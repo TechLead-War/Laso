@@ -13,6 +13,106 @@ private extension Product.SubscriptionPeriod {
     }
 }
 
+// MARK: - Reusable timeline draw (shared by Preview + Paywall trial timeline)
+
+/// One node on a vertical timeline. `halo` adds the soft outer ring (present
+/// anchor); `solid` fills the dot blue (the live "today" node on the paywall;
+/// Preview's anchor keeps a hollow dot, so it sets halo without solid).
+struct OnbV2TimelineNode: Identifiable {
+    let id: String
+    let dayLabel: String
+    let title: String
+    let body: String
+    var halo: Bool = false
+    var solid: Bool = false
+}
+
+/// A vertical timeline whose spine grows top->bottom as a height mask and whose
+/// nodes scale-in one after another (70ms apart). Preview and the paywall trial
+/// timeline shared this exact spine+nodes shape, so it lives in one place.
+///
+/// Reduce Motion: the spine is full height and every node is present instantly
+/// (a single crossfade owned by the parent), with no mask growth or scale pop.
+struct OnbV2TimelineDraw: View {
+    let nodes: [OnbV2TimelineNode]
+    /// Flipped true by the parent once its reveal beat for the timeline lands.
+    let draw: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            // Spine sits behind the nodes; the ZStack sizes itself to the node
+            // column, so the gradient stretches to exactly the list height.
+            spine
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(Array(nodes.enumerated()), id: \.element.id) { idx, node in
+                    row(node)
+                        .scaleEffect(draw ? 1 : (reduceMotion ? 1 : 0.7), anchor: .leading)
+                        .opacity(draw ? 1 : 0)
+                        .animation(nodeAnimation(idx), value: draw)
+                }
+            }
+        }
+    }
+
+    private func nodeAnimation(_ idx: Int) -> Animation {
+        if reduceMotion { return .easeOut(duration: 0.15) }
+        // Nodes pop in 70ms apart, after the spine has begun to grow.
+        return .spring(response: 0.4, dampingFraction: 0.7).delay(0.25 + Double(idx) * 0.07)
+    }
+
+    private var spine: some View {
+        LinearGradient(
+            colors: [OnbV2.blue, OnbV2.blue.opacity(0.1)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .frame(width: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 1))
+        // Vertical scale from the top draws the line downward with no measured
+        // height (GeometryReader-free, so it never fights the ZStack's sizing).
+        .scaleEffect(x: 1, y: (draw || reduceMotion) ? 1 : 0, anchor: .top)
+        .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeOut(duration: 0.6), value: draw)
+        .padding(.leading, 7)
+    }
+
+    private func row(_ node: OnbV2TimelineNode) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                if node.halo {
+                    Circle()
+                        .stroke(OnbV2.blue.opacity(0.2), lineWidth: 4)
+                        .frame(width: 24, height: 24)
+                }
+                Circle()
+                    .fill(node.solid ? OnbV2.blue : OnbV2.bg)
+                    .frame(width: 16, height: 16)
+                Circle()
+                    .stroke(OnbV2.blue, lineWidth: 2)
+                    .frame(width: 16, height: 16)
+            }
+            .frame(width: 16, height: 16)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(node.dayLabel)
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.7)
+                    .foregroundStyle(OnbV2.blue)
+                    .textCase(.uppercase)
+                Text(node.title)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(OnbV2.fg)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(node.body)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(OnbV2.fg3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, -2)
+        }
+    }
+}
+
 // MARK: - Screen 14: Preview
 
 struct OnbV2Screen14Preview: View {
@@ -23,8 +123,12 @@ struct OnbV2Screen14Preview: View {
     let onBack: () -> Void
     let onContinue: () -> Void
 
+    // One trigger flips the whole header/CTA stagger; the timeline draws after.
+    @State private var appeared = false
+    @State private var drawTimeline = false
+
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue) {
+        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 15, total: OnbV2Flow.total, onBack: onBack)
 
@@ -34,6 +138,7 @@ struct OnbV2Screen14Preview: View {
                             .font(.system(size: 12, weight: .bold))
                             .tracking(1.6)
                             .foregroundStyle(OnbV2.blue)
+                            .onbV2StaggerIn(index: 0, appeared: appeared)
 
                         Spacer().frame(height: 12)
 
@@ -41,6 +146,7 @@ struct OnbV2Screen14Preview: View {
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
                             .fixedSize(horizontal: false, vertical: true)
+                            .onbV2StaggerIn(index: 1, appeared: appeared)
 
                         Spacer().frame(height: 12)
 
@@ -48,71 +154,46 @@ struct OnbV2Screen14Preview: View {
                             .font(.system(size: 16))
                             .foregroundStyle(OnbV2.fg2)
                             .fixedSize(horizontal: false, vertical: true)
+                            .onbV2StaggerIn(index: 2, appeared: appeared)
 
                         Spacer().frame(height: 22)
 
-                        timeline
+                        OnbV2TimelineDraw(nodes: timelineNodes, draw: drawTimeline)
                     }
                     .padding(.horizontal, OnbV2.bodyPadH)
                     .padding(.top, 8)
                     .padding(.bottom, 24)
                 }
 
-                OnbV2PrimaryCTA(Copy.OnboardingV2.s14CTA, action: onContinue)
-                    .padding(.horizontal, OnbV2.bodyPadH)
-                    .padding(.bottom, 20)
+                OnbV2PrimaryCTA(Copy.OnboardingV2.s14CTA) {
+                    ctaTapped.toggle()
+                    onContinue()
+                }
+                .padding(.horizontal, OnbV2.bodyPadH)
+                .padding(.bottom, 20)
+                .onbV2StaggerIn(index: 4, appeared: appeared)
+                .sensoryFeedback(.impact(weight: .light), trigger: ctaTapped)
             }
+        }
+        .task {
+            appeared = true
+            // Let the header stagger seat, then draw the timeline spine + nodes.
+            try? await Task.sleep(for: .milliseconds(220))
+            drawTimeline = true
         }
     }
 
-    private var timeline: some View {
-        ZStack(alignment: .topLeading) {
-            LinearGradient(
-                colors: [OnbV2.blue, OnbV2.blue.opacity(0.1)],
-                startPoint: .top,
-                endPoint: .bottom
+    @State private var ctaTapped = false
+
+    private var timelineNodes: [OnbV2TimelineNode] {
+        Array(Copy.OnboardingV2.previewDays.enumerated()).map { idx, day in
+            OnbV2TimelineNode(
+                id: "preview_\(day.day)",
+                dayLabel: Copy.Onboarding.dayLabel(day.day),
+                title: day.title,
+                body: day.body,
+                halo: idx == 0   // anchor day keeps the soft ring, hollow dot
             )
-            .frame(width: 2)
-            .clipShape(RoundedRectangle(cornerRadius: 1))
-            .padding(.leading, 7)
-
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(Array(Copy.OnboardingV2.previewDays.enumerated()), id: \.offset) { idx, day in
-                    HStack(alignment: .top, spacing: 14) {
-                        ZStack {
-                            if idx == 0 {
-                                Circle()
-                                    .stroke(OnbV2.blue.opacity(0.2), lineWidth: 4)
-                                    .frame(width: 24, height: 24)
-                            }
-                            Circle()
-                                .fill(OnbV2.bg)
-                                .frame(width: 16, height: 16)
-                            Circle()
-                                .stroke(OnbV2.blue, lineWidth: 2)
-                                .frame(width: 16, height: 16)
-                        }
-                        .frame(width: 16, height: 16)
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(Copy.Onboarding.dayLabel(day.day))
-                                .font(.system(size: 11, weight: .semibold))
-                                .tracking(0.7)
-                                .foregroundStyle(OnbV2.blue)
-                                .textCase(.uppercase)
-                            Text(day.title)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(OnbV2.fg)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(day.body)
-                                .font(.system(size: 13.5))
-                                .foregroundStyle(OnbV2.fg3)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.top, -2)
-                    }
-                }
-            }
         }
     }
 }
@@ -125,9 +206,14 @@ struct OnbV2Screen15SignIn: View {
 
     @State private var isAuthing = false
     @State private var errorMessage: String?
+    @State private var appeared = false
+    @State private var pressed = false
+    // Outcome trigger: flips only once the Apple sign-in actually succeeds.
+    @State private var signedInOk = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .mix) {
+        OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 16, total: OnbV2Flow.total, onBack: onBack)
 
@@ -135,6 +221,7 @@ struct OnbV2Screen15SignIn: View {
                     Spacer()
 
                     OnbV2HeartHero(size: 180)
+                        .onbV2StaggerIn(index: 0, appeared: appeared)
 
                     Spacer().frame(height: 28)
 
@@ -143,6 +230,7 @@ struct OnbV2Screen15SignIn: View {
                         .foregroundStyle(OnbV2.fg)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                        .onbV2StaggerIn(index: 1, appeared: appeared)
 
                     Spacer().frame(height: 14)
 
@@ -152,37 +240,28 @@ struct OnbV2Screen15SignIn: View {
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 320)
                         .fixedSize(horizontal: false, vertical: true)
+                        .onbV2StaggerIn(index: 2, appeared: appeared)
 
                     Spacer()
                 }
                 .padding(.horizontal, OnbV2.bodyPadH)
 
                 VStack(spacing: 12) {
-                    Button {
-                        Task { @MainActor in
-                            isAuthing = true
-                            defer { isAuthing = false }
-                            do {
-                                let result = try await AppleAuthService.shared.signIn()
-                                // Apple returns fullName only on the FIRST sign-in
-                                // for a given Apple ID. Capture it now so the home
-                                // greeting can show "Good morning, {name}".
-                                if let given = result.fullName?.givenName?.trimmingCharacters(in: .whitespacesAndNewlines),
-                                   !given.isEmpty {
-                                    UserProfileStore.shared.saveDisplayName(given)
-                                }
-                                onSignedIn()
-                            } catch {
-                                self.errorMessage = error.localizedDescription
-                            }
-                        }
-                    } label: {
+                    Button(action: signIn) {
                         HStack(spacing: 8) {
-                            Image(systemName: "applelogo")
-                                .foregroundStyle(.black)
-                            Text(Copy.OnboardingV2.s15CTA)
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(.black)
+                            if isAuthing {
+                                // Inline progress so the press has a visible
+                                // "working" state while Apple's sheet resolves.
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(.black)
+                            } else {
+                                Image(systemName: "applelogo")
+                                    .foregroundStyle(.black)
+                                Text(Copy.OnboardingV2.s15CTA)
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(.black)
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -190,10 +269,15 @@ struct OnbV2Screen15SignIn: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(.white)
                         )
+                        .scaleEffect(pressed && !reduceMotion ? 0.985 : 1)
+                        .opacity(isAuthing ? 0.6 : (pressed ? 0.9 : 1))
+                        .animation(.easeOut(duration: 0.12), value: pressed)
                     }
                     .buttonStyle(.plain)
                     .disabled(isAuthing)
-                    .opacity(isAuthing ? 0.6 : 1)
+                    .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
+                    .sensoryFeedback(.impact(weight: .light), trigger: pressed) { _, now in now }
+                    .sensoryFeedback(.success, trigger: signedInOk)
 
                     if let errorMessage {
                         Text(errorMessage)
@@ -211,6 +295,29 @@ struct OnbV2Screen15SignIn: View {
                 }
                 .padding(.horizontal, OnbV2.bodyPadH)
                 .padding(.bottom, 20)
+                .onbV2StaggerIn(index: 3, appeared: appeared)
+            }
+        }
+        .task { appeared = true }
+    }
+
+    private func signIn() {
+        Task { @MainActor in
+            isAuthing = true
+            defer { isAuthing = false }
+            do {
+                let result = try await AppleAuthService.shared.signIn()
+                // Apple returns fullName only on the FIRST sign-in for a given
+                // Apple ID. Capture it now so the home greeting can show
+                // "Good morning, {name}".
+                if let given = result.fullName?.givenName?.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !given.isEmpty {
+                    UserProfileStore.shared.saveDisplayName(given)
+                }
+                signedInOk.toggle()   // outcome haptic: success only, never on request
+                onSignedIn()
+            } catch {
+                self.errorMessage = error.localizedDescription
             }
         }
     }
@@ -231,7 +338,17 @@ struct OnbV2Screen16Paywall: View {
 
     @State private var selectedIsAnnual = true
 
+    // Reveal clocks the screen owns: the watch-list check cascade ticks one row
+    // at a time (each tick = one .selection), the trial timeline draws after,
+    // and the plan cards fade in last.
+    @State private var revealedChecks = 0
+    @State private var drawTimeline = false
+    @State private var plansAppeared = false
+    // Outcome trigger: only flips when StoreKit actually grants access.
+    @State private var purchased = false
+
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let manager = SubscriptionManager.shared
 
     var body: some View {
@@ -289,7 +406,8 @@ struct OnbV2Screen16Paywall: View {
             return Copy.OnboardingV2.s16CTAFallback
         }()
 
-        return OnbV2ScreenContainer(ambient: .mix) {
+        let rows = watchRows
+        return OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: onBack)
 
@@ -299,6 +417,7 @@ struct OnbV2Screen16Paywall: View {
                             .font(.system(size: 12, weight: .bold))
                             .tracking(1.6)
                             .foregroundStyle(OnbV2.blue)
+                            .onbV2StaggerIn(index: 0, appeared: revealedChecks > 0)
 
                         Spacer().frame(height: 8)
 
@@ -307,18 +426,24 @@ struct OnbV2Screen16Paywall: View {
                             .foregroundStyle(OnbV2.fg)
                             .lineSpacing(4)
                             .fixedSize(horizontal: false, vertical: true)
+                            .onbV2StaggerIn(index: 1, appeared: revealedChecks > 0)
 
                         Spacer().frame(height: 18)
 
                         VStack(spacing: 0) {
-                            ForEach(Array(watchRows.enumerated()), id: \.element.id) { idx, row in
+                            ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
                                 OnbV2WatchRow(
                                     icon: row.icon,
                                     color: row.color,
                                     label: row.label,
                                     sub: row.sub,
-                                    showDivider: idx > 0
+                                    showDivider: idx > 0 && rowShown(idx - 1)
                                 )
+                                // Each row + its check lands one tick at a time,
+                                // springing in 80ms apart for the cascade feel.
+                                .opacity(rowShown(idx) ? 1 : 0)
+                                .scaleEffect(rowShown(idx) ? 1 : (reduceMotion ? 1 : 0.96), anchor: .leading)
+                                .animation(rowReveal, value: revealedChecks)
                             }
                         }
                         .padding(6)
@@ -330,6 +455,10 @@ struct OnbV2Screen16Paywall: View {
                             RoundedRectangle(cornerRadius: 18)
                                 .stroke(OnbV2.line, lineWidth: 1)
                         )
+                        // One .selection tick per check as the cascade advances.
+                        .sensoryFeedback(.selection, trigger: revealedChecks) { old, new in
+                            new > old && new <= rows.count
+                        }
 
                         Spacer().frame(height: 18)
 
@@ -360,6 +489,9 @@ struct OnbV2Screen16Paywall: View {
                                     selectedIsAnnual = false
                                 }
                             }
+                            .opacity(plansAppeared ? 1 : 0)
+                            .offset(y: plansAppeared || reduceMotion ? 0 : 8)
+                            .animation(reduceMotion ? .easeOut(duration: 0.15) : OnbV2.entryEase, value: plansAppeared)
                         } else {
                             VStack(spacing: 10) {
                                 if let err = manager.errorMessage {
@@ -398,11 +530,17 @@ struct OnbV2Screen16Paywall: View {
                         isEnabled: !manager.isPurchasing && productsLoaded
                     ) {
                         guard let product = selectedIsAnnual ? yearly : monthly else { return }
+                        purchaseTapped.toggle()   // .impact(.medium): purchase intent
                         Task { @MainActor in
                             await SubscriptionManager.shared.purchase(product)
-                            if FeatureGate.hasFullAccess { onPurchased() }
+                            if FeatureGate.hasFullAccess {
+                                purchased.toggle()   // outcome: access actually granted
+                                onPurchased()
+                            }
                         }
                     }
+                    .sensoryFeedback(.impact(weight: .medium), trigger: purchaseTapped)
+                    .sensoryFeedback(.success, trigger: purchased)
 
                     HStack(spacing: 14) {
                         Button {
@@ -447,6 +585,45 @@ struct OnbV2Screen16Paywall: View {
                 await SubscriptionManager.shared.loadProducts()
             }
         }
+        .task { await runRevealCascade(rowCount: rows.count) }
+    }
+
+    @State private var purchaseTapped = false
+
+    /// True once the cascade has reached row `idx` (0-based). The header reveals
+    /// at the same first beat so nothing pops before the list starts.
+    private func rowShown(_ idx: Int) -> Bool { revealedChecks > idx }
+
+    private var rowReveal: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.15)
+            : .spring(response: 0.45, dampingFraction: 0.72)
+    }
+
+    /// Drives the watch-list check cascade (one row per 80ms tick, each tick a
+    /// .selection), then draws the trial timeline, then fades the plan cards in.
+    /// Cancel-safe `.task`, so swapping screens stops it cleanly.
+    /// Reduce Motion: reveal everything at once on a single crossfade.
+    @MainActor
+    private func runRevealCascade(rowCount: Int) async {
+        if reduceMotion {
+            revealedChecks = rowCount
+            drawTimeline = true
+            plansAppeared = true
+            return
+        }
+        for _ in 0..<rowCount {
+            revealedChecks += 1
+            try? await Task.sleep(for: .milliseconds(80))
+            if Task.isCancelled { return }
+        }
+        // Let the last check settle before the timeline draws and plans land.
+        try? await Task.sleep(for: .milliseconds(120))
+        if Task.isCancelled { return }
+        drawTimeline = true
+        try? await Task.sleep(for: .milliseconds(200))
+        if Task.isCancelled { return }
+        plansAppeared = true
     }
 
     // MARK: - Watch list (built from the user's real answers + the read)
@@ -517,59 +694,28 @@ struct OnbV2Screen16Paywall: View {
         let total = trialDays > 0 ? trialDays : 7
         // Reminder lands two days before renewal, but never before day 1.
         let remindDay = max(1, total - 2)
-        let nodes: [(day: Int, title: String, sub: String, filled: Bool)] = [
-            (0, Copy.OnboardingV2.s16TimelineToday, Copy.OnboardingV2.s16TimelineTodaySub, true),
-            (remindDay, Copy.OnboardingV2.s16TimelineRemind, Copy.OnboardingV2.s16TimelineRemindSub, false),
-            (total, Copy.OnboardingV2.s16TimelineRenew, Copy.OnboardingV2.s16TimelineRenewSub, false)
-        ]
-
-        return ZStack(alignment: .topLeading) {
-            LinearGradient(
-                colors: [OnbV2.blue, OnbV2.blue.opacity(0.1)],
-                startPoint: .top,
-                endPoint: .bottom
+        let nodes: [OnbV2TimelineNode] = [
+            OnbV2TimelineNode(
+                id: "today",
+                dayLabel: Copy.OnboardingV2.s16TimelineDay(0),
+                title: Copy.OnboardingV2.s16TimelineToday,
+                body: Copy.OnboardingV2.s16TimelineTodaySub,
+                halo: true, solid: true   // the live "today" anchor
+            ),
+            OnbV2TimelineNode(
+                id: "remind",
+                dayLabel: Copy.OnboardingV2.s16TimelineDay(remindDay),
+                title: Copy.OnboardingV2.s16TimelineRemind,
+                body: Copy.OnboardingV2.s16TimelineRemindSub
+            ),
+            OnbV2TimelineNode(
+                id: "renew",
+                dayLabel: Copy.OnboardingV2.s16TimelineDay(total),
+                title: Copy.OnboardingV2.s16TimelineRenew,
+                body: Copy.OnboardingV2.s16TimelineRenewSub
             )
-            .frame(width: 2)
-            .clipShape(RoundedRectangle(cornerRadius: 1))
-            .padding(.leading, 7)
-
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(nodes, id: \.day) { node in
-                    HStack(alignment: .top, spacing: 14) {
-                        ZStack {
-                            if node.filled {
-                                Circle()
-                                    .stroke(OnbV2.blue.opacity(0.2), lineWidth: 4)
-                                    .frame(width: 24, height: 24)
-                            }
-                            Circle()
-                                .fill(node.filled ? OnbV2.blue : OnbV2.bg)
-                                .frame(width: 16, height: 16)
-                            Circle()
-                                .stroke(OnbV2.blue, lineWidth: 2)
-                                .frame(width: 16, height: 16)
-                        }
-                        .frame(width: 16, height: 16)
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(Copy.OnboardingV2.s16TimelineDay(node.day))
-                                .font(.system(size: 11, weight: .semibold))
-                                .tracking(0.7)
-                                .foregroundStyle(OnbV2.blue)
-                                .textCase(.uppercase)
-                            Text(node.title)
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundStyle(OnbV2.fg)
-                            Text(node.sub)
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(OnbV2.fg3)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.top, -2)
-                    }
-                }
-            }
-        }
+        ]
+        return OnbV2TimelineDraw(nodes: nodes, draw: drawTimeline)
     }
 }
 
@@ -579,9 +725,10 @@ struct OnbV2ScreenDone: View {
     let onDone: () -> Void
 
     @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .mix) {
+        OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 Spacer()
 
@@ -601,9 +748,11 @@ struct OnbV2ScreenDone: View {
                         .foregroundStyle(.white)
                         .font(.system(size: 36, weight: .bold))
                 }
-                .scaleEffect(appeared ? 1 : 0.6)
+                // Badge keeps its celebratory pop as the first beat; the spring
+                // collapses to a plain fade under Reduce Motion.
+                .scaleEffect(appeared ? 1 : (reduceMotion ? 1 : 0.6))
                 .opacity(appeared ? 1 : 0)
-                .animation(.spring(response: 0.5, dampingFraction: 0.7), value: appeared)
+                .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.5, dampingFraction: 0.7), value: appeared)
 
                 Spacer().frame(height: 26)
 
@@ -612,6 +761,7 @@ struct OnbV2ScreenDone: View {
                     .foregroundStyle(OnbV2.fg)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .onbV2StaggerIn(index: 1, appeared: appeared)
 
                 Spacer().frame(height: 12)
 
@@ -621,13 +771,17 @@ struct OnbV2ScreenDone: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 280)
                     .fixedSize(horizontal: false, vertical: true)
+                    .onbV2StaggerIn(index: 2, appeared: appeared)
 
                 Spacer()
 
                 OnbV2PrimaryCTA(Copy.OnboardingV2.sDoneCTA, action: onDone)
                     .padding(.bottom, 20)
+                    .onbV2StaggerIn(index: 3, appeared: appeared)
             }
             .padding(.horizontal, OnbV2.bodyPadH)
+            // Completion outcome: the only success beat that lands on arrival.
+            .sensoryFeedback(.success, trigger: appeared)
         }
         .onAppear { appeared = true }
     }

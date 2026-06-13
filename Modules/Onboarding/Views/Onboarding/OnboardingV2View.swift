@@ -171,8 +171,13 @@ struct OnboardingV2View: View {
             }
         case .verdict:
             if let prediction, let verdict {
+                // The proof chart reads per-weekday means (Mon..Sun) the snapshot
+                // already computed for the HRV screen — no second HealthKit query.
+                // weekday highlights the confirmed driver day; nil on
+                // refuted/inconclusive, where the chart is hidden anyway.
                 OnbV2ScreenVerdict(prediction: prediction,
                                    verdict: verdict,
+                                   weekdayMeans: healthSnapshot.hrvWeekdayMeans,
                                    onContinue: { advance(to: .heart) })
             } else {
                 Color.clear.onAppear { advance(to: .heart) }

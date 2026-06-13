@@ -121,8 +121,8 @@ extension Copy {
                 .apple:  .init(icon: "applewatch", title: s("copy_onboardingv2_wearable_apple_title", "Apple Watch"),          subtitle: s("copy_onboardingv2_wearable_apple_sub", "Best fit. Deepest signal.")),
                 .whoop:  .init(icon: "heart",      title: s("copy_onboardingv2_wearable_whoop_title", "Whoop"),                subtitle: s("copy_onboardingv2_wearable_whoop_sub", "Strain, sleep, recovery.")),
                 .oura:   .init(icon: "circle",     title: s("copy_onboardingv2_wearable_oura_title", "Oura Ring"),             subtitle: s("copy_onboardingv2_wearable_oura_sub", "Sleep, HRV, body temp.")),
-                .garmin: .init(icon: "applewatch", title: s("copy_onboardingv2_wearable_garmin_title", "Garmin / Polar"),     subtitle: s("copy_onboardingv2_wearable_garmin_sub", "Training-focused devices.")),
-                .fitbit: .init(icon: "applewatch", title: s("copy_onboardingv2_wearable_fitbit_title", "Fitbit"),             subtitle: s("copy_onboardingv2_wearable_fitbit_sub", "Steps, sleep, heart rate.")),
+                .garmin: .init(icon: "figure.run.circle", title: s("copy_onboardingv2_wearable_garmin_title", "Garmin / Polar"),     subtitle: s("copy_onboardingv2_wearable_garmin_sub", "Training-focused devices.")),
+                .fitbit: .init(icon: "waveform.path.ecg", title: s("copy_onboardingv2_wearable_fitbit_title", "Fitbit"),             subtitle: s("copy_onboardingv2_wearable_fitbit_sub", "Steps, sleep, heart rate.")),
                 .other:  .init(icon: "sparkles",   title: s("copy_onboardingv2_wearable_other_title", "Something else"),       subtitle: s("copy_onboardingv2_wearable_other_sub", "If it syncs to Apple Health, we'll read it.")),
                 .none:   .init(icon: "iphone",     title: s("copy_onboardingv2_wearable_none_title", "Just my iPhone for now"), subtitle: s("copy_onboardingv2_wearable_none_sub", "That's plenty to start."))
             ]

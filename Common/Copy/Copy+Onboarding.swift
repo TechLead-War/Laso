@@ -158,6 +158,8 @@ extension Copy {
         static var noDataYet: String { RemoteConfigManager.shared.copyString("copy_onboarding_no_data_yet", default: "no data yet") }
         static var h: String { RemoteConfigManager.shared.copyString("copy_onboarding_h", default: "h") }
         static var m: String { RemoteConfigManager.shared.copyString("copy_onboarding_m", default: "m") }
+        static var ms: String { RemoteConfigManager.shared.copyString("copy_onboarding_ms", default: "ms") }
+        static var pct: String { RemoteConfigManager.shared.copyString("copy_onboarding_pct", default: "%") }
         static var x2: String { RemoteConfigManager.shared.copyString("copy_onboarding_x2", default: "—") }
         static var target7h: String { RemoteConfigManager.shared.copyString("copy_onboarding_target7h", default: "target 7h") }
         static var noDataYet2: String { RemoteConfigManager.shared.copyString("copy_onboarding_no_data_yet2", default: "no data yet") }

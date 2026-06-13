@@ -151,6 +151,10 @@ enum OnbV2Ambient {
 
 struct OnbV2ScreenContainer<Content: View>: View {
     let ambient: OnbV2Ambient
+    /// When true the screen runs its own per-element reveal (P1 stagger / P2
+    /// clock), so the container skips its block fade to avoid double-animating.
+    /// Default false keeps every existing screen byte-for-byte unchanged.
+    var staggerOwnsEntry: Bool = false
     @ViewBuilder let content: () -> Content
     @State private var appeared = false
 
@@ -158,10 +162,14 @@ struct OnbV2ScreenContainer<Content: View>: View {
         ZStack {
             OnbV2.bg.ignoresSafeArea()
             ambientGradient.ignoresSafeArea().allowsHitTesting(false)
-            content()
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 6)
-                .animation(OnbV2.entryEase, value: appeared)
+            if staggerOwnsEntry {
+                content()
+            } else {
+                content()
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 6)
+                    .animation(OnbV2.entryEase, value: appeared)
+            }
         }
         .onAppear { appeared = true }
         .preferredColorScheme(.dark)
@@ -302,6 +310,8 @@ struct OnbV2PrimaryCTA: View {
 struct OnbV2GhostCTA: View {
     let title: String
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pressed = false
 
     init(_ title: String, action: @escaping () -> Void) {
         self.title = title
@@ -315,8 +325,12 @@ struct OnbV2GhostCTA: View {
                 .foregroundStyle(OnbV2.fg2)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
+                .scaleEffect(pressed && !reduceMotion ? 0.985 : 1)
+                .opacity(pressed ? 0.9 : 1)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: pressed)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
     }
 }
 
@@ -329,6 +343,8 @@ struct OnbV2SelectRow: View {
     let accent: Color
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pressed = false
 
     var body: some View {
         Button(action: action) {
@@ -372,9 +388,13 @@ struct OnbV2SelectRow: View {
                 RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
                     .stroke(isSelected ? accent : OnbV2.line, lineWidth: 1)
             )
+            .scaleEffect(pressed && !reduceMotion ? 0.97 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: pressed)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
         .animation(.easeOut(duration: 0.18), value: isSelected)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 }
 
@@ -385,6 +405,8 @@ struct OnbV2Chip: View {
     let label: String
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pressed = false
 
     var body: some View {
         Button(action: action) {
@@ -403,9 +425,13 @@ struct OnbV2Chip: View {
             .overlay(
                 Capsule().stroke(isSelected ? OnbV2.blue : OnbV2.line, lineWidth: 1)
             )
+            .scaleEffect(pressed && !reduceMotion ? 0.97 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: pressed)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
         .animation(.easeOut(duration: 0.16), value: isSelected)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 }
 
@@ -414,12 +440,13 @@ struct OnbV2Chip: View {
 struct OnbV2HeartHero: View {
     var size: CGFloat = 220
     var color: Color = OnbV2.blue
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var beat = false
 
     var body: some View {
         ZStack {
             ForEach(0..<4) { i in
-                PulseRing(delay: Double(i) * 0.6, color: color)
+                PulseRing(delay: Double(i) * 0.6, color: color, reduceMotion: reduceMotion)
                     .frame(width: size * 0.85, height: size * 0.85)
             }
 
@@ -443,12 +470,14 @@ struct OnbV2HeartHero: View {
                 )
         }
         .frame(width: size, height: size)
-        .onAppear { beat = true }
+        // Reduce Motion: hold the heart still; PulseRing renders its static rest state.
+        .onAppear { beat = reduceMotion ? false : true }
     }
 
     private struct PulseRing: View {
         let delay: Double
         let color: Color
+        let reduceMotion: Bool
         @State private var animate = false
 
         var body: some View {
@@ -459,7 +488,7 @@ struct OnbV2HeartHero: View {
                     .easeOut(duration: 3.6).repeatForever(autoreverses: false).delay(delay),
                     value: animate
                 )
-                .onAppear { animate = true }
+                .onAppear { if !reduceMotion { animate = true } }
         }
     }
 }
@@ -474,6 +503,7 @@ struct OnbV2CountUp: View {
     var font: Font = .system(size: 88, weight: .bold).monospacedDigit()
     var color: Color = OnbV2.fg
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var current: Double = 0
     @State private var started = false
 
@@ -484,6 +514,11 @@ struct OnbV2CountUp: View {
             .onAppear {
                 guard !started else { return }
                 started = true
+                // Reduce Motion: land on the final value instantly, no tick loop.
+                if reduceMotion {
+                    current = target
+                    return
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                     let start = Date()
                     let timer = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { t in
@@ -601,6 +636,8 @@ struct OnbV2PlanCard: View {
     let badge: String?         // e.g. "Save 58%" computed at runtime
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pressed = false
 
     var body: some View {
         Button(action: action) {
@@ -650,8 +687,12 @@ struct OnbV2PlanCard: View {
                 RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
                     .stroke(isSelected ? OnbV2.blue : OnbV2.line, lineWidth: 1.5)
             )
+            .scaleEffect(pressed && !reduceMotion ? 0.97 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: pressed)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, pressing: { pressed = $0 }, perform: {})
         .animation(.easeOut(duration: 0.18), value: isSelected)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 }
