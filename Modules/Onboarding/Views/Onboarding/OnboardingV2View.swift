@@ -482,6 +482,22 @@ struct OnboardingV2View: View {
                 userName: UserProfileStore.shared.storedName()
             )
             ReengagementScheduler.reschedule()
+
+            // Trial reminders are armed at purchase, but the permission prompt
+            // runs here (after the paywall), so on a fresh first launch the
+            // purchase-time arming hit the auth gate and was silently dropped.
+            // Re-arm now that permission exists, off the live entitlement end.
+            // Idempotent: TrialScheduler uses fixed identifiers, so this
+            // replaces rather than duplicates whatever purchase attempted.
+            let trialEnd: Date?
+            switch subscriptionManager.status {
+            case .trial(let expiration): trialEnd = expiration
+            case .subscribed(let expiration): trialEnd = expiration
+            default: trialEnd = nil
+            }
+            if let trialEnd {
+                TrialScheduler.scheduleTrialLifecycle(trialEnd: trialEnd)
+            }
         }
     }
 
