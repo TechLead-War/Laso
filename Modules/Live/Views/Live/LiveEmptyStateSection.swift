@@ -197,7 +197,7 @@ struct LiveWaitingForDataView: View {
         if let primaryDevice {
             return [
                 (primaryDevice.systemImageName, "Wear your \(primaryDevice.displayName) and keep it nearby"),
-                ("bluetooth", "Keep Bluetooth enabled on iPhone"),
+                ("antenna.radiowaves.left.and.right", "Keep Bluetooth enabled on iPhone"),
                 ("heart.fill", "Open the companion app or start a quick workout to generate a fresh sample"),
                 ("arrow.clockwise", "Recent data may take a moment to sync")
             ]
