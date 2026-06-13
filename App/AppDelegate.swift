@@ -1,6 +1,7 @@
 import UIKit
 import UserNotifications
 import FacebookCore
+import AppTrackingTransparency
 
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -62,6 +63,24 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             sourceApplication: options[.sourceApplication] as? String,
             annotation: options[.annotation]
         )
+    }
+
+    // MARK: - App Tracking Transparency
+
+    /// Ask for tracking permission once the app is active (the prompt is
+    /// suppressed if requested before the window is key), then mirror the
+    /// choice into the Facebook SDK so Meta only uses the ad identifier for
+    /// attribution when the user actually allowed it. Required for Meta
+    /// subscription-conversion ad optimization on iOS 14.5+.
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else {
+            Settings.shared.isAdvertiserTrackingEnabled =
+                ATTrackingManager.trackingAuthorizationStatus == .authorized
+            return
+        }
+        ATTrackingManager.requestTrackingAuthorization { status in
+            Settings.shared.isAdvertiserTrackingEnabled = (status == .authorized)
+        }
     }
 
     // MARK: - Lifecycle (analytics flush)

@@ -2,6 +2,7 @@ import Foundation
 import StoreKit
 import Observation
 import UIKit
+import FacebookCore
 
 #if canImport(FirebaseFirestore)
 import FirebaseFirestore
@@ -571,6 +572,17 @@ final class SubscriptionManager {
             transactionIDHash: AppAnalytics.sha256Hash16(String(transactionID))
         )
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
+
+        // Meta ad optimization: send the standard StartTrial / Subscribe event
+        // so campaigns optimizing for subscription activation have a signal to
+        // bid on. A first purchase that opens a free trial reports as .trial; a
+        // direct or converted paid period reports as .subscribed.
+        let fbEvent: AppEvents.Name = { if case .trial = status { return .startTrial }; return .subscribe }()
+        AppEvents.shared.logEvent(
+            fbEvent,
+            valueToSum: NSDecimalNumber(decimal: product.price).doubleValue,
+            parameters: [.currency: product.priceFormatStyle.currencyCode]
+        )
     }
 
     // MARK: - Error
