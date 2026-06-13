@@ -690,6 +690,15 @@ final class DashboardViewModel {
             return
         }
 
+        // Denied-branch payoff: a user who got the re-permission push and then
+        // granted Health access here has converted. Fire once.
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: AppKeys.Prediction.repermissionFired),
+           !defaults.bool(forKey: AppKeys.Prediction.repermissionConverted) {
+            defaults.set(true, forKey: AppKeys.Prediction.repermissionConverted)
+            AnalyticsBackend.provider.capture(event: "repermission_conversion", properties: ["granted": true])
+        }
+
         await refresh(
             awaitDeferredAnalysis: awaitDeferredAnalysis,
             forceHeavyDeferred: forceHeavyDeferred,
@@ -2266,6 +2275,13 @@ final class DashboardViewModel {
         MorningCheckInManager.save(checkIn)
         subjectiveReadinessAdjustment = checkIn.readinessAdjustment
         AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+
+        // First-ever check-in is the denied branch's value moment; fire once via
+        // a one-shot flag so history pruning can never replay it.
+        if !UserDefaults.standard.bool(forKey: AppKeys.Prediction.firstCheckInLogged) {
+            UserDefaults.standard.set(true, forKey: AppKeys.Prediction.firstCheckInLogged)
+            AnalyticsBackend.provider.capture(event: "first_checkin_done", properties: nil)
+        }
     }
 
     /// Adjusted readiness score incorporating subjective data (Paper 10)

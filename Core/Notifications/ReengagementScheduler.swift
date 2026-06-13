@@ -13,7 +13,22 @@ enum ReengagementScheduler {
 
     /// Cancel any pending re-engagement notification and schedule a new one
     /// 3 days from now. Call this on every session start.
+    ///
+    /// Builds the request through `center.add()` directly (it needs the richest
+    /// snapshot copy, which `NotificationManager.scheduleNotification` cannot
+    /// build), so it does not inherit the manager's authorization gate. Without
+    /// the check below a fresh install — where the permission prompt has not run
+    /// yet — would schedule into the void: iOS silently drops the request until
+    /// permission is granted, which never happens for this id. Gate here so the
+    /// notification is only enqueued once the user has actually granted.
     static func reschedule() {
+        Task {
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            performReschedule()
+        }
+    }
+
+    private static func performReschedule() {
         let center = UNUserNotificationCenter.current()
 
         // Cancel existing. we always push the timer forward

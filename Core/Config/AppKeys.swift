@@ -117,6 +117,9 @@ enum AppKeys {
     enum Billing {
         static let graceStartDate = "laso.billing.grace_start_date"
         static let lastSubscribedDate = "laso.billing.last_subscribed_date"
+        /// Set once the trial-expired win-back push has been armed, so it is
+        /// scheduled a single time per expiry rather than on every status refresh.
+        static let winbackArmed = "laso.billing.winback_armed"
     }
 
     // MARK: - Readiness
@@ -307,6 +310,28 @@ enum AppKeys {
 
     enum Activation {
         static let state = "laso.activation.state"
+    }
+
+    // MARK: - Onboarding Prediction (cliffhanger payoff + re-permission hook)
+
+    enum Prediction {
+        /// JSON-encoded PreRegisteredPrediction captured during onboarding.
+        static let registered = "laso.prediction.registered"
+        /// JSON-encoded onboarding answers persistOnboardingProfile used to
+        /// discard (symptoms / activity / wearable), kept so the "we will
+        /// watch for them" promise is true.
+        static let capturedAnswers = "laso.prediction.captured_answers"
+        /// Set once the answer-ready (cliffhanger payoff) push has fired so it
+        /// never repeats.
+        static let answerReadyFired = "laso.prediction.answer_ready_fired"
+        /// Set once the denied-branch re-permission push has fired.
+        static let repermissionFired = "laso.prediction.repermission_fired"
+        /// Set once the first ever morning check-in completes, so the
+        /// first_checkin_done value-moment event fires exactly once.
+        static let firstCheckInLogged = "laso.prediction.first_checkin_logged"
+        /// Set once the re-permission conversion event has fired, so a user who
+        /// grants Health access after the re-permission push is counted once.
+        static let repermissionConverted = "laso.prediction.repermission_converted"
     }
 
     // MARK: - Circadian Health

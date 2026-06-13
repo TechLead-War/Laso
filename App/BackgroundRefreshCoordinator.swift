@@ -150,6 +150,13 @@ final class BackgroundRefreshCoordinator {
             userName: UserProfileStore.shared.storedName()
         )
 
+        // Journey 4: fire the cliffhanger payoff once the stored inconclusive
+        // prediction has matured against live data.
+        AnswerReadyScheduler.checkAndFire(store: store)
+        // Journey 5: denied-branch re-permission once the user has logged enough
+        // check-ins, restating their own words.
+        RepermissionScheduler.checkAndFire()
+
         // Wind-down needs a real target bedtime. Full housekeeping does not run
         // in BG, so derive one from the stored sleep history; if the store is
         // absent or there is not enough data, the bedtime is nil and the

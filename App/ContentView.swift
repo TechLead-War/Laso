@@ -817,6 +817,13 @@ struct ContentView: View {
         // If the user keeps opening the app, this never fires.
         ReengagementScheduler.reschedule()
 
+        // Cliffhanger payoff (Journey 4) and denied-branch re-permission
+        // (Journey 5) are also evaluated on foreground so a returning user is
+        // not left waiting on the next background refresh. Both are cheap
+        // one-shot no-ops once fired or when their preconditions are unmet.
+        AnswerReadyScheduler.checkAndFire(store: NotificationManager.shared.store)
+        RepermissionScheduler.checkAndFire()
+
         // Show PMF survey when eligible (14+ days, 10+ sessions, 90-day cooldown)
         if PMFSurveyManager.shared.shouldShowSurvey() {
             showPMFSurvey = true

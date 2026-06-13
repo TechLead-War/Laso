@@ -207,6 +207,7 @@ final class SubscriptionManager {
                 await refreshStatus()
                 await syncSubscriptionToFirestore(transaction)
                 trackPurchase(product: product, isTrialConversion: wasTrialBefore, transactionID: transaction.id)
+                armTrialNotifications()
 
             case .userCancelled:
                 AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .userCancelled)
@@ -221,6 +222,18 @@ final class SubscriptionManager {
             errorMessage = "Purchase failed. Please try again."
             AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .verification)
         }
+    }
+
+    /// After a successful purchase, retire any pending trial or win-back nudges
+    /// (a paying user should never see them) and, when the new entitlement is a
+    /// trial-bearing subscription, arm the trial-lifecycle drip off the live
+    /// expiration date. Called only from the purchase success branch.
+    private func armTrialNotifications() {
+        TrialScheduler.cancelAll()
+        // Allow the win-back to re-arm if this subscription later lapses.
+        defaults.set(false, forKey: AppKeys.Billing.winbackArmed)
+        guard case .subscribed(let expiration) = status else { return }
+        TrialScheduler.scheduleTrialLifecycle(trialEnd: expiration)
     }
 
     // MARK: - Restore
@@ -292,6 +305,29 @@ final class SubscriptionManager {
         //    no trial. Onboarding now requires the user to start the trial
         //    via autopay before reaching this state.
         status = .expired
+        armWinbackIfNeeded()
+    }
+
+    /// Arm the single trial-expired win-back (Journey 3) the first time status
+    /// lands on expired. One-shot via `winbackArmed` so refreshStatus, which
+    /// runs on many launches, does not keep resetting the delay. The flag is
+    /// cleared on the next purchase, so a re-subscribe-then-lapse re-arms it.
+    private func armWinbackIfNeeded() {
+        guard !defaults.bool(forKey: AppKeys.Billing.winbackArmed) else { return }
+        defaults.set(true, forKey: AppKeys.Billing.winbackArmed)
+        // A few hours after expiry, not the instant it lapses, so it reads as a
+        // gentle return invite rather than a paywall slam.
+        TrialScheduler.scheduleWinback(focus: trackedFocusLabel(), delay: 6 * 60 * 60)
+    }
+
+    /// The user's own focus to name in the win-back. Prefers their onboarding
+    /// prediction phrase (their exact words); falls back to the first stored
+    /// health-focus label; nil when neither exists so the generic copy is used.
+    private func trackedFocusLabel() -> String? {
+        if let phrase = OnboardingPredictionStore.loadPrediction()?.userPhrase, !phrase.isEmpty {
+            return phrase
+        }
+        return PersistenceManager().loadHealthFocuses().first?.displayName
     }
 
     private func isInBillingRetry() async -> Bool {

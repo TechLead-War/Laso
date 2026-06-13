@@ -15,6 +15,24 @@ enum AppConstants {
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
         static let watchLowBattery = "healthpulse.watch.lowBattery"
 
+        // Onboarding abandonment (Journey 1): three reminders after the user
+        // drops out mid-onboarding, cancelled the moment onboarding completes.
+        static let abandonment2h = "healthpulse.abandonment.2h"
+        static let abandonment24h = "healthpulse.abandonment.24h"
+        static let abandonment72h = "healthpulse.abandonment.72h"
+
+        // Trial lifecycle (Journey 2/3).
+        static let trialGettingStarted = "healthpulse.trial.gettingStarted"
+        static let trialInsightNudge = "healthpulse.trial.insightNudge"
+        static let trialRenewalReminder = "healthpulse.trial.renewalReminder"
+        static let trialWinback = "healthpulse.trial.winback"
+
+        // Answer-ready (Journey 4): the cliffhanger payoff push.
+        static let answerReady = "healthpulse.answerReady"
+
+        // Denied-branch re-permission (Journey 5): one push after 3 check-ins.
+        static let repermission = "healthpulse.repermission"
+
         // Prefix-based identifiers (appended with metric/level info)
         static let alertPrefix = "healthpulse.alert."
         static let spikePrefix = "healthpulse.spike."
@@ -22,6 +40,13 @@ enum AppConstants {
         static let reversalPrefix = "healthpulse.reversal."
         static let celebrationPrefix = "healthpulse.celebration."
         static let engagementPrefix = "healthpulse.engagement."
+
+        /// Every onboarding-abandonment identifier, for one-shot cancellation
+        /// when onboarding completes.
+        static let abandonmentAll = [abandonment2h, abandonment24h, abandonment72h]
+
+        /// Every trial-lifecycle identifier, cancelled on purchase.
+        static let trialAll = [trialGettingStarted, trialInsightNudge, trialRenewalReminder, trialWinback]
     }
 
     // MARK: - Notification Categories
@@ -48,6 +73,13 @@ enum AppConstants {
 
         /// Reengagement notification delay (3 days)
         static let reengagementDelay: TimeInterval = 3 * 24 * 60 * 60
+
+        /// Onboarding-abandonment reminder offsets, measured from the moment the
+        /// user dropped out (Journey 1). Spaced so the three reminders never land
+        /// inside one frequency-cap day.
+        static let abandonment2h: TimeInterval = 2 * 60 * 60
+        static let abandonment24h: TimeInterval = 24 * 60 * 60
+        static let abandonment72h: TimeInterval = 72 * 60 * 60
 
         /// ML model retrain interval (30 days)
         static let mlRetrainInterval: TimeInterval = 30 * 24 * 60 * 60

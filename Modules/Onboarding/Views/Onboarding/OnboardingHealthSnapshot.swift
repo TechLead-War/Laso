@@ -38,6 +38,31 @@ final class OnboardingHealthSnapshot {
     private(set) var hrvWeeksCovered: Int?
     private(set) var hrvWeekdayMeans: [Double?] = Array(repeating: nil, count: 7)
 
+    // Raw daily samples for the prediction verdict engine. One dated value per
+    // day so the engine can run its weekday group-difference analysis. The
+    // aggregate fields above cannot rebuild these (they drop the dates), so the
+    // router reads from here. Sleep values are minutes asleep; RHR is bpm; HRV
+    // is mean SDNN in ms — matching PredictionMetric's documented units.
+    private(set) var rhrDailySamples: [MetricSample] = []
+    private(set) var sleepDurationDailySamples: [MetricSample] = []
+    private(set) var hrvDailySamples: [MetricSample] = []
+
+    /// Per-metric history for PredictionVerdictEngine.evaluate / .segment.
+    var verdictHistory: [PredictionMetric: [MetricSample]] {
+        [
+            .restingHeartRate: rhrDailySamples,
+            .sleepDuration: sleepDurationDailySamples,
+            .heartRateVariability: hrvDailySamples
+        ]
+    }
+
+    /// True when any metric has at least one sample. Drives the denied segment:
+    /// a granted-but-empty Health database is indistinguishable from a read
+    /// denial and is treated as denied by design (see DataRichnessSegment).
+    var hasAnyHealthData: Bool {
+        !rhrDailySamples.isEmpty || !sleepDurationDailySamples.isEmpty || !hrvDailySamples.isEmpty
+    }
+
 #if DEBUG
     /// Seeds realistic values for screenshot capture. The screenshot simulator
     /// has no Apple Health samples, so a deep-linked scan/heart/sleep/hrv screen
@@ -64,6 +89,22 @@ final class OnboardingHealthSnapshot {
         hrvWeeksCovered = 12
         hrvWeekdayMeans = [64, 66, 63, 67, 61, 59, 52]  // Mon..Sun, Sunday lowest
 
+        // 28 days of dated daily samples so the screenshot harness lands on the
+        // rich segment and the verdict screen renders with a real confirmed
+        // pattern (Sunday sleep dip) rather than its loading state.
+        let now = Date()
+        rhrDailySamples = (0..<28).map { i in
+            MetricSample(date: now.addingTimeInterval(-Double(i) * day), value: 54)
+        }
+        sleepDurationDailySamples = (0..<28).map { i in
+            let date = now.addingTimeInterval(-Double(i) * day)
+            let isSunday = Date.cal.component(.weekday, from: date) == 1
+            return MetricSample(date: date, value: isSunday ? 360 : 456)  // minutes
+        }
+        hrvDailySamples = (0..<28).map { i in
+            MetricSample(date: now.addingTimeInterval(-Double(i) * day), value: 62)
+        }
+
         isLoaded = true
     }
 #endif
@@ -76,6 +117,9 @@ final class OnboardingHealthSnapshot {
         async let rhrData = recentRestingHR()
         async let sleepData = recent7NightSleep()
         async let hrvData = hrvWeekdayPattern()
+        async let rhrSamples = dailyRestingHRSamples()
+        async let sleepSamples = dailySleepDurationSamples()
+        async let hrvSamples = dailyHRVSamples()
 
         let h = await hrAge
         let s = await slpAge
@@ -84,6 +128,9 @@ final class OnboardingHealthSnapshot {
         let rhr = await rhrData
         let sleep = await sleepData
         let hrv = await hrvData
+        let rhrDaily = await rhrSamples
+        let sleepDaily = await sleepSamples
+        let hrvDaily = await hrvSamples
 
         heartRateAge = h
         sleepAge = s
@@ -103,6 +150,10 @@ final class OnboardingHealthSnapshot {
         hrvWeeklyAvgMs = hrv.weeklyAvgMs
         hrvWeeksCovered = hrv.weeksOfData
         hrvWeekdayMeans = hrv.weekdayMeans
+
+        rhrDailySamples = rhrDaily
+        sleepDurationDailySamples = sleepDaily
+        hrvDailySamples = hrvDaily
 
         isLoaded = true
     }
@@ -243,7 +294,8 @@ final class OnboardingHealthSnapshot {
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
             ) { _, samples, _ in
-                guard let qs = samples as? [HKQuantitySample], qs.count >= 14 else {
+                guard let qs = samples as? [HKQuantitySample],
+                      qs.count >= InsightConfig.GroupDifference.minSamples else {
                     continuation.resume(returning: (nil, nil, nil, Array(repeating: nil, count: 7)))
                     return
                 }
@@ -258,7 +310,7 @@ final class OnboardingHealthSnapshot {
                 let weekdayMeansDict = byWeekday.compactMapValues { values -> Double? in
                     values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
                 }
-                guard weekdayMeansDict.count >= 5 else {
+                guard weekdayMeansDict.count >= InsightConfig.GroupDifference.minWeekdaysCovered else {
                     continuation.resume(returning: (nil, nil, nil, Array(repeating: nil, count: 7)))
                     return
                 }
@@ -266,13 +318,13 @@ final class OnboardingHealthSnapshot {
                 let overallAvg = qs.map { $0.quantity.doubleValue(for: unit) }
                     .reduce(0, +) / Double(qs.count)
 
-                // Worst weekday must be at least 5% below the overall average to
-                // count as a real pattern. With 12+ weeks of data, 5% is a
-                // realistic threshold; tighter risks false negatives, looser
-                // surfaces noise.
+                // Worst weekday must sit at least one HRV floor below the
+                // overall average to count as a real pattern, not noise. Floor
+                // shared with the verdict engine via InsightConfig.
+                let worstFraction = 1 - InsightConfig.GroupDifference.hrvFloorPercent / 100
                 let worst: Int?
                 if let candidate = weekdayMeansDict.min(by: { $0.value < $1.value }),
-                   candidate.value < overallAvg * 0.95 {
+                   candidate.value < overallAvg * worstFraction {
                     worst = candidate.key
                 } else {
                     worst = nil
@@ -292,6 +344,106 @@ final class OnboardingHealthSnapshot {
                 }).count
 
                 continuation.resume(returning: (worst, overallAvg, distinctWeeks, weekdayMeans))
+            }
+            store.execute(q)
+        }
+    }
+
+    // MARK: - Daily samples for the prediction verdict engine
+
+    /// Window for the verdict engine's daily series. 90 days clears the 21-day
+    /// refutation density bar with margin while staying cheap to query.
+    private static let verdictWindowDays: Int = 90
+
+    /// Last-value-per-day resting heart rate samples (bpm).
+    private func dailyRestingHRSamples() async -> [MetricSample] {
+        await quantityDailySamples(
+            type: HKQuantityType(.restingHeartRate),
+            unit: HKUnit.count().unitDivided(by: .minute())
+        )
+    }
+
+    /// Mean-per-day HRV SDNN samples (ms).
+    private func dailyHRVSamples() async -> [MetricSample] {
+        await quantityDailySamples(
+            type: HKQuantityType(.heartRateVariabilitySDNN),
+            unit: HKUnit.secondUnit(with: .milli)
+        )
+    }
+
+    /// One sample per day at the day's mean of the quantity. The engine
+    /// collapses same-day samples to a mean anyway, so emitting a single dated
+    /// value per day keeps the payload small without changing the result.
+    private func quantityDailySamples(type: HKQuantityType, unit: HKUnit) async -> [MetricSample] {
+        let calendar = Date.cal
+        let endDate = Date()
+        guard let startDate = calendar.date(byAdding: .day, value: -Self.verdictWindowDays, to: endDate) else {
+            return []
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictEndDate)
+
+        return await withCheckedContinuation { continuation in
+            let q = HKSampleQuery(
+                sampleType: type,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, _ in
+                guard let qs = samples as? [HKQuantitySample], !qs.isEmpty else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                var byDay: [Date: [Double]] = [:]
+                for sample in qs {
+                    let day = calendar.startOfDay(for: sample.startDate)
+                    byDay[day, default: []].append(sample.quantity.doubleValue(for: unit))
+                }
+                let daily = byDay.map { day, values in
+                    MetricSample(date: day, value: values.reduce(0, +) / Double(values.count))
+                }
+                continuation.resume(returning: daily.sorted { $0.date < $1.date })
+            }
+            store.execute(q)
+        }
+    }
+
+    /// One sample per night = total minutes asleep, grouped by the same 6-hour
+    /// shifted night anchor the sleep aggregate uses so a single night is never
+    /// split across two calendar days.
+    private func dailySleepDurationSamples() async -> [MetricSample] {
+        let calendar = Date.cal
+        let endDate = Date()
+        guard let startDate = calendar.date(byAdding: .day, value: -Self.verdictWindowDays, to: endDate) else {
+            return []
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
+
+        return await withCheckedContinuation { continuation in
+            let q = HKSampleQuery(
+                sampleType: HKCategoryType(.sleepAnalysis),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: nil
+            ) { _, samples, _ in
+                guard let cats = samples as? [HKCategorySample], !cats.isEmpty else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                var perNight: [Date: TimeInterval] = [:]
+                for sample in cats {
+                    let asleep =
+                        sample.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue ||
+                        sample.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue ||
+                        sample.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue ||
+                        sample.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue
+                    guard asleep else { continue }
+                    let nightAnchor = calendar.startOfDay(for: sample.startDate.addingTimeInterval(-6 * 3600))
+                    perNight[nightAnchor, default: 0] += sample.endDate.timeIntervalSince(sample.startDate)
+                }
+                let daily = perNight.map { night, seconds in
+                    MetricSample(date: night, value: seconds / 60.0)  // minutes asleep
+                }
+                continuation.resume(returning: daily.sorted { $0.date < $1.date })
             }
             store.execute(q)
         }

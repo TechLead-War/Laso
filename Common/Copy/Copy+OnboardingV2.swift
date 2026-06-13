@@ -79,7 +79,7 @@ extension Copy {
                 .tiredMorning:  .init(icon: "battery.25",    label: s("copy_onboardingv2_symptom_tired_morning", "Tired mornings")),
                 .restless:      .init(icon: "moon.zzz",      label: s("copy_onboardingv2_symptom_restless", "Restless nights")),
                 .foggy:         .init(icon: "cloud.fog",     label: s("copy_onboardingv2_symptom_foggy", "Foggy thinking")),
-                .anxious:       .init(icon: "waveform.path", label: s("copy_onboardingv2_symptom_anxious", "Anxious or wired")),
+                .anxious:       .init(icon: "waveform.path", label: s("copy_onboardingv2_symptom_anxious", "Nervous energy")),
                 .lowMotivation: .init(icon: "cloud",         label: s("copy_onboardingv2_symptom_low_motivation", "Low motivation")),
                 .sore:          .init(icon: "figure.run",    label: s("copy_onboardingv2_symptom_sore", "Slow recovery")),
                 .moody:         .init(icon: "drop",          label: s("copy_onboardingv2_symptom_moody", "Mood swings")),
@@ -234,7 +234,8 @@ extension Copy {
 
         // MARK: - Screen 16 — Paywall
         static var s16Eyebrow: String      { s("copy_onboardingv2_s16_eyebrow", "YOUR LASO PLAN") }
-        static var s16Title: String        { s("copy_onboardingv2_s16_title", "Based on what we read,\nhere's what we'll watch for you.") }
+        // Insight-driven framing: sell the next pattern, not feature bullets.
+        static var s16Title: String        { s("copy_onboardingv2_s16_title", "You unlocked your first pattern.\nWant a new one every week?") }
         static var s16AnnualTitle: String  { s("copy_onboardingv2_s16_annual_title", "Annual") }
         static var s16MonthlyTitle: String { s("copy_onboardingv2_s16_monthly_title", "Monthly") }
         static var s16MonthlySub: String   { s("copy_onboardingv2_s16_monthly_sub", "Cancel anytime") }
@@ -248,20 +249,128 @@ extension Copy {
             String(format: s("copy_onboardingv2_s16_annual_sub", "That's about %1$@/month · %2$@-day free trial"), perMonth, trialDays)
         }
 
-        struct WatchListRow {
+        struct WatchListRow: Identifiable {
+            let id: String
             let icon: String
             let color: Color
             let label: String
             let sub: String
         }
-        static var watchListRows: [WatchListRow] {
-            [
-                .init(icon: "heart",                     color: OnbV2.rose,   label: s("copy_onboardingv2_watch_rhr_label", "Resting heart rate trends"),  sub: s("copy_onboardingv2_watch_rhr_sub", "See your daily and weekly trend at a glance.")),
-                .init(icon: "moon.fill",                 color: OnbV2.purple, label: s("copy_onboardingv2_watch_sleep_label", "Your sleep debt"),           sub: s("copy_onboardingv2_watch_sleep_sub", "Personalized to your nights")),
-                .init(icon: "waveform.path.ecg",         color: OnbV2.teal,   label: s("copy_onboardingv2_watch_hrv_label", "HRV recovery patterns"),       sub: s("copy_onboardingv2_watch_hrv_sub", "Including the Sunday dip")),
-                .init(icon: "chart.line.uptrend.xyaxis", color: OnbV2.green,  label: s("copy_onboardingv2_watch_patterns_label", "Patterns we already noticed"), sub: s("copy_onboardingv2_watch_patterns_sub", "A handful are waiting for you")),
-                .init(icon: "bell.fill",                 color: OnbV2.blue,   label: s("copy_onboardingv2_watch_alerts_label", "Smart alerts when things shift"), sub: s("copy_onboardingv2_watch_alerts_sub", "Quiet, not pushy"))
-            ]
+        // Generic sub line for a goal-derived or symptom-derived watch row. The
+        // user's own goal / symptom label is the row title, so the sub stays a
+        // short shared reassurance rather than restating the metric.
+        static var watchRowGoalSub: String   { s("copy_onboardingv2_watch_goal_sub", "We keep an eye on this for you, every day.") }
+        // Worst-weekday row: the one concrete pattern the read already surfaced.
+        static func watchWeekdayLabel(weekday: String) -> String {
+            String(format: s("copy_onboardingv2_watch_weekday_label", "Your %@ dip"), weekday)
+        }
+        static var watchWeekdaySub: String   { s("copy_onboardingv2_watch_weekday_sub", "The day your recovery runs lowest.") }
+        // Always-on closing row: the weekly cadence the subscription buys.
+        static var watchWeeklyLabel: String  { s("copy_onboardingv2_watch_weekly_label", "A fresh pattern every week") }
+        static var watchWeeklySub: String    { s("copy_onboardingv2_watch_weekly_sub", "Quiet alerts the moment something shifts.") }
+
+        // MARK: - Screen 16 — Trial timeline
+        static var s16TimelineToday: String  { s("copy_onboardingv2_s16_timeline_today", "Today") }
+        static var s16TimelineTodaySub: String { s("copy_onboardingv2_s16_timeline_today_sub", "Full access opens.") }
+        static var s16TimelineRemind: String { s("copy_onboardingv2_s16_timeline_remind", "We remind you") }
+        static var s16TimelineRemindSub: String { s("copy_onboardingv2_s16_timeline_remind_sub", "Two days before the trial ends.") }
+        static var s16TimelineRenew: String  { s("copy_onboardingv2_s16_timeline_renew", "Renews") }
+        static var s16TimelineRenewSub: String { s("copy_onboardingv2_s16_timeline_renew_sub", "Cancel anytime before this.") }
+        static func s16TimelineDay(_ day: Int) -> String {
+            day == 0 ? s("copy_onboardingv2_s16_timeline_day0", "Day 1") : String(format: s("copy_onboardingv2_s16_timeline_dayn", "Day %d"), day + 1)
+        }
+
+        // MARK: - Metric phrases (used to build claim + watch copy)
+        /// The "claim" half of the prediction, the suspected driver in plain
+        /// words. Keyed by PredictionMetric so Core types stay out of Copy.
+        static func metricClaimPhrase(_ metric: PredictionMetric) -> String {
+            switch metric {
+            case .sleepDuration:        return s("copy_onboardingv2_metric_claim_sleep", "shorter nights")
+            case .heartRateVariability: return s("copy_onboardingv2_metric_claim_hrv", "lower recovery")
+            case .restingHeartRate:     return s("copy_onboardingv2_metric_claim_rhr", "a higher resting heart rate")
+            }
+        }
+        /// Short label for the metric we will keep watching (refuted pivot and
+        /// side discoveries).
+        static func metricWatchLabel(_ metric: PredictionMetric) -> String {
+            switch metric {
+            case .sleepDuration:        return s("copy_onboardingv2_metric_label_sleep", "sleep")
+            case .heartRateVariability: return s("copy_onboardingv2_metric_label_hrv", "recovery")
+            case .restingHeartRate:     return s("copy_onboardingv2_metric_label_rhr", "resting heart rate")
+            }
+        }
+
+        // MARK: - Prediction (pre-registered claim screen)
+        static var predictionEyebrow: String { s("copy_onboardingv2_prediction_eyebrow", "YOUR FIRST CHECK") }
+        static var predictionCTA: String     { s("copy_onboardingv2_prediction_cta", "Let's find out") }
+        static var predictionFootnote: String { s("copy_onboardingv2_prediction_footnote", "We decide this from your own data. Not a guess.") }
+        /// The pre-registered claim, built from the user's own goal + symptom
+        /// words. No timing promise: the data branch decides when the answer is
+        /// ready.
+        static func predictionTitle(claim: String, outcome: String) -> String {
+            String(format: s("copy_onboardingv2_prediction_title", "We will check the link between %1$@ and your %2$@."), claim, outcome)
+        }
+
+        // MARK: - Verdict (rich branch)
+        static var verdictConfirmedEyebrow: String { s("copy_onboardingv2_verdict_confirmed_eyebrow", "YOUR ANSWER") }
+        static var verdictRefutedEyebrow: String   { s("copy_onboardingv2_verdict_refuted_eyebrow", "GOOD NEWS") }
+        static var verdictInconclusiveEyebrow: String { s("copy_onboardingv2_verdict_inconclusive_eyebrow", "ALMOST THERE") }
+        static var verdictCTA: String { s("copy_onboardingv2_verdict_cta", "Continue") }
+        /// Confirmed: the claim held. `metric` is the driver we watch,
+        /// `magnitude` a banded phrase, `weekday` the day it lands hardest,
+        /// `outcome` the user's own words. Phrasing stays neutral so it reads
+        /// right whether the metric goes up or down.
+        static func verdictConfirmedBody(metric: String, magnitude: String, weekday: String, outcome: String) -> String {
+            String(format: s("copy_onboardingv2_verdict_confirmed_body", "On %1$@s your %2$@ shifts by %3$@, and that lines up with your %4$@. Now you know where to look."), weekday, metric, magnitude, outcome)
+        }
+        static var verdictConfirmedTitle: String { s("copy_onboardingv2_verdict_confirmed_title", "You were right.") }
+        /// Refuted: the predicted cause is not the driver. Honest pivot to the
+        /// metric we will keep watching.
+        static func verdictRefutedBody(outcome: String, watch: String) -> String {
+            String(format: s("copy_onboardingv2_verdict_refuted_body", "Your %1$@ did not line up with the data here. That rules out a dead end. We will keep watching your %2$@ instead."), outcome, watch)
+        }
+        static var verdictRefutedTitle: String { s("copy_onboardingv2_verdict_refuted_title", "We can rule that out.") }
+        /// Inconclusive in the rich branch: enough data to run, not enough to
+        /// be sure yet. `nights` is verdict.nightsRemaining.
+        static func verdictInconclusiveBody(nights: Int) -> String {
+            let unit = nights == 1 ? s("copy_onboardingv2_night_singular", "night") : s("copy_onboardingv2_night_plural", "nights")
+            return String(format: s("copy_onboardingv2_verdict_inconclusive_body", "The pattern is forming but not certain. About %1$d more %2$@ and we will know for sure."), nights, unit)
+        }
+        static var verdictInconclusiveTitle: String { s("copy_onboardingv2_verdict_inconclusive_title", "We are close.") }
+        /// Mandatory label for side discoveries. They never replace the answer.
+        static func verdictSideDiscovery(metric: String, weekday: String) -> String {
+            String(format: s("copy_onboardingv2_verdict_side_discovery", "While checking, we also noticed your %1$@ shifts most on %2$@s."), metric, weekday)
+        }
+
+        // MARK: - Cliffhanger (sparse branch)
+        static var cliffhangerEyebrow: String { s("copy_onboardingv2_cliffhanger_eyebrow", "ALMOST READY") }
+        static var cliffhangerTitle: String   { s("copy_onboardingv2_cliffhanger_title", "Your answer is on its way.") }
+        static func cliffhangerBody(nights: Int) -> String {
+            let unit = nights == 1 ? s("copy_onboardingv2_night_singular", "night") : s("copy_onboardingv2_night_plural", "nights")
+            return String(format: s("copy_onboardingv2_cliffhanger_body", "We have a strong start. About %1$d more %2$@ of sleep and we can give you a real answer."), nights, unit)
+        }
+        static var cliffhangerNotifyTitle: String { s("copy_onboardingv2_cliffhanger_notify_title", "Want us to tell you the moment your answer is ready?") }
+        static var cliffhangerNotifyYes: String   { s("copy_onboardingv2_cliffhanger_notify_yes", "Yes, tell me") }
+        static var cliffhangerSkip: String        { s("copy_onboardingv2_cliffhanger_skip", "Not now") }
+
+        // MARK: - Journal first (denied branch)
+        static var journalFirstEyebrow: String { s("copy_onboardingv2_journal_first_eyebrow", "ANOTHER WAY IN") }
+        static var journalFirstTitle: String   { s("copy_onboardingv2_journal_first_title", "You can still get answers.") }
+        static var journalFirstBody: String    { s("copy_onboardingv2_journal_first_body", "Even without Health data, a quick morning check in builds your picture. Log how you feel and we will find the patterns with you.") }
+        static var journalFirstCTA: String     { s("copy_onboardingv2_journal_first_cta", "Start with a check in") }
+
+        // MARK: - Verdict magnitude band words
+        /// Turns a banded magnitude into copy. Hour bands ignore the raw value
+        /// so the screen never shows false precision; minute / percent / bpm
+        /// bands carry the rounded value.
+        static func bandPhrase(band: VerdictMagnitude.Band, value: Int) -> String {
+            switch band {
+            case .roughlyAnHour: return s("copy_onboardingv2_band_roughly_an_hour", "roughly an hour")
+            case .overAnHour:    return s("copy_onboardingv2_band_over_an_hour", "more than an hour")
+            case .minutes:       return String(format: s("copy_onboardingv2_band_minutes", "about %d minutes"), value)
+            case .percent:       return String(format: s("copy_onboardingv2_band_percent", "about %d percent"), value)
+            case .bpm:           return String(format: s("copy_onboardingv2_band_bpm", "about %d bpm"), value)
+            }
         }
 
         // MARK: - Done

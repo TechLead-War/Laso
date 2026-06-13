@@ -16,13 +16,17 @@ private extension Product.SubscriptionPeriod {
 // MARK: - Screen 14: Preview
 
 struct OnbV2Screen14Preview: View {
+    // Threaded from the router so the first-week preview can personalise to the
+    // user's goals and real snapshot. Consumed by the paywall workstream.
+    let profile: OnboardingV2Profile
+    let snapshot: OnboardingHealthSnapshot
     let onBack: () -> Void
     let onContinue: () -> Void
 
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 14, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 15, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -125,7 +129,7 @@ struct OnbV2Screen15SignIn: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .mix) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 15, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 16, total: OnbV2Flow.total, onBack: onBack)
 
                 VStack(spacing: 0) {
                     Spacer()
@@ -215,6 +219,13 @@ struct OnbV2Screen15SignIn: View {
 // MARK: - Screen 16: Paywall (real StoreKit prices)
 
 struct OnbV2Screen16Paywall: View {
+    // Threaded from the router so the watch list and trial timeline can be
+    // built from the user's real goals, symptoms, and verdict. Consumed by the
+    // paywall workstream; nil verdict means the user did not reach a rich
+    // instant verdict (sparse or denied branch).
+    let profile: OnboardingV2Profile
+    let snapshot: OnboardingHealthSnapshot
+    let verdict: PredictionVerdict?
     let onBack: () -> Void
     let onPurchased: () -> Void
 
@@ -280,7 +291,7 @@ struct OnbV2Screen16Paywall: View {
 
         return OnbV2ScreenContainer(ambient: .mix) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 16, total: 16, onBack: onBack)
+                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -300,7 +311,7 @@ struct OnbV2Screen16Paywall: View {
                         Spacer().frame(height: 18)
 
                         VStack(spacing: 0) {
-                            ForEach(Array(Copy.OnboardingV2.watchListRows.enumerated()), id: \.offset) { idx, row in
+                            ForEach(Array(watchRows.enumerated()), id: \.element.id) { idx, row in
                                 OnbV2WatchRow(
                                     icon: row.icon,
                                     color: row.color,
@@ -321,6 +332,11 @@ struct OnbV2Screen16Paywall: View {
                         )
 
                         Spacer().frame(height: 18)
+
+                        if productsLoaded {
+                            trialTimeline(trialDays: trialDays)
+                            Spacer().frame(height: 18)
+                        }
 
                         if productsLoaded {
                             VStack(spacing: 10) {
@@ -429,6 +445,129 @@ struct OnbV2Screen16Paywall: View {
         .task {
             if SubscriptionManager.shared.products.isEmpty {
                 await SubscriptionManager.shared.loadProducts()
+            }
+        }
+    }
+
+    // MARK: - Watch list (built from the user's real answers + the read)
+
+    /// The watch list is personal: one row per the user's own goals and
+    /// symptoms (their words, their icons), the single concrete weekday dip the
+    /// read already found, and a closing weekly-cadence row. No hardcoded
+    /// metrics, no invented "Sunday dip".
+    private var watchRows: [Copy.OnboardingV2.WatchListRow] {
+        var rows: [Copy.OnboardingV2.WatchListRow] = []
+
+        // Goals first: each carries its own icon and accent from the goal copy.
+        for goal in profile.goals {
+            guard let copy = Copy.OnboardingV2.goalCopy[goal] else { continue }
+            rows.append(.init(
+                id: "goal_\(goal.rawValue)",
+                icon: copy.icon,
+                color: copy.accent,
+                label: copy.title,
+                sub: Copy.OnboardingV2.watchRowGoalSub
+            ))
+        }
+
+        // Then symptoms the user flagged ("Nothing major" is not a watch item).
+        for symptom in profile.symptoms where symptom != .none {
+            guard let copy = Copy.OnboardingV2.symptomCopy[symptom] else { continue }
+            rows.append(.init(
+                id: "symptom_\(symptom.rawValue)",
+                icon: copy.icon,
+                color: OnbV2.teal,
+                label: copy.label,
+                sub: Copy.OnboardingV2.watchRowGoalSub
+            ))
+        }
+
+        // The one concrete pattern from the read: prefer the verdict's weekday
+        // (the confirmed driver), else the snapshot's worst HRV weekday.
+        let patternWeekday = verdict?.weekday ?? snapshot.hrvWorstWeekday
+        if let name = OnbHealthFormat.weekdayName(patternWeekday) {
+            rows.append(.init(
+                id: "weekday",
+                icon: "calendar",
+                color: OnbV2.amber,
+                label: Copy.OnboardingV2.watchWeekdayLabel(weekday: name),
+                sub: Copy.OnboardingV2.watchWeekdaySub
+            ))
+        }
+
+        // Closing row: the weekly cadence the subscription buys.
+        rows.append(.init(
+            id: "weekly",
+            icon: "sparkles",
+            color: OnbV2.blue,
+            label: Copy.OnboardingV2.watchWeeklyLabel,
+            sub: Copy.OnboardingV2.watchWeeklySub
+        ))
+
+        return rows
+    }
+
+    // MARK: - Trial timeline (today -> reminder -> renewal)
+
+    /// Three-node timeline derived from the live StoreKit intro-offer length.
+    /// `trialDays` is 0 when StoreKit has not surfaced an intro offer; the
+    /// reminder and renewal nodes then fall back to a neutral 7-day shape so
+    /// the graphic never shows day 0 or a negative reminder.
+    private func trialTimeline(trialDays: Int) -> some View {
+        let total = trialDays > 0 ? trialDays : 7
+        // Reminder lands two days before renewal, but never before day 1.
+        let remindDay = max(1, total - 2)
+        let nodes: [(day: Int, title: String, sub: String, filled: Bool)] = [
+            (0, Copy.OnboardingV2.s16TimelineToday, Copy.OnboardingV2.s16TimelineTodaySub, true),
+            (remindDay, Copy.OnboardingV2.s16TimelineRemind, Copy.OnboardingV2.s16TimelineRemindSub, false),
+            (total, Copy.OnboardingV2.s16TimelineRenew, Copy.OnboardingV2.s16TimelineRenewSub, false)
+        ]
+
+        return ZStack(alignment: .topLeading) {
+            LinearGradient(
+                colors: [OnbV2.blue, OnbV2.blue.opacity(0.1)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(width: 2)
+            .clipShape(RoundedRectangle(cornerRadius: 1))
+            .padding(.leading, 7)
+
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(nodes, id: \.day) { node in
+                    HStack(alignment: .top, spacing: 14) {
+                        ZStack {
+                            if node.filled {
+                                Circle()
+                                    .stroke(OnbV2.blue.opacity(0.2), lineWidth: 4)
+                                    .frame(width: 24, height: 24)
+                            }
+                            Circle()
+                                .fill(node.filled ? OnbV2.blue : OnbV2.bg)
+                                .frame(width: 16, height: 16)
+                            Circle()
+                                .stroke(OnbV2.blue, lineWidth: 2)
+                                .frame(width: 16, height: 16)
+                        }
+                        .frame(width: 16, height: 16)
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(Copy.OnboardingV2.s16TimelineDay(node.day))
+                                .font(.system(size: 11, weight: .semibold))
+                                .tracking(0.7)
+                                .foregroundStyle(OnbV2.blue)
+                                .textCase(.uppercase)
+                            Text(node.title)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(OnbV2.fg)
+                            Text(node.sub)
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(OnbV2.fg3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, -2)
+                    }
+                }
             }
         }
     }

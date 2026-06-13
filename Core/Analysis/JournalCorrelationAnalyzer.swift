@@ -103,8 +103,10 @@ struct JournalCorrelationAnalyzer {
 
     // MARK: - Minimum Data Points
 
-    /// Minimum number of paired data points required to compute a correlation
-    static let minimumDataPoints = 14
+    /// Minimum number of paired data points required to compute a correlation.
+    /// Shared with the onboarding verdict engine so both surfaces judge the
+    /// same claim against the same evidence bar.
+    static let minimumDataPoints = InsightConfig.Correlation.minPairedDays
 
     // MARK: - Analysis
 
@@ -150,9 +152,11 @@ struct JournalCorrelationAnalyzer {
 
             guard journalValues.count >= minimumDataPoints else { continue }
 
-            // Compute Pearson correlation
+            // Compute Pearson correlation. The old 0.15 gate sat below the
+            // noise floor at n=14, so random data cleared it; confirmR is the
+            // significance threshold (critical r at df=12, p<0.05).
             let r = pearsonCorrelation(x: journalValues, y: healthValues)
-            guard abs(r) >= 0.15 else { continue }
+            guard abs(r) >= InsightConfig.Correlation.confirmR else { continue }
 
             // Compute conditional effect: above-median vs below-median behavior
             let effect = computeMedianSplitEffect(
@@ -160,7 +164,7 @@ struct JournalCorrelationAnalyzer {
                 healthValues: healthValues,
                 metric: pair.metric
             )
-            guard abs(effect.percentDiff) >= 5.0 else { continue }
+            guard abs(effect.percentDiff) >= InsightConfig.Correlation.medianSplitFloorPercent else { continue }
 
             // Generate personalized insight string
             let insight = generateInsight(

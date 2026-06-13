@@ -54,7 +54,7 @@ struct OnbV2Screen2Promise: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 2, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 2, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -71,6 +71,9 @@ struct OnbV2Screen2Promise: View {
 
                         Spacer().frame(height: 28)
 
+                        // Empowerment leads, connection next, privacy last as a
+                        // footnote (onboarding framing: what the user gains is
+                        // the headline, privacy reassures but never leads).
                         VStack(spacing: 14) {
                             OnbV2PromiseCard(
                                 icon: "sparkles",
@@ -79,16 +82,16 @@ struct OnbV2Screen2Promise: View {
                                 accent: OnbV2.blue
                             )
                             OnbV2PromiseCard(
-                                icon: "lock.fill",
-                                title: Copy.OnboardingV2.s2Card2Title,
-                                bodyText: Copy.OnboardingV2.s2Card2Body,
-                                accent: OnbV2.green
-                            )
-                            OnbV2PromiseCard(
                                 icon: "heart.fill",
                                 title: Copy.OnboardingV2.s2Card3Title,
                                 bodyText: Copy.OnboardingV2.s2Card3Body,
                                 accent: OnbV2.rose
+                            )
+                            OnbV2PromiseCard(
+                                icon: "lock.fill",
+                                title: Copy.OnboardingV2.s2Card2Title,
+                                bodyText: Copy.OnboardingV2.s2Card2Body,
+                                accent: OnbV2.green
                             )
                         }
                     }
@@ -121,7 +124,7 @@ struct OnbV2Screen3About: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 3, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 3, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -269,7 +272,7 @@ struct OnbV2Screen4Goal: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 4, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 4, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -348,7 +351,7 @@ struct OnbV2Screen5Symptoms: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 5, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 5, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -413,7 +416,7 @@ struct OnbV2Screen6Activity: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 6, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 7, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -471,7 +474,7 @@ struct OnbV2Screen7Wearable: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 7, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 8, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {

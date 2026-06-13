@@ -90,6 +90,17 @@ final class OnboardingV2Profile {
     }
 }
 
+// MARK: - Flow constants
+
+/// Single source of truth for the progress-bar denominator. The three router
+/// screens (verdict / cliffhanger / journalFirst) are mutually exclusive and
+/// hide their progress bar, so they count as the one linear step they replace.
+/// Linear steps: welcome, promise, about, goal, symptoms, prediction, activity,
+/// wearable, bridge, scan, [router], heart, sleep, hrv, preview, signIn, paywall.
+enum OnbV2Flow {
+    static let total = 17
+}
+
 // MARK: - V2 design tokens
 
 enum OnbV2 {

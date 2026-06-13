@@ -10,7 +10,7 @@ struct OnbV2Screen8Bridge: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .mix) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 8, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 9, total: OnbV2Flow.total, onBack: onBack)
 
                 Spacer(minLength: 0)
 
@@ -111,7 +111,7 @@ struct OnbV2Screen10Scan: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 10, total: 16, onBack: nil, hideProgress: false)
+                OnbV2TopBar(step: 10, total: OnbV2Flow.total, onBack: nil, hideProgress: false)
 
                 Spacer().frame(height: 8)
 
@@ -333,7 +333,7 @@ struct OnbV2Screen11Heart: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .rose) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 11, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -482,7 +482,7 @@ struct OnbV2Screen12Sleep: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 12, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 13, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -676,7 +676,7 @@ struct OnbV2Screen13HRV: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blue) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 13, total: 16, onBack: onBack)
+                OnbV2TopBar(step: 14, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -821,5 +821,371 @@ struct OnbV2Screen13HRV: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Screen — Prediction (pre-registered claim)
+
+/// Shown after the symptom capture, before the HealthKit ask. States the claim
+/// Laso will test, built from the user's own goal + symptom words, with no
+/// timing promise — the data branch decides when the answer is ready.
+struct OnbV2ScreenPrediction: View {
+    let prediction: PreRegisteredPrediction
+    let onBack: () -> Void
+    let onCTA: () -> Void
+
+    var body: some View {
+        OnbV2ScreenContainer(ambient: .mix) {
+            VStack(spacing: 0) {
+                OnbV2TopBar(step: 6, total: OnbV2Flow.total, onBack: onBack)
+
+                Spacer(minLength: 0)
+
+                OnbV2HeartHero(size: 180, color: OnbV2.blue)
+
+                Spacer().frame(height: 28)
+
+                Text(Copy.OnboardingV2.predictionEyebrow)
+                    .font(.system(size: 12, weight: .bold))
+                    .tracking(1.6)
+                    .foregroundStyle(OnbV2.blue)
+
+                Spacer().frame(height: 12)
+
+                Text(Copy.OnboardingV2.predictionTitle(
+                    claim: Copy.OnboardingV2.metricClaimPhrase(prediction.metric),
+                    outcome: outcomePhrase
+                ))
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(OnbV2.fg)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, OnbV2.bodyPadH)
+
+                Spacer().frame(height: 16)
+
+                Text(Copy.OnboardingV2.predictionFootnote)
+                    .font(.system(size: 14))
+                    .foregroundStyle(OnbV2.fg3)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 320)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+
+                Spacer(minLength: 0)
+
+                OnbV2PrimaryCTA(Copy.OnboardingV2.predictionCTA, action: onCTA)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+                    .padding(.bottom, 20)
+            }
+        }
+        .onAppear {
+            AnalyticsBackend.provider.capture(
+                event: "promise_shown",
+                properties: ["metric": prediction.metric.rawValue]
+            )
+        }
+    }
+
+    /// The user's own symptom or goal words, lowercased so it reads naturally
+    /// inside the sentence. Falls back to a neutral phrase if somehow empty.
+    private var outcomePhrase: String {
+        let phrase = prediction.userPhrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return phrase.isEmpty ? Copy.OnboardingV2.metricWatchLabel(prediction.metric) : phrase.lowercasedFirst
+    }
+}
+
+// MARK: - Screen — Verdict (rich branch)
+
+/// Instant verdict on the pre-registered prediction, shown only when the
+/// snapshot is data-rich. Confirmed, refuted, and inconclusive each get an
+/// honest framing. Side discoveries appear under a mandatory label and never
+/// replace the prediction's answer.
+struct OnbV2ScreenVerdict: View {
+    let prediction: PreRegisteredPrediction
+    let verdict: PredictionVerdict
+    let onContinue: () -> Void
+
+    var body: some View {
+        OnbV2ScreenContainer(ambient: ambient) {
+            VStack(spacing: 0) {
+                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        VStack(spacing: 8) {
+                            Text(eyebrow)
+                                .font(.system(size: 12, weight: .bold))
+                                .tracking(1.6)
+                                .foregroundStyle(accent)
+                            Text(title)
+                                .font(.system(size: 30, weight: .bold))
+                                .foregroundStyle(OnbV2.fg)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 24)
+
+                        Text(bodyText)
+                            .font(.system(size: 17))
+                            .foregroundStyle(OnbV2.fg2)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                            .frame(maxWidth: 340)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if let side = sideDiscoveryText {
+                            Text(side)
+                                .font(.system(size: 13.5))
+                                .foregroundStyle(OnbV2.fg3)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 320)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 4)
+                        }
+                    }
+                    .padding(.horizontal, OnbV2.bodyPadH)
+                    .padding(.bottom, 16)
+                }
+
+                OnbV2PrimaryCTA(Copy.OnboardingV2.verdictCTA, action: onContinue)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+                    .padding(.bottom, 20)
+            }
+        }
+        .onAppear {
+            AnalyticsBackend.provider.capture(
+                event: "verdict_delivered",
+                properties: [
+                    "zone": verdict.zone.rawValue,
+                    "magnitude_band": verdict.magnitude?.band.rawValue ?? "",
+                    "weekday": verdict.weekday ?? -1,
+                    "nights_remaining": verdict.nightsRemaining ?? -1,
+                    "side_discovery_count": verdict.sideDiscoveries.count
+                ]
+            )
+        }
+    }
+
+    private var ambient: OnbV2Ambient {
+        switch verdict.zone {
+        case .confirmed:    return .blue
+        case .refuted:      return .blue
+        case .inconclusive: return .mix
+        }
+    }
+
+    private var accent: Color {
+        switch verdict.zone {
+        case .confirmed:    return OnbV2.blue
+        case .refuted:      return OnbV2.green
+        case .inconclusive: return OnbV2.amber
+        }
+    }
+
+    private var eyebrow: String {
+        switch verdict.zone {
+        case .confirmed:    return Copy.OnboardingV2.verdictConfirmedEyebrow
+        case .refuted:      return Copy.OnboardingV2.verdictRefutedEyebrow
+        case .inconclusive: return Copy.OnboardingV2.verdictInconclusiveEyebrow
+        }
+    }
+
+    private var title: String {
+        switch verdict.zone {
+        case .confirmed:    return Copy.OnboardingV2.verdictConfirmedTitle
+        case .refuted:      return Copy.OnboardingV2.verdictRefutedTitle
+        case .inconclusive: return Copy.OnboardingV2.verdictInconclusiveTitle
+        }
+    }
+
+    private var bodyText: String {
+        switch verdict.zone {
+        case .confirmed:
+            let magnitude = verdict.magnitude.map {
+                Copy.OnboardingV2.bandPhrase(band: $0.band, value: $0.value)
+            } ?? Copy.OnboardingV2.metricWatchLabel(prediction.metric)
+            let weekday = OnbHealthFormat.weekdayName(verdict.weekday) ?? ""
+            return Copy.OnboardingV2.verdictConfirmedBody(
+                metric: Copy.OnboardingV2.metricWatchLabel(prediction.metric),
+                magnitude: magnitude,
+                weekday: weekday,
+                outcome: outcomePhrase
+            )
+        case .refuted:
+            return Copy.OnboardingV2.verdictRefutedBody(
+                outcome: outcomePhrase,
+                watch: Copy.OnboardingV2.metricWatchLabel(prediction.metric)
+            )
+        case .inconclusive:
+            // nightsRemaining is nil once the data bar is met; fall back to the
+            // minimum data bar so copy never shows "0 more nights".
+            let nights = verdict.nightsRemaining ?? InsightConfig.GroupDifference.minSamples
+            return Copy.OnboardingV2.verdictInconclusiveBody(nights: nights)
+        }
+    }
+
+    /// First side discovery only, under the mandatory label. Never shown for a
+    /// refuted verdict (the honest pivot already names the metric to watch).
+    private var sideDiscoveryText: String? {
+        guard verdict.zone != .refuted,
+              let side = verdict.sideDiscoveries.first,
+              let weekday = OnbHealthFormat.weekdayName(side.weekday) else { return nil }
+        return Copy.OnboardingV2.verdictSideDiscovery(
+            metric: Copy.OnboardingV2.metricWatchLabel(side.metric),
+            weekday: weekday
+        )
+    }
+
+    private var outcomePhrase: String {
+        let phrase = prediction.userPhrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return phrase.isEmpty ? Copy.OnboardingV2.metricWatchLabel(prediction.metric) : phrase.lowercasedFirst
+    }
+}
+
+// MARK: - Screen — Cliffhanger (sparse branch)
+
+/// Shown when Health is granted but the predicted metric has too little data
+/// for a verdict. Promises a real answer in N nights and offers a contextual
+/// notification opt-in. The system permission prompt fires only after the user
+/// taps yes.
+struct OnbV2ScreenCliffhanger: View {
+    let nightsRemaining: Int
+    /// Fires the system notification prompt; returns the granted state.
+    let onNotifyYes: () async -> Void
+    let onContinue: () -> Void
+
+    @State private var notifyHandled = false
+
+    var body: some View {
+        OnbV2ScreenContainer(ambient: .blue) {
+            VStack(spacing: 0) {
+                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
+
+                Spacer(minLength: 0)
+
+                OnbV2HeartHero(size: 180, color: OnbV2.blue)
+
+                Spacer().frame(height: 28)
+
+                Text(Copy.OnboardingV2.cliffhangerEyebrow)
+                    .font(.system(size: 12, weight: .bold))
+                    .tracking(1.6)
+                    .foregroundStyle(OnbV2.blue)
+
+                Spacer().frame(height: 12)
+
+                Text(Copy.OnboardingV2.cliffhangerTitle)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(OnbV2.fg)
+                    .multilineTextAlignment(.center)
+
+                Spacer().frame(height: 14)
+
+                Text(Copy.OnboardingV2.cliffhangerBody(nights: nightsRemaining))
+                    .font(.system(size: 16))
+                    .foregroundStyle(OnbV2.fg2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 320)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+
+                Spacer(minLength: 0)
+
+                VStack(spacing: 12) {
+                    Text(Copy.OnboardingV2.cliffhangerNotifyTitle)
+                        .font(.system(size: 14))
+                        .foregroundStyle(OnbV2.fg2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    OnbV2PrimaryCTA(Copy.OnboardingV2.cliffhangerNotifyYes, isEnabled: !notifyHandled) {
+                        notifyHandled = true
+                        Task {
+                            await onNotifyYes()
+                            onContinue()
+                        }
+                    }
+
+                    OnbV2GhostCTA(Copy.OnboardingV2.cliffhangerSkip, action: onContinue)
+                }
+                .padding(.horizontal, OnbV2.bodyPadH)
+                .padding(.bottom, 20)
+            }
+        }
+        .onAppear {
+            AnalyticsBackend.provider.capture(
+                event: "promise_shown",
+                properties: ["branch": "cliffhanger", "nights_remaining": nightsRemaining]
+            )
+        }
+    }
+}
+
+// MARK: - Screen — Journal first (denied branch)
+
+/// Shown when no Health data is available. Pitches the morning check in and
+/// journal so the user can still benefit, with no instant verdict.
+struct OnbV2ScreenJournalFirst: View {
+    let onContinue: () -> Void
+
+    var body: some View {
+        OnbV2ScreenContainer(ambient: .rose) {
+            VStack(spacing: 0) {
+                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
+
+                Spacer(minLength: 0)
+
+                OnbV2HeartHero(size: 180, color: OnbV2.rose)
+
+                Spacer().frame(height: 28)
+
+                Text(Copy.OnboardingV2.journalFirstEyebrow)
+                    .font(.system(size: 12, weight: .bold))
+                    .tracking(1.6)
+                    .foregroundStyle(OnbV2.rose)
+
+                Spacer().frame(height: 12)
+
+                Text(Copy.OnboardingV2.journalFirstTitle)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(OnbV2.fg)
+                    .multilineTextAlignment(.center)
+
+                Spacer().frame(height: 14)
+
+                Text(Copy.OnboardingV2.journalFirstBody)
+                    .font(.system(size: 16))
+                    .foregroundStyle(OnbV2.fg2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 320)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+
+                Spacer(minLength: 0)
+
+                OnbV2PrimaryCTA(Copy.OnboardingV2.journalFirstCTA, action: onContinue)
+                    .padding(.horizontal, OnbV2.bodyPadH)
+                    .padding(.bottom, 20)
+            }
+        }
+        .onAppear {
+            AnalyticsBackend.provider.capture(
+                event: "promise_shown",
+                properties: ["branch": "journal_first"]
+            )
+        }
+    }
+}
+
+// MARK: - String helper
+
+private extension String {
+    /// Lowercases only the first character so a user phrase like "Tired
+    /// mornings" reads naturally mid-sentence without touching acronyms later
+    /// in the string.
+    var lowercasedFirst: String {
+        guard let first else { return self }
+        return first.lowercased() + String(dropFirst())
     }
 }

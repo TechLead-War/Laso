@@ -55,6 +55,10 @@ final class NotificationManager {
         if identifier == id.dailySummary { return "daily_summary" }
         if identifier == id.eveningSummary { return "evening_summary" }
         if identifier == id.windDown { return "wind_down" }
+        if identifier == id.answerReady { return "answer_ready" }
+        if identifier == id.repermission { return "repermission" }
+        if id.abandonmentAll.contains(identifier) { return "onboarding_abandonment" }
+        if id.trialAll.contains(identifier) { return "trial" }
 
         if identifier.hasPrefix(id.triagePrefix) { return "safety_triage" }
         if identifier.hasPrefix(id.spikePrefix) { return "spike" }

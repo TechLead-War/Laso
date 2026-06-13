@@ -562,5 +562,81 @@ extension Copy {
 
         static var permissionRationaleTitle: String { RemoteConfigManager.shared.copyString("copy_notifications_permission_rationale_title", default: "Turn on notifications") }
         static var permissionRationaleBody: String { RemoteConfigManager.shared.copyString("copy_notifications_permission_rationale_body", default: "Get a heads up on heart rate, sleep, and weekly progress so you never miss a meaningful change.") }
+
+        // MARK: - Onboarding Abandonment (Journey 1)
+        //
+        // Three reminders if the user drops out mid-onboarding. Copy restates
+        // the progress already made and the answer still waiting. No guilt.
+
+        static var abandonment2hTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_2h_title", default: "You are almost set up"), max: titleMax) }
+        static var abandonment2hBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_2h_body", default: "Your answer is one step away. Pick up where you left off and see what your body is telling you."), max: bodyMax) }
+
+        static var abandonment24hTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_24h_title", default: "Your first pattern is waiting"), max: titleMax) }
+        static var abandonment24hBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_24h_body", default: "Finish setting up and we will start checking the link you asked about."), max: bodyMax) }
+
+        static var abandonment72hTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_72h_title", default: "Still here when you are ready"), max: titleMax) }
+        static var abandonment72hBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_abandonment_72h_body", default: "It takes a minute to finish. Then we watch for the pattern you came here to understand."), max: bodyMax) }
+
+        // MARK: - Trial Lifecycle (Journey 2 + 3)
+        //
+        // Day-1 getting started, day-3 insight nudge, and a reminder the day
+        // before renewal. Timing is derived from the live StoreKit trial length
+        // by the scheduler, never hardcoded here.
+
+        static var trialGettingStartedTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_getting_started_title", default: "Your first morning check-in"), max: titleMax) }
+        static var trialGettingStartedBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_getting_started_body", default: "Log how you feel this morning. It is the fastest way to start building your pattern."), max: bodyMax) }
+
+        static var trialInsightNudgeTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_insight_nudge_title", default: "A pattern is forming"), max: titleMax) }
+        static var trialInsightNudgeBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_insight_nudge_body", default: "A few days in, your data is starting to tell a story. Open the app to see what is taking shape."), max: bodyMax) }
+
+        /// `daysLeft` is computed from the live trial end date by the scheduler.
+        static func trialRenewalTitle(daysLeft: Int) -> String {
+            if daysLeft <= 1 {
+                return clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_renewal_title_last", default: "Your trial ends tomorrow"), max: titleMax)
+            }
+            return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_trial_renewal_title", default: "%d days left in your trial"), daysLeft), max: titleMax)
+        }
+        static var trialRenewalBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_renewal_body", default: "Keep every weekly insight by staying on. Manage your plan anytime in settings."), max: bodyMax) }
+
+        /// Win-back after the trial expires (Journey 3). References the user's
+        /// own tracked focus so the nudge is about their question, not a generic
+        /// pitch. `focus` is the focus-area label supplied by the scheduler.
+        static func trialWinbackTitle(focus: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_title", default: "Your %@ answer is still here"), focus), max: titleMax)
+        }
+        static func trialWinbackBody(focus: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_body", default: "Come back to see what your %@ data revealed while you were away."), focus), max: bodyMax)
+        }
+        /// Win-back when no specific focus is stored.
+        static var trialWinbackGenericTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_generic_title", default: "Your insights are still here"), max: titleMax) }
+        static var trialWinbackGenericBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_generic_body", default: "Come back to see what your body data revealed while you were away."), max: bodyMax) }
+
+        // MARK: - Answer Ready (Journey 4)
+        //
+        // The cliffhanger payoff. Fires once when an inconclusive prediction
+        // matures to a real verdict. Strongest, most specific push.
+
+        /// `phrase` is the user's own goal or symptom words from onboarding.
+        static func answerReadyTitle(phrase: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_answer_ready_title", default: "Your answer is ready"), phrase), max: titleMax)
+        }
+        static func answerReadyBody(phrase: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_answer_ready_body", default: "We have enough data on your %@ now. Open the app to see what it shows."), phrase), max: bodyMax)
+        }
+
+        // MARK: - Denied-Branch Re-permission (Journey 5)
+        //
+        // After 3 morning check-ins on the journal-first branch, one push that
+        // restates the user's OWN logged words and offers to check the data.
+        // Never an invented hypothesis.
+
+        /// `phrase` and `count` come from the user's logged check-ins; the copy
+        /// quotes their words verbatim, e.g. "waking up tired" + 3.
+        static func repermissionTitle(count: Int) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_repermission_title", default: "%d mornings logged"), count), max: titleMax)
+        }
+        static func repermissionBody(phrase: String, count: Int) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_repermission_body", default: "You logged %@ %d mornings. Want to see if your health data explains it?"), phrase, count), max: bodyMax)
+        }
     }
 }
