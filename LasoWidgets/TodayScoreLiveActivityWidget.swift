@@ -15,7 +15,15 @@ struct TodayScoreLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    CoachOrbRing(state: context.state, size: 62)
+                    CoachOrbRing(state: context.state, size: 66)
+                        .background {
+                            // Soft band glow behind the island ring (radial, not blur).
+                            RadialGradient(
+                                colors: [bandColor(for: context.state).opacity(0.22), .clear],
+                                center: .center, startRadius: 6, endRadius: 54
+                            )
+                            .scaleEffect(1.7)
+                        }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     CoachTrailingStack(state: context.state)
@@ -31,7 +39,7 @@ struct TodayScoreLiveActivityWidget: Widget {
                         .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    CoachActionBar(kind: context.state.actionKind, tint: bandColor(for: context.state))
+                    CoachActionBar(kind: context.state.actionKind, tint: bandColor(for: context.state), fullWidth: true)
                         .padding(.top, 2)
                 }
             } compactLeading: {
@@ -40,7 +48,7 @@ struct TodayScoreLiveActivityWidget: Widget {
                     .widgetURL(Self.todaysActionURL)
             } compactTrailing: {
                 Text("\(context.state.overallScore)")
-                    .font(.headline.weight(.bold).monospacedDigit())
+                    .font(.title3.weight(.bold).monospacedDigit())
                     .foregroundStyle(scoreTint(for: context.state))
                     .contentTransition(.numericText())
                     .accessibilityLabel(scoreAccessibilityLabel(for: context.state))
@@ -64,11 +72,21 @@ private struct CoachLockScreenView: View {
     var body: some View {
         let tint = bandColor(for: state)
 
-        VStack(spacing: 8) {
-            HStack(alignment: .center, spacing: 14) {
-                CoachOrbRing(state: state, size: 64)
+        VStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 16) {
+                // GLOW HERO: a large score ring with a soft band-colour radial bloom
+                // behind it (lock screen only). RadialGradient, not .blur — widgets do
+                // not render blur. Single soft radial <=20% opacity, no white halo.
+                CoachOrbRing(state: state, size: 78)
+                    .background {
+                        RadialGradient(
+                            colors: [tint.opacity(0.22), tint.opacity(0)],
+                            center: .center, startRadius: 6, endRadius: 64
+                        )
+                        .scaleEffect(1.7)
+                    }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
                         Image(systemName: state.mode.symbolName)
                             .font(.caption2.weight(.semibold))
@@ -90,31 +108,49 @@ private struct CoachLockScreenView: View {
                                 .minimumScaleFactor(0.6)
                         }
                     }
+                    // Hero insight — promoted to headline so it carries real weight.
                     Text(state.insight)
-                        .font(.subheadline.weight(.medium))
+                        .font(.headline.weight(.semibold))
                         .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                         .fixedSize(horizontal: false, vertical: true)
+                    // Supporting stat + weakest-pillar limiter, both demoted.
+                    HStack(spacing: 10) {
+                        if let hrv = state.hrvMs {
+                            Text("HRV \(hrv) ms")
+                                .font(.caption2.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(AppColour.textSecondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        if let pillar = state.weakestPillarScore {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                Text("\(state.weakestPillar) \(pillar)")
+                            }
+                            .font(.caption2.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(AppColour.warning)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        }
+                    }
                 }
 
                 Spacer(minLength: 4)
+            }
 
-                if state.actionKind != .noop {
-                    CoachActionBar(kind: state.actionKind, tint: tint)
-                        .layoutPriority(0)
-                }
+            // Full-width action below the hero row (matches the chosen Glow Hero look).
+            if state.actionKind != .noop {
+                CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true)
             }
 
             DayProgressStrip()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        // Pure-black card body. Score-band tint stays on the ring and the accent
-        // icon so colour signals the score state without washing the card grey.
+        .padding(14)
         .background(AppColour.surfaceBase)
-        .overlay(alignment: .topLeading) {
-            // 1px score-tint hairline at the top — subtle premium accent.
+        .overlay(alignment: .top) {
+            // 1px score-tint hairline at the top — the only chrome accent.
             Rectangle()
                 .fill(tint.opacity(0.55))
                 .frame(height: 1)
@@ -354,6 +390,9 @@ private struct MinimalModeBadge: View {
 private struct CoachActionBar: View {
     let kind: CoachActionKind
     let tint: Color
+    /// Full-width capsule in the expanded island bottom region (matches the
+    /// mockup's full-width action); content-hugging on the lock card right side.
+    var fullWidth: Bool = false
 
     var body: some View {
         switch kind {
@@ -382,6 +421,7 @@ private struct CoachActionBar: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+            .frame(maxWidth: fullWidth ? .infinity : nil)
             .background(tint.opacity(0.28), in: Capsule())
             .overlay(Capsule().strokeBorder(tint.opacity(0.55), lineWidth: 1))
         }
@@ -448,3 +488,37 @@ private func staleAgePhrase(_ state: TodayScoreActivityAttributes.ContentState) 
     let age = formatter.string(from: elapsed) ?? ""
     return String(format: TodayScoreCopy.staleAgeTemplate, age)
 }
+
+// MARK: - Xcode Previews (open this file, show the canvas to render the real output)
+
+#if DEBUG
+private func previewState(
+    _ score: Int, _ tint: TodayScoreTint, _ mode: CoachMode,
+    _ action: CoachActionKind, _ insight: String,
+    weakest: String = "Mobility", weakestScore: Int? = 69, hrv: Int? = 53, ageHours: Double = 0
+) -> TodayScoreActivityAttributes.ContentState {
+    .init(
+        overallScore: score, scoreTint: tint,
+        weakestPillar: weakest, weakestPillarScore: weakestScore,
+        steps: 6400, stepsGoal: 10000, hrvMs: hrv, restingHR: 57,
+        lastUpdated: Date(timeIntervalSinceNow: -ageHours * 3600),
+        mode: mode, heroValue: score, insight: insight, actionKind: action
+    )
+}
+
+#Preview("Lock Screen", as: .content, using: TodayScoreActivityAttributes(userName: "Ayush")) {
+    TodayScoreLiveActivityWidget()
+} contentStates: {
+    previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
+    previewState(61, .fair, .evening, .windDown, "Sleep is your limiter today. Wind down a little earlier.", weakest: "Sleep", weakestScore: 48, hrv: 44)
+    previewState(42, .poor, .morning, .breathe, "Low recovery. Keep it easy and breathe.", weakest: "HRV", weakestScore: 38, hrv: 38)
+    previewState(75, .good, .morning, .noop, "Open Laso to refresh. This reading is from yesterday.", ageHours: 22)
+}
+
+#Preview("Island Expanded", as: .dynamicIsland(.expanded), using: TodayScoreActivityAttributes(userName: "Ayush")) {
+    TodayScoreLiveActivityWidget()
+} contentStates: {
+    previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
+    previewState(42, .poor, .morning, .breathe, "Low recovery. Keep it easy and breathe.", weakest: "HRV", weakestScore: 38, hrv: 38)
+}
+#endif
