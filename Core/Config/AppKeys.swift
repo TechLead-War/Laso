@@ -125,6 +125,11 @@ enum AppKeys {
         /// Set once the trial-expired win-back push has been armed, so it is
         /// scheduled a single time per expiry rather than on every status refresh.
         static let winbackArmed = "laso.billing.winback_armed"
+
+        /// Set once the cancelled-but-active save push has been armed, so it
+        /// fires a single time per cancellation rather than on every status
+        /// refresh. Cleared when auto-renew is turned back on.
+        static let cancelledSaveArmed = "laso.billing.cancelled_save_armed"
     }
 
     // MARK: - Readiness

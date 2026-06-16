@@ -1014,3 +1014,143 @@ exports.appStoreServerNotificationsV2 = onRequest(
     res.status(200).send("ok");
   }
 );
+
+// ═══ iOS Uninstall Detection (silent push → Amplitude) ═══════════════════════
+//
+// iOS has no uninstall callback. The only signal is APNs: once an app is removed,
+// the next push to that token makes APNs report it "Unregistered" (410), which FCM
+// surfaces as `messaging/registration-token-not-registered`. So daily we send a
+// SILENT background push (content-available, no alert/sound) to every iOS token in
+// `device_tokens` (written by PushNotificationManager.swift, doc id = the token),
+// then read the per-message result.
+//
+// GOTCHA — this is an ESTIMATE, not an exact count. Apple's 2026 APNs changes made
+// the signal unreliable (some uninstall-tracking vendors dropped iOS for this in
+// Jan 2026), and the same error also fires for tokens invalidated by long
+// inactivity or device-side push reset. Treat `app_likely_uninstalled` as a churn
+// trend, never as a precise uninstall total.
+//
+// Dedup: insert_id = `uninstall_<sha256(token)>`, so a given install is counted at
+// most once. A reinstall mints a fresh token, so a later uninstall counts again.
+// Raw tokens are never logged or sent to Amplitude — only their hash.
+
+const UNINSTALL_TOKEN_PAGE = 450; // < 500 so it fits one Firestore batch + one sendEach call.
+
+exports.detectIosUninstalls = onSchedule(
+  {
+    schedule: "every 24 hours",
+    timeZone: "UTC",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+    region: "us-central1",
+  },
+  async () => {
+    const db = admin.firestore();
+    const messaging = admin.messaging();
+
+    let scanned = 0;
+    let unregistered = 0; // likely uninstalled — token deleted + Amplitude event
+    let malformed = 0;    // invalid token shape — deleted, NO event (not a user signal)
+    let otherErrors = 0;  // transient/unknown — left in place to retry next run
+
+    let cursor = null;
+    // Page by document id (the token) so the cursor is stable across the deletes
+    // we issue mid-loop. Cap iterations as a runaway backstop.
+    for (let page = 0; page < 500; page++) {
+      let q = db.collection("device_tokens")
+        .where("platform", "==", "ios")
+        .orderBy(admin.firestore.FieldPath.documentId())
+        .limit(UNINSTALL_TOKEN_PAGE);
+      if (cursor) q = q.startAfter(cursor);
+
+      const snap = await q.get();
+      if (snap.empty) break;
+      cursor = snap.docs[snap.docs.length - 1].id;
+      scanned += snap.size;
+
+      const docs = snap.docs;
+      const messages = docs.map((d) => ({
+        token: d.id,
+        apns: {
+          // Background push: priority 5 + push-type background is what APNs requires
+          // for a silent content-available message, and it never alerts the user.
+          headers: { "apns-priority": "5", "apns-push-type": "background" },
+          payload: { aps: { "content-available": 1 } },
+        },
+      }));
+
+      let resp;
+      try {
+        resp = await messaging.sendEach(messages);
+      } catch (err) {
+        // Whole-batch failure (e.g. transient FCM outage): skip this page, retry next run.
+        otherErrors += messages.length;
+        logger.error("detectIosUninstalls sendEach failed", { message: err.message, page });
+        continue;
+      }
+
+      const deleteBatch = db.batch();
+      const amplitudeEvents = [];
+      const now = Date.now();
+
+      resp.responses.forEach((r, i) => {
+        if (r.success) return;
+        const code = r.error?.code || "";
+        const doc = docs[i];
+        if (code === "messaging/registration-token-not-registered") {
+          unregistered++;
+          deleteBatch.delete(doc.ref);
+          const data = doc.data() || {};
+          if (typeof data.uid === "string" && data.uid.length > 0) {
+            const tokenHash = sha256Hex(doc.id);
+            amplitudeEvents.push({
+              user_id: data.uid,
+              event_type: "app_likely_uninstalled",
+              time: now,
+              insert_id: `uninstall_${tokenHash}`, // count each install at most once
+              event_properties: {
+                token_hash: tokenHash,
+                app_version: data.appVersion || null,
+                locale: data.locale || null,
+                timezone: data.timezone || null,
+                platform: "ios",
+                detection: "fcm_silent_push_unregistered",
+              },
+            });
+          }
+        } else if (code === "messaging/invalid-registration-token") {
+          // Malformed token — junk row, prune it but it is not a churn signal.
+          malformed++;
+          deleteBatch.delete(doc.ref);
+        } else {
+          otherErrors++;
+        }
+      });
+
+      if (unregistered + malformed > 0) {
+        try { await deleteBatch.commit(); }
+        catch (err) { logger.error("detectIosUninstalls delete batch failed", { message: err.message, page }); }
+      }
+      if (amplitudeEvents.length > 0) {
+        try {
+          const apiResp = await fetch(AMPLITUDE_HTTP_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ api_key: AMPLITUDE_API_KEY, events: amplitudeEvents }),
+          });
+          if (!apiResp.ok) {
+            logger.error("detectIosUninstalls Amplitude post failed", {
+              status: apiResp.status, body: (await apiResp.text()).slice(0, 200),
+            });
+          }
+        } catch (err) {
+          logger.error("detectIosUninstalls Amplitude post error", { message: err.message });
+        }
+      }
+
+      if (snap.size < UNINSTALL_TOKEN_PAGE) break;
+    }
+
+    logger.info("detectIosUninstalls ran", { scanned, unregistered, malformed, otherErrors });
+  }
+);

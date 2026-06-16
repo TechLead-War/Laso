@@ -84,6 +84,55 @@ enum TrialScheduler {
         }
     }
 
+    /// One welcome push after a paid activation that did NOT go through a free
+    /// trial. Fired a couple of hours after purchase so it reads as a
+    /// confirmation, not an upsell. Idempotent via the fixed identifier.
+    static func scheduleNonTrialWelcome() {
+        NotificationManager.shared.scheduleNotification(
+            title: Copy.Notifications.nonTrialWelcomeTitle,
+            body: Copy.Notifications.nonTrialWelcomeBody,
+            identifier: AppConstants.NotificationID.nonTrialWelcome,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: AppConstants.Timing.nonTrialWelcomeDelay, repeats: false)
+        )
+    }
+
+    /// One save push for a subscriber who turned off auto-renew but still has
+    /// access. Fired about a day before the period ends, or in an hour when
+    /// under a day remains, so it lands while they can still keep the plan.
+    /// `focus` names the user's own tracked focus; nil uses the generic copy.
+    static func scheduleCancelledSave(focus: String?, expiration: Date) {
+        let manager = NotificationManager.shared
+        let now = Date()
+        let lead = Date.cal.date(byAdding: .second, value: -Int(AppConstants.Timing.cancelledSaveLeadTime), to: expiration) ?? now
+        let trigger: UNNotificationTrigger
+        if lead > now {
+            trigger = UNCalendarNotificationTrigger(dateMatching: morningComponents(for: lead), repeats: false)
+        } else {
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: AppConstants.Timing.cancelledSaveMinDelay, repeats: false)
+        }
+        if let focus, !focus.isEmpty {
+            manager.scheduleNotification(
+                title: Copy.Notifications.cancelledSaveTitle(focus: focus),
+                body: Copy.Notifications.cancelledSaveBody(focus: focus),
+                identifier: AppConstants.NotificationID.cancelledSave,
+                trigger: trigger
+            )
+        } else {
+            manager.scheduleNotification(
+                title: Copy.Notifications.cancelledSaveGenericTitle,
+                body: Copy.Notifications.cancelledSaveGenericBody,
+                identifier: AppConstants.NotificationID.cancelledSave,
+                trigger: trigger
+            )
+        }
+    }
+
+    /// Retire the pending save push, e.g. when the user turns auto-renew back on.
+    static func cancelCancelledSave() {
+        UNUserNotificationCenter.current()
+            .removePendingNotificationRequests(withIdentifiers: [AppConstants.NotificationID.cancelledSave])
+    }
+
     /// Cancel every trial-lifecycle and win-back notification. Called on
     /// purchase so a paying user never sees a trial nudge.
     static func cancelAll() {

@@ -1367,6 +1367,30 @@ final class AppAnalytics {
         setUserProperty("subscription_status", value: "expired")
     }
 
+    /// Call when a paid activation happens WITHOUT a free trial (a direct
+    /// purchase, or a re-subscribe with no new trial). Marks the cohort so
+    /// "non-trial activated" users are queryable, and records acquisition path.
+    func trackNonTrialActivation(productID: String, billingPeriod: String) {
+        logEvent("non_trial_activation", parameters: [
+            "product_id": productID,
+            "billing_period": billingPeriod,
+            "days_since_install": session.daysSinceInstall
+        ])
+        setUserProperty("acquired_via_trial", value: "no")
+    }
+
+    /// Call when a still-active subscription is found with auto-renew turned off
+    /// (cancelled but not yet lapsed). Client-inferred from StoreKit renewal
+    /// status on app open; authoritative cancel truth still needs a store webhook.
+    func trackSubscriptionCancelDetected(daysUntilExpiry: Int) {
+        logEvent("subscription_cancel_detected", parameters: [
+            "days_until_expiry": daysUntilExpiry,
+            "was_activated": session.isActivated ? 1 : 0,
+            "days_since_install": session.daysSinceInstall
+        ])
+        setUserProperty("auto_renew", value: "off")
+    }
+
     /// Call when restore purchases is attempted.
     func trackRestoreAttempted(success: Bool) {
         logEvent("restore_attempted", parameters: [

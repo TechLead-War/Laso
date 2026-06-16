@@ -211,6 +211,17 @@ final class SubscriptionManager {
                 trackPurchase(product: product, isTrialConversion: wasTrialBefore, transactionID: transaction.id)
                 armTrialNotifications()
 
+                // A paid activation that did not pass through a free trial:
+                // confirm it with a welcome push and mark the cohort. A trial
+                // conversion (wasTrialBefore) is excluded; it has its own drip.
+                if !wasTrialBefore, case .subscribed = status {
+                    AppAnalytics.shared.trackNonTrialActivation(
+                        productID: product.id,
+                        billingPeriod: Self.billingPeriod(for: product)
+                    )
+                    TrialScheduler.scheduleNonTrialWelcome()
+                }
+
             case .userCancelled:
                 AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .userCancelled)
 
@@ -288,6 +299,7 @@ final class SubscriptionManager {
                     // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
                     clearGraceState(wasActive: wasInGrace)
+                    await armCancelledSaveIfNeeded(productID: transaction.productID, expiration: expiration)
                     return
                 }
             }
@@ -394,6 +406,59 @@ final class SubscriptionManager {
             }
         }
         return false
+    }
+
+    /// Detect a still-active paid subscription whose auto-renew has been turned
+    /// off (cancelled but not yet lapsed) and arm one save push before it ends.
+    /// One-shot via `cancelledSaveArmed`; cleared (and the push cancelled) when
+    /// auto-renew is turned back on. Trials are skipped: a trial that will not
+    /// renew is the trial-expiry win-back's job, not the paid-save's.
+    private func armCancelledSaveIfNeeded(productID: String, expiration: Date) async {
+        guard case .subscribed = status else { return }
+        guard let willRenew = await autoRenewIsOn(for: productID) else { return }
+
+        if willRenew {
+            // Renewal is on (or back on): retire any armed save push.
+            if defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) {
+                defaults.set(false, forKey: AppKeys.Billing.cancelledSaveArmed)
+                TrialScheduler.cancelCancelledSave()
+            }
+            return
+        }
+
+        // Auto-renew is off and access is still live: arm the save once.
+        guard !defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) else { return }
+        defaults.set(true, forKey: AppKeys.Billing.cancelledSaveArmed)
+        let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
+        AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
+        TrialScheduler.scheduleCancelledSave(focus: trackedFocusLabel(), expiration: expiration)
+    }
+
+    /// Whether the active subscription for `productID` is set to auto-renew.
+    /// Returns nil when StoreKit does not surface renewal info (offline or no
+    /// subscription), so callers no-op rather than guess.
+    private func autoRenewIsOn(for productID: String) async -> Bool? {
+        guard let product = products.first(where: { $0.id == productID }),
+              let subscription = product.subscription else { return nil }
+        do {
+            let statuses = try await subscription.status
+            // Prefer the renewal info that matches this exact product.
+            for status in statuses {
+                if case .verified(let renewalInfo) = status.renewalInfo,
+                   renewalInfo.currentProductID == productID {
+                    return renewalInfo.willAutoRenew
+                }
+            }
+            // Fall back to the first verified renewal info in the group.
+            for status in statuses {
+                if case .verified(let renewalInfo) = status.renewalInfo {
+                    return renewalInfo.willAutoRenew
+                }
+            }
+            return nil
+        } catch {
+            return nil
+        }
     }
 
     private func startOrContinueGrace() -> Int {
@@ -556,13 +621,20 @@ final class SubscriptionManager {
 
     // MARK: - Analytics
 
-    private func trackPurchase(product: Product, isTrialConversion: Bool, transactionID: UInt64) {
-        let period: String = switch product.subscription?.subscriptionPeriod.unit {
-        case .month: "monthly"
-        case .year: "yearly"
-        case .week: "weekly"
-        default: "unknown"
+    /// Billing-period label for analytics, derived from the product's
+    /// subscription period unit. Shared by purchase tracking and the
+    /// non-trial activation event so the mapping lives in one place.
+    private static func billingPeriod(for product: Product) -> String {
+        switch product.subscription?.subscriptionPeriod.unit {
+        case .month: return "monthly"
+        case .year: return "yearly"
+        case .week: return "weekly"
+        default: return "unknown"
         }
+    }
+
+    private func trackPurchase(product: Product, isTrialConversion: Bool, transactionID: UInt64) {
+        let period = Self.billingPeriod(for: product)
         AppAnalytics.shared.trackPurchaseCompleted(
             productID: product.id,
             billingPeriod: period,

@@ -33,6 +33,14 @@ enum AppConstants {
         // Denied-branch re-permission (Journey 5): one push after 3 check-ins.
         static let repermission = "healthpulse.repermission"
 
+        // Non-trial activation welcome (subscription lifecycle): one push to a
+        // user who activates a paid plan WITHOUT a free trial.
+        static let nonTrialWelcome = "healthpulse.subscription.nonTrialWelcome"
+
+        // Cancelled-but-still-active save: one push when auto-renew is turned
+        // off while the paid period is still running, before it lapses.
+        static let cancelledSave = "healthpulse.subscription.cancelledSave"
+
         // Prefix-based identifiers (appended with metric/level info)
         static let alertPrefix = "healthpulse.alert."
         static let spikePrefix = "healthpulse.spike."
@@ -80,6 +88,15 @@ enum AppConstants {
         static let abandonment2h: TimeInterval = 2 * 60 * 60
         static let abandonment24h: TimeInterval = 24 * 60 * 60
         static let abandonment72h: TimeInterval = 72 * 60 * 60
+
+        /// Delay after a no-trial paid activation before the welcome push.
+        static let nonTrialWelcomeDelay: TimeInterval = 2 * 60 * 60
+
+        /// Lead time before expiry for the cancelled-subscriber save push.
+        static let cancelledSaveLeadTime: TimeInterval = 24 * 60 * 60
+
+        /// Fallback delay when the save push is armed with under a day left.
+        static let cancelledSaveMinDelay: TimeInterval = 60 * 60
 
         /// ML model retrain interval (30 days)
         static let mlRetrainInterval: TimeInterval = 30 * 24 * 60 * 60

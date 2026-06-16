@@ -57,6 +57,8 @@ final class NotificationManager {
         if identifier == id.windDown { return "wind_down" }
         if identifier == id.answerReady { return "answer_ready" }
         if identifier == id.repermission { return "repermission" }
+        if identifier == id.nonTrialWelcome { return "non_trial_welcome" }
+        if identifier == id.cancelledSave { return "cancelled_save" }
         if id.abandonmentAll.contains(identifier) { return "onboarding_abandonment" }
         if id.trialAll.contains(identifier) { return "trial" }
 

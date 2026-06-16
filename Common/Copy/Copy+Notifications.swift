@@ -611,6 +611,28 @@ extension Copy {
         static var trialWinbackGenericTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_generic_title", default: "Your insights are still here"), max: titleMax) }
         static var trialWinbackGenericBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_winback_generic_body", default: "Come back to see what your body data revealed while you were away."), max: bodyMax) }
 
+        // MARK: - Non-Trial Activation Welcome
+        //
+        // One push to a user who goes straight to a paid plan without a free
+        // trial. Confirms the choice and points at first value, no countdown.
+
+        static var nonTrialWelcomeTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_non_trial_welcome_title", default: "You are all set"), max: titleMax) }
+        static var nonTrialWelcomeBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_non_trial_welcome_body", default: "Your plan is active. Log your first morning check in to start building your pattern."), max: bodyMax) }
+
+        // MARK: - Cancelled But Active Save
+        //
+        // One push to a subscriber who turned off auto-renew but still has time
+        // left. References the user's own focus so it is about what they lose.
+
+        static func cancelledSaveTitle(focus: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_cancelled_save_title", default: "Keep your %@ insights"), focus), max: titleMax)
+        }
+        static func cancelledSaveBody(focus: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_cancelled_save_body", default: "Your plan ends soon. Turn renewal back on to keep tracking your %@ without a break."), focus), max: bodyMax)
+        }
+        static var cancelledSaveGenericTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_cancelled_save_generic_title", default: "Keep your insights going"), max: titleMax) }
+        static var cancelledSaveGenericBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_cancelled_save_generic_body", default: "Your plan ends soon. Turn renewal back on to keep tracking without a break."), max: bodyMax) }
+
         // MARK: - Answer Ready (Journey 4)
         //
         // The cliffhanger payoff. Fires once when an inconclusive prediction
