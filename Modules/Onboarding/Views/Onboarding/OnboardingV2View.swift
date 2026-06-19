@@ -53,23 +53,22 @@ struct OnboardingV2View: View {
         case about          // 3
         case goal           // 4
         case symptoms       // 5
-        case prediction     // 6  (pre-registered claim, built from goal+symptom)
-        case activity       // 7
-        case wearable       // 8
-        case bridge         // 9
-        case scan           // 10 (system HealthKit sheet fires before this)
+        case activity       // 6
+        case wearable       // 7
+        case bridge         // 8
+        case scan           // 9 (system HealthKit sheet fires before this)
         // Mutually exclusive router targets, reached only from `scan` based on
-        // the data-richness segment. They share ordinal 11 (the linear slot
+        // the data-richness segment. They share ordinal 10 (the linear slot
         // they replace).
-        case verdict        // 11 rich
-        case cliffhanger    // 11 sparse
-        case journalFirst   // 11 denied
-        case heart          // 12
-        case sleep          // 13
-        case hrv            // 14
-        case preview        // 15
-        case signIn         // 16
-        case paywall        // 17
+        case verdict        // 10 rich
+        case cliffhanger    // 10 sparse
+        case journalFirst   // 10 denied
+        case heart          // 11
+        case sleep          // 12
+        case hrv            // 13
+        case preview        // 14
+        case signIn         // 15
+        case paywall        // 16
         case done           // post
     }
 
@@ -90,7 +89,7 @@ struct OnboardingV2View: View {
                 // The mid-flow screens are built from goal+symptom+scan state the
                 // harness skips, so seed that state here too; without it they fall
                 // through to .heart and cannot be captured from a single launch.
-                if [.prediction, .verdict, .cliffhanger].contains(target) {
+                if [.verdict, .cliffhanger].contains(target) {
                     profile.goals = [.sleep]
                     profile.symptoms = [.tiredMorning]
                     prediction = buildPrediction()
@@ -100,6 +99,13 @@ struct OnboardingV2View: View {
                             history: healthSnapshot.verdictHistory
                         )
                     }
+                }
+                // The paywall's watch list is built from goals + symptoms; seed a
+                // multi-item profile so the rows render. Mock scan data above keeps
+                // it on the has-insights branch (the common case).
+                if target == .paywall {
+                    profile.goals = [.sleep, .energy, .stress]
+                    profile.symptoms = [.tiredMorning, .restless]
                 }
                 screen = target
             }
@@ -140,22 +146,16 @@ struct OnboardingV2View: View {
             OnbV2Screen5Symptoms(profile: profile,
                                  onBack: { advance(to: .goal) },
                                  onContinue: {
+                                     // The claim is still built here (silently). The
+                                     // dedicated claim screen is gone, but the
+                                     // post-scan verdict / cliffhanger still pay it
+                                     // off and the answer-ready push still arms.
                                      prediction = buildPrediction()
-                                     advance(to: .prediction)
+                                     advance(to: .activity)
                                  })
-        case .prediction:
-            // Without a buildable claim (no mapped goal/symptom) the verdict
-            // branch is meaningless, so skip straight to the activity question.
-            if let prediction {
-                OnbV2ScreenPrediction(prediction: prediction,
-                                      onBack: { advance(to: .symptoms) },
-                                      onCTA: { advance(to: .activity) })
-            } else {
-                Color.clear.onAppear { advance(to: .activity) }
-            }
         case .activity:
             OnbV2Screen6Activity(profile: profile,
-                                 onBack: { advance(to: .prediction) },
+                                 onBack: { advance(to: .symptoms) },
                                  onContinue: { advance(to: .wearable) })
         case .wearable:
             OnbV2Screen7Wearable(profile: profile,
@@ -286,7 +286,7 @@ struct OnboardingV2View: View {
     ).count
 
     /// Step number used in analytics. Matches the user-visible 1-based step
-    /// index. The three router screens share ordinal 11 (the linear slot they
+    /// index. The three router screens share ordinal 10 (the linear slot they
     /// replace), so the forward/back funnel comparison stays monotonic across
     /// whichever branch the user lands on.
     private static func screenOrdinal(_ screen: Screen) -> Int {
@@ -296,19 +296,18 @@ struct OnboardingV2View: View {
         case .about:        return 3
         case .goal:         return 4
         case .symptoms:     return 5
-        case .prediction:   return 6
-        case .activity:     return 7
-        case .wearable:     return 8
-        case .bridge:       return 9
-        case .scan:         return 10
-        case .verdict, .cliffhanger, .journalFirst: return 11
-        case .heart:        return 12
-        case .sleep:        return 13
-        case .hrv:          return 14
-        case .preview:      return 15
-        case .signIn:       return 16
-        case .paywall:      return 17
-        case .done:         return 18
+        case .activity:     return 6
+        case .wearable:     return 7
+        case .bridge:       return 8
+        case .scan:         return 9
+        case .verdict, .cliffhanger, .journalFirst: return 10
+        case .heart:        return 11
+        case .sleep:        return 12
+        case .hrv:          return 13
+        case .preview:      return 14
+        case .signIn:       return 15
+        case .paywall:      return 16
+        case .done:         return 17
         }
     }
 

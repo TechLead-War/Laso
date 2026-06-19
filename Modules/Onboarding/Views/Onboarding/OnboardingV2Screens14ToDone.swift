@@ -128,9 +128,9 @@ struct OnbV2Screen14Preview: View {
     @State private var drawTimeline = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 15, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 14, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -213,9 +213,9 @@ struct OnbV2Screen15SignIn: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 16, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 15, total: OnbV2Flow.total, onBack: onBack)
 
                 VStack(spacing: 0) {
                     Spacer()
@@ -351,6 +351,11 @@ struct OnbV2Screen16Paywall: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let manager = SubscriptionManager.shared
 
+    // The scan found real samples to read. Drives the no-insights fallback: when
+    // false we never claim a pattern we didn't find; instead the headline, rows,
+    // and closing line sell the hunt, built only on the goals/symptoms they gave.
+    private var hasInsights: Bool { snapshot.hasAnyHealthData }
+
     var body: some View {
         let yearly = manager.yearlyProduct
         let monthly = manager.monthlyProduct
@@ -367,12 +372,19 @@ struct OnbV2Screen16Paywall: View {
         }()
 
         let savingsBadge: String? = {
-            guard let y = yearly, let m = monthly, m.price > 0 else { return nil }
-            let yearlyMonthly = (y.price as Decimal) / 12
-            let pct = ((m.price - yearlyMonthly) / m.price) * 100
-            let pctInt = Int(truncating: pct as NSDecimalNumber)
-            guard pctInt > 0 else { return nil }
-            return String(format: "Save %d%%", pctInt)
+            guard let y = yearly, let m = monthly else { return nil }
+            // Prefer the StoreKit Decimal price; fall back to parsing displayPrice
+            // so the badge still computes when a test product reports a 0 price.
+            func priceValue(_ p: Product) -> Double {
+                let d = NSDecimalNumber(decimal: p.price).doubleValue
+                if d > 0 { return d }
+                return Double(p.displayPrice.filter { $0.isNumber || $0 == "." }) ?? 0
+            }
+            let yv = priceValue(y), mv = priceValue(m)
+            guard mv > 0, yv > 0 else { return nil }
+            let pct = Int(((mv - yv / 12) / mv) * 100)
+            guard pct > 0 else { return nil }
+            return Copy.OnboardingV2.s16SaveBadge(percent: pct)
         }()
 
         let trialDays: Int = yearly?.subscription?.introductoryOffer?.period.daysApprox ?? 0
@@ -392,7 +404,7 @@ struct OnbV2Screen16Paywall: View {
             if trialDays > 0 {
                 return Copy.OnboardingV2.s16AnnualSub(perMonth: perMonth, trialDays: "\(trialDays)")
             }
-            return "That's about \(perMonth) per month"
+            return Copy.OnboardingV2.s16AnnualSubNoTrial(perMonth: perMonth)
         }()
 
         let ctaTitle: String = {
@@ -400,14 +412,14 @@ struct OnbV2Screen16Paywall: View {
             let p = selectedIsAnnual ? yearly : monthly
             if let intro = p?.subscription?.introductoryOffer, intro.period.value > 0 {
                 let days = intro.period.daysApprox
-                if days > 0 { return "Start \(days) day free trial" }
+                if days > 0 { return Copy.OnboardingV2.s16CTATrial(days: days) }
                 return Copy.OnboardingV2.s16CTA
             }
             return Copy.OnboardingV2.s16CTAFallback
         }()
 
         let rows = watchRows
-        return OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
+        return OnbV2ScreenContainer(ambient: .paywallBlue, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: onBack)
 
@@ -421,7 +433,7 @@ struct OnbV2Screen16Paywall: View {
 
                         Spacer().frame(height: 8)
 
-                        Text(Copy.OnboardingV2.s16Title)
+                        Text(hasInsights ? Copy.OnboardingV2.s16Title : Copy.OnboardingV2.s16TitleNoData)
                             .font(.system(size: 26, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
                             .lineSpacing(4)
@@ -626,62 +638,73 @@ struct OnbV2Screen16Paywall: View {
         plansAppeared = true
     }
 
-    // MARK: - Watch list (built from the user's real answers + the read)
+    // MARK: - Watch list (one bucket only: real insights OR the chase, never both)
 
-    /// The watch list is personal: one row per the user's own goals and
-    /// symptoms (their words, their icons), the single concrete weekday dip the
-    /// read already found, and a closing weekly-cadence row. No hardcoded
-    /// metrics, no invented "Sunday dip".
+    /// At most two rows, and a single bucket:
+    /// - With scan data: the concrete findings the read produced (the weekday
+    ///   dip, resting heart rate, sleep average) — no generic goal/static rows.
+    /// - With no data: the question we'll go answer for each picked goal/symptom.
+    /// Every data row uses a real value and appears only when that value exists;
+    /// nothing is invented.
     private var watchRows: [Copy.OnboardingV2.WatchListRow] {
         var rows: [Copy.OnboardingV2.WatchListRow] = []
 
-        // Goals first: each carries its own icon and accent from the goal copy.
-        for goal in profile.goals {
-            guard let copy = Copy.OnboardingV2.goalCopy[goal] else { continue }
-            rows.append(.init(
-                id: "goal_\(goal.rawValue)",
-                icon: copy.icon,
-                color: copy.accent,
-                label: copy.title,
-                sub: Copy.OnboardingV2.watchRowGoalSub
-            ))
+        if hasInsights {
+            // Concrete findings only, most specific first.
+            let patternWeekday = verdict?.weekday ?? snapshot.hrvWorstWeekday
+            if let name = OnbHealthFormat.weekdayName(patternWeekday) {
+                rows.append(.init(
+                    id: "weekday",
+                    icon: "calendar",
+                    color: OnbV2.amber,
+                    label: Copy.OnboardingV2.watchWeekdayLabel(weekday: name),
+                    sub: Copy.OnboardingV2.watchWeekdaySub
+                ))
+            }
+            if let bpm = snapshot.restingHR {
+                rows.append(.init(
+                    id: "rhr",
+                    icon: "heart.fill",
+                    color: OnbV2.rose,
+                    label: Copy.OnboardingV2.watchRestingHRLabel,
+                    sub: Copy.OnboardingV2.watchRestingHRSub(bpm: bpm)
+                ))
+            }
+            if let hours = snapshot.sleepAvgHours, let mins = snapshot.sleepAvgMins {
+                rows.append(.init(
+                    id: "sleep",
+                    icon: "moon.fill",
+                    color: OnbV2.purple,
+                    label: Copy.OnboardingV2.watchSleepLabel,
+                    sub: Copy.OnboardingV2.watchSleepSub(hours: hours, mins: mins)
+                ))
+            }
+        } else {
+            // No data yet: the chase, built from their own picks. Goals first.
+            for goal in profile.goals {
+                guard let copy = Copy.OnboardingV2.goalCopy[goal] else { continue }
+                rows.append(.init(
+                    id: "goal_\(goal.rawValue)",
+                    icon: copy.icon,
+                    color: copy.accent,
+                    label: copy.title,
+                    sub: copy.chase
+                ))
+            }
+            for symptom in profile.symptoms where symptom != .none {
+                guard let copy = Copy.OnboardingV2.symptomCopy[symptom] else { continue }
+                rows.append(.init(
+                    id: "symptom_\(symptom.rawValue)",
+                    icon: copy.icon,
+                    color: OnbV2.teal,
+                    label: copy.label,
+                    sub: copy.chase
+                ))
+            }
         }
 
-        // Then symptoms the user flagged ("Nothing major" is not a watch item).
-        for symptom in profile.symptoms where symptom != .none {
-            guard let copy = Copy.OnboardingV2.symptomCopy[symptom] else { continue }
-            rows.append(.init(
-                id: "symptom_\(symptom.rawValue)",
-                icon: copy.icon,
-                color: OnbV2.teal,
-                label: copy.label,
-                sub: Copy.OnboardingV2.watchRowGoalSub
-            ))
-        }
-
-        // The one concrete pattern from the read: prefer the verdict's weekday
-        // (the confirmed driver), else the snapshot's worst HRV weekday.
-        let patternWeekday = verdict?.weekday ?? snapshot.hrvWorstWeekday
-        if let name = OnbHealthFormat.weekdayName(patternWeekday) {
-            rows.append(.init(
-                id: "weekday",
-                icon: "calendar",
-                color: OnbV2.amber,
-                label: Copy.OnboardingV2.watchWeekdayLabel(weekday: name),
-                sub: Copy.OnboardingV2.watchWeekdaySub
-            ))
-        }
-
-        // Closing row: the weekly cadence the subscription buys.
-        rows.append(.init(
-            id: "weekly",
-            icon: "sparkles",
-            color: OnbV2.blue,
-            label: Copy.OnboardingV2.watchWeeklyLabel,
-            sub: Copy.OnboardingV2.watchWeeklySub
-        ))
-
-        return rows
+        // Hard cap: never more than two rows.
+        return Array(rows.prefix(2))
     }
 
     // MARK: - Trial timeline (today -> reminder -> renewal)
@@ -728,7 +751,7 @@ struct OnbV2ScreenDone: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 Spacer()
 

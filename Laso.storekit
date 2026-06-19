@@ -6,7 +6,7 @@
     "_applicationInternalID" : "app_laso",
     "_developerTeamID" : "SGX8SC86TT",
     "_failTransactionsEnabled" : false,
-    "_locale" : "en_US",
+    "_locale" : "en_IN",
     "_storeKitErrors" : [],
     "_timeRate" : 6
   },
@@ -19,7 +19,7 @@
         {
           "adHocOffers" : [],
           "codeOffers" : [],
-          "displayPrice" : "29.99",
+          "displayPrice" : "2499",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "1",
@@ -45,7 +45,7 @@
         {
           "adHocOffers" : [],
           "codeOffers" : [],
-          "displayPrice" : "5.99",
+          "displayPrice" : "499",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "2",

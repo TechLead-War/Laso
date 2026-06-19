@@ -95,10 +95,10 @@ final class OnboardingV2Profile {
 /// Single source of truth for the progress-bar denominator. The three router
 /// screens (verdict / cliffhanger / journalFirst) are mutually exclusive and
 /// hide their progress bar, so they count as the one linear step they replace.
-/// Linear steps: welcome, promise, about, goal, symptoms, prediction, activity,
-/// wearable, bridge, scan, [router], heart, sleep, hrv, preview, signIn, paywall.
+/// Linear steps: welcome, promise, about, goal, symptoms, activity, wearable,
+/// bridge, scan, [router], heart, sleep, hrv, preview, signIn, paywall.
 enum OnbV2Flow {
-    static let total = 17
+    static let total = 16
 }
 
 // MARK: - V2 design tokens
@@ -146,7 +146,10 @@ enum OnbV2 {
 // MARK: - Screen container with ambient gradient + fade-up
 
 enum OnbV2Ambient {
-    case blue, rose, mix, none
+    // blueHero is a brighter, on-screen bloom used only by the welcome screen so
+    // the orb sits in a visible glow; plain blue keeps the faint off-screen tail
+    // every other screen uses.
+    case blue, blueHero, greenHero, roseHero, blueDual, paywallBlue, purpleDual, tealDual, rose, mix, none
 }
 
 struct OnbV2ScreenContainer<Content: View>: View {
@@ -182,6 +185,55 @@ struct OnbV2ScreenContainer<Content: View>: View {
             ZStack {
                 radial(OnbV2.blue.opacity(0.18), x: -0.30, y: -0.20, r: 280)
                 radial(OnbV2.blueLight.opacity(0.10), x: 1.20, y: 0.10, r: 220)
+            }
+        case .blueHero:
+            // Match the welcome mockup exactly: a visible blue bloom from the
+            // top-left and a faint cool wash lower-right. The orb supplies its own
+            // centre glow through its shadows, so the background is just ambient.
+            ZStack {
+                radial(OnbV2.blue.opacity(0.22), x: 0.16, y: 0.10, r: 340)
+                radial(OnbV2.blueLight.opacity(0.10), x: 0.92, y: 0.80, r: 300)
+            }
+        case .greenHero:
+            // Green blooms in both corners (upper-left and lower-right), for the
+            // About screen.
+            ZStack {
+                radial(OnbV2.green.opacity(0.20), x: 0.16, y: 0.10, r: 260)
+                radial(OnbV2.green.opacity(0.24), x: 0.92, y: 0.90, r: 280)
+            }
+        case .roseHero:
+            // Rose blooms in both corners (upper-left and lower-right), for the
+            // Symptoms screen.
+            ZStack {
+                radial(OnbV2.rose.opacity(0.20), x: 0.16, y: 0.10, r: 260)
+                radial(OnbV2.rose.opacity(0.24), x: 0.92, y: 0.90, r: 280)
+            }
+        case .blueDual:
+            // Subtle blue blooms in both corners (top-left and bottom-right),
+            // kept light so the verdict chart stays the focus.
+            ZStack {
+                radial(OnbV2.blue.opacity(0.28), x: 0.14, y: 0.10, r: 280)
+                radial(OnbV2.blue.opacity(0.16), x: 0.88, y: 0.94, r: 300)
+            }
+        case .paywallBlue:
+            // Paywall only: same top-left blue as blueDual, but a stronger
+            // bottom-right bloom sitting slightly above the bottom edge so it
+            // reads as a glow rising from the lower-right, not hugging the floor.
+            ZStack {
+                radial(OnbV2.blue.opacity(0.28), x: 0.14, y: 0.10, r: 280)
+                radial(OnbV2.blue.opacity(0.22), x: 0.90, y: 0.86, r: 320)
+            }
+        case .purpleDual:
+            // Purple blooms in both corners, for the Sleep reveal.
+            ZStack {
+                radial(OnbV2.purple.opacity(0.18), x: 0.14, y: 0.10, r: 240)
+                radial(OnbV2.purple.opacity(0.18), x: 0.90, y: 0.92, r: 260)
+            }
+        case .tealDual:
+            // Teal blooms in both corners, for the HRV reveal.
+            ZStack {
+                radial(OnbV2.teal.opacity(0.16), x: 0.14, y: 0.10, r: 240)
+                radial(OnbV2.teal.opacity(0.16), x: 0.90, y: 0.92, r: 260)
             }
         case .rose:
             ZStack {
@@ -451,12 +503,18 @@ struct OnbV2HeartHero: View {
             }
 
             Circle()
-                .fill(LinearGradient(
-                    colors: [color, color.opacity(0.7)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
+                // Bright glossy hotspot off-center, fading to the base colour, so
+                // the disc reads as a lit orb instead of a flat fill.
+                .fill(RadialGradient(
+                    colors: [Color.white.opacity(0.6), color],
+                    center: UnitPoint(x: 0.36, y: 0.30),
+                    startRadius: 0, endRadius: size * 0.26
                 ))
                 .frame(width: size * 0.4, height: size * 0.4)
-                .shadow(color: color.opacity(0.55), radius: 20, x: 0, y: 14)
+                // Two layers like the mockup: a soft even halo that bleeds light
+                // into the dark field, plus a grounded downward glow.
+                .shadow(color: color.opacity(0.5), radius: size * 0.12, x: 0, y: 0)
+                .shadow(color: color.opacity(0.5), radius: size * 0.08, x: 0, y: size * 0.05)
                 .overlay(
                     Image(systemName: "heart.fill")
                         .font(.system(size: size * 0.18, weight: .bold))
@@ -658,10 +716,10 @@ struct OnbV2PlanCard: View {
                             .foregroundStyle(OnbV2.fg)
                         if let badge {
                             Text(badge)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 13, weight: .bold))
                                 .tracking(0.4)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
                                 .background(Capsule().fill(OnbV2.green.opacity(0.18)))
                                 .foregroundStyle(OnbV2.green)
                         }

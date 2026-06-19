@@ -286,7 +286,7 @@ enum BlockType: String {
 // ─── USER PROPERTIES (cohort segmentation) ──────────────────────────────────
 //
 //  DEMOGRAPHICS:                                  PIPELINE:
-//  age_bracket         18-24 | 25-34 | ...        data_sufficiency     sufficient | insufficient
+//  age                 27 | 34 | ...               data_sufficiency     sufficient | insufficient
 //  gender              male | female | other       health_source_count  0, 1, 2, ...
 //  country             US | GB | IN | ...          has_apple_watch      yes | no
 //  language            en | es | de | ...          primary_health_source apple_watch | ...
@@ -397,21 +397,11 @@ final class AppAnalytics {
         let defaults = UserDefaults.standard
         var props: [String: Any] = [:]
 
-        // Age bracket. derived from encrypted date of birth
+        // Exact age, derived from encrypted date of birth
         if let dob = UserProfileStore.shared.storedDateOfBirth() {
             let age = Date.cal.dateComponents([.year], from: dob, to: Date()).year ?? 0
             if age > 0 {
-                let bracket: String
-                switch age {
-                case ..<18:   bracket = "under_18"
-                case 18...24: bracket = "18-24"
-                case 25...34: bracket = "25-34"
-                case 35...44: bracket = "35-44"
-                case 45...54: bracket = "45-54"
-                case 55...64: bracket = "55-64"
-                default:      bracket = "65+"
-                }
-                props["age_bracket"] = bracket
+                props["age"] = age
             }
         }
 
@@ -1910,14 +1900,6 @@ final class AppAnalytics {
             "total_pages": totalPages,
             "days_since_install": session.daysSinceInstall
         ])
-    }
-
-    /// Onboarding promise-card impression. Routes through logEvent so the `metric`
-    /// key is collapsed to its parent HealthCategory by sanitizeParameters; the raw
-    /// HealthMetric name must never reach a third party. Call sites previously hit
-    /// AnalyticsBackend.provider.capture directly, which bypasses that anonymization.
-    func trackPromiseShown(metric: String) {
-        logEvent("promise_shown", parameters: ["metric": metric])
     }
 
     // ══════════════════════════════════════════════════════════════════════

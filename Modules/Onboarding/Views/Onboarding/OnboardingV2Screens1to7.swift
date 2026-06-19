@@ -12,7 +12,7 @@ struct OnbV2Screen1Welcome: View {
     @State private var beginTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
 
@@ -22,31 +22,29 @@ struct OnbV2Screen1Welcome: View {
                     .animation(reduceMotion ? .easeOut(duration: 0.15)
                                             : OnbV2.entryEase, value: heroSettled)
 
-                Spacer().frame(height: 36)
+                // Flexible gap, not a fixed one, so the orb settles in the upper
+                // third and the headline drops to the lower third with even
+                // breathing room above and below, instead of clumping at the top.
+                Spacer(minLength: 0)
 
-                Text(Copy.OnboardingV2.s1Eyebrow)
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(1.6)
-                    .foregroundStyle(OnbV2.blue)
-                    .onbV2StaggerIn(index: 1, appeared: appeared, tight: true)
+                // Title + explainer left-align to a shared leading edge (matches
+                // the mockup); the orb and CTA stay centred above/below.
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(Copy.OnboardingV2.s1Title)
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(OnbV2.blueLight)
+                        .multilineTextAlignment(.leading)
+                        .lineSpacing(4)
+                        .onbV2StaggerIn(index: 1, appeared: appeared)
 
-                Spacer().frame(height: 14)
-
-                Text(Copy.OnboardingV2.s1Title)
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(OnbV2.fg)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .onbV2StaggerIn(index: 2, appeared: appeared)
-
-                Spacer().frame(height: 16)
-
-                Text(Copy.OnboardingV2.s1Lede)
-                    .font(.system(size: 16))
-                    .foregroundStyle(OnbV2.fg2)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 320)
-                    .onbV2StaggerIn(index: 3, appeared: appeared)
+                    Text(Copy.OnboardingV2.s1Lede)
+                        .font(.system(size: 17))
+                        .foregroundStyle(OnbV2.fg3)
+                        .multilineTextAlignment(.leading)
+                        .lineSpacing(2)
+                        .onbV2StaggerIn(index: 2, appeared: appeared)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Spacer(minLength: 0)
 
@@ -54,7 +52,10 @@ struct OnbV2Screen1Welcome: View {
                     beginTapped = true
                     onContinue()
                 }
-                .onbV2StaggerIn(index: 4, appeared: appeared)
+                // Blue glow under the hero CTA so it lifts off the dark field,
+                // matching the welcome mockup. Scoped to Screen 1 only.
+                .shadow(color: OnbV2.blue.opacity(0.45), radius: 16, x: 0, y: 8)
+                .onbV2StaggerIn(index: 3, appeared: appeared)
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, OnbV2.bodyPadH)
@@ -76,24 +77,32 @@ struct OnbV2Screen2Promise: View {
     @State private var ctaTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 2, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
+                        Text(Copy.OnboardingV2.s2Eyebrow)
+                            .font(.system(size: 12, weight: .bold))
+                            .tracking(1.6)
+                            .foregroundStyle(OnbV2.blue)
+                            .onbV2StaggerIn(index: 0, appeared: appeared)
+
+                        Spacer().frame(height: 10)
+
                         Text(Copy.OnboardingV2.s2Title)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
                             .lineSpacing(4)
-                            .onbV2StaggerIn(index: 0, appeared: appeared)
+                            .onbV2StaggerIn(index: 1, appeared: appeared)
 
                         Spacer().frame(height: 12)
 
                         Text(Copy.OnboardingV2.s2Lede)
                             .font(.system(size: 16))
                             .foregroundStyle(OnbV2.fg2)
-                            .onbV2StaggerIn(index: 1, appeared: appeared)
+                            .onbV2StaggerIn(index: 2, appeared: appeared)
 
                         Spacer().frame(height: 28)
 
@@ -107,21 +116,21 @@ struct OnbV2Screen2Promise: View {
                                 bodyText: Copy.OnboardingV2.s2Card1Body,
                                 accent: OnbV2.blue
                             )
-                            .onbV2StaggerIn(index: 2, appeared: appeared)
+                            .onbV2StaggerIn(index: 3, appeared: appeared)
                             OnbV2PromiseCard(
                                 icon: "heart.fill",
                                 title: Copy.OnboardingV2.s2Card3Title,
                                 bodyText: Copy.OnboardingV2.s2Card3Body,
                                 accent: OnbV2.rose
                             )
-                            .onbV2StaggerIn(index: 3, appeared: appeared)
+                            .onbV2StaggerIn(index: 4, appeared: appeared)
                             OnbV2PromiseCard(
                                 icon: "lock.fill",
                                 title: Copy.OnboardingV2.s2Card2Title,
                                 bodyText: Copy.OnboardingV2.s2Card2Body,
                                 accent: OnbV2.green
                             )
-                            .onbV2StaggerIn(index: 4, appeared: appeared)
+                            .onbV2StaggerIn(index: 5, appeared: appeared)
                         }
 
                         // Absorbs slack on tall devices so the cards sit just
@@ -165,12 +174,20 @@ struct OnbV2Screen3About: View {
     @State private var ctaTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .greenHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 3, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
+                        Text(Copy.OnboardingV2.s3Eyebrow)
+                            .font(.system(size: 12, weight: .bold))
+                            .tracking(1.6)
+                            .foregroundStyle(OnbV2.green)
+                            .onbV2StaggerIn(index: 0, appeared: appeared)
+
+                        Spacer().frame(height: 10)
+
                         Text(Copy.OnboardingV2.s3Title)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
@@ -317,16 +334,16 @@ struct OnbV2Screen3About: View {
         } label: {
             Text(s.label)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isSelected ? OnbV2.blue : OnbV2.fg)
+                .foregroundStyle(isSelected ? OnbV2.green : OnbV2.fg)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
-                        .fill(isSelected ? OnbV2.blue.opacity(0.12) : OnbV2.bg2)
+                        .fill(isSelected ? OnbV2.green.opacity(0.12) : OnbV2.bg2)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
-                        .stroke(isSelected ? OnbV2.blue : OnbV2.line, lineWidth: 1)
+                        .stroke(isSelected ? OnbV2.green : OnbV2.line, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -343,16 +360,35 @@ struct OnbV2Screen4Goal: View {
     @State private var appeared = false
     @State private var ctaTapped = false
 
+    // Tints the accent word (s4TitleAccent) inside the title blue, leaving the
+    // rest white, so "focus" pops without splitting into two Text views.
+    private var goalTitleAttributed: AttributedString {
+        var a = AttributedString(Copy.OnboardingV2.s4Title)
+        if let r = a.range(of: Copy.OnboardingV2.s4TitleAccent) {
+            a[r].foregroundColor = OnbV2.blueLight
+        }
+        return a
+    }
+
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 4, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(Copy.OnboardingV2.s4Title)
+                        Text(Copy.OnboardingV2.s4Eyebrow)
+                            .font(.system(size: 12, weight: .bold))
+                            .tracking(1.6)
+                            .foregroundStyle(OnbV2.blue)
+                            .onbV2StaggerIn(index: 0, appeared: appeared)
+
+                        Spacer().frame(height: 10)
+
+                        Text(goalTitleAttributed)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
+                            .lineSpacing(4)
                             .onbV2StaggerIn(index: 0, appeared: appeared)
 
                         Spacer().frame(height: 12)
@@ -388,7 +424,7 @@ struct OnbV2Screen4Goal: View {
                 VStack(spacing: 10) {
                     Text(profile.goals.isEmpty
                          ? Copy.OnboardingV2.s4ZeroCount
-                         : "\(profile.goals.count) selected")
+                         : Copy.OnboardingV2.countSelected(profile.goals.count))
                         .font(.system(size: 12))
                         .foregroundStyle(OnbV2.fg4)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -420,6 +456,15 @@ struct OnbV2Screen5Symptoms: View {
     let onBack: () -> Void
     let onContinue: () -> Void
 
+    // Tints the accent word (s5TitleAccent) inside the title rose, rest white.
+    private var symptomTitleAttributed: AttributedString {
+        var a = AttributedString(Copy.OnboardingV2.s5Title)
+        if let r = a.range(of: Copy.OnboardingV2.s5TitleAccent) {
+            a[r].foregroundColor = OnbV2.rose
+        }
+        return a
+    }
+
     private var ledeText: Text {
         Text(Copy.OnboardingV2.s5Lede1)
             .foregroundStyle(OnbV2.fg2)
@@ -436,15 +481,24 @@ struct OnbV2Screen5Symptoms: View {
     @State private var ctaTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .roseHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 5, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(Copy.OnboardingV2.s5Title)
-                            .font(.system(size: 28, weight: .bold))
+                        Text(Copy.OnboardingV2.s5Eyebrow)
+                            .font(.system(size: 12, weight: .bold))
+                            .tracking(1.6)
+                            .foregroundStyle(OnbV2.rose)
+                            .onbV2StaggerIn(index: 0, appeared: appeared)
+
+                        Spacer().frame(height: 10)
+
+                        Text(symptomTitleAttributed)
+                            .font(.system(size: 34, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
+                            .lineSpacing(2)
                             .onbV2StaggerIn(index: 0, appeared: appeared)
 
                         Spacer().frame(height: 12)
@@ -487,7 +541,7 @@ struct OnbV2Screen5Symptoms: View {
                 VStack(spacing: 10) {
                     Text(profile.symptoms.isEmpty
                          ? Copy.OnboardingV2.s5ZeroCount
-                         : "\(profile.symptoms.count) selected")
+                         : Copy.OnboardingV2.countSelected(profile.symptoms.count))
                         .font(.system(size: 12))
                         .foregroundStyle(OnbV2.fg4)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -519,15 +573,32 @@ struct OnbV2Screen6Activity: View {
     @State private var appeared = false
     @State private var ctaTapped = false
 
+    // Tints the accent word (s6TitleAccent) inside the title blue, rest white.
+    private var activityTitleAttributed: AttributedString {
+        var a = AttributedString(Copy.OnboardingV2.s6Title)
+        if let r = a.range(of: Copy.OnboardingV2.s6TitleAccent) {
+            a[r].foregroundColor = OnbV2.blueLight
+        }
+        return a
+    }
+
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             // Only four rows, so drop the ScrollView and let Spacers centre the
             // block between the header and the CTA instead of leaving a void.
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 7, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 6, total: OnbV2Flow.total, onBack: onBack)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(Copy.OnboardingV2.s6Title)
+                    Text(Copy.OnboardingV2.s6Eyebrow)
+                        .font(.system(size: 12, weight: .bold))
+                        .tracking(1.6)
+                        .foregroundStyle(OnbV2.blue)
+                        .onbV2StaggerIn(index: 0, appeared: appeared)
+
+                    Spacer().frame(height: 10)
+
+                    Text(activityTitleAttributed)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(OnbV2.fg)
                         .onbV2StaggerIn(index: 0, appeared: appeared)
@@ -537,6 +608,7 @@ struct OnbV2Screen6Activity: View {
                     Text(Copy.OnboardingV2.s6Lede)
                         .font(.system(size: 16))
                         .foregroundStyle(OnbV2.fg2)
+                        .lineSpacing(2)
                         .onbV2StaggerIn(index: 1, appeared: appeared)
 
                     Spacer(minLength: 24)
@@ -588,9 +660,9 @@ struct OnbV2Screen7Wearable: View {
     @State private var ctaTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 8, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 7, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {

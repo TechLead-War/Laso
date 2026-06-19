@@ -10,9 +10,9 @@ struct OnbV2Screen8Bridge: View {
     @State private var connectTapped = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .mix) {
+        OnbV2ScreenContainer(ambient: .blueDual) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 9, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 8, total: OnbV2Flow.total, onBack: onBack)
 
                 Spacer(minLength: 0)
 
@@ -118,9 +118,9 @@ struct OnbV2Screen10Scan: View {
     }
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue) {
+        OnbV2ScreenContainer(ambient: .blueDual) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 10, total: OnbV2Flow.total, onBack: nil, hideProgress: false)
+                OnbV2TopBar(step: 9, total: OnbV2Flow.total, onBack: nil, hideProgress: false)
 
                 Spacer().frame(height: 8)
 
@@ -351,14 +351,39 @@ struct OnbV2Screen11Heart: View {
 
     private var hasData: Bool { snapshot.restingHR != nil }
 
+    /// Resting-HR band, using the central BiologicalAgeConfig anchors so the
+    /// reveal copy adapts to the value instead of always reading "calm".
+    private enum RHRBand { case athletic, normal, elevated }
+    private var rhrBand: RHRBand {
+        guard let bpm = snapshot.restingHR else { return .normal }
+        if Double(bpm) <= BiologicalAgeConfig.rhrYoungFitCeiling { return .athletic }
+        if Double(bpm) > BiologicalAgeConfig.rhrElevatedCeiling { return .elevated }
+        return .normal
+    }
+    private var heartSub: String {
+        switch rhrBand {
+        case .athletic: return Copy.OnboardingV2.s11SubAthletic
+        case .normal:   return Copy.OnboardingV2.s11SubNormal
+        case .elevated: return Copy.OnboardingV2.s11SubElevated
+        }
+    }
+    private var heartBody: String {
+        guard hasData else { return Copy.OnboardingV2.s11BodyEmpty }
+        switch rhrBand {
+        case .athletic: return Copy.OnboardingV2.s11BodyAthletic
+        case .normal:   return Copy.OnboardingV2.s11BodyNormal
+        case .elevated: return Copy.OnboardingV2.s11BodyElevated
+        }
+    }
+
     var body: some View {
-        OnbV2ScreenContainer(ambient: .rose, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .roseHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 11, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
-                        VStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text(Copy.OnboardingV2.s11Eyebrow)
                                 .font(.system(size: 12, weight: .semibold))
                                 .tracking(1.6)
@@ -366,8 +391,10 @@ struct OnbV2Screen11Heart: View {
                             Text(hasData ? Copy.OnboardingV2.s11TitleHasData : Copy.OnboardingV2.s11TitleEmpty)
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundStyle(OnbV2.fg)
-                                .multilineTextAlignment(.center)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 12)
                         .onbV2StaggerIn(index: 0, appeared: phase.hasReached(.chart))
 
@@ -398,7 +425,16 @@ struct OnbV2Screen11Heart: View {
                                 .foregroundStyle(OnbV2.fg4)
                         }
 
-                        Text(hasData ? Copy.OnboardingV2.s11BodyHasData : Copy.OnboardingV2.s11BodyEmpty)
+                        if hasData {
+                            Text(heartSub)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(OnbV2.fg3)
+                                .padding(.top, 4)
+                                .opacity(phase.hasReached(.number) ? 1 : 0)
+                                .animation(.easeOut(duration: 0.3), value: phase)
+                        }
+
+                        Text(heartBody)
                             .font(.system(size: 16))
                             .foregroundStyle(OnbV2.fg2)
                             .multilineTextAlignment(.center)
@@ -536,24 +572,58 @@ struct OnbV2Screen12Sleep: View {
     /// driven by the reveal clock instead of a bare onAppear flag.
     private var barsRevealed: Bool { phase.hasReached(.chart) }
 
+    /// "Where you want to be": the upper of the standard 7-8h adult range that
+    /// the body copy already frames as the goal. (The readiness scorer's 7.5h
+    /// target is for daily scoring, a different purpose.)
+    private let sleepGoalHours: Double = 8
+
+    /// Minutes short of the goal, or nil when already at/above it.
+    private var sleepGapMinutes: Int? {
+        guard let h = snapshot.sleepAvgHours, let m = snapshot.sleepAvgMins else { return nil }
+        let gap = Int(sleepGoalHours * 60) - (h * 60 + m)
+        return gap > 0 ? gap : nil
+    }
+
+    /// Dynamic title: the gap phrase tinted purple, or the on-target variant.
+    private var sleepTitleAttributed: AttributedString {
+        guard let gap = sleepGapMinutes else {
+            return AttributedString(Copy.OnboardingV2.s12TitleOnTarget)
+        }
+        let phrase = Copy.OnboardingV2.sleepGapPhrase(minutes: gap)
+        var a = AttributedString(Copy.OnboardingV2.s12TitleGap(gap: phrase))
+        if let r = a.range(of: phrase) {
+            a[r].foregroundColor = OnbV2.purple
+        }
+        return a
+    }
+
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .purpleDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 13, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
-                        VStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 14) {
                             Text(Copy.OnboardingV2.s12Eyebrow)
                                 .font(.system(size: 12, weight: .semibold))
                                 .tracking(1.6)
                                 .foregroundStyle(OnbV2.purple)
-                            Text(hasData ? Copy.OnboardingV2.s12TitleHasData : Copy.OnboardingV2.s12TitleEmpty)
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundStyle(OnbV2.fg)
-                                .multilineTextAlignment(.center)
+                            Group {
+                                if hasData {
+                                    Text(sleepTitleAttributed)
+                                } else {
+                                    Text(Copy.OnboardingV2.s12TitleEmpty)
+                                }
+                            }
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundStyle(OnbV2.fg)
+                            .multilineTextAlignment(.leading)
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(.top, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 20)
                         .onbV2StaggerIn(index: 0, appeared: phase.hasReached(.chart))
 
                         sleepCard
@@ -779,9 +849,9 @@ struct OnbV2Screen13HRV: View {
     private var barsRevealed: Bool { phase.hasReached(.chart) }
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .tealDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 14, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 13, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -979,108 +1049,13 @@ struct OnbV2Screen13HRV: View {
     }
 }
 
-// MARK: - Screen — Prediction (pre-registered claim)
-
-/// Shown after the symptom capture, before the HealthKit ask. States the claim
-/// Laso will test, built from the user's own goal + symptom words, with no
-/// timing promise — the data branch decides when the answer is ready.
-struct OnbV2ScreenPrediction: View {
-    let prediction: PreRegisteredPrediction
-    let onBack: () -> Void
-    let onCTA: () -> Void
-
-    @State private var appeared = false
-    @State private var ctaPressed = false
-    @State private var heroPulse = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        OnbV2ScreenContainer(ambient: .mix, staggerOwnsEntry: true) {
-            VStack(spacing: 0) {
-                OnbV2TopBar(step: 6, total: OnbV2Flow.total, onBack: onBack)
-
-                Spacer(minLength: 0)
-
-                OnbV2HeartHero(size: 180, color: OnbV2.blue)
-                    .scaleEffect(heroPulse ? 1.04 : 1)
-                    .onbV2StaggerIn(index: 0, appeared: appeared)
-
-                Spacer().frame(height: 28)
-
-                Text(Copy.OnboardingV2.predictionEyebrow)
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(1.6)
-                    .foregroundStyle(OnbV2.blue)
-                    .onbV2StaggerIn(index: 1, appeared: appeared)
-
-                Spacer().frame(height: 12)
-
-                // The claim now sits in a hairline card so it reads as the
-                // pre-registered statement under test, not just a headline.
-                Text(Copy.OnboardingV2.predictionTitle(
-                    claim: Copy.OnboardingV2.metricClaimPhrase(prediction.metric),
-                    outcome: outcomePhrase
-                ))
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(OnbV2.fg)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(20)
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(OnbV2.bg2)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(OnbV2.line, lineWidth: 1)
-                )
-                .padding(.horizontal, OnbV2.bodyPadH)
-                .onbV2StaggerIn(index: 2, appeared: appeared)
-
-                Spacer().frame(height: 16)
-
-                Text(Copy.OnboardingV2.predictionFootnote)
-                    .font(.system(size: 14))
-                    .foregroundStyle(OnbV2.fg3)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 320)
-                    .padding(.horizontal, OnbV2.bodyPadH)
-                    .onbV2StaggerIn(index: 3, appeared: appeared)
-
-                Spacer(minLength: 0)
-
-                OnbV2PrimaryCTA(Copy.OnboardingV2.predictionCTA) {
-                    ctaPressed.toggle()
-                    onCTA()
-                }
-                .padding(.horizontal, OnbV2.bodyPadH)
-                .padding(.bottom, 20)
-                .onbV2StaggerIn(index: 4, appeared: appeared)
-            }
-        }
-        // Ordinary CTA press: .impact(.light) per the haptic ladder.
-        .sensoryFeedback(.impact(weight: .light), trigger: ctaPressed)
-        .onAppear {
-            appeared = true
-            // One-shot hero pulse once the claim card lands (beat index 2 at
-            // 0.045s cascade + 0.7s settle). Gated under reduce motion.
-            if !reduceMotion {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.5)) { heroPulse = true }
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.5).delay(0.3)) { heroPulse = false }
-                }
-            }
-            AppAnalytics.shared.trackPromiseShown(metric: prediction.metric.rawValue)
-        }
-    }
-
-    /// The user's own symptom or goal words, lowercased so it reads naturally
-    /// inside the sentence. Falls back to a neutral phrase if somehow empty.
-    private var outcomePhrase: String {
-        let phrase = prediction.userPhrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        return phrase.isEmpty ? Copy.OnboardingV2.metricWatchLabel(prediction.metric) : phrase.lowercasedFirst
+/// A horizontal line spanning its frame, drawn dashed for a reference rule.
+struct DashedHLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: 0, y: rect.midY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return p
     }
 }
 
@@ -1132,49 +1107,48 @@ struct OnbV2ScreenVerdict: View {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
 
                 ScrollView {
-                    VStack(spacing: 18) {
-                        proofCard
-                            .opacity(phase.hasReached(.chart) ? 1 : 0)
-                            .padding(.top, 8)
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(eyebrow)
+                            .font(.system(size: 12, weight: .bold))
+                            .tracking(1.6)
+                            .foregroundStyle(accent)
+                            .onbV2StaggerIn(index: 0, appeared: phase.hasReached(.chart))
 
-                        VStack(spacing: 8) {
-                            Text(eyebrow)
-                                .font(.system(size: 12, weight: .bold))
-                                .tracking(1.6)
-                                .foregroundStyle(accent)
-                            Text(title)
-                                .font(.system(size: 30, weight: .bold))
-                                .foregroundStyle(OnbV2.fg)
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .onbV2StaggerIn(index: 0, appeared: phase.hasReached(.body))
+                        Text(titleAttributed)
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(OnbV2.fg)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .onbV2StaggerIn(index: 1, appeared: phase.hasReached(.chart))
 
                         Text(bodyText)
                             .font(.system(size: 17))
                             .foregroundStyle(OnbV2.fg2)
-                            .multilineTextAlignment(.center)
+                            .multilineTextAlignment(.leading)
                             .lineSpacing(3)
-                            .frame(maxWidth: 340)
                             .fixedSize(horizontal: false, vertical: true)
-                            .onbV2StaggerIn(index: 1, appeared: phase.hasReached(.body))
+                            .onbV2StaggerIn(index: 2, appeared: phase.hasReached(.chart))
+
+                        proofCard
+                            .opacity(phase.hasReached(.chart) ? 1 : 0)
+                            .padding(.top, 10)
 
                         if let side = sideDiscoveryText {
                             Text(side)
                                 .font(.system(size: 13.5))
                                 .foregroundStyle(OnbV2.fg3)
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: 320)
+                                .multilineTextAlignment(.leading)
                                 .fixedSize(horizontal: false, vertical: true)
-                                .padding(.top, 4)
-                                .onbV2StaggerIn(index: 2, appeared: phase.hasReached(.body))
+                                .padding(.top, 2)
+                                .onbV2StaggerIn(index: 3, appeared: phase.hasReached(.body))
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, OnbV2.bodyPadH)
                     .padding(.bottom, 16)
                 }
 
-                OnbV2PrimaryCTA(Copy.OnboardingV2.verdictCTA, action: onContinue)
+                OnbV2PrimaryCTA(ctaTitle, action: onContinue)
                     .padding(.horizontal, OnbV2.bodyPadH)
                     .padding(.bottom, 20)
                     .opacity(phase.hasReached(.cta) ? 1 : 0)
@@ -1213,82 +1187,59 @@ struct OnbV2ScreenVerdict: View {
         }
     }
 
-    /// Confirmed: weekday bar chart with the driver day highlighted, and the
-    /// magnitude as a CountUp hero. Hour bands carry no honest number, so they
-    /// show the band phrase instead of a fabricated count.
+    /// Confirmed: the driver day highlighted in red against the weekly-average
+    /// dashed line, with full weekday names and an honest source caption. The
+    /// magnitude now lives in the body sentence, so there is no hero number.
     private var confirmedProof: some View {
-        VStack(spacing: 14) {
-            magnitudeHero
-
+        VStack(alignment: .leading, spacing: 10) {
             if hasChartData {
                 weekdayBarChart
                     .frame(height: 96)
+                    // Red dashed line at the weekly average so the driver day's
+                    // shift reads against the norm. Fades in once the bars land.
+                    .overlay(alignment: .bottom) {
+                        DashedHLine()
+                            .stroke(OnbV2.rose.opacity(0.6), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                            .frame(height: 2)
+                            .padding(.bottom, avgBarHeight)
+                            .opacity(phase.hasReached(.number) ? 1 : 0)
+                            .animation(.easeOut(duration: 0.3), value: phase)
+                    }
 
-                HStack(spacing: 8) {
-                    ForEach(Array(dayLetters.enumerated()), id: \.offset) { idx, d in
+                HStack(spacing: 6) {
+                    ForEach(Array(dayNames.enumerated()), id: \.offset) { idx, d in
                         let isWorst = (idx == highlightLetterIndex)
                         Text(d)
-                            .font(.system(size: 11, weight: isWorst ? .bold : .medium))
-                            .foregroundStyle(isWorst ? accent : OnbV2.fg3)
+                            .font(.system(size: 12, weight: isWorst ? .bold : .medium))
+                            .foregroundStyle(isWorst ? OnbV2.rose : OnbV2.fg3)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
-            }
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(accent.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(accent.opacity(0.18), lineWidth: 1)
-        )
-    }
 
-    /// The banded magnitude. Numeric bands (minutes/percent/bpm) count up to
-    /// their value once the number beat hits; hour bands show their phrase
-    /// statically so the screen never implies false precision.
-    @ViewBuilder
-    private var magnitudeHero: some View {
-        if let magnitude = verdict.magnitude {
-            switch magnitude.band {
-            case .minutes, .percent, .bpm:
-                HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    if phase.hasReached(.number) {
-                        OnbV2CountUp(
-                            target: Double(magnitude.value),
-                            duration: 1.1,
-                            font: .system(size: 72, weight: .bold).monospacedDigit(),
-                            color: accent
-                        )
-                    } else {
-                        Text("0")
-                            .font(.system(size: 72, weight: .bold).monospacedDigit())
-                            .foregroundStyle(accent)
-                    }
-                    Text(magnitudeUnit(magnitude.band))
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundStyle(OnbV2.fg3)
-                }
-            case .roughlyAnHour, .overAnHour:
-                Text(Copy.OnboardingV2.bandPhrase(band: magnitude.band, value: magnitude.value))
-                    .font(.system(size: 30, weight: .bold))
-                    .foregroundStyle(accent)
+                Text(Copy.OnboardingV2.verdictChartCaption)
+                    .font(.system(size: 13))
+                    .foregroundStyle(OnbV2.fg4)
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 4)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
-    private func magnitudeUnit(_ band: VerdictMagnitude.Band) -> String {
-        switch band {
-        case .minutes:           return Copy.Onboarding.m
-        case .percent:           return Copy.Onboarding.pct
-        case .bpm:               return Copy.OnboardingV2.s11Unit
-        case .roughlyAnHour,
-             .overAnHour:        return ""
-        }
+    /// Full weekday names for the confirmed proof chart's axis.
+    private let dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+    /// Height of the weekly-average bar, in the bars' own scale, so the red
+    /// dashed reference line lands at the norm the driver day deviates from.
+    private var avgBarHeight: CGFloat {
+        let present = weekdayMeans.compactMap { $0 }
+        guard !present.isEmpty else { return 0 }
+        let minVal = present.min() ?? 0
+        let maxVal = present.max() ?? 1
+        let range = max(1, maxVal - minVal)
+        let avg = present.reduce(0, +) / Double(present.count)
+        return 16 + CGFloat((avg - minVal) / range) * 72
     }
 
     /// One bar per weekday from the threaded means, normalized to the present
@@ -1309,7 +1260,7 @@ struct OnbV2ScreenVerdict: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(LinearGradient(
                             colors: isWorst
-                                ? [accent, accent.opacity(0.4)]
+                                ? [OnbV2.rose, OnbV2.rose.opacity(0.4)]
                                 : [accent.opacity(0.55), accent.opacity(0.2)],
                             startPoint: .top, endPoint: .bottom
                         ))
@@ -1404,8 +1355,8 @@ struct OnbV2ScreenVerdict: View {
 
     private var ambient: OnbV2Ambient {
         switch verdict.zone {
-        case .confirmed:    return .blue
-        case .refuted:      return .blue
+        case .confirmed:    return .blueDual
+        case .refuted:      return .blueDual
         case .inconclusive: return .mix
         }
     }
@@ -1416,6 +1367,13 @@ struct OnbV2ScreenVerdict: View {
         case .refuted:      return OnbV2.green
         case .inconclusive: return OnbV2.amber
         }
+    }
+
+    /// Confirmed gets a coaching CTA; the other zones keep the neutral Continue.
+    private var ctaTitle: String {
+        verdict.zone == .confirmed
+            ? Copy.OnboardingV2.verdictConfirmedCTA
+            : Copy.OnboardingV2.verdictCTA
     }
 
     private var eyebrow: String {
@@ -1432,6 +1390,16 @@ struct OnbV2ScreenVerdict: View {
         case .refuted:      return Copy.OnboardingV2.verdictRefutedTitle
         case .inconclusive: return Copy.OnboardingV2.verdictInconclusiveTitle
         }
+    }
+
+    /// Confirmed title tints its accent word ("Yours") blue; other zones plain.
+    private var titleAttributed: AttributedString {
+        var a = AttributedString(title)
+        if verdict.zone == .confirmed,
+           let r = a.range(of: Copy.OnboardingV2.verdictConfirmedTitleAccent) {
+            a[r].foregroundColor = OnbV2.blueLight
+        }
+        return a
     }
 
     private var bodyText: String {
@@ -1495,7 +1463,7 @@ struct OnbV2ScreenCliffhanger: View {
     @State private var notifyPressed = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .blue, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
 
@@ -1581,40 +1549,39 @@ struct OnbV2ScreenJournalFirst: View {
     @State private var ctaPressed = false
 
     var body: some View {
-        OnbV2ScreenContainer(ambient: .rose, staggerOwnsEntry: true) {
+        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: nil, hideProgress: true)
 
-                Spacer(minLength: 0)
-
-                OnbV2HeartHero(size: 180, color: OnbV2.rose)
-                    .onbV2StaggerIn(index: 0, appeared: appeared)
-
-                Spacer().frame(height: 28)
-
-                // Group 2: eyebrow + title + body. This is the denied branch —
-                // no instant data, so the reveal is gentle copy only, never a
-                // number or chart motion.
-                VStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 14) {
                     Text(Copy.OnboardingV2.journalFirstEyebrow)
                         .font(.system(size: 12, weight: .bold))
                         .tracking(1.6)
-                        .foregroundStyle(OnbV2.rose)
+                        .foregroundStyle(OnbV2.blue)
+                        .onbV2StaggerIn(index: 0, appeared: appeared)
 
                     Text(Copy.OnboardingV2.journalFirstTitle)
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(size: 30, weight: .bold))
                         .foregroundStyle(OnbV2.fg)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .onbV2StaggerIn(index: 1, appeared: appeared)
 
                     Text(Copy.OnboardingV2.journalFirstBody)
                         .font(.system(size: 16))
                         .foregroundStyle(OnbV2.fg2)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 320)
+                        .multilineTextAlignment(.leading)
+                        .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, OnbV2.bodyPadH)
+                        .onbV2StaggerIn(index: 2, appeared: appeared)
+
+                    sampleChart
+                        .padding(.top, 18)
+                        .onbV2StaggerIn(index: 3, appeared: appeared)
                 }
-                .onbV2StaggerIn(index: 1, appeared: appeared)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, OnbV2.bodyPadH)
+                .padding(.top, 8)
 
                 Spacer(minLength: 0)
 
@@ -1624,7 +1591,7 @@ struct OnbV2ScreenJournalFirst: View {
                 }
                 .padding(.horizontal, OnbV2.bodyPadH)
                 .padding(.bottom, 20)
-                .onbV2StaggerIn(index: 2, appeared: appeared)
+                .onbV2StaggerIn(index: 4, appeared: appeared)
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: ctaPressed)
@@ -1634,6 +1601,53 @@ struct OnbV2ScreenJournalFirst: View {
                 event: "promise_shown",
                 properties: ["branch": "journal_first"]
             )
+        }
+    }
+
+    /// Illustrative weekly trend. The denied branch has no real data yet, so the
+    /// body frames this as an example of what a week of check-ins reads like —
+    /// never the user's own numbers. Red days are the standouts a trend surfaces.
+    private var sampleChart: some View {
+        let bars: [(h: CGFloat, red: Bool, dim: Bool)] = [
+            (0.55, false, false), (0.72, false, false), (0.40, false, true),
+            (0.82, false, false), (0.88, true, false), (0.80, false, false), (1.0, true, false)
+        ]
+        let names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .bottom, spacing: 8) {
+                ForEach(0..<7, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(LinearGradient(
+                            colors: bars[i].red
+                                ? [OnbV2.rose, OnbV2.rose.opacity(0.4)]
+                                : (bars[i].dim
+                                    ? [OnbV2.blue.opacity(0.3), OnbV2.blue.opacity(0.12)]
+                                    : [OnbV2.blueLight, OnbV2.blue]),
+                            startPoint: .top, endPoint: .bottom))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28 + bars[i].h * 92)
+                        // Colored glow so the bars read lit, not flat.
+                        .shadow(color: (bars[i].red ? OnbV2.rose : OnbV2.blue).opacity(bars[i].dim ? 0 : 0.45), radius: 8, x: 0, y: 0)
+                        .scaleEffect(y: appeared ? 1 : 0, anchor: .bottom)
+                        .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.7).delay(Double(i) * 0.06), value: appeared)
+                }
+            }
+            .frame(height: 130, alignment: .bottom)
+
+            HStack(spacing: 8) {
+                ForEach(0..<7, id: \.self) { i in
+                    Text(names[i])
+                        .font(.system(size: 12, weight: bars[i].red ? .bold : .medium))
+                        .foregroundStyle(bars[i].red ? OnbV2.rose : OnbV2.fg3)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            Text(Copy.OnboardingV2.journalFirstChartCaption)
+                .font(.system(size: 13))
+                .foregroundStyle(OnbV2.fg4)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 4)
         }
     }
 }
