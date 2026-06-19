@@ -144,9 +144,6 @@ enum TodayScoreCopy {
     static let msUnit = "ms"
     static let bpmUnit = "bpm"
 
-    /// `%d` is the overall 0–100 score. Caption under the trailing stack.
-    static let scoreCaptionTemplate = "Laso score %d"
-
     /// `%1$d` is the overall score, `%2$@` is the mode headline. Ring VoiceOver.
     static let ringAccessibilityTemplate = "%2$@. Laso score %1$d out of 100"
 

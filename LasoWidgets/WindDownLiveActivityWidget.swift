@@ -5,10 +5,12 @@ import AppIntents
 
 /// Dynamic Island + Lock Screen presentation for the evening wind-down window.
 ///
-/// Two elements animate without a push update: `Text(timerInterval:)` (the
-/// primitive iOS renders smoothly) and the icon-tile progress arc + evolving
-/// phrase, both driven by a 60-second TimelineView so they advance as bedtime
-/// approaches whenever the island is tapped or the lock screen is visible.
+/// The countdown to bedtime advances without a push update via
+/// `Text(timerInterval:)`, and the expanded moon-arc fills toward bedtime via
+/// `ProgressView(timerInterval:)` — the only ring primitive iOS keeps moving in
+/// a Live Activity. The stage phrase is computed once per render from `now`
+/// (the system re-renders the island on its own cadence); it carries no
+/// animation primitive of its own, so it never freezes a stale frame on screen.
 struct WindDownLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WindDownActivityAttributes.self) { context in
@@ -19,19 +21,18 @@ struct WindDownLiveActivityWidget: Widget {
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
+                // EXPANDED — the HTML "type: count" card mapped onto the four
+                // fixed regions: mode pill (leading) + stamp (trailing) form the
+                // head, the insight/countdown sits centre, and the moon-arc tile
+                // plus the full-width action button fill the bottom.
                 DynamicIslandExpandedRegion(.leading) {
-                    WindDownIconTile(state: context.state, size: 56)
+                    WindDownModePill()
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    WindDownCountdownStack(state: context.state, font: .title.weight(.bold))
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    WindDownPhraseLine(state: context.state)
-                        .padding(.top, 2)
+                    WindDownStampLabel(state: context.state)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    WindDownActionRow(state: context.state)
-                        .padding(.top, 4)
+                    WindDownExpandedBody(state: context.state)
                 }
             } compactLeading: {
                 Image(systemName: "moon.stars.fill")
@@ -97,7 +98,7 @@ private struct WindDownLockScreenView: View {
 
             WindDownCountdownStack(state: state, font: .title2.weight(.bold))
 
-            WindDownBreatheButton()
+            WindDownBreatheButton(fullWidth: false)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -109,11 +110,169 @@ private struct WindDownLockScreenView: View {
     }
 }
 
-// MARK: - Icon Tile (expanded leading / lock screen)
+// MARK: - Expanded head (mode pill + stamp)
+
+/// Tint-tinted capsule with the moon glyph and the "Wind down" headline — the
+/// HTML `modepill`. Background is the accent at 18% to match `color-mix(... 18%)`.
+private struct WindDownModePill: View {
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "moon.stars.fill")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(windDownTint)
+            Text(WindDownCopy.header)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(AppColour.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.leading, 8)
+        .padding(.trailing, 11)
+        .padding(.vertical, 5)
+        .background(windDownTint.opacity(0.18), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(WindDownCopy.header)
+    }
+}
+
+/// HTML `stamp` — small tertiary "time until bedtime" label sitting opposite the
+/// mode pill. Driven by `Text(timerInterval:)` so it stays live without a push.
+private struct WindDownStampLabel: View {
+    let state: WindDownActivityAttributes.ContentState
+
+    var body: some View {
+        Text(WindDownCopy.toBed)
+            .font(.caption.weight(.medium))
+            .textCase(.uppercase)
+            .tracking(0.6)
+            .foregroundStyle(AppColour.textTertiary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Expanded body (moon-arc + countdown copy + action)
+
+/// The HTML `exp-body` grid `auto 1fr` followed by the `exp-foot` button, mapped
+/// into the single `.bottom` region (the only region wide enough to host the
+/// card). Left = moon-arc tile, right = big countdown + stage phrase + HRV hint,
+/// below = full-width Breathe action.
+private struct WindDownExpandedBody: View {
+    let state: WindDownActivityAttributes.ContentState
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 16) {
+                WindDownMoonArc(state: state, size: 56)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    // exp-count: big countdown number + "to bed" unit. The
+                    // timer primitive renders the live minutes; the static unit
+                    // sits beside it as the HTML `small`.
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(timerInterval: Date()...state.targetBedtime, countsDown: true)
+                            .font(.system(size: 30, weight: .bold).monospacedDigit())
+                            .foregroundStyle(AppColour.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        Text(WindDownCopy.toBed)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(AppColour.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+
+                    // stage-phrase: accent-coloured, softens as bed nears.
+                    Text(currentStage(now: Date(), bedtime: state.targetBedtime).phrase)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(windDownTint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    // hint: optional HRV nudge, tertiary.
+                    if let hint = hrvHint(state: state) {
+                        Text(hint)
+                            .font(.caption2)
+                            .foregroundStyle(AppColour.textTertiary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                }
+
+                Spacer(minLength: 4)
+            }
+
+            WindDownBreatheButton(fullWidth: true)
+        }
+        .padding(.top, 4)
+    }
+
+    private func hrvHint(state: WindDownActivityAttributes.ContentState) -> String? {
+        guard state.hrvIsLow, let hrv = state.hrvMs, hrv > 0 else { return nil }
+        return String(format: WindDownCopy.hrvHintTemplate, hrv)
+    }
+}
+
+// MARK: - Moon Arc Tile (expanded leading figure)
+
+/// HTML `ring-wrap` for the wind-down count card: a soft radial bloom behind an
+/// advancing accent arc, with the moon glyph centred. The arc fills from
+/// `windDownStartedAt` to `targetBedtime` via `ProgressView(timerInterval:)` —
+/// the only self-advancing ring primitive in a Live Activity. A static `.trim`
+/// would freeze until the next push. The glow is a RadialGradient layer (never
+/// `.blur`/`.shadow`, which render as a box and do not display in widgets).
+private struct WindDownMoonArc: View {
+    let state: WindDownActivityAttributes.ContentState
+    let size: CGFloat
+
+    var body: some View {
+        let (start, end) = arcWindow(state: state)
+
+        ZStack {
+            Circle()
+                .stroke(Color.white.opacity(0.12), lineWidth: 4)
+            ProgressView(timerInterval: start...end, countsDown: false) {
+                EmptyView()
+            } currentValueLabel: {
+                EmptyView()
+            }
+            .progressViewStyle(.circular)
+            .tint(windDownTint)
+            .accessibilityHidden(true)
+
+            Image(systemName: currentStage(now: Date(), bedtime: state.targetBedtime).symbolName)
+                .font(.system(size: size * 0.38, weight: .semibold))
+                .foregroundStyle(windDownTint)
+        }
+        .frame(width: size, height: size)
+        .background {
+            RadialGradient(
+                colors: [windDownTint.opacity(0.22), windDownTint.opacity(0)],
+                center: .center, startRadius: 4, endRadius: size * 0.85
+            )
+            .scaleEffect(1.7)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(currentStage(now: Date(), bedtime: state.targetBedtime).accessibilityLabel)
+    }
+
+    /// Clamps the arc window so the progress timer always has a forward range:
+    /// once bedtime has passed, peg `end` just ahead of `now` so the ring reads
+    /// as full rather than crashing on an empty `ClosedRange`.
+    private func arcWindow(state: WindDownActivityAttributes.ContentState) -> (Date, Date) {
+        let start = state.windDownStartedAt
+        let end = max(state.targetBedtime, start.addingTimeInterval(1))
+        return (start, end)
+    }
+}
+
+// MARK: - Icon Tile (lock screen)
 
 /// Progress arc that fills from `windDownStartedAt` to `targetBedtime` with the
 /// current stage glyph centred. A 60-second TimelineView advances both the fill
-/// and the glyph without needing a push update each minute.
+/// and the glyph; kept for the lock-screen card, where TimelineView refreshes
+/// reliably while the screen is visible.
 private struct WindDownIconTile: View {
     let state: WindDownActivityAttributes.ContentState
     let size: CGFloat
@@ -152,7 +311,7 @@ private struct WindDownIconTile: View {
     }
 }
 
-// MARK: - Countdown (expanded trailing / lock screen)
+// MARK: - Countdown (lock screen)
 
 private struct WindDownCountdownStack: View {
     let state: WindDownActivityAttributes.ContentState
@@ -191,7 +350,7 @@ private struct CompactCountdown: View {
     }
 }
 
-// MARK: - Phrase Line
+// MARK: - Phrase Line (lock screen)
 
 private struct WindDownPhraseLine: View {
     let state: WindDownActivityAttributes.ContentState
@@ -208,36 +367,30 @@ private struct WindDownPhraseLine: View {
     }
 }
 
-// MARK: - Action Row
+// MARK: - Action Button
 
-private struct WindDownActionRow: View {
-    let state: WindDownActivityAttributes.ContentState
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Spacer()
-            WindDownBreatheButton()
-            Spacer()
-        }
-    }
-}
-
+/// HTML `btn` — the single full-width "Breathe 2 min" action. Accent at 22%
+/// background, accent glyph, white label. `fullWidth` lets the lock screen reuse
+/// it as a trailing pill while the expanded island stretches it edge to edge.
 private struct WindDownBreatheButton: View {
+    var fullWidth: Bool
+
     var body: some View {
         Button(intent: WindDownBreatheIntent()) {
-            HStack(spacing: 6) {
+            HStack(spacing: 7) {
                 Image(systemName: "wind")
                     .font(.footnote.weight(.semibold))
+                    .foregroundStyle(windDownTint)
                 Text(WindDownCopy.breatheButton)
                     .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppColour.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            .foregroundStyle(.white)
+            .frame(maxWidth: fullWidth ? .infinity : nil)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(windDownTint.opacity(0.28), in: Capsule())
-            .overlay(Capsule().strokeBorder(windDownTint.opacity(0.55), lineWidth: 1))
+            .background(windDownTint.opacity(0.22), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(WindDownCopy.breatheButtonAccessibilityLabel)

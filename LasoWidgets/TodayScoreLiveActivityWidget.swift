@@ -14,33 +14,35 @@ struct TodayScoreLiveActivityWidget: Widget {
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
+                // Hero score ring + soft radial bloom, concentric with the island.
+                // Kept in .leading (out of .bottom) so the bottom region can never
+                // overflow the island's fixed height and clip the action button.
                 DynamicIslandExpandedRegion(.leading) {
-                    CoachOrbRing(state: context.state, size: 66)
-                        .background {
-                            // Soft band glow behind the island ring (radial, not blur).
-                            RadialGradient(
-                                colors: [bandColor(for: context.state).opacity(0.22), .clear],
-                                center: .center, startRadius: 6, endRadius: 54
-                            )
-                            .scaleEffect(1.7)
-                        }
+                    CoachExpandedRing(state: context.state)
                 }
+                // Small tertiary time / honest-stale stamp (HTML `.stamp`).
                 DynamicIslandExpandedRegion(.trailing) {
-                    CoachTrailingStack(state: context.state)
+                    CoachStamp(state: context.state)
                 }
+                // Eyebrow mode pill over the one-line insight briefing (HTML header + `.ins`).
                 DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.insight)
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(AppColour.textPrimary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.7)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 10)
-                        .padding(.top, 4)
+                    VStack(alignment: .leading, spacing: 3) {
+                        CoachModePill(state: context.state)
+                        Text(context.state.insight)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(AppColour.textPrimary)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.7)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.leading, 4)
+                    .padding(.top, 2)
                 }
+                // Briefing body: hairline 3-stat row, then the full-width action
+                // capsule beside the weakest-pillar chip. The ring lives in .leading.
                 DynamicIslandExpandedRegion(.bottom) {
-                    CoachActionBar(kind: context.state.actionKind, tint: bandColor(for: context.state), fullWidth: true)
-                        .padding(.top, 2)
+                    CoachExpandedBottom(state: context.state)
                 }
             } compactLeading: {
                 CompactLeadingRing(state: context.state)
@@ -79,11 +81,14 @@ private struct CoachLockScreenView: View {
                 // not render blur. Single soft radial <=20% opacity, no white halo.
                 CoachOrbRing(state: state, size: 78)
                     .background {
-                        RadialGradient(
-                            colors: [tint.opacity(0.22), tint.opacity(0)],
-                            center: .center, startRadius: 6, endRadius: 64
-                        )
-                        .scaleEffect(1.7)
+                        // Circle-clipped bloom (see CoachExpandedRing) so the soft band
+                        // glow never renders as a square behind the lock-screen ring.
+                        Circle()
+                            .fill(RadialGradient(
+                                colors: [tint.opacity(0.22), .clear],
+                                center: .center, startRadius: 8, endRadius: 56
+                            ))
+                            .frame(width: 118, height: 118)
                     }
 
                 VStack(alignment: .leading, spacing: 5) {
@@ -248,88 +253,211 @@ private struct CoachOrbRing: View {
     }
 }
 
-// MARK: - Trailing Stack (expanded trailing)
+// MARK: - Mode Pill (expanded leading)
 
-private struct CoachTrailingStack: View {
+/// Tint-tinted capsule with the mode glyph and headline — the HTML `.modepill`
+/// (accent at ~18% background). Reuses `state.mode.symbolName` / `.headline` so
+/// the eyebrow always matches the time-of-day mode driving the rest of the card.
+private struct CoachModePill: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = scoreTint(for: state)
-
-        VStack(alignment: .trailing, spacing: 4) {
-            Text(state.mode.secondaryLabel)
+        let tint = bandColor(for: state)
+        HStack(spacing: 6) {
+            Image(systemName: state.mode.symbolName)
                 .font(.caption2.weight(.semibold))
-                .textCase(.uppercase)
-                .tracking(0.8)
-                .foregroundStyle(AppColour.textSecondary)
+                .foregroundStyle(tint)
+            Text(state.mode.headline)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(tint.opacity(0.18), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(state.mode.headline)
+    }
+}
 
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(secondaryValue)
-                    .font(.title.weight(.bold).monospacedDigit())
-                    .foregroundStyle(AppColour.textPrimary)
-                    .contentTransition(.numericText())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if let unit = secondaryUnit {
-                    Text(unit)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppColour.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-            }
+// MARK: - Stamp (expanded trailing)
 
-            Text(String(format: TodayScoreCopy.scoreCaptionTemplate, state.overallScore))
-                .font(.caption2)
-                .foregroundStyle(tint.opacity(0.85))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+/// Small tertiary time stamp (HTML `.stamp`). Switches to the honest "Updated Nh
+/// ago" phrase once the data is stale so an old reading never shows a fresh time.
+private struct CoachStamp: View {
+    let state: TodayScoreActivityAttributes.ContentState
 
-            // Quiet weakest-pillar nudge — only when the score is known.
-            if let weakest = state.weakestPillarScore {
-                HStack(spacing: 3) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppColour.warning)
-                    Text("\(state.weakestPillar) \(weakest)")
-                        .font(.caption2.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(AppColour.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
+    var body: some View {
+        Text(staleAgePhrase(state) ?? WidgetStyle.timeString(from: state.lastUpdated))
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(AppColour.textTertiary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.trailing, 4)
+    }
+}
+
+// MARK: - Expanded Bottom (ring + stats + action row)
+
+/// The HTML "briefing" body mapped onto the bottom region: a score ring with a
+/// soft radial bloom, a hairline-divided 3-stat row built from real ContentState
+/// fields, then a full-width action capsule beside the weakest-pillar chip.
+private struct CoachExpandedBottom: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        let tint = bandColor(for: state)
+        VStack(spacing: 6) {
+            CoachStatRow(state: state)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 9) {
+                CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true)
+                if let weakest = state.weakestPillarScore {
+                    CoachWeakChip(pillar: state.weakestPillar, score: weakest)
                 }
             }
         }
-        .padding(.trailing, 6)
     }
+}
 
-    private var secondaryValue: String {
+// MARK: - Expanded Leading Ring
+
+/// Score ring with its soft radial bloom for the expanded leading region, sized to
+/// sit concentric beside the camera. RadialGradient bloom (widgets cannot render .blur).
+private struct CoachExpandedRing: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        let tint = bandColor(for: state)
+        CoachOrbRing(state: state, size: 50)
+            .background {
+                // Circle-clipped bloom. A bare RadialGradient fills its square frame
+                // and shows tinted corners whenever endRadius exceeds the frame, which
+                // reads as a box behind the ring. Filling a Circle clips that away so
+                // the glow is always a clean disc.
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [tint.opacity(0.28), .clear],
+                        center: .center, startRadius: 6, endRadius: 38
+                    ))
+                    .frame(width: 80, height: 80)
+            }
+    }
+}
+
+// MARK: - Stat Row (3 stats, hairline dividers)
+
+/// Up to three supporting stats with thin vertical hairline rules between them
+/// (HTML `.stat-row`). Each cell is a bold monospaced value + tiny unit over an
+/// UPPERCASE caption. Stats are built ONLY from fields the ContentState actually
+/// carries — missing optionals (HRV / resting HR) are dropped, never faked.
+private struct CoachStatRow: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    /// (value, unit?, caption) tuples. Order is mode-led: the day mode leads with
+    /// the effort metric (Steps); recovery modes lead with HRV / resting HR.
+    private var stats: [(value: String, unit: String?, caption: String)] {
+        var out: [(String, String?, String)] = []
         switch state.mode {
-        case .morning:
-            if let hrv = state.hrvMs { return "\(hrv)" }
-            return "\(state.restingHR ?? state.heroValue)"
         case .day:
-            return stepsDisplay(state.steps)
-        case .evening, .night:
-            return "\(state.heroValue)"
+            out.append((stepsDisplay(state.steps), nil, CoachMode.day.secondaryLabel))
+            if let hr = state.restingHR { out.append(("\(hr)", TodayScoreCopy.bpmUnit, CoachMode.night.headline)) }
+            if let hrv = state.hrvMs { out.append(("\(hrv)", TodayScoreCopy.msUnit, CoachMode.morning.secondaryLabel)) }
+        case .morning, .evening, .night:
+            if let hrv = state.hrvMs { out.append(("\(hrv)", TodayScoreCopy.msUnit, CoachMode.morning.secondaryLabel)) }
+            if let hr = state.restingHR { out.append(("\(hr)", TodayScoreCopy.bpmUnit, CoachMode.night.headline)) }
+            out.append((stepsDisplay(state.steps), nil, CoachMode.day.secondaryLabel))
         }
+        return Array(out.prefix(3))
     }
 
-    private var secondaryUnit: String? {
-        switch state.mode {
-        case .morning: return state.hrvMs != nil ? TodayScoreCopy.msUnit : (state.restingHR != nil ? TodayScoreCopy.bpmUnit : nil)
-        case .day:     return nil
-        case .evening, .night: return nil
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
+                if index > 0 {
+                    // Hairline rule, inset top/bottom so it never spans full height.
+                    Rectangle()
+                        .fill(Color.white.opacity(0.10))
+                        .frame(width: 1)
+                        .padding(.vertical, 3)
+                }
+                StatCell(value: stat.value, unit: stat.unit, caption: stat.caption)
+                    .padding(.leading, index == 0 ? 0 : 10)
+                    .padding(.trailing, index == stats.count - 1 ? 0 : 10)
+            }
         }
     }
 
     private func stepsDisplay(_ steps: Int) -> String {
         if steps >= 10_000 {
-            let k = Double(steps) / 1_000
-            return String(format: "%.1fK", k)
+            return String(format: "%.1fK", Double(steps) / 1_000)
         }
         return "\(steps)"
+    }
+}
+
+private struct StatCell: View {
+    let value: String
+    let unit: String?
+    let caption: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text(value)
+                    .font(.footnote.weight(.bold).monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                if let unit {
+                    Text(unit)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(AppColour.textTertiary)
+                }
+            }
+            Text(caption)
+                .font(.system(size: 9, weight: .semibold))
+                .textCase(.uppercase)
+                .tracking(0.4)
+                .foregroundStyle(AppColour.textTertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Weakest-Pillar Chip
+
+/// HTML `.chip-weak`: a soft pill with a fixed amber warning dot, the pillar
+/// name, then the bold score. Dot is always `AppColour.warning` (#F59E0B) per
+/// spec, independent of the score band tint.
+private struct CoachWeakChip: View {
+    let pillar: String
+    let score: Int
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(AppColour.warning)
+                .frame(width: 7, height: 7)
+            Text(pillar)
+                .foregroundStyle(AppColour.textSecondary)
+            Text("\(score)")
+                .foregroundStyle(AppColour.textPrimary)
+                .monospacedDigit()
+        }
+        .font(.caption.weight(.semibold))
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .padding(.horizontal, 10)
+        .frame(height: 30)
+        .background(Color.white.opacity(0.06), in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(pillar) \(score)")
     }
 }
 

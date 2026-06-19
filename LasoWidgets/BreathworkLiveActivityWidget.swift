@@ -13,50 +13,33 @@ struct BreathworkLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label(context.state.protocolType.title, systemImage: context.state.protocolType.symbolName)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                    BreathworkModePill(context: context)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    BreathworkTimerLabel(context: context)
+                    BreathworkStamp(context: context)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    TimelineView(.periodic(from: .now, by: 1)) { timeline in
-                        let phase = phase(at: timeline.date, context: context)
-                        HStack(spacing: 10) {
-                            BreathingOrb(phase: phase, size: 22)
-                            Text(phase.label)
-                                .font(.headline)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                            Spacer()
-                            Text(context.state.protocolType.subtitle)
-                                .font(.caption)
-                                .foregroundStyle(AppColour.textSecondary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(phase.accessibilityLabel)
+                    BreathworkExpandedBody(context: context)
                         .widgetURL(Self.stressMonitorURL)
-                    }
                 }
             } compactLeading: {
-                TimelineView(.periodic(from: .now, by: 1)) { timeline in
-                    let phase = phase(at: timeline.date, context: context)
-                    Image(systemName: phase.symbolName)
-                        .foregroundStyle(AppColour.accent)
-                        .accessibilityLabel(phase.accessibilityLabel)
-                        .widgetURL(Self.stressMonitorURL)
-                }
+                Image(systemName: context.state.activePhase.symbolName)
+                    .foregroundStyle(AppColour.accent)
+                    .accessibilityLabel(context.state.activePhase.accessibilityLabel)
+                    .widgetURL(Self.stressMonitorURL)
             } compactTrailing: {
                 CompactTimerText(context: context)
                     .accessibilityLabel(BreathworkCopy.timerAccessibilityLabel)
                     .widgetURL(Self.stressMonitorURL)
             } minimal: {
-                Image(systemName: context.state.protocolType.symbolName)
-                    .accessibilityLabel(context.state.protocolType.title)
+                ZStack {
+                    Circle().fill(AppColour.accent.opacity(0.22))
+                    Circle().stroke(AppColour.accent, lineWidth: 1.2)
+                    Image(systemName: context.state.protocolType.symbolName)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppColour.accent)
+                }
+                .accessibilityLabel(context.state.protocolType.title)
             }
         }
     }
@@ -64,41 +47,135 @@ struct BreathworkLiveActivityWidget: Widget {
     /// Deep link target for the breathwork surface. `onOpenURL` (added by D3)
     /// maps this via `Route.fromUITestIdentifier` to `Route.stressMonitor`.
     private static let stressMonitorURL = URL(string: "laso://route/stressMonitor")
-
-    private func phase(
-        at date: Date,
-        context: ActivityViewContext<BreathworkActivityAttributes>
-    ) -> BreathworkLivePhase {
-        guard context.state.status == .active else {
-            return context.state.currentPhase
-        }
-
-        let elapsed = max(0, date.timeIntervalSince(context.state.sessionStartDate))
-        return context.state.protocolType.phase(atElapsed: elapsed)
-    }
 }
 
-// MARK: - Breathing Orb
+// MARK: - Dynamic Island: Expanded leading (mode pill)
 
-/// Signature pace cue. Scales between phases following `BreathworkLivePhase.orbScale`
-/// so the orb tracks the lungs. The scaling animation is suppressed when Reduce
-/// Motion is on — the orb then renders at the phase's fixed size with no movement.
-private struct BreathingOrb: View {
-    let phase: BreathworkLivePhase
-    let size: CGFloat
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+/// Tinted capsule mirroring the HTML `modepill`: accent glyph + headline title.
+/// Background is the accent at low opacity so it reads as branded but restrained.
+private struct BreathworkModePill: View {
+    let context: ActivityViewContext<BreathworkActivityAttributes>
 
     var body: some View {
-        Circle()
-            .fill(AppColour.accent.opacity(0.22))
-            .overlay(Circle().stroke(AppColour.accent, lineWidth: 1.4))
-            .frame(width: size, height: size)
-            .scaleEffect(phase.orbScale)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 1), value: phase)
-            .accessibilityHidden(true)
+        HStack(spacing: 6) {
+            Image(systemName: context.state.protocolType.symbolName)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColour.accent)
+            Text(context.attributes.title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColour.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(AppColour.accent.opacity(0.18), in: Capsule())
     }
 }
+
+// MARK: - Dynamic Island: Expanded trailing (stamp)
+
+/// Small tertiary label naming the active protocol, matching the HTML `stamp`.
+private struct BreathworkStamp: View {
+    let context: ActivityViewContext<BreathworkActivityAttributes>
+
+    var body: some View {
+        Text(context.state.protocolType.subtitle)
+            .font(.caption)
+            .foregroundStyle(AppColour.textTertiary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+    }
+}
+
+// MARK: - Dynamic Island: Expanded bottom (orb + phase + meta)
+
+/// Centred breathing column from the HTML `breath-body`: the static orb, the
+/// current phase label, and a session meta line (subtitle + remaining time).
+private struct BreathworkExpandedBody: View {
+    let context: ActivityViewContext<BreathworkActivityAttributes>
+
+    var body: some View {
+        VStack(spacing: 8) {
+            BreathingOrb(size: 56)
+
+            Text(context.state.activePhase.label)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(AppColour.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            BreathworkMetaLine(context: context)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(context.state.activePhase.accessibilityLabel)
+    }
+}
+
+/// HTML `breath-meta`: protocol subtitle plus the live remaining countdown.
+/// Active sessions stream the countdown via `Text(timerInterval:)`; paused /
+/// completed states show a static string so nothing claims to be ticking.
+private struct BreathworkMetaLine: View {
+    let context: ActivityViewContext<BreathworkActivityAttributes>
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(context.state.protocolType.subtitle)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            switch context.state.status {
+            case .active:
+                Text(BreathworkCopy.remaining)
+                Text(timerInterval: Date()...context.state.sessionEndDate, countsDown: true)
+                    .monospacedDigit()
+                    .frame(minWidth: 36, alignment: .leading)
+            case .paused:
+                Text(BreathworkCopy.statusPaused)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            case .completed:
+                Text(BreathworkCopy.statusComplete)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(AppColour.textTertiary)
+    }
+}
+
+// MARK: - Breathing Orb (static)
+
+/// Static stand-in for the HTML breathing `orb`. A Live Activity cannot run the
+/// scale keyframe, so the orb is rendered as concentric circles over a soft
+/// accent RadialGradient bloom — the same filter-free glow technique the ring
+/// glow uses (a radial gradient on a circular frame reads as a circular bloom,
+/// never a box; `.blur`/`.shadow` would not render here).
+private struct BreathingOrb: View {
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [AppColour.accent.opacity(0.55), .clear],
+                        center: UnitPoint(x: 0.5, y: 0.42),
+                        startRadius: 0,
+                        endRadius: size * 0.7
+                    )
+                )
+            Circle()
+                .stroke(AppColour.accent.opacity(0.5), lineWidth: 2)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Lock Screen content
 
 private struct BreathworkLiveActivityView: View {
     let context: ActivityViewContext<BreathworkActivityAttributes>
@@ -107,7 +184,7 @@ private struct BreathworkLiveActivityView: View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let phase = phase(at: timeline.date)
             HStack(spacing: 12) {
-                BreathingOrb(phase: phase, size: 40)
+                LockScreenBreathingOrb(phase: phase, size: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.protocolType.subtitle)
@@ -185,54 +262,46 @@ private struct BreathworkLiveActivityView: View {
     }
 }
 
-private struct BreathworkTimerLabel: View {
-    let context: ActivityViewContext<BreathworkActivityAttributes>
+/// Lock-screen pace cue. Scales between phases following `orbScale` so the orb
+/// tracks the lungs; suppressed when Reduce Motion is on. Lock-screen Live
+/// Activity views may animate, unlike the Dynamic Island orb above.
+private struct LockScreenBreathingOrb: View {
+    let phase: BreathworkLivePhase
+    let size: CGFloat
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { timeline in
-            switch context.state.status {
-            case .active:
-                Text(timerInterval: timeline.date...context.state.sessionEndDate, countsDown: true)
-                    .font(.headline.monospacedDigit())
-            case .paused:
-                Text(format(seconds: context.state.remainingSeconds))
-                    .font(.headline.monospacedDigit())
-            case .completed:
-                Text(BreathworkCopy.done)
-                    .font(.headline)
-            }
-        }
-        .accessibilityLabel(BreathworkCopy.timerAccessibilityLabel)
-    }
-
-    private func format(seconds: Int) -> String {
-        let minutes = max(seconds, 0) / 60
-        let remainder = max(seconds, 0) % 60
-        return String(format: "%d:%02d", minutes, remainder)
+        Circle()
+            .fill(AppColour.accent.opacity(0.22))
+            .overlay(Circle().stroke(AppColour.accent, lineWidth: 1.4))
+            .frame(width: size, height: size)
+            .scaleEffect(phase.orbScale)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 1), value: phase)
+            .accessibilityHidden(true)
     }
 }
+
+// MARK: - Compact trailing timer
 
 private struct CompactTimerText: View {
     let context: ActivityViewContext<BreathworkActivityAttributes>
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { timeline in
-            switch context.state.status {
-            case .active:
-                Text(shortRemaining(at: timeline.date))
-                    .font(.caption2.monospacedDigit())
-            case .paused:
-                Text(BreathworkCopy.pausedCompact)
-                    .font(.caption2.weight(.bold))
-            case .completed:
-                Text(BreathworkCopy.completeCompact)
-                    .font(.caption2.weight(.bold))
-            }
+        switch context.state.status {
+        case .active:
+            Text(timerInterval: Date()...context.state.sessionEndDate, countsDown: true)
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(AppColour.accent)
+                .frame(minWidth: 40, alignment: .trailing)
+        case .paused:
+            Text(BreathworkCopy.pausedCompact)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(AppColour.accent)
+        case .completed:
+            Text(BreathworkCopy.completeCompact)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(AppColour.accent)
         }
-    }
-
-    private func shortRemaining(at date: Date) -> String {
-        let seconds = max(Int(context.state.sessionEndDate.timeIntervalSince(date)), 0)
-        return seconds >= 60 ? "\(seconds / 60)m" : "\(seconds)s"
     }
 }
