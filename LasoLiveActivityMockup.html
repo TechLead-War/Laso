@@ -1,0 +1,182 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laso · Recovery Ring, Living Day — Live Activity Design</title>
+<style>
+:root{
+  --opt:#10B981; --good:#34D399; --fair:#F59E0B; --poor:#E5484D;
+  --warn:#F59E0B; --primary:#4DA3FF;
+  --bg:#0a0c10; --card:#000; --t1:#f4f6f8; --t2:#9aa4b2; --t3:#5b6472;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;line-height:1.5}
+header{padding:30px 26px 10px}
+h1{margin:0;font-size:21px;letter-spacing:.2px}
+.sub{color:var(--t2);font-size:13.5px;margin:6px 0 0;max-width:760px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:16px 26px 0;font-size:12px;color:var(--t2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%}
+main{padding:24px 26px 60px;max-width:1180px;margin:0 auto}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin:34px 0 14px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px}
+.scenario{}
+.cap{font-size:12px;color:var(--t2);margin:9px 2px 0}
+.cap b{color:var(--t1)}
+
+/* expanded dynamic island pill */
+.pill{background:var(--card);border-radius:42px;padding:18px 22px 16px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.6);border:1px solid #14171c}
+.pillrow{display:flex;align-items:center;gap:16px}
+.mid{flex:1;min-width:0}
+.eyebrow{display:flex;align-items:center;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--t2)}
+.insight{font-size:14px;font-weight:500;color:var(--t1);margin-top:5px}
+.trail{text-align:right;white-space:nowrap}
+.trail .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);font-weight:600}
+.trail .val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.trail .unit{font-size:12px;color:var(--t2);font-weight:600}
+.limiter{display:flex;align-items:center;gap:5px;justify-content:flex-end;font-size:11px;color:var(--t2);margin-top:4px;font-weight:600}
+.action{margin-top:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:22px;padding:11px;font-size:13.5px;font-weight:600}
+
+/* lock screen card */
+.lock{background:var(--card);border-radius:22px;padding:0 0 12px;overflow:hidden;border:1px solid #14171c;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.hair{height:2px}
+.lockbody{display:flex;align-items:center;gap:16px;padding:14px 16px 10px}
+.lockmid{flex:1;min-width:0}
+.daybar{height:3px;margin:4px 16px 0;border-radius:3px;background:rgba(255,255,255,.10);position:relative}
+.daybar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--primary)}
+
+/* compact + minimal */
+.island{background:#000;border-radius:40px;height:44px;display:inline-flex;align-items:center;gap:10px;padding:0 14px;min-width:130px;justify-content:space-between}
+.minimal{background:#000;border-radius:50%;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center}
+.score-d{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.smallrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+
+svg text{font-family:-apple-system,"SF Pro Rounded",sans-serif}
+.note{color:var(--t3);font-size:11px;margin-top:7px}
+footer{color:var(--t3);font-size:12px;text-align:center;padding:20px;border-top:1px solid #16191e}
+</style></head>
+<body>
+<header>
+<h1>Laso · "Recovery Ring, Living Day"</h1>
+<p class="sub">One readiness ring is the hero at every size. The number lives inside it, a faint outer track crawls through the day on its own, one plain-English line says why, one optional action sits below. Color and arc length both read the state, so a glance gives one number, one mood, one move. Mockup of the real states — colors, rings and layout match the spec (system rendering will be sharper).</p>
+<div class="legend">
+  <span><i class="dot" style="background:var(--opt)"></i>Excellent &ge;85</span>
+  <span><i class="dot" style="background:var(--good)"></i>Good 70&ndash;84</span>
+  <span><i class="dot" style="background:var(--fair)"></i>Fair 50&ndash;69</span>
+  <span><i class="dot" style="background:var(--poor)"></i>Poor &lt;50</span>
+  <span><i class="dot" style="background:var(--t3)"></i>Stale &gt;20h</span>
+</div>
+</header>
+<main>
+
+<h2>Dynamic Island — Expanded (changes by score · time of day · data)</h2>
+<div class="grid" id="expanded"></div>
+
+<h2>Lock screen / banner card</h2>
+<div class="grid" id="lock"></div>
+
+<h2>Dynamic Island — Compact (around the camera) &amp; Minimal</h2>
+<div class="smallrow" id="compact"></div>
+
+</main>
+<footer>Generated mockup · colors from AppColour score ramp · pure-black cards · the day track + lock bar advance on a free local timer (no battery cost).</footer>
+
+<script>
+const BAND={opt:'#10B981',good:'#34D399',fair:'#F59E0B',poor:'#E5484D',stale:'#5b6472'};
+function band(score,stale){ if(stale) return BAND.stale; if(score>=85)return BAND.opt; if(score>=70)return BAND.good; if(score>=50)return BAND.fair; return BAND.poor;}
+function ring(score,color,size,dayFrac){
+  const r=34, c=2*Math.PI*r, dash=Math.max(0,Math.min(1,score/100))*c;
+  const R=44, C=2*Math.PI*R, dDash=dayFrac*C;
+  const fs=Math.round(size*0.30), us=Math.max(8,Math.round(size*0.115));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${R}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="3"/>
+    <circle cx="50" cy="50" r="${R}" fill="none" stroke="#5b6472" stroke-width="3" stroke-linecap="round"
+      stroke-dasharray="${dDash} ${C}" transform="rotate(-90 50 50)"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${dash} ${c}" transform="rotate(-90 50 50)"/>
+    <text x="50" y="50" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="${fs}" font-weight="700">${score}</text>
+    <text x="50" y="${50+fs*0.62+us*0.5}" text-anchor="middle" fill="#9aa4b2" font-size="${us}" font-weight="600" letter-spacing="1">SCORE</text>
+  </svg>`;
+}
+const S=[
+ {tag:'Morning · Excellent', mode:'sunrise.fill ☼ READINESS', score:92, stale:false, day:.18,
+  insight:'HRV is high after deep sleep. Good day to push.', lbl:'HRV', val:'72', unit:'ms', action:'Set intention', limiter:null},
+ {tag:'Day · Good', mode:'bolt.fill ⚡ STRAIN', score:78, stale:false, day:.5,
+  insight:'Steady load so far. A short walk keeps you on track.', lbl:'STEPS', val:'6.4K', unit:'/10K', action:'Breathe', limiter:null},
+ {tag:'Evening · Fair', mode:'moon.stars.fill ☾ TONIGHT', score:61, stale:false, day:.82,
+  insight:'Sleep is your limiter today. Wind down a little earlier.', lbl:'BEDTIME', val:'10:40', unit:'pm', action:'Wind down', limiter:'Sleep 48'},
+ {tag:'Morning · Poor', mode:'sunrise.fill ☼ RECOVER', score:42, stale:false, day:.15,
+  insight:'Low recovery. Keep it easy and breathe.', lbl:'RHR', val:'63', unit:'bpm', action:'Breathe', limiter:'HRV 38'},
+ {tag:'Night · Quiet (no action)', mode:'zzz ☾ RESTING', score:70, stale:false, day:.97,
+  insight:'Resting. Your morning score arrives after you wake.', lbl:'', val:'', unit:'', action:null, limiter:null},
+ {tag:'Stale · data &gt;20h old', mode:'clock ◴ LAST SEEN 22H', score:75, stale:true, day:.4,
+  insight:'Open Laso to refresh — this reading is from yesterday.', lbl:'', val:'', unit:'', action:null, limiter:null},
+];
+
+function actionBtn(label,color){
+  if(!label) return '';
+  return `<div class="action"><div class="btn" style="background:${color}33;border:1px solid ${color}8c;color:#fff">＋ ${label}</div></div>`;
+}
+function expandedCard(s){
+  const col=band(s.score,s.stale);
+  const trail = s.val? `<div class="trail"><div class="lbl">${s.lbl}</div><div class="val">${s.val}<span class="unit"> ${s.unit}</span></div>${s.limiter?`<div class="limiter" style="color:#F59E0B">⚠ ${s.limiter}</div>`:''}</div>`
+                      : (s.limiter?`<div class="trail"><div class="limiter" style="color:#F59E0B">⚠ ${s.limiter}</div></div>`:'');
+  return `<div class="scenario">
+    <div class="pill">
+      <div class="pillrow">
+        <div>${ring(s.score,col,84,s.day)}</div>
+        <div class="mid"><div class="eyebrow" style="color:${col}">${s.mode}</div><div class="insight">${s.insight}</div></div>
+        ${trail}
+      </div>
+      ${actionBtn(s.action,col)}
+    </div>
+    <div class="cap"><b>${s.tag}</b></div>
+  </div>`;
+}
+function lockCard(s){
+  const col=band(s.score,s.stale);
+  const right = s.action? `<div class="btn" style="background:${col}33;border:1px solid ${col}8c;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px">＋ ${s.action}</div>`
+              : (s.val?`<div class="trail"><div class="lbl">${s.lbl}</div><div class="val" style="font-size:18px">${s.val}<span class="unit"> ${s.unit}</span></div></div>`:'');
+  return `<div class="scenario">
+    <div class="lock">
+      <div class="hair" style="background:${col}8c"></div>
+      <div class="lockbody">
+        <div>${ring(s.score,col,68,s.day)}</div>
+        <div class="lockmid"><div class="eyebrow" style="color:${col}">${s.mode}</div><div class="insight">${s.insight}</div></div>
+        <div>${right}</div>
+      </div>
+      <div class="daybar"><i style="width:${Math.round(s.day*100)}%"></i></div>
+    </div>
+    <div class="cap"><b>${s.tag}</b></div>
+  </div>`;
+}
+function miniRing(score,col,size){
+  const r=40,c=2*Math.PI*r,dash=score/100*c;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash} ${c}" transform="rotate(-90 50 50)"/>
+  </svg>`;
+}
+function compactSet(s){
+  const col=band(s.score,s.stale);
+  return `<div class="scenario">
+    <div class="island">${miniRing(s.score,col,26)}<span class="score-d" style="color:${col}">${s.score}</span></div>
+    <div class="cap">Compact · <b>${s.tag.split(' · ')[1]||s.tag}</b></div>
+  </div>`;
+}
+function minimalSet(s){
+  const col=band(s.score,s.stale);
+  return `<div class="scenario">
+    <div class="minimal"><svg width="34" height="34" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="8"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${s.score/100*2*Math.PI*40} ${2*Math.PI*40}" transform="rotate(-90 50 50)"/>
+      <text x="50" y="50" text-anchor="middle" dominant-baseline="central" fill="${col}" font-size="34" font-weight="700">${s.score}</text>
+    </svg></div>
+    <div class="cap">Minimal</div>
+  </div>`;
+}
+document.getElementById('expanded').innerHTML=S.map(expandedCard).join('');
+document.getElementById('lock').innerHTML=S.map(lockCard).join('');
+document.getElementById('compact').innerHTML=[S[0],S[2],S[3]].map(compactSet).join('') + [S[0]].map(minimalSet).join('');
+</script>
+</body></html>

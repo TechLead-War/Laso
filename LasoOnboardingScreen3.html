@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 3 · About · Motion-First Reduction</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:40px;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:18%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* the big live age numeral, same family the reveal uses */
+  .agewrap{display:flex; flex-direction:column; align-items:center; margin-top:18px;}
+  .kicker{font-size:13px; font-weight:600; letter-spacing:.2px; color:var(--fg3); text-align:center;}
+  .age{font-size:120px; line-height:1; font-weight:800; letter-spacing:-3px; color:var(--fg);
+    text-shadow:0 0 34px rgba(10,132,255,.45); margin-top:6px;}
+  .age small{font-size:18px; font-weight:600; color:var(--fg3); letter-spacing:0; margin-left:8px;}
+
+  /* drag dial: ticks the thumb sweeps across */
+  .dial{position:relative; width:100%; height:54px; margin-top:18px; overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);}
+  .ticks{position:absolute; top:50%; left:0; display:flex; gap:11px; transform:translate(-46px,-50%);}
+  .ticks i{width:2px; height:16px; border-radius:2px; background:rgba(255,255,255,.22);}
+  .ticks i.tall{height:26px; background:rgba(255,255,255,.4);}
+  .needle{position:absolute; top:50%; left:50%; width:3px; height:34px; border-radius:2px;
+    transform:translate(-50%,-50%); background:var(--blue); box-shadow:0 0 14px rgba(10,132,255,.9);}
+
+  /* sex: two taps, the chosen one fills blue */
+  .sex{display:flex; gap:12px; margin-top:26px;}
+  .opt{flex:1; height:52px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.04); color:var(--fg2); font-size:16px; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:8px;}
+  .opt.on{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 8px 20px rgba(10,132,255,.4);}
+  .opt svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff; font-size:17px; font-weight:600; border:none; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(10,132,255,.38); cursor:pointer;}
+  .cta.dim{background:rgba(255,255,255,.08); color:var(--fg3); box-shadow:none;}
+  .priv{display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; color:var(--fg3); margin-top:12px;}
+  .priv svg{width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:1.8;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.45; color:var(--fg2); margin-bottom:8px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · Screen 3 · About · Show, Don't Tell</h1>
+    <p>The dull age+sex form becomes the FIRST turn of the dial that builds your Vitality Age.<br/>
+       You drag, the number counts under your thumb, sex is two taps. No headline lecture, no privacy hero. Center is the pick.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- A: minimal label still present -->
+    <div class="col">
+      <div class="tag">Option A · One Soft Line</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">3 / 17</div></div>
+            <div class="agewrap">
+              <div class="kicker">I am</div>
+              <div class="age">42<small>years</small></div>
+              <div class="dial">
+                <div class="ticks">
+                  <i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i>
+                </div>
+                <div class="needle"></div>
+              </div>
+            </div>
+            <div class="sex">
+              <div class="opt on"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>Female</div>
+              <div class="opt"><svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/></svg>Male</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>"I am 42" reads as identity,</b> not a form field, so the input feels like a statement about you. <s>Self-reference effect</s></li>
+      </div></div>
+    </div>
+
+    <!-- B: pure, no headline (recommended) -->
+    <div class="col">
+      <div class="tag final">&#9733; Option B · The Living Number · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">3 / 17</div></div>
+            <div class="agewrap">
+              <div class="age">42<small>years old</small></div>
+              <div class="dial">
+                <div class="ticks">
+                  <i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i><i></i><i></i><i></i><i></i><i class="tall"></i>
+                </div>
+                <div class="needle"></div>
+              </div>
+            </div>
+            <div class="sex">
+              <div class="opt on"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>Female</div>
+              <div class="opt"><svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/></svg>Male</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+            <div class="priv"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Stays on your iPhone</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Zero headline.</b> The big number IS the screen. You set it by dragging, the meaning is the motion, not a sentence. <s>Show-don't-tell, Superhuman</s></li>
+        <li><b>Live count under the thumb.</b> The numeral ticks as you drag, so the input feels like the first turn of the dial that computes your age. <s>countUp; causal feedback within 0.1s, NN/g</s></li>
+        <li><b>Visual rhyme with the reveal.</b> Same giant numeral here and at the Vitality Age, so this screen quietly previews the payoff. <s>Peak-end priming</s></li>
+        <li><b>Privacy demoted to one quiet line,</b> never the hero, just enough to remove the only objection. <s>Brief rule: never privacy as hero</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: vertical wheel variant -->
+    <div class="col">
+      <div class="tag">Option C · Picker Wheel</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">3 / 17</div></div>
+            <div class="agewrap" style="margin-top:8px;">
+              <div style="height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+                <div style="font-size:22px;color:var(--fg3);font-weight:600;">40</div>
+                <div style="font-size:30px;color:rgba(255,255,255,.6);font-weight:700;margin:4px 0;">41</div>
+                <div class="age" style="font-size:64px;margin:0;">42</div>
+                <div style="font-size:30px;color:rgba(255,255,255,.6);font-weight:700;margin:4px 0;">43</div>
+                <div style="font-size:22px;color:var(--fg3);font-weight:600;">44</div>
+              </div>
+            </div>
+            <div class="sex">
+              <div class="opt on"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>Female</div>
+              <div class="opt"><svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/></svg>Male</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Familiar iOS wheel,</b> safe but less of a moment, the number is dimmer and the gesture is vertical scroll, not a felt sweep. <s>Jakob's Law, but lower delight</s></li>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>

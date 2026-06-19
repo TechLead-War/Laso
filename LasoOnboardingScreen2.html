@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 2 · Memorable Single-Idea Hooks</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:34px;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:12%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* left aligned, single idea */
+  .headline{font-size:26px; line-height:1.26; font-weight:700; letter-spacing:-.3px; color:var(--fg); text-align:left;}
+  .subline{font-size:15px; line-height:1.45; color:var(--fg2); text-align:left; margin-top:16px;}
+
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff; font-size:17px; font-weight:600; border:none; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(10,132,255,.38); cursor:pointer;}
+  .cap{text-align:center; font-size:12px; color:var(--fg3); margin-top:12px;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.45; color:var(--fg2); margin-bottom:8px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · Screen 2 · One Memorable Idea (left aligned)</h1>
+    <p>Replaces the forgettable 3 promise wall with ONE concrete idea you still remember on the next screen.<br/>
+       All three use the passport vs heart contrast, then withhold your number so curiosity pulls you forward. Center is my pick.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- B: Number never shown -->
+    <div class="col">
+      <div class="tag">Option A · The Hidden Number</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">2 / 17</div></div>
+            <div class="headline">Your body has been keeping its own age.<br/>You have just never been shown the number.</div>
+            <div class="subline">It is rarely the one on your passport.</div>
+            <div class="spacer"></div>
+            <button class="cta">Show me the number</button>
+            <div class="cap">Takes about 2 minutes</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Discovery, not diagnosis.</b> "A number exists, you just haven't seen it" pulls an anxious reader in, not away. <s>Golman &amp; Loewenstein, ostrich effect</s></li>
+        <li><b>Sticks as gist.</b> They keep the meaning, not the words. <s>Fuzzy-trace theory</s></li>
+      </div></div>
+    </div>
+
+    <!-- A: Passport vs Heart (recommended) -->
+    <div class="col">
+      <div class="tag final">★ Option B · Passport vs Heart · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">2 / 17</div></div>
+            <div class="headline">Your passport knows your age.<br/>Your heart keeps a different number.</div>
+            <div class="subline">In about two minutes, you will meet it.</div>
+            <div class="spacer"></div>
+            <button class="cta">Show my heart's age</button>
+            <div class="cap">Takes about 2 minutes</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>One curiosity gap.</b> Two ages, yours withheld, so you silently ask "what's MY number?" That itch burns the reveal into memory. <s>Loewenstein information gap</s></li>
+        <li><b>Concrete + unexpected.</b> A passport you own, split from your heart, one surprising beat. <s>Heath, Made to Stick</s></li>
+        <li><b>One line, isolated,</b> so it is remembered where 3 same promises cancelled out. <s>von Restorff</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: Rather know than wonder -->
+    <div class="col">
+      <div class="tag">Option C · Rather Know</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">2 / 17</div></div>
+            <div class="headline">Your passport knows your birthday.<br/>It has no idea how old your heart is.</div>
+            <div class="subline">Some people would rather know than wonder.</div>
+            <div class="spacer"></div>
+            <button class="cta">Find my real age</button>
+            <div class="cap">Takes about 2 minutes</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Same vivid contrast</b> plus an identity reason to continue, not just curiosity. <s>self-signaling</s></li>
+        <li><b>Surprise on the left edge</b> where the eye lands first. <s>NN/G F-pattern</s></li>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laso · Dynamic Island</title>
+<style>
+:root{--t1:#F4F6F8;--t2:#9AA1AC;--t3:#5B6472;--warn:#F5A623;}
+*{box-sizing:border-box}
+body{margin:0;background:#070809;color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif}
+header{padding:30px 26px 6px}h1{margin:0;font-size:21px}.sub{color:var(--t2);font-size:13px;margin:7px 0 0;max-width:720px}
+main{padding:24px 26px 70px;max-width:980px;margin:0 auto}
+.row{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.cap{text-align:center;color:var(--t2);font-size:12.5px;margin-top:12px}.cap b{color:var(--t1)}
+/* phone top */
+.phone{width:340px;border-radius:46px 46px 22px 22px;padding:12px 12px 26px;position:relative;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 2px #1c1f24;}
+.wall{position:absolute;inset:0;z-index:0}
+.statusbar{position:relative;z-index:4;display:flex;justify-content:space-between;align-items:center;padding:8px 20px 0;font-size:14px;font-weight:600;color:#fff;letter-spacing:.3px}
+.statusbar .ic{display:flex;gap:6px;align-items:center;font-size:12px}
+/* dynamic island expanded */
+.island{position:relative;z-index:3;margin:10px auto 0;width:300px;background:#000;border-radius:40px;padding:14px 18px 12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.cut{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:74px;height:24px;background:#000;border-radius:14px;z-index:5}
+.toprow{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.num{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1}
+.eyebrow{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);font-weight:700}
+.warn{display:inline-flex;align-items:center;gap:4px;color:var(--warn);font-size:11.5px;font-weight:700}
+.insight{font-size:14.5px;font-weight:600;text-align:center;margin-top:6px;line-height:1.25}
+.cta{display:flex;align-items:center;justify-content:center;gap:7px;border-radius:20px;padding:11px;font-size:13.5px;font-weight:700;margin-top:11px;color:#eafff5}
+.glow{position:absolute;border-radius:50%;filter:blur(2px)}
+.small{display:flex;gap:50px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.pill-c{position:relative;z-index:3;margin:10px auto 0;background:#000;border-radius:40px;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 11px;width:200px}
+footer{color:var(--t3);font-size:12px;text-align:center;padding:20px;border-top:1px solid #16191e}
+svg text{font-family:-apple-system,"SF Pro Rounded",sans-serif}
+</style></head>
+<body>
+<header><h1>Laso · Dynamic Island</h1>
+<p class="sub">Shown in context on the phone, to scale, hugging the real camera cutout. Same recovery data; left card is a strong morning (green), right is a low-recovery morning (red) so you can see it adapt. Compact + minimal below.</p></header>
+<main>
+<div class="row" id="frames"></div>
+<div class="small" id="small"></div>
+</main>
+<footer>Pure-black island floating on the wallpaper · soft band glow behind the hero ring · full-width action · the notch is real and to scale.</footer>
+<script>
+const BANDS={good:'#34D399',poor:'#E5484D'};
+function ring(size,sw,color,day){const r=42,c=2*Math.PI*r,d=null,R=47,C=2*Math.PI*R;
+ const sc=(color===BANDS.good?78:41), dd=sc/100*c, dayd=day*C, fs=Math.round(size*0.32);
+ return `<div style="position:relative;width:${size}px;height:${size}px">
+  <div class="glow" style="inset:-34%;background:radial-gradient(circle,${color}40,transparent 62%)"></div>
+  <svg width="${size}" height="${size}" viewBox="0 0 100 100" style="position:relative">
+   <defs><linearGradient id="g${color.slice(1)}" x1=0 y1=0 x2=1 y2=1><stop offset=0 stop-color="${color}"/><stop offset=1 stop-color="${color}bb"/></linearGradient></defs>
+   <circle cx=50 cy=50 r=49 fill="rgba(124,128,140,.18)"/>
+   <circle cx=50 cy=50 r=${R} fill=none stroke="rgba(255,255,255,.06)" stroke-width=2/>
+   <circle cx=50 cy=50 r=${R} fill=none stroke="#5B6472" stroke-width=2 stroke-linecap=round stroke-dasharray="${dayd} ${C}" transform="rotate(-90 50 50)"/>
+   <circle cx=50 cy=50 r=${r} fill=none stroke="rgba(255,255,255,.08)" stroke-width=${sw}/>
+   <circle cx=50 cy=50 r=${r} fill=none stroke="url(#g${color.slice(1)})" stroke-width=${sw} stroke-linecap=round stroke-dasharray="${dd} ${c}" transform="rotate(-90 50 50)"/>
+   <text x=50 y=49 text-anchor=middle dominant-baseline=central fill="#fff" font-size=${fs} font-weight=800>${sc}</text>
+   <text x=50 y=${49+fs*0.58} text-anchor=middle fill="#9AA1AC" font-size=8.5 font-weight=700 letter-spacing=1>SCORE</text></svg></div>`;}
+
+function frame(opts){const c=opts.color;
+ return `<div><div class="phone">
+   <div class="wall" style="background:${opts.wall}"></div>
+   <div class="statusbar"><span>9:41</span><span class="ic">●●● ${'◯'} ▮</span></div>
+   <div class="island"><div class="cut"></div>
+     <div class="toprow">
+       <div>${ring(74,8,c,opts.day)}</div>
+       <div style="text-align:right;padding-top:6px">
+         <div class="eyebrow">${opts.statLbl}</div>
+         <div class="num" style="font-size:23px">${opts.statVal}<span style="font-size:11px;color:var(--t2);font-weight:700"> ${opts.statUnit}</span></div>
+         <div class="warn" style="justify-content:flex-end;margin-top:4px">⚠ ${opts.limiter}</div></div>
+     </div>
+     <div class="insight">${opts.insight}</div>
+     <div class="cta" style="background:${c}26;border:1px solid ${c}80;box-shadow:0 4px 16px ${c}30">✦ ${opts.action}</div>
+   </div>
+ </div><div class="cap"><b>${opts.title}</b></div></div>`;}
+
+document.getElementById('frames').innerHTML =
+ frame({title:'Morning · Strong',color:BANDS.good,wall:'linear-gradient(160deg,#0e2a3a,#06141d 70%)',day:.18,statLbl:'HRV',statVal:'72',statUnit:'ms',limiter:'Mobility 69',insight:'HRV high after deep sleep. Push today.',action:'Set intention'})
+ + frame({title:'Morning · Low recovery',color:BANDS.poor,wall:'linear-gradient(160deg,#2a0e12,#160708 70%)',day:.15,statLbl:'RHR',statVal:'63',statUnit:'bpm',limiter:'HRV 38',insight:'Low recovery. Keep it easy and breathe.',action:'Breathe'});
+
+function miniRing(size,score,color,withNum){const r=44,c=2*Math.PI*r,d=score/100*c;
+ return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><circle cx=50 cy=50 r=${r} fill=none stroke="rgba(255,255,255,.12)" stroke-width=9/>
+  <circle cx=50 cy=50 r=${r} fill=none stroke="${color}" stroke-width=9 stroke-linecap=round stroke-dasharray="${d} ${c}" transform="rotate(-90 50 50)"/>
+  ${withNum?`<text x=50 y=51 text-anchor=middle dominant-baseline=central fill="${color}" font-size=38 font-weight=800>${score}</text>`:''}</svg>`;}
+function compactPill(score,color,label){
+ return `<div style="text-align:center"><div style="background:#000;border-radius:26px;height:52px;display:inline-flex;align-items:center;gap:60px;padding:0 18px;box-shadow:0 8px 22px rgba(0,0,0,.5)">
+   ${miniRing(28,score,color,false)}<span class="num" style="font-size:28px;color:${color}">${score}</span></div>
+   <div class="cap">Compact · <b>${label}</b></div></div>`;}
+document.getElementById('small').innerHTML =
+ compactPill(92,'#34D399','Excellent') + compactPill(61,'#F5A623','Fair') + compactPill(42,'#E5484D','Poor')
+ + `<div style="text-align:center"><div style="background:#000;border-radius:50%;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.5)">${miniRing(40,92,'#34D399',true)}</div><div class="cap">Minimal</div></div>`;
+</script>
+</body></html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laso · Dynamic Island — Research-led designs</title>
+<style>
+/* tokens from Laso AppColour + the research brief */
+:root{
+  --good:#34D399;--warn:#F5A623;--t1:#F2F4F7;--t2:#9AA1AC;--t3:#5B6472;
+  --surfaceBase:#161719;       /* lock card (not pure black, for depth) */
+  --elev1:#202225;             /* inset rail base */
+  --elev2:#282A2E;             /* inset rail +1 */
+  --orbBacking:rgba(122,126,138,.26);
+  --pageBg:#0b0c0e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pageBg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif}
+header{padding:30px 26px 2px}h1{margin:0;font-size:20px;font-weight:700}
+.sub{color:var(--t2);font-size:13px;margin:7px 0 0;max-width:720px}
+.rules{display:flex;gap:8px;flex-wrap:wrap;margin:14px 26px 0}
+.rules span{font-size:11px;color:var(--t2);background:#16181b;border:1px solid #232629;border-radius:20px;padding:4px 10px}
+main{padding:18px 26px 70px;max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+.tag{display:flex;gap:9px;align-items:baseline;margin:0 2px 11px}
+.tag .n{font-size:12px;color:var(--t3);font-weight:800}.tag b{font-size:15px}.tag span{color:var(--t2);font-size:12.5px}
+/* THE ISLAND — pure black foreground canvas, no fill/halo/shadow */
+.pill{background:#000;border-radius:44px;border:1px solid #121315;height:150px;display:flex;align-items:center;padding:14px 22px;position:relative}
+.lockcard{background:var(--surfaceBase);border-radius:24px;padding:14px;position:relative;overflow:hidden}
+.hair{position:absolute;top:0;left:0;right:0;height:1px}
+.num{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:.92}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);font-weight:700}
+.warn{display:inline-flex;align-items:center;gap:5px;color:var(--warn);font-size:12px;font-weight:700}
+.cta{display:inline-flex;align-items:center;gap:7px;border-radius:21px;padding:10px 17px;font-size:13.5px;font-weight:700;color:#eafff5;background:rgba(52,211,153,.26);border:1px solid rgba(52,211,153,.5)}
+.coach{font-size:14px;font-weight:500;color:var(--t1)}
+.rail{display:flex;background:var(--elev1);border-radius:14px;overflow:hidden}
+.rail>div{flex:1;padding:9px 12px}.rail>div+div{border-left:1px solid #000}
+.smalllbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);font-weight:700}
+.smallval{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.row{display:flex;gap:18px;align-items:center}
+svg text{font-family:-apple-system,"SF Pro Rounded",sans-serif}
+.small{display:flex;gap:24px;align-items:center;padding:2px 2px 0}
+.island-c{background:#000;border-radius:40px;height:42px;display:inline-flex;align-items:center;gap:9px;padding:0 13px}
+.island-m{background:#000;border-radius:50%;width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center}
+.note{color:var(--t3);font-size:11.5px;margin:9px 2px 0}
+footer{color:var(--t3);font-size:12px;text-align:center;padding:20px;border-top:1px solid #16191e}
+</style></head>
+<body>
+<header><h1>Laso · Dynamic Island — research-led</h1>
+<p class="sub">Rebuilt from real Apple HIG + Whoop/Oura/Fitness craft research. One hero (the score), color = the zone, flat surfaces lightened for depth — no glow halos, gradients or shadows (the amateur tells). Same data each card (Recovery 78, HRV 53, weakest Mobility 69).</p>
+<div class="rules"><span>One hero only</span><span>Color = zone, no words</span><span>No glow/gradient/shadow</span><span>14px uniform margins</span><span>Depth via lighter surfaces</span><span>Subtract until it hurts</span></div>
+</header>
+<main id="m"></main>
+<footer>Tokens: green #34D399 · amber #F5A623 · card #161719 · pure-black island. Pick one and I build it exactly.</footer>
+<script>
+const G='#34D399',SCORE=78;
+function orb(size,sw,withDay){const r=42,c=2*Math.PI*r,d=SCORE/100*c,fs=Math.round(size*0.30);
+ const R=46,C=2*Math.PI*R,day=0.45*C;
+ return `<svg width="${size}" height="${size}" viewBox="0 0 100 100">
+  <circle cx=50 cy=50 r=49 fill="rgba(122,126,138,.16)"/>
+  ${withDay?`<circle cx=50 cy=50 r=${R} fill=none stroke="rgba(255,255,255,.06)" stroke-width=2/>
+  <circle cx=50 cy=50 r=${R} fill=none stroke="#5B6472" stroke-width=2 stroke-linecap=round stroke-dasharray="${day} ${C}" transform="rotate(-90 50 50)"/>`:''}
+  <circle cx=50 cy=50 r=${r} fill=none stroke="rgba(255,255,255,.08)" stroke-width=${sw}/>
+  <circle cx=50 cy=50 r=${r} fill=none stroke="${G}" stroke-width=${sw} stroke-linecap=round stroke-dasharray="${d} ${c}" transform="rotate(-90 50 50)"/>
+  <text x=50 y=48 text-anchor=middle dominant-baseline=central fill="#fff" font-size=${fs} font-weight=800>78</text>
+  <text x=50 y=${48+fs*0.62} text-anchor=middle fill="var(--t2)" font-size=8.5 font-weight=700 letter-spacing=1>SCORE</text></svg>`;}
+function thinRing(size){const r=44,c=2*Math.PI*r,d=SCORE/100*c;
+ return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><circle cx=50 cy=50 r=49 fill="rgba(122,126,138,.16)"/>
+  <circle cx=50 cy=50 r=${r} fill=none stroke="rgba(255,255,255,.08)" stroke-width=6/>
+  <circle cx=50 cy=50 r=${r} fill=none stroke="${G}" stroke-width=6 stroke-linecap=round stroke-dasharray="${d} ${c}" transform="rotate(-90 50 50)"/>
+  <text x=50 y=50 text-anchor=middle dominant-baseline=central fill="${G}" font-size=30 font-weight=800>☼</text></svg>`;}
+
+document.getElementById('m').innerHTML = `
+<div><div class="tag"><span class="n">1</span><b>Concentric Score Orb</b><span>· top pick · refine the live build</span></div>
+  <div class="pill">
+    <div style="width:84px;height:84px;flex:none">${orb(84,7,true)}</div>
+    <div style="flex:1;text-align:center;padding:0 16px"><div class="coach">Solid base today</div></div>
+    <div style="text-align:right;flex:none">
+      <div class="eyebrow">HRV</div>
+      <div class="num" style="font-size:26px">53<span style="font-size:12px;color:var(--t2);font-weight:700"> ms</span></div>
+      <div class="warn" style="justify-content:flex-end;margin-top:4px">⚠ Mobility 69</div></div>
+  </div>
+  <div class="note">Score is the only hero; HRV sits at ~55% weight; color carries the zone; flat fills, lighter orb backing for depth. The layout already in code — done with proper craft.</div>
+  <div class="small">
+    <div class="island-c">${thinRingMini()}<span class="num" style="font-size:17px;color:${G}">78</span><span class="note" style="margin:0 0 0 4px">compact</span></div>
+    <div class="island-m">${thinRingMini(34,true)}</div><span class="note">minimal</span></div>
+</div>
+
+<div><div class="tag"><span class="n">2</span><b>Number-Hero + Contributor Rail</b><span>· big number = the meaning</span></div>
+  <div class="pill" style="flex-direction:column;align-items:stretch;gap:12px;justify-content:center">
+    <div class="row">
+      <div style="width:46px;height:46px;flex:none">${thinRing(46)}</div>
+      <div style="flex:1"><span class="num" style="font-size:40px;color:${G}">78</span>
+        <span style="font-size:12px;color:var(--t2);font-weight:600;margin-left:8px">+6 vs 7-day avg</span></div>
+      <span class="cta">✦ Set intention</span></div>
+    <div class="rail">
+      <div><div class="smalllbl">HRV</div><div class="smallval">53 ms</div></div>
+      <div><div class="smalllbl">Resting HR</div><div class="smallval">57</div></div>
+      <div><div class="smalllbl">Sleep</div><div class="smallval">7.1 h</div></div></div>
+  </div>
+  <div class="note">Big tabular number is the hero (parsed faster than a ring); ring demoted to a zone signifier; inset rail (lighter surface, hairline dividers) holds the contributors — never edge-to-edge.</div>
+</div>
+
+<div><div class="tag"><span class="n">3</span><b>Ambient Band-Glow — lock screen</b><span>· one tasteful soft glow (lock only)</span></div>
+  <div class="lockcard">
+    <div class="hair" style="background:rgba(52,211,153,.5)"></div>
+    <div style="position:absolute;left:30px;top:50%;transform:translateY(-50%);width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.16),transparent 60%)"></div>
+    <div class="row" style="position:relative">
+      <div style="width:72px;height:72px;flex:none">${orb(72,7,false)}</div>
+      <div style="flex:1"><div class="eyebrow" style="color:${G}">☼ Readiness</div><div class="coach" style="font-size:16px;margin-top:3px">Solid base today</div><div class="warn" style="margin-top:4px">⚠ Mobility 69</div></div>
+      <span class="cta">✦ Set intention</span></div>
+    <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:12px;position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:45%;border-radius:2px;background:#5B9DFF"></i></div>
+  </div>
+  <div class="note">Lock screen only: a single soft band-color radial at ~16% (never a white halo or 2-stop gradient), card lifted off pure black, 14px margins, day-progress bar at the base. The island itself stays glow-free.</div>
+</div>`;
+
+function thinRingMini(size,withNum){size=size||26;const r=44,c=2*Math.PI*r,d=SCORE/100*c;
+ return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><circle cx=50 cy=50 r=${r} fill=none stroke="rgba(255,255,255,.1)" stroke-width=8/>
+  <circle cx=50 cy=50 r=${r} fill=none stroke="${G}" stroke-width=8 stroke-linecap=round stroke-dasharray="${d} ${c}" transform="rotate(-90 50 50)"/>
+  ${withNum?`<text x=50 y=50 text-anchor=middle dominant-baseline=central fill="${G}" font-size=38 font-weight=800>78</text>`:''}</svg>`;}
+// re-render now that helper exists
+document.getElementById('m').innerHTML = document.getElementById('m').innerHTML;
+</script>
+</body></html>

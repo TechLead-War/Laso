@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 8 · Wearable · Motion-First Reduction</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; align-items:center; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:34px; width:100%;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:47%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* HERO: the watch on the wrist, sending one live beat */
+  .stage{position:relative; width:200px; height:220px; margin-top:64px; display:flex; align-items:center; justify-content:center;}
+  /* pulse rings leaving the watch = the live signal Laso reads */
+  .sig{position:absolute; left:50%; top:50%; width:150px; height:150px; margin:-75px 0 0 -75px;
+    border-radius:50%; border:1.5px solid rgba(10,132,255,.55);}
+  .sig.s1{animation:emit 2.8s ease-out infinite;}
+  .sig.s2{animation:emit 2.8s ease-out infinite; animation-delay:.93s;}
+  .sig.s3{animation:emit 2.8s ease-out infinite; animation-delay:1.86s;}
+  @keyframes emit{0%{transform:scale(.55); opacity:.55;} 100%{transform:scale(1.55); opacity:0;}}
+
+  /* watch body */
+  .watch{position:relative; width:92px; height:112px; border-radius:26px; z-index:2;
+    background:linear-gradient(160deg,#26272c,#101116);
+    box-shadow:0 16px 34px rgba(0,0,0,.6), inset 0 1px 1px rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.10);
+    display:flex; align-items:center; justify-content:center;}
+  .crown{position:absolute; right:-4px; top:38px; width:6px; height:22px; border-radius:3px; background:#3a3b42;}
+  .face{width:74px; height:94px; border-radius:20px; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
+  /* the heart on the watch face, beating in time with the rings */
+  .face svg{width:30px; height:30px; fill:url(#wg); filter:drop-shadow(0 0 8px rgba(10,132,255,.7)); animation:beat 1.6s ease-in-out infinite;}
+  @keyframes beat{0%,100%{transform:scale(1);} 45%{transform:scale(1.16);} 60%{transform:scale(1.07);}}
+  /* strap hints, top and bottom */
+  .strap{position:absolute; left:50%; transform:translateX(-50%); width:62px; background:linear-gradient(180deg,#1c1d22,#141519); z-index:1;}
+  .strap.top{top:-30px; height:42px; border-radius:14px 14px 6px 6px;}
+  .strap.bot{bottom:-30px; height:42px; border-radius:6px 6px 14px 14px;}
+
+  .line{font-size:21px; line-height:1.3; font-weight:700; letter-spacing:-.2px; color:var(--fg); text-align:center; margin-top:46px;}
+
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff; font-size:17px; font-weight:600; border:none; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(10,132,255,.38); cursor:pointer;}
+  .ghost{width:100%; text-align:center; font-size:14px; font-weight:600; color:var(--fg3); margin-top:16px; background:none; border:none; cursor:pointer;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.45; color:var(--fg2); margin-bottom:8px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+
+  /* reduce-motion fallback: still composition, no emitting rings, static heart */
+  @media (prefers-reduced-motion: reduce){
+    .sig{animation:none; opacity:.28;}
+    .sig.s2{transform:scale(1.15);} .sig.s3{transform:scale(1.35);}
+    .face svg{animation:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · Screen 8 · Wearable · Show, Don't Tell</h1>
+    <p>The 7 row brand catalog (14 lines of text) becomes ONE hero watch sending a live beat.<br/>
+       Motion sets the data expectation: your wrist is already broadcasting a signal Laso can read. One line. One pulse. Center is the pick.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- A: keep a thin brand confirm, but quiet -->
+    <div class="col">
+      <div class="tag">Option A · Watch + Soft Brand Note</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <svg width="0" height="0"><defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#5AC8FA"/><stop offset="1" stop-color="#0A84FF"/>
+          </linearGradient></defs></svg>
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">8 / 17</div></div>
+            <div class="stage">
+              <div class="sig s1"></div><div class="sig s2"></div><div class="sig s3"></div>
+              <div class="strap top"></div><div class="strap bot"></div>
+              <div class="watch"><div class="crown"></div><div class="face">
+                <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg>
+              </div></div>
+            </div>
+            <div class="line">Your wrist is already<br/>sending a signal.</div>
+            <div class="spacer"></div>
+            <button class="cta">Read my wrist</button>
+            <button class="ghost">I wear something else</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>One picturable object</b> replaces a 7 brand list. The watch is the whole screen. <s>Concreteness, Heath</s></li>
+        <li><b>Ghost escape</b> for non Apple Watch users, no friction added to the main path. <s>Progressive disclosure</s></li>
+      </div></div>
+    </div>
+
+    <!-- B: pure motion, the live beat IS the message (recommended) -->
+    <div class="col">
+      <div class="tag final">&#9733; Option B · The Live Signal · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">8 / 17</div></div>
+            <div class="stage">
+              <div class="sig s1"></div><div class="sig s2"></div><div class="sig s3"></div>
+              <div class="strap top"></div><div class="strap bot"></div>
+              <div class="watch"><div class="crown"></div><div class="face">
+                <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg>
+              </div></div>
+            </div>
+            <div class="line">Your watch already<br/>knows your heart.</div>
+            <div class="spacer"></div>
+            <button class="cta">Read my watch</button>
+            <button class="ghost">I don't wear one</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Motion sets the data expectation, not text.</b> Rings emitting from the watch SHOW that a live signal exists for Laso to read, so no brand list is needed to explain it. <s>Show don't tell, Superhuman · functional motion, NN/g</s></li>
+        <li><b>Heart beats in sync with the rings,</b> previewing the welcome orb and the reveal, one escalating arc, not a new flourish. <s>State change + feedback, NN/g</s></li>
+        <li><b>Brand choice demoted to a tap.</b> Apple Watch is the default felt object; "I don't wear one" branches softer expectations without a catalog. <s>One thing per page, NN/g · cut work free screens, Adapty</s></li>
+        <li><b>"Already knows" lowers effort and anxiety.</b> Nothing to set up, the body is the input. <s>Temporal discounting, vividness lever</s></li>
+        <li><b>Reduce Motion fallback:</b> rings freeze as a static halo, heart stops, the line still carries the meaning. <s>Apple HIG Reduce Motion</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: cut it entirely, fold into permission -->
+    <div class="col">
+      <div class="tag">Option C · Cut · Fold Into Permission</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">cut</div></div>
+            <div class="stage">
+              <div class="sig s1"></div><div class="sig s2"></div><div class="sig s3"></div>
+              <div class="strap top" style="opacity:.4"></div><div class="strap bot" style="opacity:.4"></div>
+              <div class="watch" style="opacity:.55"><div class="crown"></div><div class="face">
+                <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg>
+              </div></div>
+            </div>
+            <div class="line" style="color:var(--fg3)">No screen.<br/>Ask inside the read.</div>
+            <div class="spacer"></div>
+            <button class="cta" style="background:rgba(255,255,255,.08); color:var(--fg3); box-shadow:none;">Merged away</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Honest alternative.</b> On iOS the brand never changes the HealthKit read path, so this screen does no data work, only manages expectations. <s>RevenueCat: every pre reveal screen is a motivation tax</s></li>
+        <li><b>Why NOT cut:</b> the live beat builds belief that real data is being read before the permission ask, and the "I don't wear one" branch genuinely softens the no data case. That belief is worth one near textless screen. <s>Peak priming · Adapty: keep screens that personalize</s></li>
+      </div></div>
+    </div>
+
+  </div>
+  <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#5AC8FA"/><stop offset="1" stop-color="#0A84FF"/>
+  </linearGradient></defs></svg>
+</body>
+</html>

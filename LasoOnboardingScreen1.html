@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Onboarding Screen 1 · Final Design</title>
+<style>
+  :root{
+    --bg:#000000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#ffffff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:48px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1100px; margin:0 auto 40px; text-align:center;}
+  .page-head h1{font-size:24px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:14px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:56px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1200px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:16px; color:var(--fg3);}
+  .tag.final{color:var(--blue);}
+
+  /* iPhone frame */
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 30px 70px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 60px rgba(10,132,255,.35), 0 30px 80px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+
+  /* ambient glows, matching OnbV2 .blue ambient */
+  .glow-a{position:absolute; width:380px; height:380px; left:-150px; top:-120px;
+    background:radial-gradient(circle, rgba(10,132,255,.18), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:300px; height:300px; right:-120px; bottom:30px;
+    background:radial-gradient(circle, rgba(90,200,250,.10), transparent 62%); filter:blur(8px);}
+
+  /* status bar */
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center;
+    justify-content:space-between; padding:18px 28px 0; font-size:14px; font-weight:600; z-index:5;}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px;
+    background:#000; border-radius:14px; z-index:6;}
+
+  .content{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:0 28px 30px; z-index:4;}
+
+  /* orb */
+  .orb-wrap{position:relative; width:200px; height:200px; margin-top:150px; display:flex; align-items:center; justify-content:center;}
+  .ring{position:absolute; left:50%; top:50%; width:170px; height:170px; margin:-85px 0 0 -85px;
+    border-radius:50%; border:1.5px solid rgba(10,132,255,.55);}
+  .ring.r1{animation:pulse 3.4s ease-out infinite;}
+  .ring.r2{animation:pulse 3.4s ease-out infinite; animation-delay:1.13s;}
+  .ring.r3{animation:pulse 3.4s ease-out infinite; animation-delay:2.26s;}
+  @keyframes pulse{0%{transform:scale(.5); opacity:.55;} 100%{transform:scale(1.5); opacity:0;}}
+
+  .disc{position:relative; width:86px; height:86px; border-radius:50%;
+    background:radial-gradient(circle at 38% 32%, #5AC8FA, #0A84FF 72%);
+    box-shadow:0 14px 30px rgba(10,132,255,.55), 0 0 26px rgba(10,132,255,.5);
+    display:flex; align-items:center; justify-content:center; animation:beat 1.6s ease-in-out infinite;}
+  @keyframes beat{0%,100%{transform:scale(1);} 45%{transform:scale(1.12);} 60%{transform:scale(1.06);}}
+  .disc svg{width:38px; height:38px; fill:#fff; filter:drop-shadow(0 1px 1px rgba(0,0,0,.2));}
+
+  .headline{margin-top:54px; font-size:27px; line-height:1.22; font-weight:700; letter-spacing:-.4px;
+    text-align:center; color:var(--fg); max-width:240px;}
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff;
+    font-size:17px; font-weight:600; border:none; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 24px rgba(10,132,255,.4); cursor:pointer; transition:transform .12s ease;}
+  .cta:active{transform:scale(.985);}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%);
+    width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  /* science caption */
+  .why{width:300px; margin-top:22px; background:#15161a; border:1px solid rgba(255,255,255,.07);
+    border-radius:16px; padding:16px 18px;}
+  .why h3{font-size:13px; font-weight:700; color:#fff; margin-bottom:10px;}
+  .why ul{list-style:none; display:flex; flex-direction:column; gap:9px;}
+  .why li{font-size:11.5px; line-height:1.45; color:var(--fg2);}
+  .why li b{color:#fff; font-weight:600;}
+  .why li span{color:var(--blue);}
+  .wordcount{font-size:11px; color:var(--fg3); margin-top:10px; text-align:center;}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · First Screen · Steve Jobs Reduction</h1>
+    <p>One screen, one idea: your Vitality Age is the hero. The middle phone is the recommended final.<br/>
+       Every element below cites the research behind it. Real app tokens (#000 field, #0A84FF orb).</p>
+  </div>
+
+  <div class="row">
+
+    <!-- ALT A : curiosity -->
+    <div class="col">
+      <div class="tag">Alternate · Curiosity</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="orb-wrap">
+              <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+              <div class="disc"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.3 8.3 1.8 4.6 5.2 4.1 7.3 3.8 9 5 12 8c3-3 4.7-4.2 6.8-3.9 3.4.5 4.9 4.2 3.2 7.6C19.5 16.3 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="headline">How old is your body, really?</div>
+            <div class="spacer"></div>
+            <button class="cta">Find out</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="wordcount">6 words on screen</div>
+    </div>
+
+    <!-- FINAL : recommended -->
+    <div class="col">
+      <div class="tag final">★ The Final</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="orb-wrap">
+              <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+              <div class="disc"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.3 8.3 1.8 4.6 5.2 4.1 7.3 3.8 9 5 12 8c3-3 4.7-4.2 6.8-3.9 3.4.5 4.9 4.2 3.2 7.6C19.5 16.3 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="headline">See how old your body really is.</div>
+            <div class="spacer"></div>
+            <button class="cta">See my Vitality Age</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="wordcount">8 words on screen</div>
+      <div class="why">
+        <h3>Why every pixel is here</h3>
+        <ul>
+          <li><b>Beating orb (kept):</b> the one moving object lands the feeling before a word is read, and being the only thing different, it is what gets remembered. <span>Von Restorff; Norman visceral level</span></li>
+          <li><b>Black calm field:</b> dark ground isolates the orb as the single figure and lowers anxiety for a heart conscious user. <span>Figure ground, NN/G</span></li>
+          <li><b>One headline:</b> assume they read only the title and button, so one line carries the whole pitch. <span>F pattern + how little users read, NN/G</span></li>
+          <li><b>First person CTA:</b> exactly one choice = fastest action; "my Vitality Age" beats generic "Begin". <span>Hick's Law; Iyengar &amp; Lepper 2000; NN/G</span></li>
+        </ul>
+        <p style="font-size:11px;color:var(--fg3);margin-top:12px;line-height:1.5;">
+          Removed: the LASO eyebrow, the soft "feel understood" line, the long lede, progress dots, any privacy line. Each was a good idea, which is why it had to go. <span style="color:var(--blue)">Jobs "say no to 1,000 things"; Rams "less, but better"</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- ALT B : empowerment -->
+    <div class="col">
+      <div class="tag">Alternate · Empowerment</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#128268;</span></div>
+          <div class="content">
+            <div class="orb-wrap">
+              <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+              <div class="disc"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.3 8.3 1.8 4.6 5.2 4.1 7.3 3.8 9 5 12 8c3-3 4.7-4.2 6.8-3.9 3.4.5 4.9 4.2 3.2 7.6C19.5 16.3 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="headline">Your age is not your verdict.</div>
+            <div class="spacer"></div>
+            <button class="cta">See my number</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="wordcount">8 words on screen</div>
+    </div>
+
+  </div>
+</body>
+</html>

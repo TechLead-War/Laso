@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 16 · Sign in · Claim your number</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; align-items:center; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:34px; width:100%;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:94%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* HERO: the user's own Vitality Age, held in a pending halo. One tap claims it. */
+  .stage{position:relative; width:240px; height:300px; margin-top:46px; display:flex; align-items:center; justify-content:center;}
+  /* the pending ring: a single thin loop that breathes around the number, the open loop made visual */
+  .ring{position:absolute; left:50%; top:50%; width:210px; height:210px; margin:-105px 0 0 -105px;
+    border-radius:50%; border:1.5px solid rgba(10,132,255,.42);
+    animation:breathe 2.6s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{transform:scale(1); opacity:.42;} 50%{transform:scale(1.05); opacity:.7;}}
+
+  .age{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;}
+  .bignum{font-size:96px; line-height:1; font-weight:800; letter-spacing:-3px; color:var(--fg);
+    text-shadow:0 0 34px rgba(10,132,255,.5);}
+  .ageword{font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--fg3); margin-top:10px;}
+
+  /* shimmer sweep over the number = "not yet yours / waiting to be saved" */
+  .age.pending .bignum{position:relative; overflow:hidden;}
+  .age.pending .bignum::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+    background-size:240% 100%; mix-blend-mode:overlay;
+    animation:sweep 2.4s ease-in-out infinite;}
+  @keyframes sweep{0%{background-position:140% 0;} 60%,100%{background-position:-140% 0;}}
+
+  /* one quiet line, the open loop in words. Short. */
+  .line{font-size:18px; line-height:1.35; font-weight:700; letter-spacing:-.2px; color:var(--fg); text-align:center; margin-top:30px;}
+  .line.dim{color:var(--fg2); font-weight:600; font-size:15px;}
+
+  .spacer{flex:1;}
+  /* Apple black button per Apple sign-in guidelines, full width */
+  .apple{width:100%; height:54px; border-radius:16px; background:#fff; color:#000; font-size:17px; font-weight:600; border:none;
+    display:flex; align-items:center; justify-content:center; gap:9px; cursor:pointer;
+    box-shadow:0 10px 22px rgba(0,0,0,.5);}
+  .apple svg{width:18px; height:18px; fill:#000; margin-top:-2px;}
+  .cap{text-align:center; font-size:11.5px; color:var(--fg3); margin-top:14px;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.45; color:var(--fg2); margin-bottom:8px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+
+  /* the "claimed" state preview, right column: ring closes to solid, number locks, shimmer gone */
+  .ring.locked{animation:none; border-color:rgba(10,132,255,.9); box-shadow:0 0 30px rgba(10,132,255,.4);}
+  .age.locked .bignum::after{display:none;}
+
+  /* reduce motion: ring holds as a static halo, no breathe, no shimmer. Number always legible. */
+  @media (prefers-reduced-motion: reduce){
+    .ring{animation:none; opacity:.5;}
+    .age.pending .bignum::after{animation:none; display:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · Screen 16 · Sign in · Claim the number you earned</h1>
+    <p>The old card was a headline, a subhead, three benefit rows, and a caption, all explaining why to save. The rethink shows the user
+       their OWN Vitality Age held in a pending halo, shimmering as if not yet theirs, and makes one Apple tap the act that locks it in.
+       Curiosity and endowment, near-zero text. Center is the pick.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- A: the old explain-everything version, trimmed -->
+    <div class="col">
+      <div class="tag">Option A · Explain Why To Save</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">16 / 17</div></div>
+            <div class="line" style="margin-top:24px; font-size:22px;">Keep your number<br/>for good.</div>
+            <div class="line dim" style="margin-top:14px;">Sign in once so your Vitality Age stays with you on iPhone, iPad, and Watch.</div>
+            <div style="width:100%; margin-top:26px; display:flex; flex-direction:column; gap:14px;">
+              <div class="line dim" style="text-align:left; margin:0;">&#9679; Your read follows you everywhere</div>
+              <div class="line dim" style="text-align:left; margin:0;">&#9679; No password to remember</div>
+              <div class="line dim" style="text-align:left; margin:0;">&#9679; Your email stays private</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="apple"><svg viewBox="0 0 24 24"><path d="M16.4 12.7c0-2 1.6-3 1.7-3a3.8 3.8 0 0 0-3-1.6c-1.3-.1-2.5.7-3.1.7s-1.6-.7-2.7-.7a4 4 0 0 0-3.4 2c-1.4 2.5-.4 6.2 1 8.3.7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.5.6 2.6.6 1.7-1 2.4-2a8.7 8.7 0 0 0 1.1-2.2 3.7 3.7 0 0 1-2.2-3.5zM14.3 6.3a3.6 3.6 0 0 0 .8-2.6 3.7 3.7 0 0 0-2.4 1.2 3.4 3.4 0 0 0-.8 2.5 3 3 0 0 0 2.4-1.1z"/></svg>Sign in with Apple</button>
+            <div class="cap">One tap. Nothing to fill in.</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Tells, never shows.</b> Five lines of benefit right before the paywall is a motivation tax: the user reads instead of feeling, and "save your read" is abstract. <s>RevenueCat motivation x trust / friction · NN/g everything on screen reads as important</s></li>
+      </div></div>
+    </div>
+
+    <!-- B: the number, held pending, one tap claims it (recommended) -->
+    <div class="col">
+      <div class="tag final">&#9733; Option B · Claim Your Number · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">16 / 17</div></div>
+            <div class="stage">
+              <div class="ring"></div>
+              <div class="age pending">
+                <div class="bignum">42</div>
+                <div class="ageword">Vitality Age</div>
+              </div>
+            </div>
+            <div class="line">Save it to your name.</div>
+            <div class="spacer"></div>
+            <button class="apple"><svg viewBox="0 0 24 24"><path d="M16.4 12.7c0-2 1.6-3 1.7-3a3.8 3.8 0 0 0-3-1.6c-1.3-.1-2.5.7-3.1.7s-1.6-.7-2.7-.7a4 4 0 0 0-3.4 2c-1.4 2.5-.4 6.2 1 8.3.7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.5.6 2.6.6 1.7-1 2.4-2a8.7 8.7 0 0 0 1.1-2.2 3.7 3.7 0 0 1-2.2-3.5zM14.3 6.3a3.6 3.6 0 0 0 .8-2.6 3.7 3.7 0 0 0-2.4 1.2 3.4 3.4 0 0 0-.8 2.5 3 3 0 0 0 2.4-1.1z"/></svg>Sign in with Apple</button>
+            <div class="cap">One tap. Your email stays with Apple.</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>The number IS the screen.</b> The user's own Vitality Age (42) sits in a breathing halo, a thin shimmer sweeping over it, as if it is theirs but not yet locked. No headline, no subhead, no benefit rows. <s>shimmer + breathe ring; show don't tell, Superhuman · progressive disclosure, NN/g</s></li>
+        <li><b>Open loop made visual.</b> The pending ring and shimmer are the curiosity beat: a number you can see but have not kept. The one tap is the close. On tap, ring snaps solid, shimmer stops, one success haptic. <s>countUp/close-the-loop tension · peak as the lock-in moment, peak-end NN/g</s></li>
+        <li><b>Endowment, not "save your read".</b> You already earned this number at the reveal. Signing in protects something you own, which is a far stronger pull than abstract sync benefits. <s>endowment effect + self-reference · gain framing, Fiske</s></li>
+        <li><b>One line only.</b> "Save it to your name." carries the whole job. Privacy is a quiet caption under the button, never the hero. <s>less text, motion carries meaning · privacy never hero</s></li>
+        <li><b>Reduce Motion:</b> ring holds as a static halo, shimmer off, the 42 is fully legible and the button does the same job. Nothing meaningful lives only in motion. <s>Apple HIG Reduce Motion</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: claimed state preview (what the tap resolves to) -->
+    <div class="col">
+      <div class="tag">After Tap · Locked In</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">16 / 17</div></div>
+            <div class="stage">
+              <div class="ring locked"></div>
+              <div class="age locked">
+                <div class="bignum">42</div>
+                <div class="ageword" style="color:var(--blue)">Saved to you</div>
+              </div>
+            </div>
+            <div class="line">It is yours now.</div>
+            <div class="spacer"></div>
+            <button class="apple" style="background:var(--blue); color:#fff;">Continue</button>
+            <div class="cap">Next: your first 7 days, free.</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>The close.</b> Ring snaps solid, shimmer stops, "Saved to you" lands with one success haptic. The loop the pending state opened is now closed, a clean high note straight into the paywall. <s>peak-end: end on a high note before pricing · haptic reward, JCR 2026</s></li>
+        <li><b>Critic note carried forward:</b> sign-in is still a hard gate before the painwall. If funnel data shows drop-off here, the fallback is to defer sign-in until after the free trial starts and let Continue pass through. Endowment framing is the mitigation, not a guarantee. <s>RevenueCat: hard gates bleed motivation · validate with your own funnel</s></li>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>

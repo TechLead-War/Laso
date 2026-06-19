@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 12 · Heart · Curiosity Reduction</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; align-items:center; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:34px; width:100%;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:70%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* HERO: a single heart beating on the black field, rings leaving it like a real pulse */
+  .stage{position:relative; width:220px; height:240px; margin-top:54px; display:flex; align-items:center; justify-content:center;}
+  .sig{position:absolute; left:50%; top:50%; width:160px; height:160px; margin:-80px 0 0 -80px;
+    border-radius:50%; border:1.5px solid rgba(10,132,255,.5);}
+  .sig.s1{animation:emit 1.6s ease-out infinite;}
+  .sig.s2{animation:emit 1.6s ease-out infinite; animation-delay:.8s;}
+  @keyframes emit{0%{transform:scale(.5); opacity:.5;} 100%{transform:scale(1.45); opacity:0;}}
+
+  .heart{position:relative; z-index:2; width:96px; height:96px;
+    filter:drop-shadow(0 0 22px rgba(10,132,255,.6)); animation:beat 1.6s ease-in-out infinite;}
+  .heart svg{width:100%; height:100%; fill:url(#hg12);}
+  @keyframes beat{0%,100%{transform:scale(1);} 45%{transform:scale(1.13);} 60%{transform:scale(1.05);}}
+
+  /* the number that lives under the heart: hidden until the tap, then counts up */
+  .readout{margin-top:30px; height:96px; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .bignum{font-size:76px; line-height:1; font-weight:800; letter-spacing:-2px; color:var(--fg);
+    text-shadow:0 0 30px rgba(10,132,255,.45); display:flex; align-items:baseline;}
+  .bignum small{font-size:16px; font-weight:600; color:var(--fg3); letter-spacing:0; margin-left:8px;}
+  .unset{font-size:18px; font-weight:600; color:var(--fg3); letter-spacing:.2px;}
+
+  .line{font-size:20px; line-height:1.3; font-weight:700; letter-spacing:-.2px; color:var(--fg); text-align:center; margin-top:28px;}
+
+  /* ONE soft cohort line, appears only after the number resolves. NEEDS REAL DATA. */
+  .proof{display:flex; align-items:center; gap:8px; margin-top:22px; padding:9px 14px;
+    border-radius:999px; background:rgba(10,132,255,.10); border:1px solid rgba(10,132,255,.22);}
+  .proof svg{width:14px; height:14px; flex:0 0 auto; fill:none; stroke:var(--blueLight); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .proof span{font-size:12.5px; line-height:1.35; color:var(--fg2);}
+  .proof span b{color:#fff; font-weight:700;}
+
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff; font-size:17px; font-weight:600; border:none; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(10,132,255,.38); cursor:pointer;}
+  .cap{text-align:center; font-size:11.5px; color:var(--fg3); margin-top:12px;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.45; color:var(--fg2); margin-bottom:8px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+  .flag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.4px; color:#ffb020; border:1px solid rgba(255,176,32,.4); border-radius:5px; padding:1px 5px; margin-left:4px;}
+
+  /* reduce motion: rings freeze as a static halo, heart stops, number shown immediately */
+  @media (prefers-reduced-motion: reduce){
+    .sig{animation:none; opacity:.24;}
+    .sig.s2{transform:scale(1.18);}
+    .heart{animation:none;}
+  }
+</style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="hg12" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#5AC8FA"/><stop offset="1" stop-color="#0A84FF"/>
+  </linearGradient></defs></svg>
+
+  <div class="page-head">
+    <h1>Laso · Screen 12 · Heart · Real Number, Then One True Proof</h1>
+    <p>The old card stated the BPM up top with an eyebrow, subhead, and 3 explainer rows. The rethink beats a real heart, counts the BPM up on
+       the user's own tap, then folds ONE softened, goal-matched cohort line under it. Center is the pick. Proof line is flagged NEEDS REAL DATA.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- A: heart + the number already shown (the old, telling version, trimmed) -->
+    <div class="col">
+      <div class="tag">Option A · Number Pre-Shown</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">12 / 17</div></div>
+            <div class="stage">
+              <div class="sig s1"></div><div class="sig s2"></div>
+              <div class="heart"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="readout"><div class="bignum">58<small>BPM</small></div></div>
+            <div class="line">Your heart at rest.</div>
+            <div class="spacer"></div>
+            <button class="cta">What does it mean?</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Honest and concrete</b> but it spends the number with no tension. The reveal is over before the tap. <s>No open loop</s></li>
+      </div></div>
+    </div>
+
+    <!-- B: withhold, beat, count up on tap (recommended) -->
+    <div class="col">
+      <div class="tag final">&#9733; Option B · Number Lands, Then Proof · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">12 / 17</div></div>
+            <div class="stage">
+              <div class="sig s1"></div><div class="sig s2"></div>
+              <div class="heart"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="readout"><div class="bignum">58<small>BPM</small></div></div>
+            <div class="proof">
+              <svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM2 21a6 6 0 0 1 12 0M17 14a6 6 0 0 1 5 7"/></svg>
+              <span><b>Most people who started here</b> nudged this lower over a few months.</span>
+            </div>
+            <div class="spacer"></div>
+            <button class="cta">What this means</button>
+            <div class="cap">From 2 years of your own data</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>The number IS the screen.</b> Heart beats, BPM counts up to 58 on the user's tap within 0.1s, so it feels read from their body, not pre-baked. No eyebrow, no subhead, no 3-row card stack. <s>countUp; causal feedback, NN/g · show don't tell, Superhuman</s></li>
+        <li><b>ONE folded social-proof line,</b> goal-matched and softened, appears only AFTER the number lands, so it reads as peer validation, not a billboard. No invented precision, no fake live ticker. <span class="flag">NEEDS REAL DATA</span> <s>Fold proof into the reveal, Adapty · HRV improves but modestly over 3-6mo, DREW/Frontiers · fake live proof is a dark pattern, deceptive.design</s></li>
+        <li><b>"Most people," not "people."</b> Softened, no hard numeric promise, because the science supports better autonomic balance over months, not a guaranteed jump for everyone. <s>Honesty guardrail, 2025 HRV meta-analysis</s></li>
+        <li><b>One escalating arc, then stillness.</b> Same beating heart as the welcome orb and the watch; the number settles and the rings calm, so a health figure never pulses like an alarm for an anxious reader. <s>One reveal then rest, Aurora Harley NN/g · peak-end</s></li>
+        <li><b>Reduce Motion:</b> rings freeze as a halo, heart holds, 58 shows at once with a crossfade, the cohort line and meaning are untouched. <s>Apple HIG Reduce Motion</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: cut into the verdict / reveal sequence -->
+    <div class="col">
+      <div class="tag">Option C · Number Only · No Proof Yet</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">cut</div></div>
+            <div class="stage">
+              <div class="sig s1" style="opacity:.3"></div><div class="sig s2" style="opacity:.3"></div>
+              <div class="heart" style="opacity:.5; animation:none"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-9.5-8.8C1 9 2.4 5.5 5.6 5.1 7.6 4.9 9.2 6 12 8.6 14.8 6 16.4 4.9 18.4 5.1c3.2.4 4.6 3.9 3.1 7.1C19 16.6 12 21 12 21z"/></svg></div>
+            </div>
+            <div class="readout"><div class="bignum">58<small>BPM</small></div></div>
+            <div class="line" style="font-size:16px; color:var(--fg2); margin-top:18px;">Your heart at rest.</div>
+            <div class="spacer"></div>
+            <button class="cta">What this means</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>The safe default until cohort data exists.</b> If Laso has no real measured outcome yet, ship THIS, not an invented stat. A number that reads as fake poisons trust in the whole reveal. <s>Omit over invent, deceptive.design · Airbridge</s></li>
+        <li><b>Why B wins once data is real:</b> the matched cohort line turns a cold reading into peer validation at the exact moment of investment, lifting felt value at near-zero text cost. <s>Outcome-matched proof, Adapty</s></li>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>
