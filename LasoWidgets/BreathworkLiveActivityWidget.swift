@@ -57,12 +57,15 @@ private struct BreathworkModePill: View {
     let context: ActivityViewContext<BreathworkActivityAttributes>
 
     var body: some View {
+        // Fixed point sizes: the expanded island ignores `.dynamicTypeSize` and is
+        // capped at 160 pt, so a scaling leading pill grows the head row and pushes
+        // the bottom content past the cap. Pinning holds the height.
         HStack(spacing: 6) {
             Image(systemName: context.state.protocolType.symbolName)
-                .font(.caption.weight(.semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(AppColour.accent)
             Text(context.attributes.title)
-                .font(.subheadline.weight(.semibold))
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -81,7 +84,7 @@ private struct BreathworkStamp: View {
 
     var body: some View {
         Text(context.state.protocolType.subtitle)
-            .font(.caption)
+            .font(.system(size: 12))
             .foregroundStyle(AppColour.textTertiary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -96,11 +99,14 @@ private struct BreathworkExpandedBody: View {
     let context: ActivityViewContext<BreathworkActivityAttributes>
 
     var body: some View {
+        // Fixed point sizes (not Dynamic Type styles): the expanded island is capped
+        // at 160 pt and ignores `.dynamicTypeSize`, so scaling fonts would push the
+        // meta line past the cap and the system would clip it. Fixed sizes hold height.
         VStack(spacing: 8) {
             BreathingOrb(size: 56)
 
             Text(context.state.activePhase.label)
-                .font(.headline.weight(.bold))
+                .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -128,7 +134,7 @@ private struct BreathworkMetaLine: View {
             switch context.state.status {
             case .active:
                 Text(BreathworkCopy.remaining)
-                Text(timerInterval: Date()...context.state.sessionEndDate, countsDown: true)
+                Text(timerInterval: WidgetStyle.timerRange(to: context.state.sessionEndDate), countsDown: true)
                     .monospacedDigit()
                     .frame(minWidth: 36, alignment: .leading)
             case .paused:
@@ -141,7 +147,7 @@ private struct BreathworkMetaLine: View {
                     .minimumScaleFactor(0.7)
             }
         }
-        .font(.caption)
+        .font(.system(size: 12))
         .foregroundStyle(AppColour.textTertiary)
     }
 }
@@ -244,7 +250,7 @@ private struct BreathworkLiveActivityView: View {
     private func timerLabel(at date: Date) -> some View {
         switch context.state.status {
         case .active:
-            Text(timerInterval: date...context.state.sessionEndDate, countsDown: true)
+            Text(timerInterval: WidgetStyle.timerRange(from: date, to: context.state.sessionEndDate), countsDown: true)
                 .font(.title3.weight(.bold).monospacedDigit())
         case .paused:
             Text(format(seconds: context.state.remainingSeconds))
@@ -290,7 +296,7 @@ private struct CompactTimerText: View {
     var body: some View {
         switch context.state.status {
         case .active:
-            Text(timerInterval: Date()...context.state.sessionEndDate, countsDown: true)
+            Text(timerInterval: WidgetStyle.timerRange(to: context.state.sessionEndDate), countsDown: true)
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(AppColour.accent)
                 .frame(minWidth: 40, alignment: .trailing)

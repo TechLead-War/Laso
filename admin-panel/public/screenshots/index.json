@@ -1,6 +1,136 @@
 {
   "runs": [
     {
+      "timestamp": "2026-06-20_10-51-52_clean2",
+      "meta": {
+        "timestamp": "2026-06-20_10-51-52_clean2",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_onboarding",
+            "title": "Onboarding",
+            "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+            "shots": [
+              {
+                "file": "01_onboarding/03_connect.png",
+                "screen": "Onboarding \u00b7 Connect Health",
+                "caption": "Apple Health authorization step"
+              }
+            ]
+          },
+          {
+            "id": "02_today",
+            "title": "Today",
+            "description": "The Home tab and its primary daily surfaces \u2014 recovery, morning check-in, today's action, weekly review, health state timeline.",
+            "shots": [
+              {
+                "file": "02_today/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery + daily narrative"
+              },
+              {
+                "file": "02_today/03_todays_action.png",
+                "screen": "Today's Action detail",
+                "caption": "Single contextual action with reasoning"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-06-20_10-39-28_social-proof",
+      "meta": {
+        "timestamp": "2026-06-20_10-39-28_social-proof",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_onboarding",
+            "title": "Onboarding",
+            "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+            "shots": [
+              {
+                "file": "01_onboarding/03_connect.png",
+                "screen": "Onboarding \u00b7 Connect Health",
+                "caption": "Apple Health authorization step"
+              }
+            ]
+          },
+          {
+            "id": "02_today",
+            "title": "Today",
+            "description": "The Home tab and its primary daily surfaces \u2014 recovery, morning check-in, today's action, weekly review, health state timeline.",
+            "shots": [
+              {
+                "file": "02_today/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery + daily narrative"
+              },
+              {
+                "file": "02_today/03_todays_action.png",
+                "screen": "Today's Action detail",
+                "caption": "Single contextual action with reasoning"
+              }
+            ]
+          },
+          {
+            "id": "08_states",
+            "title": "Edge cases & states",
+            "description": "Transient overlays, paywalls, empty states, and breadth screens \u2014 disclaimer, paywall, Pro lock, connect-health empty, achievements, Explore tab.",
+            "shots": [
+              {
+                "file": "08_states/02_paywall.png",
+                "screen": "Paywall",
+                "caption": "Pro upgrade with trial messaging"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "timestamp": "2026-04-25_14-01-30",
       "meta": {
         "timestamp": "2026-04-25_14-01-30",
@@ -419,14 +549,6 @@
       }
     },
     {
-      "timestamp": "2026-04-25_13-13-58_test-rest2",
-      "meta": null
-    },
-    {
-      "timestamp": "2026-04-25_13-10-49_test-rest",
-      "meta": null
-    },
-    {
       "timestamp": "2026-04-25_13-08-57_test-deep",
       "meta": {
         "timestamp": "2026-04-25_13-08-57_test-deep",
@@ -632,10 +754,6 @@
       }
     },
     {
-      "timestamp": "2026-04-25_12-52-57_test-parallel",
-      "meta": null
-    },
-    {
       "timestamp": "2026-04-25_12-52-26_test-lifestyle",
       "meta": {
         "timestamp": "2026-04-25_12-52-26_test-lifestyle",
@@ -802,18 +920,6 @@
           }
         ]
       }
-    },
-    {
-      "timestamp": "2026-04-25_12-37-35",
-      "meta": null
-    },
-    {
-      "timestamp": "2026-04-25_12-37-18",
-      "meta": null
-    },
-    {
-      "timestamp": "2026-04-25_12-36-25",
-      "meta": null
     },
     {
       "timestamp": "2026-04-25_11-51-07_smoketest2",
@@ -994,5 +1100,5 @@
       }
     }
   ],
-  "generated_at": "2026-04-25T08:37:09.505484Z"
+  "generated_at": "2026-06-20T05:22:35.773458Z"
 }

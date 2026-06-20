@@ -38,9 +38,11 @@ final class BreathworkLiveActivityManager {
         )
         lastContentState = contentState
 
-        if let activity {
+        // End any prior activity — including one orphaned by a crash/relaunch that the
+        // in-memory `activity` missed — so a new request never leaves two live.
+        if let stale = activity ?? Activity<BreathworkActivityAttributes>.activities.first {
             Task {
-                await activity.end(nil, dismissalPolicy: .immediate)
+                await stale.end(nil, dismissalPolicy: .immediate)
             }
         }
 
@@ -90,8 +92,11 @@ final class BreathworkLiveActivityManager {
         )
         lastContentState = contentState
 
+        // A paused session has no live countdown, so don't hand iOS a future stale
+        // date — that would dim a paused card as "stale" at the wrong moment.
+        let staleDate: Date? = isPaused ? nil : contentState.sessionEndDate
         Task {
-            await activity.update(ActivityContent(state: contentState, staleDate: contentState.sessionEndDate))
+            await activity.update(ActivityContent(state: contentState, staleDate: staleDate))
         }
         AppAnalytics.shared.trackLiveActivityStateChanged(
             kind: "breathwork",

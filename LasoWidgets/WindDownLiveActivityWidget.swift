@@ -116,12 +116,15 @@ private struct WindDownLockScreenView: View {
 /// HTML `modepill`. Background is the accent at 18% to match `color-mix(... 18%)`.
 private struct WindDownModePill: View {
     var body: some View {
+        // Fixed point sizes: the expanded island ignores `.dynamicTypeSize` and is
+        // capped at 160 pt, so a scaling leading pill grows the head row and pushes
+        // the bottom Breathe button past the cap. Pinning holds the height.
         HStack(spacing: 6) {
             Image(systemName: "moon.stars.fill")
-                .font(.caption2.weight(.semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(windDownTint)
             Text(WindDownCopy.header)
-                .font(.footnote.weight(.semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -142,7 +145,7 @@ private struct WindDownStampLabel: View {
 
     var body: some View {
         Text(WindDownCopy.toBed)
-            .font(.caption.weight(.medium))
+            .font(.system(size: 12, weight: .medium))
             .textCase(.uppercase)
             .tracking(0.6)
             .foregroundStyle(AppColour.textTertiary)
@@ -162,6 +165,10 @@ private struct WindDownExpandedBody: View {
     let state: WindDownActivityAttributes.ContentState
 
     var body: some View {
+        // Fixed point sizes (not Dynamic Type styles): the expanded island is capped
+        // at 160 pt and ignores `.dynamicTypeSize`, so scaling fonts would push the
+        // Breathe action past the cap and the system would clip it. Fixed sizes hold
+        // the height constant; the lock-screen card still scales for accessibility.
         VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 16) {
                 WindDownMoonArc(state: state, size: 56)
@@ -171,13 +178,13 @@ private struct WindDownExpandedBody: View {
                     // timer primitive renders the live minutes; the static unit
                     // sits beside it as the HTML `small`.
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(timerInterval: Date()...state.targetBedtime, countsDown: true)
+                        Text(timerInterval: WidgetStyle.timerRange(to: state.targetBedtime), countsDown: true)
                             .font(.system(size: 30, weight: .bold).monospacedDigit())
                             .foregroundStyle(AppColour.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                         Text(WindDownCopy.toBed)
-                            .font(.footnote.weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -185,7 +192,7 @@ private struct WindDownExpandedBody: View {
 
                     // stage-phrase: accent-coloured, softens as bed nears.
                     Text(currentStage(now: Date(), bedtime: state.targetBedtime).phrase)
-                        .font(.footnote.weight(.semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(windDownTint)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -193,7 +200,7 @@ private struct WindDownExpandedBody: View {
                     // hint: optional HRV nudge, tertiary.
                     if let hint = hrvHint(state: state) {
                         Text(hint)
-                            .font(.caption2)
+                            .font(.system(size: 11))
                             .foregroundStyle(AppColour.textTertiary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -203,7 +210,7 @@ private struct WindDownExpandedBody: View {
                 Spacer(minLength: 4)
             }
 
-            WindDownBreatheButton(fullWidth: true)
+            WindDownBreatheButton(fullWidth: true, fixedType: true)
         }
         .padding(.top, 4)
     }
@@ -326,7 +333,7 @@ private struct WindDownCountdownStack: View {
                 .foregroundStyle(AppColour.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            Text(timerInterval: Date()...state.targetBedtime, countsDown: true)
+            Text(timerInterval: WidgetStyle.timerRange(to: state.targetBedtime), countsDown: true)
                 .font(font.monospacedDigit())
                 .foregroundStyle(AppColour.textPrimary)
                 .multilineTextAlignment(.trailing)
@@ -344,7 +351,7 @@ private struct CompactCountdown: View {
     let bedtime: Date
 
     var body: some View {
-        Text(timerInterval: Date()...bedtime, countsDown: true)
+        Text(timerInterval: WidgetStyle.timerRange(to: bedtime), countsDown: true)
             .font(.caption2.weight(.semibold).monospacedDigit())
             .frame(minWidth: 34, alignment: .trailing)
     }
@@ -374,15 +381,24 @@ private struct WindDownPhraseLine: View {
 /// it as a trailing pill while the expanded island stretches it edge to edge.
 private struct WindDownBreatheButton: View {
     var fullWidth: Bool
+    /// Fixed point size instead of a Dynamic Type style. The expanded island has a
+    /// hard 160 pt cap and ignores `.dynamicTypeSize`, so the island passes `true`
+    /// to hold its height; the lock-screen card leaves this `false` so its action
+    /// still scales for accessibility.
+    var fixedType: Bool = false
+
+    private var labelFont: Font {
+        fixedType ? .system(size: 13, weight: .semibold) : .footnote.weight(.semibold)
+    }
 
     var body: some View {
         Button(intent: WindDownBreatheIntent()) {
             HStack(spacing: 7) {
                 Image(systemName: "wind")
-                    .font(.footnote.weight(.semibold))
+                    .font(labelFont)
                     .foregroundStyle(windDownTint)
                 Text(WindDownCopy.breatheButton)
-                    .font(.footnote.weight(.semibold))
+                    .font(labelFont)
                     .foregroundStyle(AppColour.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)

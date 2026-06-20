@@ -60,6 +60,14 @@ final class TodayScoreLiveActivityManager {
             return
         }
 
+        // Wind-down owns the Dynamic Island during its evening window. An evening
+        // dashboard refresh would otherwise respawn the rotating TodayScore on top of
+        // a live wind-down (two activities in the notch); stand down and let it hold.
+        if !Activity<WindDownActivityAttributes>.activities.isEmpty {
+            end()
+            return
+        }
+
         let mode = CoachMode.current
         let coach = Self.deriveCoachContext(
             mode: mode,

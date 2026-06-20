@@ -165,7 +165,14 @@ struct OnboardingV2View: View {
         case .wearable:
             OnbV2Screen7Wearable(profile: profile,
                                  onBack: { advance(to: .activity) },
-                                 onContinue: { advance(to: .bridge) })
+                                 onContinue: {
+                                     AppAnalytics.shared.trackOnboardingWearableSelected(
+                                         wearable: profile.wearable?.rawValue ?? OnbV2Wearable.none.rawValue,
+                                         stepIndex: Self.screenOrdinal(.wearable),
+                                         durationSec: max(0, Int(Date().timeIntervalSince(stepStartedAt)))
+                                     )
+                                     advance(to: .bridge)
+                                 })
         case .bridge:
             OnbV2Screen8Bridge(goal: profile.primaryGoal,
                                onBack: { advance(to: .wearable) },

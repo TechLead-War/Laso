@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laso — Variant B, all goal versions</title>
+<style>
+  :root{
+    --txt:#fff; --txt2:rgba(235,235,245,.62); --txt3:rgba(235,235,245,.38); --txt4:rgba(235,235,245,.55);
+    --accent:#22D3EE; --amber:#F59E0B;
+    --imgW:300px; --imgH:651.6px;   /* 300 * 2868/1320 */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 700px at 50% -10%,#0c1416 0%,#070809 55%,#050506 100%);
+    color:var(--txt);-webkit-font-smoothing:antialiased;padding:40px 22px 90px}
+  .wrap{max-width:1360px;margin:0 auto}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{color:var(--txt2);font-size:15px;max-width:920px;line-height:1.55}
+  .sub b{color:#fff}
+
+  .how{margin:18px 0 8px;border-radius:14px;padding:14px 16px;background:#101216;border:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.6;color:var(--txt2);max-width:920px}
+  .how b{color:#fff}
+  .how code{background:#1b1e24;padding:1px 6px;border-radius:5px;color:#8fd3ff;font-size:12px}
+  .guard{margin:10px 0 30px;border-radius:14px;padding:13px 16px;background:linear-gradient(180deg,rgba(245,158,11,.12),rgba(245,158,11,.04));
+    border:1px solid rgba(245,158,11,.3);font-size:12.5px;line-height:1.55;color:#fde9c8;max-width:920px}
+  .guard b{color:#fcd34d}
+
+  .grid{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .col{flex:0 0 auto;width:var(--imgW)}
+  .head{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+  .gicon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;flex:0 0 auto;
+    background:color-mix(in srgb,var(--g) 26%,#15171b)}
+  .sel{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
+  .gname{font-size:14.5px;font-weight:700;color:var(--g)}
+
+  .phone{position:relative;width:var(--imgW);height:var(--imgH);border-radius:34px;overflow:hidden;
+    box-shadow:0 26px 50px -18px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.07)}
+  .phone img{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .ov{position:absolute;left:20px;right:20px;text-align:center;z-index:2;top:67%}
+  .avts{display:flex;justify-content:center;margin-bottom:9px}
+  .avts i{width:22px;height:22px;border-radius:50%;border:2px solid #050506;margin-left:-7px;display:block;
+    background:linear-gradient(135deg,var(--g),#0A84FF)}
+  .avts i:first-child{margin-left:0}
+  .line{font-size:13px;color:var(--txt4);line-height:1.45}
+  .line b{color:#fff;font-weight:800}
+  .ex{display:block;margin-top:8px;font-size:8px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+
+  .cap{margin-top:13px;font-size:11.5px;line-height:1.5;color:var(--txt3)}
+  .cap b{color:var(--txt2)}
+
+  .close{margin:46px auto 0;max-width:920px;border-top:1px solid rgba(255,255,255,.08);padding-top:24px;font-size:13px;color:var(--txt2);line-height:1.6}
+  .close h2{font-size:18px;color:#fff;margin-bottom:10px}
+  .close b{color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Variant B, finalized — and every version it will show</h1>
+  <p class="sub"><b>"People like you"</b> is locked in. It is not one fixed line. It reads the goal the user picked on Screen 4 and swaps the metric, the wording, and the accent color to match. Below is the full set: one real Screen 14 per goal.</p>
+
+  <div class="how">
+    <b>How it stays based on their choices:</b> the line switches on the same <code>OnbV2Goal</code> value that already drives the Bridge copy (<code>bridgeLede(for: goal)</code>). The goal they selected picks the metric. "People like you" can sharpen further from their baseline reveal (their real sleep on Screen 12, HRV on Screen 13), so it means people with the <b>same goal and a similar starting point</b>, not everyone.
+  </div>
+  <div class="guard"><b>Still the one rule:</b> every number is a placeholder until it is a real per-goal Laso cohort figure, served through Remote Config and refreshed. If a goal's cohort is too small to be honest, the line hides for that goal instead of borrowing another goal's number.</div>
+
+  <div class="grid">
+
+    <!-- sleep -->
+    <div class="col" style="--g:#C77DFF">
+      <div class="head"><div class="gicon">🌙</div><div><div class="sel">Selected · Screen 4</div><div class="gname">Sleep better</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 sleep">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, working on sleep, gained <b>38 min</b> a night in <b>3 weeks</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>nightly sleep</b>. Goal accent: purple, matching the sleep reveal screen.</div>
+    </div>
+
+    <!-- energy -->
+    <div class="col" style="--g:#FF9F0A">
+      <div class="head"><div class="gicon">⚡</div><div><div class="sel">Selected · Screen 4</div><div class="gname">More steady energy</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 energy">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, working on energy, had <b>30% fewer</b> afternoon dips by <b>week 3</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>energy from morning check ins</b>. Accent: amber.</div>
+    </div>
+
+    <!-- training -->
+    <div class="col" style="--g:#34C759">
+      <div class="head"><div class="gicon">🏃</div><div><div class="sel">Selected · Screen 4</div><div class="gname">Train smarter</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 training">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, training smarter, recovered <b>a day faster</b> between hard sessions in <b>3 weeks</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>recovery</b>. Accent: green.</div>
+    </div>
+
+    <!-- stress -->
+    <div class="col" style="--g:#2DD4BF">
+      <div class="head"><div class="gicon">🧠</div><div><div class="sel">Selected · Screen 4</div><div class="gname">Manage stress</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 stress">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, managing stress, raised their HRV <b>9%</b> in <b>3 weeks</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>HRV</b>, the real signal behind stress. Accent: teal.</div>
+    </div>
+
+    <!-- longevity -->
+    <div class="col" style="--g:#FF6B7A">
+      <div class="head"><div class="gicon">❤️</div><div><div class="sel">Selected · Screen 4</div><div class="gname">Stay healthy</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 longevity">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, staying healthy, dropped their resting heart rate <b>4 bpm</b> in <b>4 weeks</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>resting heart rate</b> / vitality. Accent: rose.</div>
+    </div>
+
+    <!-- weight -->
+    <div class="col" style="--g:#0A84FF">
+      <div class="head"><div class="gicon">⚖️</div><div><div class="sel">Selected · Screen 4</div><div class="gname">Weight goal</div></div></div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="Screen 14 weight">
+        <div class="ov">
+          <div class="avts"><i></i><i></i><i></i><i></i></div>
+          <div class="line">People like you, on a weight goal, saw a steady <b>3% move</b> toward it in <b>6 weeks</b>.</div>
+          <span class="ex">example figure</span>
+        </div>
+      </div>
+      <div class="cap">Metric: <b>weight trend</b>, gentle framing to match "without obsessing". Accent: blue.</div>
+    </div>
+
+  </div>
+
+  <div class="close">
+    <h2>What I need from you next</h2>
+    These six lines and metrics are my draft. Confirm or correct the <b>metric per goal</b> (for example: is energy best shown from morning check ins, or HRV?) and I will lock the copy. Then the real build is: a goal switch on Screen 14, copy in <code>Copy+OnboardingV2.swift</code>, the per goal number from a real cohort query served via Remote Config, and the line hidden when a cohort is too small. The "none" goal falls back to the sleep or HRV version.
+  </div>
+
+</div>
+</body>
+</html>

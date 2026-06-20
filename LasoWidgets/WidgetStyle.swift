@@ -51,4 +51,13 @@ enum WidgetStyle {
     static func timeString(from date: Date) -> String {
         date.formatted(.dateTime.hour().minute())
     }
+
+    /// A guaranteed-forward range for `Text(timerInterval:)` / `ProgressView(timerInterval:)`.
+    /// Swift's `...` traps when `start > end`, which happens routinely once a target
+    /// (bedtime, session end) passes before the next push lands — that trap crashes the
+    /// widget extension. Clamp the upper bound just above the start so the range is never
+    /// empty or reversed; a passed target then reads as 0:00 instead of crashing.
+    static func timerRange(from start: Date = Date(), to end: Date) -> ClosedRange<Date> {
+        start...max(end, start.addingTimeInterval(1))
+    }
 }

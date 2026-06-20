@@ -60,7 +60,9 @@ final class WindDownLiveActivityManager {
 
         // Outside window entirely — end anything running from an earlier session.
         guard now >= windowStart else {
-            // Far before the window. Nothing to do.
+            // Bedtime moved later than a live activity expects (recompute pushed the
+            // window into the future); tear it down so a stale countdown isn't pinned.
+            endIfRunning(reason: "before_window")
             return
         }
         guard now <= windowEnd else {
@@ -154,6 +156,10 @@ final class WindDownLiveActivityManager {
     /// as a distinct funnel outcome vs. the auto-expire path.
     private func observeStateUpdates(_ activity: Activity<WindDownActivityAttributes>) {
         stateObservationTask?.cancel()
+        // Each freshly observed activity starts clean: a prior `endIfRunning` leaves
+        // the flag set, and without this reset the next night's genuine user swipe
+        // would be misread as our own teardown (skipping analytics + dismissal memory).
+        programmaticEndInFlight = false
         stateObservationTask = Task { @MainActor [weak self] in
             for await state in activity.activityStateUpdates {
                 guard let self else { return }

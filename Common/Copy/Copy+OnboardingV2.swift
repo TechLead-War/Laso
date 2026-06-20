@@ -97,7 +97,7 @@ extension Copy {
                 .tiredMorning:  .init(icon: "battery.25",    label: s("copy_onboardingv2_symptom_tired_morning", "Tired mornings"), chase: s("copy_onboardingv2_symptom_tired_morning_chase", "Find why your mornings feel heavy")),
                 .restless:      .init(icon: "moon.zzz",      label: s("copy_onboardingv2_symptom_restless", "Restless nights"), chase: s("copy_onboardingv2_symptom_restless_chase", "Find what's breaking your sleep")),
                 .foggy:         .init(icon: "cloud.fog",     label: s("copy_onboardingv2_symptom_foggy", "Foggy thinking"), chase: s("copy_onboardingv2_symptom_foggy_chase", "Find what's clouding your focus")),
-                .anxious:       .init(icon: "waveform.path", label: s("copy_onboardingv2_symptom_anxious", "Nervous energy"), chase: s("copy_onboardingv2_symptom_anxious_chase", "Find what keeps you on edge")),
+                .anxious:       .init(icon: "waveform.path", label: s("copy_onboardingv2_symptom_anxious", "Anxiety/restlessness"), chase: s("copy_onboardingv2_symptom_anxious_chase", "Find what keeps you on edge")),
                 .lowMotivation: .init(icon: "cloud",         label: s("copy_onboardingv2_symptom_low_motivation", "Low motivation"), chase: s("copy_onboardingv2_symptom_low_motivation_chase", "Find what's draining your drive")),
                 .sore:          .init(icon: "figure.run",    label: s("copy_onboardingv2_symptom_sore", "Slow recovery"), chase: s("copy_onboardingv2_symptom_sore_chase", "Find what's slowing your recovery")),
                 .moody:         .init(icon: "drop",          label: s("copy_onboardingv2_symptom_moody", "Mood swings"), chase: s("copy_onboardingv2_symptom_moody_chase", "Find what's swinging your mood")),

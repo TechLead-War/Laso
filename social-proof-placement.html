@@ -3,312 +3,183 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laso — Social Proof Placement</title>
+<title>Laso — Social Proof in Onboarding</title>
 <style>
   :root{
-    /* real app tokens */
-    --surfaceBase:#000;            /* systemBackground dark */
-    --surfaceRaised:#1C1C1E;       /* secondarySystemBackground dark */
-    --surfaceRaised2:#2C2C2E;
-    --textPrimary:#fff;
-    --textSecondary:rgba(235,235,245,.62);
-    --textTertiary:rgba(235,235,245,.34);
-    --accent:#22D3EE;              /* cyan dark */
-    --success:#10B981;
-    --warning:#F59E0B;
-    --danger:#E5484D;
-    /* onboarding tokens */
-    --onbBlue:#0A84FF;
-    --onbBlueLight:#5AC8FA;
-    --onbGreen:#34C759;
-    --onbBg:#0A0A0C;
-    --fg2:rgba(255,255,255,.72);
-    --fg3:rgba(255,255,255,.48);
-    --line:rgba(255,255,255,.08);
-    --proof:#FBBF24; /* highlight ring for the proof element */
+    --bg:#070809; --card:#121316; --line:rgba(255,255,255,.08);
+    --txt:#fff; --txt2:rgba(235,235,245,.62); --txt3:rgba(235,235,245,.34);
+    --accent:#22D3EE; --green:#10B981; --amber:#F59E0B; --blue:#5AC8FA;
+    --imgW:300px; --imgH:651.6px;   /* 300 * 2868/1320 */
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
     background:radial-gradient(1200px 700px at 50% -10%,#0c1416 0%,#070809 55%,#050506 100%);
-    color:var(--textPrimary);
-    -webkit-font-smoothing:antialiased;
-    padding:40px 20px 80px;
-  }
-  .wrap{max-width:1240px;margin:0 auto}
-  h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
-  .sub{color:var(--textSecondary);font-size:15px;max-width:760px;line-height:1.5}
-
-  /* honesty banner */
-  .banner{
-    margin:22px 0 34px;border-radius:16px;padding:16px 18px;
-    background:linear-gradient(180deg,rgba(229,72,77,.12),rgba(229,72,77,.05));
-    border:1px solid rgba(229,72,77,.3);display:flex;gap:14px;align-items:flex-start;
-  }
-  .banner .dot{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--danger);margin-top:6px;box-shadow:0 0 12px var(--danger)}
-  .banner b{color:#FF8A8E}
-  .banner p{font-size:13.5px;line-height:1.55;color:rgba(255,235,235,.85)}
-
-  .legend{display:flex;gap:22px;flex-wrap:wrap;margin:0 0 30px;font-size:12.5px;color:var(--textSecondary)}
+    color:var(--txt);-webkit-font-smoothing:antialiased;padding:40px 20px 80px}
+  .wrap{max-width:1340px;margin:0 auto}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{color:var(--txt2);font-size:15px;max-width:900px;line-height:1.55}
+  .sub b{color:#fff}
+  .guard{margin:18px 0 4px;border-radius:14px;padding:14px 16px;background:linear-gradient(180deg,rgba(245,158,11,.12),rgba(245,158,11,.04));
+    border:1px solid rgba(245,158,11,.3);font-size:13px;line-height:1.55;color:#fde9c8}
+  .guard b{color:#fcd34d}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;margin:18px 0 0;font-size:12.5px;color:var(--txt2)}
   .legend span{display:inline-flex;align-items:center;gap:8px}
-  .pill{width:22px;height:12px;border-radius:6px}
-  .pill.safe{background:var(--success)}
-  .pill.gated{background:var(--warning)}
+  .pill{width:22px;height:12px;border-radius:6px;background:var(--amber)}
 
-  .grid{display:flex;gap:34px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
-  .col{flex:0 0 auto;width:340px}
-  .rank{display:flex;align-items:center;gap:10px;margin:0 0 14px}
-  .rankNo{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#04222a;font-weight:800;font-size:14px;display:grid;place-items:center}
-  .rankTtl{font-size:15px;font-weight:700}
-  .rankSpot{font-size:12px;color:var(--textTertiary);margin-top:1px}
+  .grid{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;align-items:flex-start;margin-top:30px}
+  .col{flex:0 0 auto;width:var(--imgW)}
+  .col.focus{outline:2px solid rgba(34,211,238,.55);outline-offset:14px;border-radius:6px}
+  .rank{display:flex;align-items:flex-start;gap:10px;margin:0 0 12px;min-height:60px}
+  .rankNo{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#04222a;font-weight:800;font-size:14px;display:grid;place-items:center;flex:0 0 auto}
+  .ribbon{display:inline-block;background:var(--accent);color:#04222a;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px;margin-bottom:6px}
+  .rankTtl{font-size:14.5px;font-weight:700;line-height:1.2}
+  .rankSpot{font-size:11.5px;color:var(--txt3);margin-top:2px}
+  .score{font-size:11px;color:var(--green);font-weight:700;margin-top:3px}
 
-  /* phone */
-  .phone{
-    border-radius:42px;padding:10px;background:#1a1a1c;
-    box-shadow:0 30px 60px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.06);
-  }
-  .screen{
-    border-radius:33px;overflow:hidden;background:var(--surfaceBase);
-    height:680px;display:flex;flex-direction:column;position:relative;
-  }
-  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:5}
-  .statusbar{display:flex;justify-content:space-between;padding:12px 22px 4px;font-size:12px;font-weight:600;color:var(--textPrimary)}
-  .scroll{flex:1;overflow:hidden;padding:6px 18px 0;display:flex;flex-direction:column}
+  .phone{position:relative;width:var(--imgW);height:var(--imgH);border-radius:34px;overflow:hidden;
+    box-shadow:0 26px 50px -18px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.07)}
+  .phone img{width:100%;height:100%;display:block}
+  /* zone + marker at the exact insertion gap */
+  .zone{position:absolute;left:8px;right:8px;border:2px solid var(--amber);border-radius:14px;background:rgba(245,158,11,.1);pointer-events:none}
+  .ins{position:absolute;left:0;right:0;display:flex;align-items:center;pointer-events:none}
+  .ins .bar{flex:1;height:0;border-top:2px dashed var(--amber)}
+  .ins .pin{position:absolute;left:50%;transform:translateX(-50%);background:var(--amber);color:#3a2b00;
+    font-size:10px;font-weight:800;letter-spacing:.02em;padding:4px 10px;border-radius:999px;white-space:nowrap;
+    text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.5)}
 
-  /* proof highlight */
-  .proofMark{position:relative;border-radius:16px}
-  .proofMark::before{
-    content:"";position:absolute;inset:-7px;border-radius:20px;
-    border:2px dashed var(--proof);box-shadow:0 0 0 4px rgba(251,191,36,.08);
-    pointer-events:none;
-  }
-  .proofTag{
-    position:absolute;top:-12px;right:10px;z-index:3;background:var(--proof);color:#3a2b00;
-    font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 9px;border-radius:999px;text-transform:uppercase;
-  }
+  .bigline{margin:12px 0 4px;padding:15px 16px;border-radius:14px;background:#0A0A0C;border:1px solid rgba(90,200,250,.28);text-align:center;line-height:1.35}
+  .bigline .lead{font-size:14.5px;font-weight:800;color:#fff;letter-spacing:-.01em}
+  .bigline .num{color:var(--blue)}
+  .bigline .ex{display:block;margin-top:8px;font-size:10px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 
-  /* ---------- PAYWALL ---------- */
-  .pwIcon{width:74px;height:74px;border-radius:20px;margin:14px auto 12px;
-    background:linear-gradient(160deg,#0ea5b8,#06b6d4);display:grid;place-items:center;font-size:34px}
-  .pwTitle{text-align:center;font-size:24px;font-weight:800;letter-spacing:-.02em}
-  .pwSub{text-align:center;color:var(--textSecondary);font-size:13px;margin:6px 14px 18px;line-height:1.4}
-  .card{background:var(--surfaceRaised);border-radius:16px;padding:15px}
-  .frow{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:13.5px}
-  .frow .ic{width:26px;color:var(--accent);font-size:15px;text-align:center}
+  /* line composited in place on the screenshot, anchored above the CTA */
+  .phone .onscreen{position:absolute;left:14px;right:14px;padding:11px 12px;border-radius:12px;
+    background:rgba(10,10,12,.86);border:1px solid rgba(90,200,250,.32);text-align:center;line-height:1.3}
+  .phone .onscreen .lead{font-size:12.5px;font-weight:800;color:#fff;letter-spacing:-.01em}
+  .phone .onscreen .num{color:var(--blue)}
+  .phone .onscreen .ex{display:block;margin-top:5px;font-size:8px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+  .cap{margin-top:12px;font-size:12.5px;line-height:1.5;color:var(--txt2)}
+  .cap b{color:#fff}
+  .why{margin-top:7px;color:var(--txt2)}
 
-  .proofCard{background:var(--surfaceRaised);border-radius:16px;padding:14px 15px;margin:16px 0}
-  .stars{color:#FFB020;font-size:15px;letter-spacing:1px}
-  .proofTop{display:flex;align-items:center;gap:10px}
-  .proofRating{font-weight:800;font-size:17px}
-  .proofCount{color:var(--textSecondary);font-size:12.5px}
-  .proofQuote{margin-top:9px;font-size:12.5px;color:var(--textSecondary);line-height:1.45;font-style:italic}
-
-  .plan{display:flex;align-items:center;justify-content:space-between;background:var(--surfaceRaised);
-    border-radius:14px;padding:13px 15px;margin-top:9px;border:2px solid transparent}
-  .plan.sel{border-color:var(--accent)}
-  .planL{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-  .badge{background:var(--success);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
-  .planD{font-size:12px;color:var(--textSecondary);margin-top:3px}
-  .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--textTertiary)}
-  .radio.on{border:0;background:var(--accent);position:relative}
-  .radio.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#04222a;font-size:12px;font-weight:900}
-  .cta{margin:16px 2px 6px;background:var(--accent);color:#04222a;text-align:center;font-weight:800;font-size:16px;padding:15px;border-radius:16px}
-  .micro{text-align:center;font-size:10px;color:var(--textTertiary);padding:0 10px 12px;line-height:1.4}
-
-  /* ---------- ONBOARDING ---------- */
-  .onb{background:var(--onbBg)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:14px 4px 0}
-  .back{color:var(--fg2);font-size:18px}
-  .track{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}
-  .track i{display:block;height:100%;width:62%;background:var(--onbBlue);border-radius:2px}
-  .step{font-size:12px;color:var(--fg3)}
-  .heart{width:150px;height:150px;margin:30px auto 0;border-radius:50%;
-    background:radial-gradient(circle at 50% 45%,rgba(10,132,255,.55),rgba(10,132,255,0) 65%);
-    display:grid;place-items:center;font-size:74px;filter:drop-shadow(0 0 24px rgba(10,132,255,.5))}
-  .onbTitle{text-align:center;font-size:25px;font-weight:800;margin:18px 16px 0;line-height:1.25}
-  .onbLede{text-align:center;color:var(--fg2);font-size:15px;margin:14px auto 0;max-width:280px;line-height:1.45}
-  .proofChip{display:flex;align-items:center;gap:10px;justify-content:center;margin:20px auto 0;max-width:300px;
-    background:rgba(10,132,255,.1);border:1px solid rgba(10,132,255,.32);border-radius:14px;padding:12px 14px}
-  .avts{display:flex}
-  .avts span{width:24px;height:24px;border-radius:50%;border:2px solid var(--onbBg);margin-left:-8px;
-    background:linear-gradient(135deg,#5AC8FA,#0A84FF)}
-  .avts span:first-child{margin-left:0}
-  .proofChipTxt{font-size:12.5px;color:#cfe6ff;line-height:1.35;text-align:left}
-  .privChip{display:inline-flex;align-items:center;gap:6px;margin:16px auto 0;align-self:center;
-    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:12.5px;color:var(--fg2)}
-  .onbCta{margin:auto 2px 8px;background:var(--onbBlue);color:#fff;text-align:center;font-weight:700;font-size:16px;padding:16px;border-radius:16px}
-
-  /* ---------- HOME ---------- */
-  .homeTop{padding:14px 4px 6px}
-  .homeGreet{font-size:13px;color:var(--textSecondary)}
-  .ring{width:128px;height:128px;border-radius:50%;margin:14px auto 4px;
-    background:conic-gradient(var(--success) 0 78%,rgba(255,255,255,.08) 78% 100%);
-    display:grid;place-items:center;position:relative}
-  .ring::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--surfaceBase)}
-  .ringTxt{position:relative;z-index:2;text-align:center}
-  .ringTxt b{font-size:34px;font-weight:800;display:block;line-height:1}
-  .ringTxt small{font-size:10px;color:var(--textSecondary);letter-spacing:.08em}
-  .secLbl{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--textSecondary);text-transform:uppercase;display:flex;align-items:center;gap:5px;margin:8px 2px 8px}
-  .actCard{background:var(--surfaceRaised);border-radius:18px;padding:15px}
-  .actHead{display:flex;align-items:center;gap:12px}
-  .actIcon{width:40px;height:40px;border-radius:11px;background:var(--success);display:grid;place-items:center;font-size:19px}
-  .actTitle{font-size:15px;font-weight:700}
-  .actSub{font-size:12.5px;color:var(--textSecondary);margin-top:2px}
-  .actProof{font-size:12px;color:#86efac;margin-top:8px;display:flex;align-items:center;gap:6px}
-  .miniCard{background:var(--surfaceRaised);border-radius:16px;padding:14px;margin-top:12px;height:64px;opacity:.5}
-  .miniRow{height:10px;border-radius:5px;background:rgba(255,255,255,.1);margin-bottom:9px}
-  .miniRow.s{width:55%}
-
-  .note{font-size:12px;color:var(--textSecondary);line-height:1.5;margin-top:16px}
-  .note b{color:var(--textPrimary)}
-  .why{margin-top:46px;border-top:1px solid rgba(255,255,255,.08);padding-top:28px}
-  .why h2{font-size:18px;margin-bottom:14px}
-  .why ul{list-style:none;display:grid;gap:12px}
-  .why li{display:flex;gap:12px;font-size:13.5px;color:var(--textSecondary);line-height:1.5}
-  .why li b{color:var(--textPrimary)}
-  .chk{flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:var(--success);color:#04221a;display:grid;place-items:center;font-size:11px;font-weight:900;margin-top:1px}
-  .chk.g{background:var(--warning);color:#3a2b00}
+  .foot{margin:44px 0 0;border-top:1px solid var(--line);padding-top:24px;font-size:13px;color:var(--txt2);line-height:1.6}
+  .foot h2{font-size:18px;color:#fff;margin-bottom:10px}
+  .foot b{color:#fff}
+  .foot .skip{color:var(--txt3);font-size:12px;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Social proof — where it goes in Laso</h1>
-  <p class="sub">Three placements, ranked by evidence strength. The yellow dashed box is the new element on each screen. Everything else is the real screen as it ships today.</p>
+  <h1>Social proof in onboarding — where it actually fits</h1>
+  <p class="sub">Onboarding only. Every image is a <b>real screenshot of the live Laso onboarding</b> (captured just now, iPhone 17 Pro Max). Ranked by impact. The amber marker is the exact gap the line drops into; the styled line under each phone shows how it reads in-app.</p>
 
-  <div class="banner">
-    <div class="dot"></div>
-    <p><b>The "3x" claim is not in any mockup, on purpose.</b> A health outcome number like "users improve 3x" is a legal establishment claim. FTC needs your own study to back it before it runs, a testimonial does not launder it, and "results may vary" does not cure it. Apple can also reject the app for it. So we show only what is honest today: <b>real ratings, real counts, and the user's own history.</b> Outcome multipliers wait until you own a cohort study.</p>
-  </div>
+  <div class="guard"><b>One rule that does not bend:</b> the percentage must be your own real number — computed from Laso users' HRV data, then served through the Remote Config copy system. A made-up "38% / 9%" is an FTC and App Store reject risk and breaks trust the second someone checks. If you do not have the number yet, run the cohort analysis first. The examples below are placeholders.</p>
 
-  <div class="legend">
-    <span><i class="pill safe"></i> Safe to ship now (real first-party data or true public number)</span>
-    <span><i class="pill gated"></i> Gated — only once the underlying number is genuinely real</span>
-  </div>
+  <div class="legend"><span><i class="pill"></i> Population claim — needs a real, verified cohort number before it ships</span></div>
 
   <div class="grid">
 
-    <!-- ============ 1. PAYWALL ============ -->
-    <div class="col">
+    <!-- 1. HRV REVEAL — best -->
+    <div class="col focus">
       <div class="rank">
         <div class="rankNo">1</div>
-        <div><div class="rankTtl">Paywall</div><div class="rankSpot">between Features and Pricing · PaywallView.swift</div></div>
-      </div>
-      <div class="phone"><div class="screen">
-        <div class="notch"></div>
-        <div class="statusbar"><span>9:41</span><span>5G ▮▮</span></div>
-        <div class="scroll">
-          <div class="pwIcon">❤️</div>
-          <div class="pwTitle">Unlock Laso</div>
-          <div class="pwSub">Your full vitality picture, every day</div>
-
-          <div class="card">
-            <div class="frow"><span class="ic">〜</span> Live vitals on your home screen</div>
-            <div class="frow"><span class="ic">◐</span> Personal insights that explain why</div>
-            <div class="frow"><span class="ic">📈</span> Long term trends and patterns</div>
-            <div class="frow"><span class="ic">🔔</span> Smart alerts before it dips</div>
-          </div>
-
-          <!-- PROOF -->
-          <div class="proofCard proofMark">
-            <div class="proofTag">gated · real reviews</div>
-            <div class="proofTop">
-              <span class="proofRating">4.7</span>
-              <span class="stars">★★★★★</span>
-              <span class="proofCount">2,300+ ratings</span>
-            </div>
-            <div class="proofQuote">"First app that actually told me why I felt off. I check it before coffee now."</div>
-          </div>
-
-          <div class="plan sel">
-            <div><div class="planL">Yearly <span class="badge">SAVE 40%</span></div><div class="planD">$59.99 / year</div></div>
-            <div class="radio on"></div>
-          </div>
-          <div class="plan">
-            <div><div class="planL">Monthly</div><div class="planD">$8.99 / month</div></div>
-            <div class="radio"></div>
-          </div>
-
-          <div class="cta">Start free trial</div>
-          <div class="micro">7 days free, then $59.99/year. Cancel anytime.</div>
+        <div>
+          <span class="ribbon">best spot</span>
+          <div class="rankTtl">HRV reveal — "Sundays land harder"</div>
+          <div class="rankSpot">Screen 13 · below the body line, above the CTA</div>
+          <div class="score">Most relevant + most memorable</div>
         </div>
-      </div></div>
-      <p class="note"><b>Why first.</b> The decision moment for a high-value purchase, where proof lifts intent most (Spiegel/Northwestern +380% on high-consideration buys; OMENA doubled trial starts adding proof to its paywall). Show a true 4.2–4.7 rating, never 5.0 (reads fake). Wire behind real review volume.</p>
+      </div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_hrv.png" alt="real HRV reveal onboarding screen">
+        <div class="zone" style="top:67%;height:9%"></div>
+        <div class="ins" style="top:66.5%"><span class="bar"></span><span class="pin">HRV line here</span></div>
+      </div>
+      <div class="bigline">
+        <span class="lead">In 4 weeks, <span class="num">38%</span> of members like you raised their HRV by <span class="num">9%</span>.</span>
+        <span class="ex">example — swap for your real cohort number</span>
+      </div>
+      <div class="cap">
+        Their own HRV (52 ms) and "Most people miss it. We won't." are already on screen. Dropping the peer outcome right under it pairs <b>their number with a proven result</b> — that is what they feel and remember.
+      </div>
     </div>
 
-    <!-- ============ 2. ONBOARDING ============ -->
+    <!-- 2. PREVIEW / FIRST WEEK -->
     <div class="col">
       <div class="rank">
         <div class="rankNo">2</div>
-        <div><div class="rankTtl">Onboarding · Bridge (Screen 8)</div><div class="rankSpot">under the lede, above the connect ask</div></div>
-      </div>
-      <div class="phone"><div class="screen onb">
-        <div class="notch"></div>
-        <div class="statusbar"><span>9:41</span><span>5G ▮▮</span></div>
-        <div class="scroll">
-          <div class="topbar"><span class="back">‹</span><div class="track"><i></i></div><span class="step">8 / 13</span></div>
-          <div class="heart">❤️</div>
-          <div class="onbTitle">Now let's read<br>your real signals</div>
-          <div class="onbLede">Connect Health so Laso can turn your sleep and heart data into one daily score.</div>
-
-          <!-- PROOF -->
-          <div class="proofChip proofMark">
-            <div class="proofTag">gated · real count</div>
-            <div class="avts"><span></span><span></span><span></span></div>
-            <div class="proofChipTxt">Joined by <b>50,000+ people</b> tracking their vitality with Laso</div>
-          </div>
-
-          <div class="privChip">🔒 Your data stays on your device</div>
-          <div style="flex:1"></div>
-          <div class="onbCta">Connect Health</div>
+        <div>
+          <div class="rankTtl">First-week plan — "Here's what comes next"</div>
+          <div class="rankSpot">Screen 14 · below the 7-day timeline</div>
+          <div class="score">Commitment moment, before sign-in + paywall</div>
         </div>
-      </div></div>
-      <p class="note"><b>Why here, not Screen 1.</b> Proof on the first screen reads as a brand boast; it lands only after the user has put in effort (Airbridge, Adapty). Screen 8 follows goal and symptom input, so a "people like you" line is earned and self-relevant — and it de-risks the Health permission ask right before the tap.</p>
+      </div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_preview.png" alt="real first week plan onboarding screen">
+        <div class="onscreen" style="top:72.5%">
+          <span class="lead">People who followed this plan improved their sleep <span class="num">14%</span> in a month.</span>
+          <span class="ex">example — adapts to their goal, real cohort number</span>
+        </div>
+      </div>
+      <div class="cap">
+        <b>My take: strong choice — the best conversion spot.</b> Anchored just above "Continue" so it is the last belief before they sign in and hit the paywall (not floating in the empty gap). The metric <b>matches their Screen 4 goal</b> — sleep goal shows a sleep stat, energy shows energy — so it actually relates. Still needs a real cohort number via Remote Config.
+      </div>
     </div>
 
-    <!-- ============ 3. HOME ============ -->
+    <!-- 3. BRIDGE -->
     <div class="col">
       <div class="rank">
         <div class="rankNo">3</div>
-        <div><div class="rankTtl">Home action card · proofLine</div><div class="rankSpot">already built — expand it · HomePrimaryActionCard.swift</div></div>
-      </div>
-      <div class="phone"><div class="screen">
-        <div class="notch"></div>
-        <div class="statusbar"><span>9:41</span><span>5G ▮▮</span></div>
-        <div class="scroll">
-          <div class="homeTop"><div class="homeGreet">Good morning, Ayush</div></div>
-          <div class="ring"><div class="ringTxt"><b>78</b><small>READY</small></div></div>
-
-          <div class="secLbl">✦ Today's action</div>
-          <div class="actCard proofMark">
-            <div class="proofTag">safe · your own data</div>
-            <div class="actHead">
-              <div class="actIcon">🛌</div>
-              <div>
-                <div class="actTitle">Wind down 30 min earlier</div>
-                <div class="actSub">Your recovery dips on short sleep</div>
-              </div>
-            </div>
-            <div class="actProof">✓ You kept recovery green 5 of the last 7 days</div>
-          </div>
-
-          <div class="miniCard"><div class="miniRow"></div><div class="miniRow s"></div></div>
-          <div class="miniCard"><div class="miniRow"></div><div class="miniRow s"></div></div>
+        <div>
+          <div class="rankTtl">Bridge — "Now Laso can read your story"</div>
+          <div class="rankSpot">Screen 8 · under the lede, before Connect</div>
+          <div class="score">De-risks the Apple Health connect</div>
         </div>
-      </div></div>
-      <p class="note"><b>Why ship this first.</b> It is a fact about the user, not a claim about a population, so it needs zero substantiation and carries no legal risk. The <code>proofLine</code> slot and <code>Copy.Home.ActionProof</code> lines already exist — this is plumbing you can expand today while paywall and onboarding copy go through review.</p>
+      </div>
+      <div class="phone">
+        <img src="social-proof-shots/bridge.png" alt="real bridge onboarding screen">
+        <div class="zone" style="top:65.5%;height:6%"></div>
+        <div class="ins" style="top:65%"><span class="bar"></span><span class="pin">proof line here</span></div>
+      </div>
+      <div class="bigline">
+        <span class="lead">In 4 weeks, <span class="num">38%</span> of members raised their HRV by <span class="num">9%</span>.</span>
+        <span class="ex">example — swap for your real cohort number</span>
+      </div>
+      <div class="cap">
+        The belief beat right before the "Connect Apple Health" tap. A proven peer result here pushes them to grant access.
+      </div>
+    </div>
+
+    <!-- 4. PROMISE -->
+    <div class="col">
+      <div class="rank">
+        <div class="rankNo">4</div>
+        <div>
+          <div class="rankTtl">Promise — "A few things, before we start"</div>
+          <div class="rankSpot">Screen 2 · below the three promise cards</div>
+          <div class="score">Fits "You're not alone", but early</div>
+        </div>
+      </div>
+      <div class="phone">
+        <img src="social-proof-shots/onb_promise.png" alt="real promise onboarding screen">
+        <div class="zone" style="top:61%;height:7%"></div>
+        <div class="ins" style="top:60.5%"><span class="bar"></span><span class="pin">count line here</span></div>
+      </div>
+      <div class="bigline">
+        <span class="lead">Joined by <span class="num">50,000+</span> people reading their own signals.</span>
+        <span class="ex">example — use your true member count, never rounded up</span>
+      </div>
+      <div class="cap">
+        Matches the "You're not alone in this" promise card. Weaker than the others because nothing is invested yet, but lots of space and on-theme. Use a count here, not an HRV outcome.
+      </div>
     </div>
 
   </div>
 
-  <!-- summary -->
-  <div class="why">
-    <h2>What each proof is doing</h2>
-    <ul>
-      <li><span class="chk">✓</span><div><b>Home — first-party history.</b> "You kept recovery green 5 of 7 days." Safest and strongest, because it is true for that user and no one can dispute it. Specificity beats a wall of generic 5-stars.</div></li>
-      <li><span class="chk g">!</span><div><b>Onboarding — real count / "people like you."</b> Descriptive norm, the most robust social-proof effect (Cialdini). Use only your true user count; never round up to a plausible-looking number. A/B test it.</div></li>
-      <li><span class="chk g">!</span><div><b>Paywall — real rating + reviews.</b> Highest-converting spot, but gate it behind genuinely having 50–100+ reviews, and show the real 4.2–4.7 value.</div></li>
-    </ul>
-    <p class="note" style="margin-top:18px"><b>Never show:</b> low counts, "0 reviews", or "most people quit" framing. Negative or tiny social proof actively reduces the behavior you want (Cialdini's Petrified Forest sign tripled theft). All proof copy routes through Remote Config so a non-compliant line can be pulled instantly without a release.</p>
+  <div class="foot">
+    <h2>How to read this</h2>
+    Put the <b>HRV outcome line on the HRV reveal (Screen 13)</b> — that is the one to ship first; it is the most relevant and most felt. Add the <b>plan-outcome line on the First-week plan (Screen 14)</b> as the second beat that drives the paywall. The Bridge and Promise are optional reinforcements. All four need a real number through Remote Config — nothing here ships with an invented stat.
+    <div class="skip">Not recommended: the data-entry screens (goal, symptoms, activity, wearable) break focus, and the welcome / sign-in screens carry no earned context. Reveal screens (heart 54 BPM, sleep 7h 36m) can each carry their own metric-specific stat later using the same pattern.</div>
   </div>
 
 </div>

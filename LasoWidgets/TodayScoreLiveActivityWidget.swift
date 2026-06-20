@@ -37,7 +37,12 @@ struct TodayScoreLiveActivityWidget: Widget {
                     .widgetURL(Self.todaysActionURL)
             } compactTrailing: {
                 Text("\(context.state.overallScore)")
-                    .font(.title3.weight(.bold).monospacedDigit())
+                    // Fixed size + scale-to-fit: the compact pill is the only place a
+                    // scaling font remained; a 3-digit score (100) at large text widens
+                    // the pill and crowds the leading ring.
+                    .font(.system(size: 18, weight: .bold).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .foregroundStyle(scoreTint(for: context.state))
                     .contentTransition(.numericText())
                     .accessibilityLabel(scoreAccessibilityLabel(for: context.state))
@@ -260,12 +265,16 @@ private struct CoachModePill: View {
 
     var body: some View {
         let tint = bandColor(for: state)
+        // Fixed point sizes (not Dynamic Type styles): the expanded island has a
+        // hard 160 pt height cap and ignores `.dynamicTypeSize`, so scaling fonts
+        // would grow the card past the cap and the system would clip the bottom
+        // action row. Fixed sizes keep the card height constant at any text size.
         HStack(spacing: 6) {
             Image(systemName: state.mode.symbolName)
-                .font(.caption2.weight(.semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(tint)
             Text(state.mode.headline)
-                .font(.caption.weight(.semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -287,7 +296,7 @@ private struct CoachStamp: View {
 
     var body: some View {
         Text(staleAgePhrase(state) ?? WidgetStyle.timeString(from: state.lastUpdated))
-            .font(.caption2.weight(.medium))
+            .font(.system(size: 11, weight: .medium))
             .foregroundStyle(AppColour.textTertiary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -312,7 +321,7 @@ private struct CoachExpandedCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     CoachModePill(state: state)
                     Text(state.insight)
-                        .font(.footnote.weight(.semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -322,7 +331,7 @@ private struct CoachExpandedCard: View {
             }
 
             HStack(spacing: 9) {
-                CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true)
+                CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true, fixedType: true)
                 if let weakest = state.weakestPillarScore {
                     CoachWeakChip(pillar: state.weakestPillar, score: weakest)
                 }
@@ -413,7 +422,7 @@ private struct StatCell: View {
         VStack(alignment: .leading, spacing: 1) {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
-                    .font(.footnote.weight(.bold).monospacedDigit())
+                    .font(.system(size: 13, weight: .bold).monospacedDigit())
                     .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
                     .lineLimit(1)
@@ -456,7 +465,7 @@ private struct CoachWeakChip: View {
                 .foregroundStyle(AppColour.textPrimary)
                 .monospacedDigit()
         }
-        .font(.caption.weight(.semibold))
+        .font(.system(size: 12, weight: .semibold))
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .padding(.horizontal, 10)
@@ -527,6 +536,15 @@ private struct CoachActionBar: View {
     /// Full-width capsule in the expanded island bottom region (matches the
     /// mockup's full-width action); content-hugging on the lock card right side.
     var fullWidth: Bool = false
+    /// Fixed point size instead of a Dynamic Type style. The expanded island has a
+    /// hard 160 pt cap and ignores `.dynamicTypeSize`, so the island passes `true`
+    /// to keep its height constant; the lock-screen card leaves this `false` so its
+    /// action still scales for accessibility.
+    var fixedType: Bool = false
+
+    private var labelFont: Font {
+        fixedType ? .system(size: 13, weight: .semibold) : .footnote.weight(.semibold)
+    }
 
     var body: some View {
         switch kind {
@@ -546,9 +564,9 @@ private struct CoachActionBar: View {
         Button(intent: intent) {
             HStack(spacing: 6) {
                 Image(systemName: kind.symbolName)
-                    .font(.footnote.weight(.semibold))
+                    .font(labelFont)
                 Text(kind.label)
-                    .font(.footnote.weight(.semibold))
+                    .font(labelFont)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }

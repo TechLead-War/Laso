@@ -540,6 +540,18 @@ final class AppAnalytics {
         ])
     }
 
+    /// Fired when the user picks a wearable on onboarding screen 7. The generic
+    /// step event records that the wearable step was completed but not which
+    /// device was chosen, so this captures the choice on its own event to let
+    /// device cohorts (Apple Watch vs Oura vs none) be segmented in the funnel.
+    func trackOnboardingWearableSelected(wearable: String, stepIndex: Int, durationSec: Int) {
+        logEvent("onboarding_wearable_selected", parameters: [
+            "wearable": wearable,
+            "step_index": stepIndex,
+            "duration_sec": durationSec
+        ])
+    }
+
     /// Call when onboarding is fully completed. The caller MUST run
     /// `markOnboardingCompleted()` BEFORE this so the onboarding_completed user
     /// property is already true and not self-contradictory. health_focus is kept

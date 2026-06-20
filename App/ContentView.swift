@@ -142,6 +142,14 @@ struct ContentView: View {
                         kind: pending.source ?? "unknown",
                         actionKind: pending.kind.rawValue
                     )
+                    // The expanded island buttons open the app but only logged before;
+                    // route to the matching surface so the CTA is not a dead end.
+                    switch pending.kind {
+                    case .setIntention: navigate(to: .todaysAction)
+                    case .breathe:      navigate(to: .stressMonitor)
+                    case .windDown:     navigate(to: .sleepCoach)
+                    case .noop:         break
+                    }
                 }
                 Task {
                     if await NotificationRepromptManager.checkAndRecordDenial() {

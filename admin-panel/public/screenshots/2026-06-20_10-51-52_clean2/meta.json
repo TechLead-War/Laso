@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-06-20_10-51-52_clean2",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "01_onboarding",
+      "title": "Onboarding",
+      "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+      "shots": [
+        {
+          "file": "01_onboarding/03_connect.png",
+          "screen": "Onboarding \u00b7 Connect Health",
+          "caption": "Apple Health authorization step"
+        }
+      ]
+    },
+    {
+      "id": "02_today",
+      "title": "Today",
+      "description": "The Home tab and its primary daily surfaces \u2014 recovery, morning check-in, today's action, weekly review, health state timeline.",
+      "shots": [
+        {
+          "file": "02_today/01_home.png",
+          "screen": "Home dashboard",
+          "caption": "Recovery + daily narrative"
+        },
+        {
+          "file": "02_today/03_todays_action.png",
+          "screen": "Today's Action detail",
+          "caption": "Single contextual action with reasoning"
+        }
+      ]
+    }
+  ]
+}
