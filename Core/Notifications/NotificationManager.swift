@@ -69,10 +69,9 @@ final class NotificationManager {
         if identifier.hasPrefix(id.alertPrefix) { return "alert" }
         if identifier.hasPrefix(id.engagementPrefix) { return "engagement" }
 
-        // No AppConstants prefix constant exists for these (the intelligence
-        // prefix is an inline literal in IntelligenceAlertEvaluator); match the
-        // raw identifier prefix until/unless a constant is introduced.
-        if identifier.hasPrefix("healthpulse.intelligence.") { return "intelligence" }
+        if identifier.hasPrefix(id.intelligencePrefix) { return "intelligence" }
+        // No AppConstants prefix constant exists for these two yet; match the
+        // raw identifier prefix until/unless constants are introduced.
         if identifier.hasPrefix("healthpulse.watch.") { return "watch_monitor" }
         if identifier.hasPrefix("healthpulse.weekly") { return "weekly_summary" }
         if identifier.hasPrefix("healthpulse.reengagement") { return "reengagement" }

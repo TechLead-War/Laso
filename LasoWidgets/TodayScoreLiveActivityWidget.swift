@@ -14,35 +14,22 @@ struct TodayScoreLiveActivityWidget: Widget {
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
-                // Hero score ring + soft radial bloom, concentric with the island.
-                // Kept in .leading (out of .bottom) so the bottom region can never
-                // overflow the island's fixed height and clip the action button.
+                // The top slots flank the TrueDepth camera and are NARROW — a wide pill
+                // or label truncates there (the "Re..." bug). So leading/trailing carry
+                // only a glyph + the time, the centre is left empty (the camera squeezes
+                // it), and ALL wide content — ring, mode label, insight, stats, action —
+                // lives in the full-width, roomy .bottom card. Researched region model.
                 DynamicIslandExpandedRegion(.leading) {
-                    CoachExpandedRing(state: context.state)
+                    Image(systemName: context.state.mode.symbolName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(bandColor(for: context.state))
+                        .accessibilityLabel(context.state.mode.headline)
                 }
-                // Small tertiary time / honest-stale stamp (HTML `.stamp`).
                 DynamicIslandExpandedRegion(.trailing) {
                     CoachStamp(state: context.state)
                 }
-                // Eyebrow mode pill over the one-line insight briefing (HTML header + `.ins`).
-                DynamicIslandExpandedRegion(.center) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        CoachModePill(state: context.state)
-                        Text(context.state.insight)
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(AppColour.textPrimary)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.7)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(.leading, 4)
-                    .padding(.top, 2)
-                }
-                // Briefing body: hairline 3-stat row, then the full-width action
-                // capsule beside the weakest-pillar chip. The ring lives in .leading.
                 DynamicIslandExpandedRegion(.bottom) {
-                    CoachExpandedBottom(state: context.state)
+                    CoachExpandedCard(state: context.state)
                 }
             } compactLeading: {
                 CompactLeadingRing(state: context.state)
@@ -193,6 +180,10 @@ private struct DayProgressStrip: View {
 private struct CoachOrbRing: View {
     let state: TodayScoreActivityAttributes.ContentState
     let size: CGFloat
+    /// Expanded Dynamic Island passes `false` for a single bold score arc (no day
+    /// track) so the ring reads large and clean in the tight leading slot; the lock
+    /// screen keeps the day track since it has room.
+    var showDayTrack: Bool = true
 
     /// Inset of the inner score ring inside the outer day track so the two arcs
     /// read as distinct concentric rings instead of one fat stroke.
@@ -202,43 +193,49 @@ private struct CoachOrbRing: View {
         let tint = scoreTint(for: state)
         let progress = max(0, min(1, Double(state.overallScore) / 100.0))
         let (dayStart, dayEnd) = todayDayWindow()
+        let inset: CGFloat = showDayTrack ? dayTrackInset : 0
+        let arcWidth: CGFloat = showDayTrack ? 3 : 5
 
         ZStack {
             Circle()
                 .fill(AppColour.surfaceOverlay.opacity(0.55))
 
-            // OUTER day track — faint full circle + a self-advancing fill that
-            // crawls sunrise→bedtime via ProgressView(timerInterval:) with no push.
-            // `.circular` is the only self-advancing ring primitive in a Live
-            // Activity; a static `.trim` would freeze until the next push.
-            Circle()
-                .stroke(Color.white.opacity(0.06), lineWidth: 2)
-            ProgressView(timerInterval: dayStart...dayEnd, countsDown: false) {
-                EmptyView()
-            } currentValueLabel: {
-                EmptyView()
+            if showDayTrack {
+                // OUTER day track — faint full circle + a self-advancing fill that
+                // crawls sunrise→bedtime via ProgressView(timerInterval:) with no push.
+                // `.circular` is the only self-advancing ring primitive in a Live
+                // Activity; a static `.trim` would freeze until the next push.
+                Circle()
+                    .stroke(Color.white.opacity(0.06), lineWidth: 2)
+                ProgressView(timerInterval: dayStart...dayEnd, countsDown: false) {
+                    EmptyView()
+                } currentValueLabel: {
+                    EmptyView()
+                }
+                .progressViewStyle(.circular)
+                .tint(AppColour.textTertiary)
+                .accessibilityHidden(true)
             }
-            .progressViewStyle(.circular)
-            .tint(AppColour.textTertiary)
-            .accessibilityHidden(true)
 
-            // INNER score ring — band-coloured arc (greyed when stale).
+            // Score ring — band-coloured arc (greyed when stale). Bolder and at full
+            // radius when the day track is hidden, so the expanded island reads as one
+            // clean, prominent ring instead of two thin concentric strokes.
             Circle()
-                .stroke(Color.white.opacity(0.08), lineWidth: 3)
-                .padding(dayTrackInset)
+                .stroke(Color.white.opacity(0.08), lineWidth: arcWidth)
+                .padding(inset)
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(tint, style: StrokeStyle(lineWidth: arcWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .padding(dayTrackInset)
+                .padding(inset)
 
             VStack(spacing: 1) {
                 Text("\(state.overallScore)")
-                    .font(.system(size: size * 0.3, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(size: size * 0.34, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(tint)
                     .contentTransition(.numericText())
                 Text(TodayScoreCopy.scoreUnit)
-                    .font(.system(size: max(7, size * 0.11), weight: .semibold))
+                    .font(.system(size: max(7, size * 0.12), weight: .semibold))
                     .textCase(.uppercase)
                     .tracking(0.6)
                     .foregroundStyle(AppColour.textSecondary)
@@ -298,19 +295,31 @@ private struct CoachStamp: View {
     }
 }
 
-// MARK: - Expanded Bottom (ring + stats + action row)
+// MARK: - Expanded Card (the whole briefing, in the roomy bottom region)
 
-/// The HTML "briefing" body mapped onto the bottom region: a score ring with a
-/// soft radial bloom, a hairline-divided 3-stat row built from real ContentState
-/// fields, then a full-width action capsule beside the weakest-pillar chip.
-private struct CoachExpandedBottom: View {
+/// The full score card — ring on the left, mode pill + insight + hairline 3-stat row
+/// on the right, then a full-width action capsule beside the weakest-pillar chip. It
+/// all lives in the bottom region because that is the only region clear of the camera
+/// and wide enough to hold it without truncating any label.
+private struct CoachExpandedCard: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
         let tint = bandColor(for: state)
-        VStack(spacing: 6) {
-            CoachStatRow(state: state)
+        VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 13) {
+                CoachExpandedRing(state: state)
+                VStack(alignment: .leading, spacing: 3) {
+                    CoachModePill(state: state)
+                    Text(state.insight)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(AppColour.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    CoachStatRow(state: state)
+                }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
             HStack(spacing: 9) {
                 CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true)
@@ -324,23 +333,20 @@ private struct CoachExpandedBottom: View {
 
 // MARK: - Expanded Leading Ring
 
-/// Score ring with its soft radial bloom for the expanded leading region, sized to
-/// sit concentric beside the camera. RadialGradient bloom (widgets cannot render .blur).
+/// Score ring with its soft radial bloom for the expanded card. Single clean arc
+/// (no day track) so it reads bold. RadialGradient bloom (widgets cannot render .blur).
 private struct CoachExpandedRing: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
         let tint = bandColor(for: state)
-        CoachOrbRing(state: state, size: 50)
+        CoachOrbRing(state: state, size: 54, showDayTrack: false)
             .background {
-                // Circle-clipped bloom. A bare RadialGradient fills its square frame
-                // and shows tinted corners whenever endRadius exceeds the frame, which
-                // reads as a box behind the ring. Filling a Circle clips that away so
-                // the glow is always a clean disc.
+                // Circle-clipped bloom (never a square), sized close to the ring.
                 Circle()
                     .fill(RadialGradient(
-                        colors: [tint.opacity(0.28), .clear],
-                        center: .center, startRadius: 6, endRadius: 38
+                        colors: [tint.opacity(0.30), .clear],
+                        center: .center, startRadius: 8, endRadius: 40
                     ))
                     .frame(width: 80, height: 80)
             }

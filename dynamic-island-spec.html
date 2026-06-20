@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laso · Dynamic Island — region-accurate redesign</title>
+<style>
+  :root{
+    --bg:#0b0d12; --ink:#fff; --ink2:rgba(255,255,255,.62); --ink3:rgba(255,255,255,.34);
+    --hair:rgba(255,255,255,.10); --hair-soft:rgba(255,255,255,.06);
+    --good:#34D399; --warn:#F59E0B; --indigo:#818CF8; --cyan:#22D3EE;
+    --lead:#4DA3FF; --trail:#22D3EE; --center:#A78BFA; --bottom:#34D399;
+    --island:#000;
+    --font:-apple-system,"SF Pro Display","SF Pro Text",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:
+      radial-gradient(900px 500px at 15% -10%,#16233a 0,transparent 55%),
+      radial-gradient(800px 500px at 100% 0,#1a1430 0,transparent 50%),var(--bg);
+    padding:44px 24px 100px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
+  h1{font-size:clamp(26px,3.6vw,38px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+  h1 em{font-style:normal;color:var(--ink3)}
+  .lede{font-size:15.5px;line-height:1.6;color:var(--ink2);max-width:760px;margin:0}
+  .lede b{color:#fff;font-weight:600}
+
+  h2{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:56px 0 18px}
+
+  /* ---------- spec table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--hair-soft);vertical-align:top}
+  th{color:var(--ink3);font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+  td b{color:#fff;font-weight:600}
+  .conf{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px}
+  .h{background:rgba(52,211,153,.16);color:#5be0ab}
+  .m{background:rgba(245,158,11,.16);color:#f5b942}
+  .l{background:rgba(229,72,77,.16);color:#f0787c}
+  .src{color:var(--ink3);font-size:12px}
+
+  /* ---------- stage (blueprint + final share geometry) ---------- */
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+  @media(max-width:900px){.row{grid-template-columns:1fr}}
+  .panel-title{font-size:14px;font-weight:700;margin:0 0 4px}
+  .panel-sub{font-size:12.5px;color:var(--ink2);margin:0 0 16px;line-height:1.5}
+
+  /* the island — 371pt × 150pt at 1.78px/pt ≈ 660×267 */
+  .stagebox{background:linear-gradient(180deg,#0a1322,#06080e);border:1px solid var(--hair-soft);border-radius:20px;padding:30px 14px;display:flex;justify-content:center}
+  .island{position:relative;width:660px;height:267px;background:var(--island);border-radius:78px;box-shadow:0 10px 30px -8px rgba(0,0,0,.7)}
+  @media(max-width:720px){.island{transform:scale(.72);transform-origin:top center}}
+
+  /* camera cutout — centered, ~125×37pt ≈ 222×66, approximate */
+  .cutout{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:222px;height:62px;border-radius:31px;
+    background:radial-gradient(circle at 62% 38%,#1a1c22,#050506);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+  .cutout.bp{background:transparent;border:1.5px dashed rgba(255,255,255,.28)}
+  .cutout .lens{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 60% 35%,#2a3550,#070708)}
+
+  /* region overlays for the blueprint */
+  .region{position:absolute;border-radius:14px;display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 8px;
+    font-size:11px;font-weight:700;letter-spacing:.03em}
+  .r-lead{left:14px;top:14px;width:200px;height:118px;background:rgba(77,163,255,.12);border:1px solid var(--lead);color:#9cc8ff}
+  .r-trail{right:14px;top:14px;width:200px;height:74px;background:rgba(34,211,238,.12);border:1px solid var(--trail);color:#8fe9f5}
+  .r-center{left:50%;transform:translateX(-50%);top:78px;width:218px;height:56px;background:rgba(167,139,250,.12);border:1px solid var(--center);color:#c9b6fb;justify-content:center}
+  .r-bottom{left:14px;right:14px;bottom:14px;height:120px;background:rgba(52,211,153,.1);border:1px solid var(--bottom);color:#7fe7bd}
+  .tag{position:absolute;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.55)}
+  .narrow{color:#ffb4b4}.roomy{color:#7fe7bd}
+
+  /* ---------- final content placed in real regions ---------- */
+  .c-lead{position:absolute;left:30px;top:24px;display:flex;flex-direction:column;align-items:center;color:var(--good)}
+  .c-lead svg{width:22px;height:22px}
+  .c-trail{position:absolute;right:30px;top:30px;font-size:14px;font-weight:600;color:var(--ink3)}
+
+  .c-bottom{position:absolute;left:24px;right:24px;bottom:20px;display:flex;flex-direction:column;gap:11px}
+  .b-top{display:flex;align-items:center;gap:16px}
+  .ringwrap{position:relative;width:92px;height:92px;flex:none;display:flex;align-items:center;justify-content:center}
+  .ringwrap .glow{position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle,var(--good) 0%,transparent 62%);opacity:.18}
+  .ringwrap svg{position:relative;z-index:1}
+  .ringwrap .num{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;line-height:1}
+  .ringwrap .num b{font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--good)}
+  .ringwrap .num span{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--ink2);margin-top:2px}
+
+  .b-copy{min-width:0;flex:1}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 7px;border-radius:999px;background:rgba(52,211,153,.18);margin-bottom:5px}
+  .pill svg{width:12px;height:12px;color:var(--good)}
+  .pill span{font-size:11.5px;font-weight:700;color:#fff;letter-spacing:.02em}
+  .ins{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px;line-height:1.2}
+  .stats{display:flex;align-items:stretch}
+  .stat{display:flex;flex-direction:column;gap:1px;padding:0 12px;position:relative}
+  .stat:first-child{padding-left:0}
+  .stat+.stat::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:1px;background:var(--hair)}
+  .stat .v{font-size:14px;font-weight:700;letter-spacing:-.02em}
+  .stat .v small{font-size:9.5px;font-weight:600;color:var(--ink3);margin-left:1px}
+  .stat .k{font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+
+  .b-action{display:flex;align-items:center;gap:9px}
+  .btn{flex:1;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;gap:7px;
+    background:rgba(52,211,153,.2);color:#fff;font-size:14px;font-weight:600}
+  .btn svg{width:14px;height:14px;color:var(--good)}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:17px;background:rgba(255,255,255,.07);font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
+  .chip b{color:#fff}.chip .d{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+
+  /* toggle */
+  .toggle{display:inline-flex;align-items:center;gap:9px;margin:0 0 16px;font-size:13px;color:var(--ink2);cursor:pointer;user-select:none}
+  .toggle input{display:none}
+  .toggle .sw{width:38px;height:22px;border-radius:11px;background:rgba(255,255,255,.12);position:relative;transition:.2s}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .toggle input:checked + .sw{background:var(--good)}
+  .toggle input:checked + .sw::after{transform:translateX(16px)}
+  .hide-regions .region{display:none}
+  .hide-regions .cutout.bp{display:none}
+
+  /* dimension annotations */
+  .dim{position:absolute;font-size:11px;font-weight:600;color:var(--ink3);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px}
+
+  /* true scale */
+  .truescale{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+  .phone{width:301px;flex:none}
+  .phone .scr{position:relative;width:301px;height:655px;border-radius:42px;overflow:hidden;border:6px solid #1c1d22;
+    background:radial-gradient(120% 80% at 50% -10%,#1d3358 0,transparent 46%),linear-gradient(180deg,#0a1322,#05070d)}
+  .phone .status{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;align-items:center;padding:14px 24px 0;font-size:13px;font-weight:600}
+  .phone-cap{font-size:12.5px;color:var(--ink2);text-align:center;margin-top:12px;line-height:1.4}
+  /* real-scale island: 371pt at ~0.72px/pt to fit 268px screen width region */
+  .ti{position:absolute;top:11px;left:50%;transform:translateX(-50%);background:#000;border-radius:34px}
+  .ti.compact{width:124px;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 9px}
+  .ti.compact .arc{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(52,211,153,.3);border-top-color:var(--good);border-right-color:var(--good);transform:rotate(45deg)}
+  .ti.compact .sc{font-size:15px;font-weight:700;color:var(--good)}
+  .ti.exp{width:268px;height:108px}
+  .ti.exp .mini{position:absolute;inset:0;padding:8px 10px 10px}
+  .ti.exp .mlead{position:absolute;left:11px;top:9px;color:var(--good)}
+  .ti.exp .mlead svg{width:13px;height:13px}
+  .ti.exp .mtrail{position:absolute;right:11px;top:10px;font-size:9px;color:var(--ink3);font-weight:600}
+  .ti.exp .mbottom{position:absolute;left:10px;right:10px;bottom:9px}
+  .ti.exp .mb1{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .ti.exp .mring{width:42px;height:42px;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:var(--good);border-right-color:var(--good);position:relative;flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--good)}
+  .ti.exp .mins{font-size:10px;font-weight:600;line-height:1.15}
+  .ti.exp .mst{display:flex;gap:8px;font-size:8px;color:var(--ink2);margin-top:3px}
+  .ti.exp .mst b{color:#fff}
+  .ti.exp .mact{height:22px;border-radius:11px;background:rgba(52,211,153,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+
+  .note{margin-top:18px;padding:16px 18px;border-radius:14px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);font-size:13px;line-height:1.6;color:var(--ink2)}
+  .note b{color:#f5b942}
+  .impl{margin-top:14px;padding:16px 18px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--hair-soft);font-size:13px;line-height:1.65;color:var(--ink2)}
+  .impl b{color:#fff}
+  .impl code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#9cc8ff;background:rgba(77,163,255,.1);padding:1px 5px;border-radius:4px}
+  .foot{margin-top:50px;border-top:1px solid var(--hair-soft);padding-top:22px;font-size:12px;color:var(--ink3);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Laso · Live Activity — redesign v2 (region-accurate)</div>
+  <h1>The Dynamic Island, <em>drawn to its real regions.</em></h1>
+  <p class="lede">The first mockup was a freeform card the island can't reproduce — its top splits into <b>narrow</b> slots around the camera, which truncated "Readiness" to "Re...". This version models the four real regions from researched specs, so the layout you review is exactly what ships. The rule that drives it: <b>leading and trailing and center are narrow; only the bottom is roomy</b> — so every wide element (label, insight, stats, action) lives in the bottom card, and the narrow top slots hold only a glyph and the time.</p>
+
+  <!-- spec -->
+  <h2>Verified spec (cross-checked, with honest gaps)</h2>
+  <table>
+    <tr><th>Property</th><th>Value</th><th>Source</th><th>Confidence</th></tr>
+    <tr><td>Screen width — 16/17 Pro</td><td><b>402 pt</b> (1206 px @3x)</td><td class="src">useyourloaf</td><td><span class="conf h">high</span></td></tr>
+    <tr><td>Expanded island width</td><td><b>~371 pt</b></td><td class="src">UX Planet (dev-measured)</td><td><span class="conf m">med</span></td></tr>
+    <tr><td>Expanded height (min → max)</td><td><b>84 pt → 160 pt</b></td><td class="src">UX Planet / Apple forum</td><td><span class="conf m">med</span></td></tr>
+    <tr><td>Corner radius</td><td><b>44 pt</b></td><td class="src">SparrowCode / Infinum</td><td><span class="conf m">med-high</span></td></tr>
+    <tr><td>Inner content margin</td><td><b>20 pt</b></td><td class="src">Apple HIG</td><td><span class="conf h">high</span></td></tr>
+    <tr><td>Four regions (leading/trailing/center/bottom)</td><td><b>API-defined</b></td><td class="src">Apple WidgetKit</td><td><span class="conf h">high</span></td></tr>
+    <tr><td>TrueDepth cutout size + offset</td><td><b>not published</b> — approximated</td><td class="src">— (gap)</td><td><span class="conf l">gap</span></td></tr>
+    <tr><td>Compact pill</td><td><b>~52 × 37 pt</b> per side</td><td class="src">UX Planet</td><td><span class="conf m">med</span></td></tr>
+  </table>
+
+  <!-- blueprint + final -->
+  <h2>Region map ⟷ final layout</h2>
+  <label class="toggle"><input type="checkbox" id="rt" checked><span class="sw"></span> Show region map</label>
+  <div class="row" id="stage">
+    <!-- BLUEPRINT -->
+    <div>
+      <p class="panel-title" style="color:#9cc8ff">The four regions</p>
+      <p class="panel-sub">How WidgetKit splits the expanded island around the camera. Sizes are derived from <code style="font-family:ui-monospace;font-size:12px">width − cutout</code>, not hardcoded.</p>
+      <div class="stagebox">
+        <div class="island">
+          <div class="cutout bp"></div>
+          <div class="region r-lead">LEADING <span class="tag narrow" style="left:8px;bottom:8px">NARROW · glyph only</span></div>
+          <div class="region r-trail">TRAILING <span class="tag narrow" style="left:8px;bottom:8px">NARROW · time only</span></div>
+          <div class="region r-center">CENTER · squeezed</div>
+          <div class="region r-bottom">BOTTOM <span class="tag roomy" style="right:8px;top:8px">ROOMY · full width → the card</span></div>
+          <div class="dim" style="top:-22px;left:50%;transform:translateX(-50%)">≈ 371 pt wide</div>
+          <div class="dim" style="right:-78px;top:50%;transform:translateY(-50%)">≤ 160 pt</div>
+        </div>
+      </div>
+    </div>
+    <!-- FINAL -->
+    <div>
+      <p class="panel-title" style="color:#7fe7bd">Today's Score — placed in regions</p>
+      <p class="panel-sub">Glyph + time in the narrow top slots; the whole score card in the roomy bottom. Nothing wide can truncate.</p>
+      <div class="stagebox">
+        <div class="island">
+          <div class="cutout"><div class="lens"></div></div>
+          <!-- leading: glyph only -->
+          <div class="c-lead">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 8.6 7 10M18.4 8.6 17 10M2 18h20"/><path d="M7 18a5 5 0 0 1 10 0" fill="currentColor" fill-opacity=".18"/></svg>
+          </div>
+          <!-- trailing: time only -->
+          <div class="c-trail">7:24 AM</div>
+          <!-- bottom: the card -->
+          <div class="c-bottom">
+            <div class="b-top">
+              <div class="ringwrap">
+                <div class="glow"></div>
+                <svg width="92" height="92" viewBox="0 0 92 92">
+                  <circle cx="46" cy="46" r="40" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"/>
+                  <circle cx="46" cy="46" r="40" fill="none" stroke="var(--good)" stroke-width="5" stroke-linecap="round"
+                    stroke-dasharray="251.3" stroke-dashoffset="45.2" transform="rotate(-90 46 46)"/>
+                </svg>
+                <div class="num"><b>82</b><span>SCORE</span></div>
+              </div>
+              <div class="b-copy">
+                <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 8.6 7 10M18.4 8.6 17 10M2 18h20"/><path d="M7 18a5 5 0 0 1 10 0"/></svg><span>Readiness</span></span>
+                <p class="ins">Strong overnight recovery.</p>
+                <div class="stats">
+                  <div class="stat"><div class="v">64<small>ms</small></div><div class="k">HRV</div></div>
+                  <div class="stat"><div class="v">52<small>bpm</small></div><div class="k">Resting</div></div>
+                  <div class="stat"><div class="v">7:42</div><div class="k">Sleep</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="b-action">
+              <div class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg> Set Intention</div>
+              <div class="chip"><span class="d"></span>Mobility <b>69</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="impl">
+    <b>Why this is buildable 1:1.</b> In SwiftUI it maps straight to the API:
+    <code>.leading</code> → the sunrise glyph, <code>.trailing</code> → the time, <code>.center</code> → empty,
+    <code>.bottom</code> → the whole card (ring + Readiness pill + insight + 3‑stat row, then the action + weak‑pillar chip).
+    Because the wide content sits only in <code>.bottom</code> (full island width, clear of the camera), nothing truncates, and the bottom takes the full height under the camera so the action never clips.
+  </div>
+
+  <!-- true scale -->
+  <h2>True scale — iPhone 17 Pro</h2>
+  <div class="truescale">
+    <div class="phone">
+      <div class="scr">
+        <div class="status"><span>9:41</span><span>􀙇 􀛨</span></div>
+        <div class="ti compact"><div class="arc"></div><div class="sc">82</div></div>
+      </div>
+      <div class="phone-cap"><b style="color:#fff">Compact</b> — the default on the home screen. Ring + score, ~124 pt pill.</div>
+    </div>
+    <div class="phone">
+      <div class="scr">
+        <div class="status"><span>9:41</span><span>􀙇 􀛨</span></div>
+        <div class="ti exp">
+          <div class="mlead"><svg viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v3M2 18h20"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+          <div class="mtrail">7:24</div>
+          <div class="mbottom">
+            <div class="mb1">
+              <div class="mring">82</div>
+              <div><div class="mins">Strong overnight recovery.</div>
+                <div class="mst"><span><b>64</b> HRV</span><span><b>52</b> RHR</span><span><b>7:42</b> Sleep</span></div></div>
+            </div>
+            <div class="mact">Set Intention</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-cap"><b style="color:#fff">Expanded</b> — on long‑press. Real ~371×~150 pt proportion.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Honest gaps (flagged, not hidden):</b> the TrueDepth cutout's exact point size and vertical offset are not published by Apple anywhere — the cutout here is a centered approximation. The expanded max height is reported as 144 pt by one source and 160 pt by another; this design targets ~150 pt to stay safely under both. The ~371 pt width and 84/160 pt heights come from one dev measurement (UX Planet), not an Apple page. So treat the pixel proportions as close, not exact — but the region model (narrow top, roomy bottom) is solid and is what makes the layout correct.
+  </div>
+
+  <div class="foot">
+    Region model + dimensions cross-checked across Apple HIG / WidgetKit, UX Planet, Infinum, SparrowCode, useyourloaf. Colors and metrics from Laso's AppColour / shipping Today's Score Live Activity. This is a review spec — say the word and I'll rebuild the app's Dynamic Island to match it exactly.
+  </div>
+
+</div>
+<script>
+  const rt=document.getElementById('rt'), stage=document.getElementById('stage');
+  const sync=()=>stage.classList.toggle('hide-regions', !rt.checked);
+  rt.addEventListener('change',sync); sync();
+</script>
+</body>
+</html>

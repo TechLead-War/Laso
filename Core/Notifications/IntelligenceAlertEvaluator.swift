@@ -40,7 +40,7 @@ struct IntelligenceAlertEvaluator {
             return
         }
 
-        let identifier = "healthpulse.intelligence.\(topCard.type.rawValue)"
+        let identifier = "\(AppConstants.NotificationID.intelligencePrefix)\(topCard.type.rawValue)"
         guard !isOnCooldown(identifier: identifier) else { return }
 
         // Map CardSeverity to Severity

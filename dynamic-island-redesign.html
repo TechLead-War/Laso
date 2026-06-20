@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laso · Dynamic Island, Redesigned</title>
+<style>
+  /* ---- Laso design tokens (pulled from AppColour.swift / DesignSystem.swift) ---- */
+  :root{
+    --bg:#0b0d12;
+    --ink:#ffffff;
+    --ink2:rgba(255,255,255,.62);
+    --ink3:rgba(255,255,255,.34);
+    --hair:rgba(255,255,255,.10);
+    --hair-soft:rgba(255,255,255,.06);
+
+    --c-readiness:#34D399;   /* score Good band 70-84 */
+    --c-strain:#F59E0B;      /* strain High */
+    --c-winddown:#818CF8;    /* windDownTint indigo */
+    --c-breath:#22D3EE;      /* CTA accent cyan */
+    --c-heart:#F87171;       /* categoryHeart rose */
+
+    --island:#000000;
+    --spring:cubic-bezier(.32,.72,0,1);
+    --font:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  }
+
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  html,body{margin:0}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 600px at 20% -10%, #16233a 0%, transparent 55%),
+      radial-gradient(900px 600px at 100% 0%, #1a1430 0%, transparent 50%),
+      var(--bg);
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:48px 24px 96px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- page chrome ---------- */
+  .wrap{max-width:1120px;margin:0 auto}
+  .masthead{margin-bottom:40px;max-width:720px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink3);margin-bottom:16px;
+  }
+  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--c-readiness);box-shadow:0 0 0 0 var(--c-readiness);animation:beacon 2.4s infinite}
+  @keyframes beacon{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+  h1{font-size:clamp(28px,4vw,42px);line-height:1.05;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+  h1 em{font-style:normal;color:var(--ink3)}
+  .sub{font-size:16px;line-height:1.55;color:var(--ink2);margin:0}
+
+  /* ---------- hero stage ---------- */
+  .stage{
+    display:grid;grid-template-columns:minmax(360px,380px) 1fr;gap:48px;align-items:start;
+    margin:8px 0 64px;padding:32px;border-radius:28px;
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));
+    border:1px solid var(--hair-soft);
+  }
+  @media(max-width:880px){.stage{grid-template-columns:1fr;gap:32px}}
+
+  /* iPhone 16 Pro frame */
+  .phone{
+    width:360px;height:760px;border-radius:56px;margin:0 auto;position:relative;
+    background:#000;padding:5px;
+    box-shadow:0 0 0 2px #2a2c30, 0 40px 80px -24px rgba(0,0,0,.8), inset 0 0 0 6px #0a0b0d;
+  }
+  .screen{
+    position:absolute;inset:5px;border-radius:51px;overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #1d3358 0%, transparent 46%),
+      radial-gradient(100% 70% at 90% 12%, #2a1f4d 0%, transparent 40%),
+      linear-gradient(180deg,#0a1322 0%,#06080e 60%,#04050a 100%);
+  }
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:58px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 34px 0;font-size:15px;font-weight:600;color:#fff;z-index:1;
+  }
+  .statusbar .sig{display:flex;align-items:center;gap:7px}
+  .statusbar svg{display:block}
+  .home-hint{position:absolute;left:0;right:0;bottom:9px;display:flex;justify-content:center}
+  .home-hint i{width:128px;height:5px;border-radius:3px;background:rgba(255,255,255,.32)}
+
+  /* faint app surface behind, so the black island reads as a real cutout */
+  .behind{position:absolute;left:24px;right:24px;top:120px;display:flex;flex-direction:column;gap:14px;opacity:.5}
+  .behind .row{height:64px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--hair-soft)}
+  .behind .row.tall{height:150px}
+
+  /* ============ THE ISLAND ============ */
+  .island{
+    position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    background:var(--island);color:#fff;z-index:5;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 22px -6px rgba(0,0,0,.7);
+    transition:width .52s var(--spring),height .52s var(--spring),border-radius .52s var(--spring);
+    cursor:pointer;user-select:none;
+  }
+  .island .ic{transition:opacity .26s ease}
+  .island.swapping .ic{opacity:0}
+
+  .island.minimal{width:96px;height:37px;border-radius:19px}
+  .island.compact{height:37px;border-radius:19px}
+  .island.expanded{border-radius:42px}
+
+  /* minimal: camera + a single status dot, like the real two-piece minimal */
+  .min-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 9px}
+  .cam{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 60% 35%,#23252b,#070708);box-shadow:inset 0 0 2px #000}
+  .min-dot{
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:var(--accent);position:relative;
+  }
+  .min-dot .mnum{font-size:11px;font-weight:700;color:#fff}
+  .min-dot svg{width:14px;height:14px}
+
+  /* compact: leading | (sensor gap) | trailing */
+  .cmp{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 13px;gap:46px}
+  .cmp .lead,.cmp .trail{display:flex;align-items:center;gap:6px}
+  .cmp .trail{justify-content:flex-end}
+  .cmp .cnum{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .cmp .ctag{font-size:12px;font-weight:600;color:var(--ink2)}
+  .cmp .lead svg.glyph{width:16px;height:16px;color:var(--accent)}
+  .caret{display:inline-flex;color:var(--accent)}
+  .caret svg{width:9px;height:9px}
+  .micro{display:flex;align-items:flex-end;gap:1.5px;height:13px}
+  .micro i{width:2px;border-radius:1px;background:var(--accent);opacity:.85}
+
+  /* ---------- ring component ---------- */
+  .ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:none}
+  .ring-wrap svg{position:relative;z-index:1}
+  /* filter-free circular bloom — drop-shadow/blur on an SVG renders as a bounding box in WebKit,
+     so the glow is a plain radial-gradient on a border-radius:50% layer instead. Pulse via opacity only. */
+  .ring-glow{position:absolute;inset:-20%;border-radius:50%;z-index:0;pointer-events:none;
+    background:radial-gradient(circle,var(--accent) 0%,transparent 60%);
+    animation:glowpulse 3.6s ease-in-out infinite}
+  @keyframes glowpulse{0%,100%{opacity:.10}50%{opacity:.22}}
+  @keyframes breathe{0%,100%{transform:scale(.92);opacity:.16}50%{transform:scale(1.08);opacity:.3}}
+  .ring-wrap .rnum{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;line-height:1}
+  .ring-wrap .rnum b{font-weight:700;letter-spacing:-.02em}
+  .ring-prog{stroke:var(--accent)}
+
+  /* ---------- expanded layouts ---------- */
+  .exp{width:100%;height:100%;padding:14px 18px 15px;color:#fff;display:flex;flex-direction:column}
+  .exp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+  .modepill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 8px;border-radius:999px;
+    background:color-mix(in srgb,var(--accent) 18%,transparent);}
+  .modepill svg{width:14px;height:14px;color:var(--accent)}
+  .modepill span{font-size:13px;font-weight:600;color:#fff;letter-spacing:-.01em}
+  .stamp{font-size:12px;color:var(--ink3);font-weight:500}
+
+  .exp-body{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;flex:1}
+  .exp-copy{min-width:0}
+  .exp-copy .ins{font-size:15px;line-height:1.32;font-weight:600;letter-spacing:-.01em;margin:0 0 10px}
+  .stat-row{display:flex;align-items:stretch;gap:0}
+  .stat{flex:1;display:flex;flex-direction:column;gap:1px;padding:0 12px;position:relative}
+  .stat:first-child{padding-left:0}
+  .stat+.stat::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:1px;background:var(--hair)}
+  .stat .sv{font-size:15px;font-weight:700;letter-spacing:-.02em}
+  .stat .sv small{font-size:10px;font-weight:600;color:var(--ink3);margin-left:1px}
+  .stat .sk{font-size:10.5px;color:var(--ink3);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+
+  .exp-foot{margin-top:12px;display:flex;align-items:center;gap:9px}
+  .btn{flex:1;height:33px;border-radius:17px;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    font-family:var(--font);font-size:14px;font-weight:600;letter-spacing:-.01em;color:#fff;
+    background:color-mix(in srgb,var(--accent) 22%,transparent);
+  }
+  .btn svg{width:14px;height:14px;color:var(--accent)}
+  .chip-weak{display:inline-flex;align-items:center;gap:6px;height:33px;padding:0 12px;border-radius:17px;
+    background:rgba(255,255,255,.06);font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
+  .chip-weak b{color:#fff}
+  .chip-weak .dot{width:7px;height:7px;border-radius:50%;background:var(--c-strain)}
+
+  /* wind-down expanded */
+  .exp-count{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .exp-count small{font-size:14px;font-weight:600;color:var(--ink2);margin-left:4px;letter-spacing:0}
+  .stage-phrase{font-size:14px;font-weight:600;color:var(--accent);margin-top:5px}
+  .hint{font-size:12px;color:var(--ink3);margin-top:2px}
+
+  /* breath expanded */
+  .breath-body{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:9px}
+  .orb{width:62px;height:62px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--accent) 55%,transparent),transparent 70%);
+    animation:orb 6.4s ease-in-out infinite}
+  .orb::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);opacity:.5;animation:orb 6.4s ease-in-out infinite}
+  @keyframes orb{0%,100%{transform:scale(.74)}45%{transform:scale(1.12)}55%{transform:scale(1.12)}}
+  .breath-phase{font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .breath-meta{font-size:12px;color:var(--ink3)}
+
+  /* heart expanded */
+  .ecg{flex:1;height:46px;position:relative;overflow:hidden;margin:0 2px;display:flex;align-items:center}
+  .ecg-track{display:flex;width:200%;animation:scroll 3.2s linear infinite}
+  .ecg svg{width:50%;height:46px;flex:none}
+  .ecg path{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .bpm{font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1;display:flex;align-items:baseline;gap:5px}
+  .bpm small{font-size:14px;font-weight:600;color:var(--ink2)}
+  .zone{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+    background:color-mix(in srgb,var(--accent) 20%,transparent);font-size:12px;font-weight:700;color:#fff}
+
+  /* ---------- controls ---------- */
+  .panel{display:flex;flex-direction:column;gap:24px;padding-top:8px}
+  .panel h2{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:0 0 12px}
+  .scn-grid{display:flex;flex-wrap:wrap;gap:9px}
+  .scn{display:inline-flex;align-items:center;gap:9px;padding:10px 15px;border-radius:14px;cursor:pointer;
+    background:rgba(255,255,255,.045);border:1px solid var(--hair-soft);color:var(--ink2);
+    font-size:14px;font-weight:600;font-family:var(--font);transition:.18s ease}
+  .scn:hover{background:rgba(255,255,255,.08)}
+  .scn .d{width:9px;height:9px;border-radius:50%;background:var(--cdot)}
+  .scn.on{color:#fff;background:rgba(255,255,255,.10);border-color:var(--cdot)}
+  .scn.on .d{box-shadow:0 0 9px var(--cdot)}
+
+  .seg{display:inline-flex;background:rgba(255,255,255,.045);border:1px solid var(--hair-soft);border-radius:13px;padding:4px}
+  .seg button{border:none;background:none;cursor:pointer;font-family:var(--font);font-size:13.5px;font-weight:600;
+    color:var(--ink2);padding:8px 16px;border-radius:9px;transition:.18s ease}
+  .seg button.on{background:rgba(255,255,255,.12);color:#fff}
+
+  .tip{font-size:13.5px;line-height:1.55;color:var(--ink2);padding:14px 16px;border-radius:14px;
+    background:rgba(255,255,255,.03);border:1px solid var(--hair-soft)}
+  .tip b{color:#fff;font-weight:600}
+  .tap-cue{font-size:12.5px;color:var(--ink3);display:flex;align-items:center;gap:7px;margin-top:2px}
+  .tap-cue i{width:18px;height:18px;border-radius:6px;border:1px solid var(--hair);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px}
+
+  /* ---------- gallery ---------- */
+  .sec-head{margin:72px 0 24px}
+  .sec-head h2{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:0 0 8px}
+  .sec-head p{font-size:15px;color:var(--ink2);margin:0;max-width:640px;line-height:1.5}
+
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+  .tile{border-radius:22px;overflow:hidden;border:1px solid var(--hair-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01))}
+  .tile-screen{position:relative;height:150px;display:flex;justify-content:center;padding-top:18px;
+    background:
+      radial-gradient(120% 90% at 50% -20%, #1d3358 0%, transparent 50%),
+      linear-gradient(180deg,#0a1322,#05070d);}
+  .tile-screen.tall{height:232px}
+  .tile-screen .island{position:relative;top:0;left:auto;transform:none;cursor:default}
+  .tile-label{padding:12px 16px 14px;border-top:1px solid var(--hair-soft);display:flex;align-items:center;gap:8px}
+  .tile-label .d{width:8px;height:8px;border-radius:50%;background:var(--cdot)}
+  .tile-label .t{font-size:13px;font-weight:600;color:#fff}
+  .tile-label .s{font-size:12px;color:var(--ink3);margin-left:auto;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+
+  /* ---------- principles ---------- */
+  .notes{margin-top:72px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .note{padding:20px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid var(--hair-soft)}
+  .note .n{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .note .n .k{width:22px;height:22px;border-radius:7px;background:color-mix(in srgb,var(--c-breath) 22%,transparent);
+    display:inline-flex;align-items:center;justify-content:center;color:var(--c-breath);font-size:12px}
+  .note p{font-size:13.5px;line-height:1.55;color:var(--ink2);margin:0}
+  .foot{margin-top:48px;font-size:12.5px;color:var(--ink3);line-height:1.6;border-top:1px solid var(--hair-soft);padding-top:24px}
+  .foot a{color:var(--ink2)}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition-duration:.001s!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- masthead -->
+  <div class="masthead">
+    <span class="eyebrow"><span class="pulse"></span> Laso · Live Activity</span>
+    <h1>The Dynamic Island, <em>redesigned around your day.</em></h1>
+    <p class="sub">One living surface that changes meaning by the hour — Readiness at dawn, Strain at midday, Wind-Down at night, Breathwork on demand. Built on your real metrics and the exact Apple geometry (44pt corners, 20pt margins, 24pt glyphs). Tap the island to morph it.</p>
+  </div>
+
+  <!-- interactive stage -->
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="sig">
+            <svg width="18" height="12" viewBox="0 0 18 12"><g fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="5" width="3" height="7" rx="1"/><rect x="9" y="2.5" width="3" height="9.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></g></svg>
+            <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 0.4 3.6a11.4 11.4 0 0 1 16.2 0L8.5 11.2Z" fill="none"/><path d="M8.5 2C5.4 2 2.6 3.2 0.6 5.2l1.4 1.4A8.1 8.1 0 0 1 8.5 4.3c2.5 0 4.8 1 6.5 2.5l1.4-1.4A11.4 11.4 0 0 0 8.5 2Zm0 4.2a4.6 4.6 0 0 0-3.3 1.4l3.3 3.4 3.3-3.4a4.6 4.6 0 0 0-3.3-1.4Z" fill="#fff"/></svg>
+            <svg width="26" height="13" viewBox="0 0 26 13"><rect x="1" y="1" width="21" height="11" rx="3" fill="none" stroke="#fff" stroke-opacity=".55"/><rect x="3" y="3" width="15" height="7" rx="1.5" fill="#fff"/><rect x="23" y="4" width="2" height="5" rx="1" fill="#fff" fill-opacity=".55"/></svg>
+          </span>
+        </div>
+
+        <div class="behind">
+          <div class="row tall"></div><div class="row"></div><div class="row"></div>
+        </div>
+
+        <div class="island compact" id="island"></div>
+
+        <div class="home-hint"><i></i></div>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div class="panel">
+      <div>
+        <h2>Moment</h2>
+        <div class="scn-grid" id="scnGrid"></div>
+      </div>
+      <div>
+        <h2>State</h2>
+        <div class="seg" id="stateSeg">
+          <button data-st="minimal">Minimal</button>
+          <button data-st="compact" class="on">Compact</button>
+          <button data-st="expanded">Expanded</button>
+        </div>
+        <div class="tap-cue"><i>↹</i> or just tap the island to morph compact ↔ expanded</div>
+      </div>
+      <div class="tip" id="tip"></div>
+    </div>
+  </div>
+
+  <!-- gallery -->
+  <div class="sec-head">
+    <h2>Every moment, every state</h2>
+    <p>The same surface, adapting. Each tile is a real Apple geometry render on a phone screen — scan them the way you scanned the reference grids.</p>
+  </div>
+  <div class="gal" id="gallery"></div>
+
+  <!-- principles -->
+  <div class="sec-head" style="margin-top:72px">
+    <h2>Why it reads as premium</h2>
+    <p>Seven decisions separate this from the generic ring-and-number island.</p>
+  </div>
+  <div class="notes">
+    <div class="note"><p class="n"><span class="k">1</span> One signal, concentric</p><p>Compact shows a single glanceable signal that hugs the pill's curve. No clutter fighting the camera gap.</p></div>
+    <div class="note"><p class="n"><span class="k">2</span> Time-of-day identity</p><p>Color and content shift with the body's day — calm green dawn, amber strain, indigo wind-down. The island is a clock for your physiology.</p></div>
+    <div class="note"><p class="n"><span class="k">3</span> It breathes</p><p>A soft pulse glow behind the ring and a live ECG/orb tell you data is alive, not a frozen screenshot.</p></div>
+    <div class="note"><p class="n"><span class="k">4</span> Earned color</p><p>True-black base per Apple; brand color used only where it carries meaning (the score arc, the action). Restraint reads expensive.</p></div>
+    <div class="note"><p class="n"><span class="k">5</span> Expanded = a briefing</p><p>One insight sentence, three supporting stats with hairline dividers, one clear action. Glance, understand, act.</p></div>
+    <div class="note"><p class="n"><span class="k">6</span> Honest staleness</p><p>After 20h the arc and number desaturate — your existing freshness rule, now visible. It never lies about old data.</p></div>
+    <div class="note"><p class="n"><span class="k">7</span> Ends clean</p><p>Today's Score self-ends at local midnight; Breathwork at session end. Nothing lingers past its meaning.</p></div>
+  </div>
+
+  <div class="foot">
+    Geometry per Apple HIG / Live Activities: island corner radius 44pt, 20pt content margins, 24pt glyphs, 15pt text, compact height ~37pt, expanded up to 160–192pt. Colors and metrics from <b style="color:var(--ink2)">AppColour.swift</b>, <b style="color:var(--ink2)">DesignSystem.swift</b>, and the shipping <b style="color:var(--ink2)">TodayScore / WindDown / Breathwork</b> Live Activities. Sources:
+    <a href="https://developer.apple.com/videos/play/wwdc2023/10194/">WWDC23 · Design dynamic Live Activities</a>,
+    <a href="https://infinum.com/blog/start-designing-for-dynamic-island-and-live-activities/">Infinum design specs</a>.
+  </div>
+
+</div>
+
+<script>
+/* ---------- icon glyphs ---------- */
+const I = {
+  sunrise:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 8.6 7 10M18.4 8.6 17 10M2 18h20"/><path d="M7 18a5 5 0 0 1 10 0" fill="currentColor" fill-opacity=".18"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.2H11l-1 8.8L19.5 9.8H13z" fill="currentColor"/></svg>',
+  moon:'<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="currentColor"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24"><path d="M4 20s.3-9.3 7.4-13.4C16.6 3.6 20 4 20 4s.4 3.4-2.6 8.6C13.3 19.7 4 20 4 20z" fill="currentColor"/><path d="M4 20 14 9" stroke="#000" stroke-width="1.4" stroke-opacity=".25" stroke-linecap="round"/></svg>',
+  heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-7.4-4.6-9.9-9.1C.6 8.6 2.1 5 5.6 5 7.8 5 9.4 6.3 12 9c2.6-2.7 4.2-4 6.4-4 3.5 0 5 3.6 3.5 6.9C19.4 16.4 12 21 12 21z" fill="currentColor"/></svg>',
+  inhale:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>',
+  wind:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3"/></svg>',
+};
+
+/* ---------- ring + helpers ---------- */
+function ring(val, size){
+  const sw = size>46?6:4, r=(size-sw)/2-1, c=2*Math.PI*r, off=c*(1-val/100), ctr=size/2;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${ctr}" cy="${ctr}" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="${sw}"/>
+    <circle class="ring-prog" cx="${ctr}" cy="${ctr}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="${sw}"
+      stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      transform="rotate(-90 ${ctr} ${ctr})"/></svg>`;
+}
+function ringBlock(val,size,numSize){
+  return `<div class="ring-wrap" style="width:${size}px;height:${size}px"><div class="ring-glow"></div>${ring(val,size)}
+    <div class="rnum"><b style="font-size:${numSize}px">${val}</b></div></div>`;
+}
+const micro = (h)=>`<div class="micro">${h.map(v=>`<i style="height:${v}px"></i>`).join('')}</div>`;
+const caret = (up)=>`<span class="caret">${up?'<svg viewBox="0 0 10 10"><path d="M5 2 9 8H1z" fill="currentColor"/></svg>':'<svg viewBox="0 0 10 10"><path d="M5 8 1 2h8z" fill="currentColor"/></svg>'}</span>`;
+const ecgPath = 'M0 23 H22 l3 -2 l4 6 l5 -20 l5 28 l4 -12 l3 0 H72 l3 -2 l4 6 l5 -20 l5 28 l4 -12 l3 0 H100';
+
+/* ---------- scenario data (real Laso metrics) ---------- */
+const SCEN = {
+  readiness:{
+    name:'Readiness', accent:'var(--c-readiness)', dot:'#34D399', glyph:I.sunrise, stamp:'Morning · 7:24',
+    type:'score', val:82,
+    compact:{trail:`<span class="cnum">82</span>${caret(true)}${micro([5,8,6,10,7,9])}`},
+    insight:'Strong overnight recovery. A good day to push.',
+    stats:[['HRV','64','ms'],['Resting HR','52','bpm'],['Sleep','7:42','']],
+    weak:['Mobility','69'], action:['Set Intention',I.target],
+    tip:'<b>Readiness (5–10am).</b> The morning hero. Score arc + one recovery sentence, with HRV / resting HR / sleep as proof, and the weakest pillar to fix. Tap to set today\'s intention.'
+  },
+  strain:{
+    name:'Strain', accent:'var(--c-strain)', dot:'#F59E0B', glyph:I.bolt, stamp:'Afternoon · 14:08',
+    type:'score', val:74,
+    compact:{trail:`<span class="cnum">74</span>${caret(true)}${micro([4,7,5,9,11,8])}`},
+    insight:'Solid zone-2 work logged. Keep it cruising.',
+    stats:[['Steps','6.4K',''],['Active','420','kcal'],['Zone','Z2','']],
+    weak:['Stand','5h'], action:['Log Workout',I.bolt],
+    tip:'<b>Strain (10am–6pm).</b> Same surface, amber now. Score holds the center while steps, active calories and current HR zone show the day\'s effort building.'
+  },
+  winddown:{
+    name:'Wind-Down', accent:'var(--c-winddown)', dot:'#818CF8', glyph:I.moon, stamp:'Evening · 21:42',
+    type:'count',
+    compact:{trail:`<span class="cnum">38</span><span class="ctag">min</span>`, leadGlyph:true},
+    count:'38', countUnit:'min to bed', phrase:'Soften the pace',
+    hint:'HRV 48 ms · an earlier night helps recovery', action:['Breathe 2 min',I.wind],
+    tip:'<b>Wind-Down (evening).</b> Indigo, calm. A self-advancing countdown to your target bedtime with a stage phrase that softens as bed nears — no server pushes needed.'
+  },
+  breath:{
+    name:'Breathwork', accent:'var(--c-breath)', dot:'#22D3EE', glyph:I.leaf, stamp:'Relax · Cyclic Sighing',
+    type:'breath',
+    compact:{trail:`<span class="cnum">4:23</span>`, leadGlyph:true, leadIcon:I.inhale},
+    phase:'Breathe in', meta:'Relax · 4:23 remaining',
+    tip:'<b>Breathwork (live session).</b> A breathing orb that scales with each inhale and exhale on a 1-second timeline, the phase label, and the session timer. Pure focus.'
+  },
+  heart:{
+    name:'Live Heart Rate', accent:'var(--c-heart)', dot:'#F87171', glyph:I.heart, stamp:'Outdoor Run · 12:04', concept:true,
+    type:'heart',
+    compact:{trail:`<span class="cnum">142</span><span class="ctag">bpm</span>`, leadGlyph:true, beat:true},
+    bpm:'142', zone:'Zone 4', meta:'Outdoor Run · 12:04 elapsed',
+    tip:'<b>Live Heart Rate (concept).</b> Heart rate is already a tracked metric — this shows the headroom: a scrolling ECG, live BPM and the current effort zone during a workout. Not yet shipped.'
+  }
+};
+
+/* ---------- render a state into an island element ---------- */
+function render(el, key, state){
+  const s = SCEN[key];
+  el.style.setProperty('--accent', s.accent);
+  el.className = 'island ' + state;
+
+  let html='';
+  if(state==='minimal'){
+    let inner = s.type==='score'
+      ? `<span class="mnum">${s.val}</span>`
+      : s.glyph;
+    html = `<div class="min-row"><div class="cam"></div><div class="min-dot">${inner}</div></div>`;
+    el.style.width = '96px';
+  }
+  else if(state==='compact'){
+    // score compacts show an arc on the lead (number lives on the trailing side);
+    // the others show their accent glyph, with a subtle beat for live heart rate
+    const leadFinal = (s.type==='score')
+      ? miniArc(s.val)
+      : `<span style="color:var(--accent);display:inline-flex">${beatWrap(s, s.compact.leadIcon||s.glyph)}</span>`;
+    html = `<div class="cmp"><div class="lead">${leadFinal}</div><div class="trail">${s.compact.trail}</div></div>`;
+    el.style.width = (s.type==='score'?168: (key==='breath'?150:158)) + 'px';
+  }
+  else { // expanded — height is measured after layout so content can never clip
+    el.style.width = '330px';
+    html = expandedHTML(s);
+  }
+  // fade-swap
+  const oldH = el.getBoundingClientRect().height || 37;
+  el.classList.add('swapping');
+  el.innerHTML = `<div class="ic" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">${html}</div>`;
+  if(state==='expanded'){
+    el.style.height='auto';                 // let the content set its natural height
+    const target=el.getBoundingClientRect().height;
+    el.style.height=oldH+'px';
+    void el.offsetHeight;                    // force reflow so the morph animates from the old size
+    el.style.height=target+'px';
+  } else {
+    el.style.height='37px';
+  }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove('swapping')));
+}
+
+function beatWrap(s, glyph){
+  const beat = s.compact && s.compact.beat;
+  return `<span style="display:inline-flex;width:16px;height:16px;${beat?'animation:breathe 1.1s ease-in-out infinite':''}">${glyph}</span>`;
+}
+function miniArc(val){
+  return `<div class="ring-wrap" style="width:24px;height:24px"><div class="ring-glow"></div>${ring(val,24)}</div>`;
+}
+
+/* ---------- expanded builders per type ---------- */
+function head(s){
+  return `<div class="exp-head"><div class="modepill">${s.glyph}<span>${s.name}</span></div><div class="stamp">${s.stamp}</div></div>`;
+}
+function expandedHTML(s){
+  if(s.type==='score'){
+    const stats = s.stats.map(([k,v,u])=>`<div class="stat"><div class="sv">${v}${u?`<small>${u}</small>`:''}</div><div class="sk">${k}</div></div>`).join('');
+    return `<div class="exp">${head(s)}
+      <div class="exp-body">
+        ${ringBlock(s.val,60,24)}
+        <div class="exp-copy">
+          <p class="ins">${s.insight}</p>
+          <div class="stat-row">${stats}</div>
+        </div>
+      </div>
+      <div class="exp-foot">
+        <button class="btn">${s.action[1]}${s.action[0]}</button>
+        <span class="chip-weak"><span class="dot"></span>${s.weak[0]} <b>${s.weak[1]}</b></span>
+      </div></div>`;
+  }
+  if(s.type==='count'){
+    return `<div class="exp">${head(s)}
+      <div class="exp-body">
+        <div class="ring-wrap" style="width:56px;height:56px"><div class="ring-glow"></div>${ring(64,56)}
+          <div class="rnum" style="color:var(--accent)">${s.glyph.replace('width','w').replace(/viewBox="0 0 24 24"/,'viewBox="0 0 24 24" width="22" height="22"')}</div></div>
+        <div class="exp-copy">
+          <div class="exp-count">${s.count}<small>${s.countUnit}</small></div>
+          <div class="stage-phrase">${s.phrase}</div>
+          <div class="hint">${s.hint}</div>
+        </div>
+      </div>
+      <div class="exp-foot"><button class="btn">${s.action[1]}${s.action[0]}</button></div></div>`;
+  }
+  if(s.type==='breath'){
+    return `<div class="exp">${head(s)}
+      <div class="breath-body">
+        <div class="orb"></div>
+        <div class="breath-phase">${s.phase}</div>
+        <div class="breath-meta">${s.meta}</div>
+      </div></div>`;
+  }
+  if(s.type==='heart'){
+    return `<div class="exp">${head(s)}
+      <div class="exp-body" style="grid-template-columns:auto 1fr;align-items:center">
+        <div class="bpm">${s.bpm}<small>bpm</small></div>
+        <div class="ecg"><div class="ecg-track">
+          <svg viewBox="0 0 100 46" preserveAspectRatio="none"><path d="${ecgPath}"/></svg>
+          <svg viewBox="0 0 100 46" preserveAspectRatio="none"><path d="${ecgPath}"/></svg>
+        </div></div>
+      </div>
+      <div class="exp-foot" style="margin-top:8px"><span class="zone">${I.heart.replace(/viewBox="0 0 24 24"/,'viewBox="0 0 24 24" width="13" height="13"')} ${s.zone}</span><span class="hint" style="margin-top:0">${s.meta}</span></div></div>`;
+  }
+}
+
+/* ---------- wire the interactive stage ---------- */
+let curScn='readiness', curState='compact';
+const island=document.getElementById('island');
+
+function paint(){ render(island, curScn, curState); document.getElementById('tip').innerHTML=SCEN[curScn].tip; }
+
+// scenario chips
+const grid=document.getElementById('scnGrid');
+Object.entries(SCEN).forEach(([k,s])=>{
+  const b=document.createElement('button');
+  b.className='scn'+(k===curScn?' on':''); b.style.setProperty('--cdot',s.dot);
+  b.innerHTML=`<span class="d"></span>${s.name}${s.concept?' <span style="font-size:11px;color:var(--ink3);font-weight:600">· concept</span>':''}`;
+  b.onclick=()=>{curScn=k; [...grid.children].forEach(c=>c.classList.remove('on')); b.classList.add('on'); paint();};
+  grid.appendChild(b);
+});
+// state segmented
+const seg=document.getElementById('stateSeg');
+seg.querySelectorAll('button').forEach(b=>{
+  b.onclick=()=>{curState=b.dataset.st; seg.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); paint();};
+});
+// tap island to toggle
+island.addEventListener('click',()=>{
+  curState = curState==='expanded' ? 'compact' : 'expanded';
+  seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.st===curState));
+  paint();
+});
+paint();
+
+/* ---------- gallery ---------- */
+const GAL=[
+  ['readiness','expanded'],['strain','expanded'],['winddown','expanded'],['breath','expanded'],['heart','expanded'],['readiness','compact'],
+  ['strain','compact'],['winddown','compact'],['breath','compact'],['heart','compact'],['readiness','minimal'],['winddown','minimal'],
+];
+const gal=document.getElementById('gallery');
+GAL.forEach(([k,st])=>{
+  const s=SCEN[k];
+  const tile=document.createElement('div'); tile.className='tile';
+  const scr=document.createElement('div'); scr.className='tile-screen'+(st==='expanded'?' tall':'');
+  const isl=document.createElement('div'); scr.appendChild(isl);
+  tile.appendChild(scr);
+  tile.insertAdjacentHTML('beforeend',
+    `<div class="tile-label" style="--cdot:${s.dot}"><span class="d"></span><span class="t">${s.name}</span><span class="s">${st}</span></div>`);
+  gal.appendChild(tile);
+  render(isl,k,st);
+  isl.classList.remove('swapping');
+});
+</script>
+</body>
+</html>

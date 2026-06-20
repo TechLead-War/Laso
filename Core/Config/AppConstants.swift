@@ -48,6 +48,7 @@ enum AppConstants {
         static let reversalPrefix = "healthpulse.reversal."
         static let celebrationPrefix = "healthpulse.celebration."
         static let engagementPrefix = "healthpulse.engagement."
+        static let intelligencePrefix = "healthpulse.intelligence."
 
         /// Every onboarding-abandonment identifier, for one-shot cancellation
         /// when onboarding completes.
