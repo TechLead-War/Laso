@@ -266,6 +266,38 @@ extension Copy {
             ]
         }
 
+        /// Social proof line on Screen 14, adapted to the user's primary goal.
+        /// Default is intentionally EMPTY: this is a population outcome claim, so
+        /// it must never ship an invented number. The line stays hidden until an
+        /// operator sets a real per goal cohort figure via Remote Config. Markdown
+        /// bold (**...**) marks the figures so the operator controls emphasis too.
+        static func s14SocialProof(for goal: OnbV2Goal?) -> String {
+            switch goal {
+            case .sleep:     return s("copy_onboardingv2_s14_proof_sleep", "")
+            case .energy:    return s("copy_onboardingv2_s14_proof_energy", "")
+            case .training:  return s("copy_onboardingv2_s14_proof_training", "")
+            case .stress:    return s("copy_onboardingv2_s14_proof_stress", "")
+            case .longevity: return s("copy_onboardingv2_s14_proof_longevity", "")
+            case .weight:    return s("copy_onboardingv2_s14_proof_weight", "")
+            case .none:      return s("copy_onboardingv2_s14_proof_sleep", "")
+            }
+        }
+
+        /// Illustrative example lines, shown ONLY in premium-showcase / screenshot
+        /// builds so the design can be reviewed. The numbers are placeholders, never
+        /// a production claim, and never reach a real user (premiumShowcase is false
+        /// in Release).
+        static func s14SocialProofShowcase(for goal: OnbV2Goal?) -> String {
+            switch goal {
+            case .energy:    return "People like you, working on energy, had **30% fewer** afternoon dips by **week 3**."
+            case .training:  return "People like you, training smarter, recovered **a day faster** between hard sessions in **3 weeks**."
+            case .stress:    return "People like you, managing stress, raised their HRV **9%** in **3 weeks**."
+            case .longevity: return "People like you, staying healthy, dropped their resting heart rate **4 bpm** in **4 weeks**."
+            case .weight:    return "People like you, on a weight goal, saw a steady **3% move** toward it in **6 weeks**."
+            case .sleep, .none: return "People like you, working on sleep, gained **38 min** a night in **3 weeks**."
+            }
+        }
+
         // MARK: - Screen 15 — Sign in
         static var s15Title: String    { s("copy_onboardingv2_s15_title", "Save your read.") }
         static var s15Lede: String     { s("copy_onboardingv2_s15_lede", "Sign in so your insights stay with you — across iPhone, iPad, and Watch. No password to remember.") }

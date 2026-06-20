@@ -19,6 +19,7 @@ enum UITestMode {
     private static let initialRoutePrefix = "--ui-test-initial-route="
     private static let onboardingStepPrefix = "--ui-test-onboarding-step="
     private static let onboardingV2ScreenPrefix = "--ui-test-onboarding-v2-screen="
+    private static let onboardingGoalPrefix = "--ui-test-onboarding-goal="
     private static let settingsRoutePrefix = "--ui-test-settings-route="
     private static let overrideNamePrefix = "--ui-test-override-name="
     private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
@@ -126,6 +127,11 @@ enum UITestMode {
     /// paywall|done). Format: `--ui-test-onboarding-v2-screen=heart`
     static var onboardingV2StartScreen: String? { stringValue(for: onboardingV2ScreenPrefix) }
 
+    /// Forces the onboarding primary goal for screenshot capture so goal-adaptive
+    /// screens (e.g. the Screen 14 social proof line) render per goal from a single
+    /// launch. Format: `--ui-test-onboarding-goal=sleep|energy|training|stress|longevity|weight`
+    static var onboardingGoal: String? { stringValue(for: onboardingGoalPrefix) }
+
     /// Settings sub-page the test harness wants pushed onto the Settings tab on
     /// first appear so a single launch can capture e.g. NotificationsSettingsView.
     /// Format: `--ui-test-settings-route=notifications|devices|siri`
@@ -216,6 +222,7 @@ enum UITestMode {
     static var initialRoute: String? { nil }
     static var onboardingStartStep: String? { nil }
     static var onboardingV2StartScreen: String? { nil }
+    static var onboardingGoal: String? { nil }
     static var settingsInitialRoute: String? { nil }
     static var overrideName: String? { nil }
     static var overrideOverallScore: Int? { nil }

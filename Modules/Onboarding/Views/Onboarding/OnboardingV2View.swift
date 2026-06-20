@@ -107,6 +107,11 @@ struct OnboardingV2View: View {
                     profile.goals = [.sleep, .energy, .stress]
                     profile.symptoms = [.tiredMorning, .restless]
                 }
+                // Goal override for per-goal screenshot capture (e.g. Screen 14
+                // social proof line). Applied last so it wins over the seeds above.
+                if let raw = UITestMode.onboardingGoal, let goal = OnbV2Goal(rawValue: raw) {
+                    profile.goals = [goal]
+                }
                 screen = target
             }
 #endif

@@ -165,6 +165,17 @@ struct OnbV2Screen14Preview: View {
                     .padding(.bottom, 24)
                 }
 
+                if !proofLine.isEmpty {
+                    // Fall back to .sleep when no goal is set so the tint matches the
+                    // sleep copy fallback (real users always have a goal here). Sits
+                    // low above the CTA with the empty space above it, matching the
+                    // approved design.
+                    OnbV2SocialProofLine(goal: profile.primaryGoal ?? .sleep, markdown: proofLine)
+                        .padding(.horizontal, OnbV2.bodyPadH)
+                        .padding(.bottom, 36)
+                        .onbV2StaggerIn(index: 3, appeared: appeared)
+                }
+
                 OnbV2PrimaryCTA(Copy.OnboardingV2.s14CTA) {
                     ctaTapped.toggle()
                     onContinue()
@@ -185,6 +196,15 @@ struct OnbV2Screen14Preview: View {
 
     @State private var ctaTapped = false
 
+    /// Goal-adaptive social proof line. Hidden in production until a real per goal
+    /// cohort number is set in Remote Config; the illustrative showcase copy renders
+    /// only in screenshot / premium-showcase builds, never for a real user.
+    private var proofLine: String {
+        UITestMode.premiumShowcase
+            ? Copy.OnboardingV2.s14SocialProofShowcase(for: profile.primaryGoal)
+            : Copy.OnboardingV2.s14SocialProof(for: profile.primaryGoal)
+    }
+
     private var timelineNodes: [OnbV2TimelineNode] {
         Array(Copy.OnboardingV2.previewDays.enumerated()).map { idx, day in
             OnbV2TimelineNode(
@@ -195,6 +215,52 @@ struct OnbV2Screen14Preview: View {
                 halo: idx == 0   // anchor day keeps the soft ring, hollow dot
             )
         }
+    }
+}
+
+// MARK: - Screen 14 social proof line
+
+/// "People like you" social proof line for Screen 14. A goal tinted avatar cluster
+/// over a markdown sentence whose bold figures render in full white above muted
+/// text, matching the approved design. The avatar gradient and copy both key off
+/// the user's primary goal selected on Screen 4.
+private struct OnbV2SocialProofLine: View {
+    let goal: OnbV2Goal?
+    let markdown: String
+
+    private var accent: Color {
+        goal.flatMap { Copy.OnboardingV2.goalCopy[$0]?.accent } ?? OnbV2.blue
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: -10) {
+                ForEach(0..<4, id: \.self) { _ in
+                    Circle()
+                        .fill(LinearGradient(colors: [accent, OnbV2.blue],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 30, height: 30)
+                        .overlay(Circle().stroke(OnbV2.bg, lineWidth: 2.5))
+                }
+            }
+            Text(styled(markdown))
+                .font(.system(size: 18))
+                .foregroundStyle(OnbV2.fg2)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Parse the markdown and lift the bold figures to full white so they pop over
+    /// the muted sentence. Falls back to plain text if the markdown ever fails.
+    private func styled(_ md: String) -> AttributedString {
+        guard var attr = try? AttributedString(markdown: md) else { return AttributedString(md) }
+        for run in attr.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
+            attr[run.range].foregroundColor = OnbV2.fg
+        }
+        return attr
     }
 }
 

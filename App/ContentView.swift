@@ -110,7 +110,10 @@ struct ContentView: View {
             // onboarding via any other path land here in `.notDetermined` and
             // never receive notifications. Trigger the system prompt once.
             // iOS no-ops this call when status is already `.authorized`/`.denied`.
-            if await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
+            // Skip during UI-test screenshot capture: the system permission
+            // alert would otherwise overlay every main-app screen we capture.
+            if !UITestMode.isEnabled,
+               await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
                 _ = await NotificationManager.shared.requestAuthorization(source: "launch_fallback")
             }
         }
