@@ -351,6 +351,10 @@ struct OnbV2VitalityRevealScreen: View {
                     RadialGradient(colors: [orbTint.opacity(0.12), Color.clear],
                                    center: .bottomTrailing, startRadius: 0, endRadius: 320)
                 }
+                // Bleed the glow past the safe area so it fills behind the status
+                // bar and home indicator, matching every other onboarding screen
+                // (whose ambient is drawn by the container with ignoresSafeArea).
+                .ignoresSafeArea()
             )
         }
         .task { await runSequence() }
