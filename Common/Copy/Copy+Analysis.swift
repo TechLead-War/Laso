@@ -318,7 +318,7 @@ extension Copy {
                 let stage = deepDeclining
                     ? RemoteConfigManager.shared.copyString("copy_analysis_daylight_stage_deep", default: "deep sleep")
                     : RemoteConfigManager.shared.copyString("copy_analysis_daylight_stage_duration", default: "sleep duration")
-                return String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_summary", default: "Your daylight exposure dropped %@%% and %@ declined %@%% in the same window. These are connected — natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity."), daylightChange, stage, deepChange)
+                return String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_summary", default: "Your daylight exposure dropped %@%% and %@ declined %@%% in the same window. These are connected. Natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity."), daylightChange, stage, deepChange)
             }
             static func daylightChainRecommendation(effectNote: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_recommendation", default: "Get 20+ min of outdoor light before noon tomorrow.%@ This single change impacts your sleep timing, deep sleep percentage, and next-day mental sharpness."), effectNote)

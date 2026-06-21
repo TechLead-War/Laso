@@ -540,6 +540,20 @@ final class AppAnalytics {
         ])
     }
 
+    /// Fired when the app is backgrounded mid-onboarding (the user quit before
+    /// finishing). `onboarding_step_completed` only logs screens the user
+    /// navigates away from, so without this the exact screen someone abandons on
+    /// is invisible. Fired on every background, not once, so the LAST drop_off
+    /// with no later `onboarding_completed` is the true abandonment point.
+    func trackOnboardingDropOff(lastStep: String, stepIndex: Int, stepCount: Int, durationSec: Int) {
+        logEvent("onboarding_drop_off", parameters: [
+            "last_step": lastStep,
+            "step_index": stepIndex,
+            "step_count": stepCount,
+            "duration_sec": durationSec
+        ])
+    }
+
     /// Fired when the user picks a wearable on onboarding screen 7. The generic
     /// step event records that the wearable step was completed but not which
     /// device was chosen, so this captures the choice on its own event to let

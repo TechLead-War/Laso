@@ -45,6 +45,11 @@ struct OnboardingV2View: View {
     @State private var stepStartedAt = Date()
     @State private var onboardingStartedAt = Date()
 
+    // Captures the screen a user quits on: the step funnel only logs screens
+    // they navigate away from, so an app-kill mid-flow leaves no record without
+    // watching scenePhase.
+    @Environment(\.scenePhase) private var scenePhase
+
     /// Raw values intentionally match the case names so the Firebase Remote
     /// Config key `onboarding_skip_screens` (CSV) can reference them by name
     /// at runtime.
@@ -136,6 +141,19 @@ struct OnboardingV2View: View {
                     await subscriptionManager.loadProducts()
                 }
             }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Record the screen the user quit on. Only `.background` (true quit /
+            // home / app-switcher dismiss) counts — `.inactive` is skipped because
+            // it also fires for the system HealthKit and Apple Sign-In sheets,
+            // which are not exits. `.done` is the post-flow state, not a drop-off.
+            guard newPhase == .background, screen != .done else { return }
+            AppAnalytics.shared.trackOnboardingDropOff(
+                lastStep: screen.rawValue,
+                stepIndex: Self.screenOrdinal(screen),
+                stepCount: Self.stepCount,
+                durationSec: max(0, Int(Date().timeIntervalSince(stepStartedAt)))
+            )
         }
     }
 

@@ -195,7 +195,7 @@ extension Copy {
             // Only fire the "slipping" loss frame when we have a concrete delta to cite.
             // Vague "Yesterday's gains are slipping" without data tested as filler.
             if improvingDays == 0, let delta = scoreDelta, delta < 0 {
-                candidates.append((.lossFrame, "Down \(abs(delta)) since yesterday — easy to claw back."))
+                candidates.append((.lossFrame, "Down \(abs(delta)) since yesterday. Easy to claw back."))
             }
 
             // Progress hooks (endowed progress)

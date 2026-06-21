@@ -300,7 +300,7 @@ extension Copy {
 
         // MARK: - Screen 15 — Sign in
         static var s15Title: String    { s("copy_onboardingv2_s15_title", "Save your read.") }
-        static var s15Lede: String     { s("copy_onboardingv2_s15_lede", "Sign in so your insights stay with you — across iPhone, iPad, and Watch. No password to remember.") }
+        static var s15Lede: String     { s("copy_onboardingv2_s15_lede", "Sign in so your insights stay with you across iPhone, iPad, and Watch. No password to remember.") }
         static var s15CTA: String      { s("copy_onboardingv2_s15_cta", "Sign in with Apple") }
         static var s15Footnote: String { s("copy_onboardingv2_s15_footnote", "We never see your email. Apple keeps it private.") }
 
