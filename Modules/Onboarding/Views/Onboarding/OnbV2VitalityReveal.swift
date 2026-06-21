@@ -261,7 +261,7 @@ struct OnbV2VitalityRevealScreen: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .none, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 14, total: OnbV2Flow.total, onBack: onBack, tint: orbTint)
+                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack, tint: orbTint)
                 Text("YOUR VITALITY AGE")
                     .font(.system(size: 12, weight: .bold)).tracking(2.2)
                     .foregroundStyle(orbTintBright)

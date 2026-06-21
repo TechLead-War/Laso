@@ -105,51 +105,7 @@ extension Copy {
             ]
         }
 
-        // MARK: - Screen 6 — Activity
-        static var s6Eyebrow: String     { s("copy_onboardingv2_s6_eyebrow", "WHY WE ASK") }
-        static var s6Title: String       { s("copy_onboardingv2_s6_title", "How active are you, usually?") }
-        // The word inside s6Title that renders blue. Must appear verbatim in s6Title.
-        static var s6TitleAccent: String { s("copy_onboardingv2_s6_title_accent", "usually") }
-        static var s6Lede: String        { s("copy_onboardingv2_s6_lede", "Because the same resting heart rate means rest for a desk day and recovery for a hard week. Your answer sets the baseline we read against.") }
-        static var s6CTA: String         { s("copy_onboardingv2_s6_cta", "Continue") }
-
-        struct ActivityCopy {
-            let icon: String
-            let title: String
-            let subtitle: String
-        }
-        static var activityCopy: [OnbV2Activity: ActivityCopy] {
-            [
-                .low:   .init(icon: "figure.walk", title: s("copy_onboardingv2_activity_low_title", "Mostly desk-bound"), subtitle: s("copy_onboardingv2_activity_low_sub", "A walk here and there.")),
-                .mod:   .init(icon: "figure.walk", title: s("copy_onboardingv2_activity_mod_title", "On my feet"),        subtitle: s("copy_onboardingv2_activity_mod_sub", "Walks, light workouts most weeks.")),
-                .high:  .init(icon: "figure.run",  title: s("copy_onboardingv2_activity_high_title", "Train regularly"),  subtitle: s("copy_onboardingv2_activity_high_sub", "3 to 5 sessions a week.")),
-                .elite: .init(icon: "figure.run",  title: s("copy_onboardingv2_activity_elite_title", "Athlete"),         subtitle: s("copy_onboardingv2_activity_elite_sub", "Daily, structured training."))
-            ]
-        }
-
-        // MARK: - Screen 7 — Wearable
-        static var s7Title: String { s("copy_onboardingv2_s7_title", "Do you wear anything?") }
-        static var s7Lede: String  { s("copy_onboardingv2_s7_lede", "We don't connect to your watch directly. We read whatever it shares with Apple Health. Most modern wearables do.") }
-        static var s7CTA: String   { s("copy_onboardingv2_s7_cta", "Continue") }
-
-        struct WearableCopy {
-            let icon: String
-            let title: String
-            let subtitle: String
-        }
-        static var wearableCopy: [OnbV2Wearable: WearableCopy] {
-            [
-                .apple:  .init(icon: "applewatch", title: s("copy_onboardingv2_wearable_apple_title", "Apple Watch"),          subtitle: s("copy_onboardingv2_wearable_apple_sub", "Best fit. Deepest signal.")),
-                .whoop:  .init(icon: "heart",      title: s("copy_onboardingv2_wearable_whoop_title", "Whoop"),                subtitle: s("copy_onboardingv2_wearable_whoop_sub", "Strain, sleep, recovery.")),
-                .oura:   .init(icon: "circle",     title: s("copy_onboardingv2_wearable_oura_title", "Oura Ring"),             subtitle: s("copy_onboardingv2_wearable_oura_sub", "Sleep, HRV, body temp.")),
-                .garmin: .init(icon: "figure.run.circle", title: s("copy_onboardingv2_wearable_garmin_title", "Garmin / Polar"),     subtitle: s("copy_onboardingv2_wearable_garmin_sub", "Training-focused devices.")),
-                .fitbit: .init(icon: "waveform.path.ecg", title: s("copy_onboardingv2_wearable_fitbit_title", "Fitbit"),             subtitle: s("copy_onboardingv2_wearable_fitbit_sub", "Steps, sleep, heart rate.")),
-                .other:  .init(icon: "sparkles",   title: s("copy_onboardingv2_wearable_other_title", "Something else"),       subtitle: s("copy_onboardingv2_wearable_other_sub", "If it syncs to Apple Health, we'll read it.")),
-                .none:   .init(icon: "iphone",     title: s("copy_onboardingv2_wearable_none_title", "Just my iPhone for now"), subtitle: s("copy_onboardingv2_wearable_none_sub", "That's plenty to start."))
-            ]
-        }
-
-        // MARK: - Screen 8 — Bridge
+        // MARK: - Screen 6 — Bridge
         static var s8Title: String       { s("copy_onboardingv2_s8_title", "Now Laso can read\nyour story.") }
         static var s8DefaultLede: String { s("copy_onboardingv2_s8_default_lede", "We'll learn the rhythms only you have.") }
         static var s8PrivacyChip: String { s("copy_onboardingv2_s8_privacy_chip", "Your data never leaves your phone.") }

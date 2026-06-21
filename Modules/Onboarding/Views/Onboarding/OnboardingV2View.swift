@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// New 16-screen onboarding flow router. Replaces the legacy `OnboardingView`
+/// New 14-screen onboarding flow router. Replaces the legacy `OnboardingView`
 /// (TabView-based 7-step). Navigation is index-based with a forward-only fade
 /// transition; back goes to previous screen.
 ///
@@ -59,22 +59,20 @@ struct OnboardingV2View: View {
         case about          // 3
         case goal           // 4
         case symptoms       // 5
-        case activity       // 6
-        case wearable       // 7
-        case bridge         // 8
-        case scan           // 9 (system HealthKit sheet fires before this)
+        case bridge         // 6
+        case scan           // 7 (system HealthKit sheet fires before this)
         // Mutually exclusive router targets, reached only from `scan` based on
-        // the data-richness segment. They share ordinal 10 (the linear slot
+        // the data-richness segment. They share ordinal 8 (the linear slot
         // they replace).
-        case verdict        // 10 rich
-        case cliffhanger    // 10 sparse
-        case journalFirst   // 10 denied
-        case heart          // 11
-        case sleep          // 12
-        case hrv            // 13
-        case preview        // 14
-        case signIn         // 15
-        case paywall        // 16
+        case verdict        // 8 rich
+        case cliffhanger    // 8 sparse
+        case journalFirst   // 8 denied
+        case heart          // 9
+        case sleep          // 10
+        case hrv            // 11
+        case preview        // 12
+        case signIn         // 13
+        case paywall        // 14
         case done           // post
     }
 
@@ -193,30 +191,11 @@ struct OnboardingV2View: View {
                                      // post-scan verdict / cliffhanger still pay it
                                      // off and the answer-ready push still arms.
                                      prediction = buildPrediction()
-                                     advance(to: .activity)
-                                 })
-        case .activity:
-            OnbV2Screen6Activity(profile: profile,
-                                 onBack: { advance(to: .symptoms) },
-                                 onContinue: {
-                                     AppAnalytics.shared.trackOnboardingActivitySelected(
-                                         level: profile.activity?.rawValue ?? "unspecified")
-                                     advance(to: .wearable)
-                                 })
-        case .wearable:
-            OnbV2Screen7Wearable(profile: profile,
-                                 onBack: { advance(to: .activity) },
-                                 onContinue: {
-                                     AppAnalytics.shared.trackOnboardingWearableSelected(
-                                         wearable: profile.wearable?.rawValue ?? OnbV2Wearable.none.rawValue,
-                                         stepIndex: Self.screenOrdinal(.wearable),
-                                         durationSec: max(0, Int(Date().timeIntervalSince(stepStartedAt)))
-                                     )
                                      advance(to: .bridge)
                                  })
         case .bridge:
             OnbV2Screen8Bridge(goal: profile.primaryGoal,
-                               onBack: { advance(to: .wearable) },
+                               onBack: { advance(to: .symptoms) },
                                onCTA: requestHealthKitAndAdvance)
         case .scan:
             OnbV2Screen10Scan(snapshot: healthSnapshot) {
@@ -339,7 +318,7 @@ struct OnboardingV2View: View {
     ).count
 
     /// Step number used in analytics. Matches the user-visible 1-based step
-    /// index. The three router screens share ordinal 10 (the linear slot they
+    /// index. The three router screens share ordinal 8 (the linear slot they
     /// replace), so the forward/back funnel comparison stays monotonic across
     /// whichever branch the user lands on.
     private static func screenOrdinal(_ screen: Screen) -> Int {
@@ -349,18 +328,16 @@ struct OnboardingV2View: View {
         case .about:        return 3
         case .goal:         return 4
         case .symptoms:     return 5
-        case .activity:     return 6
-        case .wearable:     return 7
-        case .bridge:       return 8
-        case .scan:         return 9
-        case .verdict, .cliffhanger, .journalFirst: return 10
-        case .heart:        return 11
-        case .sleep:        return 12
-        case .hrv:          return 13
-        case .preview:      return 14
-        case .signIn:       return 15
-        case .paywall:      return 16
-        case .done:         return 17
+        case .bridge:       return 6
+        case .scan:         return 7
+        case .verdict, .cliffhanger, .journalFirst: return 8
+        case .heart:        return 9
+        case .sleep:        return 10
+        case .hrv:          return 11
+        case .preview:      return 12
+        case .signIn:       return 13
+        case .paywall:      return 14
+        case .done:         return 15
         }
     }
 
@@ -392,16 +369,14 @@ struct OnboardingV2View: View {
         UserProfileStore.shared.save(userProfile)
     }
 
-    /// Persist the answers persistOnboardingProfile drops (symptoms, activity,
-    /// wearable) plus the pre-registered prediction, so screen 5's "we will
-    /// watch for them" promise is true and the cliffhanger payoff can mature
-    /// the claim later. Called once the prediction is built.
+    /// Persist the answers persistOnboardingProfile drops (symptoms) plus the
+    /// pre-registered prediction, so screen 5's "we will watch for them" promise
+    /// is true and the cliffhanger payoff can mature the claim later. Called
+    /// once the prediction is built.
     private func persistCapturedAnswers() {
         OnboardingPredictionStore.saveAnswers(
             OnboardingPredictionStore.CapturedAnswers(
-                symptomKeys: profile.symptoms.map(\.rawValue),
-                activityKey: profile.activity?.rawValue,
-                wearableKey: profile.wearable?.rawValue
+                symptomKeys: profile.symptoms.map(\.rawValue)
             )
         )
         if let prediction {

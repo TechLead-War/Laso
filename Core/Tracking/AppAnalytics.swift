@@ -554,19 +554,7 @@ final class AppAnalytics {
         ])
     }
 
-    /// Fired when the user picks a wearable on onboarding screen 7. The generic
-    /// step event records that the wearable step was completed but not which
-    /// device was chosen, so this captures the choice on its own event to let
-    /// device cohorts (Apple Watch vs Oura vs none) be segmented in the funnel.
-    func trackOnboardingWearableSelected(wearable: String, stepIndex: Int, durationSec: Int) {
-        logEvent("onboarding_wearable_selected", parameters: [
-            "wearable": wearable,
-            "step_index": stepIndex,
-            "duration_sec": durationSec
-        ])
-    }
-
-    /// Fired when the onboarding Vitality Age reveal (screen 14) settles on its
+    /// Fired when the onboarding Vitality Age reveal (screen 12) settles on its
     /// result, so the computed outcome — not just the screen transition — is in
     /// Amplitude (how many users land younger vs older, the spread, and how often
     /// we had no health data to compute from).
@@ -609,12 +597,7 @@ final class AppAnalytics {
         logEvent("onboarding_symptoms_selected", parameters: ["symptoms": symptoms, "count": count])
     }
 
-    /// Activity screen (6): the activity level the user chose.
-    func trackOnboardingActivitySelected(level: String) {
-        logEvent("onboarding_activity_selected", parameters: ["level": level])
-    }
-
-    /// Apple sign-in outcome on the onboarding sign-in screen (15). Success is the
+    /// Apple sign-in outcome on the onboarding sign-in screen (13). Success is the
     /// key account-creation conversion; failure includes user cancellation.
     func trackSignInCompleted(method: String, success: Bool) {
         logEvent("sign_in_completed", parameters: ["method": method, "success": success])

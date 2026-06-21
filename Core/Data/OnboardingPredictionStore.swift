@@ -1,7 +1,7 @@
 import Foundation
 
 /// Persists the onboarding answers that `persistOnboardingProfile` used to
-/// discard (symptoms, activity, wearable) plus the pre-registered prediction,
+/// discard (symptoms) plus the pre-registered prediction,
 /// so the cliffhanger payoff (answer-ready push) and the denied-branch
 /// re-permission hook can restate the user's own words later. Static-func +
 /// JSONEncoder pattern mirrors MorningCheckInManager.
@@ -11,8 +11,6 @@ enum OnboardingPredictionStore {
     /// string arrays keep this Core type free of onboarding module imports.
     struct CapturedAnswers: Codable {
         let symptomKeys: [String]
-        let activityKey: String?
-        let wearableKey: String?
     }
 
     private static let jsonEncoder = JSONEncoder()

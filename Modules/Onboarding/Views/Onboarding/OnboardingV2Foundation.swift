@@ -43,14 +43,6 @@ enum OnbV2Symptom: String, CaseIterable, Codable {
     case tiredMorning, restless, foggy, anxious, lowMotivation, sore, moody, none
 }
 
-enum OnbV2Activity: String, CaseIterable, Codable {
-    case low, mod, high, elite
-}
-
-enum OnbV2Wearable: String, CaseIterable, Codable {
-    case apple, whoop, oura, garmin, fitbit, other, none
-}
-
 @Observable
 final class OnboardingV2Profile {
     var age: Int = 26
@@ -59,8 +51,6 @@ final class OnboardingV2Profile {
     /// goal-conditional bridge copy and downstream personalisation.
     var goals: [OnbV2Goal] = []
     var symptoms: Set<OnbV2Symptom> = []
-    var activity: OnbV2Activity?
-    var wearable: OnbV2Wearable?
 
     var primaryGoal: OnbV2Goal? { goals.first }
 
@@ -95,10 +85,10 @@ final class OnboardingV2Profile {
 /// Single source of truth for the progress-bar denominator. The three router
 /// screens (verdict / cliffhanger / journalFirst) are mutually exclusive and
 /// hide their progress bar, so they count as the one linear step they replace.
-/// Linear steps: welcome, promise, about, goal, symptoms, activity, wearable,
-/// bridge, scan, [router], heart, sleep, hrv, preview, signIn, paywall.
+/// Linear steps: welcome, promise, about, goal, symptoms, bridge, scan,
+/// [router], heart, sleep, hrv, preview, signIn, paywall.
 enum OnbV2Flow {
-    static let total = 16
+    static let total = 14
 }
 
 // MARK: - V2 design tokens

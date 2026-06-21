@@ -281,7 +281,7 @@ struct OnbV2Screen15SignIn: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 15, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 13, total: OnbV2Flow.total, onBack: onBack)
 
                 VStack(spacing: 0) {
                     Spacer()
