@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 14 · Vitality Age reveal (balanced space)</title>
+<style>
+  *{box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  :root{ --blue:#0A84FF; --blue-bright:#5AC8FA; --amber:#FF9F0A; --grey:#444b57; --fg3:rgba(255,255,255,.4); }
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:40px 20px 60px; -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; align-items:center;}
+  .head{text-align:center; margin-bottom:22px;}
+  .head h1{font-size:21px; font-weight:700;}
+  .head p{font-size:13px; color:rgba(255,255,255,.5); margin-top:7px;}
+  .replay{margin-top:13px; padding:9px 18px; border-radius:999px; border:1px solid rgba(10,132,255,.5); background:rgba(10,132,255,.12); color:var(--blue-bright); font-size:13px; font-weight:600; cursor:pointer;}
+
+  .phone{position:relative; width:330px; height:680px; border-radius:56px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 60px rgba(10,132,255,.26), 0 30px 70px rgba(0,0,0,.7); overflow:hidden;}
+  .screen{position:absolute; inset:0; overflow:hidden; background:radial-gradient(140% 100% at 50% 34%, #0a1020 0%, #05070e 52%, #000 100%);}
+  /* richer ambient light: top-left light source + faint fill + corner vignette for depth */
+  .ambient{position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(440px 410px at 15% 9%, rgba(74,144,235,.20), transparent 58%),
+      radial-gradient(320px 320px at 90% 94%, rgba(40,96,180,.10), transparent 60%),
+      radial-gradient(125% 110% at 50% 46%, transparent 56%, rgba(0,0,0,.5) 100%);}
+  .island{position:absolute; top:12px; left:50%; transform:translateX(-50%); width:88px; height:26px; background:#000; border-radius:14px; z-index:9;}
+  canvas{position:absolute; inset:0; width:100%; height:100%; z-index:1;}
+
+  .topbar{position:absolute; top:58px; left:0; right:0; padding:0 24px; display:flex; align-items:center; gap:11px; z-index:6;}
+  .back{width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; font-size:15px; flex:0 0 auto;}
+  .track2{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track2 i{display:block; height:100%; width:0; background:var(--blue); border-radius:3px; transition:width 1s ease .1s;}
+  .in .track2 i{width:87%;}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* orb sits in the upper-centre */
+  .glow{position:absolute; left:50%; top:41%; width:280px; height:280px; transform:translate(-50%,-50%); border-radius:50%;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 64%); filter:blur(20px); z-index:0; opacity:0; transition:opacity 1.1s ease .2s, transform .3s ease;}
+  .in .glow{opacity:1;} .glow.flash{transform:translate(-50%,-50%) scale(1.14); background:radial-gradient(circle, rgba(90,200,250,.34), transparent 64%);}
+  .ripple{position:absolute; left:50%; top:41%; width:180px; height:180px; margin:-90px 0 0 -90px; border-radius:50%; border:1.5px solid; transform:scale(.6); opacity:.55; z-index:2; pointer-events:none; transition:transform .85s cubic-bezier(.2,.7,.3,1), opacity .85s ease-out;}
+  .ripple.go{transform:scale(1.7); opacity:0;}
+
+  .center{position:absolute; left:50%; top:41%; transform:translate(-50%,-50%); text-align:center; z-index:4; pointer-events:none;}
+  .num{font-size:72px; font-weight:800; letter-spacing:-2px; line-height:1; color:#fff; text-shadow:0 0 30px rgba(10,132,255,.5); font-variant-numeric:tabular-nums; transition:transform .25s ease;}
+  .num.bump{transform:scale(1.06);}
+  .label{font-size:12.5px; font-weight:700; letter-spacing:3.5px; color:rgba(255,255,255,.78); margin-top:11px; opacity:0; transition:opacity .6s ease 1s; min-height:1em;}
+  .in .label{opacity:1;}
+
+  /* light metric chips, a neat 2x2 block in the lower area */
+  .chip{position:absolute; width:138px; padding:10px 13px; border-radius:14px;
+    background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    z-index:3; opacity:0; transform:translateY(8px) scale(.96); transition:opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1);}
+  .in .chip{opacity:1; transform:none;}
+  .chip.c1{top:15%; left:5%;  transition-delay:.5s;}   /* above-left  */
+  .chip.c2{top:17%; right:6%; transition-delay:.7s;}   /* above-right */
+  .chip.c3{top:64%; left:7%;  transition-delay:.88s;}  /* below-left  */
+  .chip.c4{top:67%; right:5%; transition-delay:1.06s;} /* below-right */
+  .chip .row{display:flex; align-items:baseline; justify-content:space-between; gap:6px;}
+  .chip .name{font-size:9px; font-weight:800; letter-spacing:.7px; color:rgba(255,255,255,.6);}
+  .chip .v{font-size:17px; font-weight:800; letter-spacing:-.5px;}
+  .chip .v small{font-size:8.5px; font-weight:700; color:var(--fg3); margin-left:1px;}
+  .good .v{color:var(--blue-bright);} .bad .v{color:var(--amber);}
+  .bar{position:relative; height:4px; border-radius:3px; margin-top:9px;
+    background:linear-gradient(90deg, var(--amber) 0 42%, var(--grey) 42% 58%, var(--blue) 58% 100%);}
+  .dot{position:absolute; top:50%; width:8px; height:8px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); left:8%;
+    box-shadow:0 0 0 2px rgba(0,0,0,.45); transition:left 1s cubic-bezier(.22,1,.36,1) .5s;}
+  .in .dot{left:var(--p);}
+
+  /* payoff reuses the space the chips vacated */
+  .payoff{position:absolute; left:0; right:0; top:57%; text-align:center; z-index:5; opacity:0; transform:translateY(10px); transition:opacity .6s ease, transform .6s cubic-bezier(.34,1.56,.64,1);}
+  .done .payoff{opacity:1; transform:none;}
+  .payoff .big{font-size:26px; font-weight:800; letter-spacing:-.5px; color:var(--blue-bright);}
+  .payoff .sub{font-size:13px; color:rgba(255,255,255,.55); margin-top:7px;}
+
+  .footer{position:absolute; left:0; right:0; bottom:30px; padding:0 24px; z-index:7; text-align:center;}
+  .cta{width:100%; height:52px; border-radius:16px; background:var(--blue); color:#fff; font-size:16px; font-weight:700; border:none; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 22px rgba(10,132,255,.34); opacity:0; transition:opacity .5s ease;}
+  .done .cta{opacity:1; transition-delay:.3s;}
+  .cap{font-size:11px; color:var(--fg3); margin-top:11px; opacity:0; transition:opacity .5s ease;}
+  .done .cap{opacity:1; transition-delay:.45s;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:9;}
+
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Laso · Screen 14 · Vitality Age reveal, in the app</h1>
+    <p>Orb hero up top; the four signals are a neat block below that fly in and recalculate it; the freed space then shows the payoff.</p>
+    <button class="replay" onclick="play()">&#8635; Replay</button>
+  </div>
+
+  <div class="phone"><div class="island"></div>
+    <div class="screen" id="stage">
+      <div class="ambient"></div>
+      <canvas id="sphere"></canvas>
+      <div class="glow"></div>
+      <div class="topbar"><div class="back">&#8249;</div><div class="track2"><i></i></div><div class="step">14 / 16</div></div>
+
+      <div class="center">
+        <div class="num" id="num">0.0</div>
+        <div class="label" id="label">YOUR AGE</div>
+      </div>
+
+      <div class="chip c1 bad" data-delta="0.5">
+        <div class="row"><span class="name">STEPS</span><span class="v">+0.5<small>yr</small></span></div>
+        <div class="bar"><i class="dot" style="--p:57%"></i></div>
+      </div>
+      <div class="chip c2 good" data-delta="-2.1">
+        <div class="row"><span class="name">VO2 MAX</span><span class="v">-2.1<small>yr</small></span></div>
+        <div class="bar"><i class="dot" style="--p:58%"></i></div>
+      </div>
+      <div class="chip c3 good" data-delta="-1.8">
+        <div class="row"><span class="name">HR ZONE 1-3</span><span class="v">-1.8<small>yr</small></span></div>
+        <div class="bar"><i class="dot" style="--p:75%"></i></div>
+      </div>
+      <div class="chip c4 bad" data-delta="0.4">
+        <div class="row"><span class="name">SLEEP CONS.</span><span class="v">+0.4<small>yr</small></span></div>
+        <div class="bar"><i class="dot" style="--p:74%"></i></div>
+      </div>
+
+      <div class="payoff">
+        <div class="big">3 years younger</div>
+        <div class="sub">than your real age of 30</div>
+      </div>
+
+      <div class="footer">
+        <button class="cta">Continue</button>
+        <div class="cap">Your first 7 days are free.</div>
+      </div>
+      <div class="home-ind"></div>
+    </div>
+  </div>
+
+<script>
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas=document.getElementById('sphere'), ctx=canvas.getContext('2d');
+  var DPR=Math.min(window.devicePixelRatio||1,2);
+  var W,H,cx,cy,R,P=[],t0=null,raf=null,flare=0,rPulse=0;
+
+  function resize(){ var r=canvas.getBoundingClientRect(); W=r.width;H=r.height;cx=W/2;cy=H*0.41;R=Math.min(W,H)*0.255;
+    canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0); }
+  window.addEventListener('resize',resize);
+  function build(){ P=[]; for(var i=0;i<900;i++){ var u=Math.random(),v=Math.random(),th=2*Math.PI*u,ph=Math.acos(2*v-1),rr=0.80+0.20*Math.random();
+    P.push({x:Math.sin(ph)*Math.cos(th)*rr,y:Math.cos(ph)*rr,z:Math.sin(ph)*Math.sin(th)*rr,size:0.5+Math.random()*1.6,tw:Math.random()*6.28,twS:0.8+Math.random()*1.3,al:0.35+Math.random()*0.55,white:Math.random()<0.16}); } }
+  function frame(now){ if(t0===null)t0=now; var t=(now-t0)/1000, intro=reduce?1:Math.min(1,t/1.4);
+    flare*=0.93; rPulse*=0.90;
+    var idle=0.022*Math.sin(t*0.85), bx=1+0.030*Math.sin(t*0.55), by=1-0.030*Math.sin(t*0.55), Reff=R*(1+rPulse*0.07+idle);
+    var ay=t*0.22,tilt=-0.32,ct=Math.cos(tilt),stt=Math.sin(tilt),cyA=Math.cos(ay),syA=Math.sin(ay);
+    ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
+    for(var i=0;i<P.length;i++){ var p=P[i];
+      var x=p.x*cyA+p.z*syA,z=-p.x*syA+p.z*cyA,y=p.y, y2=y*ct-z*stt,z2=y*stt+z*ct;
+      var depth=(z2+1)/2, sx=cx+x*Reff*bx, sy=cy+y2*Reff*by, tw=0.55+0.45*Math.sin(t*p.twS+p.tw);
+      var size=p.size*(0.45+1.05*depth)*(1+rPulse*0.5), a=p.al*tw*(0.18+0.82*depth)*intro*(1+flare*1.3); if(a>1)a=1;
+      ctx.fillStyle=p.white?'rgba(180,222,255,'+(a*1.05)+')':'rgba(10,132,255,'+a+')';
+      ctx.beginPath(); ctx.arc(sx,sy,size,0,6.2832); ctx.fill(); }
+    ctx.globalCompositeOperation='source-over';
+    ctx.beginPath(); ctx.ellipse(cx,cy,Reff*1.02*bx,Reff*1.02*by,0,0,6.2832); ctx.strokeStyle='rgba(90,200,250,'+((0.18+0.4*flare)*intro)+')'; ctx.lineWidth=1+rPulse; ctx.stroke();
+    raf=requestAnimationFrame(frame); }
+
+  function easeOut(t){ return 1-Math.pow(1-t,3); }
+  function tween(set,from,to,dur){ var s=null; (function k(n){ if(s===null)s=n; var p=Math.min(1,(n-s)/dur); set(from+(to-from)*easeOut(p)); if(p<1)requestAnimationFrame(k); else set(to); })(performance.now()); }
+  var TL=[]; function at(ms,fn){ TL.push(setTimeout(fn,ms)); } function clearTL(){ TL.forEach(clearTimeout); TL=[]; }
+
+  var START=30, ORDER=['.c2','.c3','.c1','.c4'];  // non-grid order so the feed is not a clockwise sweep
+  var num=document.getElementById('num'), label=document.getElementById('label'), stage=document.getElementById('stage');
+  function setNum(x){ num.textContent=x.toFixed(1); }
+  function flyIn(el){ var cr=el.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+    // enter the orb at a random point with a slight rotation, so it never looks static or symmetric
+    var jx=(Math.random()*2-1)*R*0.32, jy=(Math.random()*2-1)*R*0.32, rot=(Math.random()*2-1)*16;
+    var dx=(sr.left+sr.width/2+jx)-(cr.left+cr.width/2), dy=(sr.top+sr.height*0.41+jy)-(cr.top+cr.height/2);
+    el.style.transition='transform .85s cubic-bezier(.5,0,.25,1), opacity .85s ease'; el.style.transform='translate('+dx+'px,'+dy+'px) scale(.1) rotate('+rot+'deg)'; el.style.opacity='0'; }
+  function react(good){ flare=0.9; rPulse=1; var g=stage.querySelector('.glow'); g.classList.add('flash'); num.classList.add('bump');
+    at(260,function(){ g.classList.remove('flash'); num.classList.remove('bump'); });
+    var rp=document.createElement('div'); rp.className='ripple'; rp.style.borderColor=good?'rgba(90,200,250,.8)':'rgba(255,159,10,.7)'; stage.appendChild(rp);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ rp.classList.add('go'); }); }); at(900,function(){ if(rp.parentNode)rp.parentNode.removeChild(rp); }); }
+
+  function play(){ clearTL(); if(raf)cancelAnimationFrame(raf); t0=null; flare=0; rPulse=0;
+    stage.classList.remove('in'); stage.classList.remove('done');
+    stage.querySelectorAll('.chip').forEach(function(c){ c.style.cssText=''; }); stage.querySelectorAll('.ripple').forEach(function(r){ r.remove(); });
+    label.textContent='YOUR AGE'; setNum(0); void stage.offsetWidth;
+    if(reduce){ stage.classList.add('in'); stage.classList.add('done'); label.textContent='VITALITY AGE'; setNum(START-3);
+      stage.querySelectorAll('.chip').forEach(function(c){ c.style.opacity='0'; }); build(); frame(performance.now()); return; }
+    stage.classList.add('in'); raf=requestAnimationFrame(frame);
+    at(300,function(){ tween(setNum,0,START,1100); });
+    var running=START, base=2400, times=[0,850,1780,2600];   // uneven timing reads less robotic
+    ORDER.forEach(function(sel,i){ at(base+times[i],function(){ var el=stage.querySelector(sel), d=parseFloat(el.getAttribute('data-delta')), from=running; running=Math.round((running+d)*10)/10;
+      if(i===0)label.textContent='CALCULATING'; tween(setNum,from,running,650); flyIn(el); react(d<0); }); });
+    var endAt=base+times[times.length-1]+950;
+    at(endAt,function(){ label.textContent='VITALITY AGE'; stage.classList.add('done'); });
+    at(endAt+3600, play);
+  }
+  window.addEventListener('load',function(){ resize(); build(); play(); });
+</script>
+</body>
+</html>

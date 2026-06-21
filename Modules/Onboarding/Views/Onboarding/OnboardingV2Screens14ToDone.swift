@@ -381,8 +381,10 @@ struct OnbV2Screen15SignIn: View {
                     UserProfileStore.shared.saveDisplayName(given)
                 }
                 signedInOk.toggle()   // outcome haptic: success only, never on request
+                AppAnalytics.shared.trackSignInCompleted(method: "apple", success: true)
                 onSignedIn()
             } catch {
+                AppAnalytics.shared.trackSignInCompleted(method: "apple", success: false)
                 self.errorMessage = error.localizedDescription
             }
         }
@@ -487,7 +489,11 @@ struct OnbV2Screen16Paywall: View {
         let rows = watchRows
         return OnbV2ScreenContainer(ambient: .paywallBlue, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: {
+                    AppAnalytics.shared.trackPaywallDismissed(
+                        timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart)), source: "onboarding")
+                    onBack()
+                })
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -555,6 +561,8 @@ struct OnbV2Screen16Paywall: View {
                                     isSelected: selectedIsAnnual
                                 ) {
                                     selectedIsAnnual = true
+                                    AppAnalytics.shared.trackPaywallPlanSelected(
+                                        productID: yearly?.id ?? "annual", period: "annual", price: annualPriceText)
                                 }
 
                                 OnbV2PlanCard(
@@ -565,6 +573,8 @@ struct OnbV2Screen16Paywall: View {
                                     isSelected: !selectedIsAnnual
                                 ) {
                                     selectedIsAnnual = false
+                                    AppAnalytics.shared.trackPaywallPlanSelected(
+                                        productID: monthly?.id ?? "monthly", period: "monthly", price: monthlyPriceText)
                                 }
                             }
                             .opacity(plansAppeared ? 1 : 0)
@@ -609,6 +619,8 @@ struct OnbV2Screen16Paywall: View {
                     ) {
                         guard let product = selectedIsAnnual ? yearly : monthly else { return }
                         purchaseTapped.toggle()   // .impact(.medium): purchase intent
+                        AppAnalytics.shared.trackPaywallCTATapped(
+                            productID: product.id, price: selectedIsAnnual ? annualPriceText : monthlyPriceText)
                         Task { @MainActor in
                             await SubscriptionManager.shared.purchase(product)
                             if FeatureGate.hasFullAccess {
@@ -658,6 +670,10 @@ struct OnbV2Screen16Paywall: View {
                 .padding(.bottom, 20)
             }
         }
+        .onAppear {
+            paywallStart = Date()
+            AppAnalytics.shared.trackPaywallViewed(source: "onboarding")
+        }
         .task {
             if SubscriptionManager.shared.products.isEmpty {
                 await SubscriptionManager.shared.loadProducts()
@@ -667,6 +683,7 @@ struct OnbV2Screen16Paywall: View {
     }
 
     @State private var purchaseTapped = false
+    @State private var paywallStart = Date()
 
     /// True once the cascade has reached row `idx` (0-based). The header reveals
     /// at the same first beat so nothing pops before the list starts.

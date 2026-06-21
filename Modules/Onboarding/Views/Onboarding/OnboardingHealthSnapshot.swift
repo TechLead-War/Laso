@@ -38,6 +38,12 @@ final class OnboardingHealthSnapshot {
     private(set) var hrvWeeksCovered: Int?
     private(set) var hrvWeekdayMeans: [Double?] = Array(repeating: nil, count: 7)
 
+    // Activity / fitness averages for the Screen 14 Vitality Age estimate.
+    private(set) var stepsDailyAvg: Double?
+    private(set) var vo2Max: Double?
+    private(set) var exerciseDailyAvg: Double?
+    private(set) var walkingSpeedKmh: Double?
+
     // Raw daily samples for the prediction verdict engine. One dated value per
     // day so the engine can run its weekday group-difference analysis. The
     // aggregate fields above cannot rebuild these (they drop the dates), so the
@@ -89,6 +95,11 @@ final class OnboardingHealthSnapshot {
         hrvWeeksCovered = 12
         hrvWeekdayMeans = [64, 66, 63, 67, 61, 59, 52]  // Mon..Sun, Sunday lowest
 
+        stepsDailyAvg = 9200
+        vo2Max = 48
+        exerciseDailyAvg = 40
+        walkingSpeedKmh = 5.3
+
         // 28 days of dated daily samples so the screenshot harness lands on the
         // rich segment and the verdict screen renders with a real confirmed
         // pattern (Sunday sleep dip) rather than its loading state.
@@ -120,6 +131,10 @@ final class OnboardingHealthSnapshot {
         async let rhrSamples = dailyRestingHRSamples()
         async let sleepSamples = dailySleepDurationSamples()
         async let hrvSamples = dailyHRVSamples()
+        async let stepsV = quantityStat(HKQuantityType(.stepCount), unit: .count(), days: 30, options: .cumulativeSum)
+        async let vo2V = quantityStat(HKQuantityType(.vo2Max), unit: HKUnit(from: "ml/kg*min"), days: 90, options: .discreteAverage)
+        async let exV = quantityStat(HKQuantityType(.appleExerciseTime), unit: .minute(), days: 30, options: .cumulativeSum)
+        async let wsV = quantityStat(HKQuantityType(.walkingSpeed), unit: HKUnit(from: "km/hr"), days: 30, options: .discreteAverage)
 
         let h = await hrAge
         let s = await slpAge
@@ -155,7 +170,27 @@ final class OnboardingHealthSnapshot {
         sleepDurationDailySamples = sleepDaily
         hrvDailySamples = hrvDaily
 
+        stepsDailyAvg = (await stepsV).map { $0 / 30.0 }
+        vo2Max = await vo2V
+        exerciseDailyAvg = (await exV).map { $0 / 30.0 }
+        walkingSpeedKmh = await wsV
+
         isLoaded = true
+    }
+
+    /// One HKStatisticsQuery over the last `days` window. `cumulativeSum` for
+    /// totals (steps, exercise minutes), `discreteAverage` for rates (VO2, speed).
+    private func quantityStat(_ type: HKQuantityType, unit: HKUnit, days: Int, options: HKStatisticsOptions) async -> Double? {
+        let end = Date()
+        guard let start = Date.cal.date(byAdding: .day, value: -days, to: end) else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        return await withCheckedContinuation { cont in
+            let q = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: options) { _, stats, _ in
+                let qty = options.contains(.cumulativeSum) ? stats?.sumQuantity() : stats?.averageQuantity()
+                cont.resume(returning: qty?.doubleValue(for: unit))
+            }
+            store.execute(q)
+        }
     }
 
     // MARK: - Earliest sample

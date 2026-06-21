@@ -277,6 +277,7 @@ struct OnbV2TopBar: View {
     let total: Int
     let onBack: (() -> Void)?
     var hideProgress: Bool = false
+    var tint: Color = OnbV2.blue
 
     var body: some View {
         HStack(spacing: 12) {
@@ -300,7 +301,7 @@ struct OnbV2TopBar: View {
                         Capsule().fill(Color.white.opacity(0.08))
                         Capsule()
                             .fill(LinearGradient(
-                                colors: [OnbV2.blue, OnbV2.blueLight],
+                                colors: [tint.opacity(0.75), tint],
                                 startPoint: .leading, endPoint: .trailing
                             ))
                             .frame(width: max(0, geo.size.width * progress))
@@ -329,12 +330,14 @@ struct OnbV2TopBar: View {
 struct OnbV2PrimaryCTA: View {
     let title: String
     let isEnabled: Bool
+    let tint: Color
     let action: () -> Void
     @State private var pressed = false
 
-    init(_ title: String, isEnabled: Bool = true, action: @escaping () -> Void) {
+    init(_ title: String, isEnabled: Bool = true, tint: Color = OnbV2.blue, action: @escaping () -> Void) {
         self.title = title
         self.isEnabled = isEnabled
+        self.tint = tint
         self.action = action
     }
 
@@ -347,7 +350,7 @@ struct OnbV2PrimaryCTA: View {
                 .frame(height: 56)
                 .background(
                     RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
-                        .fill(isEnabled ? OnbV2.blue : Color.white.opacity(0.08))
+                        .fill(isEnabled ? tint : Color.white.opacity(0.08))
                 )
                 .scaleEffect(pressed ? 0.985 : 1)
                 .opacity(pressed ? 0.9 : 1)

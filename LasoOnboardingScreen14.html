@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso · Screen 14 · Pre-paywall · From a 7-day list to one projected number</title>
+<style>
+  :root{
+    --bg:#000; --blue:#0A84FF; --blueLight:#5AC8FA;
+    --fg:#fff; --fg2:rgba(255,255,255,.72); --fg3:rgba(255,255,255,.48);
+    --card:#15161a; --green:#34C759; --amber:#FF9F0A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;}
+  body{background:#0c0c10; color:#fff; min-height:100vh; padding:44px 24px 80px; -webkit-font-smoothing:antialiased;}
+  .page-head{max-width:1200px; margin:0 auto 38px; text-align:center;}
+  .page-head h1{font-size:23px; font-weight:700; letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--fg3); margin-top:8px; line-height:1.5;}
+
+  .row{display:flex; gap:48px; justify-content:center; align-items:flex-start; flex-wrap:wrap; max-width:1240px; margin:0 auto;}
+  .col{display:flex; flex-direction:column; align-items:center; width:300px;}
+  .tag{font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:14px; color:var(--fg3); text-align:center;}
+  .tag.final{color:var(--blue);}
+
+  .phone{position:relative; width:300px; height:620px; border-radius:54px; background:#000;
+    box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #2c2d31, 0 26px 60px rgba(0,0,0,.6); overflow:hidden;}
+  .phone.is-final{box-shadow:0 0 0 11px #1b1c1f, 0 0 0 13px #34507a, 0 0 56px rgba(10,132,255,.32), 0 26px 70px rgba(0,0,0,.7);}
+  .screen{position:absolute; inset:0; background:var(--bg); overflow:hidden;}
+  .glow-a{position:absolute; width:360px; height:360px; left:-150px; top:-110px;
+    background:radial-gradient(circle, rgba(10,132,255,.16), transparent 62%); filter:blur(8px);}
+  .glow-b{position:absolute; width:280px; height:280px; right:-120px; bottom:40px;
+    background:radial-gradient(circle, rgba(90,200,250,.08), transparent 62%); filter:blur(8px);}
+  .island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:84px; height:24px; background:#000; border-radius:14px; z-index:6;}
+  .status{position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:center; justify-content:space-between; padding:18px 26px 0; font-size:13px; font-weight:600; z-index:5;}
+
+  .content{position:absolute; inset:0; padding:64px 26px 28px; display:flex; flex-direction:column; align-items:center; z-index:4;}
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:30px; width:100%;}
+  .back{width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; flex:0 0 auto;}
+  .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .track > i{display:block; height:100%; width:87%; border-radius:3px; background:var(--blue);}
+  .step{font-size:12px; font-weight:600; color:var(--fg3);}
+
+  /* ---- Option A: the current 7-day list ---- */
+  .kicker{align-self:flex-start; font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--blue); margin-bottom:8px;}
+  .title{align-self:flex-start; font-size:24px; font-weight:800; letter-spacing:-.5px; line-height:1.12;}
+  .lede{align-self:flex-start; font-size:13.5px; color:var(--fg2); margin-top:8px; line-height:1.45;}
+  .tl{align-self:flex-start; margin-top:24px; position:relative; padding-left:26px;}
+  .tl::before{content:""; position:absolute; left:8px; top:6px; bottom:10px; width:1.5px; background:rgba(10,132,255,.4);}
+  .ev{position:relative; margin-bottom:18px;}
+  .ev::before{content:""; position:absolute; left:-26px; top:2px; width:15px; height:15px; border-radius:50%; border:2px solid var(--blue); background:#000;}
+  .ev.first::before{background:var(--blue);}
+  .ev .d{font-size:10.5px; font-weight:700; letter-spacing:1px; color:var(--blue); text-transform:uppercase;}
+  .ev .t{font-size:16px; font-weight:700; letter-spacing:-.2px; margin-top:2px;}
+  .ev .b{font-size:12.5px; color:var(--fg3); margin-top:2px; line-height:1.35;}
+
+  /* ---- Option B / C: the hero number ---- */
+  .stage{position:relative; width:240px; height:210px; margin-top:30px; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .ring{position:absolute; left:50%; top:84px; width:200px; height:200px; margin:-100px 0 0 -100px;
+    border-radius:50%; border:1.5px solid rgba(10,132,255,.40); animation:breathe 2.8s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{transform:scale(1); opacity:.4;} 50%{transform:scale(1.05); opacity:.68;}}
+  .bignum{position:relative; z-index:2; font-size:104px; line-height:.95; font-weight:800; letter-spacing:-4px; color:var(--fg); text-shadow:0 0 36px rgba(10,132,255,.5);}
+  .ageword{position:relative; z-index:2; font-size:12.5px; font-weight:700; letter-spacing:2.4px; text-transform:uppercase; color:var(--fg3); margin-top:8px;}
+
+  /* the projection: today -> 90 days, the Noom/Fitbod "taste of progress" beat */
+  .proj{width:100%; margin-top:26px; display:flex; flex-direction:column; align-items:center;}
+  .proj svg{width:230px; height:84px; overflow:visible;}
+  .proj .lab{display:flex; justify-content:space-between; width:230px; margin-top:6px; font-size:11px; font-weight:600;}
+  .proj .lab .now{color:var(--fg2);} .proj .lab .fut{color:var(--green);}
+  .proj .lab b{font-size:13px;}
+
+  .line{font-size:17px; line-height:1.35; font-weight:700; letter-spacing:-.2px; color:var(--fg); text-align:center; margin-top:24px; padding:0 6px;}
+  .line.dim{color:var(--fg2); font-weight:600; font-size:14.5px;}
+
+  .spacer{flex:1;}
+  .cta{width:100%; height:54px; border-radius:16px; background:var(--blue); color:#fff; font-size:17px; font-weight:700; border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 22px rgba(10,132,255,.32);}
+  .cap{text-align:center; font-size:11.5px; color:var(--fg3); margin-top:13px;}
+  .home-ind{position:absolute; bottom:9px; left:50%; transform:translateX(-50%); width:120px; height:5px; border-radius:3px; background:rgba(255,255,255,.5); z-index:5;}
+
+  .meta{width:300px; margin-top:14px;}
+  .why{background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:14px 16px;}
+  .why li{list-style:none; font-size:11.5px; line-height:1.5; color:var(--fg2); margin-bottom:9px;}
+  .why li:last-child{margin-bottom:0;}
+  .why b{color:#fff;} .why s{color:var(--blue); text-decoration:none;}
+  .why .warn{color:var(--amber);}
+
+  @media (prefers-reduced-motion: reduce){ .ring{animation:none; opacity:.5;} }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Laso · Screen 14 · Pre-paywall · From a 7-day list to one projected number</h1>
+    <p>This is the screen right before the paywall. Today it is a five-item "first 7 days" list. The research says the strongest
+       pre-paywall move is one personalized result, not a list (Noom's weight projection, Fitbod's "taste of progress just before the
+       paywall", Cal AI). Option B turns the screen into the user's own Vitality Age plus where it heads. Note: Vitality Age is already
+       the hero of the sign-in screen (Screen 16), so here it is framed as the projection ("where it goes"), keeping the two screens
+       distinct instead of showing the same static number twice.</p>
+  </div>
+
+  <div class="row">
+
+    <!-- A: current 7-day list -->
+    <div class="col">
+      <div class="tag">Option A · Current · The 7 Day List</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">14 / 16</div></div>
+            <div class="kicker">Your first week</div>
+            <div class="title">Here's what<br/>comes next.</div>
+            <div class="lede">A gentle plan for your first 7 days with Laso.</div>
+            <div class="tl">
+              <div class="ev first"><div class="d">Day 1</div><div class="t">Your baseline</div><div class="b">We set what 'normal' looks like for you.</div></div>
+              <div class="ev"><div class="d">Day 2</div><div class="t">Your sleep window</div><div class="b">When your body actually wants to rest.</div></div>
+              <div class="ev"><div class="d">Day 3</div><div class="t">Stress signals</div><div class="b">The ones your body has been hiding.</div></div>
+              <div class="ev"><div class="d">Day 5</div><div class="t">Recovery rhythm</div><div class="b">How long it really takes to bounce back.</div></div>
+              <div class="ev"><div class="d">Day 7</div><div class="t">Your first weekly read</div><div class="b">What changed. What it means.</div></div>
+            </div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Five future promises, no payoff yet.</b> Every line is a thing that will happen later. Nothing on screen is the user's right now, so it informs but does not pull. <s>projection beats lists pre-paywall, RevenueCat / Airbridge</s></li>
+        <li><b>Looks like a twin of the paywall.</b> A vertical day-by-day list sits two screens before the paywall's Day 1 / Day 6 / Day 8 billing timeline. Two near-identical timelines back to back is a redundancy risk. <s class="warn">no source tested two stacked timelines; open risk, not proven</s></li>
+      </div></div>
+    </div>
+
+    <!-- B: the projected number (recommended) -->
+    <div class="col">
+      <div class="tag final">&#9733; Option B · Your Number, Projected · Recommended</div>
+      <div class="phone is-final">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">14 / 16</div></div>
+            <div class="kicker" style="align-self:center;">Your Vitality Age</div>
+            <div class="stage">
+              <div class="ring"></div>
+              <div class="bignum">42</div>
+              <div class="ageword">Years</div>
+            </div>
+            <div class="proj">
+              <svg viewBox="0 0 230 84">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stop-color="#0A84FF"/><stop offset="1" stop-color="#34C759"/></linearGradient></defs>
+                <path d="M8,16 C70,18 120,52 222,70" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="8" cy="16" r="5.5" fill="#0A84FF"/>
+                <circle cx="222" cy="70" r="6" fill="#000" stroke="#34C759" stroke-width="3"/>
+              </svg>
+              <div class="lab"><span class="now">Today <b>42</b></span><span class="fut">In 90 days <b>39</b></span></div>
+            </div>
+            <div class="line">Your body runs at 42. Your first week is where we start bringing it down.</div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+            <div class="cap">Your first 7 days are free.</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>One personal result, not a list.</b> The screen is the user's own number (42) with a clear direction of travel. This is the exact pattern the evidence backs hardest. <s>Noom weight projection; Fitbod "taste of progress just before the paywall"; Cal AI result screen</s></li>
+        <li><b>Projection is the hook, not just the number.</b> "42 today, 39 in 90 days" opens a gap the subscription closes. A static number informs; a projected one creates pull. <s>open loop / taste of progress, RevenueCat web-to-app teardown</s></li>
+        <li><b>Value before price, kept early.</b> The strongest converting moment sits right before billing; the paywall then leads with value, not price. <s>value-first ordering: 72% and 31% lifts, RevenueCat case studies; no case won price-first</s></li>
+        <li><b>Solves the twin-timeline problem.</b> Replacing the day list removes the second vertical timeline, so the billing timeline two screens later reads as new, not repeat.</li>
+        <li><b class="warn">Honest dependencies.</b> Needs the scan to have enough data to compute a real number and a credible 90-day projection; when it does not, fall back to the goal-based "we will find it" copy. The 42 to 39 figures are illustrative mock data, not a clinical claim, and the actual lift must be A/B tested on Laso's own funnel. <s class="warn">hero-metric vs list is A/B-testable, not a universal law</s></li>
+      </div></div>
+    </div>
+
+    <!-- C: just the number -->
+    <div class="col">
+      <div class="tag">Option C · Just The Number</div>
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="glow-a"></div><div class="glow-b"></div>
+          <div class="status"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9889;</span></div>
+          <div class="content">
+            <div class="topbar"><div class="back">&#8249;</div><div class="track"><i></i></div><div class="step">14 / 16</div></div>
+            <div class="spacer" style="max-height:30px;"></div>
+            <div class="kicker" style="align-self:center;">Your Vitality Age</div>
+            <div class="stage" style="margin-top:14px;">
+              <div class="ring"></div>
+              <div class="bignum">42</div>
+              <div class="ageword">Years</div>
+            </div>
+            <div class="line">This is how old your body is running today.</div>
+            <div class="spacer"></div>
+            <button class="cta">Continue</button>
+            <div class="cap">Your first 7 days are free.</div>
+          </div>
+          <div class="home-ind"></div>
+        </div>
+      </div>
+      <div class="meta"><div class="why">
+        <li><b>Closest to "only the number."</b> Maximum focus, near-zero text. Strong as a punch, but with no direction of travel it informs more than it pulls. <s>single concise value prop can beat a 5-bullet list, theaudiencers teardown</s></li>
+        <li><b>Trade-off.</b> Cleaner than B, but it overlaps more with Screen 16's "claim your number." If you pick C, make Screen 16 do the claim and keep the projection for inside the app. Pick B if you want the screen to actively pull toward the paywall.</li>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>

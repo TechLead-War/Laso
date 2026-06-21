@@ -346,6 +346,7 @@ struct OnbV2Screen11Heart: View {
     @State private var traceProgress: CGFloat = 0
     @State private var phase: RevealPhase = .hidden
     @State private var numberLanded = false
+    @State private var revealTracked = false
     @State private var tracePulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -480,6 +481,12 @@ struct OnbV2Screen11Heart: View {
             if !reduceMotion {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) { tracePulse = true }
             }
+        }
+        .onAppear {
+            guard !revealTracked else { return }
+            revealTracked = true
+            AppAnalytics.shared.trackOnboardingHeartRevealed(
+                restingHR: snapshot.restingHR, hasData: hasData, monthsCovered: snapshot.restingHRMonthsCovered)
         }
     }
 
@@ -1517,7 +1524,10 @@ struct OnbV2ScreenCliffhanger: View {
                         }
                     }
 
-                    OnbV2GhostCTA(Copy.OnboardingV2.cliffhangerSkip, action: onContinue)
+                    OnbV2GhostCTA(Copy.OnboardingV2.cliffhangerSkip, action: {
+                        AppAnalytics.shared.trackOnboardingNotificationSkipped(source: "cliffhanger")
+                        onContinue()
+                    })
                 }
                 .padding(.horizontal, OnbV2.bodyPadH)
                 .padding(.bottom, 20)

@@ -124,6 +124,7 @@
 		411DFA18321197B6022DC7D0 /* AmplitudeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED6CB88679CDBB3A71AC1C0 /* AmplitudeProvider.swift */; };
 		416F291DBFB7F23E7333B156 /* AnalysisWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */; };
 		4197F7A0127D9F6094E0B599 /* RepermissionScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC90DE6811B52871702E0082 /* RepermissionScheduler.swift */; };
+		41BEAF87E59F4FA27AB7CF6B /* OnbV2VitalityReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */; };
 		421D98FD3FAA63162014FC05 /* BaselineCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C23C83BB01D6AA8C14D39 /* BaselineCalculator.swift */; };
 		4480046D5704641EE0A79090 /* HomePrimaryActionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF836429FD3F6EA68F6E15 /* HomePrimaryActionCard.swift */; };
 		44DA1A66B0D7D377CD111B03 /* HealthStateTimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5845E7295C458830CD703F4F /* HealthStateTimelineViewModel.swift */; };
@@ -711,6 +712,7 @@
 		7645C33E2BC23C63E1F1BF07 /* ConnectedDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDevicesView.swift; sourceTree = "<group>"; };
 		77717BE0C826ED4BCC307EB5 /* InsightAnalyzerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightAnalyzerProtocol.swift; sourceTree = "<group>"; };
 		7819843EFAB7EAF1A1CE4C25 /* PatternCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternCard.swift; sourceTree = "<group>"; };
+		782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnbV2VitalityReveal.swift; sourceTree = "<group>"; };
 		78D0A7A8A5CE97B2C4468D86 /* RulesConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesConfiguration.swift; sourceTree = "<group>"; };
 		7B11F3A73FDF345E243B48CC /* VitalityTrendSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityTrendSection.swift; sourceTree = "<group>"; };
 		7C331C42101235409295B307 /* NLEmbeddingAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLEmbeddingAnalyzer.swift; sourceTree = "<group>"; };
@@ -1446,6 +1448,7 @@
 				5529175400AEF0828DDE520E /* OnboardingV2Screens8to13.swift */,
 				122379A3ADDC67E84B6C60B3 /* OnboardingV2Screens14ToDone.swift */,
 				AC23934CCED0695BED3ACAD7 /* OnboardingV2View.swift */,
+				782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */,
 				3604B31F36F6A68F693CC8F3 /* ProfileCaptureView.swift */,
 				1DBFCF182494EC1EC5F29C4B /* ReferralCodeStep.swift */,
 			);
@@ -2673,6 +2676,7 @@
 				537053E2A8C4C0274E965B31 /* NotificationRouter.swift in Sources */,
 				B84951F0C7842811DFC930EA /* NotificationsSettingsView.swift in Sources */,
 				9C103FBF9A80F879D1D6056C /* NutritionCorrelationAnalyzer.swift in Sources */,
+				41BEAF87E59F4FA27AB7CF6B /* OnbV2VitalityReveal.swift in Sources */,
 				ECE35010F12F68B525CBA2EB /* OnboardingAbandonmentScheduler.swift in Sources */,
 				09F2933AF2645FE7C26125EF /* OnboardingConnectHealthStep.swift in Sources */,
 				D508157E53DD1D6439326467 /* OnboardingFocusStep.swift in Sources */,

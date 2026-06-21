@@ -552,6 +552,75 @@ final class AppAnalytics {
         ])
     }
 
+    /// Fired when the onboarding Vitality Age reveal (screen 14) settles on its
+    /// result, so the computed outcome — not just the screen transition — is in
+    /// Amplitude (how many users land younger vs older, the spread, and how often
+    /// we had no health data to compute from).
+    func trackOnboardingVitalityRevealed(vitalityAge: Int, realAge: Int, metricCount: Int, hasHealthData: Bool) {
+        let diff = realAge - vitalityAge   // + younger, - older
+        let band: String
+        if diff >= 0 { band = "younger" }
+        else if diff >= -3 { band = "slightly_older" }
+        else { band = "much_older" }
+        logEvent("onboarding_vitality_revealed", parameters: [
+            "vitality_age": vitalityAge,
+            "real_age": realAge,
+            "years_diff": diff,
+            "verdict": diff > 0 ? "younger" : (diff < 0 ? "older" : "even"),
+            "band": band,
+            "metric_count": metricCount,
+            "has_health_data": hasHealthData
+        ])
+    }
+
+    /// First touch of the onboarding funnel, so abandonment on the very first
+    /// screen (before any step is completed) is visible.
+    func trackOnboardingStarted() {
+        logEvent("onboarding_started", parameters: [:])
+    }
+
+    /// Profile screen: the age + sex the user entered (screen 3). Sent on the
+    /// screen so mid-funnel drop-offs are cohortable, not only at completion.
+    func trackOnboardingProfileSet(age: Int, sex: String) {
+        logEvent("onboarding_profile_set", parameters: ["age": age, "sex": sex])
+    }
+
+    /// Goal screen (4): which goals the user picked and how many. Order-preserved.
+    func trackOnboardingGoalSelected(goals: [String], count: Int) {
+        logEvent("onboarding_goal_selected", parameters: ["goals": goals, "count": count])
+    }
+
+    /// Symptom screen (5): which symptoms the user picked and how many.
+    func trackOnboardingSymptomsSelected(symptoms: [String], count: Int) {
+        logEvent("onboarding_symptoms_selected", parameters: ["symptoms": symptoms, "count": count])
+    }
+
+    /// Activity screen (6): the activity level the user chose.
+    func trackOnboardingActivitySelected(level: String) {
+        logEvent("onboarding_activity_selected", parameters: ["level": level])
+    }
+
+    /// Apple sign-in outcome on the onboarding sign-in screen (15). Success is the
+    /// key account-creation conversion; failure includes user cancellation.
+    func trackSignInCompleted(method: String, success: Bool) {
+        logEvent("sign_in_completed", parameters: ["method": method, "success": success])
+    }
+
+    /// Heart screen (11): the resting-HR reveal outcome, so empty-state vs
+    /// has-data drop-off is measurable like the vitality reveal.
+    func trackOnboardingHeartRevealed(restingHR: Int?, hasData: Bool, monthsCovered: Int?) {
+        var params: [String: Any] = ["has_data": hasData]
+        if let restingHR { params["resting_hr"] = restingHR }
+        if let monthsCovered { params["months_covered"] = monthsCovered }
+        logEvent("onboarding_heart_revealed", parameters: params)
+    }
+
+    /// Cliffhanger screen: user skipped the notification opt-in (distinct from
+    /// the generic step event, which can't tell skip from opt-in).
+    func trackOnboardingNotificationSkipped(source: String) {
+        logEvent("onboarding_notification_skipped", parameters: ["source": source])
+    }
+
     /// Call when onboarding is fully completed. The caller MUST run
     /// `markOnboardingCompleted()` BEFORE this so the onboarding_completed user
     /// property is already true and not self-contradictory. health_focus is kept

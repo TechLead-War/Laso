@@ -660,6 +660,72 @@ final class VitalityScorer {
         weights.first { $0.metric == key }?.weight ?? 0
     }
 
+    // MARK: - Onboarding estimate (store-free)
+
+    /// A single real metric in the onboarding estimate.
+    struct OnboardingMetric: Identifiable {
+        let id = UUID()
+        let name: String
+        let valueLabel: String
+        /// 0 = worse than peers, 1 = better. Drives the marker position.
+        let goodness: Double
+        /// Years this metric adds (+) or removes (-) vs the user's real age.
+        let delta: Int
+    }
+
+    /// Store-free Vitality Age estimate for the onboarding reveal, where only
+    /// scalar averages exist (resting HR, HRV). Reuses the same population norms
+    /// and weights as the full engine, renormalised over the metrics provided.
+    /// Returns the chronological age and no metrics when nothing is available.
+    static func onboardingEstimate(
+        chronologicalAge: Int,
+        restingHR: Double?,
+        hrvMs: Double?,
+        steps: Double?,
+        vo2Max: Double?,
+        exerciseMinutes: Double?,
+        walkingSpeedKmh: Double?
+    ) -> (vitalityAge: Int, metrics: [OnboardingMetric]) {
+        var weightedSum = 0.0
+        var totalWeight = 0.0
+        var out: [OnboardingMetric] = []
+
+        func add(_ value: Double?, name: String, label: (Double) -> String,
+                 table: [(age: Int, value: Double)], higherIsBetter: Bool,
+                 key: VitalityMetricKey, goodness: (Double) -> Double) {
+            guard let v = value, v > 0 else { return }
+            let age = VitalityNorms.metricAge(value: v, table: table, higherIsBetter: higherIsBetter)
+            let w = weightFor(key)
+            weightedSum += Double(age) * w
+            totalWeight += w
+            out.append(OnboardingMetric(name: name, valueLabel: label(v),
+                                        goodness: min(1, max(0, goodness(v))),
+                                        delta: age - chronologicalAge))
+        }
+
+        add(restingHR, name: "RESTING HR", label: { "\(Int($0.rounded())) bpm" },
+            table: VitalityNorms.restingHeartRate, higherIsBetter: false,
+            key: .restingHeartRate, goodness: { (100 - $0) / 60 })
+        add(hrvMs, name: "HRV", label: { "\(Int($0.rounded())) ms" },
+            table: VitalityNorms.hrv, higherIsBetter: true,
+            key: .hrv, goodness: { ($0 - 10) / 90 })
+        add(steps, name: "STEPS", label: { "\(Int($0.rounded())) steps" },
+            table: VitalityNorms.steps, higherIsBetter: true,
+            key: .steps, goodness: { $0 / 12000 })
+        add(vo2Max, name: "VO2 MAX", label: { "\(Int($0.rounded())) mL" },
+            table: VitalityNorms.vo2Max, higherIsBetter: true,
+            key: .vo2Max, goodness: { ($0 - 20) / 40 })
+        add(exerciseMinutes, name: "EXERCISE", label: { "\(Int($0.rounded())) min" },
+            table: VitalityNorms.exerciseMinutes, higherIsBetter: true,
+            key: .exerciseMinutes, goodness: { $0 / 45 })
+        add(walkingSpeedKmh, name: "WALK SPEED", label: { String(format: "%.1f km/h", $0) },
+            table: VitalityNorms.walkingSpeed, higherIsBetter: true,
+            key: .walkingSpeed, goodness: { ($0 - 3) / 3 })
+
+        guard totalWeight > 0 else { return (chronologicalAge, []) }
+        return (Int((weightedSum / totalWeight).rounded()), out)
+    }
+
     /// Interpolate the population median for a given age from a reference table
     private func interpolateMedian(age: Int, table: [(age: Int, value: Double)]) -> Double {
         guard table.count >= 2, let firstEntry = table.first, let lastEntry = table.last else { return 0 }

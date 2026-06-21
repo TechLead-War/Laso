@@ -23,6 +23,7 @@ struct OnboardingV2View: View {
     @State private var screen: Screen = .welcome
     @State private var isRequestingHealth = false
     @State private var calibrationStarted = false
+    @State private var startTracked = false
     @State private var healthSnapshot = OnboardingHealthSnapshot()
 
     // The pre-registered claim, built from goal + symptom on the prediction
@@ -120,7 +121,15 @@ struct OnboardingV2View: View {
             // paywall while a fix ships. Only honoured if we are still on the
             // welcome screen so a user mid-flow does not get teleported.
             if screen == .welcome, RemoteConfigManager.shared.onboardingForceSkipToPaywall {
+                // record the welcome exit so the kill-switch jump still shows in the funnel
+                AppAnalytics.shared.trackOnboardingStepCompleted(
+                    stepKey: Screen.welcome.rawValue, stepIndex: Self.screenOrdinal(.welcome),
+                    stepCount: Self.stepCount, durationSec: 0, action: .completed)
                 screen = .paywall
+            }
+            if !startTracked {
+                startTracked = true
+                AppAnalytics.shared.trackOnboardingStarted()
             }
             Task { @MainActor in
                 if subscriptionManager.products.isEmpty {
@@ -142,15 +151,25 @@ struct OnboardingV2View: View {
         case .about:
             OnbV2Screen3About(profile: profile,
                               onBack: { advance(to: .promise) },
-                              onContinue: { advance(to: .goal) })
+                              onContinue: {
+                                  AppAnalytics.shared.trackOnboardingProfileSet(
+                                      age: profile.age, sex: profile.sex?.rawValue ?? "unspecified")
+                                  advance(to: .goal)
+                              })
         case .goal:
             OnbV2Screen4Goal(profile: profile,
                              onBack: { advance(to: .about) },
-                             onContinue: { advance(to: .symptoms) })
+                             onContinue: {
+                                 AppAnalytics.shared.trackOnboardingGoalSelected(
+                                     goals: profile.goals.map(\.rawValue), count: profile.goals.count)
+                                 advance(to: .symptoms)
+                             })
         case .symptoms:
             OnbV2Screen5Symptoms(profile: profile,
                                  onBack: { advance(to: .goal) },
                                  onContinue: {
+                                     AppAnalytics.shared.trackOnboardingSymptomsSelected(
+                                         symptoms: profile.symptoms.map(\.rawValue), count: profile.symptoms.count)
                                      // The claim is still built here (silently). The
                                      // dedicated claim screen is gone, but the
                                      // post-scan verdict / cliffhanger still pay it
@@ -161,7 +180,11 @@ struct OnboardingV2View: View {
         case .activity:
             OnbV2Screen6Activity(profile: profile,
                                  onBack: { advance(to: .symptoms) },
-                                 onContinue: { advance(to: .wearable) })
+                                 onContinue: {
+                                     AppAnalytics.shared.trackOnboardingActivitySelected(
+                                         level: profile.activity?.rawValue ?? "unspecified")
+                                     advance(to: .wearable)
+                                 })
         case .wearable:
             OnbV2Screen7Wearable(profile: profile,
                                  onBack: { advance(to: .activity) },
@@ -213,10 +236,10 @@ struct OnboardingV2View: View {
                              onBack: { advance(to: .sleep) },
                              onContinue: { advance(to: .preview) })
         case .preview:
-            OnbV2Screen14Preview(profile: profile,
-                                 snapshot: healthSnapshot,
-                                 onBack: { advance(to: .hrv) },
-                                 onContinue: { advance(to: .signIn) })
+            OnbV2VitalityRevealScreen(profile: profile,
+                                      snapshot: healthSnapshot,
+                                      onBack: { advance(to: .hrv) },
+                                      onContinue: { advance(to: .signIn) })
         case .signIn:
             OnbV2Screen15SignIn(onBack: { advance(to: .preview) },
                                 onSignedIn: handleSignedIn)
