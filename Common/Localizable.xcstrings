@@ -771,6 +771,9 @@
     "Target Low" : {
 
     },
+    "than your real age of %lld" : {
+
+    },
     "That seems like a lot! Please enter an amount under 10 liters." : {
 
     },
@@ -814,6 +817,9 @@
     "Workout Type" : {
 
     },
+    "years" : {
+
+    },
     "Yoga" : {
 
     },
@@ -842,6 +848,9 @@
           }
         }
       }
+    },
+    "YOUR VITALITY AGE" : {
+
     }
   },
   "version" : "1.0"
