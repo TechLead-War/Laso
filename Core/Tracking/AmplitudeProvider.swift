@@ -38,6 +38,14 @@ final class AmplitudeProvider: AnalyticsProvider {
         amp.add(plugin: SuperPropertiesPlugin(superProps: AnalyticsEnvironment.staticSuperProperties()))
         amplitude = amp
 
+        errorWindowLock.lock()
+        let pending = preConfigureErrors
+        preConfigureErrors = []
+        errorWindowLock.unlock()
+        for buffered in pending {
+            trackErrorGated(context: buffered.context, props: buffered.props)
+        }
+
         #if DEBUG
         if AmpConfig.apiKey.isEmpty {
             print("[Amplitude] WARNING: AMPLITUDE_API_KEY is empty — no events will reach Amplitude. Set it in Secrets.xcconfig.")
@@ -94,8 +102,22 @@ final class AmplitudeProvider: AnalyticsProvider {
 
     // MARK: - Error Tracking
 
+    /// captureError has ~50 call sites and no upstream throttle, so one failing
+    /// subsystem can burst dozens of identical events in a second (observed: a
+    /// locked-device HealthKit sync emitting ~60 per background wake). Cap each
+    /// error_context per hour and emit a single marker event when the cap trips
+    /// so suppression stays visible in Amplitude instead of failing silently.
+    private static let errorEventsPerContextPerHour = 5
+    private var errorWindows: [String: (start: Date, count: Int)] = [:]
+    private let errorWindowLock = NSLock()
+
+    /// Errors captured before configure() runs (e.g. EncryptedStore purging
+    /// orphaned blobs during AppContainer init) would otherwise be silently
+    /// dropped by the nil-amplitude guard. Buffer a few and flush on configure.
+    private var preConfigureErrors: [(context: String, props: [String: Any])] = []
+    private static let preConfigureErrorCap = 10
+
     func captureError(_ error: Error, context: String, metadata: [String: Any]) {
-        guard let amplitude else { return }
         var props: [String: Any] = [
             "error_message": error.localizedDescription,
             "error_context": context,
@@ -103,11 +125,10 @@ final class AmplitudeProvider: AnalyticsProvider {
             "error_code": (error as NSError).code
         ]
         for (k, v) in metadata { props[k] = v }
-        amplitude.track(eventType: "app_error_recorded", eventProperties: sanitizeErrorProps(props))
+        trackErrorGated(context: context, props: props)
     }
 
     func captureError(_ message: String, context: String, metadata: [String: Any]) {
-        guard let amplitude else { return }
         var props: [String: Any] = [
             "error_message": message,
             "error_context": context
@@ -116,6 +137,39 @@ final class AmplitudeProvider: AnalyticsProvider {
         #if DEBUG
         print("[Amplitude] app_error_recorded: \(context). \(message)")
         #endif
+        trackErrorGated(context: context, props: props)
+    }
+
+    private func trackErrorGated(context: String, props: [String: Any]) {
+        guard let amplitude else {
+            errorWindowLock.lock()
+            if preConfigureErrors.count < Self.preConfigureErrorCap {
+                preConfigureErrors.append((context: context, props: props))
+            }
+            errorWindowLock.unlock()
+            return
+        }
+
+        errorWindowLock.lock()
+        let now = Date()
+        var window = errorWindows[context] ?? (start: now, count: 0)
+        if now.timeIntervalSince(window.start) > 3600 {
+            window = (start: now, count: 0)
+        }
+        window.count += 1
+        errorWindows[context] = window
+        errorWindowLock.unlock()
+
+        guard window.count <= Self.errorEventsPerContextPerHour else {
+            if window.count == Self.errorEventsPerContextPerHour + 1 {
+                amplitude.track(eventType: "app_error_recorded", eventProperties: sanitizeErrorProps([
+                    "error_context": context,
+                    "error_message": "Rate limit reached, suppressing further errors for this context this hour",
+                    "rate_limited": true
+                ]))
+            }
+            return
+        }
         amplitude.track(eventType: "app_error_recorded", eventProperties: sanitizeErrorProps(props))
     }
 

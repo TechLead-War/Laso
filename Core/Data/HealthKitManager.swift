@@ -1,6 +1,18 @@
 import Foundation
 import HealthKit
 import Observation
+#if os(iOS)
+import UIKit
+#endif
+
+/// Records a HealthKit fetch failure, dropping errorDatabaseInaccessible: the
+/// health DB is sealed whenever the device is locked, so a background wake makes
+/// every in-flight query of the metric fan-out fail at once and floods analytics
+/// with same-second bursts that are device state, not app errors.
+private func recordHealthKitFetchError(_ error: Error, context: String, metadata: [String: Any] = [:]) {
+    if (error as? HKError)?.code == .errorDatabaseInaccessible { return }
+    AnalyticsBackend.provider.captureError(error, context: context, metadata: metadata)
+}
 
 @Observable
 final class HealthKitManager: @unchecked Sendable {
@@ -208,6 +220,21 @@ final class HealthKitManager: @unchecked Sendable {
     @MainActor
     @discardableResult
     func loadAndSync(store: HealthDataStore) async -> SyncResult {
+        // Hydrate persisted series before any early return: on a cold background
+        // relaunch the caller analyzes whatever is in memory, and an empty
+        // timeSeries would overwrite today's snapshot and widgets with zeros.
+        if timeSeries.isEmpty {
+            timeSeries = store.loadAllTimeSeries()
+        }
+
+        // The health DB is sealed while the device is locked: every query in the
+        // fan-out below would fail with errorDatabaseInaccessible. Skip the pass;
+        // the next unlock/foreground trigger syncs instead.
+        #if os(iOS)
+        guard UIApplication.shared.isProtectedDataAvailable else {
+            return SyncResult(metricsWithNewData: [], totalNewSamples: 0, isFirstSync: false)
+        }
+        #endif
         let syncStartTime = Date()
         let previousRefresh = lastRefresh
         isLoading = true
@@ -221,10 +248,6 @@ final class HealthKitManager: @unchecked Sendable {
             oldestSampleDate: nil,
             latestMetric: nil
         )
-
-        if timeSeries.isEmpty {
-            timeSeries = store.loadAllTimeSeries()
-        }
 
         let syncDates = store.allSyncDates()
         let isFirstSync = syncDates.isEmpty
@@ -497,7 +520,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch")
+                    recordHealthKitFetchError(error, context: "healthkit_fetch")
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: [])
@@ -661,7 +684,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_raw_hr")
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_raw_hr")
                 }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: [])
@@ -699,7 +722,7 @@ final class HealthKitManager: @unchecked Sendable {
 
             query.initialResultsHandler = { [metric] _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_daily_stats", metadata: ["metric": metric.rawValue])
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_daily_stats", metadata: ["metric": metric.rawValue])
                 }
                 guard let results, error == nil else {
                     continuation.resume(returning: nil)
@@ -743,7 +766,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_quantity", metadata: ["metric": metric.rawValue])
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_quantity", metadata: ["metric": metric.rawValue])
                 }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: nil)
@@ -912,7 +935,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
@@ -1030,11 +1053,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(
-                        error,
-                        context: "healthkit_fetch_sleep_onset",
-                        metadata: [:]
-                    )
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_sleep_onset")
                 }
                 guard let samples = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
@@ -1060,7 +1079,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_workouts", metadata: ["metric": metric.rawValue])
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_workouts", metadata: ["metric": metric.rawValue])
                 }
                 guard let workouts = results as? [HKWorkout], error == nil else {
                     continuation.resume(returning: nil)
@@ -1249,7 +1268,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_mindful")
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_mindful")
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
