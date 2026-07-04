@@ -14,18 +14,33 @@ final class RemoteConfigManager {
 
     static let shared = RemoteConfigManager()
 
+    /// Backing store for `remoteConfig`. This singleton can be touched before
+    /// `FirebaseApp.configure()` runs (AppDelegate's stored properties initialize
+    /// AppLaunchCoordinator, whose default argument resolves `.shared`, before
+    /// `didFinishLaunching` configures Firebase). Capturing nil in a `let` at that
+    /// moment permanently disabled Remote Config for the whole session, so the
+    /// instance is created lazily on first access after Firebase is up.
+    @ObservationIgnored private var _remoteConfig: RemoteConfig?
+    @ObservationIgnored private let remoteConfigCreationLock = NSLock()
+
     /// nil when Firebase is not configured (e.g. UI test mode)
-    private let remoteConfig: RemoteConfig?
+    private var remoteConfig: RemoteConfig? {
+        remoteConfigCreationLock.lock()
+        defer { remoteConfigCreationLock.unlock() }
+        if _remoteConfig == nil, FirebaseApp.app() != nil {
+            _remoteConfig = Self.makeConfiguredInstance()
+        }
+        return _remoteConfig
+    }
+
     private(set) var lastFetchTime: Date?
     private(set) var fetchError: String?
 
     // MARK: - Init
 
-    private init() {
-        guard FirebaseApp.app() != nil else {
-            remoteConfig = nil
-            return
-        }
+    private init() {}
+
+    private static func makeConfiguredInstance() -> RemoteConfig {
         let rc = RemoteConfig.remoteConfig()
         let settings = RemoteConfigSettings()
         #if DEBUG
@@ -40,7 +55,7 @@ final class RemoteConfigManager {
         // pre-existing key.
         let merged = Self.defaults.merging(Self.expandedDefaults) { current, _ in current }
         rc.setDefaults(merged)
-        remoteConfig = rc
+        return rc
     }
 
     // MARK: - Helpers
