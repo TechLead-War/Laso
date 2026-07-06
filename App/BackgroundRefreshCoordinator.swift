@@ -162,13 +162,12 @@ final class BackgroundRefreshCoordinator {
         RepermissionScheduler.checkAndFire()
 
         // Wind-down needs a real target bedtime. Full housekeeping does not run
-        // in BG, so derive one from the stored sleep history; if the store is
-        // absent or there is not enough data, the bedtime is nil and the
-        // scheduler cancels rather than firing a faked time.
-        guard let store else {
-            WindDownScheduler.cancel()
-            return
-        }
+        // in BG, so derive one from the stored sleep history. A nil store here
+        // means this is a scene-less background relaunch where the startup
+        // coordinator never ran — NOT that the user lacks sleep data — so leave
+        // any pending wind-down (scheduled by the last foreground pass) intact
+        // instead of cancelling tonight's reminder.
+        guard let store else { return }
         let need = SleepNeedCalculator().compute(
             from: store,
             currentStrain: 0,

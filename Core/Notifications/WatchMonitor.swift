@@ -28,13 +28,9 @@ final class WatchMonitor {
     // MARK: - UserDefaults Keys
 
     private let lastWatchDataKey = AppKeys.Watch.lastWatchDataTime
-    private let lastNotWornNotificationKey = AppKeys.Watch.lastNotWornNotification
     private let lowBatteryAlertShownKey = AppKeys.Watch.lowBatteryAlertShown
     private let lastObserverProcessingKey = AppKeys.Watch.lastObserverProcessing
     private let lastScheduleRefreshKey = AppKeys.Watch.lastScheduleRefresh
-
-    /// Minimum hours between repeated "not worn" notifications
-    private var notWornCooldownHours: Double { RemoteConfigManager.shared.watchNotWornCooldownHours }
 
     /// Cached preferences to avoid repeated Keychain + AES-GCM decryption
     private var cachedPreferences: NotificationPreferences?
@@ -226,15 +222,21 @@ final class WatchMonitor {
     /// after `thresholdHours`. As long as watch data keeps arriving, this keeps
     /// getting pushed forward. The moment data stops, it fires. no app needed.
     private func scheduleNotWornNotification() {
-        NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
-
         let preferences = loadCachedPreferences()
-        guard preferences.watchNotWornReminderEnabled else { return }
+        guard preferences.watchNotWornReminderEnabled else {
+            // Only an explicit opt-out removes the pending alarm. No
+            // cancel-before-reschedule: center.add with the same identifier
+            // replaces the pending request atomically, so a suppressed
+            // reschedule (e.g. cold auth cache at launch) leaves the previous
+            // alarm armed instead of deleting it.
+            NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
+            return
+        }
 
         let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
-        NotificationManager.shared.scheduleNotification(
+        let scheduled = NotificationManager.shared.scheduleNotification(
             title: DeviceMessaging.wearPromptTitle,
             body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),
             identifier: scheduledNotWornIdentifier,
@@ -242,7 +244,12 @@ final class WatchMonitor {
             maxPerDay: 1,
             bypassCap: true
         )
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastScheduleRefreshKey)
+        // Stamp the refresh throttle only for a schedule that happened, so a
+        // suppressed attempt retries on the next delivery instead of waiting
+        // out the full refresh interval.
+        if scheduled {
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastScheduleRefreshKey)
+        }
     }
 
     /// Ensures a "not worn" notification is pending without cancelling an existing one.
@@ -313,7 +320,7 @@ final class WatchMonitor {
             // it below the critical alarm tier. Routing through NotificationManager
             // means it is tracked like every other notification (replaces the raw
             // trackNotificationSent that bypassed the standard funnel).
-            NotificationManager.shared.scheduleNotification(
+            let scheduled = NotificationManager.shared.scheduleNotification(
                 title: Copy.Notifications.watchBatteryLow,
                 body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
                 identifier: AppConstants.NotificationID.watchLowBattery,
@@ -322,7 +329,12 @@ final class WatchMonitor {
                 bypassCap: true
             )
 
-            defaults.set(true, forKey: lowBatteryAlertShownKey)
+            // Mark the cycle only for a notification that actually exists, so
+            // a suppressed schedule retries on the next delivery instead of
+            // muting battery alerts for the whole discharge cycle.
+            if scheduled {
+                defaults.set(true, forKey: lowBatteryAlertShownKey)
+            }
         } else {
             // Battery recovered. reset so we can alert again next cycle
             defaults.set(false, forKey: lowBatteryAlertShownKey)

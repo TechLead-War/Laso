@@ -241,7 +241,7 @@ struct JournalEntryView: View {
             Text(Copy.Journal.notes)
                 .font(DS.Typography.headline)
 
-            TextField("Optional notes...", text: $notes, axis: .vertical)
+            TextField(Copy.Journal.notesPlaceholder, text: $notes, axis: .vertical)
                 .lineLimit(2...4)
                 .textFieldStyle(.plain)
                 .padding(DS.cardPadding)

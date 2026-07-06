@@ -92,20 +92,15 @@ enum AppKeys {
     // MARK: - Feedback
 
     enum Feedback {
-        static let lastPromptDate    = "laso.feedback.last_prompt_date"
-        static let submitted         = "laso.feedback.submitted"
-        static let lastSubmittedDate = "laso.feedback.last_submitted_date"
-        static let cooldownDays      = "laso.feedback.cooldown_days"
-        static let entries           = "laso.feedback.entries"
-        static let lastNPSDate       = "laso.feedback.last_nps_date"
-        static let lastNPSScore      = "laso.feedback.last_nps_score"
+        static let entries       = "laso.feedback.entries"
+        static let lastNPSDate   = "laso.feedback.last_nps_date"
+        static let lastNPSScore  = "laso.feedback.last_nps_score"
     }
 
     // MARK: - Watch Monitor
 
     enum Watch {
         static let lastWatchDataTime        = "healthpulse.watchMonitor.lastWatchDataTime"
-        static let lastNotWornNotification  = "healthpulse.watchMonitor.lastNotWornNotification"
         static let lowBatteryAlertShown     = "healthpulse.watchMonitor.lowBatteryAlertShown"
         static let lastObserverProcessing   = "healthpulse.watchMonitor.lastObserverProcessing"
         static let lastScheduleRefresh      = "healthpulse.watchMonitor.lastScheduleRefresh"

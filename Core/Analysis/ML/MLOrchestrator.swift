@@ -165,6 +165,14 @@ final class MLOrchestrator {
         anomalyCounts: [Date: Int],
         focusCategories: Set<HealthCategory> = []
     ) async {
+        // Remote kill switch checked here, at the single choke point, so every
+        // entry path (dashboard refresh, background refresh, future callers)
+        // respects it without per-caller guards.
+        guard !RemoteConfigManager.shared.killMLPipeline else {
+            logger.warning("Skipping ML analysis: kill_ml_pipeline is enabled")
+            return
+        }
+
         // Bail out entirely if device is already under thermal pressure
         let thermalState = ProcessInfo.processInfo.thermalState
         if thermalState == .critical || thermalState == .serious {
@@ -316,6 +324,11 @@ final class MLOrchestrator {
 
     /// Run circadian analysis using hourly data. Called separately from the main ML pipeline.
     func runCircadianAnalysis(hourlyData: [HealthMetric: [[Double]]]) {
+        // Same choke-point kill switch as the main pipeline above.
+        guard !RemoteConfigManager.shared.killMLPipeline else {
+            logger.warning("Skipping circadian analysis: kill_ml_pipeline is enabled")
+            return
+        }
         guard !hourlyData.isEmpty else { return }
         circadianAnalyzer.analyze(hourlyData: hourlyData)
     }

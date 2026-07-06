@@ -73,7 +73,7 @@ struct StrainCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Today's strain \(String(format: "%.1f", strainValue)), \(strainLevel.displayName)")
+        .accessibilityLabel(Copy.Home.strainCardLabel(value: String(format: "%.1f", strainValue), level: strainLevel.displayName))
         .accessibilityHint(Copy.Home.viewStrainDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.strainCard")

@@ -161,7 +161,11 @@ struct InsightsDetailView: View {
             maybeShowAhaPaywall()
         }
         .fullScreenCover(isPresented: $showAhaPaywall) {
-            PaywallView(subscriptionManager: SubscriptionManager.shared, source: "aha_moment")
+            PaywallView(
+                subscriptionManager: SubscriptionManager.shared,
+                source: "aha_moment",
+                onSubscribed: { showAhaPaywall = false }
+            )
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.insightsDetail)
@@ -192,12 +196,11 @@ struct InsightsDetailView: View {
         if defaults.bool(forKey: AppKeys.Session.ahaPaywallShown) {
             return
         }
-        guard !SubscriptionManager.shared.hasAccess else {
-            // Already a paying / trialing user — don't show. Mark seen so we
-            // never re-evaluate when their status changes later.
-            defaults.set(true, forKey: AppKeys.Session.ahaPaywallShown)
-            return
-        }
+        // Full access can be temporary (free-year promo, active trial). Do not
+        // persist the seen flag here: burning it would permanently disable the
+        // aha surface for the whole cohort once that access lapses. Leave the
+        // flag unset so the next insight visit re-evaluates.
+        guard !FeatureGate.hasFullAccess else { return }
         defaults.set(true, forKey: AppKeys.Session.ahaPaywallShown)
         // paywall_viewed fires once from PaywallView.onAppear with source
         // "aha_moment" passed into the fullScreenCover above. Do not emit it

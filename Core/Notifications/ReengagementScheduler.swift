@@ -23,6 +23,15 @@ enum ReengagementScheduler {
     /// notification is only enqueued once the user has actually granted.
     static func reschedule() {
         Task {
+            // This builder bypasses NotificationManager.scheduleNotification, so
+            // the remote kill switch must be re-checked here. Re-engagement is
+            // never critical, so kill_notifications always blocks it. A request
+            // queued before the switch flipped would still fire up to 3 days
+            // later, so cancel it before skipping.
+            guard !RemoteConfigManager.shared.killNotifications else {
+                cancel()
+                return
+            }
             guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
             performReschedule()
         }
@@ -75,8 +84,13 @@ enum ReengagementScheduler {
             content.body = Copy.Notifications.insightsReadyBody
         }
 
+        // Last-open + 72h lands at the same clock time the user last opened
+        // the app, which can be the middle of the night. Push a quiet-hours
+        // fire time forward to the window's end (e.g. 02:00 -> 07:00) using
+        // the same rule the central manager applies.
+        let target = NotificationManager.shared.quietHoursAdjusted(Date().addingTimeInterval(delaySeconds))
         let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: delaySeconds,
+            timeInterval: max(60, target.timeIntervalSinceNow),
             repeats: false
         )
 

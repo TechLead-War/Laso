@@ -51,7 +51,7 @@ struct WindDownScheduler {
         let bedtimeDisplay = Self.formatBedtime(bedtime)
         let hrvHint: String? = {
             guard hrvIsLow, let lastHRV, lastHRV > 0 else { return nil }
-            return "Your HRV (\(lastHRV) ms) suggests an early night."
+            return Copy.Notifications.windDownHRVHint(ms: lastHRV)
         }()
 
         let title = Copy.Notifications.windDownTitle()
@@ -71,6 +71,9 @@ struct WindDownScheduler {
         )
 
         // Non-critical, medium priority, counts toward the daily cap.
+        // Opts out of the quiet-hours gate: the fire time is bedtime minus
+        // 60 minutes by design, which for any bedtime past 23:00 falls inside
+        // the default 22-7 window — exactly when this reminder must land.
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
@@ -80,7 +83,8 @@ struct WindDownScheduler {
             severity: .info,
             deviationPercent: 0,
             metricInFocus: false,
-            bypassCap: false
+            bypassCap: false,
+            respectsQuietHours: false
         )
     }
 

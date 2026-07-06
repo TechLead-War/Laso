@@ -48,10 +48,19 @@ struct CooldownManager {
     }
 }
 
-/// Evaluates real-time health data and triggers critical/warning/spike/trend alerts
-struct AlertEvaluator {
+/// Evaluates real-time health data and triggers critical/warning/spike/trend alerts.
+///
+/// A class (not a struct) so `evaluate` can set the per-evaluation
+/// `suppressNonCritical` flag read by the send funnel. Only touched from the
+/// MainActor housekeeping pass.
+final class AlertEvaluator {
 
     private let cooldownManager: CooldownManager
+
+    /// Set per evaluation when the kill switch or the morning summary window
+    /// is active: non-critical alerts are muted but critical/life-safety ones
+    /// still reach the notification manager (which never gates critical).
+    private var suppressNonCritical = false
 
     /// Shared instance for production use, preserving the static call-site API
     static let shared = AlertEvaluator()
@@ -75,15 +84,14 @@ struct AlertEvaluator {
         preferences: NotificationPreferences
     ) {
         // Hotfix kill switch — flip ON in Firebase Remote Config when threshold
-        // tuning produces false-positive alert floods. Cooldown / dedup logic
-        // remains in place for the next time the switch flips OFF.
-        guard !RemoteConfigManager.shared.killAnomalyAlerts else { return }
-
-        // Morning suppression: skip real-time alerts within 1 hour of the daily summary
-        // since the summary already includes the top anomaly info.
-        if preferences.dailySummaryEnabled, isNearDailySummaryTime(preferences.dailySummaryTime) {
-            return
-        }
+        // tuning produces false-positive alert floods. Morning suppression —
+        // skip real-time alerts within 1 hour of the daily summary since the
+        // summary already includes the top anomaly info. NEITHER may drop
+        // critical/life-safety alerts (a dangerous SpO2 reading must fire even
+        // with the switch on), so instead of returning here the send funnel
+        // mutes non-critical severities only.
+        suppressNonCritical = RemoteConfigManager.shared.killAnomalyAlerts
+            || (preferences.dailySummaryEnabled && isNearDailySummaryTime(preferences.dailySummaryTime))
 
         // Hard cap: real-time alerts get at most 1 slot per day.
         // The daily summary (repeating) uses the other slot → total max 2/day.
@@ -101,6 +109,10 @@ struct AlertEvaluator {
                 maxPerDay: maxPerDay
             )
         }
+
+        // Trend reversals and improvement celebrations are never critical, so
+        // they are skipped outright while non-critical alerts are muted.
+        guard !suppressNonCritical else { return }
 
         // 3. Trend reversal alerts
         if preferences.trendReversalAlertsEnabled {
@@ -122,6 +134,9 @@ struct AlertEvaluator {
         anomalies: [AnomalyDetector.AnomalyResult],
         preferences: NotificationPreferences
     ) {
+        // Refresh the mute flag so this path honors the kill switch and never
+        // reuses a stale value from a previous full evaluation.
+        suppressNonCritical = RemoteConfigManager.shared.killAnomalyAlerts
         evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: 1)
     }
 
@@ -484,9 +499,10 @@ struct AlertEvaluator {
     }
 
     private func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
+        guard severity == .critical || !suppressNonCritical else { return }
         guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
-        NotificationManager.shared.scheduleNotification(
+        let scheduled = NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
@@ -494,13 +510,18 @@ struct AlertEvaluator {
             severity: severity,
             bypassCap: bypassCap
         )
-        cooldownManager.recordAlert(identifier: identifier)
+        // Cooldown only for a notification that actually exists; stamping a
+        // suppressed schedule would dedupe alerts the user never saw.
+        if scheduled {
+            cooldownManager.recordAlert(identifier: identifier)
+        }
     }
 
     private func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
+        guard severity == .critical || !suppressNonCritical else { return }
         guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
-        NotificationManager.shared.scheduleNotification(
+        let scheduled = NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
@@ -508,7 +529,11 @@ struct AlertEvaluator {
             severity: severity,
             bypassCap: bypassCap
         )
-        cooldownManager.recordAlert(identifier: identifier)
+        // Cooldown only for a notification that actually exists; stamping a
+        // suppressed schedule would dedupe alerts the user never saw.
+        if scheduled {
+            cooldownManager.recordAlert(identifier: identifier)
+        }
     }
 
     /// Returns true if the current time is within 1 hour of the daily summary time.

@@ -30,14 +30,22 @@ enum RepermissionScheduler {
         guard let prediction = OnboardingPredictionStore.loadPrediction(),
               !prediction.userPhrase.isEmpty else { return }
 
-        defaults.set(true, forKey: AppKeys.Prediction.repermissionFired)
-
-        NotificationManager.shared.scheduleNotification(
-            title: Copy.Notifications.repermissionTitle(count: count),
-            body: Copy.Notifications.repermissionBody(phrase: prediction.userPhrase, count: count),
-            identifier: AppConstants.NotificationID.repermission,
-            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        )
+        // Await the real authorization state instead of trusting the launch-time
+        // cache (cold at first render), and burn the one-shot flag only after
+        // the schedule actually passed every gate — a suppressed attempt stays
+        // retryable on the next refresh.
+        Task {
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            let scheduled = NotificationManager.shared.scheduleNotification(
+                title: Copy.Notifications.repermissionTitle(count: count),
+                body: Copy.Notifications.repermissionBody(phrase: prediction.userPhrase, count: count),
+                identifier: AppConstants.NotificationID.repermission,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            )
+            if scheduled {
+                defaults.set(true, forKey: AppKeys.Prediction.repermissionFired)
+            }
+        }
     }
 
     /// Cancel the re-permission push.

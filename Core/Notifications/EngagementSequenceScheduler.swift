@@ -142,13 +142,19 @@ enum EngagementSequenceScheduler {
                 )
             }
 
-            scheduleNotification(
+            let scheduled = scheduleNotification(
                 day: nextDay,
                 title: content.title,
                 body: content.body,
                 wakeHour: wakeTime.hour,
                 wakeMinute: wakeTime.minute
             )
+
+            // Advance only when the notification actually passed the manager's
+            // gates. A suppressed schedule (cold auth cache, fatigue window,
+            // lost same-day competition) leaves the day pending so the next
+            // launch retries it instead of silently consuming the drip.
+            guard scheduled else { return }
 
             defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
 
@@ -306,7 +312,7 @@ enum EngagementSequenceScheduler {
         case 7:
             return await generateDay7(dataStore: dataStore)
         default:
-            return ("Your Health Update", "Tap to see your latest health insights.")
+            return (Copy.Notifications.engagementDefaultTitle, Copy.Notifications.engagementDefaultBody)
         }
     }
 
@@ -342,7 +348,7 @@ enum EngagementSequenceScheduler {
         }
 
         return (
-            title: "Your morning health briefing",
+            title: Copy.Notifications.engagementDay2FallbackTitle,
             body: Copy.Notifications.engagementDay2Fallback
         )
     }
@@ -360,9 +366,9 @@ enum EngagementSequenceScheduler {
                         if let last = samples.last, let prev = samples.dropLast().last {
                             let change = ((last.value - prev.value) / max(prev.value, 0.01)) * 100
                             if abs(change) > 5 {
-                                let direction = change > 0 ? "up" : "down"
+                                let direction = change > 0 ? Copy.Notifications.trendWordUp : Copy.Notifications.trendWordDown
                                 let metricName = metric.displayName.lowercased()
-                                let finding = "Your \(metricName) is trending \(direction) \(String(format: "%.0f", abs(change)))% over the last few nights."
+                                let finding = Copy.Notifications.engagementDay3Finding(metric: metricName, direction: direction, percent: Int(abs(change).rounded()))
                                 return (
                                     title: Copy.Notifications.engagementDay3Title,
                                     body: Copy.Notifications.engagementDay3Body(finding: finding)
@@ -481,7 +487,7 @@ enum EngagementSequenceScheduler {
         body: String,
         wakeHour: Int,
         wakeMinute: Int
-    ) {
+    ) -> Bool {
         let identifier = AppConstants.NotificationID.engagementPrefix + "day\(day)"
 
         var dateComponents = DateComponents()
@@ -493,7 +499,7 @@ enum EngagementSequenceScheduler {
 
         // NotificationManager.scheduleNotification already emits
         // trackNotificationScheduled on success, so we do not double-count here.
-        NotificationManager.shared.scheduleNotification(
+        return NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
@@ -506,17 +512,17 @@ enum EngagementSequenceScheduler {
 
     private static func insightForScore(_ score: Int) -> String {
         if score >= ScoreBucketsConfig.engagementWellRecoveredFloor {
-            return "You are well recovered today."
+            return Copy.Notifications.insightWellRecovered
         }
         if score >= ScoreBucketsConfig.engagementLookingGoodFloor {
-            return "Solid recovery. A good day to stay active."
+            return Copy.Notifications.insightLookingGood
         }
         if score >= ScoreBucketsConfig.engagementModerateFloor {
-            return "Moderate recovery. Listen to your body today."
+            return Copy.Notifications.insightModerate
         }
         if score >= ScoreBucketsConfig.engagementNeedsAttentionFloor {
-            return "Your body is still catching up."
+            return Copy.Notifications.insightNeedsAttention
         }
-        return "Take it easy. Your body needs rest."
+        return Copy.Notifications.insightRest
     }
 }

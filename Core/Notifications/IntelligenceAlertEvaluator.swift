@@ -46,13 +46,17 @@ struct IntelligenceAlertEvaluator {
         // Map CardSeverity to Severity
         let severity: Severity = topCard.severity == .critical ? .critical : .warning
 
-        NotificationManager.shared.scheduleNotification(
+        let scheduled = NotificationManager.shared.scheduleNotification(
             title: topCard.label,
             body: topCard.headline,
             identifier: identifier,
             maxPerDay: 1,
             severity: severity
         )
-        recordAlert(identifier: identifier)
+        // Cooldown only for a notification that actually exists; stamping a
+        // suppressed schedule would dedupe briefings the user never saw.
+        if scheduled {
+            recordAlert(identifier: identifier)
+        }
     }
 }

@@ -1729,12 +1729,6 @@ final class AppAnalytics {
     }
 
     // Feedback
-    func trackFeedbackPromptShown(daysSinceInstall: Int) {
-        logEvent("feedback_prompt_shown", parameters: [
-            "days_since_install": daysSinceInstall
-        ])
-    }
-
     func trackFeedbackSubmitted(category: String, textLength: Int, sentiment: String = "neutral") {
         logEvent("feedback_submitted", parameters: [
             "category": category,

@@ -127,7 +127,7 @@ struct PMFSurveySheet: View {
             Text(Copy.Common.whatTypeOfPersonDoYou)
                 .font(.title3.weight(.bold))
 
-            TextField("e.g., fitness enthusiast, someone with a chronic condition...", text: $segmentAnswer, axis: .vertical)
+            TextField(Copy.Common.pmfSegmentPlaceholder, text: $segmentAnswer, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
                 .padding(DS.space3)
@@ -152,7 +152,7 @@ struct PMFSurveySheet: View {
             Text(Copy.Common.whatIsTheMainBenefitYou)
                 .font(.title3.weight(.bold))
 
-            TextField("e.g., understanding my recovery, sleep insights...", text: $benefitAnswer, axis: .vertical)
+            TextField(Copy.Common.pmfBenefitPlaceholder, text: $benefitAnswer, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
                 .padding(DS.space3)
@@ -177,7 +177,7 @@ struct PMFSurveySheet: View {
             Text(Copy.Common.howCanWeImproveLasoFor)
                 .font(.title3.weight(.bold))
 
-            TextField("Optional — anything you'd change or add", text: $improvementText, axis: .vertical)
+            TextField(Copy.Common.pmfImprovementPlaceholder, text: $improvementText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...6)
                 .padding(DS.space3)
@@ -186,7 +186,7 @@ struct PMFSurveySheet: View {
             Button {
                 submitSurvey()
             } label: {
-                Text(improvementText.isEmpty ? "Done" : "Submit")
+                Text(improvementText.isEmpty ? Copy.Common.doneButton : Copy.Common.submitButton)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space3)
             }

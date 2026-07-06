@@ -201,6 +201,20 @@ extension Copy {
             return String(format: s("copy_onboardingv2_s13_footnote", "Pattern detected across %@"), "\(weeks) \(unit)")
         }
 
+        // MARK: - Vitality Age reveal
+        static var revealHeader: String { s("copy_onboardingv2_reveal_header", "YOUR VITALITY AGE") }
+        static var revealYearsUnit: String { s("copy_onboardingv2_reveal_years_unit", "years") }
+        static var revealPayoffOnAge: String { s("copy_onboardingv2_reveal_payoff_on_age", "right on your real age") }
+        static func revealPayoffYounger(_ years: Int) -> String { String(format: s("copy_onboardingv2_reveal_payoff_younger", "%d years younger"), years) }
+        static func revealPayoffOlder(_ years: Int) -> String { String(format: s("copy_onboardingv2_reveal_payoff_older", "%d years older"), years) }
+        static func revealThanRealAge(_ age: Int) -> String { String(format: s("copy_onboardingv2_reveal_than_real_age", "than your real age of %d"), age) }
+        static var revealSubYounger: String { s("copy_onboardingv2_reveal_sub_younger", "Now let's make it even younger.") }
+        static var revealSubOlder: String { s("copy_onboardingv2_reveal_sub_older", "Let's start bringing this down.") }
+        static var revealOrbYourAge: String { s("copy_onboardingv2_reveal_orb_your_age", "YOUR AGE") }
+        static var revealOrbCalculating: String { s("copy_onboardingv2_reveal_orb_calculating", "CALCULATING") }
+        static var revealOrbYears: String { s("copy_onboardingv2_reveal_orb_years", "YEARS") }
+        static var revealCTA: String { s("copy_onboardingv2_reveal_cta", "Continue") }
+
         // MARK: - Screen 14 — Preview
         static var s14Eyebrow: String { s("copy_onboardingv2_s14_eyebrow", "YOUR FIRST WEEK") }
         static var s14Title: String   { s("copy_onboardingv2_s14_title", "Here's what comes next.") }

@@ -59,6 +59,7 @@ extension Copy {
         static var whatToLog: String { RemoteConfigManager.shared.copyString("copy_journal_what_to_log", default: "What would you like to log?") }
         static var amount: String { RemoteConfigManager.shared.copyString("copy_journal_amount", default: "Amount") }
         static var notes: String { RemoteConfigManager.shared.copyString("copy_journal_notes", default: "Notes") }
+        static var notesPlaceholder: String { RemoteConfigManager.shared.copyString("copy_journal_notes_placeholder", default: "Optional notes...") }
         static var logged: String { RemoteConfigManager.shared.copyString("copy_journal_logged", default: "Logged") }
         static func logCount(_ count: Int) -> String {
             let unit = count == 1

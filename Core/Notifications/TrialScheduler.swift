@@ -30,7 +30,7 @@ enum TrialScheduler {
                 title: Copy.Notifications.trialGettingStartedTitle,
                 body: Copy.Notifications.trialGettingStartedBody,
                 identifier: AppConstants.NotificationID.trialGettingStarted,
-                trigger: UNCalendarNotificationTrigger(dateMatching: morningComponents(for: day1), repeats: false)
+                trigger: morningTrigger(for: day1)
             )
         }
 
@@ -40,7 +40,7 @@ enum TrialScheduler {
                 title: Copy.Notifications.trialInsightNudgeTitle,
                 body: Copy.Notifications.trialInsightNudgeBody,
                 identifier: AppConstants.NotificationID.trialInsightNudge,
-                trigger: UNCalendarNotificationTrigger(dateMatching: morningComponents(for: day3), repeats: false)
+                trigger: morningTrigger(for: day3)
             )
         }
 
@@ -54,7 +54,7 @@ enum TrialScheduler {
                 title: Copy.Notifications.trialRenewalTitle(daysLeft: daysLeft),
                 body: Copy.Notifications.trialRenewalBody,
                 identifier: AppConstants.NotificationID.trialRenewalReminder,
-                trigger: UNCalendarNotificationTrigger(dateMatching: morningComponents(for: reminderDate), repeats: false)
+                trigger: morningTrigger(for: reminderDate)
             )
         }
     }
@@ -63,19 +63,22 @@ enum TrialScheduler {
     /// is the user's own tracked focus area (their prediction phrase or first
     /// health-focus label); when empty, the generic copy is used. Idempotent via
     /// the fixed identifier — re-arming replaces the pending request.
-    static func scheduleWinback(focus: String?, delay: TimeInterval) {
+    /// Returns whether the schedule passed the gates so the caller's one-shot
+    /// arm flag is only burned for a push that actually exists.
+    @discardableResult
+    static func scheduleWinback(focus: String?, delay: TimeInterval) -> Bool {
         let manager = NotificationManager.shared
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(60, delay), repeats: false)
 
         if let focus, !focus.isEmpty {
-            manager.scheduleNotification(
+            return manager.scheduleNotification(
                 title: Copy.Notifications.trialWinbackTitle(focus: focus),
                 body: Copy.Notifications.trialWinbackBody(focus: focus),
                 identifier: AppConstants.NotificationID.trialWinback,
                 trigger: trigger
             )
         } else {
-            manager.scheduleNotification(
+            return manager.scheduleNotification(
                 title: Copy.Notifications.trialWinbackGenericTitle,
                 body: Copy.Notifications.trialWinbackGenericBody,
                 identifier: AppConstants.NotificationID.trialWinback,
@@ -100,25 +103,28 @@ enum TrialScheduler {
     /// access. Fired about a day before the period ends, or in an hour when
     /// under a day remains, so it lands while they can still keep the plan.
     /// `focus` names the user's own tracked focus; nil uses the generic copy.
-    static func scheduleCancelledSave(focus: String?, expiration: Date) {
+    /// Returns whether the schedule passed the gates so the caller's one-shot
+    /// arm flag is only burned for a push that actually exists.
+    @discardableResult
+    static func scheduleCancelledSave(focus: String?, expiration: Date) -> Bool {
         let manager = NotificationManager.shared
         let now = Date()
         let lead = Date.cal.date(byAdding: .second, value: -Int(AppConstants.Timing.cancelledSaveLeadTime), to: expiration) ?? now
         let trigger: UNNotificationTrigger
         if lead > now {
-            trigger = UNCalendarNotificationTrigger(dateMatching: morningComponents(for: lead), repeats: false)
+            trigger = morningTrigger(for: lead)
         } else {
             trigger = UNTimeIntervalNotificationTrigger(timeInterval: AppConstants.Timing.cancelledSaveMinDelay, repeats: false)
         }
         if let focus, !focus.isEmpty {
-            manager.scheduleNotification(
+            return manager.scheduleNotification(
                 title: Copy.Notifications.cancelledSaveTitle(focus: focus),
                 body: Copy.Notifications.cancelledSaveBody(focus: focus),
                 identifier: AppConstants.NotificationID.cancelledSave,
                 trigger: trigger
             )
         } else {
-            manager.scheduleNotification(
+            return manager.scheduleNotification(
                 title: Copy.Notifications.cancelledSaveGenericTitle,
                 body: Copy.Notifications.cancelledSaveGenericBody,
                 identifier: AppConstants.NotificationID.cancelledSave,
@@ -152,5 +158,16 @@ enum TrialScheduler {
         comps.minute = minute
         comps.calendar = Date.cal
         return comps
+    }
+
+    /// Trigger at `date`'s morning wake time — or, when that moment has already
+    /// passed (a fully-dated calendar trigger in the past NEVER fires; iOS
+    /// keeps it pending forever), an hour from now so the push still lands.
+    private static func morningTrigger(for date: Date) -> UNNotificationTrigger {
+        let comps = morningComponents(for: date)
+        if let fireDate = Date.cal.date(from: comps), fireDate <= Date() {
+            return UNTimeIntervalNotificationTrigger(timeInterval: 3600, repeats: false)
+        }
+        return UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
     }
 }

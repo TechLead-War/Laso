@@ -36,20 +36,20 @@ extension Copy {
 
         // MARK: - Heart Rate Alerts
 
-        static let restingHRTitle = clip("Resting Heart Rate Higher Than Usual", max: titleMax)
+        static var restingHRTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_resting_h_r_title", default: "Resting Heart Rate Higher Than Usual"), max: titleMax) }
         static func restingHRElevated(current: Int, average: Int) -> String {
             let diff = current - average
             let pct = average > 0 ? Int(round(Double(diff) / Double(average) * 100)) : 0
             return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_resting_h_r_elevated", default: "Resting HR %d bpm, %d%% above your %d avg. Rest and recheck. ❤️"), current, pct, average), max: bodyMax)
         }
 
-        static let highHRTitle = clip("Heart Rate Above Your Usual", max: titleMax)
+        static var highHRTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_high_h_r_title", default: "Heart Rate Above Your Usual"), max: titleMax) }
         static func highHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, current - threshold)
             return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_high_h_r_body", default: "HR hit %d bpm, %d above your usual %d. Try a 60-second box breath. ❤️"), current, diff, threshold), max: bodyMax)
         }
 
-        static let lowHRTitle = clip("Heart Rate Below Your Usual", max: titleMax)
+        static var lowHRTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_low_h_r_title", default: "Heart Rate Below Your Usual"), max: titleMax) }
         static func lowHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, threshold - current)
             return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_low_h_r_body", default: "HR dropped to %d bpm, %d below your usual %d. Sit and sip water. ❤️"), current, diff, threshold), max: bodyMax)
@@ -57,29 +57,45 @@ extension Copy {
 
         // MARK: - HRV
 
-        static let hrvLowTitle = clip("HRV Running Low", max: titleMax)
+        static var hrvLowTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_hrv_low_title", default: "HRV Running Low"), max: titleMax) }
         static func hrvLowBody(current: Int, dropPercent: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_hrv_low_body", default: "HRV %d ms, %d%% below recent average. Take it easy and aim for an early night. 😴"), current, dropPercent), max: bodyMax)
         }
 
         // MARK: - Blood Oxygen
 
-        static let spo2CriticalTitle = clip("Blood Oxygen Below Typical Range", max: titleMax)
+        static var spo2CriticalTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_spo2_critical_title", default: "Blood Oxygen Below Typical Range"), max: titleMax) }
         static func spo2CriticalBody(value: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_spo2_critical_body", default: "Blood oxygen %@%%, below your usual range. Rest 5 minutes, then recheck. 🫁"), value), max: bodyMax)
         }
 
-        static let spo2WarningTitle = clip("Blood Oxygen Worth Monitoring", max: titleMax)
+        static var spo2WarningTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_spo2_warning_title", default: "Blood Oxygen Worth Monitoring"), max: titleMax) }
         static func spo2WarningBody(value: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_spo2_warning_body", default: "Blood oxygen %@%%, a touch below your typical range. Recheck in 10 min. 🫁"), value), max: bodyMax)
         }
 
         // MARK: - Respiratory Rate
 
-        static let respiratoryRateTitle = clip("Breathing Rate Higher Than Usual", max: titleMax)
+        static var respiratoryRateTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_respiratory_rate_title", default: "Breathing Rate Higher Than Usual"), max: titleMax) }
         static func respiratoryRateBody(current: String, average: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_respiratory_rate_body", default: "Breathing %@ br/min, above your %@ avg. Slow, deep breaths can reset it. 🫁"), current, average), max: bodyMax)
         }
+
+        // MARK: - Metric Cue Tails
+        //
+        // Action-led closing sentences appended to anomaly bodies, resolved by
+        // `MetricCue.tail(isAbove:)`. One key per metric/direction pair.
+
+        static var cueHRVAbove: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_hrv_above", default: "Recovery is showing.") }
+        static var cueHRVBelow: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_hrv_below", default: "Aim for an early night.") }
+        static var cueHeartRateAbove: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_heart_rate_above", default: "Try a 60-second box breath.") }
+        static var cueHeartRateBelow: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_heart_rate_below", default: "Sit, sip water, recheck in 10 min.") }
+        static var cueBloodOxygen: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_blood_oxygen", default: "Rest 5 minutes, then recheck.") }
+        static var cueRespiratoryAbove: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_respiratory_above", default: "Slow, deep breaths can reset it.") }
+        static var cueRespiratoryBelow: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_respiratory_below", default: "Recheck if it stays low.") }
+        static var cueSleep: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_sleep", default: "Plan a calmer wind-down tonight.") }
+        static var cueActivity: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_activity", default: "A short walk will reset things.") }
+        static var cueOther: String { RemoteConfigManager.shared.copyString("copy_notifications_cue_other", default: "Check the dip when you can.") }
 
         // MARK: - Anomaly Alerts
 
@@ -174,59 +190,59 @@ extension Copy {
 
             // Curiosity hooks (Zeigarnik)
             if let metric = topAnomalyMetric, let pct = topAnomalyPercent, abs(pct) >= 10 {
-                candidates.append((.curiosity, "Something shifted in your \(metric.lowercased()) overnight."))
+                candidates.append((.curiosity, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_curiosity_metric", default: "Something shifted in your %@ overnight."), metric.lowercased())))
             }
             if let delta = scoreDelta, abs(delta) >= 3 {
-                candidates.append((.curiosity, "Your score moved overnight."))
+                candidates.append((.curiosity, RemoteConfigManager.shared.copyString("copy_notifications_hook_curiosity_score", default: "Your score moved overnight.")))
             }
             if improvingDays >= 2 {
-                candidates.append((.curiosity, "A pattern is forming in your data."))
+                candidates.append((.curiosity, RemoteConfigManager.shared.copyString("copy_notifications_hook_curiosity_pattern", default: "A pattern is forming in your data.")))
             }
 
             // Loss-frame hooks
             // Concrete deadline ("11:59 PM tonight") outperforms vague "tonight" in
             // Customer.io 2026 urgency tests because users can mentally schedule it.
             if streakDays >= 3 {
-                candidates.append((.lossFrame, "Your \(streakDays)-day streak ends at 11:59 PM tonight."))
+                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_streak", default: "Your %d-day streak ends at 11:59 PM tonight."), streakDays)))
             }
             if let delta = scoreDelta, delta <= -3 {
-                candidates.append((.lossFrame, "You are losing ground from last week."))
+                candidates.append((.lossFrame, RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_ground", default: "You are losing ground from last week.")))
             }
             // Only fire the "slipping" loss frame when we have a concrete delta to cite.
             // Vague "Yesterday's gains are slipping" without data tested as filler.
             if improvingDays == 0, let delta = scoreDelta, delta < 0 {
-                candidates.append((.lossFrame, "Down \(abs(delta)) since yesterday. Easy to claw back."))
+                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_delta", default: "Down %d since yesterday. Easy to claw back."), abs(delta))))
             }
 
             // Progress hooks (endowed progress)
             if improvingDays >= 3 {
-                candidates.append((.progress, "\(improvingDays) days up. Keep the run going?"))
+                candidates.append((.progress, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_progress_days_up", default: "%d days up. Keep the run going?"), improvingDays)))
             }
             if streakDays > 0 && streakDays.isMultiple(of: 7) {
-                candidates.append((.progress, "\(streakDays) days in. New milestone."))
+                candidates.append((.progress, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_progress_milestone", default: "%d days in. New milestone."), streakDays)))
             }
             if score >= 80 {
-                candidates.append((.progress, "Score: \(score). You are in the top tier."))
+                candidates.append((.progress, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_progress_top_tier", default: "Score: %d. You are in the top tier."), score)))
             }
 
             // Personal record hooks
             if let metric = topAnomalyMetric, let pct = topAnomalyPercent, pct > 15 {
-                candidates.append((.personalRecord, "Your \(metric.lowercased()) hit a new high."))
+                candidates.append((.personalRecord, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_record_metric_high", default: "Your %@ hit a new high."), metric.lowercased())))
             }
             if score >= 90 {
-                candidates.append((.personalRecord, "\(score). Your best score this month."))
+                candidates.append((.personalRecord, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_record_best_score", default: "%d. Your best score this month."), score)))
             }
             if let delta = scoreDelta, delta >= 5 {
-                candidates.append((.personalRecord, "Biggest jump in weeks: +\(delta) points."))
+                candidates.append((.personalRecord, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_record_biggest_jump", default: "Biggest jump in weeks: +%d points."), delta)))
             }
 
             // Question hooks
-            candidates.append((.question, "How did last night affect your body?"))
+            candidates.append((.question, RemoteConfigManager.shared.copyString("copy_notifications_hook_question_last_night", default: "How did last night affect your body?")))
             if let metric = topAnomalyMetric {
-                candidates.append((.question, "Why did your \(metric.lowercased()) change?"))
+                candidates.append((.question, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_question_metric_change", default: "Why did your %@ change?"), metric.lowercased())))
             }
             if score < 65 {
-                candidates.append((.question, "What is pulling your score down?"))
+                candidates.append((.question, RemoteConfigManager.shared.copyString("copy_notifications_hook_question_score_down", default: "What is pulling your score down?")))
             }
 
             // Filter out the last-used category
@@ -241,7 +257,7 @@ extension Copy {
 
             // Ultimate fallback
             UserDefaults.standard.set(HookCategory.curiosity.rawValue, forKey: AppKeys.Notifications.lastDailyHookCategory)
-            return clip("Your morning health check is ready.", max: titleMax)
+            return clip(RemoteConfigManager.shared.copyString("copy_notifications_hook_fallback", default: "Your morning health check is ready."), max: titleMax)
         }
 
         /// Body text. short, data-rich, complements the title.
@@ -258,22 +274,27 @@ extension Copy {
             var parts: [String] = []
 
             // Score context (always include, payoff for tapping)
-            parts.append("Score: \(score)/100.")
+            parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_score", default: "Score: %d/100."), score))
 
             // Most notable data point
             if anomalyCount > 0, let metric = topAnomalyMetric {
-                parts.append("\(metric) needs a look. \u{1F4CA}")
+                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_anomaly", default: "%@ needs a look. 📊"), metric))
             } else {
-                let variants = [
-                    "All metrics steady.",
-                    "No red flags today.",
-                    "Numbers looking strong.",
-                    "Everything in range.",
-                    "Looking good across the board.",
-                    "Body data looks good.",
-                    "Healthy readings overall.",
-                ]
-                parts.append(variants[dayOfWeek % variants.count])
+                let variants = RemoteConfigManager.shared.copyArray(
+                    "copy_notifications_daily_body_steady_variants",
+                    default: [
+                        "All metrics steady.",
+                        "No red flags today.",
+                        "Numbers looking strong.",
+                        "Everything in range.",
+                        "Looking good across the board.",
+                        "Body data looks good.",
+                        "Healthy readings overall.",
+                    ]
+                )
+                if !variants.isEmpty {
+                    parts.append(variants[dayOfWeek % variants.count])
+                }
             }
 
             // Action (first sentence only)
@@ -283,9 +304,9 @@ extension Copy {
 
             // Streak (compact, loss-frame when long)
             if streakDays >= 3 {
-                parts.append("\(streakDays)-day streak on the line.")
+                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_streak_risk", default: "%d-day streak on the line."), streakDays))
             } else if streakDays > 1 {
-                parts.append("\(streakDays)-day streak.")
+                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_streak", default: "%d-day streak."), streakDays))
             }
 
             return clip(parts.joined(separator: " "), max: bodyMax)
@@ -343,6 +364,11 @@ extension Copy {
             return clip(variants[nextIndex], max: titleMax)
         }
 
+        /// HRV lead-in for the wind-down body, shown only when the last HRV reading is low.
+        static func windDownHRVHint(ms: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_notifications_wind_down_hrv_hint", default: "Your HRV (%d ms) suggests an early night."), ms)
+        }
+
         /// Body for the wind-down push. Always includes the specific bedtime as a hard number.
         /// `hrvHint` is an optional lead-in like "Your HRV suggests an early night" when data supports it.
         /// `chronotypeBedtime` reserved for future scheduler wiring; the
@@ -384,11 +410,11 @@ extension Copy {
         ) -> String? {
             switch (improver, decliner) {
             case let (imp?, dec?):
-                return clip("\(imp.metric) leads at \(imp.changeText), while \(dec.metric) slipped to \(dec.changeText). \u{1F4CA}", max: bodyMax)
+                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_both", default: "%@ leads at %@, while %@ slipped to %@. 📊"), imp.metric, imp.changeText, dec.metric, dec.changeText), max: bodyMax)
             case let (imp?, nil):
-                return clip("\(imp.metric) is your top climber at \(imp.changeText). \u{1F4AA}", max: bodyMax)
+                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_improver", default: "%@ is your top climber at %@. 💪"), imp.metric, imp.changeText), max: bodyMax)
             case let (nil, dec?):
-                return clip("\(dec.metric) slipped the most, down \(dec.changeText). See what changed.", max: bodyMax)
+                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_decliner", default: "%@ slipped the most, down %@. See what changed."), dec.metric, dec.changeText), max: bodyMax)
             default:
                 return nil
             }
@@ -396,7 +422,7 @@ extension Copy {
 
         // MARK: - Reengagement
 
-        static let healthSnapshot = clip("Your Health Snapshot Is Waiting", max: titleMax)
+        static var healthSnapshot: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_health_snapshot", default: "Your Health Snapshot Is Waiting"), max: titleMax) }
         static func lastScoreBody(score: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_last_score_body", default: "Last score %d/100. 3 days on, your trends have moved. View the dip. 📊"), score), max: bodyMax)
         }
@@ -404,8 +430,8 @@ extension Copy {
         static func lastScoreBody(score: Int, trendingMetric: String, direction: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_last_score_body", default: "Last score %d/100. %@ was %@. Catch the change. 📊"), score, trendingMetric.lowercased(), direction.lowercased()), max: bodyMax)
         }
-        static let insightsReady = clip("Your Health Insights Are Ready", max: titleMax)
-        static let insightsReadyBody = clip("It has been a few days. See what your body did while you were gone. \u{1F4CA}", max: bodyMax)
+        static var insightsReady: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_insights_ready", default: "Your Health Insights Are Ready"), max: titleMax) }
+        static var insightsReadyBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_insights_ready_body", default: "It has been a few days. See what your body did while you were gone. 📊"), max: bodyMax) }
 
         /// Loss-framed, data-grounded body referencing the user's actual last HRV + trend direction.
         /// Rotated by days-inactive so a repeat lapser sees a fresh framing each time.
@@ -458,12 +484,12 @@ extension Copy {
 
         static func engagementDay1Title(name: String?) -> String {
             if let name, !name.isEmpty {
-                return clip("Morning check-in, \(name)", max: titleMax)
+                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day1_title_named", default: "Morning check-in, %@"), name), max: titleMax)
             }
-            return clip("Your first morning check-in", max: titleMax)
+            return clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day1_title", default: "Your first morning check-in"), max: titleMax)
         }
 
-        static let engagementDay1Body = clip("Log your morning heart rate to start your recovery baseline. Check today's number. \u{2764}\u{FE0F}", max: bodyMax)
+        static var engagementDay1Body: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day1_body", default: "Log your morning heart rate to start your recovery baseline. Check today's number. ❤️"), max: bodyMax) }
 
         static func engagementDay2Title(score: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day2_title", default: "Your recovery score is %d"), score), max: titleMax)
@@ -473,15 +499,26 @@ extension Copy {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day2_body", default: "%@ See what changed and today's one-minute action. 📊"), insight), max: bodyMax)
         }
 
-        static let engagementDay2Fallback = clip("See today's recovery score and your one-minute morning action. \u{1F4CA}", max: bodyMax)
+        static var engagementDay2Fallback: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day2_fallback", default: "See today's recovery score and your one-minute morning action. 📊"), max: bodyMax) }
 
-        static let engagementDay3Title = clip("A sleep pattern is forming", max: titleMax)
+        static var engagementDay2FallbackTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day2_fallback_title", default: "Your morning health briefing"), max: titleMax) }
+
+        static var engagementDay3Title: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day3_title", default: "A sleep pattern is forming"), max: titleMax) }
 
         static func engagementDay3Body(finding: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day3_body", default: "%@ See what changed and a small tweak to try tonight. 😴"), finding), max: bodyMax)
         }
 
-        static let engagementDay3Fallback = clip("Your sleep is starting to tell a story. See the early pattern and a small tweak. \u{1F634}", max: bodyMax)
+        static var engagementDay3Fallback: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day3_fallback", default: "Your sleep is starting to tell a story. See the early pattern and a small tweak. 😴"), max: bodyMax) }
+
+        /// Interpolated sleep finding used inside `engagementDay3Body`. `direction` is a
+        /// trend word from `trendWordUp`/`trendWordDown`, `percent` is a whole number.
+        static func engagementDay3Finding(metric: String, direction: String, percent: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day3_finding", default: "Your %@ is trending %@ %d%% over the last few nights."), metric, direction, percent)
+        }
+
+        static var trendWordUp: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_up", default: "up") }
+        static var trendWordDown: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_down", default: "down") }
 
         static func engagementDay5Title(percent: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_title", default: "Personalization is %d%% complete"), percent), max: titleMax)
@@ -491,13 +528,30 @@ extension Copy {
             if daysRemaining <= 0 {
                 return clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_body", default: "Your baseline is ready. See patterns built from your first month of data. 📊"), max: bodyMax)
             }
-            return clip("Check in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to build a stronger baseline. \u{1F3AF}", max: bodyMax)
+            let dayUnit = daysRemaining == 1
+                ? RemoteConfigManager.shared.copyString("copy_notifications_day_singular", default: "day")
+                : RemoteConfigManager.shared.copyString("copy_notifications_day_plural", default: "days")
+            return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_body_remaining", default: "Check in for %d more %@ to build a stronger baseline. 🎯"), daysRemaining, dayUnit), max: bodyMax)
         }
 
         // Softer Day 5 variant used when the user has not yet seen a second recovery score.
         // Avoids claiming personalization has advanced when we do not actually have the data yet.
-        static let engagementDay5SoftTitle = clip("Your baseline is still forming", max: titleMax)
-        static let engagementDay5SoftBody  = clip("Each morning check-in makes your recovery picture clearer. Check today's number.", max: bodyMax)
+        static var engagementDay5SoftTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_soft_title", default: "Your baseline is still forming"), max: titleMax) }
+        static var engagementDay5SoftBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_soft_body", default: "Each morning check-in makes your recovery picture clearer. Check today's number."), max: bodyMax) }
+
+        // MARK: - Engagement Default + Recovery Insights
+        //
+        // Used by EngagementSequenceScheduler for the unknown-day fallback and
+        // the score-bucketed insight sentence interpolated into Day 2 bodies.
+
+        static var engagementDefaultTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_default_title", default: "Your Health Update"), max: titleMax) }
+        static var engagementDefaultBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_engagement_default_body", default: "Tap to see your latest health insights."), max: bodyMax) }
+
+        static var insightWellRecovered: String { RemoteConfigManager.shared.copyString("copy_notifications_insight_well_recovered", default: "You are well recovered today.") }
+        static var insightLookingGood: String { RemoteConfigManager.shared.copyString("copy_notifications_insight_looking_good", default: "Solid recovery. A good day to stay active.") }
+        static var insightModerate: String { RemoteConfigManager.shared.copyString("copy_notifications_insight_moderate", default: "Moderate recovery. Listen to your body today.") }
+        static var insightNeedsAttention: String { RemoteConfigManager.shared.copyString("copy_notifications_insight_needs_attention", default: "Your body is still catching up.") }
+        static var insightRest: String { RemoteConfigManager.shared.copyString("copy_notifications_insight_rest", default: "Take it easy. Your body needs rest.") }
 
         static func engagementDay7Title(patternCount: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day7_title", default: "We have found %d early signals"), patternCount), max: titleMax)
@@ -513,7 +567,7 @@ extension Copy {
 
         // MARK: - Watch Monitor
 
-        static let watchBatteryLow = clip("Watch Battery Low", max: titleMax)
+        static var watchBatteryLow: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_watch_battery_low", default: "Watch Battery Low"), max: titleMax) }
         static func watchBatteryBody(device: String, percent: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_watch_battery_body", default: "%@ battery at %d%%. Charge it soon to avoid missing health data."), device, percent), max: bodyMax)
         }
@@ -523,8 +577,8 @@ extension Copy {
 
         // MARK: - Permission Re-prompt
 
-        static let repromptTitle = clip("Stay on top of your health", max: titleMax)
-        static let repromptBody = clip("Notifications are off. You are missing alerts on heart rate, sleep, and weekly progress.", max: bodyMax)
+        static var repromptTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_reprompt_title", default: "Stay on top of your health"), max: titleMax) }
+        static var repromptBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_reprompt_body", default: "Notifications are off. You are missing alerts on heart rate, sleep, and weekly progress."), max: bodyMax) }
         static var repromptAction: String { RemoteConfigManager.shared.copyString("copy_notifications_reprompt_action", default: "Turn On in Settings") }
         static var repromptDismiss: String { RemoteConfigManager.shared.copyString("copy_notifications_reprompt_dismiss", default: "Not Now") }
 

@@ -609,6 +609,12 @@ extension Copy {
         static var viewRiskDetailsAndRecommendationsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_risk_details_and_recommendations_hint", default: "View risk details and recommendations") }
         static var opensScoreBreakdownHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_score_breakdown_hint", default: "Opens score breakdown") }
         static var viewStressMonitorDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_stress_monitor_details_hint", default: "View stress monitor details") }
+        static func strainCardLabel(value: String, level: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_strain_card_label", default: "Today's strain %@, %@"), value, level)
+        }
+        static func stressCardLabel(score: String, level: String, trend: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_stress_card_label", default: "Stress level %@, %@, trending %@"), score, level, trend)
+        }
         static var timePeriodSelectorLabel: String { RemoteConfigManager.shared.copyString("copy_home_time_period_selector_label", default: "Time period selector") }
         static var dismissMorningCheckInLabel: String { RemoteConfigManager.shared.copyString("copy_home_dismiss_morning_check_in_label", default: "Dismiss morning check-in") }
         static var closesTheCheckInCardWithoutHint: String { RemoteConfigManager.shared.copyString("copy_home_closes_the_check_in_card_without_hint", default: "Closes the check-in card without submitting") }

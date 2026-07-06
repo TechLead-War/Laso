@@ -27,7 +27,7 @@ if (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.lo
 }
 
 // ─── Config Schema ───────────────────────────────────────────────────────────
-// All keys match RemoteConfigManager.swift defaults.
+// Keys the panel can edit. Only keys the iOS app actually reads belong here.
 
 // ─── Feature Taxonomy ────────────────────────────────────────────────────────
 // Group hint for known feature keys. Any feature_access_* key that arrives
@@ -35,33 +35,13 @@ if (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.lo
 // adding a new feature on the iOS side (or directly in Remote Config) makes
 // it appear in the dashboard with zero JS edit. Move it into a proper group
 // here at your leisure — the dashboard never needs the row to be hardcoded.
+// The iOS app reads a closed enum of feature keys (RemoteConfigManager.swift
+// FeatureKey) — only those three are listed.
 const FEATURE_TAXONOMY = [
-  {
-    title: "Core",
-    items: [
-      { key: "feature_access_healthScore",     label: "Health Score" },
-      { key: "feature_access_categoryScores",  label: "Category Scores" },
-      { key: "feature_access_basicMetrics",    label: "Basic Metrics" },
-      { key: "feature_access_basicInsights",   label: "Basic Insights" },
-    ],
-  },
   {
     title: "Intelligence & Analytics",
     items: [
-      { key: "feature_access_allMetrics",            label: "All Metrics" },
-      { key: "feature_access_allInsights",           label: "All Insights" },
-      { key: "feature_access_advancedAnalytics",     label: "Advanced Analytics" },
-      { key: "feature_access_simulation",            label: "Simulation" },
-      { key: "feature_access_clinicalIntelligence",  label: "Clinical Intelligence" },
-    ],
-  },
-  {
-    title: "Trends & Risk",
-    items: [
-      { key: "feature_access_sevenDayTrends",   label: "7-Day Trends" },
-      { key: "feature_access_extendedHistory",  label: "Extended History" },
-      { key: "feature_access_riskPredictions",  label: "Risk Predictions" },
-      { key: "feature_access_focusAreas",       label: "Focus Areas" },
+      { key: "feature_access_advancedAnalytics", label: "Advanced Analytics" },
     ],
   },
   {
@@ -74,15 +54,6 @@ const FEATURE_TAXONOMY = [
     title: "Export & Sharing",
     items: [
       { key: "feature_access_exportReport", label: "Export Reports" },
-    ],
-  },
-  {
-    title: "Specialized",
-    items: [
-      { key: "feature_access_ecgIntelligence",         label: "ECG Intelligence" },
-      { key: "feature_access_nutritionCorrelations",   label: "Nutrition Correlations" },
-      { key: "feature_access_circadianAnalysis",       label: "Circadian Analysis" },
-      { key: "feature_access_adherenceTracking",       label: "Adherence Tracking" },
     ],
   },
 ];
@@ -136,7 +107,7 @@ function discoverFeatures(serverParams) {
 
 // Period options offered to free users (mirrors the iOS TimeRangeSelector buckets).
 // Adding a new key here surfaces it as a checkbox in the admin panel.
-const PERIOD_OPTIONS = ["7d", "30d", "3m", "6m", "1y"];
+const PERIOD_OPTIONS = ["7d", "30d", "3m", "6m"];
 
 // All HealthMetric.rawValue cases from Core/Models/HealthMetric.swift.
 // Keep in sync when new metrics are added on iOS.
@@ -155,7 +126,6 @@ const METRIC_OPTIONS = [
 ];
 
 const LIMITS = [
-  { key: "free_metric_detail_limit", label: "Free Metric Detail Limit", type: "number" },
   { key: "free_metrics",             label: "Free Metrics",             type: "multiselect", options: METRIC_OPTIONS },
   { key: "free_insight_limit",       label: "Free Insight Limit",       type: "number" },
   { key: "free_periods",             label: "Free Periods",             type: "multiselect", options: PERIOD_OPTIONS },
@@ -164,7 +134,7 @@ const LIMITS = [
 const PRICING = [
   { key: "pricing_pro_monthly_product_id",    label: "Pro Monthly Product ID",    type: "text" },
   { key: "pricing_pro_yearly_product_id",     label: "Pro Yearly Product ID",     type: "text" },
-  { key: "pricing_pro_trial_days",            label: "Pro Trial Days",            type: "number" },
+  { key: "pricing_pro_trial_days",            label: "Trial Days (display text only, real trial length is set in App Store Connect)", type: "number" },
 ];
 
 const ALERTS = [
@@ -174,12 +144,11 @@ const ALERTS = [
   { key: "alert_spo2_critical",        label: "SpO2 Critical Threshold",        type: "number" },
   { key: "alert_spo2_warning",         label: "SpO2 Warning Threshold",         type: "number" },
   { key: "alert_rr_spike_multiplier",  label: "Resp Rate Spike Multiplier",     type: "number" },
-  { key: "alert_heart_cap_per_day",    label: "Heart Alerts Cap / Day",         type: "number" },
+  { key: "alert_heart_cap_per_day",    label: "Heart Alerts Per Day (0 disables, app enforces max 1)", type: "number" },
 ];
 
 const WATCH = [
   { key: "watch_data_freshness_hours",         label: "Data Freshness Lookback (hrs)",   type: "number" },
-  { key: "watch_not_worn_cooldown_hours",      label: "Not-Worn Cooldown (hrs)",         type: "number" },
   { key: "watch_not_worn_threshold_hours",     label: "Not-Worn Threshold (hrs)",        type: "number" },
   { key: "watch_battery_low_threshold",        label: "Battery Low Threshold (0-1)",     type: "number" },
 ];
@@ -188,17 +157,14 @@ const NOTIFICATIONS = [
   { key: "notification_daily_budget",          label: "Daily Notification Budget",       type: "number" },
   { key: "notification_fatigue_threshold",     label: "Fatigue Threshold (open rate)",   type: "number" },
   { key: "notification_min_priority_score",    label: "Min Priority Score",             type: "number" },
+  { key: "intelligence_notifications_enabled", label: "Intelligence Card Notifications", type: "checkbox" },
 ];
 
 const ANALYSIS = [
-  { key: "analysis_warning_deviation",         label: "Warning Deviation (%)",           type: "number" },
-  { key: "analysis_critical_deviation",        label: "Critical Deviation (%)",          type: "number" },
   { key: "analysis_trend_slope_threshold",     label: "Trend Slope Threshold",          type: "number" },
 ];
 
 const SYSTEM = [
-  { key: "feedback_cooldown_days",             label: "Feedback Cooldown (Days)",        type: "number" },
-  { key: "feedback_days_before_first_prompt",  label: "Days Before First Prompt",        type: "number" },
   { key: "home_refresh_interval_seconds",      label: "Home Refresh Interval (s)",       type: "number" },
 ];
 
@@ -228,34 +194,21 @@ const FORCE_UPDATE = [
 ];
 
 const MONETIZATION = [
-  { key: "free_year_active",      label: "Free Year Mode (bypass all paywalls)",     type: "checkbox" },
+  { key: "free_year_active",   label: "Free Year Mode (bypass all paywalls)",           type: "checkbox" },
+  { key: "free_year_end_date", label: "Free Year End Date (unix seconds, 0 hides date)", type: "text" },
 ];
 
 const TIERS = ["free", "pro"];
 
-// ─── Defaults (mirrors RemoteConfigManager.swift) ────────────────────────────
+// ─── Defaults ────────────────────────────────────────────────────────────────
+// Panel fallbacks used only when a key is missing from Remote Config. Keep
+// each value equal to the app's baked default in RemoteConfigManager.swift,
+// otherwise the dashboard shows a state no install actually runs with.
 
 const DEFAULTS = {
-  "feature_access_healthScore":       "free,pro",
-  "feature_access_categoryScores":    "free,pro",
-  "feature_access_basicMetrics":      "free,pro",
-  "feature_access_allMetrics":        "pro",
-  "feature_access_sevenDayTrends":    "free,pro",
-  "feature_access_extendedHistory":   "pro",
-  "feature_access_riskPredictions":   "pro",
-  "feature_access_focusAreas":        "pro",
-  "feature_access_basicInsights":     "free,pro",
-  "feature_access_allInsights":       "pro",
   "feature_access_liveTab":           "pro",
   "feature_access_exportReport":      "pro",
   "feature_access_advancedAnalytics": "pro",
-  "feature_access_simulation":        "pro",
-  "feature_access_clinicalIntelligence": "pro",
-  "feature_access_ecgIntelligence":   "pro",
-  "feature_access_nutritionCorrelations": "pro",
-  "feature_access_circadianAnalysis": "pro",
-  "feature_access_adherenceTracking": "pro",
-  "free_metric_detail_limit":   "3",
   "free_metrics":               "heartRate,steps,sleepDuration",
   "free_insight_limit":         "2",
   "free_periods":               "7d,30d",
@@ -270,18 +223,14 @@ const DEFAULTS = {
   "alert_rr_spike_multiplier":  "1.25",
   "alert_heart_cap_per_day":    "3",
   "watch_data_freshness_hours":    "2",
-  "watch_not_worn_cooldown_hours": "4",
   "watch_not_worn_threshold_hours":"1",
   "watch_battery_low_threshold":   "0.10",
   "notification_daily_budget":         "3",
   "notification_fatigue_threshold":    "0.15",
-  "notification_min_priority_score":   "30",
-  "analysis_warning_deviation":      "0.10",
-  "analysis_critical_deviation":     "0.20",
+  "notification_min_priority_score":   "10",
+  "intelligence_notifications_enabled": "true",
   "analysis_trend_slope_threshold":  "0.02",
-  "feedback_cooldown_days":            "30",
-  "feedback_days_before_first_prompt": "5",
-  "home_refresh_interval_seconds":     "60",
+  "home_refresh_interval_seconds":     "120",
   "retention_daily_sample_days":       "0",
   "retention_analysis_snapshot_days":  "365",
   "retention_daily_strain_days":       "365",
@@ -298,7 +247,8 @@ const DEFAULTS = {
   "kill_cloud_backup":     "false",
   "kill_notifications":    "false",
   "minimum_app_version":   "0.0",
-  "free_year_active":      "true",
+  "free_year_active":      "false",
+  "free_year_end_date":    "1808697600",
 };
 
 function getValue(params, key) {
@@ -426,8 +376,24 @@ const Router = (() => {
 const ConfigManager = (() => {
   let dirty = false;
   let serverParams = {};
+  // True only after a successful load. Saving against a failed or pending
+  // load would publish stale or empty values, so save is blocked until then.
+  let loadedOk = false;
+  // Warn once per failed load, not once per keystroke.
+  let warnedNotLoaded = false;
+  // Keys the operator actually touched. Save publishes only these, so a key
+  // the form cannot fully represent is never silently republished.
+  const dirtyKeys = new Set();
 
-  function markDirty() {
+  function markDirty(key) {
+    if (!loadedOk) {
+      if (!warnedNotLoaded) {
+        warnedNotLoaded = true;
+        UI.showToast("Config not loaded yet, changes cannot be saved. Reload the page.", true);
+      }
+      return;
+    }
+    if (key) dirtyKeys.add(key);
     if (!dirty) {
       dirty = true;
       UI.showSaveBar();
@@ -436,6 +402,7 @@ const ConfigManager = (() => {
 
   function markClean() {
     dirty = false;
+    dirtyKeys.clear();
     UI.hideSaveBar();
   }
 
@@ -448,20 +415,27 @@ const ConfigManager = (() => {
       const result = await getConfig();
       serverParams = result.data.parameters || {};
 
-      // Discover features from the live Remote Config payload, then render
-      // rows. Anything new on the iOS side appears here automatically.
-      discoverFeatures(serverParams);
-      const featuresContainer = document.getElementById("section-features");
-      featuresContainer.innerHTML = "";
-      buildFeatureGroups(featuresContainer, FEATURE_GROUPS);
+      // With unsaved operator edits pending, refresh serverParams only.
+      // Rebuilding and repopulating the form here would clobber their work;
+      // the caller re-renders dashboard cards from the fresh serverParams.
+      if (!dirty) {
+        // Discover features from the live Remote Config payload, then render
+        // rows. Anything new on the iOS side appears here automatically.
+        discoverFeatures(serverParams);
+        const featuresContainer = document.getElementById("section-features");
+        featuresContainer.innerHTML = "";
+        buildFeatureGroups(featuresContainer, FEATURE_GROUPS);
 
-      populateFeatures();
-      populateInputSections();
-      populateToggles();
+        populateFeatures();
+        populateInputSections();
+        markClean();
+      }
 
-      markClean();
+      loadedOk = true;
+      warnedNotLoaded = false;
       UI.showToast("Config loaded");
     } catch (err) {
+      loadedOk = false;
       UI.showToast("Failed to load config: " + err.message, true);
     } finally {
       UI.showLoading(false);
@@ -479,31 +453,47 @@ const ConfigManager = (() => {
     });
   }
 
-  function populateInputSections() {
-    const allInputFields = [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM, ...RETENTION, ...FORCE_UPDATE];
-    allInputFields.forEach(({ key, type }) => {
-      if (type === "multiselect") {
-        const value = getValue(serverParams, key);
-        const selected = new Set(value.split(",").map((s) => s.trim()).filter(Boolean));
-        document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
-          cb.checked = selected.has(cb.dataset.option);
-        });
-      } else {
-        const input = document.querySelector(`input[data-key="${key}"]`);
-        if (input) input.value = getValue(serverParams, key);
-      }
-    });
+  // Every editable non-feature field in one list. KILL_SWITCHES and
+  // MONETIZATION share the same generic read/write path as the input sections.
+  const ALL_FIELDS = [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM, ...RETENTION, ...FORCE_UPDATE, ...KILL_SWITCHES, ...MONETIZATION];
+
+  /// Read a field's current form state as its Remote Config string value.
+  /// Returns null when the field's element is not in the DOM.
+  function readFieldValue({ key, type }) {
+    if (type === "multiselect") {
+      const checked = [];
+      document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
+        if (cb.checked) checked.push(cb.dataset.option);
+      });
+      return checked.join(",");
+    }
+    if (type === "checkbox") {
+      const cb = document.querySelector(`input[data-key="${key}"][data-toggle="true"]`);
+      return cb ? (cb.checked ? "true" : "false") : null;
+    }
+    const input = document.querySelector(`input[data-key="${key}"]`);
+    return input ? input.value : null;
   }
 
-  function populateToggles() {
-    [...KILL_SWITCHES, ...MONETIZATION].forEach(({ key, type }) => {
-      if (type === "checkbox") {
-        const cb = document.querySelector(`input[data-key="${key}"][data-toggle="true"]`);
-        if (cb) cb.checked = getValue(serverParams, key) === "true";
-      } else {
-        const input = document.querySelector(`input[data-key="${key}"]`);
-        if (input) input.value = getValue(serverParams, key);
-      }
+  /// Write a Remote Config string value into the field's form controls.
+  function writeFieldValue({ key, type }, value) {
+    if (type === "multiselect") {
+      const selected = new Set(value.split(",").map((s) => s.trim()).filter(Boolean));
+      document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
+        cb.checked = selected.has(cb.dataset.option);
+      });
+    } else if (type === "checkbox") {
+      const cb = document.querySelector(`input[data-key="${key}"][data-toggle="true"]`);
+      if (cb) cb.checked = value === "true";
+    } else {
+      const input = document.querySelector(`input[data-key="${key}"]`);
+      if (input) input.value = value;
+    }
+  }
+
+  function populateInputSections() {
+    ALL_FIELDS.forEach((field) => {
+      writeFieldValue(field, getValue(serverParams, field.key));
     });
   }
 
@@ -520,42 +510,45 @@ const ConfigManager = (() => {
       parameters[key] = checked.join(",");
     });
 
-    // Input fields
-    const allInputFields = [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM, ...RETENTION, ...FORCE_UPDATE];
-    allInputFields.forEach(({ key, type }) => {
-      if (type === "multiselect") {
-        const checked = [];
-        document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
-          if (cb.checked) checked.push(cb.dataset.option);
-        });
-        parameters[key] = checked.join(",");
-      } else {
-        const input = document.querySelector(`input[data-key="${key}"]`);
-        if (input) parameters[key] = input.value;
-      }
-    });
-
-    // Toggles
-    [...KILL_SWITCHES, ...MONETIZATION].forEach(({ key, type }) => {
-      if (type === "checkbox") {
-        const cb = document.querySelector(`input[data-key="${key}"][data-toggle="true"]`);
-        if (cb) parameters[key] = cb.checked ? "true" : "false";
-      } else {
-        const input = document.querySelector(`input[data-key="${key}"]`);
-        if (input) parameters[key] = input.value;
-      }
+    ALL_FIELDS.forEach((field) => {
+      const value = readFieldValue(field);
+      if (value !== null) parameters[field.key] = value;
     });
 
     return parameters;
   }
 
   async function save() {
+    if (!loadedOk) {
+      UI.showToast("Config not loaded, refusing to save. Reload the page first.", true);
+      return;
+    }
     UI.showLoading(true);
     try {
-      const parameters = collectAll();
+      // Publish ONLY keys the operator actually touched AND that differ from
+      // the server. Diffing collected values alone would republish keys the
+      // form cannot fully represent (e.g. a live option the form dropped).
+      const collected = collectAll();
+      const parameters = {};
+      Object.entries(collected).forEach(([key, value]) => {
+        if (dirtyKeys.has(key) && value !== getValue(serverParams, key)) parameters[key] = value;
+      });
+
+      if (Object.keys(parameters).length === 0) {
+        markClean();
+        UI.showToast("No changes to publish");
+        return;
+      }
+
       const updateConfig = functions.httpsCallable("updateRemoteConfig");
       await updateConfig({ parameters });
+
+      // Mirror the published values locally so the dashboard reflects them.
+      Object.entries(parameters).forEach(([key, value]) => {
+        serverParams[key] = { ...(serverParams[key] || {}), defaultValue: value };
+      });
       markClean();
+      DashboardPage.renderConfigCards();
       UI.showToast("Published successfully");
     } catch (err) {
       UI.showToast("Save failed: " + err.message, true);
@@ -567,7 +560,6 @@ const ConfigManager = (() => {
   function discard() {
     populateFeatures();
     populateInputSections();
-    populateToggles();
     markClean();
     UI.showToast("Changes discarded");
   }
@@ -576,7 +568,11 @@ const ConfigManager = (() => {
     return getValue(serverParams, key);
   }
 
-  return { load, save, discard, markDirty, markClean, isDirty, getParam };
+  function getParamCount() {
+    return loadedOk ? Object.keys(serverParams).length : null;
+  }
+
+  return { load, save, discard, markDirty, markClean, isDirty, getParam, getParamCount };
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -665,7 +661,8 @@ buildInputRows(document.getElementById("section-limits"), LIMITS);
 buildInputRows(document.getElementById("section-pricing"), PRICING);
 buildInputRows(document.getElementById("section-alerts"), ALERTS);
 buildInputRows(document.getElementById("section-watch"), WATCH);
-buildInputRows(document.getElementById("section-notifications"), NOTIFICATIONS);
+// buildMixedRows because NOTIFICATIONS carries a checkbox field.
+buildMixedRows(document.getElementById("section-notifications"), NOTIFICATIONS);
 buildInputRows(document.getElementById("section-analysis"), ANALYSIS);
 buildInputRows(document.getElementById("section-system"), SYSTEM);
 buildInputRows(document.getElementById("section-retention"), RETENTION);
@@ -679,6 +676,17 @@ buildInputRows(document.getElementById("section-force-update"), FORCE_UPDATE);
 const DashboardPage = (() => {
   let loaded = false;
 
+  // Bound once at module setup — binding inside init/buildHealthIndicators
+  // stacked a duplicate handler on every dashboard visit.
+  document.getElementById("health-refresh-btn").addEventListener("click", async () => {
+    loaded = false;
+    // Config load and the stat loaders are independent — run them together.
+    await Promise.all([ConfigManager.load(), init()]);
+    // When unsaved edits exist, load() refreshes serverParams without
+    // repopulating the form; re-render the config cards from the fresh values.
+    renderConfigCards();
+  });
+
   async function init() {
     if (loaded) return;
     loaded = true;
@@ -687,13 +695,23 @@ const DashboardPage = (() => {
     document.getElementById("dashboard-timestamp").textContent =
       new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
-    // Load all sections in parallel
-    loadFeedbackStats();
-    loadUserStats();
+    renderConfigCards();
+    // Each loader handles its own errors, so this never rejects.
+    await Promise.all([
+      loadFeedbackStats(),
+      loadUserStats(),
+      loadRecentFeedback(),
+      loadRecentAudit(),
+    ]);
+  }
+
+  /// Re-renders every card derived from Remote Config. Also called after a
+  /// successful save so the dashboard reflects what was just published.
+  function renderConfigCards() {
     buildHealthIndicators();
     buildConfigSnapshot();
-    loadRecentFeedback();
-    loadRecentAudit();
+    const count = ConfigManager.getParamCount();
+    document.getElementById("stat-config-keys").textContent = count == null ? "--" : String(count);
   }
 
   // ── Stats ──
@@ -714,8 +732,10 @@ const DashboardPage = (() => {
     try {
       const result = await functions.httpsCallable("getUserStats")();
       document.getElementById("stat-total-users").textContent = result.data.total || 0;
+      document.getElementById("stat-signups").textContent = result.data.signupCount ?? 0;
     } catch {
       document.getElementById("stat-total-users").textContent = "--";
+      document.getElementById("stat-signups").textContent = "--";
     }
   }
 
@@ -781,12 +801,6 @@ const DashboardPage = (() => {
       banner.className = "status-banner status-ok";
       banner.querySelector(".status-banner-text").textContent = "All systems operational";
     }
-
-    // Refresh button
-    document.getElementById("health-refresh-btn").addEventListener("click", () => {
-      loaded = false;
-      init();
-    });
   }
 
   // ── Config Snapshot ──
@@ -798,7 +812,6 @@ const DashboardPage = (() => {
       { label: "Min App Version", key: "minimum_app_version" },
       { label: "Trial Days", key: "pricing_pro_trial_days", suffix: "d" },
       { label: "Free Insight Limit", key: "free_insight_limit" },
-      { label: "Free Metric Limit", key: "free_metric_detail_limit" },
       { label: "Daily Notif Budget", key: "notification_daily_budget" },
       { label: "Alert Cooldown", key: "alert_cooldown_hours", suffix: "h" },
       { label: "Home Refresh", key: "home_refresh_interval_seconds", suffix: "s" },
@@ -906,7 +919,7 @@ const DashboardPage = (() => {
 
   function reset() { loaded = false; }
 
-  return { init, reset };
+  return { init, reset, renderConfigCards };
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1220,11 +1233,11 @@ const OperationsPage = (() => {
         `Are you sure you want to enable "${label}"? This affects all users immediately.`,
         () => {
           cb.checked = true;
-          ConfigManager.markDirty();
+          ConfigManager.markDirty(key);
         }
       );
     } else {
-      ConfigManager.markDirty();
+      ConfigManager.markDirty(key);
     }
   });
 
@@ -1335,7 +1348,7 @@ const Auth = (() => {
   document.getElementById(pageId).addEventListener("input", (e) => {
     // Skip if it was handled by OperationsPage confirmation
     if (e.target.closest("#section-kill-switches") && e.target.type === "checkbox") return;
-    ConfigManager.markDirty();
+    ConfigManager.markDirty(e.target.dataset.key);
   });
 });
 
@@ -2111,8 +2124,8 @@ const ScreenshotsPage = (() => {
 // shows the live value. Admin (Firebase Auth custom claim `admin == true`)
 // can write a new override per key, which propagates to every install
 // instantly via the snapshot listener the iOS `CopyOverridesStore` keeps
-// open. Non-admins see read-only rows; the Firestore rule blocks any write
-// server-side as the real gate.
+// open. Non-admins see read-only rows. Writes go through the
+// updateCopyOverrides callable so they are admin-gated AND audit logged.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const StringsPage = (() => {
@@ -2156,7 +2169,7 @@ const StringsPage = (() => {
     } catch (err) {
       setStatus(
         `Could not load data/copy_keys.json: ${err.message}. ` +
-        `Run scripts/dump_copy_registry.py to regenerate it.`,
+        `Run Scripts/dump_copy_registry.py to regenerate it.`,
         true,
       );
       registry = [];
@@ -2430,12 +2443,18 @@ const StringsPage = (() => {
       const next = input.value;
       const errEl = modalEl.querySelector("#strings-modal-error");
       errEl.textContent = "";
+      // A blank value means "remove the override". The callable rejects empty
+      // strings by design, so route through the Clear flow with its confirm.
+      if (next.trim().length === 0) {
+        closeModal();
+        await clearOverride(key);
+        return;
+      }
       newSaveBtn.disabled = true;
       try {
-        await db
-          .collection("copy_overrides")
-          .doc("strings")
-          .set({ [key]: next }, { merge: true });
+        // Goes through the updateCopyOverrides callable (not a direct
+        // Firestore write) so every edit lands in admin_audit_log.
+        await functions.httpsCallable("updateCopyOverrides")({ set: { [key]: next } });
         closeModal();
         UI.showToast(`Saved ${key}`);
       } catch (err) {
@@ -2455,20 +2474,17 @@ const StringsPage = (() => {
       return;
     }
     try {
-      await db
-        .collection("copy_overrides")
-        .doc("strings")
-        .update({ [key]: firebase.firestore.FieldValue.delete() });
+      await functions.httpsCallable("updateCopyOverrides")({ remove: [key] });
       UI.showToast(`Cleared ${key}`);
     } catch (err) {
-      UI.showToast(friendlyWriteError(err));
+      UI.showToast(friendlyWriteError(err), true);
     }
   }
 
   function friendlyWriteError(err) {
     if (!err) return "Save failed.";
-    if (err.code === "permission-denied") {
-      return "Permission denied — only the admin account can write copy overrides.";
+    if (err.code === "permission-denied" || err.code === "functions/permission-denied") {
+      return "Permission denied. Only the admin account can write copy overrides.";
     }
     return `Save failed: ${err.message || err}`;
   }

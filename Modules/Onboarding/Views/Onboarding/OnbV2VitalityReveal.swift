@@ -168,7 +168,7 @@ private struct OnbV2MetricChip: View {
                 Text(String(format: "%+.1f", metric.delta))
                     .font(.system(size: 25, weight: .heavy))
                     .foregroundStyle(metric.good ? OnbV2.blueLight : OnbV2.amber)
-                Text("years")
+                Text(Copy.OnboardingV2.revealYearsUnit)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(OnbV2.fg3)
             }
@@ -230,8 +230,8 @@ struct OnbV2VitalityRevealScreen: View {
     }
     private var payoffText: String {
         let n = Int(abs(yearsDiff).rounded())
-        if n == 0 { return "right on your real age" }
-        return yearsDiff > 0 ? "\(n) years younger" : "\(n) years older"
+        if n == 0 { return Copy.OnboardingV2.revealPayoffOnAge }
+        return yearsDiff > 0 ? Copy.OnboardingV2.revealPayoffYounger(n) : Copy.OnboardingV2.revealPayoffOlder(n)
     }
     // the whole orb (particles, glow, rim, number) takes the verdict colour
     private var orbTint: Color {
@@ -243,13 +243,13 @@ struct OnbV2VitalityRevealScreen: View {
         yearsDiff >= 0 ? OnbV2.blueLight : resultColor
     }
     private var ctaCaption: String {
-        yearsDiff > 0 ? "Now let's make it even younger." : "Let's start bringing this down."
+        yearsDiff > 0 ? Copy.OnboardingV2.revealSubYounger : Copy.OnboardingV2.revealSubOlder
     }
 
     @State private var particles = makeOrbParticles()
     @State private var start = Date()
     @State private var age = 0.0
-    @State private var label = "YOUR AGE"
+    @State private var label = Copy.OnboardingV2.revealOrbYourAge
     @State private var consumed: [Bool]
     @State private var appeared = false
     @State private var done = false
@@ -262,7 +262,7 @@ struct OnbV2VitalityRevealScreen: View {
         OnbV2ScreenContainer(ambient: .none, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack, tint: orbTint)
-                Text("YOUR VITALITY AGE")
+                Text(Copy.OnboardingV2.revealHeader)
                     .font(.system(size: 12, weight: .bold)).tracking(2.2)
                     .foregroundStyle(orbTintBright)
                     .frame(maxWidth: .infinity)
@@ -319,7 +319,7 @@ struct OnbV2VitalityRevealScreen: View {
                             Text(payoffText)
                                 .font(.system(size: 24, weight: .heavy))
                                 .foregroundStyle(resultColor)
-                            Text("than your real age of \(chronoAge)")
+                            Text(Copy.OnboardingV2.revealThanRealAge(chronoAge))
                                 .font(.system(size: 13))
                                 .foregroundStyle(OnbV2.fg3)
                         }
@@ -329,7 +329,7 @@ struct OnbV2VitalityRevealScreen: View {
                         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: done)
 
                         VStack(spacing: 11) {
-                            OnbV2PrimaryCTA("Continue", tint: orbTint) { onContinue() }
+                            OnbV2PrimaryCTA(Copy.OnboardingV2.revealCTA, tint: orbTint) { onContinue() }
                             Text(ctaCaption)
                                 .font(.system(size: 11))
                                 .foregroundStyle(OnbV2.fg3)
@@ -404,7 +404,7 @@ struct OnbV2VitalityRevealScreen: View {
         if n > 0 {
             // the chips are framed around the orb; hold so the user can read them
             try? await Task.sleep(for: .milliseconds(1700))
-            label = "CALCULATING"
+            label = Copy.OnboardingV2.revealOrbCalculating
             for (step, idx) in feedOrder.enumerated() {
                 let d = metrics[idx].delta
                 lastFeed = Date()
@@ -421,7 +421,7 @@ struct OnbV2VitalityRevealScreen: View {
             }
         }
         await tweenAge(from: age, to: Double(vitalityAge), duration: 0.3)
-        label = "YEARS"
+        label = Copy.OnboardingV2.revealOrbYears
         // let the final number land alone for a beat before the verdict appears
         try? await Task.sleep(for: .milliseconds(550))
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { done = true }

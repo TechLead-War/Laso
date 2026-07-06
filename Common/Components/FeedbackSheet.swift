@@ -318,7 +318,6 @@ struct FeedbackSheet: View {
             textLength: trimmed.count,
             sentiment: sentiment
         )
-        FeedbackPromptManager.shared.markFeedbackSubmitted()
 
         isSending = false
         withAnimation {

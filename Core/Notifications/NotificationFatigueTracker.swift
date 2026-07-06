@@ -13,7 +13,7 @@ import Foundation
 ///    notifications are suppressed for `suppressionDuration`.
 ///
 /// 2. Same-day priority resolution:
-///    When two eligible non-critical notifications are scheduled on the same
+///    When two eligible non-critical notifications will FIRE on the same
 ///    calendar day, only the higher-priority one fires. The lower one is
 ///    dropped and reported via analytics with `reason: "priority_pushed_down"`.
 ///
@@ -127,26 +127,31 @@ struct NotificationFatigueTracker {
         case reject
     }
 
-    /// Record a candidate priority for today and decide whether to schedule it.
+    /// Record a candidate priority for the day it will FIRE and decide whether
+    /// to schedule it. Competition is per fire day: two notifications firing on
+    /// different days never compete, even when scheduled in the same session.
     /// Only call for non-critical, non-daily-summary, non-bypass notifications.
     func resolveSameDayPriority(
         identifier: String,
         priority: Int,
+        fireDate: Date = Date(),
         now: Date = Date()
     ) -> SameDayDecision {
-        let todayKey = dayKey(for: now)
+        let fireDayKey = dayKey(for: fireDate)
+        var bestByDay = loadBestByDay(now: now)
 
-        guard let stored = defaults.string(forKey: AppKeys.Notifications.sameDayBestCandidate),
-              let parsed = Self.parseBest(stored),
-              parsed.day == todayKey
+        guard let stored = bestByDay[fireDayKey],
+              let parsed = Self.parseBest(stored)
         else {
-            // No prior best for today — accept.
-            writeBest(day: todayKey, priority: priority, identifier: identifier)
+            // No prior best for this fire day — accept.
+            bestByDay[fireDayKey] = "\(priority)|\(identifier)"
+            saveBestByDay(bestByDay)
             return .accept(previousIdentifier: nil)
         }
 
         if priority > parsed.priority {
-            writeBest(day: todayKey, priority: priority, identifier: identifier)
+            bestByDay[fireDayKey] = "\(priority)|\(identifier)"
+            saveBestByDay(bestByDay)
             // Previous best is being replaced — caller should cancel it.
             return .accept(previousIdentifier: parsed.identifier == identifier ? nil : parsed.identifier)
         }
@@ -158,6 +163,14 @@ struct NotificationFatigueTracker {
         }
 
         return .reject
+    }
+
+    /// Forget the last-fired stamp when it belongs to `identifier`. Called when
+    /// a pending request is evicted before delivery so a notification the user
+    /// never saw cannot later be counted as dismissed-without-open.
+    func clearFired(identifier: String) {
+        guard lastNonCriticalFiredId == identifier else { return }
+        clearLastFired()
     }
 
     // MARK: - Private: persisted getters/setters
@@ -194,9 +207,18 @@ struct NotificationFatigueTracker {
         defaults.removeObject(forKey: AppKeys.Notifications.lastNonCriticalFiredId)
     }
 
-    private func writeBest(day: String, priority: Int, identifier: String) {
-        let encoded = "\(day)|\(priority)|\(identifier)"
-        defaults.set(encoded, forKey: AppKeys.Notifications.sameDayBestCandidate)
+    /// Per-fire-day best candidates: `[dayKey: "priority|identifier"]`.
+    /// Past days are pruned on load (the zero-padded key format sorts
+    /// lexicographically). A legacy single-string value under the same key
+    /// fails the dictionary read and is treated as empty — a one-time reset.
+    private func loadBestByDay(now: Date) -> [String: String] {
+        let stored = defaults.dictionary(forKey: AppKeys.Notifications.sameDayBestCandidate) as? [String: String] ?? [:]
+        let todayKey = dayKey(for: now)
+        return stored.filter { $0.key >= todayKey }
+    }
+
+    private func saveBestByDay(_ bestByDay: [String: String]) {
+        defaults.set(bestByDay, forKey: AppKeys.Notifications.sameDayBestCandidate)
     }
 
     private func dayKey(for date: Date) -> String {
@@ -207,10 +229,10 @@ struct NotificationFatigueTracker {
         return String(format: "%04d-%02d-%02d", year, month, day)
     }
 
-    private static func parseBest(_ raw: String) -> (day: String, priority: Int, identifier: String)? {
-        let parts = raw.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false)
-        guard parts.count == 3 else { return nil }
-        guard let priority = Int(parts[1]) else { return nil }
-        return (String(parts[0]), priority, String(parts[2]))
+    private static func parseBest(_ raw: String) -> (priority: Int, identifier: String)? {
+        let parts = raw.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return nil }
+        guard let priority = Int(parts[0]) else { return nil }
+        return (priority, String(parts[1]))
     }
 }

@@ -87,12 +87,19 @@
         </div>
 
         <!-- Stats Row -->
-        <div class="stats-grid stats-grid-5" id="dashboard-stats">
+        <div class="stats-grid" id="dashboard-stats">
           <div class="stat-card stat-card-accent">
             <div class="stat-icon">&#9632;</div>
             <div class="stat-content">
               <div class="stat-value" id="stat-total-users">--</div>
               <div class="stat-label">Total Users</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#9734;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-signups">--</div>
+              <div class="stat-label">Signups</div>
             </div>
           </div>
           <div class="stat-card">
@@ -112,7 +119,7 @@
           <div class="stat-card">
             <div class="stat-icon">&#9881;</div>
             <div class="stat-content">
-              <div class="stat-value" id="stat-config-keys">69</div>
+              <div class="stat-value" id="stat-config-keys">--</div>
               <div class="stat-label">Config Keys</div>
             </div>
           </div>
@@ -271,7 +278,7 @@
 
         <div class="card collapsible">
           <div class="card-header" data-collapse="section-system">
-            <h2>Feedback &amp; System</h2>
+            <h2>System</h2>
             <span class="collapse-icon">&#9660;</span>
           </div>
           <div class="card-body" id="section-system"></div>
@@ -601,8 +608,8 @@
       <!-- overrides to the copy_overrides/strings Firestore doc. Edits go    -->
       <!-- live to every install instantly via the snapshot listener that the -->
       <!-- iOS `CopyOverridesStore` keeps open. Non-admins see the list but   -->
-      <!-- the Save button stays disabled (and the Firestore rule blocks the  -->
-      <!-- write server-side as the actual security gate).                    -->
+      <!-- the Save button stays disabled. Writes go through the              -->
+      <!-- updateCopyOverrides callable, admin-gated and audit logged.        -->
       <div class="page" id="page-strings">
         <div class="page-header">
           <h1>Strings</h1>

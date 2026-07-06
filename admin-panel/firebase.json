@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "predeploy": ["python3 ../Scripts/dump_copy_registry.py"],
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [

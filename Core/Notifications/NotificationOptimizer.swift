@@ -69,13 +69,16 @@ enum NotificationOptimizer {
         return rate < fatigueThreshold
     }
 
-    /// Dynamic daily notification budget, reduced when fatigued
+    /// Dynamic daily notification budget, reduced when fatigued. Floored at 1
+    /// on both paths so a zero or negative remote value cannot silently kill
+    /// every capped notification app-wide (the kill switch is the sanctioned
+    /// off button, not the budget).
     static func dailyBudget(events: [StoredNotificationEvent]) -> Int {
         let baseBudget = RemoteConfigManager.shared.notificationDailyBudget
         if isFatigued(events: events) {
             return max(1, baseBudget - 1)
         }
-        return baseBudget
+        return max(1, baseBudget)
     }
 
     /// Aggregate open rate for analytics

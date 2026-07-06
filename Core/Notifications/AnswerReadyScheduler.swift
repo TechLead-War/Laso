@@ -31,16 +31,24 @@ enum AnswerReadyScheduler {
         // not ready, so we wait for a later refresh.
         guard verdict.zone != .inconclusive else { return }
 
-        defaults.set(true, forKey: AppKeys.Prediction.answerReadyFired)
-
-        NotificationManager.shared.scheduleNotification(
-            title: Copy.Notifications.answerReadyTitle(phrase: prediction.userPhrase),
-            body: Copy.Notifications.answerReadyBody(phrase: prediction.userPhrase),
-            identifier: AppConstants.NotificationID.answerReady,
-            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false),
-            severity: .info,
-            metricInFocus: true
-        )
+        // Await the real authorization state instead of trusting the launch-time
+        // cache (cold at first render), and burn the one-shot flag only after
+        // the schedule actually passed every gate — a suppressed attempt stays
+        // retryable on the next refresh.
+        Task {
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            let scheduled = NotificationManager.shared.scheduleNotification(
+                title: Copy.Notifications.answerReadyTitle(phrase: prediction.userPhrase),
+                body: Copy.Notifications.answerReadyBody(phrase: prediction.userPhrase),
+                identifier: AppConstants.NotificationID.answerReady,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false),
+                severity: .info,
+                metricInFocus: true
+            )
+            if scheduled {
+                defaults.set(true, forKey: AppKeys.Prediction.answerReadyFired)
+            }
+        }
     }
 
     /// Cancel the answer-ready push (e.g. if the user opens the app and sees the

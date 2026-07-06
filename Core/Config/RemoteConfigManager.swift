@@ -8,7 +8,7 @@ import Observation
 ///   - Feature access flags (per tier)
 ///   - Limits (free tier)
 ///   - Pricing (product IDs, trial days)
-///   - System config (feedback, analytics, sessions)
+///   - System config (alerts, retention, kill switches)
 @Observable
 final class RemoteConfigManager {
 
@@ -35,6 +35,13 @@ final class RemoteConfigManager {
 
     private(set) var lastFetchTime: Date?
     private(set) var fetchError: String?
+
+    /// Retained so the realtime stream stays alive for the app's lifetime.
+    @ObservationIgnored private var configUpdateListener: ConfigUpdateListenerRegistration?
+
+    /// In-flight fetch flag. Only read/written inside `MainActor.run` in
+    /// `fetchAndActivate()` so concurrent callers cannot interleave.
+    @ObservationIgnored private var isFetching = false
 
     // MARK: - Init
 
@@ -88,17 +95,64 @@ final class RemoteConfigManager {
 
     // MARK: - Fetch
 
-    /// Fetch and activate remote config. Call once at app launch.
+    /// Fetch and activate remote config. Call once at app launch; the
+    /// scenePhase retry may call again on a flaky-network launch.
     func fetchAndActivate() async {
         guard let remoteConfig else { return }
+        // The launch fetch and the scenePhase retry can overlap. Check-and-set
+        // the in-flight flag and register the realtime listener inside one
+        // main-actor hop (no suspension between check and set), so the second
+        // caller returns early and the listener can never register twice.
+        // Listener registration stays here, not in init: this singleton can be
+        // touched before FirebaseApp.configure() (see `_remoteConfig` note).
+        let alreadyFetching = await MainActor.run { () -> Bool in
+            if isFetching { return true }
+            isFetching = true
+            startRealtimeUpdates(remoteConfig)
+            return false
+        }
+        if alreadyFetching { return }
         do {
             let status = try await remoteConfig.fetchAndActivate()
-            if status == .successFetchedFromRemote || status == .successUsingPreFetchedData {
-                lastFetchTime = Date()
-                fetchError = nil
+            await MainActor.run {
+                isFetching = false
+                if status == .successFetchedFromRemote || status == .successUsingPreFetchedData {
+                    lastFetchTime = Date()
+                    fetchError = nil
+                }
             }
         } catch {
-            fetchError = error.localizedDescription
+            await MainActor.run {
+                isFetching = false
+                fetchError = error.localizedDescription
+            }
+        }
+    }
+
+    /// Realtime config stream. Without it an admin toggle flip only reaches
+    /// users after a cold relaunch plus the fetch throttle (up to 1 hour).
+    /// Activating on update and stamping `lastFetchTime` on the main actor
+    /// re-renders every @Observable-tracked gate mid-session.
+    /// Only called from the main-actor block in `fetchAndActivate()`, which
+    /// makes the guard below a serialized check-then-set.
+    private func startRealtimeUpdates(_ remoteConfig: RemoteConfig) {
+        guard configUpdateListener == nil else { return }
+        configUpdateListener = remoteConfig.addOnConfigUpdateListener { [weak self] update, error in
+            if let error {
+                AnalyticsBackend.provider.captureError(error, context: "remote_config_realtime")
+                return
+            }
+            guard update != nil else { return }
+            remoteConfig.activate { _, activateError in
+                if let activateError {
+                    AnalyticsBackend.provider.captureError(activateError, context: "remote_config_realtime_activate")
+                    return
+                }
+                Task { @MainActor in
+                    self?.lastFetchTime = Date()
+                    self?.fetchError = nil
+                }
+            }
         }
     }
 
@@ -117,10 +171,6 @@ final class RemoteConfigManager {
     }
 
     // MARK: - Limits
-
-    var freeMetricDetailLimit: Int {
-        intValue(forKey: "free_metric_detail_limit")
-    }
 
     var freeMetrics: [String] {
         let csv = stringValue(forKey: "free_metrics")
@@ -151,12 +201,6 @@ final class RemoteConfigManager {
     var proTrialDays: Int {
         let value = intValue(forKey: "pricing_pro_trial_days")
         return value > 0 ? value : SubscriptionConfig.fallbackTrialDays
-    }
-
-    // MARK: - System
-
-    var feedbackCooldownDays: Int {
-        intValue(forKey: "feedback_cooldown_days")
     }
 
     // MARK: - Alert Thresholds
@@ -203,11 +247,6 @@ final class RemoteConfigManager {
         doubleValue(forKey: "watch_data_freshness_hours")
     }
 
-    /// Cooldown hours between "watch not worn" notifications
-    var watchNotWornCooldownHours: Double {
-        doubleValue(forKey: "watch_not_worn_cooldown_hours")
-    }
-
     /// Hours without data before "not worn" alert fires
     var watchNotWornThresholdHours: Double {
         doubleValue(forKey: "watch_not_worn_threshold_hours")
@@ -237,16 +276,6 @@ final class RemoteConfigManager {
 
     // MARK: - Analysis Thresholds
 
-    /// Warning deviation from baseline (proportion, e.g. 0.10 = 10%)
-    var analysisWarningDeviation: Double {
-        doubleValue(forKey: "analysis_warning_deviation")
-    }
-
-    /// Critical deviation from baseline (proportion, e.g. 0.20 = 20%)
-    var analysisCriticalDeviation: Double {
-        doubleValue(forKey: "analysis_critical_deviation")
-    }
-
     /// Trend slope threshold for significance
     var analysisTrendSlopeThreshold: Double {
         doubleValue(forKey: "analysis_trend_slope_threshold")
@@ -257,11 +286,6 @@ final class RemoteConfigManager {
     /// Home screen auto-refresh interval in seconds
     var homeRefreshIntervalSeconds: Int {
         intValue(forKey: "home_refresh_interval_seconds")
-    }
-
-    /// Days before first feedback prompt
-    var feedbackDaysBeforeFirstPrompt: Int {
-        intValue(forKey: "feedback_days_before_first_prompt")
     }
 
     // MARK: - Data Retention (days)
@@ -429,7 +453,11 @@ final class RemoteConfigManager {
         guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
               !raw.isEmpty,
               let data = raw.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+              let decoded = try? JSONDecoder().decode([String].self, from: data),
+              !decoded.isEmpty else {
+            // An RC value of "[]" decodes fine but would blank the copy that
+            // consumes it (iOS drops a notification with empty content), so an
+            // empty array falls back like a missing key.
             return fallback
         }
         return decoded
@@ -461,7 +489,8 @@ extension RemoteConfigManager {
     }()
 
     /// In-app defaults used when Remote Config hasn't been fetched yet.
-    /// These mirror the initial values set in the admin panel.
+    /// Only keys the app actually reads live here; the admin panel may expose
+    /// additional keys these defaults do not mirror.
     private static let defaults: [String: NSObject] = [
         // Feature access. Only flags that actually gate UI in the app.
         "feature_access_advancedAnalytics": "pro" as NSString,
@@ -469,7 +498,6 @@ extension RemoteConfigManager {
         "feature_access_exportReport":      "pro" as NSString,
 
         // Limits
-        "free_metric_detail_limit": 3 as NSNumber,
         "free_metrics":             "heartRate,steps,sleepDuration" as NSString,
         "free_insight_limit":       2 as NSNumber,
         "free_periods":             "7d,30d" as NSString,
@@ -478,9 +506,6 @@ extension RemoteConfigManager {
         "pricing_pro_monthly_product_id":    "com.lasohealth.monthly" as NSString,
         "pricing_pro_yearly_product_id":     "com.lasohealth.yearly" as NSString,
         "pricing_pro_trial_days":            7 as NSNumber,
-
-        // System
-        "feedback_cooldown_days":         30 as NSNumber,
 
         // Alert thresholds
         "alert_cooldown_hours":        4 as NSNumber,
@@ -493,23 +518,22 @@ extension RemoteConfigManager {
 
         // Watch monitor
         "watch_data_freshness_hours":      2 as NSNumber,
-        "watch_not_worn_cooldown_hours":   4 as NSNumber,
         "watch_not_worn_threshold_hours":  1 as NSNumber,
         "watch_battery_low_threshold":     0.10 as NSNumber,
 
         // Notification optimizer
         "notification_daily_budget":            3 as NSNumber,
         "notification_fatigue_threshold":       0.15 as NSNumber,
-        "notification_min_priority_score":      30 as NSNumber,
+        // 10 lets deliberate .info journeys (engagement drip, trial nudges,
+        // wind-down, weekly summary) through; the old 30 silently suppressed
+        // every notification scoring below a plain .warning.
+        "notification_min_priority_score":      10 as NSNumber,
 
         // Analysis thresholds
-        "analysis_warning_deviation":       0.10 as NSNumber,
-        "analysis_critical_deviation":      0.20 as NSNumber,
         "analysis_trend_slope_threshold":   0.02 as NSNumber,
 
         // UI intervals
         "home_refresh_interval_seconds":       120 as NSNumber,
-        "feedback_days_before_first_prompt":   5 as NSNumber,
 
         // Data retention (days)
         "retention_daily_sample_days":        0 as NSNumber,     // No pruning — days counter must grow unbounded

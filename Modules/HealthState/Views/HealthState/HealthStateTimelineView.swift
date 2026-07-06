@@ -127,7 +127,7 @@ struct HealthStateTimelineView: View {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(DS.Typography.caption)
                         .foregroundStyle(color)
-                    Text("You typically move to \(nextState.key) in ~\(String(format: "%.0f", avgDays)) days")
+                    Text(Copy.HealthStateTimeline.transitionPrediction(to: nextState.key, days: String(format: "%.0f", avgDays)))
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()

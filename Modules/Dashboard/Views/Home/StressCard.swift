@@ -63,7 +63,7 @@ struct StressCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Stress level \(String(format: "%.1f", stressScore)), \(stressLevel), trending \(trend)")
+        .accessibilityLabel(Copy.Home.stressCardLabel(score: String(format: "%.1f", stressScore), level: stressLevel, trend: trend))
         .accessibilityHint(Copy.Home.viewStressMonitorDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.stressCard")

@@ -357,13 +357,14 @@ exports.updateRemoteConfig = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Missing parameters object.");
   }
 
-  // Validate all values are strings and not excessively long
+  // Validate keys and value lengths. Empty values are legitimate (clearing a
+  // message or a multiselect); mass-wipe protection lives client-side via the
+  // loadedOk gate plus the dirty-key diff save.
   for (const [key, value] of Object.entries(parameters)) {
     if (typeof key !== "string" || key.length > 100) {
       throw new HttpsError("invalid-argument", `Invalid key: ${key}`);
     }
-    const strVal = String(value);
-    if (strVal.length > 1000) {
+    if (String(value).length > 1000) {
       throw new HttpsError("invalid-argument", `Value too long for key: ${key}`);
     }
   }
@@ -422,13 +423,73 @@ exports.updateRemoteConfig = onCall(async (request) => {
 });
 
 /**
+ * updateCopyOverrides — writes copy string overrides to copy_overrides/strings
+ * and logs every change to admin_audit_log. The Strings page calls this instead
+ * of writing Firestore directly so copy edits are audit logged.
+ *   data.set:    { key: newValue } fields to write
+ *   data.remove: [key] fields to delete (fall back to the bundled default)
+ */
+exports.updateCopyOverrides = onCall({ invoker: "public" }, async (request) => {
+  const adminUser = await verifyAdmin(request);
+
+  const set = request.data?.set;
+  const setEntries = set && typeof set === "object" ? Object.entries(set) : [];
+  const removeKeys = Array.isArray(request.data?.remove) ? request.data.remove : [];
+  if (setEntries.length === 0 && removeKeys.length === 0) {
+    throw new HttpsError("invalid-argument", "Nothing to update.");
+  }
+
+  for (const key of [...setEntries.map(([k]) => k), ...removeKeys]) {
+    if (typeof key !== "string" || key.length === 0 || key.length > 200) {
+      throw new HttpsError("invalid-argument", `Invalid key: ${key}`);
+    }
+  }
+  for (const [key, value] of setEntries) {
+    if (typeof value !== "string" || value.length === 0 || value.length > 5000) {
+      throw new HttpsError("invalid-argument", `Invalid value for key: ${key}. Must be a non-empty string under 5000 chars.`);
+    }
+  }
+
+  const ref = admin.firestore().collection("copy_overrides").doc("strings");
+  const before = (await ref.get()).data() || {};
+
+  const payload = {};
+  const changes = {};
+  for (const [key, value] of setEntries) {
+    payload[key] = value;
+    changes[key] = { from: before[key] ?? "(unset)", to: value };
+  }
+  for (const key of removeKeys) {
+    payload[key] = admin.firestore.FieldValue.delete();
+    changes[key] = { from: before[key] ?? "(unset)", to: "(cleared)" };
+  }
+  await ref.set(payload, { merge: true });
+
+  await logAdminAction(
+    request.auth.uid,
+    adminUser.email,
+    "update_copy_overrides",
+    { changedKeys: Object.keys(changes), changes }
+  );
+
+  return { success: true, changedCount: Object.keys(changes).length };
+});
+
+/**
  * getUserStats — aggregates user_profiles collection for demographics dashboard.
  */
 exports.getUserStats = onCall({ invoker: "public" }, async (request) => {
   await verifyAdmin(request);
 
-  const snapshot = await admin.firestore().collection("user_profiles").get();
+  // signupCount feeds the dashboard Signups card. The admin panel reads it
+  // here (admin-gated) instead of the public IP-rate-limited getSignupCount,
+  // whose rate bucket is shared with marketing traffic.
+  const [snapshot, signupSnap] = await Promise.all([
+    admin.firestore().collection("user_profiles").get(),
+    admin.firestore().collection("early_access").count().get(),
+  ]);
   const total = snapshot.size;
+  const signupCount = signupSnap.data().count;
 
   const genderCounts = {};
   const ageBracketCounts = {};
@@ -459,7 +520,7 @@ exports.getUserStats = onCall({ invoker: "public" }, async (request) => {
     versionCounts[ver] = (versionCounts[ver] || 0) + 1;
   });
 
-  return { total, genderCounts, ageBracketCounts, regionCounts, healthFocusCounts, versionCounts };
+  return { total, signupCount, genderCounts, ageBracketCounts, regionCounts, healthFocusCounts, versionCounts };
 });
 
 /**
@@ -471,9 +532,9 @@ exports.getFeedbackStats = onCall({ invoker: "public" }, async (request) => {
   const countSnap = await admin.firestore().collection("feedback").count().get();
   const total = countSnap.data().count;
 
-  // Get recent feedback (last 7 days)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // Get recent feedback (last 7 days). The iOS writer stores `timestamp` as
+  // epoch seconds (a Double), so compare against a number, not a Date.
+  const sevenDaysAgo = Date.now() / 1000 - 7 * 86400;
 
   const recentSnap = await admin.firestore()
     .collection("feedback")

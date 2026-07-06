@@ -37,6 +37,17 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         backgroundRefreshCoordinator.register()
         backgroundRefreshCoordinator.schedule()
 
+        // Re-arm the Watch heart-rate observer here as well as in the SwiftUI
+        // startup path: a scene-less background relaunch (BGTask, HealthKit
+        // background delivery) never runs the WindowGroup .task, so without
+        // this the observer stays dead — the pending "not worn" alarm then
+        // fires falsely and battery alerts stop. startMonitoring falls back to
+        // its own HKHealthStore until the startup coordinator injects the
+        // shared one, and re-running it is idempotent (stops the old query).
+        Task { @MainActor in
+            WatchMonitor.shared.startMonitoring()
+        }
+
         return true
     }
 

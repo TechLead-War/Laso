@@ -48,9 +48,6 @@ extension Copy {
         static var whileYouWait: String { RemoteConfigManager.shared.copyString("copy_common_while_you_wait", default: "While you wait") }
         static var updateYourPaymentMethodToKeep: String { RemoteConfigManager.shared.copyString("copy_common_update_your_payment_method_to_keep", default: "Update your payment method to keep your subscription active.") }
         static var underMaintenance: String { RemoteConfigManager.shared.copyString("copy_common_under_maintenance", default: "Under Maintenance") }
-        static var someFeaturesMayNotWorkAs: String { RemoteConfigManager.shared.copyString("copy_common_some_features_may_not_work_as", default: "Some features may not work as expected right now.") }
-        static var continueAnyway: String { RemoteConfigManager.shared.copyString("copy_common_continue_anyway", default: "Continue Anyway") }
-        static var dismissesTheMaintenanceNoticeAndContinuesHint: String { RemoteConfigManager.shared.copyString("copy_common_dismisses_the_maintenance_notice_and_continues_hint", default: "Dismisses the maintenance notice and continues to the app") }
         static var x: String { RemoteConfigManager.shared.copyString("copy_common_x", default: "·") }
         static var laso: String { RemoteConfigManager.shared.copyString("copy_common_laso", default: "Laso") }
         static var trackYourHealthWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_track_your_health_with_laso", default: "Track your health with Laso") }
@@ -68,6 +65,10 @@ extension Copy {
         static var whatIsTheMainBenefitYou: String { RemoteConfigManager.shared.copyString("copy_common_what_is_the_main_benefit_you", default: "What is the main benefit you get from Laso?") }
         static var continueLabel2: String { RemoteConfigManager.shared.copyString("copy_common_continue2", default: "Continue") }
         static var howCanWeImproveLasoFor: String { RemoteConfigManager.shared.copyString("copy_common_how_can_we_improve_laso_for", default: "How can we improve Laso for you?") }
+        static var pmfSegmentPlaceholder: String { RemoteConfigManager.shared.copyString("copy_common_pmf_segment_placeholder", default: "e.g., fitness enthusiast, someone with a chronic condition...") }
+        static var pmfBenefitPlaceholder: String { RemoteConfigManager.shared.copyString("copy_common_pmf_benefit_placeholder", default: "e.g., understanding my recovery, sleep insights...") }
+        static var pmfImprovementPlaceholder: String { RemoteConfigManager.shared.copyString("copy_common_pmf_improvement_placeholder", default: "Optional — anything you'd change or add") }
+        static var submitButton: String { RemoteConfigManager.shared.copyString("copy_common_submit_button", default: "Submit") }
         static var thankYou: String { RemoteConfigManager.shared.copyString("copy_common_thank_you", default: "Thank you") }
         static var yourFeedbackShapesWhatWeBuild: String { RemoteConfigManager.shared.copyString("copy_common_your_feedback_shapes_what_we_build", default: "Your feedback shapes what we build next.") }
         static var doneButton: String { RemoteConfigManager.shared.copyString("copy_common_done_button", default: "Done") }

@@ -59,12 +59,6 @@ struct FeatureGate {
         return subscription.hasAccess
     }
 
-    /// The number of metric detail views allowed for free users.
-    static var metricDetailLimit: Int {
-        if freeYearActive { return .max }
-        return isFreeTier ? config.freeMetricDetailLimit : .max
-    }
-
     /// The number of insights shown to free users.
     static var insightLimit: Int {
         if freeYearActive { return .max }

@@ -36,6 +36,11 @@ extension Copy {
         static func transitionNotObserved(from: String, to: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_transition_not_observed", default: "Transition from %@ to %@ not observed."), from, to)
         }
+
+        /// `days` arrives preformatted ("%.0f") so the caller's rounding stays unchanged.
+        static func transitionPrediction(to state: String, days: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_transition_prediction", default: "You typically move to %@ in ~%@ days"), state, days)
+        }
     }
 
     // MARK: - Lifted view literals

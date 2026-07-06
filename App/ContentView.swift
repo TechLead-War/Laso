@@ -66,6 +66,21 @@ struct ContentView: View {
         .task(id: appStateStore.onboardingCompleted) {
             guard appStateStore.onboardingCompleted else { return }
 
+            // Notification permission fallback: the onboarding prompt only fires
+            // inside the Apple Sign-In success branch, so users who completed
+            // onboarding via any other path land here in `.notDetermined` and
+            // never receive notifications. Trigger the system prompt once.
+            // iOS no-ops this call when status is already `.authorized`/`.denied`.
+            // Runs BEFORE the initial load: housekeeping inside `load()` arms
+            // the daily/evening summaries, and doing that with the permission
+            // still undetermined would silently skip the user's first day.
+            // Skip during UI-test screenshot capture: the system permission
+            // alert would otherwise overlay every main-app screen we capture.
+            if !UITestMode.isEnabled,
+               await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
+                _ = await NotificationManager.shared.requestAuthorization(source: "launch_fallback")
+            }
+
             if appStateStore.pendingCalibrationHydration && healthKitManager.lastRefresh != nil {
                 dashboardViewModel.hydrateFromCalibration()
                 appStateStore.setPendingCalibrationHydration(false)
@@ -105,17 +120,6 @@ struct ContentView: View {
                 showHealthKitReprompt = true
             }
 
-            // Notification permission fallback: the onboarding prompt only fires
-            // inside the Apple Sign-In success branch, so users who completed
-            // onboarding via any other path land here in `.notDetermined` and
-            // never receive notifications. Trigger the system prompt once.
-            // iOS no-ops this call when status is already `.authorized`/`.denied`.
-            // Skip during UI-test screenshot capture: the system permission
-            // alert would otherwise overlay every main-app screen we capture.
-            if !UITestMode.isEnabled,
-               await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
-                _ = await NotificationManager.shared.requestAuthorization(source: "launch_fallback")
-            }
         }
         .onAppear {
             startSessionAnalytics()
@@ -124,6 +128,11 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
+                // A flaky-network launch can leave the whole session on baked-in
+                // defaults; retry until the first fetch ever succeeds.
+                if RemoteConfigManager.shared.lastFetchTime == nil {
+                    Task { await RemoteConfigManager.shared.fetchAndActivate() }
+                }
                 // Reset the dismiss-without-open fatigue streak on every active
                 // return, and confirm which scheduled notifications actually
                 // landed so the delivery funnel is accurate.

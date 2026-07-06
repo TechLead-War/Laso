@@ -138,6 +138,11 @@ final class NotificationManager {
     /// Schedule a notification if within frequency cap and optimizer budget.
     /// The daily summary (repeating calendar trigger) is the only notification that bypasses the cap.
     /// All other notifications are hard-capped and optimized for priority and fatigue.
+    ///
+    /// Returns `true` only when the request was handed to the notification
+    /// center. Callers that burn one-shot flags MUST check this so a gate
+    /// suppression does not permanently consume the flag.
+    @discardableResult
     func scheduleNotification(
         title: String,
         body: String,
@@ -148,29 +153,35 @@ final class NotificationManager {
         deviationPercent: Double = 0,
         metricInFocus: Bool = false,
         bypassCap: Bool = false,
-        hookCategory: String? = nil
-    ) {
+        hookCategory: String? = nil,
+        respectsQuietHours: Bool = true
+    ) -> Bool {
         let isDailySummary = identifier == AppConstants.NotificationID.dailySummary
             || identifier == AppConstants.NotificationID.eveningSummary
 
         let notifType = Self.notificationType(identifier)
 
-        // The trigger's true fire date drives the quiet-hours guard and the
-        // fatigue open-response window. A nil trigger fires immediately.
-        let fireDate = fireDate(for: trigger)
+        // The trigger's true fire date drives the quiet-hours guard, the
+        // fatigue open-response window, and all per-day accounting (cap and
+        // same-day competition key on the day the notification FIRES, not the
+        // day it was scheduled). A nil trigger fires immediately.
+        var fireDate = fireDate(for: trigger)
+        var effectiveTrigger = trigger
 
         // Authorization gate. A non-critical schedule is pointless if the user
         // has not granted permission; suppress it loudly so analytics show why.
         // Critical (life-safety) notifications are never gated by this flag.
         if !cachedAuthorized && severity != .critical {
             Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "not_authorized") }
-            return
+            return false
         }
 
-        // Kill switch. remotely disable all non-critical notifications
-        if RemoteConfigManager.shared.killNotifications && severity != .critical && !bypassCap {
+        // Kill switch. remotely disable all notifications except critical
+        // health alerts. bypassCap only exempts from the frequency cap, never
+        // from the kill switch.
+        if RemoteConfigManager.shared.killNotifications && severity != .critical {
             Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "kill_switch") }
-            return
+            return false
         }
 
         // Everything except daily summaries and bypassed notifications is capped and optimized
@@ -184,7 +195,7 @@ final class NotificationManager {
             let minPriority = RemoteConfigManager.shared.notificationMinPriorityScore
             if priority < minPriority && severity != .critical {
                 Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "low_priority") }
-                return
+                return false
             }
 
             // Fatigue suppression. after N consecutive dismiss-without-open
@@ -194,60 +205,68 @@ final class NotificationManager {
             fatigueTracker.evaluateDismissStreakLazy()
             if severity != .critical && fatigueTracker.isInFatigueSuppressionWindow {
                 Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "fatigue_suppression") }
-                return
+                return false
             }
 
-            // Same-day priority resolution. Between two eligible non-critical
-            // notifications on the same calendar day, only the higher-priority
-            // one fires. Critical severity does not participate (always allowed).
+            // Quiet-hours guard. A non-critical one-shot whose fire time lands
+            // inside the do-not-disturb window is DEFERRED to the window's end
+            // (e.g. 23:30 -> 07:00 next morning), not dropped. Repeating
+            // triggers cannot be deferred without losing their repetition, so
+            // they keep the old drop behavior. Schedulers whose timing is
+            // deliberately bedtime-aware (wind-down) opt out entirely via
+            // `respectsQuietHours: false`.
+            if severity != .critical && respectsQuietHours && isWithinQuietHours(fireDate) {
+                if trigger?.repeats == true {
+                    Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "quiet_hours") }
+                    return false
+                }
+                let deferred = quietHoursAdjusted(fireDate)
+                var comps = Date.cal.dateComponents([.year, .month, .day, .hour, .minute], from: deferred)
+                comps.calendar = Date.cal
+                effectiveTrigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+                fireDate = deferred
+                AnalyticsBackend.provider.capture(event: "notification_deferred_quiet_hours", properties: [
+                    "notification_id": identifier,
+                    "type": notifType
+                ])
+            }
+
+            // Atomic cap, keyed to the FIRE day. Reserve a slot now so two
+            // near-simultaneous schedules cannot both pass the check before
+            // either records (TOCTOU). Reserved before the same-day competition
+            // so a competition rejection can refund cleanly.
+            let dynamicBudget = resolveDailyBudget(identifier: identifier, staticBudget: maxPerDay)
+            guard frequencyCap.reserveSlot(maxPerDay: dynamicBudget, fireDate: fireDate) else {
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
+                return false
+            }
+
+            // Same-fire-day priority resolution. Between two eligible
+            // non-critical notifications FIRING on the same calendar day, only
+            // the higher-priority one survives. Critical severity does not
+            // participate (always allowed).
             if severity != .critical {
-                let decision = fatigueTracker.resolveSameDayPriority(identifier: identifier, priority: priority)
+                let decision = fatigueTracker.resolveSameDayPriority(identifier: identifier, priority: priority, fireDate: fireDate)
                 switch decision {
                 case .reject:
+                    frequencyCap.releaseSlot(on: fireDate)
                     Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "priority_pushed_down") }
-                    return
+                    return false
                 case .accept(let previousIdentifier):
                     if let previous = previousIdentifier {
                         center.removePendingNotificationRequests(withIdentifiers: [previous])
+                        // The evicted pending request held a slot for this fire
+                        // day and a "fired" stamp in the fatigue tracker; both
+                        // must be rolled back or the day is double-counted and
+                        // the never-shown notification later reads as dismissed.
+                        frequencyCap.releaseSlot(on: fireDate)
+                        fatigueTracker.clearFired(identifier: previous)
                         let previousType = Self.notificationType(previous)
                         Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: previousType, identifier: previous, reason: "priority_pushed_down") }
                     }
                 }
             }
 
-            // Quiet-hours guard. Suppress a non-critical notification whose
-            // trigger fires inside the do-not-disturb window. Critical and
-            // bypassCap notifications are never gated here.
-            if severity != .critical && isWithinQuietHours(fireDate) {
-                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "quiet_hours") }
-                return
-            }
-
-            // Dynamic budget based on fatigue detection.
-            // HealthDataStore is @MainActor. use assumeIsolated when on main thread,
-            // otherwise fall back to the static maxPerDay budget.
-            let dynamicBudget: Int
-            if let store, Thread.isMainThread {
-                dynamicBudget = MainActor.assumeIsolated {
-                    NotificationOptimizer.dailyBudget(events: store.loadNotificationEvents(days: 7))
-                }
-            } else {
-                dynamicBudget = maxPerDay
-                // Breadcrumb: the dynamic budget could not be computed (no store
-                // or off the main thread) so the static per-call budget is used.
-                AnalyticsBackend.provider.capture(event: "notification_budget_fallback", properties: [
-                    "notification_id": identifier,
-                    "reason": store == nil ? "no_store" : "off_main_thread",
-                    "static_budget": maxPerDay
-                ])
-            }
-
-            // Atomic cap. Reserve a slot now so two near-simultaneous schedules
-            // cannot both pass the check before either records (TOCTOU).
-            guard frequencyCap.reserveSlot(maxPerDay: dynamicBudget) else {
-                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
-                return
-            }
         }
 
         // Warn when pending notifications near the iOS cap; a runaway scheduler
@@ -272,7 +291,7 @@ final class NotificationManager {
         let request = UNNotificationRequest(
             identifier: identifier,
             content: content,
-            trigger: trigger
+            trigger: effectiveTrigger
         )
 
         center.add(request) { [weak self] error in
@@ -281,7 +300,7 @@ final class NotificationManager {
                 // the capped path reserved one) and report loudly so the failure
                 // is visible in analytics rather than silently swallowed.
                 if !isDailySummary && !bypassCap {
-                    self?.frequencyCap.releaseSlot()
+                    self?.frequencyCap.releaseSlot(on: fireDate)
                 }
                 AnalyticsBackend.provider.captureError(error, context: "notification_schedule", metadata: [
                     "notification_id": identifier,
@@ -311,6 +330,26 @@ final class NotificationManager {
                 }
             }
         }
+        return true
+    }
+
+    /// Dynamic per-day budget from the optimizer's fatigue detection.
+    /// HealthDataStore is @MainActor. use assumeIsolated when on main thread,
+    /// otherwise fall back to the static per-call budget.
+    private func resolveDailyBudget(identifier: String, staticBudget: Int) -> Int {
+        if let store, Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                NotificationOptimizer.dailyBudget(events: store.loadNotificationEvents(days: 7))
+            }
+        }
+        // Breadcrumb: the dynamic budget could not be computed (no store
+        // or off the main thread) so the static per-call budget is used.
+        AnalyticsBackend.provider.capture(event: "notification_budget_fallback", properties: [
+            "notification_id": identifier,
+            "reason": store == nil ? "no_store" : "off_main_thread",
+            "static_budget": staticBudget
+        ])
+        return staticBudget
     }
 
     /// Cancel a specific notification
@@ -339,6 +378,22 @@ final class NotificationManager {
             return intervalTrigger.nextTriggerDate() ?? Date()
         }
         return Date()
+    }
+
+    /// The earliest delivery time at or after `date` that is outside quiet
+    /// hours: `date` itself when already outside, otherwise the next
+    /// occurrence of the window's end hour (e.g. 23:30 -> 07:00 next day,
+    /// 02:00 -> 07:00 same day). Shared by the defer gate and by schedulers
+    /// that build their own requests (re-engagement).
+    func quietHoursAdjusted(_ date: Date) -> Date {
+        guard isWithinQuietHours(date) else { return date }
+        let endHour = RemoteConfigManager.shared.quietHoursEndHour
+        var comps = Date.cal.dateComponents([.year, .month, .day], from: date)
+        comps.hour = endHour
+        comps.minute = 0
+        guard let sameDayEnd = Date.cal.date(from: comps) else { return date }
+        if sameDayEnd > date { return sameDayEnd }
+        return Date.cal.date(byAdding: .day, value: 1, to: sameDayEnd) ?? date
     }
 
     /// Whether `date`'s local hour falls inside the do-not-disturb window from

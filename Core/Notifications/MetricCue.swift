@@ -23,13 +23,13 @@ enum MetricCue {
     /// the lowest performing CTA pattern in health-and-fitness pushes.
     func tail(isAbove: Bool) -> String {
         switch self {
-        case .hrv:          return isAbove ? "Recovery is showing." : "Aim for an early night."
-        case .heartRate:    return isAbove ? "Try a 60-second box breath." : "Sit, sip water, recheck in 10 min."
-        case .bloodOxygen:  return "Rest 5 minutes, then recheck."
-        case .respiratory:  return isAbove ? "Slow, deep breaths can reset it." : "Recheck if it stays low."
-        case .sleep:        return "Plan a calmer wind-down tonight."
-        case .activity:     return "A short walk will reset things."
-        case .other:        return "Check the dip when you can."
+        case .hrv:          return isAbove ? Copy.Notifications.cueHRVAbove : Copy.Notifications.cueHRVBelow
+        case .heartRate:    return isAbove ? Copy.Notifications.cueHeartRateAbove : Copy.Notifications.cueHeartRateBelow
+        case .bloodOxygen:  return Copy.Notifications.cueBloodOxygen
+        case .respiratory:  return isAbove ? Copy.Notifications.cueRespiratoryAbove : Copy.Notifications.cueRespiratoryBelow
+        case .sleep:        return Copy.Notifications.cueSleep
+        case .activity:     return Copy.Notifications.cueActivity
+        case .other:        return Copy.Notifications.cueOther
         }
     }
 }

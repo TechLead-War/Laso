@@ -130,12 +130,6 @@ struct RulesConfiguration {
         }
     }
 
-    /// Warning threshold: deviation from baseline (proportion)
-    static var warningDeviationThreshold: Double { RemoteConfigManager.shared.analysisWarningDeviation }
-
-    /// Critical threshold: deviation from baseline (proportion)
-    static var criticalDeviationThreshold: Double { RemoteConfigManager.shared.analysisCriticalDeviation }
-
     /// Trend significance: minimum absolute slope to be considered non-stable
     static var trendSlopeThreshold: Double { RemoteConfigManager.shared.analysisTrendSlopeThreshold }
 

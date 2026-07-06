@@ -349,11 +349,22 @@ final class SubscriptionManager {
     /// runs on many launches, does not keep resetting the delay. The flag is
     /// cleared on the next purchase, so a re-subscribe-then-lapse re-arms it.
     private func armWinbackIfNeeded() {
+        // During free year everything is already free, so a "trial expired"
+        // win-back push would be nonsense; skip arming entirely.
+        guard !FeatureGate.freeYearActive else { return }
         guard !defaults.bool(forKey: AppKeys.Billing.winbackArmed) else { return }
-        defaults.set(true, forKey: AppKeys.Billing.winbackArmed)
-        // A few hours after expiry, not the instant it lapses, so it reads as a
-        // gentle return invite rather than a paywall slam.
-        TrialScheduler.scheduleWinback(focus: trackedFocusLabel(), delay: 6 * 60 * 60)
+        // Await the real authorization state (StoreKit can resolve before the
+        // launch-time auth cache warms) and arm the one-shot flag only after
+        // the schedule passed every gate, so a suppressed attempt retries on
+        // the next status refresh instead of being lost forever.
+        Task {
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            // A few hours after expiry, not the instant it lapses, so it reads as a
+            // gentle return invite rather than a paywall slam.
+            if TrialScheduler.scheduleWinback(focus: trackedFocusLabel(), delay: 6 * 60 * 60) {
+                defaults.set(true, forKey: AppKeys.Billing.winbackArmed)
+            }
+        }
     }
 
     /// The user's own focus to name in the win-back. Prefers their onboarding
@@ -427,11 +438,17 @@ final class SubscriptionManager {
         }
 
         // Auto-renew is off and access is still live: arm the save once.
+        // Await the real authorization state (StoreKit can resolve before the
+        // launch-time auth cache warms) and burn the one-shot flag only after
+        // the schedule passed every gate, so a suppressed attempt retries on
+        // the next status refresh instead of being lost forever.
         guard !defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) else { return }
-        defaults.set(true, forKey: AppKeys.Billing.cancelledSaveArmed)
+        guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
         let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
         AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
-        TrialScheduler.scheduleCancelledSave(focus: trackedFocusLabel(), expiration: expiration)
+        if TrialScheduler.scheduleCancelledSave(focus: trackedFocusLabel(), expiration: expiration) {
+            defaults.set(true, forKey: AppKeys.Billing.cancelledSaveArmed)
+        }
     }
 
     /// Whether the active subscription for `productID` is set to auto-renew.

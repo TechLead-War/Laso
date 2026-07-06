@@ -10,8 +10,6 @@ struct LasoApp: App {
 
     /// Controls optional branded splash overlay.
     @State private var showSplash = true
-    /// Tracks whether the user dismissed the kill switch maintenance notice.
-    @State private var killSwitchDismissed = false
     private let isUITestMode: Bool
 
     private var appStateStore: AppStateStore { container.appStateStore }
@@ -84,10 +82,8 @@ struct LasoApp: App {
                 // Skip in UI test mode and during App Store review / TestFlight
                 else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
-                } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled && !killSwitchDismissed {
-                    MaintenanceView(message: remoteConfig.killSwitchMessage) {
-                        killSwitchDismissed = true
-                    }
+                } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled {
+                    MaintenanceView(message: remoteConfig.killSwitchMessage)
                 } else {
                     ContentView(container: container)
                     // 1. Onboarding (first launch)
@@ -151,7 +147,6 @@ struct LasoApp: App {
             // so the user lands back on onboarding instead of an empty dashboard.
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LasoDidWipeAccount"))) { _ in
                 appStateStore.setOnboardingCompleted(false)
-                killSwitchDismissed = false
             }
             .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
         }

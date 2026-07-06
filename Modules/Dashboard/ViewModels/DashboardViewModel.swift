@@ -1106,8 +1106,10 @@ final class DashboardViewModel {
             analysisEngine.insights = InsightCoordinator.coordinate(analysisEngine.insights)
         }
 
-        // Circadian analysis (weekly, hourly data fetch)
-        if analysisEngine.mlOrchestrator.needsCircadianAnalysis && !ThermalManager.shared.shouldThrottle {
+        // Circadian analysis (weekly, hourly data fetch). The remote kill
+        // switch is enforced inside MLOrchestrator.runCircadianAnalysis.
+        if analysisEngine.mlOrchestrator.needsCircadianAnalysis
+            && !ThermalManager.shared.shouldThrottle {
             let metricsForCircadian = CircadianAnalyzer.metricsToAnalyze + CircadianAnalyzer.optionalMetrics
             var hourlyData: [HealthMetric: [[Double]]] = [:]
             await withTaskGroup(of: (HealthMetric, [[Double]]?).self) { group in
@@ -1181,8 +1183,6 @@ final class DashboardViewModel {
         }
         let today = Date.cal.startOfDay(for: Date())
         anomalyCounts[today] = analysisEngine.anomalies.count
-
-        guard !RemoteConfigManager.shared.killMLPipeline else { return }
 
         // Use cached focus categories. already loaded by refresh() or updateCachedProperties()
         let focusCats = insights.cachedFocusCategories
