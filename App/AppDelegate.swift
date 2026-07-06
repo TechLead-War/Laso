@@ -45,6 +45,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // its own HKHealthStore until the startup coordinator injects the
         // shared one, and re-running it is idempotent (stops the old query).
         Task { @MainActor in
+            // Warm the notification-authorization cache FIRST: startMonitoring
+            // can schedule the not-worn alarm synchronously, and on a
+            // scene-less relaunch nothing else has primed the cache yet — a
+            // cold cache would suppress that schedule as not_authorized.
+            _ = await NotificationManager.shared.isCurrentlyAuthorized()
             WatchMonitor.shared.startMonitoring()
         }
 

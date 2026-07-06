@@ -33,8 +33,9 @@ enum RepermissionScheduler {
         // Await the real authorization state instead of trusting the launch-time
         // cache (cold at first render), and burn the one-shot flag only after
         // the schedule actually passed every gate — a suppressed attempt stays
-        // retryable on the next refresh.
-        Task {
+        // retryable on the next refresh. Runs on the main actor so the flag
+        // check-and-set cannot interleave with the other main-actor schedulers.
+        Task { @MainActor in
             guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
             let scheduled = NotificationManager.shared.scheduleNotification(
                 title: Copy.Notifications.repermissionTitle(count: count),

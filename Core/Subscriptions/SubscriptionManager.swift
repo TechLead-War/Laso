@@ -359,6 +359,11 @@ final class SubscriptionManager {
         // the next status refresh instead of being lost forever.
         Task {
             guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            // Re-check after the await: a purchase can complete (or another
+            // refresh can arm the flag) while the authorization query was in
+            // flight — an active subscriber must never get the winback push.
+            guard case .expired = status,
+                  !defaults.bool(forKey: AppKeys.Billing.winbackArmed) else { return }
             // A few hours after expiry, not the instant it lapses, so it reads as a
             // gentle return invite rather than a paywall slam.
             if TrialScheduler.scheduleWinback(focus: trackedFocusLabel(), delay: 6 * 60 * 60) {
@@ -444,10 +449,12 @@ final class SubscriptionManager {
         // the next status refresh instead of being lost forever.
         guard !defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) else { return }
         guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
-        let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
-        AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
         if TrialScheduler.scheduleCancelledSave(focus: trackedFocusLabel(), expiration: expiration) {
             defaults.set(true, forKey: AppKeys.Billing.cancelledSaveArmed)
+            // Inside the success branch so a repeatedly-suppressed schedule
+            // does not re-fire this event on every status refresh.
+            let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
+            AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
         }
     }
 

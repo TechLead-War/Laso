@@ -9,6 +9,13 @@ final class NotificationManager {
     private let frequencyCap = FrequencyCapManager()
     private let fatigueTracker = NotificationFatigueTracker()
 
+    /// Serializes the frequency-cap + same-day-competition accounting.
+    /// Schedulers call `scheduleNotification` from the main actor AND from
+    /// detached tasks; the underlying UserDefaults state is read-modify-write,
+    /// so without this two concurrent schedules could both win a day or
+    /// double-spend the cap.
+    private let gateLock = NSLock()
+
     /// Data store for notification event tracking (set at app launch)
     var store: HealthDataStore?
 
@@ -231,42 +238,20 @@ final class NotificationManager {
                 ])
             }
 
-            // Atomic cap, keyed to the FIRE day. Reserve a slot now so two
-            // near-simultaneous schedules cannot both pass the check before
-            // either records (TOCTOU). Reserved before the same-day competition
-            // so a competition rejection can refund cleanly.
+            // Same-fire-day competition + cap accounting, serialized under one
+            // lock (schedulers call from more than one executor and the
+            // UserDefaults-backed state is read-modify-write).
             let dynamicBudget = resolveDailyBudget(identifier: identifier, staticBudget: maxPerDay)
-            guard frequencyCap.reserveSlot(maxPerDay: dynamicBudget, fireDate: fireDate) else {
-                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
+            guard reserveFireDaySlot(
+                identifier: identifier,
+                notifType: notifType,
+                priority: priority,
+                severity: severity,
+                budget: dynamicBudget,
+                fireDate: fireDate
+            ) else {
                 return false
             }
-
-            // Same-fire-day priority resolution. Between two eligible
-            // non-critical notifications FIRING on the same calendar day, only
-            // the higher-priority one survives. Critical severity does not
-            // participate (always allowed).
-            if severity != .critical {
-                let decision = fatigueTracker.resolveSameDayPriority(identifier: identifier, priority: priority, fireDate: fireDate)
-                switch decision {
-                case .reject:
-                    frequencyCap.releaseSlot(on: fireDate)
-                    Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "priority_pushed_down") }
-                    return false
-                case .accept(let previousIdentifier):
-                    if let previous = previousIdentifier {
-                        center.removePendingNotificationRequests(withIdentifiers: [previous])
-                        // The evicted pending request held a slot for this fire
-                        // day and a "fired" stamp in the fatigue tracker; both
-                        // must be rolled back or the day is double-counted and
-                        // the never-shown notification later reads as dismissed.
-                        frequencyCap.releaseSlot(on: fireDate)
-                        fatigueTracker.clearFired(identifier: previous)
-                        let previousType = Self.notificationType(previous)
-                        Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: previousType, identifier: previous, reason: "priority_pushed_down") }
-                    }
-                }
-            }
-
         }
 
         // Warn when pending notifications near the iOS cap; a runaway scheduler
@@ -296,11 +281,17 @@ final class NotificationManager {
 
         center.add(request) { [weak self] error in
             if let error {
-                // The schedule failed to enqueue. Refund the reserved slot (only
-                // the capped path reserved one) and report loudly so the failure
-                // is visible in analytics rather than silently swallowed.
-                if !isDailySummary && !bypassCap {
-                    self?.frequencyCap.releaseSlot(on: fireDate)
+                // The schedule failed to enqueue. Refund the reserved slot and
+                // the committed best-candidate entry (only the capped path
+                // wrote either) and report loudly so the failure is visible in
+                // analytics rather than silently swallowed.
+                if let self, !isDailySummary, !bypassCap {
+                    self.gateLock.lock()
+                    self.frequencyCap.releaseSlot(at: fireDate)
+                    if severity != .critical {
+                        self.fatigueTracker.clearBest(identifier: identifier, fireDate: fireDate)
+                    }
+                    self.gateLock.unlock()
                 }
                 AnalyticsBackend.provider.captureError(error, context: "notification_schedule", metadata: [
                     "notification_id": identifier,
@@ -329,6 +320,59 @@ final class NotificationManager {
                     AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, hookCategory: hookCategory)
                 }
             }
+        }
+        return true
+    }
+
+    /// Same-fire-day competition and cap accounting under `gateLock`.
+    /// Returns `true` when the notification won its fire day (or is critical)
+    /// AND reserved a cap slot; the winner is committed as the day's best only
+    /// after the reserve succeeds, so a candidate that fails the cap never
+    /// poisons the stored best.
+    ///
+    /// Order matters: eviction of a still-pending lower-priority holder runs
+    /// BEFORE the cap reserve so the freed slot is available to the winner —
+    /// the reverse order dropped a higher-priority notification whenever its
+    /// fire day was already full.
+    private func reserveFireDaySlot(
+        identifier: String,
+        notifType: String,
+        priority: Int,
+        severity: Severity,
+        budget: Int,
+        fireDate: Date
+    ) -> Bool {
+        gateLock.lock()
+        defer { gateLock.unlock() }
+
+        if severity != .critical {
+            switch fatigueTracker.peekSameDayPriority(identifier: identifier, priority: priority, fireDate: fireDate) {
+            case .reject:
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "priority_pushed_down") }
+                return false
+            case .accept(let previous):
+                // Evict only a still-PENDING previous holder: cancel it, refund
+                // its exact slot, and forget its fired stamp so it cannot read
+                // as dismissed. An already-delivered previous (fire time in the
+                // past) is left alone — its slot was genuinely consumed and the
+                // user really saw it.
+                if let previous, previous.fireDate > Date() {
+                    center.removePendingNotificationRequests(withIdentifiers: [previous.identifier])
+                    frequencyCap.releaseSlot(at: previous.fireDate)
+                    fatigueTracker.clearFired(identifier: previous.identifier)
+                    let previousType = Self.notificationType(previous.identifier)
+                    Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: previousType, identifier: previous.identifier, reason: "priority_pushed_down") }
+                }
+            }
+        }
+
+        guard frequencyCap.reserveSlot(maxPerDay: budget, fireDate: fireDate) else {
+            Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
+            return false
+        }
+
+        if severity != .critical {
+            fatigueTracker.commitSameDayBest(identifier: identifier, priority: priority, fireDate: fireDate)
         }
         return true
     }

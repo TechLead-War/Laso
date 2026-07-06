@@ -30,20 +30,23 @@ final class FrequencyCapManager {
         return true
     }
 
-    /// Roll back one reserved slot on `fireDate`'s day. Called when a schedule
-    /// fails to enqueue, when the same-day competition rejects a candidate
-    /// after its reserve, or when an already-pending request is evicted.
+    /// Roll back the reserved slot whose fire time is `fireDate`. Called when
+    /// a schedule fails to enqueue or when a pending request is evicted by a
+    /// higher-priority same-day winner.
     ///
-    /// Pops the latest entry on that day rather than a specific identifier
-    /// because the log only stores fire timestamps; main-path scheduling is
-    /// serial, so the latest entry on the day is the one to refund.
-    func releaseSlot(on fireDate: Date = Date()) {
+    /// Matches the nearest same-day entry rather than requiring exact
+    /// equality: the JSON round-trip through UserDefaults can shave a ULP off
+    /// the stored timestamp. Refunding by timestamp (not "latest of the day")
+    /// keeps the spacing log honest when the day holds entries firing later
+    /// than the one being refunded.
+    func releaseSlot(at fireDate: Date) {
         var log = prunedLog()
-        guard let latest = log.filter({ Date.cal.isDate($0, inSameDayAs: fireDate) }).max() else { return }
-        if let index = log.firstIndex(of: latest) {
-            log.remove(at: index)
-            saveLog(log)
-        }
+        let sameDay = log.indices.filter { Date.cal.isDate(log[$0], inSameDayAs: fireDate) }
+        guard let index = sameDay.min(by: {
+            abs(log[$0].timeIntervalSince(fireDate)) < abs(log[$1].timeIntervalSince(fireDate))
+        }) else { return }
+        log.remove(at: index)
+        saveLog(log)
     }
 
     /// Number of notifications reserved for today

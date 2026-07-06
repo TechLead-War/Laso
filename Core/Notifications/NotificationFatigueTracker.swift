@@ -116,53 +116,80 @@ struct NotificationFatigueTracker {
     // MARK: Same-day priority resolution
 
     /// Result of asking "is this candidate the best eligible non-critical
-    /// notification scheduled today?"
+    /// notification firing that day?"
     enum SameDayDecision {
-        /// Candidate is a new best — schedule it. If `previousIdentifier` is
-        /// set, the previous pending request should be cancelled and reported
-        /// as `"priority_pushed_down"`.
-        case accept(previousIdentifier: String?)
-        /// Candidate loses to a higher-priority notification already scheduled
-        /// today. Caller should drop it and report `"priority_pushed_down"`.
+        /// Candidate is a new best — schedule it. If `previous` is set, that
+        /// notification currently holds the day; a still-pending one should be
+        /// cancelled and reported as `"priority_pushed_down"` (its fire date
+        /// tells the caller whether it is pending or already delivered).
+        case accept(previous: (identifier: String, fireDate: Date)?)
+        /// Candidate loses to a higher-priority notification already holding
+        /// the day. Caller should drop it and report `"priority_pushed_down"`.
         case reject
     }
 
-    /// Record a candidate priority for the day it will FIRE and decide whether
-    /// to schedule it. Competition is per fire day: two notifications firing on
-    /// different days never compete, even when scheduled in the same session.
+    /// Pure read: decide whether `identifier` would win its fire day. Writes
+    /// nothing — the caller commits the winner with `commitSameDayBest` only
+    /// after the remaining gates (frequency cap) also pass, so a candidate
+    /// that later fails a gate never poisons the day's stored best.
+    /// Competition is per fire day: two notifications firing on different
+    /// days never compete, even when scheduled in the same session.
     /// Only call for non-critical, non-daily-summary, non-bypass notifications.
-    func resolveSameDayPriority(
+    func peekSameDayPriority(
         identifier: String,
         priority: Int,
-        fireDate: Date = Date(),
-        now: Date = Date()
+        fireDate: Date = Date()
     ) -> SameDayDecision {
-        let fireDayKey = dayKey(for: fireDate)
-        var bestByDay = loadBestByDay(now: now)
+        let bestByDay = loadBestByDay(now: Date())
 
-        guard let stored = bestByDay[fireDayKey],
+        guard let stored = bestByDay[dayKey(for: fireDate)],
               let parsed = Self.parseBest(stored)
         else {
-            // No prior best for this fire day — accept.
-            bestByDay[fireDayKey] = "\(priority)|\(identifier)"
-            saveBestByDay(bestByDay)
-            return .accept(previousIdentifier: nil)
+            return .accept(previous: nil)
         }
 
         if priority > parsed.priority {
-            bestByDay[fireDayKey] = "\(priority)|\(identifier)"
-            saveBestByDay(bestByDay)
-            // Previous best is being replaced — caller should cancel it.
-            return .accept(previousIdentifier: parsed.identifier == identifier ? nil : parsed.identifier)
+            return .accept(previous: parsed.identifier == identifier
+                ? nil
+                : (parsed.identifier, parsed.fireDate))
         }
 
         // Same identifier re-scheduled at same/lower priority — treat as a
         // benign re-schedule (accept without replacement marker).
         if parsed.identifier == identifier {
-            return .accept(previousIdentifier: nil)
+            return .accept(previous: nil)
         }
 
         return .reject
+    }
+
+    /// Persist `identifier` as its fire day's best candidate. The stored fire
+    /// date lets a later eviction refund the exact frequency-cap entry and
+    /// distinguish a pending previous from an already-delivered one.
+    func commitSameDayBest(identifier: String, priority: Int, fireDate: Date) {
+        var bestByDay = loadBestByDay(now: Date())
+        let key = dayKey(for: fireDate)
+        // A same-identifier benign re-schedule at lower priority must not
+        // lower the stored bar for other candidates.
+        if let stored = bestByDay[key], let parsed = Self.parseBest(stored),
+           parsed.identifier != identifier, parsed.priority >= priority {
+            return
+        }
+        bestByDay[key] = "\(priority)|\(fireDate.timeIntervalSinceReferenceDate)|\(identifier)"
+        saveBestByDay(bestByDay)
+    }
+
+    /// Roll back a committed best candidate whose schedule failed to enqueue,
+    /// so it does not keep rejecting lower-priority notifications for a fire
+    /// day it will never occupy. Only clears when the entry still belongs to
+    /// `identifier`.
+    func clearBest(identifier: String, fireDate: Date) {
+        var bestByDay = loadBestByDay(now: Date())
+        let key = dayKey(for: fireDate)
+        guard let stored = bestByDay[key], let parsed = Self.parseBest(stored),
+              parsed.identifier == identifier else { return }
+        bestByDay.removeValue(forKey: key)
+        saveBestByDay(bestByDay)
     }
 
     /// Forget the last-fired stamp when it belongs to `identifier`. Called when
@@ -229,10 +256,13 @@ struct NotificationFatigueTracker {
         return String(format: "%04d-%02d-%02d", year, month, day)
     }
 
-    private static func parseBest(_ raw: String) -> (priority: Int, identifier: String)? {
-        let parts = raw.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
-        guard parts.count == 2 else { return nil }
-        guard let priority = Int(parts[0]) else { return nil }
-        return (priority, String(parts[1]))
+    /// Entry format: `"priority|fireEpoch|identifier"` (epoch = seconds since
+    /// reference date). Identifiers contain no `|`. A legacy 2-field entry
+    /// fails the parse and is treated as absent — a one-time reset.
+    private static func parseBest(_ raw: String) -> (priority: Int, fireDate: Date, identifier: String)? {
+        let parts = raw.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false)
+        guard parts.count == 3 else { return nil }
+        guard let priority = Int(parts[0]), let epoch = Double(parts[1]) else { return nil }
+        return (priority, Date(timeIntervalSinceReferenceDate: epoch), String(parts[2]))
     }
 }
