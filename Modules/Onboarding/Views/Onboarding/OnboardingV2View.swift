@@ -77,6 +77,7 @@ struct OnboardingV2View: View {
         case hrv
         case preview        // Vitality Age reveal
         case signIn
+        case referral       // friend's invite code (skipped when already redeemed)
         case paywall
         case done           // post
     }
@@ -263,6 +264,8 @@ struct OnboardingV2View: View {
         case .signIn:
             OnbV2Screen15SignIn(onBack: { advance(to: branch == .rich ? .verdict : .preview) },
                                 onSignedIn: handleSignedIn)
+        case .referral:
+            ReferralCodeStep(onContinue: advanceAfterReferral)
         case .paywall:
             // After sign-in, going back to the sign-in screen would re-prompt
             // an authenticated user, which is jarring. Skip back to the screen
@@ -347,15 +350,15 @@ struct OnboardingV2View: View {
         switch branch {
         case .sparse:
             return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
-                    .cliffhanger, .heart, .sleep, .hrv, .preview, .signIn, .paywall, .done]
+                    .cliffhanger, .heart, .sleep, .hrv, .preview, .signIn, .referral, .paywall, .done]
         case .denied:
             return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
-                    .journalFirst, .heart, .sleep, .hrv, .preview, .signIn, .paywall, .done]
+                    .journalFirst, .heart, .sleep, .hrv, .preview, .signIn, .referral, .paywall, .done]
         case .rich, nil:
             // nil = pre-scan, where only the shared screens 1-6 are reachable,
             // so defaulting to the rich order never misroutes.
             return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
-                    .preview, .heart, .sleep, .hrv, .verdict, .signIn, .paywall, .done]
+                    .preview, .heart, .sleep, .hrv, .verdict, .signIn, .referral, .paywall, .done]
         }
     }
 
@@ -569,6 +572,23 @@ struct OnboardingV2View: View {
     }
 
     private func handleSignedIn() {
+        // Offer the friend's-invite-code step first (auth now exists, so the
+        // redeem callable works). Skipped when the program is off, the user
+        // already redeemed on a previous run, or the operator skip-listed the
+        // screen — routing through advanceAfterReferral in every skip case so
+        // the never-charge-an-entitled-user check cannot be walked past by
+        // advance()'s skip-CSV forwarding.
+        if ReferralManager.shared.isEnabled,
+           ReferralManager.shared.redeemedCode == nil,
+           !RemoteConfigManager.shared.onboardingSkipScreens.contains(Screen.referral.rawValue) {
+            advance(to: .referral)
+        } else {
+            advanceAfterReferral()
+        }
+    }
+
+    /// Post-sign-in routing shared by the referral step and its skip path.
+    private func advanceAfterReferral() {
         // If the user already has full access (free-year flag, restored
         // entitlement) skip the paywall — never charge an entitled user.
         if FeatureGate.hasFullAccess {

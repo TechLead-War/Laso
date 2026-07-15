@@ -288,6 +288,7 @@ Consumer: `Modules/Paywall/Views/Subscription/PaywallView.swift`.
 |---|---|---|---|
 | `paywall_variant` | String | `"control"` | A/B variant selector |
 | `paywall_show_yearly_default` | Bool | `true` | Pre-select yearly tier |
+| `referral_program_enabled` | Bool | `true` | Kill switch for the invite/referral program (Settings row, onboarding code step, share caption) |
 
 ---
 

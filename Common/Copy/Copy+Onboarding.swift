@@ -140,13 +140,13 @@ extension Copy {
         enum ReferralCode {
             static var brand: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_brand", default: "Laso") }
             static var title: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_title", default: "Have a Referral Code?") }
-            static var subtitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_subtitle", default: "If a friend shared their code with you, enter it below. You\u{2019}ll both get 1 free month of Pro when you subscribe.") }
+            static var subtitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_subtitle", default: "If a friend shared their code with you, enter it below. You both get 1 free month of Pro when Laso goes paid.") }
             static var fieldLabel: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_field_label", default: "Referral Code") }
-            static var fieldPlaceholder: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_field_placeholder", default: "e.g. HEALTH-A7X3K2") }
+            static var fieldPlaceholder: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_field_placeholder", default: "e.g. LASO-A7X3K2") }
             static var verifying: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_verifying", default: "Verifying code\u{2026}") }
             static var apply: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_apply", default: "Apply Code") }
             static var skip: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_skip", default: "Skip") }
-            static var codeApplied: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_code_applied", default: "Code applied! Subscribe to unlock your free month.") }
+            static var codeApplied: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_code_applied", default: "Code applied! You both get a free month of Pro.") }
             static var emptyCodeError: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_empty_code_error", default: "Please enter a referral code.") }
             static var invalidCodeFallback: String { RemoteConfigManager.shared.copyString("copy_onboarding_referral_code_invalid_code_fallback", default: "Invalid code.") }
         }

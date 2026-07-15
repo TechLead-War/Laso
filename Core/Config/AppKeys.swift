@@ -150,6 +150,9 @@ enum AppKeys {
         static let code         = "laso.referral.code"
         static let redeemedCode = "laso.referral.redeemed_code"
         static let freeUntil    = "laso.referral.free_until"
+        /// Auth UID the cached referral fields belong to. On mismatch (account
+        /// deleted, credential switch) the cache is cleared before use.
+        static let ownerUid     = "laso.referral.owner_uid"
     }
 
     // MARK: - Backup

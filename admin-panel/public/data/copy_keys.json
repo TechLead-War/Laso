@@ -5154,8 +5154,26 @@
     "isArray": false
   },
   {
+    "key": "copy_common_pmf_benefit_placeholder",
+    "defaultValue": "e.g., understanding my recovery, sleep insights...",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_pmf_improvement_placeholder",
+    "defaultValue": "Optional — anything you'd change or add",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_pmf_not_disappointed",
     "defaultValue": "Not disappointed",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_pmf_segment_placeholder",
+    "defaultValue": "e.g., fitness enthusiast, someone with a chronic condition...",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -5226,8 +5244,68 @@
     "isArray": false
   },
   {
+    "key": "copy_common_share_add_photo",
+    "defaultValue": "Add your photo",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_card_footer",
+    "defaultValue": "laso.fit",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_change_photo",
+    "defaultValue": "Change photo",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_cta",
+    "defaultValue": "Share",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_ring_recovery",
+    "defaultValue": "RECOVERY",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_ring_sleep",
+    "defaultValue": "HOURS OF SLEEP",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_ring_vitality_age",
+    "defaultValue": "VITALITY AGE",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_sheet_title",
+    "defaultValue": "Share your day",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_take_photo",
+    "defaultValue": "Take a photo",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_skip_button",
     "defaultValue": "Skip",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_submit_button",
+    "defaultValue": "Submit",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -6936,6 +7014,12 @@
     "isArray": false
   },
   {
+    "key": "copy_health_state_health_state_timeline_transition_prediction",
+    "defaultValue": "You typically move to %@ in ~%@ days",
+    "sourceFile": "Copy+HealthState.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_health_state_health_states_nav_title",
     "defaultValue": "Health States",
     "sourceFile": "Copy+HealthState.swift",
@@ -7944,6 +8028,24 @@
     "isArray": false
   },
   {
+    "key": "copy_home_next_up_done",
+    "defaultValue": "Done. We check the result in tomorrow morning's score.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_header",
+    "defaultValue": "NEXT UP · TODAY",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_mark_done",
+    "defaultValue": "Mark done",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_week_target",
     "defaultValue": "Next week target",
     "sourceFile": "Copy+Home.swift",
@@ -8622,6 +8724,30 @@
     "isArray": false
   },
   {
+    "key": "copy_home_softlock_badge",
+    "defaultValue": "Unlock to read",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_softlock_cta",
+    "defaultValue": "Unlock my report",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_softlock_patterns",
+    "defaultValue": "Patterns found in your data: %d",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_strain_card_label",
+    "defaultValue": "Today's strain %@, %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_strain_card_zone_label",
     "defaultValue": "Z%d",
     "sourceFile": "Copy+Home.swift",
@@ -8630,6 +8756,12 @@
   {
     "key": "copy_home_strained",
     "defaultValue": "Strained",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_stress_card_label",
+    "defaultValue": "Stress level %@, %@, trending %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -10050,6 +10182,12 @@
     "isArray": false
   },
   {
+    "key": "copy_journal_notes_placeholder",
+    "defaultValue": "Optional notes...",
+    "sourceFile": "Copy+Journal.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_journal_rating_of_label",
     "defaultValue": "%@ rating %d of %d",
     "sourceFile": "Copy+Journal.swift",
@@ -10644,12 +10782,6 @@
     "isArray": false
   },
   {
-    "key": "copy_notifications_action_prefix",
-    "defaultValue": "Action: %@",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_notifications_all_metrics_healthy",
     "defaultValue": "All metrics looking healthy!",
     "sourceFile": "Copy+Notifications.swift",
@@ -10740,8 +10872,122 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_cue_activity",
+    "defaultValue": "A short walk will reset things.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_blood_oxygen",
+    "defaultValue": "Rest 5 minutes, then recheck.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_heart_rate_above",
+    "defaultValue": "Try a 60-second box breath.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_heart_rate_below",
+    "defaultValue": "Sit, sip water, recheck in 10 min.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_hrv_above",
+    "defaultValue": "Recovery is showing.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_hrv_below",
+    "defaultValue": "Aim for an early night.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_other",
+    "defaultValue": "Check the dip when you can.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_respiratory_above",
+    "defaultValue": "Slow, deep breaths can reset it.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_respiratory_below",
+    "defaultValue": "Recheck if it stays low.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_cue_sleep",
+    "defaultValue": "Plan a calmer wind-down tonight.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_anomaly",
+    "defaultValue": "%@ needs a look. 📊",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_next_step",
+    "defaultValue": "Next step: %@",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_next_step_fallback",
+    "defaultValue": "Your next step is ready in the app.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_score",
+    "defaultValue": "Score: %d/100.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_steady_variants",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_notifications_daily_body_streak",
+    "defaultValue": "%d-day streak.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_daily_body_streak_risk",
+    "defaultValue": "%d-day streak on the line.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_daily_summary_title",
     "defaultValue": "Health Score: %d/100 (%@)%@",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_day_plural",
+    "defaultValue": "days",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_day_singular",
+    "defaultValue": "day",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10752,8 +10998,38 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_engagement_day1_body",
+    "defaultValue": "Log your morning heart rate to start your recovery baseline. Check today's number. ❤️",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day1_title",
+    "defaultValue": "Your first morning check-in",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day1_title_named",
+    "defaultValue": "Morning check-in, %@",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_engagement_day2_body",
     "defaultValue": "%@ See what changed and today's one-minute action. 📊",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day2_fallback",
+    "defaultValue": "See today's recovery score and your one-minute morning action. 📊",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day2_fallback_title",
+    "defaultValue": "Your morning health briefing",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10770,8 +11046,44 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_engagement_day3_fallback",
+    "defaultValue": "Your sleep is starting to tell a story. See the early pattern and a small tweak. 😴",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day3_finding",
+    "defaultValue": "Your %@ is trending %@ %d%% over the last few nights.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day3_title",
+    "defaultValue": "A sleep pattern is forming",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_engagement_day5_body",
     "defaultValue": "Your baseline is ready. See patterns built from your first month of data. 📊",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day5_body_remaining",
+    "defaultValue": "Check in for %d more %@ to build a stronger baseline. 🎯",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day5_soft_body",
+    "defaultValue": "Each morning check-in makes your recovery picture clearer. Check today's number.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_day5_soft_title",
+    "defaultValue": "Your baseline is still forming",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10800,6 +11112,18 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_engagement_default_body",
+    "defaultValue": "Tap to see your latest health insights.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_engagement_default_title",
+    "defaultValue": "Your Health Update",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_evening_summary_body",
     "defaultValue": "%@ day ended at %d/100. %@ 🌙",
     "sourceFile": "Copy+Notifications.swift",
@@ -10812,14 +11136,128 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_health_snapshot",
+    "defaultValue": "Your Health Snapshot Is Waiting",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_high_h_r_body",
     "defaultValue": "HR hit %d bpm, %d above your usual %d. Try a 60-second box breath. ❤️",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
+    "key": "copy_notifications_high_h_r_title",
+    "defaultValue": "Heart Rate Above Your Usual",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_curiosity_metric",
+    "defaultValue": "Something shifted in your %@ overnight.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_curiosity_pattern",
+    "defaultValue": "A pattern is forming in your data.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_curiosity_score",
+    "defaultValue": "Your score moved overnight.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_fallback",
+    "defaultValue": "Your morning health check is ready.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_loss_delta",
+    "defaultValue": "Down %d since yesterday. Easy to claw back.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_loss_ground",
+    "defaultValue": "You are losing ground from last week.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_loss_streak",
+    "defaultValue": "Your %d-day streak ends at 11:59 PM tonight.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_progress_days_up",
+    "defaultValue": "%d days up. Keep the run going?",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_progress_milestone",
+    "defaultValue": "%d days in. New milestone.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_progress_top_tier",
+    "defaultValue": "Score: %d. You are in the top tier.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_question_last_night",
+    "defaultValue": "How did last night affect your body?",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_question_metric_change",
+    "defaultValue": "Why did your %@ change?",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_question_score_down",
+    "defaultValue": "What is pulling your score down?",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_record_best_score",
+    "defaultValue": "%d. Your best score this month.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_record_biggest_jump",
+    "defaultValue": "Biggest jump in weeks: +%d points.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hook_record_metric_high",
+    "defaultValue": "Your %@ hit a new high.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_hrv_low_body",
     "defaultValue": "HRV %d ms, %d%% below recent average. Take it easy and aim for an early night. 😴",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_hrv_low_title",
+    "defaultValue": "HRV Running Low",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10838,6 +11276,48 @@
   {
     "key": "copy_notifications_improvement_title",
     "defaultValue": "%@ Up %@%%!",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insight_looking_good",
+    "defaultValue": "Solid recovery. A good day to stay active.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insight_moderate",
+    "defaultValue": "Moderate recovery. Listen to your body today.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insight_needs_attention",
+    "defaultValue": "Your body is still catching up.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insight_rest",
+    "defaultValue": "Take it easy. Your body needs rest.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insight_well_recovered",
+    "defaultValue": "You are well recovered today.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insights_ready",
+    "defaultValue": "Your Health Insights Are Ready",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_insights_ready_body",
+    "defaultValue": "It has been a few days. See what your body did while you were gone. 📊",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10880,6 +11360,12 @@
   {
     "key": "copy_notifications_low_h_r_body",
     "defaultValue": "HR dropped to %d bpm, %d below your usual %d. Sit and sip water. ❤️",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_low_h_r_title",
+    "defaultValue": "Heart Rate Below Your Usual",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10944,8 +11430,20 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_reprompt_body",
+    "defaultValue": "Notifications are off. You are missing alerts on heart rate, sleep, and weekly progress.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_reprompt_dismiss",
     "defaultValue": "Not Now",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_reprompt_title",
+    "defaultValue": "Stay on top of your health",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10956,8 +11454,20 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_respiratory_rate_title",
+    "defaultValue": "Breathing Rate Higher Than Usual",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_resting_h_r_elevated",
     "defaultValue": "Resting HR %d bpm, %d%% above your %d avg. Rest and recheck. ❤️",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_resting_h_r_title",
+    "defaultValue": "Resting Heart Rate Higher Than Usual",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10968,14 +11478,38 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_spo2_critical_title",
+    "defaultValue": "Blood Oxygen Below Typical Range",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_spo2_warning_body",
     "defaultValue": "Blood oxygen %@%%, a touch below your typical range. Recheck in 10 min. 🫁",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
+    "key": "copy_notifications_spo2_warning_title",
+    "defaultValue": "Blood Oxygen Worth Monitoring",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_streak_days",
     "defaultValue": "%d-day streak!",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_summary_score_subtitle",
+    "defaultValue": "Recovery %d",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_summary_score_subtitle_delta",
+    "defaultValue": "Recovery %d (%@)",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11006,6 +11540,18 @@
   {
     "key": "copy_notifications_trend_recovering_title",
     "defaultValue": "%@ Recovering",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_trend_word_down",
+    "defaultValue": "down",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_trend_word_up",
+    "defaultValue": "up",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11058,6 +11604,12 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_trial_getting_started_body_scored",
+    "defaultValue": "Your recovery is %d this morning. Log how you feel and see if your body agrees.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_trial_getting_started_title",
     "defaultValue": "Your first morning check-in",
     "sourceFile": "Copy+Notifications.swift",
@@ -11066,6 +11618,12 @@
   {
     "key": "copy_notifications_trial_insight_nudge_body",
     "defaultValue": "A few days in, your data is starting to tell a story. Open the app to see what is taking shape.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_trial_insight_nudge_body_scored",
+    "defaultValue": "Your recovery sits at %d and a pattern is taking shape. Open the app to see what your data says.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11130,8 +11688,32 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_watch_battery_low",
+    "defaultValue": "Watch Battery Low",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_watch_not_worn_scheduled",
     "defaultValue": "%@ has not recorded data for a while. %@",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_weekly_movers_both",
+    "defaultValue": "%@ leads at %@, while %@ slipped to %@. 📊",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_weekly_movers_decliner",
+    "defaultValue": "%@ slipped the most, down %@. See what changed.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_weekly_movers_improver",
+    "defaultValue": "%@ is your top climber at %@. 💪",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11150,6 +11732,12 @@
   {
     "key": "copy_notifications_wind_down_body_with_hint",
     "defaultValue": "%@ Lights out by %@.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_wind_down_hrv_hint",
+    "defaultValue": "Your HRV (%d ms) suggests an early night.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11400,12 +11988,6 @@
     "isArray": false
   },
   {
-    "key": "copy_onboarding_onboarding_day_label",
-    "defaultValue": "DAY %d",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_onboarding_hrv_weekly_average",
     "defaultValue": "HRV · weekly average",
     "sourceFile": "Copy+Onboarding.swift",
@@ -11575,7 +12157,7 @@
   },
   {
     "key": "copy_onboarding_referral_code_code_applied",
-    "defaultValue": "Code applied! Subscribe to unlock your free month.",
+    "defaultValue": "Code applied! You both get a free month of Pro.",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
@@ -11593,7 +12175,7 @@
   },
   {
     "key": "copy_onboarding_referral_code_field_placeholder",
-    "defaultValue": "e.g. HEALTH-A7X3K2",
+    "defaultValue": "e.g. LASO-A7X3K2",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
@@ -11611,7 +12193,7 @@
   },
   {
     "key": "copy_onboarding_referral_code_subtitle",
-    "defaultValue": "If a friend shared their code with you, enter it below. You\\u{2019}ll both get 1 free month of Pro when you subscribe.",
+    "defaultValue": "If a friend shared their code with you, enter it below. You both get 1 free month of Pro when Laso goes paid.",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
@@ -12153,6 +12735,144 @@
     "key": "copy_policy_trend_declining_default",
     "defaultValue": "Stopping a negative trend early requires less effort than reversing a well-established decline.",
     "sourceFile": "Copy+Policy.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_banner_subtitle",
+    "defaultValue": "You joined early. Every friend you bring makes your free time longer.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_banner_title",
+    "defaultValue": "Laso is free until %@",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_banner_title_fallback",
+    "defaultValue": "Invite friends, earn free Pro",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_code_load_error",
+    "defaultValue": "Could not load your code. Check your connection and try again.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_copied",
+    "defaultValue": "Copied",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_already_redeemed",
+    "defaultValue": "You've already used a referral code.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_already_referred",
+    "defaultValue": "You've already been referred.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_empty_code",
+    "defaultValue": "Please enter a referral code.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_generic",
+    "defaultValue": "Something went wrong. Try again.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_invalid_code",
+    "defaultValue": "Invalid referral code.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_error_own_code",
+    "defaultValue": "You can't use your own code.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_friends_joined_many",
+    "defaultValue": "%d friends joined · %d months banked",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_friends_joined_one",
+    "defaultValue": "1 friend joined · 1 month banked",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_invite_row_subtitle",
+    "defaultValue": "Free month of Pro for you and them",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_invite_row_title",
+    "defaultValue": "Invite friends",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_no_friends_yet",
+    "defaultValue": "No friends joined yet",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_reward_line",
+    "defaultValue": "1 free month of Pro for both of you, for every friend who joins. Months stack and start when Laso goes paid.",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_screen_title",
+    "defaultValue": "Invite friends",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_share_caption_generic",
+    "defaultValue": "Laso reads my Apple Watch and tells me the one thing to do next, every morning. It is free right now — my code %@ gets you an extra free month of Pro. laso.fit",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_share_caption_younger",
+    "defaultValue": "My body is %d years younger than my age, says my Apple Watch. Laso is free right now — my code %@ gets you an extra free month of Pro. laso.fit",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_share_invite_cta",
+    "defaultValue": "Share your invite",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_tap_to_copy",
+    "defaultValue": "Tap to copy",
+    "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_referral_your_code_label",
+    "defaultValue": "YOUR CODE",
+    "sourceFile": "Copy+Referral.swift",
     "isArray": false
   },
   {

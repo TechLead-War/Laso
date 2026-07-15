@@ -222,6 +222,11 @@ enum RC {
     /// Consumer: Modules/Onboarding/Views/Onboarding/OnboardingV2Screens14ToDone.swift
     static let paywallWatchRowsMax               = "paywall_watch_rows_max"
 
+    // MARK: Referral
+    /// Kill switch for the whole invite/referral program (Settings row,
+    /// onboarding code step, share caption). Consumer: ReferralManager.isEnabled.
+    static let referralProgramEnabled            = "referral_program_enabled"
+
     // MARK: Notification timing
     static let notificationMorningStartHour      = "notification_morning_start_hour"
     static let notificationMorningEndHour        = "notification_morning_end_hour"

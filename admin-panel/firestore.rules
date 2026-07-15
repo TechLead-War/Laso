@@ -37,13 +37,15 @@ service cloud.firestore {
     // so cross-user writes are no longer allowed from the client.
     match /user_profiles/{uid} {
 
-      // Allowed fields on create and full-access update.
+      // Fields a CLIENT may write. All referral fields (referralCode,
+      // referralFreeUntil, redeemedReferralCode) are server-owned — only the
+      // referral Cloud Functions write them via the admin SDK, which bypasses
+      // rules. Listing them here would let a fresh CREATE self-grant free Pro.
       function allowedFields() {
         return [
           'gender', 'ageBracket', 'healthFocuses', 'deviceId',
           'createdAt', 'updatedAt', 'appVersion', 'region',
           'firebaseUid',
-          'referralCode', 'referralFreeUntil', 'redeemedReferralCode',
           'email', 'displayName'
         ];
       }
@@ -56,16 +58,12 @@ service cloud.firestore {
                     && request.resource.data.firebaseUid == request.auth.uid;
 
       // Update own profile: caller must own the doc (path UID == auth UID).
-      // firebaseUid and referralFreeUntil cannot be self-written (referralFreeUntil
-      // can ONLY be granted by a Cloud Function via admin SDK).
+      // firebaseUid cannot be rewritten; server-owned referral fields may exist
+      // on the doc but must be untouched by the client's merge.
       allow update: if request.auth != null
                     && request.auth.uid == uid
-                    && request.resource.data.keys().hasOnly(allowedFields())
-                    && request.resource.data.firebaseUid == resource.data.firebaseUid
-                    && (
-                         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['referralFreeUntil'])
-                         || request.auth.token.admin == true
-                       );
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields())
+                    && request.resource.data.firebaseUid == resource.data.firebaseUid;
 
       // Read own profile.
       allow get: if request.auth != null && request.auth.uid == uid;
@@ -90,25 +88,16 @@ service cloud.firestore {
     }
 
     // Referrals
-    // Tracks pending/completed referrals between two devices.
+    // Written ONLY by the redeemReferralCode Cloud Function (admin SDK bypasses
+    // rules) so all fraud checks and reward grants are server-enforced.
+    // Participants can read their own referral docs (the app counts a user's
+    // completed referrals with a `referrerUid == uid` query).
     match /referrals/{docId} {
-      allow create: if request.auth != null
-                    && request.resource.data.keys().hasAll([
-                         'referrerDeviceId', 'referredDeviceId',
-                         'referralCode', 'status', 'createdAt'
-                       ])
-                    && request.resource.data.status == 'pending'
-                    && request.resource.data.referredDeviceId is string
-                    && request.resource.data.referrerDeviceId is string
-                    && request.resource.data.referralCode is string;
-
-      allow update: if request.auth != null
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['status', 'completedAt']);
-
-      allow read: if request.auth != null;
-
-      allow delete: if false;
+      allow read: if request.auth != null
+                  && (resource.data.referrerUid == request.auth.uid
+                      || resource.data.referredUid == request.auth.uid);
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow create, update, delete: if false;
     }
 
     // Admin Audit Log

@@ -78,6 +78,12 @@ final class AppLaunchCoordinator {
             self.analyticsManager.identify(userId: user.uid, properties: [
                 "auth_provider": user.isAnonymous ? "anonymous" : "apple"
             ])
+            // Referral state needs an auth context (Firestore rules + callable),
+            // so refresh it here rather than at cold start. Fires once when the
+            // anonymous session lands and again on the anon → Apple link.
+            Task { @MainActor in
+                await ReferralManager.shared.syncWithFirestore()
+            }
         }
 
         Task { @MainActor in

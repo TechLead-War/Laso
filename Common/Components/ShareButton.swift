@@ -7,6 +7,10 @@ struct ShareButton: View {
     let screen: AppFeature
     /// When set, renders as a full-width primary CTA instead of the bare icon.
     var title: String? = nil
+    /// Optional text shared alongside the image (e.g. the referral invite
+    /// line). Message apps attach it under the photo; Instagram ignores it,
+    /// keeping the card itself clean.
+    var captionText: String? = nil
 
     @State private var isRendering = false
 
@@ -87,7 +91,10 @@ struct ShareButton: View {
     }
 
     private func presentShareSheet(with image: UIImage) {
-        let activityItems: [Any] = [image]
+        var activityItems: [Any] = [image]
+        if let captionText, !captionText.isEmpty {
+            activityItems.append(captionText)
+        }
         let activityVC = UIActivityViewController(
             activityItems: activityItems,
             applicationActivities: nil

@@ -467,19 +467,10 @@
     "Details" : {
 
     },
-    "Done" : {
-
-    },
     "Duration (minutes)" : {
 
     },
     "Duration must be greater than zero." : {
-
-    },
-    "e.g., fitness enthusiast, someone with a chronic condition..." : {
-
-    },
-    "e.g., understanding my recovery, sleep insights..." : {
 
     },
     "Elliptical" : {
@@ -643,12 +634,6 @@
     "Opens Laso to the Explore tab showing your health trends and analysis." : {
 
     },
-    "Optional — anything you'd change or add" : {
-
-    },
-    "Optional notes..." : {
-
-    },
     "Period" : {
 
     },
@@ -734,19 +719,6 @@
     "Strength Training" : {
 
     },
-    "Stress level %@, %@, trending %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Stress level %1$@, %2$@, trending %3$@"
-          }
-        }
-      }
-    },
-    "Submit" : {
-
-    },
     "Subscribes you to the selected plan" : {
 
     },
@@ -771,9 +743,6 @@
     "Target Low" : {
 
     },
-    "than your real age of %lld" : {
-
-    },
     "That seems like a lot! Please enter an amount under 10 liters." : {
 
     },
@@ -788,16 +757,6 @@
     },
     "Time" : {
 
-    },
-    "Today's strain %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Today's strain %1$@, %2$@"
-          }
-        }
-      }
     },
     "Toggles a causal explanation for why this metric declined" : {
 
@@ -817,21 +776,8 @@
     "Workout Type" : {
 
     },
-    "years" : {
-
-    },
     "Yoga" : {
 
-    },
-    "You typically move to %@ in ~%@ days" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "You typically move to %1$@ in ~%2$@ days"
-          }
-        }
-      }
     },
     "you@example.com" : {
 
@@ -848,9 +794,6 @@
           }
         }
       }
-    },
-    "YOUR VITALITY AGE" : {
-
     }
   },
   "version" : "1.0"

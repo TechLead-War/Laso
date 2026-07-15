@@ -349,9 +349,10 @@ final class SubscriptionManager {
     /// runs on many launches, does not keep resetting the delay. The flag is
     /// cleared on the next purchase, so a re-subscribe-then-lapse re-arms it.
     private func armWinbackIfNeeded() {
-        // During free year everything is already free, so a "trial expired"
-        // win-back push would be nonsense; skip arming entirely.
-        guard !FeatureGate.freeYearActive else { return }
+        // During free year everything is already free, and referral credit
+        // also keeps the app unlocked, so a "trial expired" win-back push
+        // would be nonsense in either state; skip arming entirely.
+        guard !FeatureGate.freeYearActive, !ReferralManager.shared.hasReferralAccess else { return }
         guard !defaults.bool(forKey: AppKeys.Billing.winbackArmed) else { return }
         // Await the real authorization state (StoreKit can resolve before the
         // launch-time auth cache warms) and arm the one-shot flag only after

@@ -194,6 +194,9 @@ extension RemoteConfigManager {
         RC.paywallShowYearlyDefault:          true as NSNumber,
         RC.paywallWatchRowsMax:               4 as NSNumber,
 
+        // Referral program master switch.
+        RC.referralProgramEnabled:            true as NSNumber,
+
         // Notification timing — local hours, 0-23.
         RC.notificationMorningStartHour:      5  as NSNumber,
         RC.notificationMorningEndHour:        11 as NSNumber,
@@ -411,6 +414,10 @@ extension RemoteConfigManager {
 
     var paywallVariant: String                 { string(forKey: RC.paywallVariant) ?? "control" }
     var paywallShowYearlyDefault: Bool         { bool(forKey: RC.paywallShowYearlyDefault) }
+
+    // MARK: Referral
+
+    var referralProgramEnabled: Bool           { bool(forKey: RC.referralProgramEnabled) }
 
     // MARK: Notification timing
 

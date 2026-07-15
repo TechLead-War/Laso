@@ -102,6 +102,7 @@ struct SettingsView: View {
         NavigationStack(path: $deepLinkPath) {
             Form {
                 profileSection
+                referralSection
                 subscriptionSection
                 dataSection
                 notificationsSection
@@ -243,6 +244,27 @@ struct SettingsView: View {
                 : AnyShapeStyle(.fill.tertiary),
             in: Capsule()
         )
+    }
+
+    // MARK: - Referral Section
+
+    @ViewBuilder
+    private var referralSection: some View {
+        if ReferralManager.shared.isEnabled {
+            Section {
+                NavigationLink {
+                    InviteFriendsView()
+                } label: {
+                    settingsRow(
+                        icon: "gift.fill",
+                        iconColor: .blue,
+                        title: Copy.Referral.inviteRowTitle,
+                        subtitle: Copy.Referral.inviteRowSubtitle
+                    )
+                }
+                .accessibilityIdentifier("settings.row.inviteFriends")
+            }
+        }
     }
 
     // MARK: - Subscription Section

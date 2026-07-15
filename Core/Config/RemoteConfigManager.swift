@@ -559,7 +559,7 @@ extension RemoteConfigManager {
 
         // Monetization
         "free_year_active":          false as NSNumber,    // Safe default: no accidental Pro grants when fetch fails or is pending. Flip via Firebase Remote Config.
-        "free_year_end_date":        1808697600 as NSNumber,    // 2027-04-26 UTC; override in Firebase Remote Config (0 = hide date)
+        "free_year_end_date":        1786752000 as NSNumber,    // 2026-08-15 UTC; override in Firebase Remote Config (0 = hide date)
 
         // Kill switches (all off by default)
         "kill_switch_enabled":       false as NSNumber,

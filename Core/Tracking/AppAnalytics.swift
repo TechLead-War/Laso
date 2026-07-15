@@ -28,6 +28,7 @@ enum AppFeature: String, Hashable {
     case metricLog = "metric_log"
     case proOverlay = "pro_overlay"
     case achievements
+    case inviteFriends = "invite_friends"
     case performanceProfile = "performance_profile"
     case journalEntry = "journal_entry"
     case expandedJournal = "expanded_journal"

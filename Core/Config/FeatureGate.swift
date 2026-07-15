@@ -15,6 +15,14 @@ struct FeatureGate {
 
     private static var config: RemoteConfigManager { .shared }
     private static var subscription: SubscriptionManager { .shared }
+    private static var referral: ReferralManager { .shared }
+
+    /// Non-paid full access: free-year mode or banked referral months. Referral
+    /// credit is server-granted (see ReferralManager) and starts counting after
+    /// the free year ends, so this stays correct the day the flag flips off.
+    private static var hasComplimentaryAccess: Bool {
+        config.freeYearActive || referral.hasReferralAccess
+    }
 
     /// The current user's tier string for feature flag lookup.
     static var currentTier: String {
@@ -43,31 +51,31 @@ struct FeatureGate {
 
     /// Whether the user can access a specific feature.
     static func canAccess(_ feature: RemoteConfigManager.FeatureKey) -> Bool {
-        if freeYearActive { return true }
+        if hasComplimentaryAccess { return true }
         return config.isFeatureEnabled(feature, for: currentTier)
     }
 
     /// Whether the user is on the free tier (for showing upgrade prompts).
     static var isFreeTier: Bool {
-        if freeYearActive { return false }
+        if hasComplimentaryAccess { return false }
         return currentTier == "free"
     }
 
     /// Whether the user has full app access (trial or subscribed).
     static var hasFullAccess: Bool {
-        if freeYearActive { return true }
+        if hasComplimentaryAccess { return true }
         return subscription.hasAccess
     }
 
     /// The number of insights shown to free users.
     static var insightLimit: Int {
-        if freeYearActive { return .max }
+        if hasComplimentaryAccess { return .max }
         return isFreeTier ? config.freeInsightLimit : .max
     }
 
     /// Allowed time range periods for the current tier.
     static var allowedPeriods: [String] {
-        if freeYearActive { return ["7d", "30d", "3m", "6m", "1y"] }
+        if hasComplimentaryAccess { return ["7d", "30d", "3m", "6m", "1y"] }
         return isFreeTier ? config.freePeriods : ["7d", "30d", "3m", "6m", "1y"]
     }
 

@@ -203,6 +203,17 @@ struct ShareRingsSheet: View {
     @State private var showCamera = false
     @Environment(\.dismiss) private var dismiss
 
+    /// Referral invite line attached as text next to the image. The card image
+    /// itself stays clean; message apps show this under the photo.
+    private var inviteCaption: String? {
+        let referral = ReferralManager.shared
+        guard referral.isEnabled, let code = referral.referralCode else { return nil }
+        if let vitalityAge, let realAge, vitalityAge < realAge {
+            return Copy.Referral.shareCaptionYounger(years: realAge - vitalityAge, code: code)
+        }
+        return Copy.Referral.shareCaptionGeneric(code: code)
+    }
+
     var body: some View {
         VStack(spacing: DS.space4) {
             Text(Copy.Common.shareSheetTitle)
@@ -257,13 +268,19 @@ struct ShareRingsSheet: View {
                 cardType: .rings(vitalityAge: vitalityAge, realAge: realAge,
                                  recovery: recovery, sleepSeconds: sleepSeconds, photo: photo),
                 screen: .home,
-                title: Copy.Common.shareCTA
+                title: Copy.Common.shareCTA,
+                captionText: inviteCaption
             )
 
             Spacer(minLength: DS.space4)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .task {
+            // Mint/load the invite code before the user hits Share so the
+            // caption can carry it. No-op when cached or program disabled.
+            await ReferralManager.shared.ensureReferralCode()
+        }
     }
 }
 

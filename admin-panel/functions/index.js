@@ -577,47 +577,205 @@ const CALLABLE_DEFAULTS = {
   invoker: "public",
 };
 
+// ─── Referral Program ────────────────────────────────────────────────────────
+// Reward granted to BOTH sides per completed referral. Server-authoritative:
+// firestore.rules blocks clients from writing referralFreeUntil, so grants can
+// only happen here (admin SDK bypasses rules).
+const REFERRAL_REWARD_DAYS = 30;
+// Ceiling on how far a referrer's banked credit can extend past the stacking
+// floor. The per-device dedupe is client-reported and spoofable, so this cap
+// bounds the damage of anonymous-account farming to one year of Pro.
+const REFERRAL_MAX_BANKED_DAYS = 365;
+// Charset avoids 0/O/1/I ambiguity so codes survive being read aloud.
+const REFERRAL_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function generateReferralCode() {
+  let suffix = "";
+  for (let i = 0; i < 6; i++) {
+    suffix += REFERRAL_CODE_CHARS[Math.floor(Math.random() * REFERRAL_CODE_CHARS.length)];
+  }
+  return `LASO-${suffix}`;
+}
+
+// Rewards granted while free-year mode is running must start stacking from the
+// END of the free year (stacking from "now" would burn them inside a window
+// where the app is already free). Both keys live in Remote Config and are
+// independent: free_year_active is the real gate, free_year_end_date is the
+// display/stacking date — so the date is honoured ONLY while the flag is on.
+// Cached per instance for 5 minutes to avoid a template fetch per redemption.
+let freeYearCache = { active: false, endSec: 0, fetchedAt: 0 };
+async function getFreeYearConfig() {
+  const now = Date.now();
+  if (now - freeYearCache.fetchedAt < 5 * 60 * 1000) return freeYearCache;
+  try {
+    const template = await admin.remoteConfig().getTemplate();
+    const params = template.parameters || {};
+    const active = (params.free_year_active?.defaultValue?.value || "false") === "true";
+    const endSec = Number(params.free_year_end_date?.defaultValue?.value || "0") || 0;
+    if (active && endSec <= Math.floor(now / 1000)) {
+      logger.warn("free_year_active is on but free_year_end_date is unset/past; referral rewards stack from now", { endSec });
+    }
+    freeYearCache = { active, endSec, fetchedAt: now };
+  } catch (err) {
+    logger.error("Remote Config read failed for free year keys", { message: err.message });
+    freeYearCache = { active: false, endSec: 0, fetchedAt: now };
+  }
+  return freeYearCache;
+}
+
 /**
- * lookupReferralCode — authenticated callable used by the iOS client to
- * resolve a referral code to its owner's UID. Returns ONLY the data the client
- * needs to credit the referrer. The `user_profiles` collection's list rule is
- * admin-only (Pass 5 Agent 8), so the iOS direct query no longer works.
+ * getOrAssignReferralCode — returns the caller's referral code, generating and
+ * persisting one on first call. Transactional so two concurrent calls from the
+ * same account can never mint two different codes.
  */
-exports.lookupReferralCode = onCall(CALLABLE_DEFAULTS, async (request) => {
+exports.getOrAssignReferralCode = onCall(CALLABLE_DEFAULTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+  const uid = request.auth.uid;
+  if (!checkRateLimit(`referral-assign:${uid}`, RATE_LIMIT_PUBLIC)) {
+    throw new HttpsError("resource-exhausted", "Too many requests. Slow down.");
+  }
+
+  const db = admin.firestore();
+  const profileRef = db.collection("user_profiles").doc(uid);
+
+  const code = await db.runTransaction(async (txn) => {
+    const snap = await txn.get(profileRef);
+    const existing = snap.exists ? (snap.data().referralCode || null) : null;
+    if (existing) return existing;
+
+    // Collision space is 32^6 ≈ 1.07B; a handful of retries is plenty.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = generateReferralCode();
+      const clash = await txn.get(
+        db.collection("user_profiles").where("referralCode", "==", candidate).limit(1),
+      );
+      if (clash.empty) {
+        txn.set(profileRef, { referralCode: candidate, firebaseUid: uid }, { merge: true });
+        return candidate;
+      }
+    }
+    throw new HttpsError("internal", "Could not assign a code. Try again.");
+  });
+
+  return { code };
+});
+
+/**
+ * redeemReferralCode — validates a friend's code and grants BOTH sides
+ * REFERRAL_REWARD_DAYS of Pro credit. All fraud checks are server-side:
+ * self-referral (account and physical device), one redemption per account
+ * (enforced atomically via a deterministic referral doc ID), and one per
+ * device (blocks reinstall/anonymous-reset farming).
+ * Returns { status } instead of throwing for expected outcomes so the client
+ * can map them to friendly copy.
+ */
+exports.redeemReferralCode = onCall(CALLABLE_DEFAULTS, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+  const uid = request.auth.uid;
+  if (!checkRateLimit(`referral-redeem:${uid}`, RATE_LIMIT_PUBLIC)) {
+    throw new HttpsError("resource-exhausted", "Too many requests. Slow down.");
   }
 
   const code = (request.data?.code || "").toString().trim().toUpperCase();
   if (!code || !/^[A-Z0-9-]{4,20}$/.test(code)) {
     throw new HttpsError("invalid-argument", "Invalid code format.");
   }
-
-  // Per-caller rate limit: 10 lookups/minute (matches RATE_LIMIT_PUBLIC).
-  const key = `referral-lookup:${request.auth.uid}`;
-  if (!checkRateLimit(key, RATE_LIMIT_PUBLIC)) {
-    throw new HttpsError("resource-exhausted", "Too many lookups. Slow down.");
+  // The real client always sends identifierForVendor; a missing deviceId is a
+  // hand-rolled request, so fail loudly rather than skipping the device dedupe.
+  const deviceId = sanitizeString(request.data?.deviceId || "", 64);
+  if (!deviceId) {
+    throw new HttpsError("invalid-argument", "deviceId required.");
   }
 
-  const snap = await admin.firestore()
-    .collection("user_profiles")
-    .where("referralCode", "==", code)
-    .limit(1)
-    .get();
+  const db = admin.firestore();
 
-  if (snap.empty) {
-    return { found: false };
+  // Resolve the code owner.
+  const ownerSnap = await db.collection("user_profiles")
+    .where("referralCode", "==", code).limit(1).get();
+  if (ownerSnap.empty) {
+    return { status: "invalid_code" };
+  }
+  const referrerDoc = ownerSnap.docs[0];
+  const referrerUid = referrerDoc.id;
+
+  // Self-referral: same account, or the code owner's own physical device.
+  if (referrerUid === uid || referrerDoc.data().deviceId === deviceId) {
+    return { status: "own_code" };
   }
 
-  const doc = snap.docs[0];
-  const data = doc.data();
+  const freeYear = await getFreeYearConfig();
+  const nowSec = Math.floor(Date.now() / 1000);
+  const rewardSec = REFERRAL_REWARD_DAYS * 24 * 60 * 60;
+  // Stacking floor: end of the free year while it is actually running,
+  // otherwise now. Existing credit extends past the floor, capped so a
+  // farmed referrer cannot bank more than REFERRAL_MAX_BANKED_DAYS.
+  const floorSec = (freeYear.active && freeYear.endSec > nowSec) ? freeYear.endSec : nowSec;
+  const capSec = floorSec + REFERRAL_MAX_BANKED_DAYS * 24 * 60 * 60;
+  const stackedUntil = (existingTs) =>
+    Math.min(Math.max(Number(existingTs) || 0, floorSec) + rewardSec, capSec);
 
-  // Return ONLY the fields the iOS client needs to grant the referral —
-  // do NOT leak email, age, gender, region, healthFocuses, etc.
-  return {
-    found: true,
-    ownerUid: data.firebaseUid || doc.id,
-  };
+  const referredRef = db.collection("user_profiles").doc(uid);
+  // Deterministic ID = one referral per referred account, enforced by
+  // txn.create() aborting if the doc already exists (atomic double-redeem guard).
+  const referralRef = db.collection("referrals").doc(`referred_${uid}`);
+
+  try {
+    const result = await db.runTransaction(async (txn) => {
+      // Per-device dedupe INSIDE the transaction so two accounts racing on the
+      // same device cannot both pass the check.
+      const byDevice = await txn.get(
+        db.collection("referrals").where("referredDeviceId", "==", deviceId).limit(1),
+      );
+      if (!byDevice.empty) {
+        return { alreadyReferred: true };
+      }
+
+      const [referredSnap, referrerSnap] = await Promise.all([
+        txn.get(referredRef),
+        txn.get(referrerDoc.ref),
+      ]);
+      const referredUntil = stackedUntil(referredSnap.exists ? referredSnap.data().referralFreeUntil : 0);
+      const referrerUntil = stackedUntil(referrerSnap.exists ? referrerSnap.data().referralFreeUntil : 0);
+
+      txn.create(referralRef, {
+        referrerUid,
+        referredUid: uid,
+        referredDeviceId: deviceId || null,
+        referralCode: code,
+        status: "completed",
+        createdAt: nowSec,
+        completedAt: nowSec,
+      });
+      txn.set(referredRef, {
+        referralFreeUntil: referredUntil,
+        redeemedReferralCode: code,
+        firebaseUid: uid,
+      }, { merge: true });
+      txn.set(referrerDoc.ref, { referralFreeUntil: referrerUntil }, { merge: true });
+      return { referredUntil };
+    });
+
+    if (result.alreadyReferred) {
+      return { status: "already_referred" };
+    }
+
+    logger.info("Referral redeemed", {
+      referrer: redactUid(referrerUid),
+      referred: redactUid(uid),
+    });
+    return { status: "ok", freeUntil: result.referredUntil };
+  } catch (err) {
+    // txn.create throws ALREADY_EXISTS when this account already redeemed.
+    if (err.code === 6 || /already exists/i.test(err.message || "")) {
+      return { status: "already_referred" };
+    }
+    logger.error("Referral redemption failed", { message: err.message });
+    throw new HttpsError("internal", "Redemption failed. Try again.");
+  }
 });
 
 // ═══ Admin Endpoints (continued) ═════════════════════════════════════════════
