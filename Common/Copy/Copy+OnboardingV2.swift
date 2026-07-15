@@ -21,19 +21,6 @@ extension Copy {
         static var s1Lede: String  { s("copy_onboardingv2_s1_lede", "Your true age, read from your heart, sleep, and recovery.") }
         static var s1CTA: String   { s("copy_onboardingv2_s1_cta", "See my Vitality Age") }
 
-        // MARK: - Screen 2 — Promise
-        static var s2Eyebrow: String    { s("copy_onboardingv2_s2_eyebrow", "BEFORE WE START") }
-        static var s2Title: String      { s("copy_onboardingv2_s2_title", "A few things,\nbefore we start.") }
-        static var s2Lede: String       { s("copy_onboardingv2_s2_lede", "What we promise you, in plain words.") }
-        static var s2Card1Title: String { s("copy_onboardingv2_s2_card1_title", "No noise. No panic.") }
-        static var s2Card1Body: String  { s("copy_onboardingv2_s2_card1_body", "We won't bury you in numbers. Just what matters, in words you'll actually use.") }
-        static var s2Card2Title: String { s("copy_onboardingv2_s2_card2_title", "Yours, and only yours.") }
-        static var s2Card2Body: String  { s("copy_onboardingv2_s2_card2_body", "Your health data stays on your phone. We never sell it. We never share it.") }
-        static var s2Card3Title: String { s("copy_onboardingv2_s2_card3_title", "You're not alone in this.") }
-        static var s2Card3Body: String  { s("copy_onboardingv2_s2_card3_body", "Whether you're tired, off, or hopeful, we meet you where you are.") }
-        static var s2CTA: String        { s("copy_onboardingv2_s2_cta", "I'm ready") }
-        static var s2Caption: String    { s("copy_onboardingv2_s2_caption", "Takes about 2 minutes") }
-
         // MARK: - Screen 3 — About you
         static var s3Eyebrow: String   { s("copy_onboardingv2_s3_eyebrow", "ABOUT YOU") }
         static var s3Title: String     { s("copy_onboardingv2_s3_title", "First, the basics.") }
@@ -214,59 +201,8 @@ extension Copy {
         static var revealOrbCalculating: String { s("copy_onboardingv2_reveal_orb_calculating", "CALCULATING") }
         static var revealOrbYears: String { s("copy_onboardingv2_reveal_orb_years", "YEARS") }
         static var revealCTA: String { s("copy_onboardingv2_reveal_cta", "Continue") }
-
-        // MARK: - Screen 14 — Preview
-        static var s14Eyebrow: String { s("copy_onboardingv2_s14_eyebrow", "YOUR FIRST WEEK") }
-        static var s14Title: String   { s("copy_onboardingv2_s14_title", "Here's what comes next.") }
-        static var s14Lede: String    { s("copy_onboardingv2_s14_lede", "A gentle plan for your first 7 days with Laso.") }
-        static var s14CTA: String     { s("copy_onboardingv2_s14_cta", "Continue") }
-
-        struct PreviewDay {
-            let day: Int
-            let title: String
-            let body: String
-        }
-        static var previewDays: [PreviewDay] {
-            [
-                .init(day: 1, title: s("copy_onboardingv2_preview_d1_title", "Your baseline"),           body: s("copy_onboardingv2_preview_d1_body", "We set what 'normal' looks like for you.")),
-                .init(day: 2, title: s("copy_onboardingv2_preview_d2_title", "Your sleep window"),        body: s("copy_onboardingv2_preview_d2_body", "When your body actually wants to rest.")),
-                .init(day: 3, title: s("copy_onboardingv2_preview_d3_title", "Stress signals"),           body: s("copy_onboardingv2_preview_d3_body", "The ones your body has been hiding.")),
-                .init(day: 5, title: s("copy_onboardingv2_preview_d5_title", "Recovery rhythm"),          body: s("copy_onboardingv2_preview_d5_body", "How long it really takes to bounce back.")),
-                .init(day: 7, title: s("copy_onboardingv2_preview_d7_title", "Your first weekly read"),   body: s("copy_onboardingv2_preview_d7_body", "What changed. What it means. What to try."))
-            ]
-        }
-
-        /// Social proof line on Screen 14, adapted to the user's primary goal.
-        /// Default is intentionally EMPTY: this is a population outcome claim, so
-        /// it must never ship an invented number. The line stays hidden until an
-        /// operator sets a real per goal cohort figure via Remote Config. Markdown
-        /// bold (**...**) marks the figures so the operator controls emphasis too.
-        static func s14SocialProof(for goal: OnbV2Goal?) -> String {
-            switch goal {
-            case .sleep:     return s("copy_onboardingv2_s14_proof_sleep", "")
-            case .energy:    return s("copy_onboardingv2_s14_proof_energy", "")
-            case .training:  return s("copy_onboardingv2_s14_proof_training", "")
-            case .stress:    return s("copy_onboardingv2_s14_proof_stress", "")
-            case .longevity: return s("copy_onboardingv2_s14_proof_longevity", "")
-            case .weight:    return s("copy_onboardingv2_s14_proof_weight", "")
-            case .none:      return s("copy_onboardingv2_s14_proof_sleep", "")
-            }
-        }
-
-        /// Illustrative example lines, shown ONLY in premium-showcase / screenshot
-        /// builds so the design can be reviewed. The numbers are placeholders, never
-        /// a production claim, and never reach a real user (premiumShowcase is false
-        /// in Release).
-        static func s14SocialProofShowcase(for goal: OnbV2Goal?) -> String {
-            switch goal {
-            case .energy:    return "People like you, working on energy, had **30% fewer** afternoon dips by **week 3**."
-            case .training:  return "People like you, training smarter, recovered **a day faster** between hard sessions in **3 weeks**."
-            case .stress:    return "People like you, managing stress, raised their HRV **9%** in **3 weeks**."
-            case .longevity: return "People like you, staying healthy, dropped their resting heart rate **4 bpm** in **4 weeks**."
-            case .weight:    return "People like you, on a weight goal, saw a steady **3% move** toward it in **6 weeks**."
-            case .sleep, .none: return "People like you, working on sleep, gained **38 min** a night in **3 weeks**."
-            }
-        }
+        // Rich branch: caption above the CTA that seeds the morning notification.
+        static var notifPrimer: String { s("copy_onboardingv2_notif_primer", "Tomorrow morning we will tell you how tonight went.") }
 
         // MARK: - Screen 15 — Sign in
         static var s15Title: String    { s("copy_onboardingv2_s15_title", "Save your read.") }
@@ -276,16 +212,25 @@ extension Copy {
 
         // MARK: - Screen 16 — Paywall
         static var s16Eyebrow: String      { s("copy_onboardingv2_s16_eyebrow", "YOUR LASO PLAN") }
-        // Insight-driven framing: sell the next pattern, not feature bullets.
-        static var s16Title: String        { s("copy_onboardingv2_s16_title", "You unlocked your first pattern.") }
-        // Shown instead of s16Title when the scan found no data: don't claim a
-        // pattern we didn't find; sell the hunt built on what they told us.
+        // Headline keyed to the vitality delta band. Deltas within 2 years fold
+        // into the "same" variant, which also avoids the singular year problem
+        // in the templates.
+        static func s16TitleYounger(_ years: Int) -> String {
+            String(format: s("copy_onboardingv2_s16_title_younger", "Your body is %d years younger than your age. Keep it that way."), years)
+        }
+        static func s16TitleOlder(_ years: Int) -> String {
+            String(format: s("copy_onboardingv2_s16_title_older", "Your body is %d years older than your age. Your plan closes the gap."), years)
+        }
+        static var s16TitleSame: String    { s("copy_onboardingv2_s16_title_same", "Your body matches your age. Your plan keeps you ahead.") }
+        // Shown instead of the delta headlines when the scan found no data: don't
+        // claim a read we didn't get; sell the hunt built on what they told us.
         static var s16TitleNoData: String  { s("copy_onboardingv2_s16_title_no_data", "You told us what matters.\nNow let's go find it.") }
         static var s16AnnualTitle: String  { s("copy_onboardingv2_s16_annual_title", "Annual") }
         static var s16MonthlyTitle: String { s("copy_onboardingv2_s16_monthly_title", "Monthly") }
         static var s16MonthlySub: String   { s("copy_onboardingv2_s16_monthly_sub", "Cancel anytime") }
         static var s16CTA: String          { s("copy_onboardingv2_s16_cta", "Start free trial") }
         static var s16CTAFallback: String  { s("copy_onboardingv2_s16_cta_fallback", "Continue") }
+        static var s16Decline: String      { s("copy_onboardingv2_s16_decline", "Continue without Pro") }
         static var s16Restore: String      { s("copy_onboardingv2_s16_restore", "Restore") }
         static var s16Terms: String        { s("copy_onboardingv2_s16_terms", "Terms") }
         static var s16Privacy: String      { s("copy_onboardingv2_s16_privacy", "Privacy") }
@@ -421,6 +366,7 @@ extension Copy {
         static var sDoneTitle: String { s("copy_onboardingv2_done_title", "Welcome to Laso.") }
         static var sDoneLede: String  { s("copy_onboardingv2_done_lede", "Your first insights are ready. Let's take a look.") }
         static var sDoneCTA: String   { s("copy_onboardingv2_done_cta", "Open my dashboard") }
+        static var sDoneDisclaimer: String { s("copy_onboardingv2_sdone_disclaimer", "Laso is not a medical device and does not diagnose or treat any condition. By continuing you confirm you understand.") }
 
         // MARK: - Helpers
 

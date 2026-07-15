@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// New 14-screen onboarding flow router. Replaces the legacy `OnboardingView`
+/// New 13-step onboarding flow router. Replaces the legacy `OnboardingView`
 /// (TabView-based 7-step). Navigation is index-based with a forward-only fade
 /// transition; back goes to previous screen.
 ///
@@ -34,6 +34,10 @@ struct OnboardingV2View: View {
     @State private var verdict: PredictionVerdict?
     // Nights of sleep still needed before the sparse branch can answer.
     @State private var cliffhangerNights = InsightConfig.GroupDifference.minSamples
+    // Data-richness branch chosen in routeAfterScan. Drives the per-branch
+    // screen order (`linearOrder`). nil while the user is still pre-scan,
+    // where every branch shares the same screens.
+    @State private var branch: DataRichnessSegment?
     // The single snapshot-load task, started during the scan animation and
     // awaited by routeAfterScan so segmentation runs on a fully loaded
     // snapshot without a second concurrent load.
@@ -54,25 +58,26 @@ struct OnboardingV2View: View {
     /// Config key `onboarding_skip_screens` (CSV) can reference them by name
     /// at runtime.
     enum Screen: String, Hashable, CaseIterable {
-        case welcome        // 1
-        case promise        // 2
-        case about          // 3
-        case goal           // 4
-        case symptoms       // 5
-        case bridge         // 6
-        case scan           // 7 (system HealthKit sheet fires before this)
+        case welcome
+        case about
+        case goal
+        case symptoms
+        case bridge
+        case scan           // system HealthKit sheet fires before this
         // Mutually exclusive router targets, reached only from `scan` based on
-        // the data-richness segment. They share ordinal 8 (the linear slot
-        // they replace).
-        case verdict        // 8 rich
-        case cliffhanger    // 8 sparse
-        case journalFirst   // 8 denied
-        case heart          // 9
-        case sleep          // 10
-        case hrv            // 11
-        case preview        // 12
-        case signIn         // 13
-        case paywall        // 14
+        // the data-richness segment. Step numbers are branch-dependent — see
+        // `linearOrder`: rich shows the reveal (.preview) right after the scan
+        // and the verdict after hrv; sparse/denied show their router screen
+        // after the scan and the reveal after hrv.
+        case verdict        // rich
+        case cliffhanger    // sparse
+        case journalFirst   // denied
+        case heart
+        case sleep
+        case hrv
+        case preview        // Vitality Age reveal
+        case signIn
+        case paywall
         case done           // post
     }
 
@@ -90,6 +95,15 @@ struct OnboardingV2View: View {
             // sleep/hrv) render fully instead of their empty state.
             if let raw = UITestMode.onboardingV2StartScreen, let target = Screen(rawValue: raw) {
                 healthSnapshot.applyUITestMockData()
+                // Router targets imply a branch; without it the ordinal math
+                // falls back to the pre-scan (rich) order and back-navigation
+                // from the jumped-to screen misroutes.
+                switch target {
+                case .verdict:      branch = .rich
+                case .cliffhanger:  branch = .sparse
+                case .journalFirst: branch = .denied
+                default: break
+                }
                 // The mid-flow screens are built from goal+symptom+scan state the
                 // harness skips, so seed that state here too; without it they fall
                 // through to .heart and cannot be captured from a single launch.
@@ -126,8 +140,8 @@ struct OnboardingV2View: View {
             if screen == .welcome, RemoteConfigManager.shared.onboardingForceSkipToPaywall {
                 // record the welcome exit so the kill-switch jump still shows in the funnel
                 AppAnalytics.shared.trackOnboardingStepCompleted(
-                    stepKey: Screen.welcome.rawValue, stepIndex: Self.screenOrdinal(.welcome),
-                    stepCount: Self.stepCount, durationSec: 0, action: .completed)
+                    stepKey: Screen.welcome.rawValue, stepIndex: screenOrdinal(.welcome),
+                    stepCount: stepCount, durationSec: 0, action: .completed)
                 screen = .paywall
             }
             if !startTracked {
@@ -148,8 +162,8 @@ struct OnboardingV2View: View {
             guard newPhase == .background, screen != .done else { return }
             AppAnalytics.shared.trackOnboardingDropOff(
                 lastStep: screen.rawValue,
-                stepIndex: Self.screenOrdinal(screen),
-                stepCount: Self.stepCount,
+                stepIndex: screenOrdinal(screen),
+                stepCount: stepCount,
                 durationSec: max(0, Int(Date().timeIntervalSince(stepStartedAt)))
             )
         }
@@ -159,14 +173,10 @@ struct OnboardingV2View: View {
     private var content: some View {
         switch screen {
         case .welcome:
-            OnbV2Screen1Welcome { advance(to: .promise) }
-        case .promise:
-            OnbV2Screen2Promise(onBack: { advance(to: .welcome) }) {
-                advance(to: .about)
-            }
+            OnbV2Screen1Welcome { advance(to: .about) }
         case .about:
             OnbV2Screen3About(profile: profile,
-                              onBack: { advance(to: .promise) },
+                              onBack: { advance(to: .welcome) },
                               onContinue: {
                                   AppAnalytics.shared.trackOnboardingProfileSet(
                                       age: profile.age, sex: profile.sex?.rawValue ?? "unspecified")
@@ -210,19 +220,19 @@ struct OnboardingV2View: View {
                 OnbV2ScreenVerdict(prediction: prediction,
                                    verdict: verdict,
                                    weekdayMeans: healthSnapshot.hrvWeekdayMeans,
-                                   onContinue: { advance(to: .heart) })
+                                   onContinue: { advance(to: .signIn) })
             } else {
-                Color.clear.onAppear { advance(to: .heart) }
+                Color.clear.onAppear { advance(to: .signIn) }
             }
         case .cliffhanger:
             OnbV2ScreenCliffhanger(nightsRemaining: cliffhangerNights,
-                                   onNotifyYes: { await requestNotificationPermission() },
+                                   onNotifyYes: { await requestNotificationPermission(source: "cliffhanger") },
                                    onContinue: { advance(to: .heart) })
         case .journalFirst:
             OnbV2ScreenJournalFirst(onContinue: { advance(to: .heart) })
         case .heart:
             OnbV2Screen11Heart(snapshot: healthSnapshot,
-                               onBack: { advance(to: .scan) },
+                               onBack: { advance(to: branch == .rich ? .preview : .scan) },
                                onContinue: { advance(to: .sleep) })
         case .sleep:
             OnbV2Screen12Sleep(snapshot: healthSnapshot,
@@ -231,29 +241,50 @@ struct OnboardingV2View: View {
         case .hrv:
             OnbV2Screen13HRV(snapshot: healthSnapshot,
                              onBack: { advance(to: .sleep) },
-                             onContinue: { advance(to: .preview) })
+                             onContinue: { advance(to: branch == .rich ? .verdict : .preview) })
         case .preview:
             OnbV2VitalityRevealScreen(profile: profile,
                                       snapshot: healthSnapshot,
-                                      onBack: { advance(to: .hrv) },
-                                      onContinue: { advance(to: .signIn) })
+                                      step: screenOrdinal(.preview),
+                                      showsNotificationPrimer: branch == .rich,
+                                      onBack: { advance(to: branch == .rich ? .scan : .hrv) },
+                                      onContinue: {
+                                          if branch == .rich {
+                                              // The primer above the CTA set up this ask;
+                                              // fire the system prompt before moving on.
+                                              Task { @MainActor in
+                                                  await requestNotificationPermission(source: "vitality_reveal")
+                                                  advance(to: .heart)
+                                              }
+                                          } else {
+                                              advance(to: .signIn)
+                                          }
+                                      })
         case .signIn:
-            OnbV2Screen15SignIn(onBack: { advance(to: .preview) },
+            OnbV2Screen15SignIn(onBack: { advance(to: branch == .rich ? .verdict : .preview) },
                                 onSignedIn: handleSignedIn)
         case .paywall:
             // After sign-in, going back to the sign-in screen would re-prompt
-            // an authenticated user, which is jarring. Skip back to preview.
+            // an authenticated user, which is jarring. Skip back to the screen
+            // before sign-in on the current branch.
             OnbV2Screen16Paywall(profile: profile,
                                  snapshot: healthSnapshot,
                                  verdict: verdict,
-                                 onBack: { advance(to: .preview) },
-                                 onPurchased: { advance(to: .done) })
+                                 onBack: { advance(to: branch == .rich ? .verdict : .preview) },
+                                 onPurchased: { advance(to: .done) },
+                                 onDeclined: {
+                                     appStateStore.markPaywallDeclined()
+                                     advance(to: .done)
+                                 })
         case .done:
             OnbV2ScreenDone {
                 persistOnboardingProfile()
                 // Mark complete BEFORE tracking so the onboarding_completed user
                 // property is already true when the event fires (not contradictory).
                 appStateStore.markOnboardingCompleted()
+                // The done screen now shows the disclaimer line, so finishing
+                // onboarding also acknowledges it — no separate disclaimer gate.
+                appStateStore.markDisclaimerAcknowledged()
                 AppAnalytics.shared.trackOnboardingCompleted(
                     focuses: profile.goals.map { $0.asHealthFocus.rawValue },
                     durationSec: max(0, Int(Date().timeIntervalSince(onboardingStartedAt)))
@@ -266,40 +297,39 @@ struct OnboardingV2View: View {
 
     private func advance(to next: Screen) {
         // Honour the Firebase Remote Config `onboarding_skip_screens` CSV by
-        // walking forward through the ordinal order until a non-skipped screen.
-        // Back navigation is never skipped — we want the user to land where
-        // they tapped, even if that screen happens to be in the skip set.
+        // walking forward through the current branch order until a non-skipped
+        // screen. Walking `linearOrder` (not allCases) means a router screen
+        // from another branch can never be selected as a skip target. Back
+        // navigation is never skipped — we want the user to land where they
+        // tapped, even if that screen happens to be in the skip set.
         var target = next
-        let goingForward = Self.screenOrdinal(next) > Self.screenOrdinal(screen)
+        let order = linearOrder
+        let goingForward = screenOrdinal(next) > screenOrdinal(screen)
         if goingForward {
             let skipSet = RemoteConfigManager.shared.onboardingSkipScreens
             while skipSet.contains(target.rawValue) {
-                let currentOrdinal = Self.screenOrdinal(target)
-                let later = Screen.allCases
-                    .filter { Self.screenOrdinal($0) > currentOrdinal }
-                    .min(by: { Self.screenOrdinal($0) < Self.screenOrdinal($1) })
-                guard let after = later, after != target else { break }
-                target = after
+                guard let idx = order.firstIndex(of: target), idx + 1 < order.count else { break }
+                target = order[idx + 1]
             }
         }
 
-        // Screens are ordered by `Self.screenOrdinal`. A move to a higher ordinal
+        // Screens are ordered by `screenOrdinal`. A move to a higher ordinal
         // means the current screen was completed (the forward funnel); a move to a
         // lower ordinal is the user reconsidering and going back.
         let durationSec = max(0, Int(Date().timeIntervalSince(stepStartedAt)))
-        if Self.screenOrdinal(target) > Self.screenOrdinal(screen) {
+        if screenOrdinal(target) > screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
-                stepIndex: Self.screenOrdinal(screen),
-                stepCount: Self.stepCount,
+                stepIndex: screenOrdinal(screen),
+                stepCount: stepCount,
                 durationSec: durationSec,
                 action: .completed
             )
-        } else if Self.screenOrdinal(target) < Self.screenOrdinal(screen) {
+        } else if screenOrdinal(target) < screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
-                stepIndex: Self.screenOrdinal(screen),
-                stepCount: Self.stepCount,
+                stepIndex: screenOrdinal(screen),
+                stepCount: stepCount,
                 durationSec: durationSec,
                 action: .back
             )
@@ -308,37 +338,39 @@ struct OnboardingV2View: View {
         stepStartedAt = Date()
     }
 
-    /// Total user-facing steps in this onboarding version (excludes the
-    /// post-flow `done` screen and the two router alternates that share a slot
-    /// with `.verdict`, so a user only ever traverses this many distinct
-    /// ordinals). Counting distinct ordinals keeps the funnel denominator equal
-    /// to the visible progress total.
-    private static let stepCount = Set(
-        Screen.allCases.filter { $0 != .done }.map(screenOrdinal)
-    ).count
-
-    /// Step number used in analytics. Matches the user-visible 1-based step
-    /// index. The three router screens share ordinal 8 (the linear slot they
-    /// replace), so the forward/back funnel comparison stays monotonic across
-    /// whichever branch the user lands on.
-    private static func screenOrdinal(_ screen: Screen) -> Int {
-        switch screen {
-        case .welcome:      return 1
-        case .promise:      return 2
-        case .about:        return 3
-        case .goal:         return 4
-        case .symptoms:     return 5
-        case .bridge:       return 6
-        case .scan:         return 7
-        case .verdict, .cliffhanger, .journalFirst: return 8
-        case .heart:        return 9
-        case .sleep:        return 10
-        case .hrv:          return 11
-        case .preview:      return 12
-        case .signIn:       return 13
-        case .paywall:      return 14
-        case .done:         return 15
+    /// Ordered screens for the current branch. All branches share screens 1-6;
+    /// the rich branch shows the reveal right after the scan and holds the
+    /// verdict until after hrv, while sparse/denied show their router screen
+    /// after the scan and the reveal after hrv. `done` stays last as the
+    /// post-flow state.
+    private var linearOrder: [Screen] {
+        switch branch {
+        case .sparse:
+            return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
+                    .cliffhanger, .heart, .sleep, .hrv, .preview, .signIn, .paywall, .done]
+        case .denied:
+            return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
+                    .journalFirst, .heart, .sleep, .hrv, .preview, .signIn, .paywall, .done]
+        case .rich, nil:
+            // nil = pre-scan, where only the shared screens 1-6 are reachable,
+            // so defaulting to the rich order never misroutes.
+            return [.welcome, .about, .goal, .symptoms, .bridge, .scan,
+                    .preview, .heart, .sleep, .hrv, .verdict, .signIn, .paywall, .done]
         }
+    }
+
+    /// Total user-facing steps (excludes the post-flow `done` screen). Every
+    /// branch order has the same count, so the funnel denominator matches the
+    /// visible progress total on all branches.
+    private var stepCount: Int { linearOrder.count - 1 }
+
+    /// 1-based step number used in analytics and the progress bar, derived
+    /// from the current branch order. The two router screens absent from that
+    /// order never render on it; they fall back to the post-scan slot (7) they
+    /// would have occupied, keeping the funnel monotonic even for stale skip
+    /// entries or DEBUG jumps.
+    private func screenOrdinal(_ screen: Screen) -> Int {
+        (linearOrder.firstIndex(of: screen) ?? 6) + 1
     }
 
     /// Persist V2 onboarding inputs to the same encrypted stores the legacy flow
@@ -370,7 +402,7 @@ struct OnboardingV2View: View {
     }
 
     /// Persist the answers persistOnboardingProfile drops (symptoms) plus the
-    /// pre-registered prediction, so screen 5's "we will watch for them" promise
+    /// pre-registered prediction, so the symptoms screen's "we will watch for them" promise
     /// is true and the cliffhanger payoff can mature the claim later. Called
     /// once the prediction is built.
     private func persistCapturedAnswers() {
@@ -417,6 +449,7 @@ struct OnboardingV2View: View {
 
         guard let prediction else {
             // No testable claim — treat as the journal-first experience.
+            branch = .denied
             advance(to: .journalFirst)
             return
         }
@@ -432,13 +465,17 @@ struct OnboardingV2View: View {
             properties: ["segment": segment.rawValue]
         )
 
+        // Set before advancing so the target's ordinal comes from the right
+        // branch order.
+        branch = segment
         switch segment {
         case .rich:
             // A rich segment can still land inconclusive; the prediction was
             // already persisted above so the answer-ready push can fire when it
-            // confirms later.
+            // confirms later. The verdict itself is paid off after the metric
+            // reveals — rich goes to the Vitality Age reveal first.
             verdict = PredictionVerdictEngine.evaluate(prediction: prediction, history: history)
-            advance(to: .verdict)
+            advance(to: .preview)
         case .sparse:
             let result = PredictionVerdictEngine.evaluate(prediction: prediction, history: history)
             cliffhangerNights = result.nightsRemaining ?? InsightConfig.GroupDifference.minSamples
@@ -448,13 +485,14 @@ struct OnboardingV2View: View {
         }
     }
 
-    /// Fires the system notification prompt from the cliffhanger opt-in. Kept
-    /// separate so the prompt only appears after the user taps yes. On grant we
-    /// arm the abandonment reminders here (rather than only at completion) so a
-    /// user who opts in on the cliffhanger but then drops out is still recovered.
+    /// Fires the system notification prompt from an in-flow primed ask — the
+    /// cliffhanger opt-in on the sparse branch, the Vitality Age reveal CTA on
+    /// the rich branch. On grant we arm the abandonment reminders here (rather
+    /// than only at completion) so a user who opts in mid-flow but then drops
+    /// out is still recovered.
     @MainActor
-    private func requestNotificationPermission() async {
-        let granted = await NotificationManager.shared.requestAuthorization(source: "cliffhanger")
+    private func requestNotificationPermission(source: String) async {
+        let granted = await NotificationManager.shared.requestAuthorization(source: source)
         if granted {
             OnboardingAbandonmentScheduler.schedule()
         }
@@ -488,20 +526,22 @@ struct OnboardingV2View: View {
         }
     }
 
-    /// Prompt for notification permission (mirrors the HealthKit ask) and arm
-    /// the post-onboarding notification tracks. Onboarding is now complete, so
-    /// the abandonment reminders are cancelled regardless of permission. The
-    /// engagement drip and re-engagement track only arm when the user actually
-    /// granted — scheduling them for a declined user is wasted work that iOS
-    /// silently drops. The ContentView launch fallback still covers users who
-    /// reach the dashboard without passing through here.
+    /// Arm the post-onboarding notification tracks. The permission prompt
+    /// itself fires mid-flow (reveal CTA on rich, cliffhanger opt-in on
+    /// sparse), so this only reads the current status — never prompts.
+    /// Onboarding is now complete, so the abandonment reminders are cancelled
+    /// regardless of permission. The engagement drip and re-engagement track
+    /// only arm when the user actually granted — scheduling them for a
+    /// declined user is wasted work that iOS silently drops. The ContentView
+    /// launch fallback still covers users who reach the dashboard without an
+    /// in-flow ask (journal-first branch).
     private func completeNotificationSetup() {
         // Goal complete: the user finished onboarding, so no abandonment nudge
         // should ever fire. Cancel even when permission was declined.
         OnboardingAbandonmentScheduler.cancelAll()
 
         Task { @MainActor in
-            let granted = await NotificationManager.shared.requestAuthorization(source: "onboarding")
+            let granted = await NotificationManager.shared.isCurrentlyAuthorized()
             guard granted else { return }
             await EngagementSequenceScheduler.start(
                 healthStore: healthKitManager.healthStore,
@@ -510,10 +550,10 @@ struct OnboardingV2View: View {
             )
             ReengagementScheduler.reschedule()
 
-            // Trial reminders are armed at purchase, but the permission prompt
-            // runs here (after the paywall), so on a fresh first launch the
-            // purchase-time arming hit the auth gate and was silently dropped.
-            // Re-arm now that permission exists, off the live entitlement end.
+            // Trial reminders are armed at purchase, but a user who declined
+            // (or never saw) the mid-flow permission ask hit the auth gate
+            // there and the arming was silently dropped. Re-arm now that we
+            // know permission exists, off the live entitlement end.
             // Idempotent: TrialScheduler uses fixed identifiers, so this
             // replaces rather than duplicates whatever purchase attempted.
             let trialEnd: Date?

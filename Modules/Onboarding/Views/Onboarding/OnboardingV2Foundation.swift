@@ -85,10 +85,11 @@ final class OnboardingV2Profile {
 /// Single source of truth for the progress-bar denominator. The three router
 /// screens (verdict / cliffhanger / journalFirst) are mutually exclusive and
 /// hide their progress bar, so they count as the one linear step they replace.
-/// Linear steps: welcome, promise, about, goal, symptoms, bridge, scan,
-/// [router], heart, sleep, hrv, preview, signIn, paywall.
+/// Linear steps: welcome, about, goal, symptoms, bridge, scan, [reveal on the
+/// rich branch, router screen otherwise], heart, sleep, hrv, [verdict on the
+/// rich branch, reveal otherwise], signIn, paywall.
 enum OnbV2Flow {
-    static let total = 14
+    static let total = 13
 }
 
 // MARK: - V2 design tokens
@@ -590,49 +591,6 @@ struct OnbV2CountUp: View {
             return "\(Int(v.rounded()))"
         }
         return String(format: "%.\(decimals)f", v)
-    }
-}
-
-// MARK: - Promise card (screen 2)
-
-struct OnbV2PromiseCard: View {
-    let icon: String       // SF Symbol
-    let title: String
-    let bodyText: String
-    var accent: Color = OnbV2.blue
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(accent.opacity(0.14))
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(accent)
-            }
-            .frame(width: 40, height: 40)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(OnbV2.fg)
-                Text(bodyText)
-                    .font(.system(size: 13.5))
-                    .foregroundStyle(OnbV2.fg3)
-                    .lineSpacing(2)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(OnbV2.bg2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(OnbV2.line, lineWidth: 1)
-        )
     }
 }
 

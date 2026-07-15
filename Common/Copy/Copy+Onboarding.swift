@@ -10,7 +10,6 @@ extension Copy {
         static var noNightsRecorded: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_no_nights_recorded", default: "No nights recorded yet") }
         static var hrvWeeklyAverage: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_hrv_weekly_average", default: "HRV · weekly average") }
         static var notEnoughHRVSamples: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_not_enough_hrv_samples", default: "Not enough HRV samples across the week") }
-        static func dayLabel(_ day: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_day_label", default: "DAY %d"), day) }
 
         // MARK: - Pulse (Screen 1)
 

@@ -218,6 +218,10 @@ enum RC {
     static let paywallVariant                    = "paywall_variant"
     static let paywallShowYearlyDefault          = "paywall_show_yearly_default"
 
+    /// Max rows in the onboarding paywall's personalised watch list.
+    /// Consumer: Modules/Onboarding/Views/Onboarding/OnboardingV2Screens14ToDone.swift
+    static let paywallWatchRowsMax               = "paywall_watch_rows_max"
+
     // MARK: Notification timing
     static let notificationMorningStartHour      = "notification_morning_start_hour"
     static let notificationMorningEndHour        = "notification_morning_end_hour"

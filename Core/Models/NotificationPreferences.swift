@@ -2,8 +2,9 @@ import Foundation
 
 /// User preferences for notifications
 struct NotificationPreferences: Codable, Equatable {
-    // Only the daily summary is on by default. everything else is opt-in.
-    // Users hate notification spam; one morning briefing is enough.
+    // Summaries (daily, evening, weekly) are on by default; one-off alert
+    // types stay opt-in. Note: flipping a default here only affects users
+    // with no stored preferences — existing users keep their saved values.
 
     var dailySummaryEnabled: Bool = true
     var dailySummaryTime: DateComponents = {
@@ -13,7 +14,7 @@ struct NotificationPreferences: Codable, Equatable {
         return c
     }()
 
-    var eveningSummaryEnabled: Bool = false
+    var eveningSummaryEnabled: Bool = true
     var eveningSummaryTime: DateComponents = {
         var c = DateComponents()
         c.hour = 20
@@ -25,7 +26,7 @@ struct NotificationPreferences: Codable, Equatable {
     /// it only fires when we have enough sleep data to compute a real bedtime target.
     var windDownEnabled: Bool = true
 
-    var weeklySummaryEnabled: Bool = false
+    var weeklySummaryEnabled: Bool = true
     var weeklySummaryDay: Int = 2 // Monday = 2
 
     var criticalAlertsEnabled: Bool = true

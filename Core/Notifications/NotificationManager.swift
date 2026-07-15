@@ -152,6 +152,7 @@ final class NotificationManager {
     @discardableResult
     func scheduleNotification(
         title: String,
+        subtitle: String? = nil,
         body: String,
         identifier: String,
         trigger: UNNotificationTrigger? = nil,
@@ -191,14 +192,14 @@ final class NotificationManager {
             return false
         }
 
-        // Everything except daily summaries and bypassed notifications is capped and optimized
+        let priority = NotificationOptimizer.priorityScore(
+            severity: severity,
+            deviationPercent: deviationPercent,
+            metricInFocus: metricInFocus
+        )
+
         if !isDailySummary && !bypassCap {
             // Priority filtering. skip low-priority unless critical
-            let priority = NotificationOptimizer.priorityScore(
-                severity: severity,
-                deviationPercent: deviationPercent,
-                metricInFocus: metricInFocus
-            )
             let minPriority = RemoteConfigManager.shared.notificationMinPriorityScore
             if priority < minPriority && severity != .critical {
                 Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "low_priority") }
@@ -214,30 +215,36 @@ final class NotificationManager {
                 Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "fatigue_suppression") }
                 return false
             }
+        }
 
-            // Quiet-hours guard. A non-critical one-shot whose fire time lands
-            // inside the do-not-disturb window is DEFERRED to the window's end
-            // (e.g. 23:30 -> 07:00 next morning), not dropped. Repeating
-            // triggers cannot be deferred without losing their repetition, so
-            // they keep the old drop behavior. Schedulers whose timing is
-            // deliberately bedtime-aware (wind-down) opt out entirely via
-            // `respectsQuietHours: false`.
-            if severity != .critical && respectsQuietHours && isWithinQuietHours(fireDate) {
-                if trigger?.repeats == true {
-                    Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "quiet_hours") }
-                    return false
-                }
-                let deferred = quietHoursAdjusted(fireDate)
-                var comps = Date.cal.dateComponents([.year, .month, .day, .hour, .minute], from: deferred)
-                comps.calendar = Date.cal
-                effectiveTrigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
-                fireDate = deferred
-                AnalyticsBackend.provider.capture(event: "notification_deferred_quiet_hours", properties: [
-                    "notification_id": identifier,
-                    "type": notifType
-                ])
+        // Quiet-hours guard. A non-critical one-shot whose fire time lands
+        // inside the do-not-disturb window is DEFERRED to the window's end
+        // (e.g. 23:30 -> 07:00 next morning), not dropped. Repeating
+        // triggers cannot be deferred without losing their repetition, so
+        // they keep the old drop behavior. Schedulers whose timing is
+        // deliberately bedtime-aware (wind-down) opt out entirely via
+        // `respectsQuietHours: false`. Applies to bypassCap notifications
+        // too — bypassCap exempts only the frequency cap, so a watch alert
+        // armed at bedtime cannot wake the user at 3 a.m. Daily summaries
+        // are exempt: they repeat at the user's wake time, which can sit
+        // inside the quiet window.
+        if severity != .critical && respectsQuietHours && !isDailySummary && isWithinQuietHours(fireDate) {
+            if trigger?.repeats == true {
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "quiet_hours") }
+                return false
             }
+            let deferred = quietHoursAdjusted(fireDate)
+            var comps = Date.cal.dateComponents([.year, .month, .day, .hour, .minute], from: deferred)
+            comps.calendar = Date.cal
+            effectiveTrigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+            fireDate = deferred
+            AnalyticsBackend.provider.capture(event: "notification_deferred_quiet_hours", properties: [
+                "notification_id": identifier,
+                "type": notifType
+            ])
+        }
 
+        if !isDailySummary && !bypassCap {
             // Same-fire-day competition + cap accounting, serialized under one
             // lock (schedulers call from more than one executor and the
             // UserDefaults-backed state is read-modify-write).
@@ -270,8 +277,18 @@ final class NotificationManager {
 
         let content = UNMutableNotificationContent()
         content.title = title
+        if let subtitle { content.subtitle = subtitle }
         content.body = body
         content.sound = .default
+        // Group by family (summary/alert/lifecycle...) in Notification Center.
+        content.threadIdentifier = notifType
+        // The Time Sensitive entitlement is declared in Laso.entitlements; use it
+        // so health alerts break through Focus. `.critical` interruptionLevel
+        // needs a separate Apple-granted entitlement we do not have, so warning
+        // and critical severities both map to timeSensitive.
+        if severity == .warning || severity == .critical {
+            content.interruptionLevel = .timeSensitive
+        }
 
         let request = UNNotificationRequest(
             identifier: identifier,

@@ -17,6 +17,7 @@ struct HomeView: View {
     @State private var showRecoveryInfo = false
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
+    @State private var showSoftLockPaywall = false
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -62,6 +63,9 @@ struct HomeView: View {
                 weakestCategoryName: weakestCategoryName,
                 appStateStore: appStateStore
             )
+        }
+        .sheet(isPresented: $showSoftLockPaywall) {
+            PaywallView(subscriptionManager: SubscriptionManager.shared, source: "soft_lock_home")
         }
         .sheet(isPresented: $showRecoveryInfo) {
             // Nil-safe value: `liveReadinessScore` falls back to the daily
@@ -229,6 +233,40 @@ struct HomeView: View {
         !viewModel.healthKitManager.timeSeries.isEmpty
     }
 
+    // MARK: - Soft Lock (paywall decliner)
+
+    /// Keyed off the explicit decline flag, never `!hasAccess`, so the
+    /// `.unknown` status during startup never flashes the lock.
+    private var isSoftLocked: Bool {
+        appStateStore.paywallDeclined && !FeatureGate.hasFullAccess
+    }
+
+    /// Persistent quiet unlock bar pinned under the home scroll while soft locked.
+    private var softLockBottomBar: some View {
+        VStack(spacing: DS.space2) {
+            Text(Copy.Home.softLockPatterns(viewModel.insights.allInsights.count))
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textSecondary)
+
+            Button {
+                showSoftLockPaywall = true
+            } label: {
+                Text(Copy.Home.softLockCTA)
+                    .font(DS.Typography.bodySemibold)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(DS.cardPadding)
+        .background(AppColour.surfaceElevated, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.xl)
+                .strokeBorder(AppColour.borderHigh, lineWidth: 1)
+        )
+        .padding(.horizontal, DS.screenPadding)
+        .padding(.bottom, DS.space2)
+    }
+
     /// Only show the "Connect Your Health Data" empty state after the initial load
     /// has completed AND there is genuinely no data. This prevents the empty state
     /// from flashing during startup before HealthKit data has been loaded.
@@ -299,6 +337,7 @@ struct HomeView: View {
                         )
                     }
                     .onDisappear { recoveryTracker.disappeared() }
+                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // 1b. Activation Progress (first 8 days. Paper 8)
                     ActivationProgressBanner(
@@ -328,9 +367,11 @@ struct HomeView: View {
                     // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
                     // Proactive one-paragraph story of today, grounded in real signals.
                     DailyNarrativeCard(signals: buildDailyNarrativeSignals())
+                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // 2b. Body Intelligence. non-obvious ML findings
                     TodayBriefingView(cards: viewModel.intelligenceBriefing)
+                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // 2c. Personal Health Forecast (Paper 3: Conformal Prediction)
                     PersonalHealthForecastCard(
@@ -345,8 +386,11 @@ struct HomeView: View {
                             navigationPath.append(metric)
                         }
                     )
+                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // 2d. Ask Your Data (Papers 1 & 2: PHIA)
+                    // Stays visible and tappable while soft locked; the tap
+                    // raises the unlock sheet instead of navigating.
                     AskYourDataCard {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Ask Your Data",
@@ -354,13 +398,18 @@ struct HomeView: View {
                             screen: .home,
                             metadata: ["source": "home_card"]
                         )
-                        navigationPath.append(Route.askYourData)
+                        if isSoftLocked {
+                            showSoftLockPaywall = true
+                        } else {
+                            navigationPath.append(Route.askYourData)
+                        }
                     }
 
                     // 3. Compact alert banner (illness + health risks)
                     compactAlertBanner
                         .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
                         .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
+                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     sectionHeader("VITALS")
                         .padding(.top, DS.space3)
@@ -375,6 +424,7 @@ struct HomeView: View {
                         )
                         navigationPath.append(tile.route)
                     }
+                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // ── Below the fold ──
 
@@ -398,6 +448,7 @@ struct HomeView: View {
                     }
                     .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
+                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // Last updated footer. always rendered so the user can confirm
                     // the screen is alive; falls back to a pull-to-refresh hint
@@ -420,6 +471,11 @@ struct HomeView: View {
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
         .contentMargins(.bottom, 32, for: .scrollContent)
+        .safeAreaInset(edge: .bottom) {
+            if isSoftLocked {
+                softLockBottomBar
+            }
+        }
     }
 
     // MARK: - Empty State. Waiting For First Sync
@@ -839,6 +895,42 @@ struct HomeView: View {
         .onAppear {
             AppAnalytics.shared.trackError(type: "data_load_failed", screen: .home, message: message)
         }
+    }
+}
+
+/// Blurs a home card for paywall decliners and routes any tap to the unlock
+/// sheet. Whole-card blur is deliberate; per-element granularity is skipped.
+private struct SoftLockModifier: ViewModifier {
+    let isLocked: Bool
+    let onTap: () -> Void
+
+    func body(content: Content) -> some View {
+        if isLocked {
+            content
+                .blur(radius: 10)
+                .allowsHitTesting(false)
+                .overlay(
+                    HStack(spacing: DS.space1) {
+                        Image(systemName: "lock.fill")
+                        Text(Copy.Home.softLockBadge)
+                    }
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .padding(.horizontal, DS.badgeH)
+                    .padding(.vertical, DS.badgeV)
+                    .background(Color.accentColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.full))
+                )
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onTap)
+        } else {
+            content
+        }
+    }
+}
+
+private extension View {
+    func softLocked(_ isLocked: Bool, onTap: @escaping () -> Void) -> some View {
+        modifier(SoftLockModifier(isLocked: isLocked, onTap: onTap))
     }
 }
 

@@ -24,6 +24,7 @@ final class AppStateStore {
         static let hasSeenScoreGuide = AppKeys.App.hasSeenScoreGuide
         static let cycleTrackingEnabled = AppKeys.Cycle.trackingEnabled
         static let disclaimerAcknowledged = AppKeys.App.disclaimerAcknowledged
+        static let paywallDeclined = AppKeys.App.paywallDeclined
     }
 
     private(set) var onboardingCompleted: Bool
@@ -32,6 +33,7 @@ final class AppStateStore {
     private(set) var hasSeenScoreGuide: Bool
     private(set) var cycleTrackingEnabled: Bool
     private(set) var disclaimerAcknowledged: Bool
+    private(set) var paywallDeclined: Bool
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -55,6 +57,7 @@ final class AppStateStore {
         hasSeenScoreGuide = userDefaults.bool(forKey: Key.hasSeenScoreGuide)
         cycleTrackingEnabled = userDefaults.bool(forKey: Key.cycleTrackingEnabled)
         disclaimerAcknowledged = userDefaults.bool(forKey: Key.disclaimerAcknowledged)
+        paywallDeclined = userDefaults.bool(forKey: Key.paywallDeclined)
     }
 
     private static var isAuthenticatedUser: Bool {
@@ -103,6 +106,12 @@ final class AppStateStore {
     func markDisclaimerAcknowledged() {
         disclaimerAcknowledged = true
         persist(true, forKey: Key.disclaimerAcknowledged)
+    }
+
+    /// Declining is a device decision, so it stays out of iCloud sync.
+    func markPaywallDeclined() {
+        paywallDeclined = true
+        persist(true, forKey: Key.paywallDeclined)
     }
 
     private func persist(_ value: Bool, forKey key: String, syncToCloud: Bool = false) {

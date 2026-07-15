@@ -102,7 +102,9 @@ struct LasoApp: App {
                             appStateStore.markOnboardingCompleted()
                         }
                     }
-                    // 2. Medical disclaimer (first launch after update)
+                    // 2. Medical disclaimer catch-up. New users acknowledge it on the
+                    // onboarding done screen; this cover only reaches users who
+                    // finished onboarding before that screen existed.
                     .fullScreenCover(isPresented: Binding(
                         get: { appStateStore.onboardingCompleted && !appStateStore.disclaimerAcknowledged },
                         set: { if !$0 { appStateStore.markDisclaimerAcknowledged() } }

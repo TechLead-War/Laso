@@ -68,101 +68,6 @@ struct OnbV2Screen1Welcome: View {
     }
 }
 
-// MARK: - Screen 2: Promise
-
-struct OnbV2Screen2Promise: View {
-    let onBack: () -> Void
-    let onContinue: () -> Void
-    @State private var appeared = false
-    @State private var ctaTapped = false
-
-    var body: some View {
-        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
-            VStack(spacing: 0) {
-                OnbV2TopBar(step: 2, total: OnbV2Flow.total, onBack: onBack)
-
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(Copy.OnboardingV2.s2Eyebrow)
-                            .font(.system(size: 12, weight: .bold))
-                            .tracking(1.6)
-                            .foregroundStyle(OnbV2.blue)
-                            .onbV2StaggerIn(index: 0, appeared: appeared)
-
-                        Spacer().frame(height: 10)
-
-                        Text(Copy.OnboardingV2.s2Title)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(OnbV2.fg)
-                            .lineSpacing(4)
-                            .onbV2StaggerIn(index: 1, appeared: appeared)
-
-                        Spacer().frame(height: 12)
-
-                        Text(Copy.OnboardingV2.s2Lede)
-                            .font(.system(size: 16))
-                            .foregroundStyle(OnbV2.fg2)
-                            .onbV2StaggerIn(index: 2, appeared: appeared)
-
-                        Spacer().frame(height: 28)
-
-                        // Empowerment leads, connection next, privacy last as a
-                        // footnote (onboarding framing: what the user gains is
-                        // the headline, privacy reassures but never leads).
-                        VStack(spacing: 14) {
-                            OnbV2PromiseCard(
-                                icon: "sparkles",
-                                title: Copy.OnboardingV2.s2Card1Title,
-                                bodyText: Copy.OnboardingV2.s2Card1Body,
-                                accent: OnbV2.blue
-                            )
-                            .onbV2StaggerIn(index: 3, appeared: appeared)
-                            OnbV2PromiseCard(
-                                icon: "heart.fill",
-                                title: Copy.OnboardingV2.s2Card3Title,
-                                bodyText: Copy.OnboardingV2.s2Card3Body,
-                                accent: OnbV2.rose
-                            )
-                            .onbV2StaggerIn(index: 4, appeared: appeared)
-                            OnbV2PromiseCard(
-                                icon: "lock.fill",
-                                title: Copy.OnboardingV2.s2Card2Title,
-                                bodyText: Copy.OnboardingV2.s2Card2Body,
-                                accent: OnbV2.green
-                            )
-                            .onbV2StaggerIn(index: 5, appeared: appeared)
-                        }
-
-                        // Absorbs slack on tall devices so the cards sit just
-                        // under the lede instead of floating in a centred void.
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, OnbV2.bodyPadH)
-                    .padding(.top, 24)
-                    .frame(maxWidth: .infinity, minHeight: 0, alignment: .top)
-                }
-
-                VStack(spacing: 6) {
-                    OnbV2PrimaryCTA(Copy.OnboardingV2.s2CTA) {
-                        ctaTapped = true
-                        onContinue()
-                    }
-                    Text(Copy.OnboardingV2.s2Caption)
-                        .font(.system(size: 12))
-                        .foregroundStyle(OnbV2.fg4)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, OnbV2.bodyPadH)
-                .padding(.bottom, 20)
-                .onbV2StaggerIn(index: 5, appeared: appeared)
-            }
-        }
-        .sensoryFeedback(.impact(weight: .light), trigger: ctaTapped)
-        .task { appeared = true }
-    }
-}
-
 // MARK: - Screen 3: About
 
 struct OnbV2Screen3About: View {
@@ -176,7 +81,7 @@ struct OnbV2Screen3About: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .greenHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 3, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 2, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -373,7 +278,7 @@ struct OnbV2Screen4Goal: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 4, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 3, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -483,7 +388,7 @@ struct OnbV2Screen5Symptoms: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .roseHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 5, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 4, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {

@@ -192,6 +192,7 @@ extension RemoteConfigManager {
         // Paywall.
         RC.paywallVariant:                    "control" as NSString,
         RC.paywallShowYearlyDefault:          true as NSNumber,
+        RC.paywallWatchRowsMax:               4 as NSNumber,
 
         // Notification timing — local hours, 0-23.
         RC.notificationMorningStartHour:      5  as NSNumber,

@@ -129,8 +129,11 @@ final class WatchMonitor {
             let shouldRefreshSchedule = lastScheduleRefresh == 0 ||
                 now.timeIntervalSince(Date(timeIntervalSince1970: lastScheduleRefresh)) >= scheduleRefreshInterval
 
+            // Refresh the pending alarm but do NOT re-stamp lastWatchDataKey:
+            // this path has not verified a fresh watch sample (any HR observer
+            // wake lands here), and stamping `now` made a watch that was
+            // actually off look freshly worn, suppressing the alert forever.
             if shouldRefreshSchedule {
-                defaults.set(now.timeIntervalSince1970, forKey: lastWatchDataKey)
                 scheduleNotWornNotification()
             }
 
@@ -218,9 +221,10 @@ final class WatchMonitor {
 
     // MARK: - Not Worn Notification (Background-Capable)
 
-    /// Cancels any pending "not worn" notification and schedules a new one to fire
-    /// after `thresholdHours`. As long as watch data keeps arriving, this keeps
-    /// getting pushed forward. The moment data stops, it fires. no app needed.
+    /// Replaces the pending "not worn" notification with one anchored to the last
+    /// confirmed watch sample plus `thresholdHours`. As long as watch data keeps
+    /// arriving the anchor advances and the alarm never fires; the moment data
+    /// stops, it fires threshold-after-last-wear. no app needed.
     private func scheduleNotWornNotification() {
         let preferences = loadCachedPreferences()
         guard preferences.watchNotWornReminderEnabled else {
@@ -235,7 +239,19 @@ final class WatchMonitor {
 
         let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
+        // Anchor the alarm to the LAST CONFIRMED WATCH SAMPLE, not to now.
+        // Scheduling `now + threshold` on every observer wake / app open let
+        // routine app usage push the alert forward forever even when the watch
+        // had been off for most of the freshness window. iOS rejects a
+        // non-positive interval, so an already-overdue alarm fires in a minute.
+        let lastSeen = UserDefaults.standard.double(forKey: lastWatchDataKey)
+        var fireIn = thresholdSeconds
+        if lastSeen > 0 {
+            let elapsed = Date().timeIntervalSince(Date(timeIntervalSince1970: lastSeen))
+            fireIn = max(thresholdSeconds - elapsed, 60)
+        }
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false)
         let scheduled = NotificationManager.shared.scheduleNotification(
             title: DeviceMessaging.wearPromptTitle,
             body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),

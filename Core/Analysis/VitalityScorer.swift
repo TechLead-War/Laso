@@ -673,6 +673,10 @@ final class VitalityScorer {
         let delta: Int
     }
 
+    /// Deltas inside this band read as "same as your age": ±1 year is within
+    /// the estimate's noise floor, so only ±2+ is claimed as younger/older.
+    static let onboardingHeadlineDeltaBandYears = 2
+
     /// Store-free Vitality Age estimate for the onboarding reveal, where only
     /// scalar averages exist (resting HR, HRV). Reuses the same population norms
     /// and weights as the full engine, renormalised over the metrics provided.

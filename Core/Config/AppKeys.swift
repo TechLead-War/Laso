@@ -13,6 +13,7 @@ enum AppKeys {
         static let hasSeenRecoveryInfo = "healthpulse.hasSeenRecoveryInfo"
         static let pendingCalibrationHydration = "healthpulse.pendingCalibrationHydration"
         static let disclaimerAcknowledged      = "healthpulse.disclaimerAcknowledged"
+        static let paywallDeclined             = "healthpulse.paywallDeclined"
     }
 
     // MARK: - Session & Lifecycle

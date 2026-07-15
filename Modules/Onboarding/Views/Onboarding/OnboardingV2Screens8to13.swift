@@ -12,7 +12,7 @@ struct OnbV2Screen8Bridge: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 6, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 5, total: OnbV2Flow.total, onBack: onBack)
 
                 Spacer(minLength: 0)
 
@@ -120,7 +120,7 @@ struct OnbV2Screen10Scan: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 7, total: OnbV2Flow.total, onBack: nil, hideProgress: false)
+                OnbV2TopBar(step: 6, total: OnbV2Flow.total, onBack: nil, hideProgress: false)
 
                 Spacer().frame(height: 8)
 
@@ -380,7 +380,7 @@ struct OnbV2Screen11Heart: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .roseHero, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 9, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 8, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -607,7 +607,7 @@ struct OnbV2Screen12Sleep: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .purpleDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 10, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 9, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -858,7 +858,7 @@ struct OnbV2Screen13HRV: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .tealDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 11, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 10, total: OnbV2Flow.total, onBack: onBack)
 
                 ScrollView {
                     VStack(spacing: 18) {

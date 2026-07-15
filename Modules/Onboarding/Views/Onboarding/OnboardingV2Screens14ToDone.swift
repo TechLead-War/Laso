@@ -1,5 +1,8 @@
 import SwiftUI
 import StoreKit
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
 
 private extension Product.SubscriptionPeriod {
     var daysApprox: Int {
@@ -13,11 +16,10 @@ private extension Product.SubscriptionPeriod {
     }
 }
 
-// MARK: - Reusable timeline draw (shared by Preview + Paywall trial timeline)
+// MARK: - Reusable timeline draw (paywall trial timeline)
 
 /// One node on a vertical timeline. `halo` adds the soft outer ring (present
-/// anchor); `solid` fills the dot blue (the live "today" node on the paywall;
-/// Preview's anchor keeps a hollow dot, so it sets halo without solid).
+/// anchor); `solid` fills the dot blue (the live "today" node on the paywall).
 struct OnbV2TimelineNode: Identifiable {
     let id: String
     let dayLabel: String
@@ -28,8 +30,7 @@ struct OnbV2TimelineNode: Identifiable {
 }
 
 /// A vertical timeline whose spine grows top->bottom as a height mask and whose
-/// nodes scale-in one after another (70ms apart). Preview and the paywall trial
-/// timeline shared this exact spine+nodes shape, so it lives in one place.
+/// nodes scale-in one after another (70ms apart).
 ///
 /// Reduce Motion: the spine is full height and every node is present instantly
 /// (a single crossfade owned by the parent), with no mask growth or scale pop.
@@ -113,157 +114,6 @@ struct OnbV2TimelineDraw: View {
     }
 }
 
-// MARK: - Screen 14: Preview
-
-struct OnbV2Screen14Preview: View {
-    // Threaded from the router so the first-week preview can personalise to the
-    // user's goals and real snapshot. Consumed by the paywall workstream.
-    let profile: OnboardingV2Profile
-    let snapshot: OnboardingHealthSnapshot
-    let onBack: () -> Void
-    let onContinue: () -> Void
-
-    // One trigger flips the whole header/CTA stagger; the timeline draws after.
-    @State private var appeared = false
-    @State private var drawTimeline = false
-
-    var body: some View {
-        OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
-            VStack(spacing: 0) {
-                OnbV2TopBar(step: 14, total: OnbV2Flow.total, onBack: onBack)
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(Copy.OnboardingV2.s14Eyebrow)
-                            .font(.system(size: 12, weight: .bold))
-                            .tracking(1.6)
-                            .foregroundStyle(OnbV2.blue)
-                            .onbV2StaggerIn(index: 0, appeared: appeared)
-
-                        Spacer().frame(height: 12)
-
-                        Text(Copy.OnboardingV2.s14Title)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(OnbV2.fg)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .onbV2StaggerIn(index: 1, appeared: appeared)
-
-                        Spacer().frame(height: 12)
-
-                        Text(Copy.OnboardingV2.s14Lede)
-                            .font(.system(size: 16))
-                            .foregroundStyle(OnbV2.fg2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .onbV2StaggerIn(index: 2, appeared: appeared)
-
-                        Spacer().frame(height: 22)
-
-                        OnbV2TimelineDraw(nodes: timelineNodes, draw: drawTimeline)
-                    }
-                    .padding(.horizontal, OnbV2.bodyPadH)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
-                }
-
-                if !proofLine.isEmpty {
-                    // Fall back to .sleep when no goal is set so the tint matches the
-                    // sleep copy fallback (real users always have a goal here). Sits
-                    // low above the CTA with the empty space above it, matching the
-                    // approved design.
-                    OnbV2SocialProofLine(goal: profile.primaryGoal ?? .sleep, markdown: proofLine)
-                        .padding(.horizontal, OnbV2.bodyPadH)
-                        .padding(.bottom, 36)
-                        .onbV2StaggerIn(index: 3, appeared: appeared)
-                }
-
-                OnbV2PrimaryCTA(Copy.OnboardingV2.s14CTA) {
-                    ctaTapped.toggle()
-                    onContinue()
-                }
-                .padding(.horizontal, OnbV2.bodyPadH)
-                .padding(.bottom, 20)
-                .onbV2StaggerIn(index: 4, appeared: appeared)
-                .sensoryFeedback(.impact(weight: .light), trigger: ctaTapped)
-            }
-        }
-        .task {
-            appeared = true
-            // Let the header stagger seat, then draw the timeline spine + nodes.
-            try? await Task.sleep(for: .milliseconds(220))
-            drawTimeline = true
-        }
-    }
-
-    @State private var ctaTapped = false
-
-    /// Goal-adaptive social proof line. Hidden in production until a real per goal
-    /// cohort number is set in Remote Config; the illustrative showcase copy renders
-    /// only in screenshot / premium-showcase builds, never for a real user.
-    private var proofLine: String {
-        UITestMode.premiumShowcase
-            ? Copy.OnboardingV2.s14SocialProofShowcase(for: profile.primaryGoal)
-            : Copy.OnboardingV2.s14SocialProof(for: profile.primaryGoal)
-    }
-
-    private var timelineNodes: [OnbV2TimelineNode] {
-        Array(Copy.OnboardingV2.previewDays.enumerated()).map { idx, day in
-            OnbV2TimelineNode(
-                id: "preview_\(day.day)",
-                dayLabel: Copy.Onboarding.dayLabel(day.day),
-                title: day.title,
-                body: day.body,
-                halo: idx == 0   // anchor day keeps the soft ring, hollow dot
-            )
-        }
-    }
-}
-
-// MARK: - Screen 14 social proof line
-
-/// "People like you" social proof line for Screen 14. A goal tinted avatar cluster
-/// over a markdown sentence whose bold figures render in full white above muted
-/// text, matching the approved design. The avatar gradient and copy both key off
-/// the user's primary goal selected on Screen 4.
-private struct OnbV2SocialProofLine: View {
-    let goal: OnbV2Goal?
-    let markdown: String
-
-    private var accent: Color {
-        goal.flatMap { Copy.OnboardingV2.goalCopy[$0]?.accent } ?? OnbV2.blue
-    }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: -10) {
-                ForEach(0..<4, id: \.self) { _ in
-                    Circle()
-                        .fill(LinearGradient(colors: [accent, OnbV2.blue],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 30, height: 30)
-                        .overlay(Circle().stroke(OnbV2.bg, lineWidth: 2.5))
-                }
-            }
-            Text(styled(markdown))
-                .font(.system(size: 18))
-                .foregroundStyle(OnbV2.fg2)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// Parse the markdown and lift the bold figures to full white so they pop over
-    /// the muted sentence. Falls back to plain text if the markdown ever fails.
-    private func styled(_ md: String) -> AttributedString {
-        guard var attr = try? AttributedString(markdown: md) else { return AttributedString(md) }
-        for run in attr.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
-            attr[run.range].foregroundColor = OnbV2.fg
-        }
-        return attr
-    }
-}
-
 // MARK: - Screen 15: Sign in with Apple
 
 struct OnbV2Screen15SignIn: View {
@@ -281,7 +131,7 @@ struct OnbV2Screen15SignIn: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 13, total: OnbV2Flow.total, onBack: onBack)
+                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack)
 
                 VStack(spacing: 0) {
                     Spacer()
@@ -345,6 +195,15 @@ struct OnbV2Screen15SignIn: View {
                     .sensoryFeedback(.impact(weight: .light), trigger: pressed) { _, now in now }
                     .sensoryFeedback(.success, trigger: signedInOk)
 
+                    Button(action: skip) {
+                        Text(Copy.Buttons.skipForNow)
+                            .font(DS.Typography.subheadlineMedium)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.dsPress)
+                    .disabled(isAuthing)
+
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.system(size: 12))
@@ -389,6 +248,21 @@ struct OnbV2Screen15SignIn: View {
             }
         }
     }
+
+    /// Continue on the launch-time anonymous Firebase user. AppleAuthService
+    /// links that UID if the user signs in later from Settings, so no auth is
+    /// created here.
+    private func skip() {
+        AppAnalytics.shared.trackSignInCompleted(method: "skipped", success: true)
+        #if canImport(FirebaseAuth)
+        // Launch-time anonymous sign-in can fail on an offline first launch;
+        // fire and forget a retry so Firestore writes regain an auth context.
+        if Auth.auth().currentUser == nil {
+            Task { try? await Auth.auth().signInAnonymously() }
+        }
+        #endif
+        onSignedIn()
+    }
 }
 
 // MARK: - Screen 16: Paywall (real StoreKit prices)
@@ -403,6 +277,7 @@ struct OnbV2Screen16Paywall: View {
     let verdict: PredictionVerdict?
     let onBack: () -> Void
     let onPurchased: () -> Void
+    let onDeclined: () -> Void
 
     @State private var selectedIsAnnual = true
 
@@ -423,6 +298,26 @@ struct OnbV2Screen16Paywall: View {
     // false we never claim a pattern we didn't find; instead the headline, rows,
     // and closing line sell the hunt, built only on the goals/symptoms they gave.
     private var hasInsights: Bool { snapshot.hasAnyHealthData }
+
+    /// Vitality-age delta headline. The reveal screen computed the estimate as
+    /// screen-local state that died on the swap, so the same pure function is
+    /// re-run here from the identical threaded inputs.
+    private var headline: String {
+        guard hasInsights else { return Copy.OnboardingV2.s16TitleNoData }
+        let (vitalityAge, _) = VitalityScorer.onboardingEstimate(
+            chronologicalAge: profile.age,
+            restingHR: snapshot.restingHR.map(Double.init),
+            hrvMs: snapshot.hrvWeeklyAvgMs,
+            steps: snapshot.stepsDailyAvg,
+            vo2Max: snapshot.vo2Max,
+            exerciseMinutes: snapshot.exerciseDailyAvg,
+            walkingSpeedKmh: snapshot.walkingSpeedKmh)
+        let delta = vitalityAge - profile.age
+        let band = VitalityScorer.onboardingHeadlineDeltaBandYears
+        if delta <= -band { return Copy.OnboardingV2.s16TitleYounger(abs(delta)) }
+        if delta >= band { return Copy.OnboardingV2.s16TitleOlder(delta) }
+        return Copy.OnboardingV2.s16TitleSame
+    }
 
     var body: some View {
         let yearly = manager.yearlyProduct
@@ -505,7 +400,7 @@ struct OnbV2Screen16Paywall: View {
 
                         Spacer().frame(height: 8)
 
-                        Text(hasInsights ? Copy.OnboardingV2.s16Title : Copy.OnboardingV2.s16TitleNoData)
+                        Text(headline)
                             .font(.system(size: 26, weight: .bold))
                             .foregroundStyle(OnbV2.fg)
                             .lineSpacing(4)
@@ -665,6 +560,19 @@ struct OnbV2Screen16Paywall: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
+
+                    Button {
+                        AppAnalytics.shared.trackPaywallDismissed(
+                            timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart)),
+                            source: "onboarding_declined")
+                        onDeclined()
+                    } label: {
+                        Text(Copy.OnboardingV2.s16Decline)
+                            .font(DS.Typography.captionMedium)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.dsPress)
                 }
                 .padding(.horizontal, OnbV2.bodyPadH)
                 .padding(.bottom, 20)
@@ -723,7 +631,7 @@ struct OnbV2Screen16Paywall: View {
 
     // MARK: - Watch list (one bucket only: real insights OR the chase, never both)
 
-    /// At most two rows, and a single bucket:
+    /// At most `paywall_watch_rows_max` rows, and a single bucket:
     /// - With scan data: the concrete findings the read produced (the weekday
     ///   dip, resting heart rate, sleep average) — no generic goal/static rows.
     /// - With no data: the question we'll go answer for each picked goal/symptom.
@@ -786,8 +694,8 @@ struct OnbV2Screen16Paywall: View {
             }
         }
 
-        // Hard cap: never more than two rows.
-        return Array(rows.prefix(2))
+        // Hard cap, remote-tunable so the list can never overflow the screen.
+        return Array(rows.prefix(RemoteConfigManager.shared.paywallWatchRowsMax))
     }
 
     // MARK: - Trial timeline (today -> reminder -> renewal)
@@ -880,6 +788,16 @@ struct OnbV2ScreenDone: View {
                     .onbV2StaggerIn(index: 2, appeared: appeared)
 
                 Spacer()
+
+                // Tapping the CTA below is the disclaimer acknowledgment; the
+                // router's done closure persists it.
+                Text(Copy.OnboardingV2.sDoneDisclaimer)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 14)
+                    .onbV2StaggerIn(index: 3, appeared: appeared)
 
                 OnbV2PrimaryCTA(Copy.OnboardingV2.sDoneCTA, action: onDone)
                     .padding(.bottom, 20)

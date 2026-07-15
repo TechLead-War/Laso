@@ -24,11 +24,17 @@ enum TrialScheduler {
         let manager = NotificationManager.shared
         let now = Date()
 
+        // Same cached score the engagement drip's Day 2 uses: when it exists the
+        // nudge cites the user's own number instead of a generic line.
+        let cachedScore = UserDefaults.standard.integer(forKey: AppKeys.Readiness.cachedScore)
+
         // Day-1 getting started: one day after the trial begins.
         if let day1 = Date.cal.date(byAdding: .day, value: 1, to: now), day1 > now {
             manager.scheduleNotification(
                 title: Copy.Notifications.trialGettingStartedTitle,
-                body: Copy.Notifications.trialGettingStartedBody,
+                body: cachedScore > 0
+                    ? Copy.Notifications.trialGettingStartedBodyScored(score: cachedScore)
+                    : Copy.Notifications.trialGettingStartedBody,
                 identifier: AppConstants.NotificationID.trialGettingStarted,
                 trigger: morningTrigger(for: day1)
             )
@@ -38,7 +44,9 @@ enum TrialScheduler {
         if let day3 = Date.cal.date(byAdding: .day, value: 3, to: now), day3 > now {
             manager.scheduleNotification(
                 title: Copy.Notifications.trialInsightNudgeTitle,
-                body: Copy.Notifications.trialInsightNudgeBody,
+                body: cachedScore > 0
+                    ? Copy.Notifications.trialInsightNudgeBodyScored(score: cachedScore)
+                    : Copy.Notifications.trialInsightNudgeBody,
                 identifier: AppConstants.NotificationID.trialInsightNudge,
                 trigger: morningTrigger(for: day3)
             )

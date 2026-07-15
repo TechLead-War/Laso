@@ -591,6 +591,12 @@ extension Copy {
             static var dismiss: String { RemoteConfigManager.shared.copyString("copy_home_health_kit_reprompt_dismiss", default: "Not Now") }
         }
 
+        // MARK: - Soft Lock (blurred cards until unlock)
+
+        static var softLockBadge: String { RemoteConfigManager.shared.copyString("copy_home_softlock_badge", default: "Unlock to read") }
+        static var softLockCTA: String { RemoteConfigManager.shared.copyString("copy_home_softlock_cta", default: "Unlock my report") }
+        static func softLockPatterns(_ n: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_softlock_patterns", default: "Patterns found in your data: %d"), n) }
+
         // MARK: - Lifted view literals
         static var bodyInsightBriefingLabel: String { RemoteConfigManager.shared.copyString("copy_home_body_insight_briefing_label", default: "Body insight briefing") }
         static var opensTheFullInsightsScreenHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_the_full_insights_screen_hint", default: "Opens the full insights screen") }

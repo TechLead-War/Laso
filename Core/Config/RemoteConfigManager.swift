@@ -203,6 +203,14 @@ final class RemoteConfigManager {
         return value > 0 ? value : SubscriptionConfig.fallbackTrialDays
     }
 
+    /// Max personalised watch-list rows on the onboarding paywall. Guarded
+    /// above zero so a bad remote value can never blank the findings list;
+    /// the fallback matches the bundled default in RemoteConfigSchema.
+    var paywallWatchRowsMax: Int {
+        let value = intValue(forKey: RC.paywallWatchRowsMax)
+        return value > 0 ? value : 4
+    }
+
     // MARK: - Alert Thresholds
 
     /// Cooldown hours between repeated alerts for same identifier

@@ -1,6 +1,7 @@
 import SwiftUI
 
-// Onboarding Screen 14 — Vitality Age reveal.
+// Vitality Age reveal. Step 7 on the rich branch (right after the scan,
+// where it also primes the notification ask), step 11 on sparse/denied.
 // The user's age counts up, four health signals fly into a particle orb and
 // recalculate it, then it settles on the Vitality Age. Native port of the
 // approved web prototype. NOTE: the metric values and deltas here are
@@ -186,6 +187,12 @@ private struct OnbV2MetricChip: View {
 // MARK: - The screen
 
 struct OnbV2VitalityRevealScreen: View {
+    // Branch-dependent progress position (7 rich, 11 sparse/denied), supplied
+    // by the router which owns the branch order.
+    let step: Int
+    // Rich branch only: the CTA fires the system notification prompt, so a
+    // priming line above it sets up the ask.
+    let showsNotificationPrimer: Bool
     let onBack: () -> Void
     let onContinue: () -> Void
 
@@ -197,7 +204,10 @@ struct OnbV2VitalityRevealScreen: View {
     private let realMetricCount: Int
 
     init(profile: OnboardingV2Profile, snapshot: OnboardingHealthSnapshot,
+         step: Int, showsNotificationPrimer: Bool,
          onBack: @escaping () -> Void, onContinue: @escaping () -> Void) {
+        self.step = step
+        self.showsNotificationPrimer = showsNotificationPrimer
         self.onBack = onBack
         self.onContinue = onContinue
         let est = VitalityScorer.onboardingEstimate(
@@ -261,7 +271,7 @@ struct OnbV2VitalityRevealScreen: View {
     var body: some View {
         OnbV2ScreenContainer(ambient: .none, staggerOwnsEntry: true) {
             VStack(spacing: 0) {
-                OnbV2TopBar(step: 12, total: OnbV2Flow.total, onBack: onBack, tint: orbTint)
+                OnbV2TopBar(step: step, total: OnbV2Flow.total, onBack: onBack, tint: orbTint)
                 Text(Copy.OnboardingV2.revealHeader)
                     .font(.system(size: 12, weight: .bold)).tracking(2.2)
                     .foregroundStyle(orbTintBright)
@@ -329,6 +339,12 @@ struct OnbV2VitalityRevealScreen: View {
                         .animation(.spring(response: 0.5, dampingFraction: 0.7), value: done)
 
                         VStack(spacing: 11) {
+                            if showsNotificationPrimer {
+                                Text(Copy.OnboardingV2.notifPrimer)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(OnbV2.fg2)
+                                    .multilineTextAlignment(.center)
+                            }
                             OnbV2PrimaryCTA(Copy.OnboardingV2.revealCTA, tint: orbTint) { onContinue() }
                             Text(ctaCaption)
                                 .font(.system(size: 11))
@@ -336,7 +352,10 @@ struct OnbV2VitalityRevealScreen: View {
                         }
                         .padding(.horizontal, OnbV2.bodyPadH)
                         .frame(width: w)
-                        .position(x: w / 2, y: h - 56)
+                        // The block is centre-positioned, so give the primer's
+                        // extra height back half above the anchor to keep the
+                        // bottom caption clear of the home indicator.
+                        .position(x: w / 2, y: h - (showsNotificationPrimer ? 70 : 56))
                         .opacity(done ? 1 : 0)
                         .allowsHitTesting(done)   // invisible-but-tappable would let a stray tap skip the reveal
                         .animation(.easeOut(duration: 0.5), value: done)

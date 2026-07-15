@@ -162,6 +162,16 @@ extension Copy {
         static func actionPrefix(_ action: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_action_prefix", default: "Action: %@"), action) }
         static func streakDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_streak_days", default: "%d-day streak!"), days) }
 
+        /// One-glance score line for the notification subtitle slot, e.g.
+        /// "Recovery 82 (+5)". The title carries the hook, the subtitle the number.
+        static func summaryScoreSubtitle(score: Int, delta: Int?) -> String {
+            if let delta, delta != 0 {
+                let signed = delta > 0 ? "+\(delta)" : "\(delta)"
+                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_summary_score_subtitle_delta", default: "Recovery %d (%@)"), score, signed), max: titleMax)
+            }
+            return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_summary_score_subtitle", default: "Recovery %d"), score), max: titleMax)
+        }
+
         // MARK: - Dynamic Daily Summary (Psychology-Driven)
 
         /// Psychological hook categories. never repeat the same category two days in a row.
@@ -642,6 +652,11 @@ extension Copy {
 
         static var trialInsightNudgeTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_insight_nudge_title", default: "A pattern is forming"), max: titleMax) }
         static var trialInsightNudgeBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_trial_insight_nudge_body", default: "A few days in, your data is starting to tell a story. Open the app to see what is taking shape."), max: bodyMax) }
+
+        /// Scored variants, used when a recovery score is already cached so the
+        /// nudge cites the user's own number instead of a generic line.
+        static func trialGettingStartedBodyScored(score: Int) -> String { clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_trial_getting_started_body_scored", default: "Your recovery is %d this morning. Log how you feel and see if your body agrees."), score), max: bodyMax) }
+        static func trialInsightNudgeBodyScored(score: Int) -> String { clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_trial_insight_nudge_body_scored", default: "Your recovery sits at %d and a pattern is taking shape. Open the app to see what your data says."), score), max: bodyMax) }
 
         /// `daysLeft` is computed from the live trial end date by the scheduler.
         static func trialRenewalTitle(daysLeft: Int) -> String {
