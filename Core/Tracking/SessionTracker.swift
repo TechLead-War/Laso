@@ -571,9 +571,13 @@ final class SessionTracker {
         defaults.integer(forKey: AppKeys.Session.notifSessions)
     }
 
+    var widgetSessionCount: Int {
+        defaults.integer(forKey: AppKeys.Session.widgetSessions)
+    }
+
     /// Percentage of sessions that were organic (0-100).
     var organicSessionPercent: Int {
-        let total = organicSessionCount + notificationSessionCount
+        let total = organicSessionCount + notificationSessionCount + widgetSessionCount
         guard total > 0 else { return 100 }
         return (organicSessionCount * 100) / total
     }
@@ -585,7 +589,7 @@ final class SessionTracker {
         case .notification:
             defaults.set(notificationSessionCount + 1, forKey: AppKeys.Session.notifSessions)
         case .widget:
-            defaults.set(organicSessionCount + 1, forKey: AppKeys.Session.organicSessions)
+            defaults.set(widgetSessionCount + 1, forKey: AppKeys.Session.widgetSessions)
         }
     }
 }

@@ -36,9 +36,10 @@ struct AskYourDataView: View {
         .navigationTitle(Copy.Home.AskYourData.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "ask_your_data"])
+            AppAnalytics.shared.trackFeatureOpen(.askYourData)
         }
         .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.askYourData)
             activeQueryID = UUID()
             isSearching = false
         }
@@ -92,7 +93,7 @@ struct AskYourDataView: View {
                 ForEach(suggestedQuestions, id: \.self) { question in
                     Button {
                         query = question
-                        AppAnalytics.shared.trackBlockTap(title: "Suggested Question", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_suggestion", "query_length": question.count])
+                        AppAnalytics.shared.trackBlockTap(title: "Suggested Question", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data_suggestion", "query_length": question.count])
                         runQuery()
                     } label: {
                         Text(question)
@@ -188,7 +189,7 @@ struct AskYourDataView: View {
                     ForEach(result.relatedQuestions, id: \.self) { q in
                         Button {
                             query = q
-                            AppAnalytics.shared.trackBlockTap(title: "Related Question", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_related", "query_length": q.count])
+                            AppAnalytics.shared.trackBlockTap(title: "Related Question", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data_related", "query_length": q.count])
                             runQuery()
                         } label: {
                             HStack(spacing: DS.space1) {
@@ -220,8 +221,8 @@ struct AskYourDataView: View {
         let requestID = UUID()
         activeQueryID = requestID
 
-        AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .home)
-        AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "query_length": query.count])
+        AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .askYourData)
+        AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data", "query_length": query.count])
 
         Task {
             let queryResult = await viewModel.executeHealthQuery(normalizedQuery)
@@ -230,7 +231,7 @@ struct AskYourDataView: View {
                 result = queryResult
                 isSearching = false
             }
-            AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
+            AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
         }
     }
 }

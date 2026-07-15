@@ -48,6 +48,9 @@ struct InviteFriendsView: View {
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.inviteFriends)
         }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.inviteFriends)
+        }
     }
 
     // MARK: - Banner
@@ -159,7 +162,17 @@ struct InviteFriendsView: View {
     @ViewBuilder
     private var shareCTA: some View {
         if let shareMessage {
-            ShareLink(item: shareMessage) {
+            // UIActivityViewController instead of ShareLink: ShareLink has no
+            // completion hook, so share_completed could never fire here.
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Share invite",
+                    type: .shareCard,
+                    screen: .inviteFriends,
+                    metadata: ["source": "invite_screen"]
+                )
+                ShareButton.presentShareSheet(items: [shareMessage], contentType: "referral_invite")
+            } label: {
                 Label(Copy.Referral.shareInviteCTA, systemImage: "square.and.arrow.up")
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(.white)
@@ -168,14 +181,6 @@ struct InviteFriendsView: View {
                     .background(AppColour.info, in: RoundedRectangle(cornerRadius: 14))
                     .padding(.horizontal, DS.screenPadding)
             }
-            .simultaneousGesture(TapGesture().onEnded {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Share invite",
-                    type: .shareCard,
-                    screen: .inviteFriends,
-                    metadata: ["source": "invite_screen"]
-                )
-            })
             .padding(.bottom, DS.space2)
             .background(AppColour.surfaceBase.opacity(0.94))
             .accessibilityIdentifier("invite.shareCTA")

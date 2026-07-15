@@ -24,11 +24,12 @@ struct NotificationsSettingsView: View {
         .navigationTitle(Copy.Settings.notifications)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.settings, metadata: ["sub_screen": "notifications"])
+            AppAnalytics.shared.trackFeatureOpen(.notificationsSettings)
             tracker.appeared()
             alertsTracker.appeared()
         }
         .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.notificationsSettings)
             tracker.disappeared()
             alertsTracker.disappeared()
         }

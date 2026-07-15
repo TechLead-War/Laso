@@ -696,7 +696,7 @@ final class DashboardViewModel {
         if defaults.bool(forKey: AppKeys.Prediction.repermissionFired),
            !defaults.bool(forKey: AppKeys.Prediction.repermissionConverted) {
             defaults.set(true, forKey: AppKeys.Prediction.repermissionConverted)
-            AnalyticsBackend.provider.capture(event: "repermission_conversion", properties: ["granted": 1])
+            AppAnalytics.shared.trackRepermissionConversion()
         }
 
         await refresh(
@@ -2280,7 +2280,7 @@ final class DashboardViewModel {
         // a one-shot flag so history pruning can never replay it.
         if !UserDefaults.standard.bool(forKey: AppKeys.Prediction.firstCheckInLogged) {
             UserDefaults.standard.set(true, forKey: AppKeys.Prediction.firstCheckInLogged)
-            AnalyticsBackend.provider.capture(event: "first_checkin_done", properties: nil)
+            AppAnalytics.shared.trackFirstCheckInDone()
         }
     }
 

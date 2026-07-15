@@ -474,6 +474,10 @@ struct OnbV2VitalityRevealScreen: View {
         label = Copy.OnboardingV2.revealOrbYears
         // let the final number land alone for a beat before the verdict appears
         try? await Task.sleep(for: .milliseconds(550))
+        // Backing out cancels this task, but the `try?` sleeps above swallow
+        // CancellationError, so the sequence sprints to the end. Without this
+        // guard the reveal event would fire for an aborted run.
+        guard !Task.isCancelled else { return }
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { done = true }
         AppAnalytics.shared.trackOnboardingVitalityRevealed(
             vitalityAge: vitalityAge, realAge: chronoAge,

@@ -100,6 +100,11 @@ final class SubscriptionManager {
     private enum Key {
         static let graceStartDate = AppKeys.Billing.graceStartDate
         static let lastSubscribedDate = AppKeys.Billing.lastSubscribedDate
+        /// One-shot per cancellation for subscription_cancel_detected, separate
+        /// from cancelledSaveArmed so the churn signal is recorded even when the
+        /// save push cannot be scheduled (e.g. notifications denied). Cleared
+        /// when auto-renew turns back on so a later re-cancel fires again.
+        static let cancelDetectedTracked = "laso.billing.cancel_detected_tracked"
     }
 
     // MARK: - Init
@@ -206,6 +211,15 @@ final class SubscriptionManager {
                 let transaction = try checkVerified(verification)
                 await transaction.finish()
                 let wasTrialBefore = { if case .trial = self.status { return true }; return false }()
+                // This charge is reported by purchase_completed. Advance the
+                // renewal baseline to the purchased period's end BEFORE
+                // refreshStatus so its trackSubscriptionRenewed call self-dedupes;
+                // otherwise an already-entitled user changing plans fires
+                // subscription_renewed + purchase_completed for one charge and
+                // renewal_count increments twice.
+                if let expiration = transaction.expirationDate {
+                    AppAnalytics.shared.advanceRenewalBaseline(to: expiration)
+                }
                 await refreshStatus()
                 await syncSubscriptionToFirestore(transaction)
                 trackPurchase(product: product, isTrialConversion: wasTrialBefore, transactionID: transaction.id)
@@ -242,9 +256,7 @@ final class SubscriptionManager {
     /// trial-bearing subscription, arm the trial-lifecycle drip off the live
     /// expiration date. Called only from the purchase success branch.
     private func armTrialNotifications() {
-        TrialScheduler.cancelAll()
-        // Allow the win-back to re-arm if this subscription later lapses.
-        defaults.set(false, forKey: AppKeys.Billing.winbackArmed)
+        TrialScheduler.cancelAllAndRearmWinback()
         // Schedule off whichever active entitlement we hold: a free trial now
         // reports as .trial, a direct purchase as .subscribed. Both carry the
         // period-end date the lifecycle drip is anchored to.
@@ -269,6 +281,12 @@ final class SubscriptionManager {
             try await AppStore.sync()
             await refreshStatus()
             await syncCurrentEntitlementToFirestore()
+            // Re-stamp the persisted status like configure() and
+            // handleTransactionUpdate() do: the renewal/conversion detector
+            // keys off lastKnownStatus, so a restore that leaves it stale
+            // (e.g. "expired" from earlier in the launch) silently swallows
+            // the first post-restore renewal or trial conversion.
+            AppAnalytics.shared.updateSubscriptionProperties(status: status)
         } catch {
             errorMessage = "Could not restore purchases. Please try again."
         }
@@ -277,6 +295,14 @@ final class SubscriptionManager {
     // MARK: - Status Check
 
     func refreshStatus() async {
+        // The free-year Remote Config flag can flip on AFTER the win-back was
+        // armed; retire the now-nonsense push the same way the purchase and
+        // referral-unlock paths do. Guarded on the armed flag so a normal
+        // refresh pays one defaults read.
+        if FeatureGate.freeYearActive, defaults.bool(forKey: AppKeys.Billing.winbackArmed) {
+            TrialScheduler.cancelAllAndRearmWinback()
+        }
+
         // 1. Check for an active subscription entitlement.
         //    StoreKit reports the introductory free-trial period as an active
         //    entitlement, so a user inside their 7-day Apple trial lands here
@@ -296,6 +322,12 @@ final class SubscriptionManager {
                     status = isInFreeTrial(transaction)
                         ? .trial(expiration: expiration)
                         : .subscribed(expirationDate: expiration)
+                    // Renewal detection must run on this refresh path: real
+                    // renewals land while the app is closed and their
+                    // transactions are drained by processUnfinishedTransactions()
+                    // before the Transaction.updates listener can observe them.
+                    // Self-deduping via the stored expiration baseline.
+                    AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expiration)
                     // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
                     clearGraceState(wasActive: wasInGrace)
@@ -435,27 +467,41 @@ final class SubscriptionManager {
         guard let willRenew = await autoRenewIsOn(for: productID) else { return }
 
         if willRenew {
-            // Renewal is on (or back on): retire any armed save push.
+            // Renewal is on (or back on): retire any armed save push and re-arm
+            // cancel detection so a later re-cancel is recorded again.
             if defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) {
                 defaults.set(false, forKey: AppKeys.Billing.cancelledSaveArmed)
                 TrialScheduler.cancelCancelledSave()
             }
+            defaults.set(false, forKey: Key.cancelDetectedTracked)
             return
         }
 
-        // Auto-renew is off and access is still live: arm the save once.
-        // Await the real authorization state (StoreKit can resolve before the
-        // launch-time auth cache warms) and burn the one-shot flag only after
-        // the schedule passed every gate, so a suppressed attempt retries on
-        // the next status refresh instead of being lost forever.
+        // Auto-renew is off and access is still live: record the churn signal
+        // BEFORE any push gating — the analytics observation must not depend on
+        // notification permission or on the save push clearing its gates.
+        // Migration: on older builds the event fired inside the save-push arming
+        // branch, so cancelledSaveArmed=true means it was already emitted for
+        // this cancellation; seed the new one-shot so updating mid-cancellation
+        // does not re-fire it. Remove once no installs predate this build.
+        if defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) {
+            defaults.set(true, forKey: Key.cancelDetectedTracked)
+        }
+        if !defaults.bool(forKey: Key.cancelDetectedTracked) {
+            defaults.set(true, forKey: Key.cancelDetectedTracked)
+            let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
+            AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
+        }
+
+        // Arm the save push once. Await the real authorization state (StoreKit
+        // can resolve before the launch-time auth cache warms) and burn the
+        // one-shot flag only after the schedule passed every gate, so a
+        // suppressed attempt retries on the next status refresh instead of
+        // being lost forever.
         guard !defaults.bool(forKey: AppKeys.Billing.cancelledSaveArmed) else { return }
         guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
         if TrialScheduler.scheduleCancelledSave(focus: trackedFocusLabel(), expiration: expiration) {
             defaults.set(true, forKey: AppKeys.Billing.cancelledSaveArmed)
-            // Inside the success branch so a repeatedly-suppressed schedule
-            // does not re-fire this event on every status refresh.
-            let daysLeft = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
-            AppAnalytics.shared.trackSubscriptionCancelDetected(daysUntilExpiry: daysLeft)
         }
     }
 
@@ -524,17 +570,12 @@ final class SubscriptionManager {
     }
 
     private func handleTransactionUpdate() async {
-        let previousStatus = status
+        // Renewal/conversion detection happens inside refreshStatus, keyed off
+        // the persisted status — the in-memory `status` is still .unknown when
+        // a transaction lands during cold launch, so it cannot be trusted here.
         await refreshStatus()
         await syncCurrentEntitlementToFirestore()
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
-        // The first paid period after a trial (.trial -> .subscribed) is the
-        // trial->paid conversion; later paid renewals are .subscribed -> .subscribed.
-        // Both are the renewal/conversion signal the survival funnel counts.
-        let wasEntitled: Bool = { switch previousStatus { case .subscribed, .trial: return true; default: return false } }()
-        if wasEntitled, case .subscribed(let expirationDate) = status {
-            AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expirationDate)
-        }
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
@@ -660,12 +701,16 @@ final class SubscriptionManager {
 
     private func trackPurchase(product: Product, isTrialConversion: Bool, transactionID: UInt64) {
         let period = Self.billingPeriod(for: product)
+        // status was refreshed just before this call; .trial means the purchase
+        // opened Apple's $0 introductory trial, not a paid activation.
+        let isFreeTrialStart = { if case .trial = self.status { return true }; return false }()
         AppAnalytics.shared.trackPurchaseCompleted(
             productID: product.id,
             billingPeriod: period,
             grossRevenue: NSDecimalNumber(decimal: product.price).doubleValue,
             currency: product.priceFormatStyle.currencyCode,
             isTrialConversion: isTrialConversion,
+            isFreeTrialStart: isFreeTrialStart,
             transactionIDHash: AppAnalytics.sha256Hash16(String(transactionID))
         )
         AppAnalytics.shared.updateSubscriptionProperties(status: status)

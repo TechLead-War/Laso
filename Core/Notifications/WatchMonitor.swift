@@ -36,6 +36,12 @@ final class WatchMonitor {
     private var cachedPreferences: NotificationPreferences?
     private var preferencesLoadedAt: Date?
 
+    /// Watch samples effectively never carry battery metadata, so an
+    /// unguarded report would fire on every observer wake and drown the real
+    /// suppression funnel. Once per launch keeps the breadcrumb visible
+    /// without the flood.
+    private var batteryGapReported = false
+
     private var observerProcessingInterval: TimeInterval {
         ThermalManager.shared.watchMonitorQueryInterval
     }
@@ -313,6 +319,10 @@ final class WatchMonitor {
     }
 
     private func reportBatteryMetadataAbsent() {
+        // With the reminder off no notification would ever be attempted, so
+        // there is nothing being suppressed worth reporting.
+        guard !batteryGapReported, loadCachedPreferences().lowBatteryReminderEnabled else { return }
+        batteryGapReported = true
         AppAnalytics.shared.trackNotificationSuppressed(
             type: NotificationManager.notificationType(AppConstants.NotificationID.watchLowBattery),
             identifier: AppConstants.NotificationID.watchLowBattery,

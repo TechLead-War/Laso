@@ -61,7 +61,9 @@ struct NotificationRepromptBanner: View {
         .transition(.move(edge: .top).combined(with: .opacity))
         .onAppear {
             NotificationRepromptManager.recordRepromptShown()
-            AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "notification_reprompt_banner"])
+            // Not trackFeatureOpen: this banner overlays every tab, so a screen_viewed
+            // here would corrupt the global screen/transition state and home dwell time.
+            AppAnalytics.shared.trackBlockTap(title: "Notification Reprompt Shown", type: .smartAction, screen: .home, metadata: ["source": "notification_reprompt", "action": "shown"])
         }
     }
 

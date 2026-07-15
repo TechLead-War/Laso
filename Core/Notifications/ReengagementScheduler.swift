@@ -28,11 +28,20 @@ enum ReengagementScheduler {
             // never critical, so kill_notifications always blocks it. A request
             // queued before the switch flipped would still fire up to 3 days
             // later, so cancel it before skipping.
+            let notifType = NotificationManager.notificationType(identifier)
             guard !RemoteConfigManager.shared.killNotifications else {
                 cancel()
+                await MainActor.run {
+                    AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "kill_switch")
+                }
                 return
             }
-            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else {
+                await MainActor.run {
+                    AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "not_authorized")
+                }
+                return
+            }
             performReschedule()
         }
     }
@@ -100,12 +109,18 @@ enum ReengagementScheduler {
             trigger: trigger
         )
 
+        // Mirror the central manager's success/error tracking: scheduled also
+        // stamps the sent timestamp so a later presented/opened has a known
+        // latency.
+        let notifType = NotificationManager.notificationType(identifier)
         center.add(request) { error in
-            #if DEBUG
-            if let error {
-                print("[ReengagementScheduler] Failed to schedule: \(error.localizedDescription)")
+            Task { @MainActor in
+                if let error {
+                    AppAnalytics.shared.trackNotificationFailed(type: notifType, identifier: identifier, error: error.localizedDescription)
+                } else {
+                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
+                }
             }
-            #endif
         }
     }
 

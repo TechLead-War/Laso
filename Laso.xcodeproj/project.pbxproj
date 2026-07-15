@@ -20,7 +20,6 @@
 		078BE92ABF81E3179AF99EF8 /* FeedbackPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1D030EF7F163D8F2CDD0CD /* FeedbackPromptManager.swift */; };
 		08CC2A1F3501BECC92DAB011 /* RemoteConfigSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8BC791E520041885A5F9D66 /* RemoteConfigSchema.swift */; };
 		0901C78DEA61ADB1FEA001D3 /* AdherenceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */; };
-		09F2933AF2645FE7C26125EF /* OnboardingConnectHealthStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92EFEBABE937B9AFD39D996C /* OnboardingConnectHealthStep.swift */; };
 		0B241C38AC72F42837C9BB10 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		0BA034199EEE6FDFC960B61A /* AnalysisSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904302FDB500593CF09CC92A /* AnalysisSummaryWidget.swift */; };
 		0BC728283F344678988F17BA /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2528F279EF11BFB08AE04FB /* UserBaseline.swift */; };
@@ -148,7 +147,6 @@
 		5008BAC53698186FDF80372B /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293038B6FEEBC9FF3E61CB7F /* WidgetDataStore.swift */; };
 		511D398F3F7431F45C5EA00F /* GrangerCausalityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB15987FC756B4565D98890 /* GrangerCausalityEngine.swift */; };
 		51A92B38C514AE058925E625 /* SampleDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A38DC63EDF5882A08302CF /* SampleDataProvider.swift */; };
-		51C7B4F4776A6D26E9CD0CCA /* HomeErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FA540BB6D6F39E6420F312 /* HomeErrorView.swift */; };
 		523A724E6716D7A618A78C87 /* SleepSummaryIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7553FA1757B4960F8C760018 /* SleepSummaryIntent.swift */; };
 		52FA5D94467B202F7B2FD6F2 /* UncertaintyEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E73B340F06AF928FDE7DB6 /* UncertaintyEstimator.swift */; };
 		537053E2A8C4C0274E965B31 /* NotificationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67747F3BBA28DC8946D1F66 /* NotificationRouter.swift */; };
@@ -511,7 +509,6 @@
 		076BF1861B9106B431D075CA /* DriverRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverRowView.swift; sourceTree = "<group>"; };
 		0804946317C40FBB20D6EE8C /* HealthMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetric.swift; sourceTree = "<group>"; };
 		08470FD4FE34B97792ECE163 /* CorrelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationsView.swift; sourceTree = "<group>"; };
-		08FA540BB6D6F39E6420F312 /* HomeErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeErrorView.swift; sourceTree = "<group>"; };
 		0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
 		0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		0B7F734F2F4F73A01B994CC6 /* MLPipelineRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLPipelineRunner.swift; sourceTree = "<group>"; };
@@ -776,7 +773,6 @@
 		916CCE323FE18BD6B82C3412 /* OnboardingPulseStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPulseStep.swift; sourceTree = "<group>"; };
 		91B1749FB7A1F18CD22BDBFF /* AppStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateStore.swift; sourceTree = "<group>"; };
 		923D23FC284A6B519EC56260 /* DataConfidenceBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataConfidenceBadge.swift; sourceTree = "<group>"; };
-		92EFEBABE937B9AFD39D996C /* OnboardingConnectHealthStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingConnectHealthStep.swift; sourceTree = "<group>"; };
 		94B5B7E2026395B715A0CB9F /* HealthRiskEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskEngine.swift; sourceTree = "<group>"; };
 		94F4C691C2285FCA8F472C4E /* AnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnomalyDetector.swift; sourceTree = "<group>"; };
 		957C6C8214A079EB29F5754E /* MLCalibrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLCalibrationManager.swift; sourceTree = "<group>"; };
@@ -1442,7 +1438,6 @@
 			isa = PBXGroup;
 			children = (
 				E8DBF7805661A86834CEC57A /* HealthFocus.swift */,
-				92EFEBABE937B9AFD39D996C /* OnboardingConnectHealthStep.swift */,
 				B1685CFC4B37F96EC679A309 /* OnboardingFocusStep.swift */,
 				F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */,
 				97D3DA83586090293DEA094F /* OnboardingMirrorMomentStep.swift */,
@@ -1835,7 +1830,6 @@
 				5733B93D242289D879DAA4ED /* DailyNarrativeCard.swift */,
 				0DD7112CCADE9F6965BC922D /* FocusAreasSection.swift */,
 				70B4CCCF7296B9A2EBD59163 /* HomeConnectHealthView.swift */,
-				08FA540BB6D6F39E6420F312 /* HomeErrorView.swift */,
 				F48702C0076ACEA1DE93121F /* HomeFirstLaunchLoadingView.swift */,
 				27A36D7BBB4B626B452A0DCD /* HomeJournalPromptCard.swift */,
 				6CCF836429FD3F6EA68F6E15 /* HomePrimaryActionCard.swift */,
@@ -2614,7 +2608,6 @@
 				44DA1A66B0D7D377CD111B03 /* HealthStateTimelineViewModel.swift in Sources */,
 				4F1910555B2509036B668261 /* HistoricalAnalyzer.swift in Sources */,
 				FB7AD416C051D4817574FA9E /* HomeConnectHealthView.swift in Sources */,
-				51C7B4F4776A6D26E9CD0CCA /* HomeErrorView.swift in Sources */,
 				A7B0656B7B197FF5F397515B /* HomeFirstLaunchLoadingView.swift in Sources */,
 				2AD5AFE8601DFB88F3F8F85A /* HomeJournalPromptCard.swift in Sources */,
 				4480046D5704641EE0A79090 /* HomePrimaryActionCard.swift in Sources */,
@@ -2697,7 +2690,6 @@
 				9C103FBF9A80F879D1D6056C /* NutritionCorrelationAnalyzer.swift in Sources */,
 				41BEAF87E59F4FA27AB7CF6B /* OnbV2VitalityReveal.swift in Sources */,
 				ECE35010F12F68B525CBA2EB /* OnboardingAbandonmentScheduler.swift in Sources */,
-				09F2933AF2645FE7C26125EF /* OnboardingConnectHealthStep.swift in Sources */,
 				D508157E53DD1D6439326467 /* OnboardingFocusStep.swift in Sources */,
 				EE2C582EDF480EA346B57D98 /* OnboardingHealthSnapshot.swift in Sources */,
 				B3BD73E3290C08C924E749B2 /* OnboardingMirrorMomentStep.swift in Sources */,
@@ -2966,7 +2958,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -2975,7 +2967,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.15;
+				MARKETING_VERSION = 1.2.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3045,7 +3037,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3054,7 +3046,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.15;
+				MARKETING_VERSION = 1.2.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -3072,7 +3064,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -3081,7 +3073,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.15;
+				MARKETING_VERSION = 1.2.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3095,7 +3087,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3104,7 +3096,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.15;
+				MARKETING_VERSION = 1.2.16;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;

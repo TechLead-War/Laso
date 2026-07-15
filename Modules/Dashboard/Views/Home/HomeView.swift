@@ -334,7 +334,18 @@ struct HomeView: View {
                                 showScoreGuide = true
                             }
                         },
-                        onShare: { showShareCard = true }
+                        onShare: {
+                            // Entry step of the share funnel: without this the
+                            // first event is the Share CTA inside the sheet, so
+                            // open-then-dismiss users were invisible.
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Share",
+                                type: .shareCard,
+                                screen: .home,
+                                metadata: ["source": "recovery_hero", "card_type": "rings"]
+                            )
+                            showShareCard = true
+                        }
                     )
                     .sheet(isPresented: $showShareCard) {
                         // vitalityAge/realAge are 0 until the scorer's snapshot

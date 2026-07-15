@@ -24,6 +24,11 @@ struct OnboardingV2View: View {
     @State private var isRequestingHealth = false
     @State private var calibrationStarted = false
     @State private var startTracked = false
+    // Back-navigation from heart/preview re-lands on the scan, whose timer
+    // re-runs routeAfterScan; these flags keep the day-1 segment, the scan's
+    // forward funnel step, and the promise screen impression at one emission.
+    @State private var scanRouted = false
+    @State private var promiseTracked = false
     @State private var healthSnapshot = OnboardingHealthSnapshot()
 
     // The pre-registered claim, built from goal + symptom on the prediction
@@ -134,6 +139,12 @@ struct OnboardingV2View: View {
                 screen = target
             }
 #endif
+            // Started must precede any step event so strict-order funnels hold,
+            // including the kill-switch jump below.
+            if !startTracked {
+                startTracked = true
+                AppAnalytics.shared.trackOnboardingStarted()
+            }
             // Hotfix kill switch — when a middle screen crashes mid-flow, flip
             // ON in Firebase Remote Config to send new installs straight to the
             // paywall while a fix ships. Only honoured if we are still on the
@@ -144,10 +155,8 @@ struct OnboardingV2View: View {
                     stepKey: Screen.welcome.rawValue, stepIndex: screenOrdinal(.welcome),
                     stepCount: stepCount, durationSec: 0, action: .completed)
                 screen = .paywall
-            }
-            if !startTracked {
-                startTracked = true
-                AppAnalytics.shared.trackOnboardingStarted()
+                // Without this the paywall's step duration includes welcome dwell.
+                stepStartedAt = Date()
             }
             Task { @MainActor in
                 if subscriptionManager.products.isEmpty {
@@ -229,8 +238,10 @@ struct OnboardingV2View: View {
             OnbV2ScreenCliffhanger(nightsRemaining: cliffhangerNights,
                                    onNotifyYes: { await requestNotificationPermission(source: "cliffhanger") },
                                    onContinue: { advance(to: .heart) })
+                .onAppear { trackPromiseShownOnce(branch: "cliffhanger", nightsRemaining: cliffhangerNights) }
         case .journalFirst:
             OnbV2ScreenJournalFirst(onContinue: { advance(to: .heart) })
+                .onAppear { trackPromiseShownOnce(branch: "journal_first") }
         case .heart:
             OnbV2Screen11Heart(snapshot: healthSnapshot,
                                onBack: { advance(to: branch == .rich ? .preview : .scan) },
@@ -265,7 +276,8 @@ struct OnboardingV2View: View {
             OnbV2Screen15SignIn(onBack: { advance(to: branch == .rich ? .verdict : .preview) },
                                 onSignedIn: handleSignedIn)
         case .referral:
-            ReferralCodeStep(onContinue: advanceAfterReferral)
+            ReferralCodeStep(onContinue: { advanceAfterReferral() },
+                             onSkip: { advanceAfterReferral(action: .skipped) })
         case .paywall:
             // After sign-in, going back to the sign-in screen would re-prompt
             // an authenticated user, which is jarring. Skip back to the screen
@@ -298,7 +310,7 @@ struct OnboardingV2View: View {
         }
     }
 
-    private func advance(to next: Screen) {
+    private func advance(to next: Screen, action: AppAnalytics.OnboardingStepAction = .completed, trackStep: Bool = true) {
         // Honour the Firebase Remote Config `onboarding_skip_screens` CSV by
         // walking forward through the current branch order until a non-skipped
         // screen. Walking `linearOrder` (not allCases) means a router screen
@@ -311,6 +323,15 @@ struct OnboardingV2View: View {
         if goingForward {
             let skipSet = RemoteConfigManager.shared.onboardingSkipScreens
             while skipSet.contains(target.rawValue) {
+                // Skipping sign-in must not walk blindly onto the gated
+                // referral/paywall screens: redeeming needs auth, and the
+                // never-charge-an-entitled-user check lives in
+                // advanceAfterReferral. Resolve the same gates here instead
+                // of taking the next screen in order.
+                if target == .signIn {
+                    target = FeatureGate.hasFullAccess ? .done : .paywall
+                    continue
+                }
                 guard let idx = order.firstIndex(of: target), idx + 1 < order.count else { break }
                 target = order[idx + 1]
             }
@@ -318,17 +339,19 @@ struct OnboardingV2View: View {
 
         // Screens are ordered by `screenOrdinal`. A move to a higher ordinal
         // means the current screen was completed (the forward funnel); a move to a
-        // lower ordinal is the user reconsidering and going back.
+        // lower ordinal is the user reconsidering and going back. `trackStep`
+        // is false only on the back-nav scan re-run, whose forward step already
+        // fired on the first pass.
         let durationSec = max(0, Int(Date().timeIntervalSince(stepStartedAt)))
-        if screenOrdinal(target) > screenOrdinal(screen) {
+        if trackStep, screenOrdinal(target) > screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
                 stepIndex: screenOrdinal(screen),
                 stepCount: stepCount,
                 durationSec: durationSec,
-                action: .completed
+                action: action
             )
-        } else if screenOrdinal(target) < screenOrdinal(screen) {
+        } else if trackStep, screenOrdinal(target) < screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
                 stepIndex: screenOrdinal(screen),
@@ -434,6 +457,14 @@ struct OnboardingV2View: View {
         )
     }
 
+    /// The promise screens are recreated by the back-nav scan re-run, so their
+    /// own .onAppear cannot dedupe; this flow-level guard fires exactly once.
+    private func trackPromiseShownOnce(branch: String, nightsRemaining: Int? = nil) {
+        guard !promiseTracked else { return }
+        promiseTracked = true
+        AppAnalytics.shared.trackPromiseShown(branch: branch, nightsRemaining: nightsRemaining)
+    }
+
     /// Runs after the scan animation. Awaits the snapshot, segments on data
     /// richness, and routes to the matching branch screen. Computes the
     /// instant verdict only on the rich branch. MainActor because it mutates
@@ -450,10 +481,13 @@ struct OnboardingV2View: View {
         }
         persistCapturedAnswers()
 
+        let rerun = scanRouted
+        scanRouted = true
+
         guard let prediction else {
             // No testable claim — treat as the journal-first experience.
             branch = .denied
-            advance(to: .journalFirst)
+            advance(to: .journalFirst, trackStep: !rerun)
             return
         }
 
@@ -463,10 +497,9 @@ struct OnboardingV2View: View {
             history: history,
             hasAnyHealthData: healthSnapshot.hasAnyHealthData
         )
-        AnalyticsBackend.provider.capture(
-            event: "day1_data_richness_segment",
-            properties: ["segment": segment.rawValue]
-        )
+        if !rerun {
+            AppAnalytics.shared.trackDay1DataRichnessSegment(segment.rawValue)
+        }
 
         // Set before advancing so the target's ordinal comes from the right
         // branch order.
@@ -478,13 +511,13 @@ struct OnboardingV2View: View {
             // confirms later. The verdict itself is paid off after the metric
             // reveals — rich goes to the Vitality Age reveal first.
             verdict = PredictionVerdictEngine.evaluate(prediction: prediction, history: history)
-            advance(to: .preview)
+            advance(to: .preview, trackStep: !rerun)
         case .sparse:
             let result = PredictionVerdictEngine.evaluate(prediction: prediction, history: history)
             cliffhangerNights = result.nightsRemaining ?? InsightConfig.GroupDifference.minSamples
-            advance(to: .cliffhanger)
+            advance(to: .cliffhanger, trackStep: !rerun)
         case .denied:
-            advance(to: .journalFirst)
+            advance(to: .journalFirst, trackStep: !rerun)
         }
     }
 
@@ -588,13 +621,14 @@ struct OnboardingV2View: View {
     }
 
     /// Post-sign-in routing shared by the referral step and its skip path.
-    private func advanceAfterReferral() {
+    /// `action` labels how the referral step was left (completed vs skipped).
+    private func advanceAfterReferral(action: AppAnalytics.OnboardingStepAction = .completed) {
         // If the user already has full access (free-year flag, restored
         // entitlement) skip the paywall — never charge an entitled user.
         if FeatureGate.hasFullAccess {
-            advance(to: .done)
+            advance(to: .done, action: action)
         } else {
-            advance(to: .paywall)
+            advance(to: .paywall, action: action)
         }
     }
 }

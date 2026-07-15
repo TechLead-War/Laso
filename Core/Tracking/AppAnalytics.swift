@@ -44,6 +44,8 @@ enum AppFeature: String, Hashable {
     case cycleDetail = "cycle_detail"
     case deviceSetupGuide = "device_setup_guide"
     case todaysActionDetail = "todays_action_detail"
+    case askYourData = "ask_your_data"
+    case notificationsSettings = "notifications_settings"
 }
 
 /// Actionable block/card types. only user-initiated taps and meaningful interactions.
@@ -214,7 +216,7 @@ enum BlockType: String {
 //   1. Activation rate           → onboarding_completed → activation_completed
 //   2. Time to first value       → time_to_first_value / first_score_generated
 //   3. D1 / D7 / D30 retention  → retention_milestone
-//   4. Trial-to-paid conversion  → subscription_purchased (trial_converted=1)
+//   4. Trial-to-paid conversion  → subscription_renewed (trial_converted=yes)
 //   5. Churn                     → subscription_cancelled / inactive_period_detected
 //
 // ─── Q1: WHO GETS VALUE? ────────────────────────────────────────────────────
@@ -230,6 +232,11 @@ enum BlockType: String {
 //  source_connected              source_type, metrics_available      Wearable onboarded
 //  data_pipeline_quality         coverage, enough_for_score          Data readiness
 //  empty_state_shown             screen, reason                      Blocked from value
+//  day1_data_richness_segment    segment                             Day-1 data branch (rich/sparse/denied)
+//  verdict_delivered             zone, magnitude_band, nights_remaining  Instant verdict payoff
+//  promise_shown                 branch, nights_remaining            Sparse/denied promise screen
+//  repermission_conversion       granted                             Health access after re-permission push
+//  first_checkin_done            (none)                              Denied-branch first value moment
 //
 // ─── Q2: WHO COMES BACK? ────────────────────────────────────────────────────
 //  session_start                 hour, weekday, streak, source       When & how they open
@@ -255,18 +262,20 @@ enum BlockType: String {
 //
 // ─── Q4: WHAT CONVERTS TO PAID? ─────────────────────────────────────────────
 //  paywall_viewed                source                              When they see paywall
-//  paywall_dismissed             time_on_paywall, source             Why they don't convert
+//  paywall_dismissed             time_on_paywall, source, reason     Why they don't convert
 //  paywall_cta_tapped            product_id, price                   Purchase intent
 //  trial_started                 days_remaining                      Trial began
 //  trial_day_check               days_remaining, milestones          Trial engagement
 //  trial_expired                 milestones_completed                Why no conversion
-//  subscription_purchased        product_id, trial_converted         Who pays
+//  subscription_expired          (same params as trial_expired)      Transitional dual-emit; remove after dashboards migrate
+//  purchase_completed            product_id, is_free_trial           Who pays (gross_revenue=0 at $0 trial start)
 //  pro_feature_funnel            feature, step                       Which feature converts
 //  premium_feature_attempted     feature, screen                     Free user desire
+//  pro_feature_upgrade_tapped    feature_name                        Upgrade intent (dupes pro_feature_funnel)
 //
 // ─── Q5: WHAT PREDICTS CHURN? ───────────────────────────────────────────────
 //  subscription_cancelled        months_subscribed                   Who churns
-//  subscription_renewed          months_subscribed                   Who stays
+//  subscription_renewed          months_subscribed, trial_converted  Who stays (client-detected at status refresh)
 //  inactive_period_detected      days_inactive, was_activated        Churn signal
 //  stale_data_detected           stale_since_hours, metric           Data pipeline death
 //  sync_failed                   reason, retry_count                 Broken pipeline
@@ -320,7 +329,7 @@ enum BlockType: String {
 //  cloud_backup_failed           reason                              Trust risk
 //  cloud_restore_completed       snapshot_count, success             Returning user signal
 //  app_store_review_prompted     trigger                             Review velocity
-//  deep_link_opened              url, source, campaign               Attribution
+//  deep_link_opened              url, source                         Attribution
 //  notification_permission_requested  source                         Permission funnel start
 //  notification_permission_result     granted, source                Permission conversion
 //  query_feedback                helpful, confidence, query_length   LLM quality signal
@@ -374,6 +383,7 @@ final class AppAnalytics {
     }()
 
     private var openTimestamps: [AppFeature: Date] = [:]
+    private var backgroundedAt: Date?
     private var streamingStartDate: Date?
     private enum Key {
         static let subscriptionStartDate = "laso.analytics.subscription_start_date"
@@ -772,6 +782,26 @@ final class AppAnalytics {
     /// is the DAU-inflation guard the taxonomy requires.
     @discardableResult
     func trackSessionStart() -> Bool {
+        // Screens stay open across a background gap (no onDisappear fired), so
+        // shift their open stamps forward by the gap: screen_exited duration_sec
+        // must measure foreground dwell only, mirroring the score-reaction re-arm
+        // in trackAppBackgrounded.
+        queue.sync {
+            if let backgroundStart = self.backgroundedAt {
+                let now = Date()
+                // Clamps: a wall-clock rollback during background makes the gap
+                // negative (would inflate durations), and a notification-tap deep
+                // link can stamp a screen open after foregrounding but before this
+                // runs — shifting that fresh stamp by the full gap would push it
+                // past `now` and produce negative duration_sec.
+                let gap = max(0, now.timeIntervalSince(backgroundStart))
+                for (feature, opened) in self.openTimestamps {
+                    self.openTimestamps[feature] = min(opened.addingTimeInterval(gap), now)
+                }
+                self.backgroundedAt = nil
+            }
+        }
+
         // A session left open by a prior app run (killed or backgrounded past the
         // idle window) ends here, on the next foreground — emit its deferred
         // session_ended before anything new starts.
@@ -867,6 +897,10 @@ final class AppAnalytics {
         session.closeActiveSpanForBackground()
         scoreSeenDate = nil
         scoreViewedThisSession = false
+        // onDisappear never fires on backgrounding, so open-screen stamps survive
+        // the gap; remember when it started so the next foreground can exclude
+        // the backgrounded time from screen_exited duration_sec.
+        queue.sync { self.backgroundedAt = Date() }
     }
 
     /// Emits `session_ended` for a session that has truly ended, tagged with its own
@@ -1009,7 +1043,7 @@ final class AppAnalytics {
             openTimestamps[feature] = nil
         }
 
-        let duration = Int(durationSeconds.rounded())
+        let duration = max(0, Int(durationSeconds.rounded()))
 
         var params: [String: Any] = [
             "screen": feature.rawValue,
@@ -1019,6 +1053,52 @@ final class AppAnalytics {
         ]
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_exited", parameters: params)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - Day-1 Prediction Funnel & Upgrade Intent
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Data-richness branch chosen after the onboarding scan. The call site
+    /// holds the once-per-flow guard (the back-nav scan re-run would refire it).
+    func trackDay1DataRichnessSegment(_ segment: String) {
+        logEvent("day1_data_richness_segment", parameters: ["segment": segment])
+    }
+
+    /// Instant verdict payoff on the rich onboarding branch.
+    func trackVerdictDelivered(zone: String, magnitudeBand: String, weekday: Int, nightsRemaining: Int, sideDiscoveryCount: Int) {
+        logEvent("verdict_delivered", parameters: [
+            "zone": zone,
+            "magnitude_band": magnitudeBand,
+            "weekday": weekday,
+            "nights_remaining": nightsRemaining,
+            "side_discovery_count": sideDiscoveryCount
+        ])
+    }
+
+    /// Sparse/denied-branch promise screen shown. `nightsRemaining` only
+    /// exists on the cliffhanger (sparse) branch.
+    func trackPromiseShown(branch: String, nightsRemaining: Int? = nil) {
+        var params: [String: Any] = ["branch": branch]
+        if let nightsRemaining { params["nights_remaining"] = nightsRemaining }
+        logEvent("promise_shown", parameters: params)
+    }
+
+    /// Denied-branch payoff: Health access granted after the re-permission push.
+    func trackRepermissionConversion() {
+        logEvent("repermission_conversion", parameters: ["granted": 1])
+    }
+
+    /// First-ever morning check-in, the denied branch's value moment.
+    func trackFirstCheckInDone() {
+        logEvent("first_checkin_done", parameters: [:])
+    }
+
+    /// Upgrade tap on the pro feature overlay. Duplicates
+    /// pro_feature_funnel(step=upgrade_tapped); remove once dashboards keyed
+    /// on this event migrate to pro_feature_funnel.
+    func trackProFeatureUpgradeTapped(feature: String) {
+        logEvent("pro_feature_upgrade_tapped", parameters: ["feature_name": feature])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1278,14 +1358,19 @@ final class AppAnalytics {
         let converted = defaults.string(forKey: Key.trialConverted) ?? "no"
         guard converted != "yes" else { return }
 
-        logEvent("subscription_expired", parameters: [
+        let params: [String: Any] = [
             "converted": 0,
             "milestones_completed": session.completedMilestones.count,
             "total_sessions": session.totalSessions,
             "days_since_install": session.daysSinceInstall,
             "lifetime_core_actions": session.lifetimeCoreActions,
             "was_activated": session.isActivated ? 1 : 0
-        ])
+        ]
+        logEvent("trial_expired", parameters: params)
+        // Transitional dual-emit: this event shipped in production as
+        // subscription_expired, and saved Amplitude charts still key on that
+        // name. Remove once dashboards are migrated to trial_expired.
+        logEvent("subscription_expired", parameters: params)
         setUserProperty("trial_converted", value: "no")
         defaults.set("no", forKey: Key.trialConverted)
     }
@@ -1301,11 +1386,15 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call when paywall is dismissed without purchasing.
-    func trackPaywallDismissed(timeOnPaywallSec: Int, source: String) {
+    /// Call when paywall is dismissed without purchasing. `source` stays the
+    /// placement so the viewed->dismissed funnel joins; `reason` carries how it
+    /// was dismissed ("declined" explicit no-thanks, "back" back navigation,
+    /// "closed" sheet close).
+    func trackPaywallDismissed(timeOnPaywallSec: Int, source: String, reason: String = "closed") {
         logEvent("paywall_dismissed", parameters: [
             "time_on_paywall_sec": timeOnPaywallSec,
             "source": source,
+            "reason": reason,
             "days_since_install": session.daysSinceInstall,
             "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending"
         ])
@@ -1348,6 +1437,10 @@ final class AppAnalytics {
     /// Call after a successful StoreKit purchase. Emits `purchase_completed`.
     /// `grossRevenue` is the gross DISPLAY price in major units (NOT Apple net
     /// proceeds); authoritative revenue moves server-side later.
+    /// `isFreeTrialStart` marks a purchase that opened Apple's $0 introductory
+    /// trial: nothing was charged, so gross_revenue ships as 0 and the paid-only
+    /// user-property mutations are skipped — the paid activation is recorded at
+    /// the trial→paid conversion via `subscription_renewed`.
     /// `transactionIDHash` is a one-way hash of the StoreKit transaction id for
     /// dedupe — never the raw id.
     func trackPurchaseCompleted(
@@ -1356,14 +1449,16 @@ final class AppAnalytics {
         grossRevenue: Double,
         currency: String,
         isTrialConversion: Bool,
+        isFreeTrialStart: Bool,
         transactionIDHash: String
     ) {
         logEvent("purchase_completed", parameters: [
             "product_id": productID,
             "billing_period": billingPeriod,
-            "gross_revenue": grossRevenue,
+            "gross_revenue": isFreeTrialStart ? 0 : grossRevenue,
             "currency": currency,
             "trial_converted": isTrialConversion ? "yes" : "no",
+            "is_free_trial": isFreeTrialStart ? "yes" : "no",
             "transaction_id_hash": transactionIDHash
         ])
 
@@ -1371,6 +1466,11 @@ final class AppAnalytics {
             setUserProperty("trial_converted", value: "yes")
             defaults.set("yes", forKey: Key.trialConverted)
         }
+
+        // A $0 trial start is not a paid activation: subscription_status stays
+        // "trial" (maintained by updateSubscriptionProperties), renewal_count
+        // stays 0, and the subscription age anchors at the first PAID period.
+        guard !isFreeTrialStart else { return }
 
         if defaults.object(forKey: Key.subscriptionStartDate) == nil {
             defaults.set(Date(), forKey: Key.subscriptionStartDate)
@@ -1384,19 +1484,47 @@ final class AppAnalytics {
         updateMonthsSubscribed()
     }
 
-    /// Call when we detect a renewal. Pass the new expiration date to deduplicate —
-    /// the counter only increments when the expiration date differs from the last recorded one.
-    func trackSubscriptionRenewed(newExpirationDate: Date? = nil) {
-        // Deduplicate: only count if the expiration date is genuinely new
-        if let newDate = newExpirationDate,
-           let lastDate = defaults.object(forKey: Key.lastRenewalExpirationDate) as? Date,
-           abs(newDate.timeIntervalSince(lastDate)) < 60 {
-            // Same renewal period. skip
-            return
-        }
+    /// Call on every observation of an active entitlement (each status refresh).
+    /// Real renewals — including the trial→paid conversion — land while the app
+    /// is closed and their transactions are drained by
+    /// processUnfinishedTransactions() before the Transaction.updates listener
+    /// can observe them, so renewal detection lives here on the refresh path:
+    /// the first observed expiration is stored as a baseline (that observation
+    /// is the initial purchase/restore, covered by purchase_completed) and the
+    /// event fires only when the user was entitled at the previous check AND the
+    /// expiration moved later, i.e. Apple extended the period. When the previous
+    /// status was trial, this renewal IS the trial→paid conversion
+    /// (trial_converted=yes). Renewals missed between launches collapse into one
+    /// event — the best client-side approximation without a server webhook.
+    /// Moves the renewal baseline forward without emitting an event. Called by
+    /// the purchase flow before refreshStatus so a plan-change charge is
+    /// reported once (purchase_completed), not also as subscription_renewed.
+    func advanceRenewalBaseline(to expiration: Date) {
+        defaults.set(expiration, forKey: Key.lastRenewalExpirationDate)
+    }
 
-        if let newDate = newExpirationDate {
-            defaults.set(newDate, forKey: Key.lastRenewalExpirationDate)
+    func trackSubscriptionRenewed(newExpirationDate: Date) {
+        let previousExpiration = defaults.object(forKey: Key.lastRenewalExpirationDate) as? Date
+        let previousStatus = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
+        defaults.set(newExpirationDate, forKey: Key.lastRenewalExpirationDate)
+
+        let wasEntitled = previousStatus == "trial" || previousStatus == "pro"
+            || previousStatus == "billing_grace"
+        // Late trial→paid conversion: the trial was observed expired before
+        // Apple's charge posted (trial_converted persisted "no"), then the
+        // entitlement reappeared with a later expiration — that charge IS the
+        // conversion and must not be dropped by the wasEntitled guard.
+        let isLateTrialConversion = previousStatus == "expired"
+            && defaults.string(forKey: Key.trialConverted) == "no"
+        // 60s tolerance absorbs StoreKit reporting the same period end with
+        // sub-minute jitter across refreshes.
+        guard let previousExpiration, wasEntitled || isLateTrialConversion,
+              newExpirationDate.timeIntervalSince(previousExpiration) > 60 else { return }
+
+        // First paid period for trial converts: anchor the subscription age
+        // here since their purchase_completed (trial start) no longer anchors it.
+        if defaults.object(forKey: Key.subscriptionStartDate) == nil {
+            defaults.set(Date(), forKey: Key.subscriptionStartDate)
         }
 
         let renewals = defaults.integer(forKey: Key.renewalCount) + 1
@@ -1407,8 +1535,17 @@ final class AppAnalytics {
         logEvent("subscription_renewed", parameters: [
             "months_subscribed": monthsSubscribed,
             "renewal_count": renewals,
-            "total_sessions": session.totalSessions
+            "total_sessions": session.totalSessions,
+            "trial_converted": (previousStatus == "trial" || isLateTrialConversion) ? "yes" : "no"
         ])
+
+        // updateSubscriptionProperties only flips trial_converted on a
+        // trial→subscribed flip, so the late-conversion path must flip it here
+        // or the paying convert stays recorded as a lost trial forever.
+        if isLateTrialConversion {
+            setUserProperty("trial_converted", value: "yes")
+            defaults.set("yes", forKey: Key.trialConverted)
+        }
 
         setUserProperty("renewal_count", value: "\(renewals)")
     }
@@ -2010,16 +2147,31 @@ final class AppAnalytics {
         ])
     }
 
+    /// Call when the app is opened via a deep link (laso:// widget/Live Activity
+    /// links). Attribution counterpart of the session_source tag set in
+    /// ContentView.handleDeepLink.
+    func trackDeepLinkOpened(url: String, source: String) {
+        logEvent("deep_link_opened", parameters: [
+            "url": url,
+            "source": source
+        ])
+    }
+
     /// Enqueue/intent-to-send floor (when we schedule a local notification), not delivered reach.
     func trackNotificationScheduled(type: String, identifier: String, hookCategory: String? = nil) {
         let now = Date()
-        // Raw identifiers embed the health-metric name (healthpulse.alert.[metric].[subtype]),
-        // so the join key is hashed and the metric is sent only via the anonymized alert_metric.
         let parts = identifier.split(separator: ".")
         let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
         var params: [String: Any] = [
             "notification_type": type,
-            "notification_id": Self.hashedNotificationID(identifier),
+            // Same sanitized id as opened/presented/dismissed/suppressed, so the
+            // scheduled->opened funnel joins on notification_id.
+            "notification_id": sanitizedNotificationID(identifier),
+            // Transitional dual-param: notification_id previously shipped as this
+            // 16-hex hash, so charts keyed on the old id-space can bridge the
+            // format flip. Remove once the pre-flip scheduled cohort has aged out
+            // and dashboards read notification_id.
+            "notification_id_legacy": Self.sha256Hash16(identifier),
             "alert_metric": alertMetric
         ]
         if let hook = hookCategory {
@@ -2031,15 +2183,8 @@ final class AppAnalytics {
         logEvent("notification_scheduled", parameters: params)
     }
 
-    /// Stable, non-reversible join key for a notification identifier. SHA256 truncated to
-    /// 16 hex chars keeps the scheduled->opened funnel joinable without transmitting the raw
-    /// identifier, which embeds a health-metric name.
-    static func hashedNotificationID(_ identifier: String) -> String {
-        sha256Hash16(identifier)
-    }
-
     /// Stable, non-reversible SHA256 hash truncated to 16 hex chars. Used for
-    /// dedupe/join keys (notification ids, transaction ids) without transmitting
+    /// dedupe/join keys (transaction ids, referral codes) without transmitting
     /// the raw value.
     static func sha256Hash16(_ value: String) -> String {
         let digest = SHA256.hash(data: Data(value.utf8))
@@ -2053,6 +2198,29 @@ final class AppAnalytics {
             "notification_type": type,
             "notification_id": sanitizedNotificationID(identifier),
             "reason": reason
+        ])
+    }
+
+    /// A non-critical one-shot's fire time fell inside quiet hours and was
+    /// deferred to the window's end rather than dropped.
+    func trackNotificationDeferredQuietHours(type: String, identifier: String) {
+        logEvent("notification_deferred_quiet_hours", parameters: [
+            "notification_type": type,
+            // Transitional dual-param: the old inline capture sent this value as
+            // "type" and saved breakdowns may still filter on it. Remove once
+            // dashboards are migrated to notification_type.
+            "type": type,
+            "notification_id": sanitizedNotificationID(identifier)
+        ])
+    }
+
+    /// The dynamic per-day notification budget could not be computed (no store
+    /// or off the main thread), so the static per-call budget was used.
+    func trackNotificationBudgetFallback(identifier: String, reason: String, staticBudget: Int) {
+        logEvent("notification_budget_fallback", parameters: [
+            "notification_id": sanitizedNotificationID(identifier),
+            "reason": reason,
+            "static_budget": staticBudget
         ])
     }
 
@@ -2905,14 +3073,9 @@ final class AppAnalytics {
                 "subscription_status": defaults.string(forKey: "laso.analytics.last_known_status") ?? "unknown"
             ])
         }
-
-        // User property: engagement bucket
-        let bucket: String
-        if avgScore >= 70 { bucket = "power_user" }
-        else if avgScore >= 40 { bucket = "casual" }
-        else if avgScore >= 15 { bucket = "at_risk" }
-        else { bucket = "disengaging" }
-        setUserProperty("engagement_level", value: bucket)
+        // engagement_level (user property) has exactly one writer:
+        // computeEngagementLevel at session start. The churn score here ships
+        // only on pre_churn_signal, never as a competing property definition.
     }
 
     // --- H. Background Refresh Success ---
@@ -3077,6 +3240,15 @@ final class AppAnalytics {
                 sanitized[key] = Double(value)
             case let value as Bool:
                 sanitized[key] = value ? 1 : 0
+            case let value as [String]:
+                // Passed through as a native array-of-string property so Amplitude
+                // can segment on individual elements (goals, symptoms); each
+                // element gets the same truncation + metric anonymization as a
+                // scalar string.
+                sanitized[key] = value.map { element -> String in
+                    let truncated = element.count > 100 ? String(element.prefix(100)) : element
+                    return Self.metricParameterKeys.contains(key) ? anonymizeMetricValue(truncated) : truncated
+                }
             default:
                 sanitized[key] = String(describing: rawValue)
             }
@@ -3220,9 +3392,10 @@ final class AppAnalytics {
     /// `sanitizeParameters` (metric-name anonymization, string truncation, raw-score
     /// bracketing) before sending, so opening the stream does not leak identifiable
     /// health data.
-    /// (marketing_spend_recorded is server-imported; subscription_renewed/refunded and
-    /// payment_issue_* arrive from the App Store Server Notifications webhook — none are
-    /// client events.)
+    /// (marketing_spend_recorded is server-imported; refunded and payment_issue_*
+    /// arrive from the App Store Server Notifications webhook. subscription_renewed
+    /// is client-emitted from entitlement-extension detection — the webhook skips
+    /// it to avoid double counting.)
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
         var enriched = parameters
 

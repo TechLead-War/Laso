@@ -86,17 +86,25 @@ struct ShareButton: View {
             return
         }
 
-        presentShareSheet(with: image)
-        isRendering = false
-    }
-
-    private func presentShareSheet(with image: UIImage) {
         var activityItems: [Any] = [image]
         if let captionText, !captionText.isEmpty {
             activityItems.append(captionText)
         }
+        Self.presentShareSheet(
+            items: activityItems,
+            // "_with_invite" marks shares that carried the referral caption so
+            // referral-bearing completions are separable in Amplitude.
+            contentType: activityItems.count > 1 ? "\(cardTypeLabel)_with_invite" : cardTypeLabel
+        )
+        isRendering = false
+    }
+
+    /// Presents the system share sheet from the topmost controller and reports
+    /// share_completed with the given content_type. The single presenter for
+    /// every share surface (cards here, the text invite in InviteFriendsView).
+    static func presentShareSheet(items: [Any], contentType: String) {
         let activityVC = UIActivityViewController(
-            activityItems: activityItems,
+            activityItems: items,
             applicationActivities: nil
         )
         activityVC.excludedActivityTypes = [
@@ -131,7 +139,7 @@ struct ShareButton: View {
 
         activityVC.completionWithItemsHandler = { activityType, completed, _, _ in
             AppAnalytics.shared.trackShareCompleted(
-                contentType: "health_card",
+                contentType: contentType,
                 activityType: activityType?.rawValue,
                 completed: completed
             )

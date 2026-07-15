@@ -28,6 +28,11 @@ final class ReferralManager {
 
     private let defaults = UserDefaults.standard
 
+    /// successfulReferrals count already reported as referral_completed
+    /// (role: referrer). The server grants referrer rewards with no client
+    /// callback, so completions are detected by count delta at sync time.
+    private static let reportedReferralsKey = "laso.referral.reported_referrals"
+
     /// Sent to the server as a second fraud key (blocks reinstall farming,
     /// where a new anonymous UID would otherwise allow a second redemption).
     private var deviceId: String {
@@ -64,6 +69,7 @@ final class ReferralManager {
                 defaults.removeObject(forKey: AppKeys.Referral.code)
                 defaults.removeObject(forKey: AppKeys.Referral.freeUntil)
                 defaults.removeObject(forKey: AppKeys.Referral.redeemedCode)
+                defaults.removeObject(forKey: Self.reportedReferralsKey)
             }
             defaults.set(currentUid, forKey: AppKeys.Referral.ownerUid)
         }
@@ -137,6 +143,7 @@ final class ReferralManager {
                 if let ts = data["referralFreeUntil"] as? TimeInterval, ts > 0 {
                     referralFreeUntil = Date(timeIntervalSince1970: ts)
                     defaults.set(ts, forKey: AppKeys.Referral.freeUntil)
+                    cancelStaleTrialPushesIfUnlocked()
                 }
                 if let redeemed = data["redeemedReferralCode"] as? String, !redeemed.isEmpty {
                     redeemedCode = redeemed
@@ -155,9 +162,41 @@ final class ReferralManager {
                 .whereField("referrerUid", isEqualTo: uid)
                 .getDocuments()
             successfulReferrals = snapshot.documents.count
+            reportNewReferrerCompletions()
         } catch {
             AnalyticsBackend.provider.captureError(error, context: "referral_sync_count")
         }
+    }
+
+    /// Emits referral_completed(role: referrer) for referrals granted
+    /// server-side since the last sync. Event timing lags the actual
+    /// redemption until this client next syncs; that is the best a
+    /// client-only detector can do.
+    private func reportNewReferrerCompletions() {
+        // First sync on this install/uid (key absent): the server count is
+        // all-time, so stamp the baseline WITHOUT emitting — a reinstall or
+        // second device would otherwise replay the whole referral history.
+        guard defaults.object(forKey: Self.reportedReferralsKey) != nil else {
+            defaults.set(successfulReferrals, forKey: Self.reportedReferralsKey)
+            return
+        }
+        let reported = defaults.integer(forKey: Self.reportedReferralsKey)
+        guard successfulReferrals != reported else { return }
+        if successfulReferrals > reported {
+            for _ in reported..<successfulReferrals {
+                AppAnalytics.shared.trackReferralCompleted(role: "referrer")
+            }
+        }
+        defaults.set(successfulReferrals, forKey: Self.reportedReferralsKey)
+    }
+
+    /// An armed trial-winback push is nonsense once referral access unlocks
+    /// the app; retire trial pushes the same way the purchase path does,
+    /// resetting the winback one-shot so it can re-arm after the free
+    /// period lapses.
+    private func cancelStaleTrialPushesIfUnlocked() {
+        guard hasReferralAccess else { return }
+        TrialScheduler.cancelAllAndRearmWinback()
     }
 
     // MARK: - Redeem a Referral Code
@@ -200,6 +239,7 @@ final class ReferralManager {
                 if let ts = payload["freeUntil"] as? TimeInterval, ts > 0 {
                     referralFreeUntil = Date(timeIntervalSince1970: ts)
                     defaults.set(ts, forKey: AppKeys.Referral.freeUntil)
+                    cancelStaleTrialPushesIfUnlocked()
                 }
                 AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: true)
                 AppAnalytics.shared.trackReferralCompleted(role: "referee")

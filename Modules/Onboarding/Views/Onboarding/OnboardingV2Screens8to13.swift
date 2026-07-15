@@ -1170,15 +1170,12 @@ struct OnbV2ScreenVerdict: View {
             if new.hasReached(.body) { titleLanded = true }
         }
         .onAppear {
-            AnalyticsBackend.provider.capture(
-                event: "verdict_delivered",
-                properties: [
-                    "zone": verdict.zone.rawValue,
-                    "magnitude_band": verdict.magnitude?.band.rawValue ?? "",
-                    "weekday": verdict.weekday ?? -1,
-                    "nights_remaining": verdict.nightsRemaining ?? -1,
-                    "side_discovery_count": verdict.sideDiscoveries.count
-                ]
+            AppAnalytics.shared.trackVerdictDelivered(
+                zone: verdict.zone.rawValue,
+                magnitudeBand: verdict.magnitude?.band.rawValue ?? "",
+                weekday: verdict.weekday ?? -1,
+                nightsRemaining: verdict.nightsRemaining ?? -1,
+                sideDiscoveryCount: verdict.sideDiscoveries.count
             )
         }
     }
@@ -1538,13 +1535,9 @@ struct OnbV2ScreenCliffhanger: View {
         // press itself is .impact(.light); the system prompt that follows is
         // its own outcome, owned by iOS.
         .sensoryFeedback(.impact(weight: .light), trigger: notifyPressed)
-        .onAppear {
-            appeared = true
-            AnalyticsBackend.provider.capture(
-                event: "promise_shown",
-                properties: ["branch": "cliffhanger", "nights_remaining": nightsRemaining]
-            )
-        }
+        // promise_shown is fired by the flow router, which owns the one-shot
+        // guard against the back-nav scan re-run recreating this screen.
+        .onAppear { appeared = true }
     }
 }
 
@@ -1605,13 +1598,9 @@ struct OnbV2ScreenJournalFirst: View {
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: ctaPressed)
-        .onAppear {
-            appeared = true
-            AnalyticsBackend.provider.capture(
-                event: "promise_shown",
-                properties: ["branch": "journal_first"]
-            )
-        }
+        // promise_shown is fired by the flow router, which owns the one-shot
+        // guard against the back-nav scan re-run recreating this screen.
+        .onAppear { appeared = true }
     }
 
     /// Illustrative weekly trend. The denied branch has no real data yet, so the

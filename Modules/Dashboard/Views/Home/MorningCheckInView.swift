@@ -17,6 +17,7 @@ struct MorningCheckInView: View {
     @State private var energyLevel: Int = 0
     @State private var soreness: Int = 0
     @State private var isSubmitting = false
+    @State private var hasTrackedImpression = false
 
     private var isComplete: Bool {
         sleepQuality > 0 && energyLevel > 0 && soreness > 0
@@ -107,7 +108,12 @@ struct MorningCheckInView: View {
         .animation(.snappy(duration: 0.25), value: isComplete)
         .accessibilityIdentifier("home.morningCheckInCard")
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "morning_checkin"])
+            // LazyVStack re-fires onAppear on every scroll-back, and HomeView owns
+            // the .home open/close pair; a second trackFeatureOpen(.home) would
+            // fabricate home->home transitions and reset home dwell time.
+            guard !hasTrackedImpression else { return }
+            hasTrackedImpression = true
+            AppAnalytics.shared.trackBlockTap(title: "Morning Check-In Shown", type: .smartAction, screen: .home, metadata: ["source": "morning_checkin", "action": "shown"])
         }
     }
 

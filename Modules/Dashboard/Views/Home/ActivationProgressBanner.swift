@@ -10,6 +10,7 @@ struct ActivationProgressBanner: View {
     let onDismissCelebration: () -> Void
 
     @State private var showCelebration = false
+    @State private var hasTrackedImpression = false
 
     var body: some View {
         if !state.isComplete {
@@ -25,7 +26,12 @@ struct ActivationProgressBanner: View {
             }
             .padding(.horizontal, DS.screenPadding)
             .onAppear {
-                AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "activation_progress_banner", "current_day": state.currentDay, "progress_pct": Int(state.progressFraction * 100)])
+                // LazyVStack re-fires onAppear on every scroll-back, and HomeView owns
+                // the .home open/close pair; a second trackFeatureOpen(.home) would
+                // fabricate home->home transitions and reset home dwell time.
+                guard !hasTrackedImpression else { return }
+                hasTrackedImpression = true
+                AppAnalytics.shared.trackBlockTap(title: "Activation Progress Banner Shown", type: .smartAction, screen: .home, metadata: ["source": "activation_progress", "action": "shown", "current_day": state.currentDay, "progress_pct": Int(state.progressFraction * 100)])
             }
             .onChange(of: latestMilestone?.milestone.rawValue) { _, newValue in
                 if let newValue {

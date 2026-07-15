@@ -238,10 +238,7 @@ final class NotificationManager {
             comps.calendar = Date.cal
             effectiveTrigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
             fireDate = deferred
-            AnalyticsBackend.provider.capture(event: "notification_deferred_quiet_hours", properties: [
-                "notification_id": identifier,
-                "type": notifType
-            ])
+            Task { @MainActor in AppAnalytics.shared.trackNotificationDeferredQuietHours(type: notifType, identifier: identifier) }
         }
 
         if !isDailySummary && !bypassCap {
@@ -280,6 +277,10 @@ final class NotificationManager {
         if let subtitle { content.subtitle = subtitle }
         content.body = body
         content.sound = .default
+        // Standard category so a swipe-dismiss fires didReceive (tracked as a
+        // dismissal); without it iOS swallows the dismiss for every
+        // centrally scheduled notification.
+        content.categoryIdentifier = AppConstants.NotificationCategory.standard
         // Group by family (summary/alert/lifecycle...) in Notification Center.
         content.threadIdentifier = notifType
         // The Time Sensitive entitlement is declared in Laso.entitlements; use it
@@ -405,11 +406,8 @@ final class NotificationManager {
         }
         // Breadcrumb: the dynamic budget could not be computed (no store
         // or off the main thread) so the static per-call budget is used.
-        AnalyticsBackend.provider.capture(event: "notification_budget_fallback", properties: [
-            "notification_id": identifier,
-            "reason": store == nil ? "no_store" : "off_main_thread",
-            "static_budget": staticBudget
-        ])
+        let reason = store == nil ? "no_store" : "off_main_thread"
+        Task { @MainActor in AppAnalytics.shared.trackNotificationBudgetFallback(identifier: identifier, reason: reason, staticBudget: staticBudget) }
         return staticBudget
     }
 

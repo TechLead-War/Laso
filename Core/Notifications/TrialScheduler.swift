@@ -154,6 +154,15 @@ enum TrialScheduler {
             .removePendingNotificationRequests(withIdentifiers: AppConstants.NotificationID.trialAll)
     }
 
+    /// Retire all trial pushes AND reset the win-back one-shot flag so a later
+    /// lapse re-arms it. Every path that cancels because the user gained access
+    /// (purchase, referral unlock, free-year flag) must use this, not bare
+    /// cancelAll(): a stale winbackArmed=true blocks the win-back forever.
+    static func cancelAllAndRearmWinback() {
+        cancelAll()
+        UserDefaults.standard.set(false, forKey: AppKeys.Billing.winbackArmed)
+    }
+
     /// Fire trial nudges at the user's detected wake time so they land in the
     /// morning, not at a random hour. Falls back to 9 AM when no wake time is
     /// stored, matching the engagement drip default.

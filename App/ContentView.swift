@@ -813,6 +813,12 @@ struct ContentView: View {
         guard url.scheme == "laso", url.host == "route" else { return }
         let name = url.lastPathComponent
         guard let route = Route.fromUITestIdentifier(name) else { return }
+        // Widgets and Live Activities are the only laso:// producers. Tag the
+        // session before scenePhase-driven trackSessionStart consumes it so
+        // these opens stop counting as organic (same pattern as the
+        // notification tag in AppDelegate).
+        SessionTracker.shared.pendingSessionSource = .widget
+        AppAnalytics.shared.trackDeepLinkOpened(url: url.absoluteString, source: "widget")
         navigate(to: route)
     }
 

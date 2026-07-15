@@ -3,6 +3,9 @@ import SwiftUI
 /// Optional onboarding step where users can enter a referral code.
 struct ReferralCodeStep: View {
     let onContinue: () -> Void
+    /// Separate from onContinue so the step funnel can log action=skipped
+    /// instead of a false "completed" when the user declines to enter a code.
+    let onSkip: () -> Void
 
     @State private var codeText = ""
     @State private var isRedeeming = false
@@ -126,7 +129,7 @@ struct ReferralCodeStep: View {
 
                 // Skip
                 Button {
-                    onContinue()
+                    onSkip()
                 } label: {
                     Text(Copy.Onboarding.ReferralCode.skip)
                 }

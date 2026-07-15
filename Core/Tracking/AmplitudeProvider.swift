@@ -210,22 +210,26 @@ final class AmplitudeProvider: AnalyticsProvider {
 
     // MARK: - Crash Handling
 
-    /// Install handlers for uncaught exceptions and fatal signals. Captures an
-    /// `app_crash` event and flushes before the process dies. The signal
-    /// handlers must be capture-free C function pointers, so they reach the SDK
-    /// through the `AmplitudeProvider.shared` singleton rather than `self`.
+    /// Install handlers for uncaught exceptions and fatal signals. The SDK's
+    /// track/flush are async on its tracking queue and the process dies before
+    /// the queue drains, so an in-process capture never survives the crash. The
+    /// handlers instead persist the crash synchronously to disk and the
+    /// `app_crash` event is tracked on the NEXT launch. The signal handlers
+    /// must be capture-free C function pointers, so they reach the store
+    /// through static members rather than `self`.
     func installCrashHandlers() {
         guard amplitude != nil else { return }
 
+        reportPendingCrashIfAny()
+
         NSSetUncaughtExceptionHandler { exception in
             let stackTrace = exception.callStackSymbols.prefix(15).joined(separator: "\n")
-            AmplitudeProvider.shared.amplitude?.track(eventType: "app_crash", eventProperties: [
+            AmplitudeProvider.persistCrash([
                 "crash_type": "uncaught_exception",
                 "exception_name": exception.name.rawValue,
                 "exception_reason": String((exception.reason ?? "unknown").prefix(200)),
                 "stack_trace": String(stackTrace.prefix(2000))
             ])
-            AmplitudeProvider.shared.amplitude?.flush()
         }
 
         let crashSignals: [Int32] = [SIGABRT, SIGBUS, SIGSEGV, SIGFPE, SIGILL, SIGTRAP]
@@ -241,17 +245,48 @@ final class AmplitudeProvider: AnalyticsProvider {
                 case SIGTRAP: signalName = "SIGTRAP"
                 default:      signalName = "SIGNAL_\(signalNumber)"
                 }
-                AmplitudeProvider.shared.amplitude?.track(eventType: "app_crash", eventProperties: [
+                AmplitudeProvider.persistCrash([
                     "crash_type": "signal",
                     "signal_name": signalName,
-                    "signal_number": signalNumber
+                    "signal_number": Int(signalNumber)
                 ])
-                AmplitudeProvider.shared.amplitude?.flush()
                 // Re-raise so the default handler still produces the crash report.
                 signal(signalNumber, SIG_DFL)
                 raise(signalNumber)
             }
         }
+    }
+
+    /// First access happens at install time (launch), so the directory is
+    /// created up front — never inside a crashing process.
+    private static let pendingCrashURL: URL = {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("laso_pending_crash.json")
+    }()
+
+    /// Synchronous write, so it completes before the crashing process dies.
+    /// crashed_at_epoch is stamped because the event is only tracked at next
+    /// launch and would otherwise carry the wrong wall-clock time.
+    private static func persistCrash(_ props: [String: Any]) {
+        // First writer wins: an uncaught NSException persists its rich payload,
+        // then the runtime calls abort() and the SIGABRT handler fires — it must
+        // not overwrite the exception payload with a generic signal one.
+        guard !FileManager.default.fileExists(atPath: pendingCrashURL.path) else { return }
+        var stamped = props
+        stamped["crashed_at_epoch"] = Date().timeIntervalSince1970
+        guard JSONSerialization.isValidJSONObject(stamped),
+              let data = try? JSONSerialization.data(withJSONObject: stamped) else { return }
+        try? data.write(to: pendingCrashURL)
+    }
+
+    /// Tracks the crash persisted by the previous run, if any. The file is
+    /// removed before parsing so a corrupt payload cannot retrigger forever.
+    private func reportPendingCrashIfAny() {
+        guard let data = try? Data(contentsOf: Self.pendingCrashURL) else { return }
+        try? FileManager.default.removeItem(at: Self.pendingCrashURL)
+        guard let props = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        amplitude?.track(eventType: "app_crash", eventProperties: props)
     }
 }
 

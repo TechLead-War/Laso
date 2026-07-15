@@ -386,7 +386,8 @@ struct OnbV2Screen16Paywall: View {
             VStack(spacing: 0) {
                 OnbV2TopBar(step: OnbV2Flow.total, total: OnbV2Flow.total, onBack: {
                     AppAnalytics.shared.trackPaywallDismissed(
-                        timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart)), source: "onboarding")
+                        timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart)), source: "onboarding",
+                        reason: "back")
                     onBack()
                 })
 
@@ -562,9 +563,13 @@ struct OnbV2Screen16Paywall: View {
                     .frame(maxWidth: .infinity)
 
                     Button {
+                        // source is the placement that showed the paywall, and must
+                        // match paywall_viewed's "onboarding" so the viewed->dismissed
+                        // funnel joins; the decline signal lives in `reason`.
                         AppAnalytics.shared.trackPaywallDismissed(
                             timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart)),
-                            source: "onboarding_declined")
+                            source: "onboarding",
+                            reason: "declined")
                         onDeclined()
                     } label: {
                         Text(Copy.OnboardingV2.s16Decline)
@@ -755,6 +760,7 @@ struct OnbV2ScreenDone: View {
     let onDone: () -> Void
 
     @State private var appeared = false
+    @State private var doneHandled = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -815,9 +821,16 @@ struct OnbV2ScreenDone: View {
                     .padding(.bottom, 14)
                     .onbV2StaggerIn(index: 3, appeared: appeared)
 
-                OnbV2PrimaryCTA(Copy.OnboardingV2.sDoneCTA, action: onDone)
-                    .padding(.bottom, 20)
-                    .onbV2StaggerIn(index: 3, appeared: appeared)
+                OnbV2PrimaryCTA(Copy.OnboardingV2.sDoneCTA) {
+                    // Completion runs once-only side effects (onboarding_completed,
+                    // notification arming); a second tap landing before the router
+                    // swaps screens must not repeat them.
+                    guard !doneHandled else { return }
+                    doneHandled = true
+                    onDone()
+                }
+                .padding(.bottom, 20)
+                .onbV2StaggerIn(index: 3, appeared: appeared)
             }
             .padding(.horizontal, OnbV2.bodyPadH)
             // Completion outcome: the only success beat that lands on arrival.

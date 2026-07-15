@@ -40,6 +40,7 @@ enum AppKeys {
         static let weeklyActiveDaysData  = "laso.session.weekly_active_days_data"
         static let organicSessions       = "laso.session.organic_sessions"
         static let notifSessions         = "laso.session.notif_sessions"
+        static let widgetSessions        = "laso.session.widget_sessions"
 
         // Rest-day streak credits (Gentler Streak / Duolingo pattern).
         // One credit forgives a single missed day; refilled monthly.
