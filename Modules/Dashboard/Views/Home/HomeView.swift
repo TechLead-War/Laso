@@ -15,6 +15,8 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
+    @State private var actionDoneToday = false
+    @State private var showShareCard = false
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
     @State private var showSoftLockPaywall = false
@@ -296,6 +298,11 @@ struct HomeView: View {
                 } else if hasData {
                     // ── Above the fold ──
 
+                    // 0. Next Up. the daily action leads the screen: Laso's core
+                    // promise is telling you what to do next, so the step comes
+                    // before the score that explains it.
+                    primaryActionCard
+
                     // 1. Recovery Hero. live readiness score (updates every 30 min).
                     // Title, pill, and ring all derive from RecoveryState so the
                     // three-band threshold table agrees with itself.
@@ -326,8 +333,19 @@ struct HomeView: View {
                             } else {
                                 showScoreGuide = true
                             }
-                        }
+                        },
+                        onShare: { showShareCard = true }
                     )
+                    .sheet(isPresented: $showShareCard) {
+                        // vitalityAge/realAge are 0 until the scorer's snapshot
+                        // exists; pass nil so empty rings never render.
+                        ShareRingsSheet(
+                            vitalityAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.vitalityAge : nil,
+                            realAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.chronologicalAge : nil,
+                            recovery: liveReadinessScore > 0 ? liveReadinessScore : nil,
+                            sleepSeconds: liveViewModel.sleep.lastNightSleepDuration > 0 ? liveViewModel.sleep.lastNightSleepDuration : nil
+                        )
+                    }
                     .onAppear {
                         recoveryTracker.appeared()
                         maxScrollDepth = max(maxScrollDepth, 10)
@@ -360,9 +378,6 @@ struct HomeView: View {
                         )
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
-
-                    // 2. Today's Action. single source of truth for what to do
-                    primaryActionCard
 
                     // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
                     // Proactive one-paragraph story of today, grounded in real signals.
@@ -602,26 +617,31 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Today's Action Card (single source of truth)
+    // MARK: - Next Up Card (single source of truth for what to do)
 
     @ViewBuilder
     private var primaryActionCard: some View {
         let action = viewModel.smartDailyAction(liveVM: liveViewModel)
         let actionRoute = routeForAction(action)
-        Button {
-            AppAnalytics.shared.trackBlockTap(
-                title: action.title,
-                type: .homeDailyAction,
-                screen: .home,
-                metadata: [
-                    "source": action.source,
-                    "recovery_state": viewModel.recoveryState.rawValue,
-                    "routed_to": "\(actionRoute)"
-                ]
-            )
-            navigationPath.append(actionRoute)
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Copy.Home.nextUpHeader)
+                .font(DS.Typography.captionSemibold)
+                .tracking(1.2)
+                .foregroundStyle(DS.scoreColor(liveReadinessScore))
+
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: action.title,
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: [
+                        "source": action.source,
+                        "recovery_state": viewModel.recoveryState.rawValue,
+                        "routed_to": "\(actionRoute)"
+                    ]
+                )
+                navigationPath.append(actionRoute)
+            } label: {
                 HStack(spacing: 12) {
                     Image(systemName: action.icon)
                         .font(DS.Typography.title3)
@@ -655,12 +675,42 @@ struct HomeView: View {
                         .foregroundStyle(AppColour.textTertiary)
                 }
             }
-            .padding(DS.cardPadding)
-            .cardStyle()
+            .buttonStyle(.plain)
+
+            Button {
+                actionDoneToday.toggle()
+                if actionDoneToday {
+                    UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
+                } else {
+                    UserDefaults.standard.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
+                }
+                AppAnalytics.shared.trackBlockTap(
+                    title: action.title,
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["source": "next_up_mark_done", "done": "\(actionDoneToday)"]
+                )
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "circle")
+                        .font(DS.Typography.body)
+                        .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.textTertiary)
+                    Text(actionDoneToday ? Copy.Home.nextUpDone : Copy.Home.nextUpMarkDone)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.textSecondary)
+                    Spacer()
+                }
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(DS.cardPadding)
+        .cardStyle()
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.todaysActionCard")
+        .onAppear {
+            let stored = UserDefaults.standard.object(forKey: AppKeys.Data.dailyActionDoneDay) as? Date
+            actionDoneToday = stored.map { Date.cal.isDateInToday($0) } ?? false
+        }
     }
 
     /// Routes Today's Action card contextually based on action text content.

@@ -203,6 +203,15 @@ struct OnbV2VitalityRevealScreen: View {
     private let feedOrder: [Int]
     private let realMetricCount: Int
 
+    /// First concrete action, from the metric costing the most years. All
+    /// deltas <= 0 means nothing is dragging the age up: maintain instead.
+    private var nextStepText: String {
+        guard let weakest = metrics.filter({ $0.delta > 0 }).max(by: { $0.delta < $1.delta }) else {
+            return Copy.OnboardingV2.revealNextStepMaintain
+        }
+        return Copy.OnboardingV2.revealNextStep(forMetric: weakest.name)
+    }
+
     init(profile: OnboardingV2Profile, snapshot: OnboardingHealthSnapshot,
          step: Int, showsNotificationPrimer: Bool,
          onBack: @escaping () -> Void, onContinue: @escaping () -> Void) {
@@ -332,7 +341,29 @@ struct OnbV2VitalityRevealScreen: View {
                             Text(Copy.OnboardingV2.revealThanRealAge(chronoAge))
                                 .font(.system(size: 13))
                                 .foregroundStyle(OnbV2.fg3)
+
+                            // The pathway starts here: hand over the first
+                            // concrete step, picked from the weakest metric,
+                            // before sign-in and before the paywall.
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(Copy.OnboardingV2.revealNextStepHeader)
+                                    .font(.system(size: 10, weight: .bold)).tracking(1.4)
+                                    .foregroundStyle(OnbV2.blueLight)
+                                Text(nextStepText)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(OnbV2.fg)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 11)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(OnbV2.blue.opacity(0.12)))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(OnbV2.blue.opacity(0.35)))
+                            .padding(.top, 8)
+                            .padding(.horizontal, OnbV2.bodyPadH)
                         }
+                        .frame(width: w)
                         .position(x: w / 2, y: h * 0.62)
                         .opacity(done ? 1 : 0)
                         .offset(y: done ? 0 : 10)

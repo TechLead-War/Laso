@@ -1,9 +1,213 @@
 import SwiftUI
+import PhotosUI
 
 /// Card type for shareable content
 enum ShareCardType {
     case score(score: Int, scoreChange: Int?, streakDays: Int)
     case insight(text: String, metric: String, category: String)
+    case rings(vitalityAge: Int?, realAge: Int?, recovery: Int?, sleepSeconds: Double?, photo: UIImage?)
+}
+
+// MARK: - Rings Card (Whoop-style photo share)
+
+/// A story-sized (9:16) card: the user's own photo (or a brand gradient when
+/// they skip), with up to three stat rings across the lower third — Vitality
+/// Age, Recovery, and last night's sleep. Rings with no data are hidden;
+/// nothing is invented.
+struct ShareableRingsCard: View {
+    let vitalityAge: Int?
+    let realAge: Int?
+    let recovery: Int?
+    let sleepSeconds: Double?
+    let photo: UIImage?
+
+    /// Mirrors the fixed goal in `RecoverySignalsSnapshot.sleepHoursGoal`.
+    private static let sleepGoalHours: Double = 7.5
+
+    private var gradientColors: [Color] {
+        let score = recovery ?? 0
+        switch score {
+        case 80...100: return [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd]
+        case 60..<80: return [AppColour.shareScoreGoodStart, AppColour.shareScoreGoodEnd]
+        case 40..<60: return [AppColour.shareScoreFairStart, AppColour.shareScoreFairEnd]
+        default: return [AppColour.shareScorePoorStart, AppColour.shareScorePoorEnd]
+        }
+    }
+
+    /// Same ±10-year band as `VitalityCard.ringProgress`: full ring at 10+
+    /// years younger, half at on-age, empty at 10+ years older.
+    private var vitalityProgress: Double {
+        guard let vitalityAge, let realAge else { return 0 }
+        let clamped = max(-10, min(10, realAge - vitalityAge))
+        return Double(clamped + 10) / 20.0
+    }
+
+    private var sleepText: String {
+        guard let sleepSeconds, sleepSeconds > 0 else { return "" }
+        let h = Int(sleepSeconds / 3600)
+        let m = Int((sleepSeconds - Double(h) * 3600) / 60)
+        return "\(h):\(String(format: "%02d", m))"
+    }
+
+    var body: some View {
+        ZStack {
+            if let photo {
+                // The fill image must be framed and clipped HERE: unframed it
+                // inflates the ZStack's layout bounds, which spreads the rings
+                // row beyond the visible card and cuts the metrics off.
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 390, height: 693)
+                    .clipped()
+            } else {
+                LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+
+            // Readability fades over the photo, top and bottom.
+            LinearGradient(stops: [
+                .init(color: .black.opacity(0.45), location: 0),
+                .init(color: .clear, location: 0.3),
+                .init(color: .clear, location: 0.55),
+                .init(color: .black.opacity(0.55), location: 1)
+            ], startPoint: .top, endPoint: .bottom)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text(Copy.Common.laso.uppercased())
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .tracking(3)
+                        .foregroundStyle(.white.opacity(0.85))
+                    Spacer()
+                }
+                .padding(.horizontal, DS.space6)
+                .padding(.top, 30)
+
+                Spacer()
+
+                HStack(spacing: 0) {
+                    if let vitalityAge {
+                        statRing(value: "\(vitalityAge)",
+                                 label: Copy.Common.shareRingVitalityAge,
+                                 progress: vitalityProgress,
+                                 tint: AppColour.scoreOptimal)
+                    }
+                    if let recovery {
+                        statRing(value: "\(recovery)",
+                                 label: Copy.Common.shareRingRecovery,
+                                 progress: Double(recovery) / 100.0,
+                                 tint: DS.scoreColor(recovery))
+                    }
+                    if let sleepSeconds, sleepSeconds > 0 {
+                        statRing(value: sleepText,
+                                 label: Copy.Common.shareRingSleep,
+                                 progress: min((sleepSeconds / 3600) / Self.sleepGoalHours, 1),
+                                 tint: .white.opacity(0.85))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, DS.space4)
+
+                Spacer().frame(height: 26)
+
+                Text(Copy.Common.shareCardFooter)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.bottom, 26)
+            }
+        }
+        .frame(width: 390, height: 693)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+    }
+
+    private func statRing(value: String, label: String, progress: Double, tint: Color) -> some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.3), lineWidth: 7)
+                    .frame(width: 92, height: 92)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(tint, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 92, height: 92)
+                Text(value)
+                    .font(.system(size: value.count > 2 ? 24 : 30, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 4)
+            }
+            Text(label)
+                .font(.system(size: 10, weight: .bold))
+                .tracking(2)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.7), radius: 3)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Rings share flow (photo pick -> preview -> share)
+
+/// Sheet presented from the home Recovery card's share icon. Shows a live
+/// preview of the rings card, lets the user attach a photo via the system
+/// photo picker (no permission prompt needed), and hands the rendered image
+/// to the share sheet through `ShareButton`.
+struct ShareRingsSheet: View {
+    let vitalityAge: Int?
+    let realAge: Int?
+    let recovery: Int?
+    let sleepSeconds: Double?
+
+    @State private var photoItem: PhotosPickerItem?
+    @State private var photo: UIImage?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: DS.space4) {
+            Text(Copy.Common.shareSheetTitle)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.textPrimary)
+                .padding(.top, DS.space5)
+
+            ShareableRingsCard(
+                vitalityAge: vitalityAge,
+                realAge: realAge,
+                recovery: recovery,
+                sleepSeconds: sleepSeconds,
+                photo: photo
+            )
+            .scaleEffect(0.62)
+            .frame(width: 390 * 0.62, height: 693 * 0.62)
+
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Label(photo == nil ? Copy.Common.shareAddPhoto : Copy.Common.shareChangePhoto,
+                      systemImage: "photo")
+                    .font(DS.Typography.bodySemibold)
+            }
+            .onChange(of: photoItem) { _, item in
+                guard let item else { return }
+                Task { @MainActor in
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        photo = image
+                    }
+                }
+            }
+
+            ShareButton(
+                cardType: .rings(vitalityAge: vitalityAge, realAge: realAge,
+                                 recovery: recovery, sleepSeconds: sleepSeconds, photo: photo),
+                screen: .home,
+                title: Copy.Common.shareCTA
+            )
+
+            Spacer(minLength: DS.space4)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
 }
 
 // MARK: - Score Card

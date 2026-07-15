@@ -51,6 +51,16 @@ extension Copy {
         static var x: String { RemoteConfigManager.shared.copyString("copy_common_x", default: "·") }
         static var laso: String { RemoteConfigManager.shared.copyString("copy_common_laso", default: "Laso") }
         static var trackYourHealthWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_track_your_health_with_laso", default: "Track your health with Laso") }
+
+        // Rings share card (Whoop-style photo share)
+        static var shareRingVitalityAge: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_vitality_age", default: "VITALITY AGE") }
+        static var shareRingRecovery: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_recovery", default: "RECOVERY") }
+        static var shareRingSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_sleep", default: "HOURS OF SLEEP") }
+        static var shareCardFooter: String { RemoteConfigManager.shared.copyString("copy_common_share_card_footer", default: "laso.fit") }
+        static var shareAddPhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_add_photo", default: "Add your photo") }
+        static var shareChangePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_change_photo", default: "Change photo") }
+        static var shareCTA: String { RemoteConfigManager.shared.copyString("copy_common_share_cta", default: "Share") }
+        static var shareSheetTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_sheet_title", default: "Share your day") }
         static var laso2: String { RemoteConfigManager.shared.copyString("copy_common_laso2", default: "Laso") }
         static var discoverYourHealthPatternsWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_discover_your_health_patterns_with_laso", default: "Discover your health patterns with Laso") }
         static var hidesThisBannerWithoutChangingNotificationHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_notification_hint", default: "Hides this banner without changing notification settings") }

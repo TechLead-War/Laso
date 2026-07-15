@@ -694,8 +694,24 @@ struct OnbV2Screen16Paywall: View {
             }
         }
 
+        // The pathway promise closes both buckets: the subscription buys a next
+        // step every morning, not just the data above it.
+        rows.append(.init(
+            id: "pathway",
+            icon: "arrow.triangle.turn.up.right.circle.fill",
+            color: OnbV2.blueLight,
+            label: Copy.OnboardingV2.watchPathwayLabel,
+            sub: Copy.OnboardingV2.watchPathwaySub
+        ))
+
         // Hard cap, remote-tunable so the list can never overflow the screen.
-        return Array(rows.prefix(RemoteConfigManager.shared.paywallWatchRowsMax))
+        // The pathway row survives the cap: it is the belief statement, so it
+        // replaces the last data row when the list is full.
+        let cap = RemoteConfigManager.shared.paywallWatchRowsMax
+        if rows.count > cap, let pathway = rows.last {
+            return Array(rows.prefix(cap - 1)) + [pathway]
+        }
+        return rows
     }
 
     // MARK: - Trial timeline (today -> reminder -> renewal)

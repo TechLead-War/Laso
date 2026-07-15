@@ -18,7 +18,7 @@ extension Copy {
         // blue, one plain explainer line sits under it, and the orb plus a single
         // first-person CTA carry the rest.
         static var s1Title: String { s("copy_onboardingv2_s1_title", "Vitality Age.") }
-        static var s1Lede: String  { s("copy_onboardingv2_s1_lede", "Your true age, read from your heart, sleep, and recovery.") }
+        static var s1Lede: String  { s("copy_onboardingv2_s1_lede", "Your watch already knows how old your body really is. We read it in 30 seconds, then tell you the one thing to do next.") }
         static var s1CTA: String   { s("copy_onboardingv2_s1_cta", "See my Vitality Age") }
 
         // MARK: - Screen 3 — About you
@@ -204,6 +204,23 @@ extension Copy {
         // Rich branch: caption above the CTA that seeds the morning notification.
         static var notifPrimer: String { s("copy_onboardingv2_notif_primer", "Tomorrow morning we will tell you how tonight went.") }
 
+        // Next-step card on the reveal: the pathway starts with the user's
+        // weakest metric. Keys match the producer names emitted by
+        // VitalityScorer.onboardingEstimate ("RESTING HR", "HRV", ...).
+        static var revealNextStepHeader: String { s("copy_onboardingv2_reveal_next_step_header", "YOUR NEXT STEP") }
+        static var revealNextStepMaintain: String { s("copy_onboardingv2_reveal_next_step_maintain", "Everything looks strong. Tonight: keep your usual bedtime and we will confirm it tomorrow.") }
+        static func revealNextStep(forMetric name: String) -> String {
+            switch name {
+            case "RESTING HR": return s("copy_onboardingv2_reveal_next_step_rhr", "Your resting heart rate is your weakest link. Tonight: a 10 minute wind down walk after dinner.")
+            case "HRV": return s("copy_onboardingv2_reveal_next_step_hrv", "Your HRV is your weakest link. Tonight: screens off 30 minutes before bed.")
+            case "STEPS": return s("copy_onboardingv2_reveal_next_step_steps", "Your step count is your weakest link. Today: a 15 minute walk after lunch.")
+            case "VO2 MAX": return s("copy_onboardingv2_reveal_next_step_vo2", "Your fitness level is your weakest link. This week: two brisk 20 minute walks.")
+            case "EXERCISE": return s("copy_onboardingv2_reveal_next_step_exercise", "Your exercise minutes are your weakest link. Today: 20 minutes of anything that raises your heart rate.")
+            case "WALK SPEED": return s("copy_onboardingv2_reveal_next_step_walk", "Your walking pace is your weakest link. Today: walk your usual route slightly faster.")
+            default: return s("copy_onboardingv2_reveal_next_step_generic", "Tonight: screens off 30 minutes before bed. Small steps move your Vitality Age.")
+            }
+        }
+
         // MARK: - Screen 15 — Sign in
         static var s15Title: String    { s("copy_onboardingv2_s15_title", "Save your read.") }
         static var s15Lede: String     { s("copy_onboardingv2_s15_lede", "Sign in so your insights stay with you across iPhone, iPad, and Watch. No password to remember.") }
@@ -211,7 +228,9 @@ extension Copy {
         static var s15Footnote: String { s("copy_onboardingv2_s15_footnote", "We never see your email. Apple keeps it private.") }
 
         // MARK: - Screen 16 — Paywall
-        static var s16Eyebrow: String      { s("copy_onboardingv2_s16_eyebrow", "YOUR LASO PLAN") }
+        static var s16Eyebrow: String      { s("copy_onboardingv2_s16_eyebrow", "KEEP YOUR PATHWAY") }
+        static var watchPathwayLabel: String { s("copy_onboardingv2_watch_pathway_label", "A next step every morning") }
+        static var watchPathwaySub: String { s("copy_onboardingv2_watch_pathway_sub", "We tell you what to do and prove it worked the next day.") }
         // Headline keyed to the vitality delta band. Deltas within 2 years fold
         // into the "same" variant, which also avoids the singular year problem
         // in the templates.
@@ -363,9 +382,9 @@ extension Copy {
         }
 
         // MARK: - Done
-        static var sDoneTitle: String { s("copy_onboardingv2_done_title", "Welcome to Laso.") }
-        static var sDoneLede: String  { s("copy_onboardingv2_done_lede", "Your first insights are ready. Let's take a look.") }
-        static var sDoneCTA: String   { s("copy_onboardingv2_done_cta", "Open my dashboard") }
+        static var sDoneTitle: String { s("copy_onboardingv2_done_title", "Your pathway starts now.") }
+        static var sDoneLede: String  { s("copy_onboardingv2_done_lede", "Tonight brings your first step. Tomorrow morning we tell you if it worked. One new step every day after.") }
+        static var sDoneCTA: String   { s("copy_onboardingv2_done_cta", "Start my pathway") }
         static var sDoneDisclaimer: String { s("copy_onboardingv2_sdone_disclaimer", "Laso is not a medical device and does not diagnose or treat any condition. By continuing you confirm you understand.") }
 
         // MARK: - Helpers

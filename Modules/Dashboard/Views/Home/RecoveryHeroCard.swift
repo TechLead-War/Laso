@@ -15,6 +15,7 @@ struct RecoveryHeroCard: View {
     var isWearingWatch: Bool = true
     var weeklyTrendCaption: String? = nil
     var onTap: (() -> Void)? = nil
+    var onShare: (() -> Void)? = nil
 
     @State private var appeared = false
     @State private var pulse = false
@@ -54,6 +55,22 @@ struct RecoveryHeroCard: View {
             }
         }
         .buttonStyle(.dsPress)
+        // Share sits as an overlay so it works in both card states; the inner
+        // Button wins the tap over the whole-card button.
+        .overlay(alignment: .topTrailing) {
+            if let onShare, !shouldShowWearWatch, score > 0 {
+                Button(action: onShare) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .padding(10)
+                }
+                .accessibilityLabel(Copy.Common.shareHealthCard)
+                .accessibilityIdentifier("home.recoveryCard.share")
+                .padding(.top, 6)
+                .padding(.trailing, 6)
+            }
+        }
         .padding(.horizontal, DS.screenPadding)
         .onAppear {
             appeared = true

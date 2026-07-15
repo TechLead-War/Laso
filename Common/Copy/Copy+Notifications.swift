@@ -159,7 +159,6 @@ extension Copy {
             return String(format: RemoteConfigManager.shared.copyString("copy_notifications_metrics_need_attention", default: "%d %@ worth a quick look."), count, unit)
         }
         static var allMetricsHealthy: String { RemoteConfigManager.shared.copyString("copy_notifications_all_metrics_healthy", default: "All metrics looking healthy!") }
-        static func actionPrefix(_ action: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_action_prefix", default: "Action: %@"), action) }
         static func streakDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_streak_days", default: "%d-day streak!"), days) }
 
         /// One-glance score line for the notification subtitle slot, e.g.
@@ -307,9 +306,13 @@ extension Copy {
                 }
             }
 
-            // Action (first sentence only)
+            // Next step (first sentence only). Every daily push ends in an
+            // action: when no insight produced one, point at the in-app step
+            // instead of leaving a dead-end notification.
             if let action = topInsightAction {
-                parts.append(action)
+                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_next_step", default: "Next step: %@"), action))
+            } else {
+                parts.append(RemoteConfigManager.shared.copyString("copy_notifications_daily_body_next_step_fallback", default: "Your next step is ready in the app."))
             }
 
             // Streak (compact, loss-frame when long)

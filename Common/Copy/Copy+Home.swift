@@ -37,6 +37,11 @@ extension Copy {
 
         static var analyzingHealthData: String { RemoteConfigManager.shared.copyString("copy_home_analyzing_health_data", default: "Analyzing your health data...") }
 
+        // Next Up card: the daily action leads the home screen.
+        static var nextUpHeader: String { RemoteConfigManager.shared.copyString("copy_home_next_up_header", default: "NEXT UP · TODAY") }
+        static var nextUpMarkDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_mark_done", default: "Mark done") }
+        static var nextUpDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done", default: "Done. We check the result in tomorrow morning's score.") }
+
         // MARK: - Empty State
 
         static var connectHealthData: String { RemoteConfigManager.shared.copyString("copy_home_connect_health_data", default: "Connect Your Health Data") }

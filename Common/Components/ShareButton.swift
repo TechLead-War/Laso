@@ -5,6 +5,8 @@ import SwiftUI
 struct ShareButton: View {
     let cardType: ShareCardType
     let screen: AppFeature
+    /// When set, renders as a full-width primary CTA instead of the bare icon.
+    var title: String? = nil
 
     @State private var isRendering = false
 
@@ -12,9 +14,19 @@ struct ShareButton: View {
         Button {
             shareCard()
         } label: {
-            Image(systemName: "square.and.arrow.up")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            if let title {
+                Label(title, systemImage: "square.and.arrow.up")
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(AppColour.info, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, DS.screenPadding)
+            } else {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
         }
         .disabled(isRendering)
         .accessibilityLabel(Copy.Common.shareHealthCard)
@@ -44,6 +56,15 @@ struct ShareButton: View {
                 category: category
             ))
             cardTypeLabel = "insight"
+        case .rings(let vitalityAge, let realAge, let recovery, let sleepSeconds, let photo):
+            cardView = AnyView(ShareableRingsCard(
+                vitalityAge: vitalityAge,
+                realAge: realAge,
+                recovery: recovery,
+                sleepSeconds: sleepSeconds,
+                photo: photo
+            ))
+            cardTypeLabel = "rings"
         }
 
         AppAnalytics.shared.trackBlockTap(

@@ -78,6 +78,7 @@ enum AppKeys {
         static let progressiveCoachState = "healthpulse.progressiveCoachState"
         static let primaryDevice         = "healthpulse.primaryDevice"
         static let cachedDailyAction     = "healthpulse.cachedDailyAction"
+        static let dailyActionDoneDay    = "healthpulse.dailyActionDoneDay"
         static let cachedDeviceSources   = "Laso.DeviceSource.cachedDevices"
         static let deviceSourceScanDate  = "Laso.DeviceSource.lastScanDate"
     }
