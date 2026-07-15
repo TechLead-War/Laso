@@ -68,6 +68,7 @@ targets:
         NSSiriUsageDescription: "Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free."
         NSHealthShareUsageDescription: "Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights."
         NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
+        NSCameraUsageDescription: "Laso uses your camera only when you choose to take a photo for your share card. Photos never leave your device unless you share them."
         POSTHOG_API_KEY: $(POSTHOG_API_KEY)
         POSTHOG_HOST: $(POSTHOG_HOST)
         AMPLITUDE_API_KEY: $(AMPLITUDE_API_KEY)
@@ -101,8 +102,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit
-        MARKETING_VERSION: "1.2.13"
-        CURRENT_PROJECT_VERSION: "21"
+        MARKETING_VERSION: "1.2.14"
+        CURRENT_PROJECT_VERSION: "22"
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -195,8 +196,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.widgets
-        MARKETING_VERSION: "1.2.13"
-        CURRENT_PROJECT_VERSION: "21"
+        MARKETING_VERSION: "1.2.14"
+        CURRENT_PROJECT_VERSION: "22"
         GENERATE_INFOPLIST_FILE: false
         APPLICATION_EXTENSION_API_ONLY: true
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: WIDGET_EXTENSION

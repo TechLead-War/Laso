@@ -148,6 +148,44 @@ struct ShareableRingsCard: View {
     }
 }
 
+// MARK: - Camera capture
+
+/// Minimal camera wrapper for the share card's "take a photo" option. iOS
+/// shows the camera permission prompt on first use; a denial simply returns
+/// the user to the sheet with no photo.
+struct CameraCaptureView: UIViewControllerRepresentable {
+    let onCapture: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        private let parent: CameraCaptureView
+        init(_ parent: CameraCaptureView) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onCapture(image)
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
+    }
+}
+
 // MARK: - Rings share flow (photo pick -> preview -> share)
 
 /// Sheet presented from the home Recovery card's share icon. Shows a live
@@ -162,6 +200,7 @@ struct ShareRingsSheet: View {
 
     @State private var photoItem: PhotosPickerItem?
     @State private var photo: UIImage?
+    @State private var showCamera = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -181,19 +220,37 @@ struct ShareRingsSheet: View {
             .scaleEffect(0.62)
             .frame(width: 390 * 0.62, height: 693 * 0.62)
 
-            PhotosPicker(selection: $photoItem, matching: .images) {
-                Label(photo == nil ? Copy.Common.shareAddPhoto : Copy.Common.shareChangePhoto,
-                      systemImage: "photo")
-                    .font(DS.Typography.bodySemibold)
-            }
-            .onChange(of: photoItem) { _, item in
-                guard let item else { return }
-                Task { @MainActor in
-                    if let data = try? await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        photo = image
+            HStack(spacing: DS.space5) {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Label(photo == nil ? Copy.Common.shareAddPhoto : Copy.Common.shareChangePhoto,
+                          systemImage: "photo")
+                        .font(DS.Typography.bodySemibold)
+                }
+                .onChange(of: photoItem) { _, item in
+                    guard let item else { return }
+                    Task { @MainActor in
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            photo = image
+                        }
                     }
                 }
+
+                // Camera capture, hidden where no camera exists (simulator).
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button {
+                        showCamera = true
+                    } label: {
+                        Label(Copy.Common.shareTakePhoto, systemImage: "camera")
+                            .font(DS.Typography.bodySemibold)
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraCaptureView { image in
+                    photo = image
+                }
+                .ignoresSafeArea()
             }
 
             ShareButton(

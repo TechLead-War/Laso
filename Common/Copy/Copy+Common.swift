@@ -58,6 +58,7 @@ extension Copy {
         static var shareRingSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_sleep", default: "HOURS OF SLEEP") }
         static var shareCardFooter: String { RemoteConfigManager.shared.copyString("copy_common_share_card_footer", default: "laso.fit") }
         static var shareAddPhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_add_photo", default: "Add your photo") }
+        static var shareTakePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_take_photo", default: "Take a photo") }
         static var shareChangePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_change_photo", default: "Change photo") }
         static var shareCTA: String { RemoteConfigManager.shared.copyString("copy_common_share_cta", default: "Share") }
         static var shareSheetTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_sheet_title", default: "Share your day") }
