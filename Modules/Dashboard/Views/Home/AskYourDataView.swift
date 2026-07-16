@@ -223,6 +223,8 @@ struct AskYourDataView: View {
 
         AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .askYourData)
         AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data", "query_length": query.count])
+        // Exact wording of the question, so we can see what people actually ask.
+        AppAnalytics.shared.trackAskQuerySubmitted(text: normalizedQuery)
 
         Task {
             let queryResult = await viewModel.executeHealthQuery(normalizedQuery)

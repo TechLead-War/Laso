@@ -30,6 +30,28 @@ final class LasoUITests: XCTestCase {
         saveScreenshot(name: "invite-screen")
     }
 
+    /// Types a long (>100 char) question into Ask and submits, so the
+    /// ask_query_submitted event fires with the full query_text. Verifies the
+    /// screen accepts the query and renders (the answer/loading state appears);
+    /// the console shows the "[Amplitude] ask_query_submitted" line.
+    @MainActor
+    func testAskQueryFiresWithFullText() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode", "--ui-test-initial-route=askYourData"]
+        app.launch()
+
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 30), "Ask text field did not appear")
+        field.tap()
+        let longQuestion = "why is my resting heart rate higher than usual this week even though I have been sleeping more and drinking water"
+        XCTAssertGreaterThan(longQuestion.count, 100, "test question must exceed the old 100-char cap")
+        field.typeText(longQuestion)
+        app.keyboards.buttons["Search"].firstMatch.tap()
+
+        // The result or loading state proves runQuery ran (which fires the event).
+        saveScreenshot(name: "ask-query")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

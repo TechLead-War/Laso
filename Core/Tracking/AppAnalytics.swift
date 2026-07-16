@@ -286,6 +286,7 @@ enum BlockType: String {
 //  screen_viewed                 screen, tab, depth                  What they use
 //  screen_exited                 screen, duration_sec                Time per feature
 //  block_tapped                  block_type, screen                  UI interaction
+//  ask_query_submitted           query_text, query_length, screen    Exact Ask questions (full text)
 //  core_action_completed         action, screen                      Retention predictor
 //  insight_tapped                category, severity, metric          Insight engagement
 //  correlation_tapped            metric_a, metric_b, strength        Discovery
@@ -1172,6 +1173,18 @@ final class AppAnalytics {
 
         // Behavioral intelligence: detect rage taps on any block
         detectRageTap(element: type.rawValue, screen: screen)
+    }
+
+    /// The exact question a user typed in Ask. `query_text` is a full-text field
+    /// (kept whole, not clipped to 100 chars) so the real wording reaches
+    /// Amplitude. These are health questions — treat the property as sensitive
+    /// when configuring the destination.
+    func trackAskQuerySubmitted(text: String, screen: AppFeature = .askYourData) {
+        logEvent("ask_query_submitted", parameters: [
+            "query_text": text,
+            "query_length": text.count,
+            "screen": screen.rawValue
+        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -3178,6 +3191,14 @@ final class AppAnalytics {
         "score", "category_score", "overall_score"
     ]
 
+    /// Parameter keys whose value is deliberately kept as full free text rather
+    /// than clipped to 100 chars — the exact words the user typed are the point
+    /// (e.g. the Ask question). Still capped at Amplitude's 1024-char string
+    /// limit so a pasted essay cannot blow up the payload.
+    private static let fullTextParameterKeys: Set<String> = [
+        "query_text"
+    ]
+
     /// Replaces a recognizable HealthMetric rawValue with its parent category name.
     /// Returns the original string unchanged when no matching metric is found.
     private func anonymizeMetricValue(_ value: String) -> String {
@@ -3217,7 +3238,10 @@ final class AppAnalytics {
 
             switch rawValue {
             case let value as String:
-                let truncated = value.count > 100 ? String(value.prefix(100)) : value
+                // Full-text fields keep the whole message (up to Amplitude's
+                // 1024-char string limit); everything else clips to 100.
+                let cap = Self.fullTextParameterKeys.contains(key) ? 1024 : 100
+                let truncated = value.count > cap ? String(value.prefix(cap)) : value
                 // Anonymize health metric names so specific conditions are not sent to PostHog
                 if Self.metricParameterKeys.contains(key) {
                     sanitized[key] = anonymizeMetricValue(truncated)
