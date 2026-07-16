@@ -239,10 +239,12 @@ struct ShareRingsSheet: View {
                 }
                 .onChange(of: photoItem) { _, item in
                     guard let item else { return }
+                    let wasChange = photo != nil
                     Task { @MainActor in
                         if let data = try? await item.loadTransferable(type: Data.self),
                            let image = UIImage(data: data) {
                             photo = image
+                            AppAnalytics.shared.trackSharePhotoAdded(source: "library", isChange: wasChange)
                         }
                     }
                 }
@@ -259,7 +261,9 @@ struct ShareRingsSheet: View {
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraCaptureView { image in
+                    let wasChange = photo != nil
                     photo = image
+                    AppAnalytics.shared.trackSharePhotoAdded(source: "camera", isChange: wasChange)
                 }
                 .ignoresSafeArea()
             }

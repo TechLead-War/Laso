@@ -287,6 +287,7 @@ enum BlockType: String {
 //  screen_exited                 screen, duration_sec                Time per feature
 //  block_tapped                  block_type, screen                  UI interaction
 //  ask_query_submitted           query_text, query_length, screen    Exact Ask questions (full text)
+//  share_photo_added             source, is_change, screen           Share card personalization
 //  core_action_completed         action, screen                      Retention predictor
 //  insight_tapped                category, severity, metric          Insight engagement
 //  correlation_tapped            metric_a, metric_b, strength        Discovery
@@ -1183,6 +1184,19 @@ final class AppAnalytics {
         logEvent("ask_query_submitted", parameters: [
             "query_text": text,
             "query_length": text.count,
+            "screen": screen.rawValue
+        ])
+    }
+
+    /// User attached a personal photo to the share card. `source` is
+    /// "library" or "camera"; `is_change` is true when a photo was already set
+    /// and the user replaced it. Sits between the share-sheet open and
+    /// share_completed so the personalization step of the share funnel is
+    /// measurable.
+    func trackSharePhotoAdded(source: String, isChange: Bool, screen: AppFeature = .home) {
+        logEvent("share_photo_added", parameters: [
+            "source": source,
+            "is_change": isChange ? 1 : 0,
             "screen": screen.rawValue
         ])
     }
