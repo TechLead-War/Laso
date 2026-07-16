@@ -80,6 +80,10 @@ enum AppKeys {
         static let primaryDevice         = "healthpulse.primaryDevice"
         static let cachedDailyAction     = "healthpulse.cachedDailyAction"
         static let dailyActionDoneDay    = "healthpulse.dailyActionDoneDay"
+        /// JSON record of the action marked done + the readiness score that day,
+        /// so the next morning can show whether the score moved (closing the
+        /// "do this → here is the result" loop the Next Up card promises).
+        static let dailyActionResult     = "healthpulse.dailyActionResult"
         static let cachedDeviceSources   = "Laso.DeviceSource.cachedDevices"
         static let deviceSourceScanDate  = "Laso.DeviceSource.lastScanDate"
     }

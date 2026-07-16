@@ -23,6 +23,7 @@ enum UITestMode {
     private static let settingsRoutePrefix = "--ui-test-settings-route="
     private static let overrideNamePrefix = "--ui-test-override-name="
     private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
+    private static let seedDailyResultPrefix = "--ui-test-seed-daily-result="
     private static let overrideSleepScorePrefix = "--ui-test-override-sleep-score="
     private static let overrideActivityScorePrefix = "--ui-test-override-activity-score="
 
@@ -198,6 +199,19 @@ enum UITestMode {
         }
         defaults.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
         defaults.set(true, forKey: AppKeys.Dismissals.siriTip)
+
+        // Seed a prior-day marked-done action so the loop-closer card can be
+        // driven deterministically. Value = the score recorded on the done day;
+        // today's override-overall-score minus this is the shown delta.
+        if let seededScore = intValue(for: seedDailyResultPrefix),
+           let dayAgo = Calendar.current.date(byAdding: .hour, value: -26, to: Date()),
+           let data = try? JSONEncoder().encode(
+               DailyActionResultStore.Record(doneDate: dayAgo,
+                                             actionTitle: "10-minute brisk walk",
+                                             actionIcon: "figure.walk",
+                                             scoreOnDoneDay: seededScore)) {
+            defaults.set(data, forKey: AppKeys.Data.dailyActionResult)
+        }
     }
 }
 #else

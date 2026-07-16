@@ -42,6 +42,14 @@ extension Copy {
         static var nextUpMarkDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_mark_done", default: "Mark done") }
         static var nextUpDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done", default: "Done. We check the result in tomorrow morning's score.") }
 
+        // Yesterday's result: the loop-closer shown the morning after an action
+        // is marked done, reporting how the readiness score moved.
+        static var dailyResultHeader: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_header", default: "YESTERDAY'S RESULT") }
+        static func dailyResultUp(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_up", default: "Your recovery is +%d higher this morning."), delta) }
+        static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Consistency is what compounds.") }
+        static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
+        static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
+
         // MARK: - Empty State
 
         static var connectHealthData: String { RemoteConfigManager.shared.copyString("copy_home_connect_health_data", default: "Connect Your Health Data") }

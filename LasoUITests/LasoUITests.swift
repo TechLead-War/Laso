@@ -52,6 +52,28 @@ final class LasoUITests: XCTestCase {
         saveScreenshot(name: "ask-query")
     }
 
+    /// Seeds a prior-day marked-done action (score 80) and today's score (85),
+    /// then verifies the loop-closer card renders with the +5 result.
+    @MainActor
+    func testDailyResultLoopCloser() throws {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "--ui-test-mode",
+            "--ui-test-seed-daily-result=80",
+            "--ui-test-override-overall-score=85",
+        ]
+        app.launch()
+
+        let resultCard = app.descendants(matching: .any)["home.dailyResultCard"].firstMatch
+        XCTAssertTrue(resultCard.waitForExistence(timeout: 30), "Loop-closer card did not render")
+
+        // Seeded score 80 < today's score, so the up-framing must show. The card
+        // combines its children, so assert on its label.
+        XCTAssertTrue(resultCard.label.contains("higher this morning"),
+                      "Expected the positive result framing, got: \(resultCard.label)")
+        saveScreenshot(name: "loop-closer")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

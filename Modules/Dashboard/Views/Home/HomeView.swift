@@ -17,6 +17,8 @@ struct HomeView: View {
     @State private var showRecoveryInfo = false
     @State private var actionDoneToday = false
     @State private var showShareCard = false
+    /// Yesterday's marked-done action result, surfaced this morning (loop closer).
+    @State private var dailyResult: DailyActionResultStore.Result?
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
     @State private var showSoftLockPaywall = false
@@ -97,7 +99,13 @@ struct HomeView: View {
             if let checkIn = MorningCheckInManager.todaysCheckIn() {
                 viewModel.subjectiveReadinessAdjustment = checkIn.readinessAdjustment
             }
+            refreshDailyResult()
             AppAnalytics.shared.trackFeatureOpen(.home)
+        }
+        .onChange(of: liveReadinessScore) { _, _ in
+            // The morning score can land after first appear; compute the loop
+            // closer once a real score exists.
+            refreshDailyResult()
         }
         .onDisappear {
             stopHomeRefresh()
@@ -161,6 +169,22 @@ struct HomeView: View {
     /// Whether we have a real live readiness score (not a fallback)
     private var hasLiveReadiness: Bool {
         liveViewModel.recovery.readinessScore != nil
+    }
+
+    /// Compute the loop-closer card once a real morning score exists. Guarded on
+    /// `dailyResult == nil` so it resolves once per morning and the shown event
+    /// fires a single time despite the 30-minute score refresh.
+    private func refreshDailyResult() {
+        guard dailyResult == nil,
+              let result = DailyActionResultStore.resultToShow(todayScore: liveReadinessScore) else { return }
+        dailyResult = result
+        let direction: String
+        switch result.direction {
+        case .up:     direction = "up"
+        case .steady: direction = "steady"
+        case .down:   direction = "down"
+        }
+        AppAnalytics.shared.trackDailyResultShown(direction: direction, delta: result.delta)
     }
 
     /// Plain-English caption for the 7-day HRV trend. Returns nil when the
@@ -297,6 +321,16 @@ struct HomeView: View {
                     connectHealthView
                 } else if hasData {
                     // ── Above the fold ──
+
+                    // 0a. Yesterday's result. When present, the proof that
+                    // yesterday's action moved the score leads the screen — it
+                    // is the reason the user came back this morning.
+                    if let dailyResult {
+                        DailyActionResultCard(result: dailyResult) {
+                            DailyActionResultStore.clear()
+                            withAnimation { self.dailyResult = nil }
+                        }
+                    }
 
                     // 0. Next Up. the daily action leads the screen: Laso's core
                     // promise is telling you what to do next, so the step comes
@@ -692,8 +726,16 @@ struct HomeView: View {
                 actionDoneToday.toggle()
                 if actionDoneToday {
                     UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
+                    // Record the action + today's score so tomorrow morning can
+                    // show whether it moved (the loop closer).
+                    DailyActionResultStore.save(
+                        actionTitle: action.title,
+                        actionIcon: action.icon,
+                        score: liveReadinessScore
+                    )
                 } else {
                     UserDefaults.standard.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
+                    DailyActionResultStore.clear()
                 }
                 AppAnalytics.shared.trackBlockTap(
                     title: action.title,

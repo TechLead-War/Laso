@@ -288,6 +288,7 @@ enum BlockType: String {
 //  block_tapped                  block_type, screen                  UI interaction
 //  ask_query_submitted           query_text, query_length, screen    Exact Ask questions (full text)
 //  share_photo_added             source, is_change, screen           Share card personalization
+//  daily_result_shown            direction, score_delta              Loop-closer proof shown
 //  core_action_completed         action, screen                      Retention predictor
 //  insight_tapped                category, severity, metric          Insight engagement
 //  correlation_tapped            metric_a, metric_b, strength        Discovery
@@ -1198,6 +1199,16 @@ final class AppAnalytics {
             "source": source,
             "is_change": isChange ? 1 : 0,
             "screen": screen.rawValue
+        ])
+    }
+
+    /// The morning-after result of a marked-done action was shown (the loop
+    /// closer). `direction` is up/steady/down and `delta` is the readiness-score
+    /// change — the core retention proof that the app worked.
+    func trackDailyResultShown(direction: String, delta: Int) {
+        logEvent("daily_result_shown", parameters: [
+            "direction": direction,
+            "score_delta": delta
         ])
     }
 
