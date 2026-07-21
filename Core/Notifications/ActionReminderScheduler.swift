@@ -24,12 +24,20 @@ enum ActionReminderScheduler {
     }
 
     /// Schedule (or replace) the reminder for `action` at the given time today.
-    /// Returns false if the notification could not be scheduled.
+    /// Ensures notification permission first (refreshes the auth cache, and
+    /// asks once if the user has never been prompted) so a tap does not silently
+    /// fail. Returns false if permission is denied or scheduling fails.
     @discardableResult
     @MainActor
     static func schedule(action: String,
                          hour: Int = defaultHour,
-                         minute: Int = defaultMinute) -> Bool {
+                         minute: Int = defaultMinute) async -> Bool {
+        var authorized = await NotificationManager.shared.isCurrentlyAuthorized()
+        if !authorized {
+            authorized = await NotificationManager.shared.requestAuthorization(source: "action_reminder")
+        }
+        guard authorized else { return false }
+
         cancel()
 
         var components = Date.cal.dateComponents([.year, .month, .day], from: Date())

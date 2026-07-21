@@ -74,6 +74,40 @@ final class LasoUITests: XCTestCase {
         saveScreenshot(name: "loop-closer")
     }
 
+    /// Grants notifications, taps the Next Up "Remind" button, and confirms it
+    /// schedules (the button flips to "Reminder set").
+    @MainActor
+    func testRemindButtonSchedules() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode"]
+        app.launch()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        _ = app.buttons["Today"].waitForExistence(timeout: 30)
+        // The permission alert can appear a beat after home loads; dismiss it
+        // whenever it shows over the next few seconds.
+        for _ in 0..<6 {
+            let allow = springboard.buttons["Allow"]
+            if allow.exists { allow.tap() }
+            sleep(1)
+        }
+
+        let remind = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Remind'")).firstMatch
+        XCTAssertTrue(remind.waitForExistence(timeout: 10), "Remind button missing")
+        remind.tap()
+        // Tapping requests permission on first use; grant it if the alert shows.
+        for _ in 0..<6 {
+            let allow = springboard.buttons["Allow"]
+            if allow.exists { allow.tap() }
+            sleep(1)
+        }
+        saveScreenshot(name: "remind-tapped")
+
+        // "Reminder set" is the confirm state; it does not match the Settings tab.
+        let confirmed = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Reminder set'")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 5),
+                      "Reminder did not confirm to 'Reminder set' after tap")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

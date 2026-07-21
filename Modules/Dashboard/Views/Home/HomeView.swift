@@ -735,10 +735,13 @@ struct HomeView: View {
     /// Ghost "Remind 9:30" pill. Schedules a one-off reminder for the action.
     private func actionRemindButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
-            actionReminderSet = ActionReminderScheduler.schedule(action: action.title)
-            AppAnalytics.shared.trackBlockTap(
-                title: action.title, type: .homeDailyAction, screen: .home,
-                metadata: ["source": "next_up_remind", "set": "\(actionReminderSet)"])
+            Task {
+                let ok = await ActionReminderScheduler.schedule(action: action.title)
+                actionReminderSet = ok
+                AppAnalytics.shared.trackBlockTap(
+                    title: action.title, type: .homeDailyAction, screen: .home,
+                    metadata: ["source": "next_up_remind", "set": "\(ok)"])
+            }
         } label: {
             HStack(spacing: 7) {
                 Image(systemName: actionReminderSet ? "bell.fill" : "clock")
