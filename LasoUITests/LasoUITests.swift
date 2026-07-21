@@ -108,6 +108,25 @@ final class LasoUITests: XCTestCase {
                       "Reminder did not confirm to 'Reminder set' after tap")
     }
 
+    /// Taps the Next Up "Mark done" button and confirms it flips to "Done".
+    @MainActor
+    func testMarkDoneToggles() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode"]
+        app.launch()
+        _ = app.buttons["Today"].waitForExistence(timeout: 30)
+        sleep(3)
+
+        let markDone = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Mark done'")).firstMatch
+        XCTAssertTrue(markDone.waitForExistence(timeout: 10), "Mark done button missing")
+        markDone.tap()
+        sleep(1)
+        saveScreenshot(name: "mark-done")
+        // The button's label flips to "Done" (exact, so it does not match "Mark done").
+        let done = app.buttons.matching(NSPredicate(format: "label ==[c] 'Done'")).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "Mark done did not flip to 'Done' after tap")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

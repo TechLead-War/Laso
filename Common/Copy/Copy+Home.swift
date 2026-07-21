@@ -40,6 +40,8 @@ extension Copy {
         // Next Up card: the daily action leads the home screen.
         static var nextUpHeader: String { RemoteConfigManager.shared.copyString("copy_home_next_up_header", default: "NEXT UP · TODAY") }
         static var nextUpMarkDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_mark_done", default: "Mark done") }
+        /// Short confirm label shown on the button after it is marked done.
+        static var nextUpMarkedDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_marked_done", default: "Done") }
         static var nextUpDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done", default: "Done. We check the result in tomorrow morning's score.") }
         /// Remind button on the action card. %@ is the reminder clock time, e.g. "9:30 PM".
         static func nextUpRemind(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind", default: "Remind %@"), time) }

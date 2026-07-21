@@ -2240,9 +2240,12 @@ final class DashboardViewModel {
             heartRow = .noData(kind: .heart, name: Copy.Home.whyNameHeart)
         }
 
-        // Energy
+        // Energy — use the same score the ring shows (live readiness, or the
+        // daily health score as fallback) so it always has a value when a score
+        // exists, matching the number in the ring.
         let energyRow: RecoveryWhyReason
-        if let readiness = liveVM.recovery.readinessScore {
+        let energyScore = liveVM.recovery.readinessScore ?? (overallScore.score > 0 ? overallScore.score : nil)
+        if let readiness = energyScore {
             let low = readiness < 60
             energyRow = .init(kind: .energy, name: Copy.Home.whyNameEnergy,
                               sub: low ? Copy.Home.whySubEnergyLow : Copy.Home.whySubEnergyGood,

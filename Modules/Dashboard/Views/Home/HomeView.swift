@@ -717,15 +717,19 @@ struct HomeView: View {
                 metadata: ["source": "next_up_mark_done", "done": "\(actionDoneToday)"])
         } label: {
             HStack(spacing: 7) {
-                Image(systemName: "checkmark")
+                Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "checkmark")
                     .font(DS.Typography.captionSemibold)
-                Text(Copy.Home.nextUpMarkDone)
+                Text(actionDoneToday ? Copy.Home.nextUpMarkedDone : Copy.Home.nextUpMarkDone)
                     .font(DS.Typography.subheadlineSemibold)
             }
-            .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.scoreGood)
+            .foregroundStyle(actionDoneToday ? Color.white : AppColour.scoreGood)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
-            .background((actionDoneToday ? AppColour.success : AppColour.scoreGood).opacity(0.15), in: RoundedRectangle(cornerRadius: 13))
+            .background(
+                actionDoneToday
+                    ? AnyShapeStyle(AppColour.success)
+                    : AnyShapeStyle(AppColour.scoreGood.opacity(0.15)),
+                in: RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.success, trigger: actionDoneToday) { _, new in new }
