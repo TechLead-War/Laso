@@ -49,9 +49,13 @@ extension Copy {
 
         // Score card (redesigned): one word state + a plain summary + the Why list.
         static var scoreReadyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_ready_label", default: "Ready") }
-        static var scoreSummaryLow: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low", default: "Lower than usual today. Worth an easy day.") }
-        static var scoreSummaryModerate: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_moderate", default: "About usual today. A steady day suits you.") }
-        static var scoreSummaryHigh: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high", default: "Higher than usual today. Good to push a little.") }
+        // Split into a bold heading line and a lighter sub line under the orb.
+        static var scoreSummaryLowHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low_head", default: "Lower than usual today.") }
+        static var scoreSummaryLowSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low_sub", default: "Worth an easy day.") }
+        static var scoreSummaryModerateHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_moderate_head", default: "About usual today.") }
+        static var scoreSummaryModerateSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_moderate_sub", default: "A steady day suits you.") }
+        static var scoreSummaryHighHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_head", default: "Higher than usual today.") }
+        static var scoreSummaryHighSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_sub", default: "Good to push a little.") }
         static var scoreWhyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_why_label", default: "Why") }
         // Plain-word reasons and their status values.
         static var whySleepShort: String { RemoteConfigManager.shared.copyString("copy_home_why_sleep_short", default: "Sleep was short") }

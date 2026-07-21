@@ -2259,11 +2259,12 @@ final class DashboardViewModel {
         return [sleepRow, heartRow, energyRow]
     }
 
-    /// Plain-English summary line under the score, keyed to the 3-band model.
-    func readinessSummaryLine(score: Int) -> String {
-        if score < 60 { return Copy.Home.scoreSummaryLow }
-        if score <= 75 { return Copy.Home.scoreSummaryModerate }
-        return Copy.Home.scoreSummaryHigh
+    /// Plain-English summary under the score as a bold heading + a lighter sub
+    /// line, keyed to the 3-band model.
+    func readinessSummary(score: Int) -> (head: String, sub: String) {
+        if score < 60 { return (Copy.Home.scoreSummaryLowHead, Copy.Home.scoreSummaryLowSub) }
+        if score <= 75 { return (Copy.Home.scoreSummaryModerateHead, Copy.Home.scoreSummaryModerateSub) }
+        return (Copy.Home.scoreSummaryHighHead, Copy.Home.scoreSummaryHighSub)
     }
 
     /// Build the recovery signals snapshot from current live values and personal baselines.

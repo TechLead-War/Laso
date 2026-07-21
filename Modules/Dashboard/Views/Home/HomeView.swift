@@ -334,7 +334,8 @@ struct HomeView: View {
                     // shown as one ring plus the plain-word reasons behind it.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
-                        summaryLine: viewModel.readinessSummaryLine(score: liveReadinessScore),
+                        summaryHead: viewModel.readinessSummary(score: liveReadinessScore).head,
+                        summarySub: viewModel.readinessSummary(score: liveReadinessScore).sub,
                         whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,

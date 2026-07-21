@@ -5,8 +5,10 @@ import SwiftUI
 /// number never appears without a plain reason.
 struct RecoveryHeroCard: View {
     let score: Int
-    /// Plain-English line under the score, e.g. "Lower than usual today."
-    var summaryLine: String = ""
+    /// Bold heading under the orb, e.g. "Higher than usual today."
+    var summaryHead: String = ""
+    /// Lighter sub line under the heading, e.g. "Good to push a little."
+    var summarySub: String = ""
     /// The real reasons behind the score (sleep, heart, energy).
     var whyReasons: [DashboardViewModel.RecoveryWhyReason] = []
     var hasLiveReadiness: Bool = true
@@ -95,27 +97,42 @@ struct RecoveryHeroCard: View {
 
     // MARK: - Card Content
 
+    private var ringTint: Color {
+        hasLiveReadiness ? recoveryState.color : AppColour.scoreGood
+    }
+
     private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Ring + one-line summary
-            HStack(spacing: 18) {
-                HealthScoreRing(
-                    score: score,
-                    label: Copy.Home.scoreReadyLabel,
-                    size: 96,
-                    lineWidth: 8,
-                    tint: hasLiveReadiness ? recoveryState.color : nil
-                )
+            // Centered hero orb with a soft glow, heading and sub line below.
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(ringTint)
+                        .frame(width: 96, height: 96)
+                        .blur(radius: 34)
+                        .opacity(0.30)
+                    HealthScoreRing(
+                        score: score,
+                        label: Copy.Home.scoreReadyLabel,
+                        size: 150,
+                        lineWidth: 10,
+                        tint: hasLiveReadiness ? recoveryState.color : nil
+                    )
+                }
 
-                Text(summaryLine)
-                    .font(DS.Typography.bodySemibold)
-                    .foregroundStyle(AppColour.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Spacer(minLength: 0)
+                VStack(spacing: 3) {
+                    Text(summaryHead)
+                        .font(DS.Typography.title3)
+                        .foregroundStyle(AppColour.textPrimary)
+                    Text(summarySub)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
+                }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.trailing, 34) // clear the share button
+            .frame(maxWidth: .infinity)
+            .padding(.top, 4)
 
             // Why list
             if !whyReasons.isEmpty {
@@ -143,7 +160,7 @@ struct RecoveryHeroCard: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score). \(summaryLine). " + whyReasons.map { "\($0.name), \($0.value) \($0.status)" }.joined(separator: ". "))
+        .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score). \(summaryHead) \(summarySub). " + whyReasons.map { "\($0.name), \($0.value) \($0.status)" }.joined(separator: ". "))
         .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
         .accessibilityIdentifier("home.recoveryCard")
     }
@@ -215,8 +232,9 @@ struct RecoveryHeroCard: View {
 
 #Preview {
     RecoveryHeroCard(
-        score: 68,
-        summaryLine: "Lower than usual today. Worth an easy day.",
+        score: 77,
+        summaryHead: "Higher than usual today.",
+        summarySub: "Good to push a little.",
         whyReasons: [
             .init(kind: .sleep, name: "Sleep", sub: "A bit under your usual", value: "6h 40m", status: "Okay", tone: .okay),
             .init(kind: .heart, name: "Heart", sub: "Rested and calm", value: "Calm", status: "Good", tone: .good),
