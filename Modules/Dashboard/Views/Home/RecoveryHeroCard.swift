@@ -103,8 +103,9 @@ struct RecoveryHeroCard: View {
 
     private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Centered hero orb with a soft glow, heading and sub line below.
-            VStack(spacing: 12) {
+            // Ring on the left, the "Why" list on the right — compact side by
+            // side. Ring is vertically centered against the taller Why column.
+            HStack(alignment: .center, spacing: 16) {
                 ZStack {
                     // Soft glow via a radial gradient (cheap) rather than a
                     // Gaussian blur, which re-renders offscreen every frame and
@@ -112,50 +113,52 @@ struct RecoveryHeroCard: View {
                     Circle()
                         .fill(RadialGradient(
                             colors: [ringTint.opacity(0.28), .clear],
-                            center: .center, startRadius: 8, endRadius: 92))
-                        .frame(width: 184, height: 184)
+                            center: .center, startRadius: 6, endRadius: 66))
+                        .frame(width: 132, height: 132)
                         .allowsHitTesting(false)
                     HealthScoreRing(
                         score: score,
                         label: Copy.Home.scoreReadyLabel,
-                        size: 150,
-                        lineWidth: 10,
+                        size: 104,
+                        lineWidth: 9,
                         tint: hasLiveReadiness ? recoveryState.color : nil
                     )
                 }
 
-                VStack(spacing: 3) {
+                if !whyReasons.isEmpty {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(Copy.Home.scoreWhyLabel)
+                            .font(DS.Typography.captionSemibold)
+                            .tracking(1.4)
+                            .foregroundStyle(AppColour.textTertiary)
+                            .padding(.bottom, 2)
+
+                        ForEach(Array(whyReasons.enumerated()), id: \.element.id) { index, reason in
+                            whyRow(reason)
+                            if index < whyReasons.count - 1 {
+                                Divider().overlay(AppColour.borderLow.opacity(0.6))
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            // Plain-word takeaway kept as a footer so it is never dropped.
+            if !summaryHead.isEmpty || !summarySub.isEmpty {
+                Divider()
+                    .overlay(AppColour.borderLow)
+                    .padding(.vertical, 14)
+
+                VStack(alignment: .leading, spacing: 2) {
                     Text(summaryHead)
-                        .font(DS.Typography.title3)
+                        .font(DS.Typography.headline)
                         .foregroundStyle(AppColour.textPrimary)
                     Text(summarySub)
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(AppColour.textSecondary)
                 }
-                .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 4)
-
-            // Why list
-            if !whyReasons.isEmpty {
-                Divider()
-                    .overlay(AppColour.borderLow)
-                    .padding(.vertical, 16)
-
-                Text(Copy.Home.scoreWhyLabel)
-                    .font(DS.Typography.captionSemibold)
-                    .tracking(1.4)
-                    .foregroundStyle(AppColour.textTertiary)
-                    .padding(.bottom, 2)
-
-                ForEach(Array(whyReasons.enumerated()), id: \.element.id) { index, reason in
-                    whyRow(reason)
-                    if index < whyReasons.count - 1 {
-                        Divider().overlay(AppColour.borderLow.opacity(0.6))
-                    }
-                }
             }
         }
         .padding(DS.cardPadding + 4)
@@ -171,22 +174,27 @@ struct RecoveryHeroCard: View {
 
     // MARK: - Why Row
 
-    /// One plain line: a colored dot, the interpretation, and the value.
+    /// One plain line: a colored dot, the interpretation, and the value. The
+    /// label auto-shrinks a touch rather than wrapping, so long reasons like
+    /// "Resting heart rate is up" stay on one line in the narrow right column.
     private func whyRow(_ reason: DashboardViewModel.RecoveryWhyReason) -> some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 9) {
             Circle()
                 .fill(dotColor(reason.tone))
-                .frame(width: 8, height: 8)
+                .frame(width: 7, height: 7)
             Text(reason.label)
                 .font(DS.Typography.subheadline)
                 .foregroundStyle(AppColour.textPrimary)
-            Spacer(minLength: 8)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 6)
             Text(reason.value)
                 .font(DS.Typography.footnote)
                 .foregroundStyle(AppColour.textSecondary)
+                .lineLimit(1)
                 .postHogMask()
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 9)
     }
 
     private func dotColor(_ tone: DashboardViewModel.RecoveryWhyReason.Tone) -> Color {
