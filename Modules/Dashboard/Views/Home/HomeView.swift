@@ -705,17 +705,15 @@ struct HomeView: View {
     /// it so tomorrow morning can show whether it moved the score (loop closer).
     private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
-            actionDoneToday.toggle()
-            if actionDoneToday {
-                UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
-                DailyActionResultStore.save(actionTitle: action.title, actionIcon: action.icon, score: liveReadinessScore)
-            } else {
-                UserDefaults.standard.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
-                DailyActionResultStore.clear()
-            }
+            // Locked once done for the day: a mark can't be undone, it auto-resets
+            // tomorrow (onAppear clears when the stored day is no longer today).
+            guard !actionDoneToday else { return }
+            actionDoneToday = true
+            UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
+            DailyActionResultStore.save(actionTitle: action.title, actionIcon: action.icon, score: liveReadinessScore)
             AppAnalytics.shared.trackBlockTap(
                 title: action.title, type: .homeDailyAction, screen: .home,
-                metadata: ["source": "next_up_mark_done", "done": "\(actionDoneToday)"])
+                metadata: ["source": "next_up_mark_done", "done": "true"])
         } label: {
             HStack(spacing: 7) {
                 Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "checkmark")
