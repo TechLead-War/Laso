@@ -41,6 +41,27 @@ extension Copy {
         static var nextUpHeader: String { RemoteConfigManager.shared.copyString("copy_home_next_up_header", default: "NEXT UP · TODAY") }
         static var nextUpMarkDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_mark_done", default: "Mark done") }
         static var nextUpDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done", default: "Done. We check the result in tomorrow morning's score.") }
+        /// Remind button on the action card. %@ is the reminder clock time, e.g. "9:30 PM".
+        static func nextUpRemind(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind", default: "Remind %@"), time) }
+        static var nextUpReminderSet: String { RemoteConfigManager.shared.copyString("copy_home_next_up_reminder_set", default: "Reminder set") }
+
+        // Score card (redesigned): one word state + a plain summary + the Why list.
+        static var scoreReadyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_ready_label", default: "Ready") }
+        static var scoreSummaryLow: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low", default: "Lower than usual today. Worth an easy day.") }
+        static var scoreSummaryModerate: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_moderate", default: "About usual today. A steady day suits you.") }
+        static var scoreSummaryHigh: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high", default: "Higher than usual today. Good to push a little.") }
+        static var scoreWhyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_why_label", default: "Why") }
+        // Plain-word reasons and their status values.
+        static var whySleepShort: String { RemoteConfigManager.shared.copyString("copy_home_why_sleep_short", default: "Sleep was short") }
+        static var whySleepGood: String { RemoteConfigManager.shared.copyString("copy_home_why_sleep_good", default: "Sleep was solid") }
+        static var whyHeartCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_calm", default: "Heart is calm") }
+        static var whyHeartWorking: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_working", default: "Heart is working hard") }
+        static var whyHeartGoodValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_good_value", default: "Good") }
+        static var whyHeartHighValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_high_value", default: "Elevated") }
+        static var whyEnergyLow: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low", default: "Energy is low") }
+        static var whyEnergyGood: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good", default: "Energy is good") }
+        static var whyEnergyLowValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low_value", default: "Below usual") }
+        static var whyEnergyGoodValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good_value", default: "Good") }
 
         // Yesterday's result: the loop-closer shown the morning after an action
         // is marked done, reporting how the readiness score moved.
@@ -321,10 +342,10 @@ extension Copy {
         // MARK: - Greeting
 
         enum Greeting {
-            static var goodMorning: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_morning", default: "Good Morning") }
-            static var goodAfternoon: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_afternoon", default: "Good Afternoon") }
-            static var goodEvening: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_evening", default: "Good Evening") }
-            static var goodNight: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_night", default: "Good Night") }
+            static var goodMorning: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_morning", default: "Morning") }
+            static var goodAfternoon: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_afternoon", default: "Afternoon") }
+            static var goodEvening: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_evening", default: "Evening") }
+            static var goodNight: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_night", default: "Night") }
 
             static func streakBadge(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_greeting_streak_badge", default: "%d days"), days) }
             static func streakMilestone(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_greeting_streak_milestone", default: "%d day streak!"), days) }

@@ -359,6 +359,11 @@ extension Copy {
         // MARK: - Evening Wind-Down
 
         /// Rotated title variants. keep at 3-4 so the user never gets the same title two nights in a row.
+        /// One-off reminder the user set from the Next Up action card. %@ is the
+        /// action, e.g. "Wind down 30 minutes earlier tonight".
+        static var actionReminderTitle: String { RemoteConfigManager.shared.copyString("copy_notifications_action_reminder_title", default: "Time for your one thing") }
+        static func actionReminderBody(_ action: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_action_reminder_body", default: "%@"), action) }
+
         static func windDownTitle() -> String {
             let variants = RemoteConfigManager.shared.copyArray(
                 "copy_notifications_wind_down_title_variants",

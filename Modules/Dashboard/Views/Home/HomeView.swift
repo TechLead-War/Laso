@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
     @State private var actionDoneToday = false
+    @State private var actionReminderSet = false
     @State private var showShareCard = false
     /// Yesterday's marked-done action result, surfaced this morning (loop closer).
     @State private var dailyResult: DailyActionResultStore.Result?
@@ -189,14 +190,6 @@ struct HomeView: View {
 
     /// Plain-English caption for the 7-day HRV trend. Returns nil when the
     /// trend is `.insufficientData` so the hero card hides the line cleanly.
-    private var weeklyTrendCaptionString: String? {
-        switch liveViewModel.recovery.weeklyTrend {
-        case .improving:        return Copy.Home.RecoveryTrend.improving
-        case .stable:           return Copy.Home.RecoveryTrend.stable
-        case .declining:        return Copy.Home.RecoveryTrend.declining
-        case .insufficientData: return nil
-        }
-    }
 
     /// Name of the lowest-scoring category for personalized score explanation.
     /// Cached in DashboardViewModel.updateCachedProperties() to avoid recomputing on every render.
@@ -337,28 +330,16 @@ struct HomeView: View {
                     // before the score that explains it.
                     primaryActionCard
 
-                    // 1. Recovery Hero. live readiness score (updates every 30 min).
-                    // Title, pill, and ring all derive from RecoveryState so the
-                    // three-band threshold table agrees with itself.
+                    // 1. Score card. live readiness score (updates every 30 min)
+                    // shown as one ring plus the plain-word reasons behind it.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
-                        recoveryLabel: hasLiveReadiness
-                            ? DashboardViewModel.RecoveryState(score: liveReadinessScore).label
-                            : "Daily Health Score",
-                        dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
-                        // Use the EWMA-vs-EWMA-7-days-ago delta so the badge
-                        // reflects a stable weekly comparison instead of two
-                        // point-in-time snapshots. With the live headline
-                        // moving every 30 min, the old daily-vs-snapshot
-                        // delta could swing meaninglessly between refreshes.
-                        scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
-                        recoveryWhyLine: recoveryWhyLine,
+                        summaryLine: viewModel.readinessSummaryLine(score: liveReadinessScore),
+                        whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,
-                        scoreLabel: liveViewModel.recovery.scoreLabel,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
-                        weeklyTrendCaption: weeklyTrendCaptionString,
-                        // When live Recovery exists the (i) opens the Recovery
+                        // When live Recovery exists the tap opens the Recovery
                         // explainer; otherwise the headline is the Daily Health
                         // Score (fallback) so we open the matching guide.
                         onTap: {
@@ -668,12 +649,13 @@ struct HomeView: View {
     private var primaryActionCard: some View {
         let action = viewModel.smartDailyAction(liveVM: liveViewModel)
         let actionRoute = routeForAction(action)
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(Copy.Home.nextUpHeader)
                 .font(DS.Typography.captionSemibold)
                 .tracking(1.2)
-                .foregroundStyle(DS.scoreColor(liveReadinessScore))
+                .foregroundStyle(AppColour.scoreGood)
 
+            // The action is the headline; tapping opens the full detail.
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: action.title,
@@ -687,74 +669,26 @@ struct HomeView: View {
                 )
                 navigationPath.append(actionRoute)
             } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: action.icon)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(action.title)
                         .font(DS.Typography.title3)
-                        .foregroundStyle(.white)
-                        .frame(width: 40, height: 40)
-                        .background(DS.scoreColor(liveReadinessScore), in: RoundedRectangle(cornerRadius: 10))
+                        .foregroundStyle(AppColour.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(action.title)
-                            .font(DS.Typography.bodySemibold)
-                            .foregroundStyle(AppColour.textPrimary)
-                            .lineLimit(2)
-
-                        Text(action.subtitle)
-                            .font(DS.Typography.footnote)
-                            .foregroundStyle(AppColour.textSecondary)
-                            .lineLimit(2)
-
-                        if let proof = action.proofLine {
-                            Text(proof)
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(AppColour.textTertiary)
-                                .lineLimit(2)
-                        }
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(AppColour.textTertiary)
+                    Text(action.subtitle)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .buttonStyle(.plain)
 
-            Button {
-                actionDoneToday.toggle()
-                if actionDoneToday {
-                    UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
-                    // Record the action + today's score so tomorrow morning can
-                    // show whether it moved (the loop closer).
-                    DailyActionResultStore.save(
-                        actionTitle: action.title,
-                        actionIcon: action.icon,
-                        score: liveReadinessScore
-                    )
-                } else {
-                    UserDefaults.standard.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
-                    DailyActionResultStore.clear()
-                }
-                AppAnalytics.shared.trackBlockTap(
-                    title: action.title,
-                    type: .homeDailyAction,
-                    screen: .home,
-                    metadata: ["source": "next_up_mark_done", "done": "\(actionDoneToday)"]
-                )
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "circle")
-                        .font(DS.Typography.body)
-                        .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.textTertiary)
-                    Text(actionDoneToday ? Copy.Home.nextUpDone : Copy.Home.nextUpMarkDone)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.textSecondary)
-                    Spacer()
-                }
+            HStack(spacing: 8) {
+                actionMarkDoneButton(action: action)
+                actionRemindButton(action: action)
             }
-            .buttonStyle(.plain)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -764,6 +698,61 @@ struct HomeView: View {
             let stored = UserDefaults.standard.object(forKey: AppKeys.Data.dailyActionDoneDay) as? Date
             actionDoneToday = stored.map { Date.cal.isDateInToday($0) } ?? false
         }
+    }
+
+    /// Primary green "Mark done" pill. Marks today's one thing done and records
+    /// it so tomorrow morning can show whether it moved the score (loop closer).
+    private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
+        Button {
+            actionDoneToday.toggle()
+            if actionDoneToday {
+                UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
+                DailyActionResultStore.save(actionTitle: action.title, actionIcon: action.icon, score: liveReadinessScore)
+            } else {
+                UserDefaults.standard.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
+                DailyActionResultStore.clear()
+            }
+            AppAnalytics.shared.trackBlockTap(
+                title: action.title, type: .homeDailyAction, screen: .home,
+                metadata: ["source": "next_up_mark_done", "done": "\(actionDoneToday)"])
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "checkmark")
+                    .font(DS.Typography.captionSemibold)
+                Text(Copy.Home.nextUpMarkDone)
+                    .font(DS.Typography.subheadlineSemibold)
+            }
+            .foregroundStyle(actionDoneToday ? AppColour.success : AppColour.scoreGood)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background((actionDoneToday ? AppColour.success : AppColour.scoreGood).opacity(0.15), in: RoundedRectangle(cornerRadius: 13))
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.success, trigger: actionDoneToday) { _, new in new }
+        .accessibilityIdentifier("home.action.markDone")
+    }
+
+    /// Ghost "Remind 9:30" pill. Schedules a one-off reminder for the action.
+    private func actionRemindButton(action: DashboardViewModel.SmartAction) -> some View {
+        Button {
+            actionReminderSet = ActionReminderScheduler.schedule(action: action.title)
+            AppAnalytics.shared.trackBlockTap(
+                title: action.title, type: .homeDailyAction, screen: .home,
+                metadata: ["source": "next_up_remind", "set": "\(actionReminderSet)"])
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: actionReminderSet ? "bell.fill" : "clock")
+                    .font(DS.Typography.captionSemibold)
+                Text(actionReminderSet ? Copy.Home.nextUpReminderSet : Copy.Home.nextUpRemind(ActionReminderScheduler.timeLabel()))
+                    .font(DS.Typography.subheadlineSemibold)
+            }
+            .foregroundStyle(AppColour.textSecondary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(AppColour.borderLow, in: RoundedRectangle(cornerRadius: 13))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home.action.remind")
     }
 
     /// Routes Today's Action card contextually based on action text content.
@@ -778,83 +767,6 @@ struct HomeView: View {
     /// Builds a short plain-English explanation of why the recovery score is what it is.
     /// Inspects live HRV, resting heart rate, sleep duration, and recent workout data to
     /// identify the top contributing factors, then templates them via Copy.Home.RecoveryHero.
-    private var recoveryWhyLine: String? {
-        guard hasLiveReadiness else { return nil }
-
-        let score = liveReadinessScore
-        let state = DashboardViewModel.RecoveryState(score: score)
-
-        // Gather factor descriptions based on whether each signal is positive or negative.
-        var positiveFactors: [String] = []
-        var negativeFactors: [String] = []
-
-        // HRV (40% weight, most important)
-        if let hrv = liveViewModel.recovery.latestHRV {
-            // Without baseline, use a rough heuristic: above 40ms is decent
-            if hrv >= 50 {
-                positiveFactors.append(Copy.Home.RecoveryHero.hrvBounced)
-            } else if hrv >= 35 {
-                positiveFactors.append(Copy.Home.RecoveryHero.hrvHigh)
-            } else if hrv < 25 {
-                negativeFactors.append(Copy.Home.RecoveryHero.hrvLow)
-            } else {
-                negativeFactors.append(Copy.Home.RecoveryHero.hrvBelow)
-            }
-        }
-
-        // Resting Heart Rate (35% weight)
-        if let rhr = liveViewModel.recovery.latestRestingHeartRate {
-            if rhr <= 55 {
-                positiveFactors.append(Copy.Home.RecoveryHero.rhrLow)
-            } else if rhr <= 65 {
-                positiveFactors.append(Copy.Home.RecoveryHero.rhrDropped)
-            } else if rhr > 75 {
-                negativeFactors.append(Copy.Home.RecoveryHero.rhrHigh)
-            } else {
-                negativeFactors.append(Copy.Home.RecoveryHero.rhrElevated)
-            }
-        }
-
-        // Sleep Duration (15% weight)
-        let sleepHours = liveViewModel.sleep.lastNightSleepDuration / 3600.0
-        if sleepHours > 0 {
-            if sleepHours >= 7.5 {
-                positiveFactors.append(Copy.Home.RecoveryHero.sleepGreat)
-            } else if sleepHours >= 6.5 {
-                positiveFactors.append(Copy.Home.RecoveryHero.sleepGood)
-            } else if sleepHours >= 5.5 {
-                negativeFactors.append(Copy.Home.RecoveryHero.sleepShort)
-            } else {
-                negativeFactors.append(Copy.Home.RecoveryHero.sleepShort)
-            }
-        }
-
-        // Recent Workout (4% weight, only mention if it is a drag)
-        if let workoutTime = liveViewModel.workout.lastWorkoutTimestamp {
-            let hoursSince = Date().timeIntervalSince(workoutTime) / 3600.0
-            if hoursSince < 18, (liveViewModel.workout.lastWorkoutDuration ?? 0) > 30 {
-                negativeFactors.append(Copy.Home.RecoveryHero.recentHardWorkout)
-            }
-        }
-
-        switch state {
-        case .green:
-            let top = positiveFactors.first ?? Copy.Home.RecoveryHero.hrvBounced
-            let second = positiveFactors.dropFirst().first ?? Copy.Home.RecoveryHero.sleepSolid
-            return Copy.Home.RecoveryHero.whyLineGreen(topFactor: top, secondFactor: second)
-
-        case .yellow:
-            // Lead with the top negative factor if available, otherwise the top positive one
-            let factor = negativeFactors.first ?? positiveFactors.first
-            guard let top = factor else { return nil }
-            return Copy.Home.RecoveryHero.whyLineYellow(topFactor: top)
-
-        case .red:
-            let top = negativeFactors.first ?? Copy.Home.RecoveryHero.hrvLow
-            let second = negativeFactors.dropFirst().first ?? Copy.Home.RecoveryHero.sleepShort
-            return Copy.Home.RecoveryHero.whyLineRed(topFactor: top, secondFactor: second)
-        }
-    }
 
     // MARK: - First Launch Loading
 

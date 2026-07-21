@@ -11,6 +11,8 @@ enum AppConstants {
         static let eveningSummary = "healthpulse.eveningSummary"
         static let weeklySummary = "healthpulse.weeklySummary"
         static let windDown = "healthpulse.windDown"
+        /// One-off reminder the user sets from the Next Up action card.
+        static let actionReminder = "healthpulse.actionReminder"
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
         static let watchLowBattery = "healthpulse.watch.lowBattery"

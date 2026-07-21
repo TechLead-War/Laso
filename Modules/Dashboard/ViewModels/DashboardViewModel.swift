@@ -2184,6 +2184,60 @@ final class DashboardViewModel {
         }
     }
 
+    /// One plain-word reason shown in the score card's "Why" list. Built only
+    /// from real signals; a signal with no data is omitted rather than faked.
+    struct RecoveryWhyReason: Identifiable {
+        enum Tone { case good, concern }
+        let id = UUID()
+        let label: String
+        let value: String
+        let tone: Tone
+    }
+
+    /// The top real reasons behind today's readiness, as {label, value, tone}.
+    /// Sleep from last-night duration vs goal, Heart from HRV/RHR vs baseline,
+    /// Energy from the readiness score. Rows with missing data are dropped.
+    @MainActor
+    func recoveryWhyReasons(liveVM: LiveViewModel) -> [RecoveryWhyReason] {
+        let s = todayRecoverySignals(liveVM: liveVM)
+        var reasons: [RecoveryWhyReason] = []
+
+        if let sleep = s.sleepHoursLast {
+            let short = sleep < s.sleepHoursGoal - 0.75
+            let h = Int(sleep), m = Int((sleep - Double(h)) * 60)
+            reasons.append(.init(
+                label: short ? Copy.Home.whySleepShort : Copy.Home.whySleepGood,
+                value: "\(h)h \(m)m",
+                tone: short ? .concern : .good))
+        }
+
+        if let hrv = s.hrvCurrent, let hrvBase = s.hrvBaseline, hrvBase > 0 {
+            // HRV at or above baseline means the body has recovered (calm).
+            let calm = hrv >= hrvBase * 0.95
+            reasons.append(.init(
+                label: calm ? Copy.Home.whyHeartCalm : Copy.Home.whyHeartWorking,
+                value: calm ? Copy.Home.whyHeartGoodValue : Copy.Home.whyHeartHighValue,
+                tone: calm ? .good : .concern))
+        }
+
+        if let readiness = liveVM.recovery.readinessScore {
+            let low = readiness < 60
+            reasons.append(.init(
+                label: low ? Copy.Home.whyEnergyLow : Copy.Home.whyEnergyGood,
+                value: low ? Copy.Home.whyEnergyLowValue : Copy.Home.whyEnergyGoodValue,
+                tone: low ? .concern : .good))
+        }
+
+        return Array(reasons.prefix(3))
+    }
+
+    /// Plain-English summary line under the score, keyed to the 3-band model.
+    func readinessSummaryLine(score: Int) -> String {
+        if score < 60 { return Copy.Home.scoreSummaryLow }
+        if score <= 75 { return Copy.Home.scoreSummaryModerate }
+        return Copy.Home.scoreSummaryHigh
+    }
+
     /// Build the recovery signals snapshot from current live values and personal baselines.
     @MainActor
     func todayRecoverySignals(liveVM: LiveViewModel) -> RecoverySignalsSnapshot {
