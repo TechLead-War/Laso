@@ -2188,77 +2188,91 @@ final class DashboardViewModel {
     /// Heart, Energy) ALWAYS show so the card is never half empty; a signal with
     /// no reading shows `.noData` (never a faked value).
     struct RecoveryWhyReason: Identifiable {
-        enum Kind: Hashable { case sleep, heart, energy }
+        enum Kind: Hashable { case sleep, heart, restingHR, energy, stress }
         enum Tone { case good, okay, concern, noData }
         /// Stable per-signal id so SwiftUI diffs the rows instead of rebuilding
         /// all three on every home refresh (a fresh UUID would churn every time).
         var id: Kind { kind }
         let kind: Kind
-        let name: String     // "Sleep"
-        let sub: String      // short meaning line
-        let value: String    // "6h 40m" / "Calm" / "—"
-        let status: String   // "Good" / "Short" / "No reading yet"
+        let label: String    // the plain interpretation, e.g. "Sleep was short"
+        let value: String    // "5h 40m" / "Good" / "No reading yet"
         let tone: Tone
 
         /// Placeholder row for a signal that has no reading yet.
         static func noData(kind: Kind, name: String) -> RecoveryWhyReason {
-            .init(kind: kind, name: name, sub: Copy.Home.whyNoData, value: "—", status: "", tone: .noData)
+            .init(kind: kind, label: name, value: Copy.Home.whyNoData, tone: .noData)
         }
     }
 
-    /// The three signals behind today's readiness, always in order Sleep, Heart,
-    /// Energy. Sleep from last-night duration vs goal, Heart from HRV vs your
-    /// baseline, Energy from the readiness score. Missing signals return a
-    /// `.noData` row instead of being dropped.
+    /// The "Why" list, built dynamically. Every signal that has a reading today
+    /// (sleep, heart/HRV, resting heart rate, energy, stress) becomes a
+    /// candidate; each is scored by how far it is from your usual (times a small
+    /// weight for the signals that matter most), and the three that matter most
+    /// today are shown. The label is the plain interpretation with the real
+    /// value beside it. When no signal has data, three placeholders keep the
+    /// card from looking empty.
     @MainActor
     func recoveryWhyReasons(liveVM: LiveViewModel) -> [RecoveryWhyReason] {
         let s = todayRecoverySignals(liveVM: liveVM)
+        var candidates: [(reason: RecoveryWhyReason, relevance: Double)] = []
 
-        // Sleep
-        let sleepRow: RecoveryWhyReason
+        // Sleep — vs your goal.
         if let sleep = s.sleepHoursLast {
+            let short = sleep < s.sleepHoursGoal - 0.75
             let h = Int(sleep), m = Int((sleep - Double(h)) * 60)
-            let short = sleep < s.sleepHoursGoal - 1.0
-            let okay = !short && sleep < s.sleepHoursGoal - 0.25
-            sleepRow = .init(kind: .sleep, name: Copy.Home.whyNameSleep,
-                             sub: short ? Copy.Home.whySubSleepShort : Copy.Home.whySubSleepGood,
-                             value: "\(h)h \(m)m",
-                             status: short ? Copy.Home.whyStatusShort : (okay ? Copy.Home.whyStatusOkay : Copy.Home.whyStatusGood),
-                             tone: short ? .concern : (okay ? .okay : .good))
-        } else {
-            sleepRow = .noData(kind: .sleep, name: Copy.Home.whyNameSleep)
+            let dev = abs(sleep - s.sleepHoursGoal) / s.sleepHoursGoal
+            candidates.append((.init(kind: .sleep,
+                label: short ? Copy.Home.whySleepShort : Copy.Home.whySleepGood,
+                value: "\(h)h \(m)m",
+                tone: short ? .concern : .good), dev * 1.0))
         }
 
-        // Heart
-        let heartRow: RecoveryWhyReason
-        if let hrv = s.hrvCurrent, let hrvBase = s.hrvBaseline, hrvBase > 0 {
-            let calm = hrv >= hrvBase * 0.95
-            heartRow = .init(kind: .heart, name: Copy.Home.whyNameHeart,
-                             sub: calm ? Copy.Home.whySubHeartCalm : Copy.Home.whySubHeartWorking,
-                             value: calm ? Copy.Home.whyValueCalm : Copy.Home.whyValueWorking,
-                             status: calm ? Copy.Home.whyStatusGood : Copy.Home.whyStatusElevated,
-                             tone: calm ? .good : .concern)
-        } else {
-            heartRow = .noData(kind: .heart, name: Copy.Home.whyNameHeart)
+        // Heart / HRV — vs your baseline. Highest weight.
+        if let hrv = s.hrvCurrent, let base = s.hrvBaseline, base > 0 {
+            let calm = hrv >= base * 0.95
+            let dev = abs(hrv - base) / base
+            candidates.append((.init(kind: .heart,
+                label: calm ? Copy.Home.whyHeartCalm : Copy.Home.whyHeartWorking,
+                value: calm ? Copy.Home.whyHeartGoodValue : Copy.Home.whyHeartHighValue,
+                tone: calm ? .good : .concern), dev * 1.2))
         }
 
-        // Energy — use the same score the ring shows (live readiness, or the
-        // daily health score as fallback) so it always has a value when a score
-        // exists, matching the number in the ring.
-        let energyRow: RecoveryWhyReason
-        let energyScore = liveVM.recovery.readinessScore ?? (overallScore.score > 0 ? overallScore.score : nil)
-        if let readiness = energyScore {
-            let low = readiness < 60
-            energyRow = .init(kind: .energy, name: Copy.Home.whyNameEnergy,
-                              sub: low ? Copy.Home.whySubEnergyLow : Copy.Home.whySubEnergyGood,
-                              value: low ? Copy.Home.whyValueLow : Copy.Home.whyValueReady,
-                              status: low ? Copy.Home.whyStatusBelow : Copy.Home.whyStatusGood,
-                              tone: low ? .concern : .good)
-        } else {
-            energyRow = .noData(kind: .energy, name: Copy.Home.whyNameEnergy)
+        // Resting heart rate — vs your baseline.
+        if let rhr = s.rhrCurrent, let base = s.rhrBaseline, base > 0 {
+            let up = rhr > base * 1.05
+            let dev = abs(rhr - base) / base
+            candidates.append((.init(kind: .restingHR,
+                label: up ? Copy.Home.whyRhrUp : Copy.Home.whyRhrCalm,
+                value: up ? Copy.Home.whyRhrValueUp : Copy.Home.whyRhrValueCalm,
+                tone: up ? .concern : .good), dev * 1.1))
         }
 
-        return [sleepRow, heartRow, energyRow]
+        // Energy — the same score the ring shows (readiness, or daily score).
+        if let score = liveVM.recovery.readinessScore ?? (overallScore.score > 0 ? overallScore.score : nil) {
+            let low = score < 60
+            let dev = abs(Double(score) - 70) / 70
+            candidates.append((.init(kind: .energy,
+                label: low ? Copy.Home.whyEnergyLow : Copy.Home.whyEnergyGood,
+                value: low ? Copy.Home.whyEnergyLowValue : Copy.Home.whyEnergyGoodValue,
+                tone: low ? .concern : .good), dev * 0.8))
+        }
+
+        // Stress — high stress is worth surfacing more than low.
+        if let stress = liveVM.recovery.stressLevel {
+            let high = stress >= 60
+            let dev = abs(Double(stress) - 30) / 70
+            candidates.append((.init(kind: .stress,
+                label: high ? Copy.Home.whyStressHigh : Copy.Home.whyStressLow,
+                value: ReadinessScorer.stressLabel(for: stress),
+                tone: high ? .concern : .good), high ? dev * 1.1 : dev * 0.6))
+        }
+
+        guard !candidates.isEmpty else {
+            return [.noData(kind: .sleep, name: Copy.Home.whyNameSleep),
+                    .noData(kind: .heart, name: Copy.Home.whyNameHeart),
+                    .noData(kind: .energy, name: Copy.Home.whyNameEnergy)]
+        }
+        return candidates.sorted { $0.relevance > $1.relevance }.prefix(3).map(\.reason)
     }
 
     /// Plain-English summary under the score as a bold heading + a lighter sub

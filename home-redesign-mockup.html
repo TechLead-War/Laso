@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso Home — Now vs Proposed</title>
+<style>
+  :root{
+    --bg:#070809; --panel:#0F1114; --panel2:#15181C; --line:#22262C;
+    --txt:#F4F6F8; --txt2:#9AA3AD; --txt3:#5E6670;
+    --green:#21D07A; --greenDim:#143524;
+    --amber:#FFB020; --amberDim:#3A2C0E;
+    --red:#FF5256; --redDim:#3A1416;
+    --indigo:#7C8Cff;
+    --pill:#FF3B47;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-font-smoothing:antialiased; margin:0; padding:0}
+  body{
+    font-family:-apple-system,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;
+    background:radial-gradient(1200px 700px at 50% -10%, #15191F 0%, var(--bg) 60%);
+    color:var(--txt); min-height:100vh; padding:34px 18px 70px;
+  }
+  .head{max-width:880px; margin:0 auto 26px}
+  .head h1{font-size:24px; font-weight:700; letter-spacing:-.02em}
+  .head p{color:var(--txt2); font-size:14px; margin-top:6px; line-height:1.5}
+  .stage{display:flex; gap:34px; justify-content:center; flex-wrap:wrap; align-items:flex-start}
+  .col{width:344px; max-width:100%}
+  .coltitle{display:flex; align-items:center; gap:9px; margin:0 4px 12px}
+  .coltitle .tag{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:4px 9px; border-radius:999px}
+  .tag.now{background:var(--redDim); color:#FF8589; border:1px solid #5a2225}
+  .tag.new{background:var(--greenDim); color:#5FE3A3; border:1px solid #1f5a3c}
+  .coltitle h2{font-size:15px; font-weight:600; color:var(--txt2)}
+
+  /* phone */
+  .phone{
+    background:var(--bg); border:1px solid var(--line); border-radius:42px; padding:12px;
+    box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 0 0 2px #000;
+    height:732px; position:relative; overflow:hidden;
+  }
+  .notch{position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    width:118px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5}
+  .screen{height:100%; border-radius:32px; overflow-y:auto; overflow-x:hidden;
+    background:linear-gradient(180deg,#0B0D10 0%, #070809 30%); padding:46px 14px 26px}
+  .screen::-webkit-scrollbar{width:0}
+
+  /* status bar */
+  .statusbar{display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; font-weight:600; color:var(--txt); padding:0 6px 6px; opacity:.85}
+  .statusbar .r{display:flex; gap:5px; align-items:center; font-size:12px}
+
+  /* greeting */
+  .greet{display:flex; justify-content:space-between; align-items:flex-start; padding:6px 6px 2px}
+  .greet .g1{font-size:21px; font-weight:700; letter-spacing:-.02em}
+  .greet .g2{font-size:12px; color:var(--txt2); margin-top:3px}
+  .streak{display:flex; align-items:center; gap:6px; background:var(--panel2);
+    border:1px solid var(--line); border-radius:999px; padding:6px 10px}
+  .streak .fl{font-size:14px}
+  .streak .n{font-size:14px; font-weight:700}
+  .freeze{display:flex; gap:3px; margin-left:2px}
+  .freeze i{width:5px; height:5px; border-radius:50%; background:var(--indigo); display:block}
+  .freeze i.used{background:#3a3f47}
+
+  /* cards */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; margin:11px 4px}
+  .card.flush{padding:0; overflow:hidden}
+
+  /* recovery hero */
+  .hero{display:flex; flex-direction:column; align-items:center; padding:18px 14px 16px}
+  .ring-wrap{position:relative; width:170px; height:170px}
+  .ring-num{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center}
+  .ring-num .big{font-size:60px; font-weight:800; letter-spacing:-.03em; line-height:1}
+  .ring-num .pct{font-size:15px; font-weight:700; color:var(--txt2); margin-top:2px}
+  .hero .lbl{margin-top:12px; font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--green)}
+  .hero .why{margin-top:6px; font-size:14px; color:var(--txt2); text-align:center}
+  .live{display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; color:var(--txt3)}
+  .live i{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px rgba(33,208,122,.18)}
+
+  /* small hero (NOW) */
+  .heroS .ring-wrap{width:104px; height:104px}
+  .heroS .ring-num .big{font-size:34px}
+  .badrow{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:10px}
+  .minibadge{font-size:10px; padding:3px 7px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--txt2)}
+
+  /* dial row */
+  .dials{display:flex; gap:10px; margin:11px 4px}
+  .dial{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:8px}
+  .dial .dwrap{position:relative; width:74px; height:74px}
+  .dial .dnum{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800}
+  .dial .dlbl{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--txt2)}
+  .dial .dsub{font-size:11px; color:var(--txt3)}
+
+  /* action */
+  .action{display:flex; align-items:center; gap:12px}
+  .action .ic{width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; background:var(--greenDim); flex:0 0 auto}
+  .action .at{font-size:15px; font-weight:700}
+  .action .as{font-size:12px; color:var(--txt2); margin-top:2px}
+  .action .ap{font-size:11px; color:var(--txt3); margin-top:5px}
+  .chev{margin-left:auto; color:var(--txt3); font-size:18px}
+
+  /* section header */
+  .sh{font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--txt3); margin:18px 10px 2px}
+
+  /* vitals strip */
+  .strip{display:flex; gap:9px; overflow-x:auto; padding:4px 4px 8px; scrollbar-width:none}
+  .strip::-webkit-scrollbar{height:0}
+  .tile{flex:0 0 96px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 10px}
+  .tile .ti{font-size:16px; margin-bottom:8px; opacity:.7}
+  .tile .tband{font-size:13px; font-weight:700}
+  .tile .tval{font-size:11px; color:var(--txt3); margin-top:2px}
+  .tile .tname{font-size:10px; color:var(--txt2); letter-spacing:.05em; text-transform:uppercase; margin-top:7px}
+  .tile.alert{border-color:#5a3a12; background:linear-gradient(180deg,var(--amberDim),var(--panel))}
+  .tile.alert .ti{opacity:1}
+  .tile.alert .tband{color:var(--amber)}
+
+  /* insights collapsed row */
+  .inrow{display:flex; align-items:center; gap:12px}
+  .inrow .ic{width:38px; height:38px; border-radius:11px; background:var(--panel2); display:flex; align-items:center; justify-content:center; font-size:17px}
+  .inrow .it{font-size:14px; font-weight:600}
+  .inrow .is{font-size:11px; color:var(--txt3); margin-top:2px}
+
+  /* review compact */
+  .rev{display:flex; align-items:center; gap:12px}
+  .rev .rs{font-size:24px; font-weight:800}
+  .rev .rd{font-size:12px; color:var(--green); font-weight:700}
+  .rev .rt{font-size:12px; color:var(--txt2)}
+
+  .foot{text-align:center; font-size:11px; color:var(--txt3); margin:16px 0 4px}
+
+  /* NOW red-pill marks */
+  .pillmark{position:relative}
+  .pillmark::before{content:attr(data-pill); position:absolute; top:-7px; left:10px; z-index:3;
+    font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    background:var(--pill); color:#fff; padding:2px 7px; border-radius:999px;
+    box-shadow:0 2px 8px rgba(255,59,71,.45)}
+  .pillmark > .card, .pillmark.card{border-color:#5a2226 !important; box-shadow:inset 3px 0 0 var(--pill)}
+
+  /* misc NOW cards */
+  .narr{font-size:13px; color:var(--txt2); line-height:1.55}
+  .conf{display:inline-block; font-size:10px; padding:2px 7px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--txt3); margin-top:8px}
+  .frow{display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .frow:last-child{border-bottom:0}
+  .frow .fc{font-size:10px; color:var(--txt3)}
+  .checkin .q{display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:13px; color:var(--txt2)}
+  .scale{display:flex; gap:5px}
+  .scale b{width:22px; height:22px; border-radius:6px; background:var(--panel2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--txt3); font-weight:600}
+  .banner{display:flex; align-items:center; gap:10px; font-size:12px}
+  .banner .bi{font-size:18px}
+  .grade{margin-left:auto; font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; background:var(--amberDim); color:var(--amber)}
+  .activ{display:flex; align-items:center; gap:10px}
+  .bar{flex:1; height:6px; background:var(--panel2); border-radius:999px; overflow:hidden}
+  .bar i{display:block; height:100%; width:62%; background:var(--green)}
+
+  /* legend */
+  .legend{max-width:880px; margin:30px auto 0; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:18px 20px}
+  .legend h3{font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--txt2); margin-bottom:12px}
+  .legend ul{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:9px 26px}
+  .legend li{font-size:13px; color:var(--txt2); line-height:1.45; display:flex; gap:9px}
+  .legend li b{color:var(--txt)}
+  .legend .num{flex:0 0 auto; width:19px; height:19px; border-radius:50%; background:var(--pill); color:#fff;
+    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:1px}
+  @media(max-width:760px){ .legend ul{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Laso Home — Now vs Proposed</h1>
+    <p>Left is today's screen with the red pills marked. Right is the Whoop like redesign: one big number, three dials, one action, then everything else demoted. Both scroll. This is a visual proposal, not final pixels.</p>
+  </div>
+
+  <div class="stage">
+
+    <!-- ================= NOW ================= -->
+    <div class="col">
+      <div class="coltitle"><span class="tag now">Now</span><h2>AI first, buried body</h2></div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="r">5G&nbsp;&nbsp;100%</span></div>
+
+          <div class="greet">
+            <div><div class="g1">Good morning, Ayush</div><div class="g2">Tuesday, June 23</div></div>
+          </div>
+
+          <!-- hero small -->
+          <div class="pillmark" data-pill="① small + busy">
+            <div class="card hero heroS">
+              <div class="ring-wrap">
+                <svg width="104" height="104" viewBox="0 0 104 104">
+                  <circle cx="52" cy="52" r="46" fill="none" stroke="#1b1f24" stroke-width="9"/>
+                  <circle cx="52" cy="52" r="46" fill="none" stroke="var(--green)" stroke-width="9"
+                    stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="81" transform="rotate(-90 52 52)"/>
+                </svg>
+                <div class="ring-num"><span class="big">72</span></div>
+              </div>
+              <div class="lbl" style="margin-top:8px">Recovery</div>
+              <div class="badrow">
+                <span class="minibadge">▲ +4 vs last week</span>
+                <span class="minibadge">Moderate day</span>
+                <span class="minibadge">HRV improving</span>
+                <span class="minibadge">tap to understand ⓘ</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- activation -->
+          <div class="pillmark" data-pill="⑬ banner pile">
+            <div class="card activ">
+              <span style="font-size:18px">🎯</span>
+              <div class="bar"><i></i></div>
+              <span style="font-size:11px;color:var(--txt2)">Day 5 of 8</span>
+            </div>
+          </div>
+
+          <!-- morning check-in -->
+          <div class="pillmark" data-pill="⑬ survey blocks score">
+            <div class="card checkin">
+              <div style="font-size:13px;font-weight:700;margin-bottom:6px">Morning check in</div>
+              <div class="q"><span>Sleep quality</span><div class="scale"><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b></div></div>
+              <div class="q"><span>Energy</span><div class="scale"><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b></div></div>
+              <div class="q"><span>Soreness</span><div class="scale"><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b></div></div>
+            </div>
+          </div>
+
+          <!-- 5 smart cards -->
+          <div class="pillmark" data-pill="② card 1 of 5">
+            <div class="card action">
+              <div class="ic">🏃</div>
+              <div><div class="at">Aim for a moderate workout</div><div class="as">Your recovery supports it</div></div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+
+          <div class="pillmark" data-pill="⑦ repeats hero">
+            <div class="card"><div class="narr">For you today: your HRV is steady and sleep was solid, so your body looks ready for moderate effort. Keep an eye on stress later in the day and hydrate well.</div></div>
+          </div>
+
+          <div class="pillmark" data-pill="⑩ + ⑫ jargon">
+            <div class="card">
+              <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--indigo);margin-bottom:8px">🧠 Body Intelligence</div>
+              <div class="narr">Your HRV drops on days after late screen time. <span style="color:var(--txt3)">strength: 0.64 · 12 connections across 8 measures</span></div>
+              <span class="conf">Based on 87% confidence</span>
+            </div>
+          </div>
+
+          <div class="pillmark" data-pill="⑩ stats on home">
+            <div class="card">
+              <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2);margin-bottom:6px">Health forecast</div>
+              <div class="frow"><span>Resting HR</span><span>58 <span class="fc">Expected 55–61 · 90% conf</span></span></div>
+              <div class="frow"><span>HRV</span><span>48ms <span class="fc">Expected 44–53 · 88% conf</span></span></div>
+              <div class="frow"><span>Sleep</span><span>7.1h <span class="fc">Expected 6.6–7.5 · 85% conf</span></span></div>
+            </div>
+          </div>
+
+          <div class="pillmark" data-pill="② card 5 of 5">
+            <div class="card inrow">
+              <div class="ic">💬</div>
+              <div><div class="it">Ask your data</div><div class="is">“How did caffeine affect my sleep?”</div></div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+
+          <div class="card banner">
+            <span class="bi">🛡️</span>
+            <span style="color:var(--txt2)">Possible strain building</span>
+            <span class="grade">Moderate</span>
+          </div>
+
+          <div class="sh">Vitals</div>
+          <div class="pillmark" data-pill="①+④ buried, mixed scales">
+            <div class="strip" style="margin-top:6px">
+              <div class="tile"><div class="ti">🏃</div><div class="tband" style="color:var(--green)">3y younger</div><div class="tval">32</div><div class="tname">Vitality</div></div>
+              <div class="tile"><div class="ti">🌙</div><div class="tband" style="color:var(--indigo)">Good</div><div class="tval">7h 12m</div><div class="tname">Sleep</div></div>
+              <div class="tile"><div class="ti">🔥</div><div class="tband" style="color:var(--amber)">High</div><div class="tval">14.2</div><div class="tname">Strain</div></div>
+              <div class="tile"><div class="ti">🧠</div><div class="tband" style="color:var(--green)">Sharp</div><div class="tval">85</div><div class="tname">Brain</div></div>
+              <div class="tile"><div class="ti">〰️</div><div class="tband" style="color:var(--green)">Low</div><div class="tval">1.2</div><div class="tname">Stress</div></div>
+            </div>
+          </div>
+
+          <div class="sh">Review</div>
+          <div class="pillmark" data-pill="⑥ shows daily">
+            <div class="card rev">
+              <span style="font-size:18px">📅</span>
+              <div><div class="rs">78 <span class="rd">▲ +5</span></div><div class="rt">3 wins this week</div></div>
+              <div class="chev">›</div>
+            </div>
+          </div>
+
+          <div class="foot">Updated 2m ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PROPOSED ================= -->
+    <div class="col">
+      <div class="coltitle"><span class="tag new">Proposed</span><h2>Whoop like, body first</h2></div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="r">5G&nbsp;&nbsp;100%</span></div>
+
+          <div class="greet">
+            <div><div class="g1">Good morning, Ayush</div><div class="g2">Tuesday, June 23</div></div>
+            <div class="streak">
+              <span class="fl">🔥</span><span class="n">12</span>
+              <span class="freeze"><i></i><i></i><i class="used"></i></span>
+            </div>
+          </div>
+
+          <!-- big recovery hero -->
+          <div class="card hero">
+            <div class="ring-wrap">
+              <svg width="170" height="170" viewBox="0 0 170 170">
+                <circle cx="85" cy="85" r="74" fill="none" stroke="#16191E" stroke-width="13"/>
+                <circle cx="85" cy="85" r="74" fill="none" stroke="var(--green)" stroke-width="13"
+                  stroke-linecap="round" stroke-dasharray="465" stroke-dashoffset="130" transform="rotate(-90 85 85)"/>
+              </svg>
+              <div class="ring-num"><span class="big">72</span><span class="pct">Recovery</span></div>
+            </div>
+            <div class="why">HRV is steady. Good day to train.</div>
+            <span class="live"><i></i> Updated just now</span>
+          </div>
+
+          <!-- two dials: sleep + strain -->
+          <div class="dials">
+            <div class="dial">
+              <div class="dwrap">
+                <svg width="74" height="74" viewBox="0 0 74 74">
+                  <circle cx="37" cy="37" r="31" fill="none" stroke="#16191E" stroke-width="7"/>
+                  <circle cx="37" cy="37" r="31" fill="none" stroke="var(--green)" stroke-width="7"
+                    stroke-linecap="round" stroke-dasharray="195" stroke-dashoffset="29" transform="rotate(-90 37 37)"/>
+                </svg>
+                <div class="dnum">7:12</div>
+              </div>
+              <div class="dlbl">Sleep</div><div class="dsub">85% · Good</div>
+            </div>
+            <div class="dial">
+              <div class="dwrap">
+                <svg width="74" height="74" viewBox="0 0 74 74">
+                  <circle cx="37" cy="37" r="31" fill="none" stroke="#16191E" stroke-width="7"/>
+                  <circle cx="37" cy="37" r="31" fill="none" stroke="var(--amber)" stroke-width="7"
+                    stroke-linecap="round" stroke-dasharray="195" stroke-dashoffset="63" transform="rotate(-90 37 37)"/>
+                </svg>
+                <div class="dnum">14.2</div>
+              </div>
+              <div class="dlbl">Strain</div><div class="dsub">of 21 · High</div>
+            </div>
+          </div>
+
+          <!-- one action -->
+          <div class="card action">
+            <div class="ic">🏃</div>
+            <div>
+              <div class="at">Take it easy today</div>
+              <div class="as">Strain is high and recovery is moderate</div>
+              <div class="ap">Why: HRV down vs your 7 day baseline</div>
+            </div>
+            <div class="chev">›</div>
+          </div>
+
+          <!-- vitals (sleep + strain promoted out) -->
+          <div class="sh">Vitals</div>
+          <div class="strip">
+            <div class="tile alert"><div class="ti">〰️</div><div class="tband">Elevated</div><div class="tval">4.8</div><div class="tname">Stress</div></div>
+            <div class="tile"><div class="ti">🏃</div><div class="tband" style="color:var(--txt)">On track</div><div class="tval">32</div><div class="tname">Vitality</div></div>
+            <div class="tile"><div class="ti">🧠</div><div class="tband" style="color:var(--txt)">Sharp</div><div class="tval">85</div><div class="tname">Brain</div></div>
+            <div class="tile"><div class="ti">🌸</div><div class="tband" style="color:var(--txt)">Day 14</div><div class="tval">Luteal</div><div class="tname">Cycle</div></div>
+          </div>
+
+          <!-- everything else: one collapsed row -->
+          <div class="sh">Insights</div>
+          <div class="card inrow">
+            <div class="ic">✨</div>
+            <div><div class="it">Today's insights</div><div class="is">Forecast, patterns, ask your data</div></div>
+            <div class="chev">›</div>
+          </div>
+
+          <div class="foot">Updated just now</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- legend -->
+  <div class="legend">
+    <h3>Red pills marked on the left</h3>
+    <ul>
+      <li><span class="num">1</span><span><b>Vitals buried + hero small.</b> The body numbers sit under 5 AI cards; recovery is only 34pt.</span></li>
+      <li><span class="num">2</span><span><b>5 smart cards in a row.</b> Action, narrative, intelligence, forecast, ask data all stack before vitals.</span></li>
+      <li><span class="num">4</span><span><b>Strain and Sleep demoted.</b> Ranked same as bio age inside a scroll strip.</span></li>
+      <li><span class="num">6</span><span><b>Weekly review every day.</b> Should appear only on review day.</span></li>
+      <li><span class="num">7</span><span><b>Daily narrative repeats the hero.</b> Same signals, slower prose.</span></li>
+      <li><span class="num">10</span><span><b>Model jargon on home.</b> “87% confidence”, “strength 0.64”, CI ranges belong behind a tap.</span></li>
+      <li><span class="num">12</span><span><b>“Body Intelligence” name.</b> Research label, no life impact.</span></li>
+      <li><span class="num">13</span><span><b>Banners gate the score.</b> Activation bar + 3 question survey crowd the morning glance.</span></li>
+    </ul>
+  </div>
+</body>
+</html>

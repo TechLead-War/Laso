@@ -1,0 +1,303 @@
+<title>Laso Soft Lock — Aspirational Paywall</title>
+<style>
+  :root{
+    --bg:#000; --card:#17181B; --card2:#1F2023; --line:#26272B;
+    --blue:#0A84FF; --blueDim:rgba(10,132,255,.14);
+    --green:#30D158; --greenTxt:#6EE7A0; --greenDim:rgba(48,209,88,.15);
+    --pink:#FF6482; --red:#FF453A;
+    --txt:#FFF; --txt2:#98989F; --txt3:#5D5E63;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-font-smoothing:antialiased; margin:0; padding:0}
+  body{
+    font-family:-apple-system,"SF Pro Display","SF Pro Text",system-ui,sans-serif;
+    background:radial-gradient(1100px 600px at 50% -10%, #101318 0%, var(--bg) 55%);
+    color:var(--txt); min-height:100vh; padding:40px 18px 80px;
+  }
+  .head{max-width:1080px; margin:0 auto 8px}
+  .head .eyebrow{font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--blue)}
+  .head h1{font-size:26px; font-weight:800; letter-spacing:-.02em; margin-top:8px; text-wrap:balance}
+  .head p{color:var(--txt2); font-size:14px; margin-top:8px; line-height:1.6; max-width:64ch}
+  .head p b{color:var(--txt); font-weight:600}
+
+  .stage{display:flex; gap:34px; justify-content:center; flex-wrap:wrap; align-items:flex-start; max-width:1180px; margin:34px auto 0}
+  .col{width:344px; max-width:100%}
+  .coltitle{display:flex; align-items:center; gap:9px; margin:0 4px 12px}
+  .coltitle .tag{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:4px 9px; border-radius:999px}
+  .tag.now{background:#3A1416; color:#FF8589; border:1px solid #5a2225}
+  .tag.new{background:var(--greenDim); color:var(--greenTxt); border:1px solid #1f5a3c}
+  .tag.moment{background:var(--blueDim); color:var(--blue); border:1px solid #164069}
+  .coltitle h2{font-size:15px; font-weight:600; color:var(--txt2)}
+
+  .phone{background:var(--bg); border:1px solid var(--line); border-radius:42px; padding:12px;
+    box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 0 0 2px #000; height:712px; position:relative; overflow:hidden}
+  .notch{position:absolute; top:12px; left:50%; transform:translateX(-50%); width:118px; height:26px;
+    background:#000; border-radius:0 0 16px 16px; z-index:6}
+  .screen{height:100%; border-radius:32px; overflow-y:auto; overflow-x:hidden; position:relative;
+    background:var(--bg); padding:46px 14px 120px}
+  .screen::-webkit-scrollbar{width:0}
+  .statusbar{display:flex; justify-content:space-between; font-size:13px; font-weight:600; padding:0 6px 6px; opacity:.85}
+  .caption{margin:14px 6px 0; font-size:13px; line-height:1.55; color:var(--txt2)}
+  .caption b{color:var(--txt); font-weight:600}
+
+  /* shared bits */
+  .lock{width:12px; height:12px; stroke:var(--blue); fill:none; stroke-width:2.2; stroke-linecap:round; flex:0 0 auto}
+  .lock.grey{stroke:var(--txt3)}
+  .blurred{filter:blur(10px); user-select:none}
+  .blur-soft{filter:blur(5px); user-select:none}
+  .card{background:var(--card); border-radius:var(--radius); padding:16px; margin:12px 2px}
+
+  /* ===== NOW: onboarding paywall ===== */
+  .pw .prog{display:flex; align-items:center; gap:10px; padding:8px 4px 2px}
+  .pw .back{width:34px; height:34px; border-radius:50%; background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--txt2); font-size:15px}
+  .pw .bar{flex:1; height:3px; border-radius:2px; background:linear-gradient(90deg, var(--blue) 96%, #2a2b2f 96%)}
+  .pw .steps{font-size:13px; color:var(--txt2); font-weight:600}
+  .pw .eyebrow{font-size:12px; font-weight:700; letter-spacing:.2em; color:var(--blue); margin:16px 4px 0}
+  .pw h3{font-size:26px; font-weight:800; letter-spacing:-.02em; margin:8px 4px 0; line-height:1.15}
+  .prow{display:flex; align-items:center; gap:12px; padding:11px 2px}
+  .prow + .prow{border-top:1px solid var(--line)}
+  .prow .pic{width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex:0 0 auto}
+  .prow .pic.amber{background:#3a2c10}
+  .prow .pic.red{background:#3a1620}
+  .prow .pt{font-size:15px; font-weight:700}
+  .prow .ps{font-size:12.5px; color:var(--txt2); margin-top:2px}
+  .prow .chk{margin-left:auto; color:var(--green); font-size:16px; font-weight:700}
+  .tl{margin:16px 6px 0; position:relative; padding-left:26px}
+  .tl::before{content:""; position:absolute; left:8px; top:8px; bottom:14px; width:2px; background:linear-gradient(180deg, var(--blue), #16324f)}
+  .tstep{position:relative; padding-bottom:16px}
+  .tstep::before{content:""; position:absolute; left:-24px; top:4px; width:12px; height:12px; border-radius:50%; border:2.5px solid var(--blue); background:var(--bg)}
+  .tstep.fill::before{background:var(--blue)}
+  .tstep .td{font-size:11px; font-weight:700; letter-spacing:.12em; color:var(--blue)}
+  .tstep .tt{font-size:16px; font-weight:800; margin-top:2px}
+  .tstep .ts{font-size:12.5px; color:var(--txt2); margin-top:2px}
+  .plan{display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:16px; padding:14px; margin:10px 2px; background:var(--card)}
+  .plan.sel{border:1.5px solid var(--blue); background:#0b1520}
+  .plan .radio{width:20px; height:20px; border-radius:50%; border:2px solid var(--txt3); flex:0 0 auto}
+  .plan.sel .radio{border-color:var(--blue); box-shadow:inset 0 0 0 4.5px var(--bg); background:var(--blue)}
+  .plan .pn{font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px}
+  .plan .save{font-size:11px; font-weight:700; color:var(--greenTxt); background:var(--greenDim); border-radius:999px; padding:3px 8px}
+  .plan .pd{font-size:12.5px; color:var(--txt2); margin-top:3px}
+  .plan .pr{margin-left:auto; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums}
+  .bluebtn{display:block; width:100%; padding:16px; border-radius:16px; background:var(--blue); color:#fff;
+    font-weight:700; font-size:16px; text-align:center; margin-top:12px}
+  .legal{display:flex; justify-content:center; gap:18px; font-size:12px; color:var(--txt3); margin-top:12px}
+
+  /* ===== PROPOSED: soft-locked home ===== */
+  .greet h3{font-size:24px; font-weight:800; letter-spacing:-.02em; padding:2px 4px 0}
+  .greet .gd{font-size:14px; color:var(--txt2); padding:2px 4px 0}
+  .score{background:linear-gradient(135deg,#0d2b1c 0%, #08150e 70%); border:1px solid #14311f; display:flex; gap:14px; align-items:center}
+  .ring-wrap{position:relative; width:104px; height:104px; flex:0 0 auto}
+  .ring{position:absolute; inset:0; border-radius:50%;
+    background:conic-gradient(from 210deg, var(--green) 82%, #14311f 0);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px))}
+  .ring-num{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center}
+  .ring-num .big{font-size:34px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums}
+  .ring-num .sm{font-size:12px; color:#9fd8b4; margin-top:2px}
+  .score .st{font-size:18px; font-weight:800}
+  .score .pill{display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:12.5px; font-weight:700;
+    color:var(--greenTxt); background:var(--greenDim); border-radius:999px; padding:5px 10px}
+  .score .ss{font-size:12px; color:var(--txt2); margin-top:8px; line-height:1.45}
+  .lockchip{display:inline-flex; align-items:center; gap:5px; margin-top:8px; font-size:10px; font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--txt2);
+    background:rgba(0,0,0,.5); border:1px solid var(--line); border-radius:999px; padding:4px 9px}
+  .streak{display:flex; align-items:center; gap:10px; background:var(--card); border-radius:14px; padding:12px 14px; margin:12px 2px}
+  .streak .stx{font-size:13px; font-weight:600; flex:1}
+  .streak .dots{display:flex; gap:6px; align-items:center}
+  .streak .dots i{width:5px; height:5px; border-radius:50%; background:#3a3b40; display:block}
+  .streak .dots i.on{background:var(--pink)}
+  .streak .n{font-size:14px; font-weight:800; color:var(--red)}
+  .wcard .wtop{display:flex; align-items:center; justify-content:space-between}
+  .wcard .wt{font-size:16px; font-weight:800}
+  .wcard .ws{font-size:12.5px; color:var(--txt2); margin-top:3px}
+  .wcard .count{font-size:24px; font-weight:800; color:var(--blue); font-variant-numeric:tabular-nums}
+  .insrow{display:flex; gap:11px; align-items:flex-start; padding:11px 0 2px; border-top:1px solid var(--line); margin-top:12px}
+  .insrow .pic{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex:0 0 auto}
+  .insrow .pic.amber{background:#3a2c10}
+  .insrow .pic.red{background:#3a1620}
+  .insrow .it{font-size:14px; font-weight:700}
+  .insrow .is{font-size:12.5px; color:var(--txt2); margin-top:2px; line-height:1.4}
+  .insrow .lock{margin-left:auto; margin-top:4px}
+  .hrv{display:flex; align-items:center; gap:12px}
+  .hrv .hic{width:38px; height:38px; border-radius:11px; background:var(--green); display:flex; align-items:center; justify-content:center; font-size:17px; flex:0 0 auto}
+  .hrv .ht{font-size:15px; font-weight:800}
+  .hrv .hs{font-size:12.5px; color:var(--txt2); margin-top:2px}
+  .sh{font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--txt3); margin:16px 8px 0}
+  .ask{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:999px; padding:13px 16px; margin:10px 2px;
+    font-size:14px; color:var(--txt2); font-style:italic}
+  .ask .lock{margin-left:auto}
+  .ctabar{position:absolute; left:12px; right:12px; bottom:12px; z-index:5; border-radius:0 0 32px 32px; overflow:hidden;
+    padding:24px 12px 10px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.95) 32%)}
+  .ctabar .bluebtn{margin-top:0; padding:14px}
+  .ctabar .under{text-align:center; font-size:11px; color:var(--txt3); margin-top:7px}
+  .tabbar{display:flex; justify-content:space-around; align-items:center; background:rgba(23,24,27,.9);
+    border:1px solid var(--line); border-radius:999px; padding:7px 10px; margin-top:9px}
+  .tab{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; color:var(--txt2); padding:5px 12px}
+  .tab.sel{background:var(--card2); border-radius:999px; color:var(--txt)}
+  .tab.sel .ti{color:var(--pink)}
+  .tab .ti{font-size:15px}
+
+  /* ===== unlock sheet ===== */
+  .dimmed{filter:blur(3px) brightness(.45); pointer-events:none}
+  .sheet{position:absolute; left:10px; right:10px; bottom:10px; z-index:5; background:#131417;
+    border:1px solid var(--line); border-radius:26px 26px 34px 34px; padding:18px 16px 14px}
+  .sheet .grab{width:36px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 14px}
+  .sheet .eyebrow{font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--blue); text-align:center}
+  .sheet h3{font-size:22px; font-weight:800; text-align:center; letter-spacing:-.01em; margin-top:6px}
+  .sheet .ss{font-size:13px; color:var(--txt2); text-align:center; margin-top:7px; line-height:1.5}
+  .sheet .prow .pt{font-size:14px}
+  .sheet .prow .ps{font-size:12px}
+  .sheet .fine{text-align:center; font-size:11px; color:var(--txt3); margin-top:10px}
+
+  /* mechanics */
+  .mech{max-width:1080px; margin:52px auto 0}
+  .mech h2{font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--txt3); margin:0 4px 14px}
+  .mgrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:12px}
+  .mcard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px}
+  .mcard .mn{font-size:14px; font-weight:700; color:var(--blue)}
+  .mcard p{font-size:13px; color:var(--txt2); line-height:1.55; margin-top:7px}
+  .mcard p b{color:var(--txt); font-weight:600}
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="lk"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="5" y="10" width="14" height="10" rx="2"/></g>
+</defs></svg>
+
+<div class="head">
+  <div class="eyebrow">Laso · Paywall Concept</div>
+  <h1>Soft lock: the whole app becomes the ad</h1>
+  <p>Today the trial paywall stands <b>before</b> the app, so the user pays for a promise. The soft lock lets everyone in: the real home screen renders with their <b>real HealthKit data</b>, but every score and insight sits behind a blur. Nothing is usable, everything is visible, and all of it is about <b>them</b>.</p>
+</div>
+
+<div class="stage">
+
+  <!-- NOW -->
+  <div class="col">
+    <div class="coltitle"><span class="tag now">Now</span><h2>Hard wall before the app</h2></div>
+    <div class="phone"><div class="notch"></div>
+      <div class="screen pw">
+        <div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+        <div class="prog"><div class="back">‹</div><div class="bar"></div><div class="steps">16 / 16</div></div>
+        <div class="eyebrow">YOUR LASO PLAN</div>
+        <h3>You unlocked your first pattern.</h3>
+        <div class="card">
+          <div class="prow"><div class="pic amber">📅</div><div><div class="pt">Your Sunday dip</div><div class="ps">The day your recovery runs lowest.</div></div><div class="chk">✓</div></div>
+          <div class="prow"><div class="pic red">❤️</div><div><div class="pt">Your resting heart rate</div><div class="ps">54 bpm, your true baseline</div></div><div class="chk">✓</div></div>
+        </div>
+        <div class="tl">
+          <div class="tstep fill"><div class="td">DAY 1</div><div class="tt">Today</div><div class="ts">Full access opens.</div></div>
+          <div class="tstep"><div class="td">DAY 6</div><div class="tt">We remind you</div><div class="ts">Two days before the trial ends.</div></div>
+          <div class="tstep"><div class="td">DAY 8</div><div class="tt">Renews</div><div class="ts">Cancel anytime before this.</div></div>
+        </div>
+        <div class="plan sel"><div class="radio"></div><div><div class="pn">Annual <span class="save">Save 37%</span></div><div class="pd">That's about $5.00 per month</div></div><div class="pr">$59.99/yr</div></div>
+        <div class="plan"><div class="radio"></div><div><div class="pn">Monthly</div><div class="pd">Cancel anytime</div></div><div class="pr">$7.99/mo</div></div>
+        <div class="bluebtn">Continue</div>
+        <div class="legal"><span>Restore</span><span>Terms</span><span>Privacy</span></div>
+      </div>
+    </div>
+    <p class="caption"><b>The problem:</b> decline this screen and the app is over. The user has never seen their home screen, their score, or a single day of the product. There is nothing to come back to and nothing to want.</p>
+  </div>
+
+  <!-- PROPOSED -->
+  <div class="col">
+    <div class="coltitle"><span class="tag new">Proposed</span><h2>Everything locked, everything visible</h2></div>
+    <div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+        <div class="greet"><h3>Good Morning, Alex</h3><div class="gd">Saturday, 20 June</div></div>
+
+        <div class="card score">
+          <div class="ring-wrap">
+            <div class="ring"></div>
+            <div class="ring-num"><span class="big blurred">95</span><span class="sm">Health</span></div>
+          </div>
+          <div>
+            <div class="st">Daily Health Score</div>
+            <div class="pill"><span>Green Day.</span> <span class="blur-soft">Push Hard.</span></div>
+            <div class="ss">Your score is computed and waiting.</div>
+            <div class="lockchip"><svg class="lock" viewBox="0 0 24 24"><use href="#lk"/></svg>Unlock to read it</div>
+          </div>
+        </div>
+
+        <div class="streak">
+          <div class="stx">Day 3 of 7. First comparison in 4 days</div>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="n">14</div>
+        </div>
+
+        <div class="card wcard">
+          <div class="wtop">
+            <div><div class="wt">Patterns found in your data</div><div class="ws">From your last 3 nights</div></div>
+            <div class="count">9</div>
+          </div>
+          <div class="insrow"><div class="pic amber">📅</div><div><div class="it">Your Sunday dip</div><div class="is">Your recovery runs lowest on <span class="blur-soft">Sundays, 18 points under</span></div></div><svg class="lock" viewBox="0 0 24 24"><use href="#lk"/></svg></div>
+          <div class="insrow"><div class="pic red">☕️</div><div><div class="it">Late caffeine cost</div><div class="is">Coffee after 4pm is taking <span class="blur-soft">41 min of your deep sleep</span></div></div><svg class="lock" viewBox="0 0 24 24"><use href="#lk"/></svg></div>
+        </div>
+
+        <div class="card hrv">
+          <div class="hic">🤍</div>
+          <div><div class="ht">HRV Trending Up</div><div class="hs"><span class="blur-soft">Keep your current routine.</span></div></div>
+          <svg class="lock" viewBox="0 0 24 24" style="margin-left:auto"><use href="#lk"/></svg>
+        </div>
+
+        <div class="sh">Concierge</div>
+        <div class="ask">Am I getting enough deep sleep? <svg class="lock grey" viewBox="0 0 24 24"><use href="#lk"/></svg></div>
+
+        <div class="ctabar">
+          <div class="bluebtn">Unlock my report</div>
+          <div class="under">$5 a month, billed yearly · Cancel anytime</div>
+          <div class="tabbar">
+            <div class="tab sel"><span class="ti">📋</span>Today</div>
+            <div class="tab"><span class="ti">📈</span>Live</div>
+            <div class="tab"><span class="ti">🧭</span>Explore</div>
+            <div class="tab"><span class="ti">⚙️</span>Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>The shift:</b> the real home screen, alive with their real data. The ring fills, the band pill starts to read, then blurs. Patterns show their titles, hide their numbers. Inputs stay free, answers stay locked. One quiet CTA, no popups.</p>
+  </div>
+
+  <!-- UNLOCK MOMENT -->
+  <div class="col">
+    <div class="coltitle"><span class="tag moment">Tap anything</span><h2>The paywall sells their own data</h2></div>
+    <div class="phone"><div class="notch"></div>
+      <div class="screen">
+        <div class="dimmed">
+          <div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+          <div class="greet"><h3>Good Morning, Alex</h3><div class="gd">Saturday, 20 June</div></div>
+          <div class="card score">
+            <div class="ring-wrap"><div class="ring"></div><div class="ring-num"><span class="big blurred">95</span><span class="sm">Health</span></div></div>
+            <div><div class="st">Daily Health Score</div><div class="pill"><span>Green Day.</span></div></div>
+          </div>
+          <div class="streak"><div class="stx">Day 3 of 7. First comparison in 4 days</div><div class="n">14</div></div>
+        </div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="eyebrow">YOUR LASO PLAN</div>
+          <h3>Your report is ready.</h3>
+          <div class="ss">Your score, 9 patterns and every answer are already computed from your own body. Unlock to read them.</div>
+          <div class="card" style="margin:12px 0">
+            <div class="prow"><div class="pic amber">📅</div><div><div class="pt">Your Sunday dip</div><div class="ps">Written and waiting</div></div><svg class="lock" viewBox="0 0 24 24" style="margin-left:auto"><use href="#lk"/></svg></div>
+            <div class="prow"><div class="pic red">☕️</div><div><div class="pt">Late caffeine cost</div><div class="ps">Written and waiting</div></div><svg class="lock" viewBox="0 0 24 24" style="margin-left:auto"><use href="#lk"/></svg></div>
+          </div>
+          <div class="plan sel" style="margin:8px 0"><div class="radio"></div><div><div class="pn">Annual <span class="save">Save 37%</span></div><div class="pd">That's about $5.00 per month</div></div><div class="pr">$59.99/yr</div></div>
+          <div class="plan" style="margin:8px 0"><div class="radio"></div><div><div class="pn">Monthly</div><div class="pd">Cancel anytime</div></div><div class="pr">$7.99/mo</div></div>
+          <div class="bluebtn">Unlock my report</div>
+          <div class="fine">Restore · Terms · Privacy</div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><b>The close:</b> the same plan sheet you ship today, but it rises over their own blurred report and lists what is already written about them, not a feature list. The headline is what is waiting, not what Laso does.</p>
+  </div>
+</div>
+
+<div class="mech">
+  <h2>Why this converts</h2>
+  <div class="mgrid">
+    <div class="mcard"><div class="mn">Blur, do not hide</div><p>Locked cards keep their exact shape, color and motion. The user sees <b>precisely</b> what they are missing. A hidden feature list creates no desire.</p></div>
+    <div class="mcard"><div class="mn">It is addressed to them</div><p>The ring, the band pill and the half readable pattern lines are computed from <b>their real HealthKit data</b>. It reads like an unopened letter about their own body.</p></div>
+    <div class="mcard"><div class="mn">Loss grows daily</div><p>"9 patterns" becomes 12 tomorrow. The app keeps computing for free, so the debt of unread knowledge <b>compounds</b> every night they sleep.</p></div>
+    <div class="mcard"><div class="mn">One quiet close</div><p>No popups, no timers. Every screen does the selling, the single blue button only <b>collects the decision</b>. Check-ins and questions stay typeable so users keep investing.</p></div>
+  </div>
+</div>

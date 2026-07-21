@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Laso, WHOOP style App Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    --bg:#0F1215; --bg2:#171B20; --bg3:#20262D; --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.13);
+    --hi:#F2F4F7; --mid:rgba(242,244,247,.62); --lo:rgba(242,244,247,.38);
+    --optimal:#16EC06; --fair:#FFDE00; --poor:#FF0026;
+    --sleep:#7BA1BB; --strain:#0093E7; --stress:#A78BFA; --accent:#0093E7;
+    --fn:'Oswald','Barlow Semi Condensed','DIN Alternate','Helvetica Neue',Arial,sans-serif;
+    --fp:'Barlow Semi Condensed',-apple-system,'Helvetica Neue',Arial,sans-serif;
+  }
+  html{background:#090b0d}
+  body{font-family:var(--fp);color:var(--hi);display:flex;justify-content:center;overflow-x:hidden;background:#090b0d}
+  button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  svg{display:block}
+
+  .app{width:100%;max-width:480px;min-height:100dvh;position:relative;background:linear-gradient(180deg,#1b232b 0%,var(--bg) 30%);display:flex;flex-direction:column}
+  @media (min-width:560px){
+    body{padding:28px 0}
+    .app{min-height:calc(100dvh - 56px);border:1px solid #232a31;border-radius:40px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.65)}
+  }
+
+  /* ---------- app bar ---------- */
+  .appbar{padding:18px 18px 10px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#1b232b 70%,transparent);backdrop-filter:blur(14px)}
+  .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#0093E733,#7BA1BB33);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:0 0 auto;font-family:var(--fn)}
+  .daystrip{flex:1;display:flex;gap:4px;justify-content:space-between}
+  .day{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 6px;border-radius:12px;transition:background .18s}
+  .day .dw{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--lo)}
+  .day .dn{font-family:var(--fn);font-size:14px;font-weight:600;color:var(--mid);font-variant-numeric:tabular-nums}
+  .day .dd{width:5px;height:5px;border-radius:50%}
+  .day.on{background:var(--bg3)}
+  .day.on .dn{color:var(--hi)}
+  .day.on .dw{color:var(--mid)}
+
+  /* ---------- views ---------- */
+  main{flex:1;position:relative}
+  .view{display:none;padding:4px 18px 118px;animation:fadeUp .32s ease}
+  .view.on{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .view,.sheet-panel,.ringp,.orb{animation:none!important;transition:none!important}
+  }
+
+  .h1{font-family:var(--fn);font-size:21px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:8px 2px 2px}
+  .sub{font-size:14px;color:var(--mid);margin:2px 2px 0}
+  .label{font-family:var(--fn);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--lo)}
+  .it{font-size:15.5px;font-weight:600}
+
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:12px}
+  .rowline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .chev{color:var(--lo)}
+
+  .greet{display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px}
+  .streak{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--strain) 16%,transparent);border:1px solid color-mix(in srgb,var(--strain) 42%,transparent);color:#69c2f5;border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;font-family:var(--fn)}
+  .livehr{display:inline-flex;align-items:center;gap:7px;margin:10px 2px 0;font-size:13.5px;color:var(--mid);font-weight:600}
+  .livehr .pulse{width:8px;height:8px;border-radius:50%;background:var(--poor);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .livehr b{font-family:var(--fn);color:var(--hi);font-variant-numeric:tabular-nums}
+
+  /* gauges */
+  .hero{display:flex;flex-direction:column;align-items:center;margin-top:14px}
+  .ringbox{position:relative;display:flex;align-items:center;justify-content:center}
+  .ringp{transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1),stroke-dasharray 1s cubic-bezier(.22,1,.36,1)}
+  .ringcenter{position:absolute;display:flex;flex-direction:column;align-items:center}
+  .heronum{font-family:var(--fn);font-weight:600;font-size:clamp(52px,17vw,72px);line-height:.95;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+  .heropct{font-family:var(--fn);font-size:12px;letter-spacing:.18em;color:var(--lo);font-weight:600;margin-top:3px}
+  .tier{margin-top:10px;font-family:var(--fn);font-size:17px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .why{margin-top:8px;font-size:15px;color:var(--mid);text-align:center;max-width:310px;line-height:1.45}
+  .delta{position:absolute;top:2px;right:-2px;font-family:var(--fn);font-weight:600;font-size:13px;border-radius:999px;padding:4px 10px;font-variant-numeric:tabular-nums}
+
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+  .duocell{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 4px 12px;border-radius:18px;transition:background .16s}
+  .duocell:hover{background:var(--bg3)}
+  .duonum{position:absolute;display:flex;flex-direction:column;align-items:center}
+  .duonum b{font-family:var(--fn);font-weight:600;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+  .duonum span{font-family:var(--fn);font-size:9.5px;letter-spacing:.16em;color:var(--lo);margin-top:2px}
+  .duoword{font-family:var(--fn);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+
+  .cta{width:100%;background:var(--strain);color:#fff;border-radius:14px;padding:14px;font-family:var(--fn);font-size:14.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:filter .16s}
+  .cta:hover{filter:brightness(1.12)}
+
+  /* sleep bar card */
+  .sbar{height:14px;border-radius:7px;background:var(--bg3);overflow:hidden;margin-top:10px}
+  .sbar i{display:block;height:100%;border-radius:7px;background:var(--sleep)}
+
+  /* my day */
+  .md{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+  .md:last-child{border-bottom:0}
+  .md .mt{flex:0 0 62px;font-family:var(--fn);font-size:12px;color:var(--lo);font-weight:600}
+  .md .mi{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .md .mn{flex:1;font-size:14.5px;font-weight:600}
+  .md .mv{font-family:var(--fn);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+
+  /* vitals rows */
+  .crow{width:100%;display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);text-align:left}
+  .crow:last-child{border-bottom:0;padding-bottom:2px}
+  .crow .cn{flex:0 0 92px;font-size:13.5px;font-weight:600;color:var(--mid)}
+  .crow .cv{flex:0 0 74px;font-family:var(--fn);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+  .crow .cv small{font-size:11px;color:var(--lo);font-weight:600}
+  .bb{flex:1;height:14px;position:relative;border-radius:7px;background:var(--bg3)}
+  .bb-band{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.09);border-radius:7px}
+  .bb-dot{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(0,0,0,.35)}
+  .cstat{flex:0 0 auto;font-size:12px;font-weight:700}
+  .hmrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+  .hmrow:last-child{border-bottom:0}
+  .hmrow .hn{font-size:14px;font-weight:600;color:var(--mid)}
+  .hmrow .hv{display:flex;align-items:center;gap:8px;font-family:var(--fn);font-weight:600;font-size:14.5px;font-variant-numeric:tabular-nums}
+  .dot{width:8px;height:8px;border-radius:50%}
+
+  .insitem{display:flex;gap:10px;font-size:14px;color:var(--mid);line-height:1.45}
+  .insitem .idot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex:0 0 auto}
+
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .stat{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+  .stat .sv{font-family:var(--fn);font-weight:600;font-size:24px;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+  .stat .sl{font-family:var(--fn);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lo);margin-top:5px}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mid);font-weight:600}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+  .cal i{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;font-style:normal}
+  .cal i.today{box-shadow:0 0 0 2px var(--hi)}
+
+  /* coach chat */
+  .chat{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .msg{max-width:86%;padding:12px 14px;border-radius:18px;font-size:14.5px;line-height:1.5;white-space:pre-line}
+  .msg.bot{background:var(--bg2);border:1px solid var(--line);border-bottom-left-radius:6px;align-self:flex-start;color:var(--hi)}
+  .msg.me{background:color-mix(in srgb,var(--strain) 24%,var(--bg3));border:1px solid color-mix(in srgb,var(--strain) 34%,transparent);border-bottom-right-radius:6px;align-self:flex-end}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chipq{font-size:13px;color:var(--mid);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:9px 14px;transition:.16s}
+  .chipq:hover{color:var(--hi);border-color:var(--strain)}
+  .chipq.on{color:var(--hi);border-color:var(--strain);background:color-mix(in srgb,var(--strain) 16%,transparent)}
+  .askrow{display:flex;gap:8px;margin-top:14px}
+  .askrow input{flex:1;background:var(--bg2);border:1px solid var(--line2);border-radius:14px;padding:13px 15px;color:var(--hi);font-size:14.5px;font-family:var(--fp);outline:none}
+  .askrow input:focus{border-color:var(--strain)}
+  .askrow button{background:var(--strain);color:#fff;border-radius:14px;padding:0 18px;font-weight:700;font-size:14px}
+
+  /* community */
+  .lb{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .lb:last-child{border-bottom:0}
+  .lb .rk{flex:0 0 20px;font-family:var(--fn);font-weight:600;color:var(--lo);font-size:14px}
+  .lb .av2{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--fn);font-weight:600;font-size:13px;flex:0 0 auto}
+  .lb .nm{flex:1;font-size:14.5px;font-weight:600}
+  .lb .sc{font-family:var(--fn);font-weight:600;font-size:16px;color:var(--strain);font-variant-numeric:tabular-nums}
+  .lb.me{background:color-mix(in srgb,var(--strain) 8%,transparent);border-radius:12px;padding:10px;margin:0 -10px;border-bottom:0}
+  .feed{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .feed:last-child{border-bottom:0}
+  .feed .ft{flex:1}
+  .feed .fn2{font-size:14.5px;font-weight:600}
+  .feed .fd{font-size:12.5px;color:var(--lo);margin-top:3px}
+  .feed .fs{font-family:var(--fn);font-weight:600;font-size:16px;color:var(--strain)}
+
+  /* tab bar */
+  .tabbar{position:sticky;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:center;padding:10px 4px calc(12px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--lo);font-family:var(--fn);font-size:10px;font-weight:600;letter-spacing:.1em;padding:4px 10px;border-radius:12px;transition:color .18s}
+  .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tab.on{color:var(--hi)}
+
+  .fab{position:absolute;right:16px;bottom:96px;z-index:28;width:52px;height:52px;border-radius:50%;background:var(--strain);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,147,231,.4)}
+  .fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .fab.hide{display:none}
+
+  /* sheet */
+  .sheetwrap{position:fixed;inset:0;z-index:50;display:none;justify-content:center;align-items:flex-end}
+  .sheetwrap.open{display:flex}
+  .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;transition:opacity .25s}
+  .sheetwrap.open .backdrop{opacity:1}
+  .sheet-panel{position:relative;width:100%;max-width:480px;max-height:92dvh;background:var(--bg2);border:1px solid var(--line2);border-bottom:0;border-radius:26px 26px 0 0;overflow-y:auto;padding:14px 18px 40px;transform:translateY(24px);animation:sheetUp .3s ease forwards}
+  @keyframes sheetUp{to{transform:none}}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 10px}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .sheethead .st{font-family:var(--fn);font-size:17px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .xbtn{width:32px;height:32px;border-radius:50%;background:var(--bg3);color:var(--mid);font-size:15px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+
+  .zrow{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .zrow .zl{flex:0 0 104px;font-size:12.5px;font-weight:700;color:var(--mid)}
+  .zbar{flex:1;height:12px;border-radius:6px;background:var(--bg3);overflow:hidden}
+  .zbar i{display:block;height:100%;border-radius:6px}
+  .zrow .zm{flex:0 0 62px;text-align:right;font-family:var(--fn);font-size:12.5px;font-weight:600;color:var(--mid);font-variant-numeric:tabular-nums}
+
+  .wrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+  .wrow:last-child{border-bottom:0}
+  .wrow .wn{font-size:14.5px;font-weight:600}
+  .wrow .wd{font-size:12px;color:var(--lo);margin-top:3px}
+  .wrow .ws{font-family:var(--fn);font-weight:600;font-size:17px;color:var(--strain);font-variant-numeric:tabular-nums}
+
+  .setrow{display:flex;align-items:center;justify-content:space-between;padding:14px 2px;border-bottom:1px solid var(--line);font-size:15px;font-weight:600;width:100%;text-align:left}
+  .setrow:last-child{border-bottom:0}
+  .setrow span{color:var(--lo)}
+
+  .stl{display:flex;gap:2px;margin-top:12px}
+  .stl i{flex:1;height:28px;border-radius:4px}
+  .stlx{display:flex;justify-content:space-between;font-size:10.5px;color:var(--lo);font-weight:700;margin-top:6px}
+
+  .swrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .swrow:last-child{border-bottom:0}
+  .sw{position:relative;width:44px;height:26px;border-radius:13px;background:var(--bg3);transition:background .2s;flex:0 0 auto}
+  .sw.on{background:var(--strain)}
+  .sw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+  .sw.on i{left:21px}
+
+  .badgegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .badge{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+  .badge .be{position:absolute;font-size:22px}
+  .badge .bn{font-size:12.5px;font-weight:700}
+  .badge .bp{font-family:var(--fn);font-size:11px;font-weight:600;color:var(--lo)}
+
+  .hero2{background:linear-gradient(135deg,color-mix(in srgb,var(--strain) 20%,var(--bg2)),color-mix(in srgb,var(--sleep) 18%,var(--bg2)));border:1px solid color-mix(in srgb,var(--strain) 34%,transparent);border-radius:20px;padding:22px 18px;margin-top:12px}
+  .plan{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:14px 16px;position:relative;margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+  .plan.best{border-color:var(--strain)}
+  .plan .bv{position:absolute;top:-9px;left:12px;background:var(--strain);color:#fff;font-size:10px;font-weight:800;letter-spacing:.05em;border-radius:999px;padding:3px 8px;font-family:var(--fn)}
+  .plan .pnm{font-family:var(--fn);font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .plan .pps{font-size:12px;color:var(--lo);margin-top:3px}
+  .plan .ppr{font-family:var(--fn);font-weight:600;font-size:20px}
+
+  .code{font-family:var(--fn);letter-spacing:.14em;font-weight:600;font-size:16px;background:var(--bg3);border:1px dashed var(--line2);border-radius:12px;padding:12px;text-align:center;margin-top:10px}
+
+  .onb{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:36px 28px;background:radial-gradient(120% 70% at 50% 0%,#16222c,#0F1215 62%)}
+  .onb.open{display:flex}
+  .orb{width:150px;height:150px;border-radius:50%;margin-bottom:6px;animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .orb.o0{background:radial-gradient(circle at 35% 30%,#0093E7,#034e79 72%);box-shadow:0 0 70px rgba(0,147,231,.4)}
+  .orb.o1{background:radial-gradient(circle at 35% 30%,#7BA1BB,#33566e 72%);box-shadow:0 0 70px rgba(123,161,187,.35)}
+  .onb h2{font-family:var(--fn);font-size:24px;letter-spacing:.05em;text-transform:uppercase;max-width:300px}
+  .onb p{color:var(--mid);font-size:15px;line-height:1.55;max-width:300px}
+  .onbbtn{background:var(--strain);color:#fff;border-radius:14px;padding:15px 44px;font-family:var(--fn);font-size:14px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-top:8px}
+  .onbskip{color:var(--lo);font-size:14px;font-weight:600;padding:10px}
+  .onbdials{display:flex;gap:18px;margin-bottom:4px}
+
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--line2);color:var(--hi);font-size:13px;font-weight:600;border-radius:999px;padding:10px 18px;opacity:0;transition:.25s;z-index:90;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="appbar">
+    <button class="avatar" data-go="more" aria-label="Profile">A</button>
+    <div class="daystrip" id="daystrip"></div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="view on" id="view-home">
+      <div class="greet">
+        <div>
+          <div class="h1" id="greetTitle">Good morning, Ayush</div>
+          <div class="sub" id="greetDate"></div>
+        </div>
+        <button class="streak" data-toast="12 day streak, 2 freezes left">&#128293; 12</button>
+      </div>
+      <button class="livehr" data-open="live"><span class="pulse"></span> Live <b id="liveHr">62</b> bpm, Zone 1</button>
+
+      <div class="card" style="padding:12px 8px 14px">
+        <div class="duo" id="duo" style="margin-top:0"></div>
+        <div class="why" id="heroWhy" style="max-width:none;margin:6px 12px 0"></div>
+      </div>
+
+      <button class="card" style="width:100%;text-align:left" data-open="sleep" id="sleepCard"></button>
+
+      <div class="card">
+        <div class="label">My day</div>
+        <div id="myday" style="margin-top:6px"></div>
+      </div>
+
+      <div class="card action">
+        <div class="label">Daily outlook</div>
+        <div class="it" id="actionText" style="margin:10px 0 12px;line-height:1.4"></div>
+        <button class="cta" id="actionBtn"></button>
+      </div>
+
+      <div class="statgrid" id="stepsRow"></div>
+
+      <button class="card" style="width:100%;text-align:left" data-open="stress" id="stressCard"></button>
+
+      <button class="card" style="width:100%;text-align:left" data-open="healthmonitor" id="hmCard"></button>
+
+      <button class="card rowline" style="width:100%" data-open="healthspan" id="hspanRow"></button>
+
+      <button class="card rowline" style="width:100%" data-open="cycle" id="cycleRow"></button>
+
+      <button class="card rowline" style="width:100%" data-open="insights">
+        <div style="text-align:left"><div class="it">Today&#8217;s insights</div><div class="sub">Three things worth knowing today</div></div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+
+      <button class="card rowline" style="width:100%" data-open="journal">
+        <div style="text-align:left"><div class="it">Journal</div><div class="sub" id="jSummary">2 of 6 logged today</div></div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- COACHING -->
+    <section class="view" id="view-coaching">
+      <div class="h1">Coaching</div>
+      <div class="sub">Strain, sleep and your assessments</div>
+      <div class="card" id="strainCoach"></div>
+      <div class="card" id="sleepCoach"></div>
+      <div class="card" id="planCard"></div>
+      <button class="card rowline" style="width:100%" data-open="wpa">
+        <div style="text-align:left"><div class="it">Weekly assessment</div><div class="sub" id="wpaSub"></div></div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="card rowline" style="width:100%" data-open="mpa">
+        <div style="text-align:left"><div class="it">Monthly assessment</div><div class="sub">Health state, correlations and risk</div></div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="card">
+        <div class="label">Coach</div>
+        <div class="chat" id="chat"></div>
+        <div class="chips" id="coachChips"></div>
+        <div class="askrow">
+          <input id="askInput" type="text" placeholder="Ask your data..." autocomplete="off" />
+          <button id="askBtn">Ask</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section class="view" id="view-community">
+      <div class="h1">Community</div>
+      <div class="sub">Your team, today</div>
+      <div class="card">
+        <div class="label">Morning crew, day strain</div>
+        <div id="leaderboard" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="label">Activity</div>
+        <div id="feed" style="margin-top:4px"></div>
+      </div>
+      <button class="cta" style="margin-top:14px" data-toast="Team invites open in the full app">Start a team</button>
+    </section>
+
+    <!-- MORE -->
+    <section class="view" id="view-more">
+      <div class="h1">More</div>
+      <div class="card rowline">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="avatar" style="width:52px;height:52px;font-size:20px">A</div>
+          <div><div style="font-size:17px;font-weight:700">Ayush</div><div class="sub">Member since March 2025</div></div>
+        </div>
+        <div style="text-align:right"><div style="font-family:var(--fn);font-weight:600;font-size:22px;color:#69c2f5">12</div><div class="label">Day streak</div></div>
+      </div>
+      <div class="card rowline">
+        <div><div class="it">Laso Peak</div><div class="sub">Your plan. Alerts, coach and discoveries</div></div>
+        <button class="chipq on" data-open="paywall">Manage</button>
+      </div>
+      <div class="card">
+        <div class="label">Invite friends</div>
+        <div class="code">LASO-AYUSH-21</div>
+        <div class="sub" style="margin-top:8px">1 month free for you and each friend who joins.</div>
+        <button class="cta" style="margin-top:12px" data-toast="Invite link copied">Share your code</button>
+      </div>
+      <div class="card" style="padding:6px 18px">
+        <button class="setrow" data-open="achievements">Achievements<span>&#8250;</span></button>
+        <button class="setrow" data-open="notifications">Notifications<span>&#8250;</span></button>
+        <button class="setrow" data-open="devices">Devices<span>&#8250;</span></button>
+        <button class="setrow" data-open="report">Web report<span>&#8250;</span></button>
+        <button class="setrow" data-replay>Replay the intro<span>&#8250;</span></button>
+        <button class="setrow" data-toast="Sign out works in the full app">Sign out<span>&#8250;</span></button>
+      </div>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" data-go="coaching" aria-label="Coach">
+    <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 0-3.1 6.3L21 20l-1.2-3.4A7.9 7.9 0 0 0 20 12z"/></svg>
+  </button>
+
+  <nav class="tabbar">
+    <button class="tab on" data-tab="home">
+      <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/></svg>
+      HOME
+    </button>
+    <button class="tab" data-tab="coaching">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>
+      COACHING
+    </button>
+    <button class="tab" data-tab="community">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 14.6c2.4.2 4.3 1.6 4.9 4.4"/></svg>
+      COMMUNITY
+    </button>
+    <button class="tab" data-tab="more">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      MORE
+    </button>
+  </nav>
+</div>
+
+<div class="sheetwrap" id="sheetwrap">
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet-panel" id="sheetPanel"></div>
+</div>
+<div class="onb" id="onb"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ---------- palette + bands ---------- */
+const C = {
+  optimal:'#16EC06', good:'#16EC06', fair:'#FFDE00', poor:'#FF0026',
+  sleep:'#7BA1BB', strain:'#0093E7', stress:'#A78BFA', accent:'#0093E7',
+  track:'#252C34'
+};
+const bandColor = s => s >= 75 ? C.optimal : s >= 50 ? C.fair : C.poor;
+const bandWord  = s => s >= 75 ? 'Optimal' : s >= 50 ? 'Fair' : 'Poor';
+const CHEV = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>';
+
+/* ---------- baselines (the user's 2 week normal) ---------- */
+const BASE = { hrv:62, rhr:55, resp:15.2, temp:0, spo2:97.4, vo2:46, age:29.3 };
+
+/* ---------- 7 days of data, index 6 = today ---------- */
+const DATA = [
+  {rec:62, hrv:58, rhr:57, resp:15.4, temp:0.1,  spo2:97.2, stressCalm:71, vit:-2.1, steps:9800,
+   sleep:{score:71, hrs:6.9, need:7.9, debt:1.0, stages:{deep:1.1, rem:1.3, light:4.1, awake:0.4}},
+   strain:{score:11.4, target:13.0, cal:2410, avgHr:74, maxHr:158, zones:[46,38,22,9,2], load:41,
+     workouts:[{name:'Tempo run', dur:'42 min', strain:9.1, cal:512}]}},
+  {rec:45, hrv:49, rhr:60, resp:15.9, temp:0.3,  spo2:96.9, stressCalm:54, vit:-1.6, steps:12100,
+   sleep:{score:58, hrs:6.1, need:8.3, debt:2.2, stages:{deep:0.8, rem:1.0, light:3.9, awake:0.4}},
+   strain:{score:16.8, target:12.0, cal:3120, avgHr:82, maxHr:176, zones:[38,42,35,21,8], load:78,
+     workouts:[{name:'Intervals', dur:'55 min', strain:13.6, cal:780},{name:'Evening walk', dur:'28 min', strain:4.2, cal:160}]}},
+  {rec:28, hrv:41, rhr:63, resp:16.4, temp:0.5,  spo2:96.6, stressCalm:42, vit:-1.2, steps:4200,
+   sleep:{score:52, hrs:5.8, need:8.6, debt:3.1, stages:{deep:0.7, rem:0.9, light:3.8, awake:0.4}},
+   strain:{score:6.2, target:8.0, cal:1980, avgHr:70, maxHr:132, zones:[52,24,8,2,0], load:12,
+     workouts:[{name:'Recovery walk', dur:'25 min', strain:3.8, cal:140}]}},
+  {rec:55, hrv:54, rhr:58, resp:15.6, temp:0.2,  spo2:97.0, stressCalm:63, vit:-1.8, steps:8000,
+   sleep:{score:74, hrs:7.4, need:8.1, debt:2.4, stages:{deep:1.2, rem:1.4, light:4.4, awake:0.4}},
+   strain:{score:9.8, target:11.5, cal:2260, avgHr:72, maxHr:149, zones:[48,34,16,6,1], load:28,
+     workouts:[{name:'Zone 2 ride', dur:'50 min', strain:8.4, cal:490}]}},
+  {rec:71, hrv:60, rhr:56, resp:15.3, temp:0.1,  spo2:97.3, stressCalm:76, vit:-2.4, steps:10400,
+   sleep:{score:82, hrs:7.8, need:7.9, debt:1.6, stages:{deep:1.4, rem:1.6, light:4.4, awake:0.4}},
+   strain:{score:13.1, target:14.0, cal:2740, avgHr:76, maxHr:167, zones:[42,40,26,12,4], load:64,
+     workouts:[{name:'Strength', dur:'48 min', strain:10.2, cal:430}]}},
+  {rec:88, hrv:71, rhr:52, resp:14.9, temp:-0.1, spo2:97.6, stressCalm:84, vit:-3.0, steps:14300,
+   sleep:{score:91, hrs:8.2, need:7.7, debt:0.6, stages:{deep:1.7, rem:1.8, light:4.3, awake:0.4}},
+   strain:{score:15.6, target:17.5, cal:3050, avgHr:79, maxHr:172, zones:[40,44,30,16,6], load:52,
+     workouts:[{name:'Long run', dur:'71 min', strain:13.9, cal:920}]}},
+  {rec:78, hrv:68, rhr:53, resp:15.0, temp:0.0,  spo2:97.5, stressCalm:80, vit:-2.7, steps:6200,
+   sleep:{score:85, hrs:7.6, need:7.8, debt:0.8, stages:{deep:1.5, rem:1.7, light:4.0, awake:0.4}},
+   strain:{score:8.4, target:15.5, cal:1460, avgHr:68, maxHr:141, zones:[34,22,10,3,0], load:18,
+     workouts:[{name:'Morning yoga', dur:'22 min', strain:4.6, cal:110}]}}
+];
+/* 7 extra historical points so 14 day charts have a past */
+const REC_HISTORY = [58, 66, 71, 49, 63, 75, 69];
+const REC14   = REC_HISTORY.concat(DATA.map(d => d.rec));
+const SLEEP14 = [76,68,80,74,71,85,79].concat(DATA.map(d => d.sleep.score));
+const STRAIN14= [10.2,13.5,9.1,11.8,14.2,12.6,10.9].concat(DATA.map(d => d.strain.score));
+const CALM14  = [72,66,74,70,68,78,75].concat(DATA.map(d => d.stressCalm));
+const HS30    = [61,72,55,48,66,74,80,58,45,62,70,77,52,64,69,73].concat(REC14);
+const RISK8   = [22,21,19,20,18,17,18,18];
+const VO214   = [44.9,45,45.1,45.2,45.4,45.5,45.6,45.7,45.8,45.9,46,46,46.1,46.2];
+const CYCLE28 = [52,50,55,58,60,63,66,70,74,78,82,84,86,88,85,83,80,76,72,70,68,66,64,62,60,58,56,54];
+
+/* ---------- metric catalog, single source for every vital ---------- */
+const METRICS = {
+  hrv:{n:'HRV', color:'#16EC06', base:BASE.hrv, sp:8, min:30, max:90, hib:true,
+    v:d=>d.hrv, fmt:v=>v+' <small>ms</small>',
+    series:[55,61,64,52,59,66,63].concat(DATA.map(d=>d.hrv)),
+    why:'Higher HRV means your nervous system has capacity to spare. Yours recovers fastest after two easy days in a row.'},
+  rhr:{n:'Resting HR', color:'#0093E7', base:BASE.rhr, sp:3, min:45, max:70, hib:false,
+    v:d=>d.rhr, fmt:v=>v+' <small>bpm</small>',
+    series:[58,56,55,59,57,54,55].concat(DATA.map(d=>d.rhr)),
+    why:'A lower resting heart rate means less strain at rest. Yours rises the morning after late meals or alcohol.'},
+  resp:{n:'Resp rate', color:'#A78BFA', base:BASE.resp, sp:0.6, min:13, max:18, hib:false,
+    v:d=>d.resp, fmt:v=>v+' <small>rpm</small>',
+    series:[15.4,15.1,15.0,15.6,15.3,14.9,15.1].concat(DATA.map(d=>d.resp)),
+    why:'A steady breathing rate is a quiet signal. A jump of 1 or more can flag oncoming illness before you feel it.'},
+  temp:{n:'Skin temp', color:'#FFDE00', base:0, sp:0.25, min:-1, max:1, hib:false,
+    v:d=>d.temp, fmt:v=>(v>0?'+':'')+v+' <small>&deg;C</small>',
+    series:[0.2,0.1,-0.1,0.3,0,-0.2,0.1].concat(DATA.map(d=>d.temp)),
+    why:'Skin temperature away from your baseline often shows strain, illness or cycle shifts before you feel them.'},
+  spo2:{n:'SpO2', color:'#7BA1BB', base:BASE.spo2, sp:0.5, min:94, max:100, hib:true,
+    v:d=>d.spo2, fmt:v=>v+' <small>%</small>',
+    series:[97.1,97.3,97.5,96.8,97.2,97.6,97.4].concat(DATA.map(d=>d.spo2)),
+    why:'Blood oxygen below your normal range during sleep can point to restless breathing.'},
+  vo2:{n:'VO2 max', color:'#16EC06', base:BASE.vo2, sp:2, min:42, max:50, hib:true,
+    v:()=>BASE.vo2, fmt:v=>v+'', series:VO214,
+    why:'VO2 max is your engine size. Raising it is the single biggest lever on your long term health.'}
+};
+function metricStatus(m, v){
+  const dev = v - m.base;
+  const okDir = m.hib ? dev >= 0 : dev <= 0;
+  const within = Math.abs(dev) <= m.sp;
+  const col = within || okDir ? C.optimal : (Math.abs(dev) > m.sp * 2 ? C.poor : C.fair);
+  const word = within ? 'Normal' : okDir ? 'Better' : 'Off baseline';
+  return {col, word};
+}
+
+/* ---------- journal ---------- */
+const HABITS = ['Caffeine after 2 pm','Alcohol','Late meal','Screen in bed','Reading before bed','Magnesium'];
+const IMPACTS = [
+  {n:'Alcohol', v:-18},{n:'Caffeine after 2 pm', v:-7},{n:'Screen in bed', v:-6},
+  {n:'Late meal', v:-5},{n:'Magnesium', v:4},{n:'Reading before bed', v:6}
+];
+const DEFAULT_LOGS = {0:['Caffeine after 2 pm'],1:['Alcohol','Screen in bed'],2:['Alcohol','Late meal'],3:[],4:['Caffeine after 2 pm'],5:['Reading before bed'],6:['Reading before bed','Magnesium']};
+const JOURNAL = {};
+function journalSet(i){ return JOURNAL[i] || (JOURNAL[i] = new Set(DEFAULT_LOGS[i] || [])); }
+
+/* ---------- community ---------- */
+const TEAM = [
+  {n:'Rohit', s:15.2}, {n:'Meera', s:12.8}, {n:'You', s:8.4, me:true}, {n:'Dev', s:7.1}, {n:'Sana', s:5.9}
+];
+const FEED = [
+  {n:'Rohit', act:'Long run, 11.2 km', s:13.9, t:'2 h ago'},
+  {n:'Meera', act:'Strength, 45 min', s:10.2, t:'4 h ago'},
+  {n:'Sana', act:'Woke up green, 82% recovery', s:null, t:'6 h ago'}
+];
+
+/* ---------- report + sleep planner state ---------- */
+let reportRange = '30';
+const reportMets = new Set(['Recovery','Sleep','Strain']);
+let spLevel = 'Peak';
+const SP_FRAC = {Peak:1, Perform:0.85, 'Get by':0.7};
+
+const state = { day: 6, tab: 'home' };
+const cur = () => DATA[state.day];
+
+/* ---------- date helpers ---------- */
+const WD = ['S','M','T','W','T','F','S'];
+function dateFor(i){ const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d; }
+function fmtLong(d){ return d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'}); }
+function fmtClock(min){
+  min = ((min % 1440) + 1440) % 1440;
+  let h = Math.floor(min / 60), mm = Math.round(min % 60);
+  const ap = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  return h + ':' + String(mm).padStart(2, '0') + ' ' + ap;
+}
+
+/* ---------- gauges + charts ---------- */
+function arcSVG(size, stroke, pct, color, center){
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, arc = c * 0.75;
+  const fill = arc * Math.max(0, Math.min(1, pct));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(135deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${C.track}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-dasharray="${arc} ${c}"/>
+    <circle class="ringp" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-dasharray="0 ${c}" data-dash="${fill} ${c}"/>
+  </svg>${center || ''}`;
+}
+function ringSVG(size, stroke, pct, color, center){
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const off = c * (1 - Math.max(0, Math.min(1, pct)));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${C.track}" stroke-width="${stroke}" fill="none"/>
+    <circle class="ringp" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-off="${off}"/>
+  </svg>${center || ''}`;
+}
+function animateRings(root){
+  root.querySelectorAll('.ringp').forEach(el => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (el.dataset.dash) el.style.strokeDasharray = el.dataset.dash;
+      if (el.dataset.off) el.style.strokeDashoffset = el.dataset.off;
+    }));
+  });
+}
+function countUp(el, to, decimals, dur){
+  if (el._raf) cancelAnimationFrame(el._raf);
+  const D = dur || 900, t0 = performance.now();
+  const step = t => {
+    const p = Math.min(1, Math.max(0, (t - t0) / D)), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (to * e).toFixed(decimals || 0);
+    if (p < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+function bandBar(v, base, spread, min, max, color){
+  const pc = x => Math.max(2, Math.min(98, (x - min) / (max - min) * 100));
+  const l = pc(base - spread), w = pc(base + spread) - l;
+  return `<div class="bb"><div class="bb-band" style="left:${l}%;width:${w}%"></div><div class="bb-dot" style="left:${pc(v)}%;background:${color}"></div></div>`;
+}
+function lineChart(series, o){
+  const W = o.w || 320, H = o.h || 110, pad = 8;
+  const lo = o.min !== undefined ? o.min : Math.min(...series);
+  const hi = o.max !== undefined ? o.max : Math.max(...series);
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - 16 - ((v - lo) / ((hi - lo) || 1)) * (H - 28);
+  let s = '';
+  (o.vbands || []).forEach(b => { s += `<rect x="${px(b.from)}" y="6" width="${px(b.to) - px(b.from)}" height="${H - 22}" fill="${b.fill}" rx="4"/>`; });
+  (o.zones || []).forEach(z => {
+    const y1 = py(Math.min(z.to, hi)), y2 = py(Math.max(z.from, lo));
+    s += `<rect x="${pad}" y="${y1}" width="${W - 2 * pad}" height="${Math.max(2, y2 - y1)}" fill="${z.fill || 'rgba(255,255,255,.06)'}" rx="4"/>`;
+  });
+  s += `<polyline points="${series.map((v, i) => px(i) + ',' + py(v)).join(' ')}" fill="none" stroke="${o.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (!o.noDots) s += series.map((v, i) => `<circle cx="${px(i)}" cy="${py(v)}" r="${i === series.length - 1 ? 4.5 : 2.4}" fill="${o.dot ? o.dot(v) : o.color}"/>`).join('');
+  if (o.endLabel !== undefined){
+    const lv = series[series.length - 1];
+    s += `<text x="${W - pad}" y="${py(lv) - 10}" text-anchor="end" font-size="12" font-weight="700" fill="${o.dot ? o.dot(lv) : o.color}">${o.endLabel}</text>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%">${s}</svg>`;
+}
+function spark(series, color, w, h){
+  const W = w || 96, H = h || 32, pad = 3;
+  const lo = Math.min(...series), hi = Math.max(...series);
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - pad - ((v - lo) / ((hi - lo) || 1)) * (H - 2 * pad);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${series.map((v, i) => px(i) + ',' + py(v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function scatter(pairs, o){
+  const W = 300, H = 110, pad = 12;
+  const xs = pairs.map(p => p[0]), ys = pairs.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const px = x => pad + (x - x0) / ((x1 - x0) || 1) * (W - 2 * pad);
+  const py = y => H - pad - (y - y0) / ((y1 - y0) || 1) * (H - 2 * pad);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;margin-top:8px">
+    ${pairs.map(p => `<circle cx="${px(p[0])}" cy="${py(p[1])}" r="3.4" fill="${o.color}" opacity=".75"/>`).join('')}
+  </svg>`;
+}
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* ---------- day strip ---------- */
+function buildDayStrip(){
+  $('#daystrip').innerHTML = DATA.map((d, i) => {
+    const dt = dateFor(i);
+    return `<button class="day ${i === state.day ? 'on' : ''}" data-day="${i}">
+      <span class="dw">${WD[dt.getDay()]}</span>
+      <span class="dn">${dt.getDate()}</span>
+      <span class="dd" style="background:${bandColor(d.rec)}"></span>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('.day').forEach(b =>
+    b.addEventListener('click', () => { state.day = +b.dataset.day; renderAll(); }));
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const d = cur(), dt = dateFor(state.day);
+  const h = new Date().getHours();
+  $('#greetTitle').textContent = state.day === 6
+    ? (h < 12 ? 'Good morning, Ayush' : h < 18 ? 'Good afternoon, Ayush' : 'Good evening, Ayush')
+    : fmtLong(dt).split(',')[0];
+  $('#greetDate').textContent = fmtLong(dt);
+
+  const col = bandColor(d.rec);
+  const prev = state.day > 0 ? DATA[state.day - 1].rec : REC_HISTORY[6];
+  const diff = d.rec - prev;
+  const dcol = diff >= 0 ? C.optimal : C.poor;
+
+  /* recovery + strain paired gauges, the daily loop */
+  $('#duo').innerHTML = `
+    <button class="duocell" data-open="recovery" style="position:relative">
+      <div class="ringbox">${arcSVG(150, 12, d.rec / 100, col, `<div class="duonum"><b id="duoRec" style="color:${col}">0</b><span>RECOVERY %</span></div>`)}</div>
+      <div class="duoword" style="color:${col}">${bandWord(d.rec)}</div>
+      <div class="delta" style="color:${dcol};background:color-mix(in srgb,${dcol} 14%,transparent);border:1px solid color-mix(in srgb,${dcol} 32%,transparent)">${diff >= 0 ? '&#9650;' : '&#9660;'} ${Math.abs(diff)}</div>
+    </button>
+    <button class="duocell" data-open="strain">
+      <div class="ringbox">${arcSVG(150, 12, d.strain.score / 21, C.strain, `<div class="duonum"><b style="color:${C.strain}">${d.strain.score.toFixed(1)}</b><span>DAY STRAIN</span></div>`)}</div>
+      <div class="duoword" style="color:${C.strain}">Target ${d.strain.target.toFixed(1)}</div>
+    </button>`;
+  animateRings($('#duo'));
+  countUp($('#duoRec'), d.rec);
+
+  const hrvPct = Math.round((d.hrv - BASE.hrv) / BASE.hrv * 100);
+  $('#heroWhy').textContent =
+    d.rec >= 75 ? `HRV up ${hrvPct}% vs your 2 week average. Your body is primed to take on load.` :
+    d.rec >= 50 ? `HRV is ${hrvPct >= 0 ? 'near' : Math.abs(hrvPct) + '% below'} your 2 week average. Your body can handle a moderate day.` :
+    `HRV down ${Math.abs(hrvPct)}% and resting heart rate is elevated. Your body is asking for rest.`;
+
+  /* sleep performance card */
+  const s = d.sleep;
+  $('#sleepCard').innerHTML = `
+    <div class="rowline">
+      <div><div class="label">Sleep</div>
+        <div style="font-family:var(--fn);font-weight:600;font-size:26px;margin-top:6px">${Math.floor(s.hrs)}:${String(Math.round(s.hrs % 1 * 60)).padStart(2,'0')} <span style="font-size:13px;color:var(--lo)">of ${s.need.toFixed(1)} h needed</span></div>
+      </div>
+      <div style="text-align:right"><div style="font-family:var(--fn);font-weight:600;font-size:26px;color:${C.sleep}">${s.score}%</div><div class="label">Performance</div></div>
+    </div>
+    <div class="sbar"><i style="width:${Math.min(100, s.hrs / s.need * 100)}%"></i></div>`;
+
+  /* my day timeline */
+  const times = ['7:30 am','12:10 pm','5:40 pm'];
+  let md = `<div class="md"><div class="mt">6:58 am</div><span class="mi" style="background:${C.sleep}"></span><div class="mn">Slept ${s.hrs.toFixed(1)} h</div><div class="mv" style="color:${C.sleep}">${s.score}%</div></div>`;
+  d.strain.workouts.forEach((w, i) => {
+    md += `<div class="md"><div class="mt">${times[i] || ''}</div><span class="mi" style="background:${C.strain}"></span><div class="mn">${w.name}, ${w.dur}</div><div class="mv" style="color:${C.strain}">${w.strain.toFixed(1)}</div></div>`;
+  });
+  const gap = Math.max(0, d.strain.target - d.strain.score);
+  if (gap > 1) md += `<div class="md"><div class="mt">Later</div><span class="mi" style="background:${C.track};border:1px dashed var(--line2)"></span><div class="mn" style="color:var(--mid)">Suggested: Zone 2 session</div><div class="mv" style="color:var(--lo)">+${gap.toFixed(1)}</div></div>`;
+  $('#myday').innerHTML = md;
+
+  /* daily outlook */
+  if (d.rec >= 75){
+    $('#actionText').textContent = `Green light. You have room for ${gap.toFixed(1)} more strain today, a hard session will land well.`;
+    $('#actionBtn').textContent = 'Plan a workout';
+  } else if (d.rec >= 50){
+    $('#actionText').textContent = `Take it steady. Keep strain near ${d.strain.target.toFixed(1)} and stop before the red zone.`;
+    $('#actionBtn').textContent = 'See strain target';
+  } else {
+    $('#actionText').textContent = `Your body needs a rest day. Skip intensity and aim for ${d.sleep.need.toFixed(1)} hours of sleep tonight.`;
+    $('#actionBtn').textContent = 'See wind down plan';
+  }
+  $('#actionBtn').onclick = () => openSheet(d.rec < 50 ? 'sleep' : 'strain');
+
+  /* steps + calories */
+  $('#stepsRow').innerHTML = `
+    <div class="stat"><div class="sv">${d.steps.toLocaleString()}</div><div class="sl">Steps</div></div>
+    <div class="stat"><div class="sv">${d.strain.cal.toLocaleString()}</div><div class="sl">Calories</div></div>`;
+
+  /* stress monitor row */
+  const lvl = (100 - d.stressCalm) * 3 / 100;
+  const lcol = lvl < 1 ? C.optimal : lvl < 2 ? C.fair : C.poor;
+  $('#stressCard').innerHTML = `<div class="rowline">
+      <div><div class="label">Stress monitor</div>
+        <div style="font-family:var(--fn);font-weight:600;font-size:26px;margin-top:6px;color:${lcol}">${lvl.toFixed(1)} <span style="font-size:13px;color:var(--lo)">of 3</span></div>
+        <div class="sub">${lvl < 1 ? 'Low right now. Good time for focused work.' : lvl < 2 ? 'Moderate. A short walk would settle it.' : 'High. Try 2 minutes of slow breathing.'}</div>
+      </div>
+      ${spark(CALM14.map(v => 3 - v * 3 / 100), lcol, 90, 40)}
+    </div>`;
+
+  /* health monitor card */
+  $('#hmCard').innerHTML = `<div class="label" style="margin-bottom:4px">Health monitor</div>
+    ${['hrv','rhr','resp','temp','spo2'].map(k => {
+      const m = METRICS[k], v = m.v(d), st = metricStatus(m, v);
+      return `<div class="hmrow"><span class="hn">${m.n}</span><span class="hv">${m.fmt(v)}<span class="dot" style="background:${st.col}"></span></span></div>`;
+    }).join('')}`;
+
+  /* healthspan row */
+  const wAge = (BASE.age + d.vit).toFixed(1);
+  $('#hspanRow').innerHTML = `<div style="text-align:left"><div class="it">Healthspan</div><div class="sub">Laso age ${wAge}, pace of aging 0.7x</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--fn);font-weight:600;font-size:20px;color:${C.optimal}">${d.vit.toFixed(1)}y</span>${CHEV}</div>`;
+
+  $('#cycleRow').innerHTML = `<div style="text-align:left"><div class="it">Cycle</div><div class="sub">Luteal, day 21 of 28. Sleep need is up 0.4 h.</div></div>${CHEV}`;
+  $('#jSummary').textContent = `${journalSet(state.day).size} of ${HABITS.length} logged today`;
+}
+
+/* ---------- COACHING ---------- */
+function renderCoaching(){
+  const d = cur();
+  const lo = Math.max(0, d.strain.target - 0.8), hi2 = Math.min(21, d.strain.target + 1.2);
+  const pct = Math.min(100, d.strain.score / 21 * 100);
+  const loP = lo / 21 * 100, hiP = hi2 / 21 * 100;
+  $('#strainCoach').innerHTML = `<div class="label">Strain coach</div>
+    <div class="it" style="margin-top:8px">Optimal strain today: ${lo.toFixed(1)} to ${hi2.toFixed(1)}</div>
+    <div class="bb" style="margin-top:12px;height:16px"><div class="bb-band" style="left:${loP}%;width:${hiP - loP}%;background:color-mix(in srgb,${C.strain} 30%,transparent)"></div><div class="bb-dot" style="left:${pct}%;background:${C.strain}"></div></div>
+    <div class="sub" style="margin-top:8px">You are at ${d.strain.score.toFixed(1)}. ${d.strain.score < lo ? (lo - d.strain.score).toFixed(1) + ' below the range, roughly a 40 minute zone 2 session.' : d.strain.score > hi2 ? 'Past the range. More digs into tomorrow.' : 'Inside the range. Nice.'}</div>
+    <button class="cta" style="margin-top:12px" data-open="live">Start an activity</button>`;
+
+  const frac = SP_FRAC[spLevel], needH = d.sleep.need * frac;
+  const bedMin = 390 - (needH * 60 + 25);
+  $('#sleepCoach').innerHTML = `<div class="label">Sleep planner</div>
+    <div class="chips" style="margin-top:10px">${Object.keys(SP_FRAC).map(k => `<button class="chipq ${spLevel === k ? 'on' : ''}" data-sp="${k}">${k}</button>`).join('')}</div>
+    <div class="rowline" style="margin-top:14px">
+      <div><div class="label">Sleep needed</div><div style="font-family:var(--fn);font-weight:600;font-size:24px;margin-top:4px">${needH.toFixed(1)} h</div></div>
+      <div><div class="label">In bed by</div><div style="font-family:var(--fn);font-weight:600;font-size:24px;margin-top:4px;color:${C.sleep}">${fmtClock(bedMin)}</div></div>
+      <div><div class="label">Wake at</div><div style="font-family:var(--fn);font-weight:600;font-size:24px;margin-top:4px">6:30 am</div></div>
+    </div>
+    <div class="sub" style="margin-top:10px">${spLevel === 'Peak' ? '100% of your need. Best for tomorrow&#8217;s performance.' : spLevel === 'Perform' ? '85% of your need. Enough for a solid day.' : '70% of your need. You will get by, not thrive.'} Haptic alarm set.</div>`;
+
+  $('#planCard').innerHTML = `<div class="label">This week&#8217;s plan</div>
+    <div class="insitem" style="margin-top:10px"><span class="idot" style="background:${C.optimal}"></span><span>2 hard days, on green recoveries only.</span></div>
+    <div class="insitem" style="margin-top:8px"><span class="idot" style="background:${C.strain}"></span><span>1 tempo day near strain 12.</span></div>
+    <div class="insitem" style="margin-top:8px"><span class="idot" style="background:${C.sleep}"></span><span>Every red day stays under strain 8.</span></div>
+    <button class="cta" style="margin-top:12px" data-toast="Plan editing opens in the full app">Adjust plan</button>`;
+
+  const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const week = Math.round(avg(DATA.map(x => x.rec)) * 0.5 + avg(DATA.map(x => x.sleep.score)) * 0.3 + avg(DATA.map(x => x.strain.score / x.strain.target * 100)) * 0.2);
+  $('#wpaSub').textContent = `Week score ${week}. ${week >= 75 ? 'A strong week.' : week >= 50 ? 'Sleep is the lever.' : 'Protect recovery.'}`;
+}
+
+/* ---------- COMMUNITY ---------- */
+function renderCommunity(){
+  const rows = TEAM.map(t => t.me ? {...t, s:cur().strain.score} : t).sort((a, b) => b.s - a.s);
+  $('#leaderboard').innerHTML = rows.map((t, i) => `
+    <div class="lb ${t.me ? 'me' : ''}">
+      <span class="rk">${i + 1}</span>
+      <span class="av2">${t.n[0]}</span>
+      <span class="nm">${t.me ? 'You' : t.n}</span>
+      <span class="sc">${t.s.toFixed(1)}</span>
+    </div>`).join('');
+  $('#feed').innerHTML = FEED.map(f => `
+    <div class="feed">
+      <span class="av2">${f.n[0]}</span>
+      <div class="ft"><div class="fn2">${f.n} <span style="color:var(--mid);font-weight:500">${f.act}</span></div><div class="fd">${f.t}</div></div>
+      ${f.s ? `<span class="fs">${f.s.toFixed(1)}</span>` : `<span style="font-size:16px">&#128170;</span>`}
+    </div>`).join('');
+}
+
+/* ---------- COACH CHAT ---------- */
+const COACH_QS = ['Why is my recovery where it is?', 'How much sleep do I need tonight?', 'Plan my training week', 'Log my journal'];
+function coachReply(q){
+  const d = cur();
+  const ql = q.toLowerCase();
+  if (ql.includes('recover'))
+    return `Your recovery is ${d.rec}, ${bandWord(d.rec).toLowerCase()}. The biggest driver is HRV at ${d.hrv} ms against your ${BASE.hrv} ms baseline, with resting heart rate at ${d.rhr} bpm. ${d.rec >= 75 ? 'You are ready for a hard session.' : d.rec >= 50 ? 'Keep today moderate and bank sleep tonight.' : 'Treat today as recovery. Light movement only.'}`;
+  if (ql.includes('sleep'))
+    return `Aim for ${d.sleep.need.toFixed(1)} hours tonight. You are carrying ${d.sleep.debt.toFixed(1)} hours of sleep debt, and last night you got ${d.sleep.hrs.toFixed(1)} hours with ${d.sleep.stages.deep.toFixed(1)} h deep and ${d.sleep.stages.rem.toFixed(1)} h REM. In bed by 10:30 pm sets you up to clear it.`;
+  if (ql.includes('train') || ql.includes('week') || ql.includes('plan'))
+    return `This week your average strain was ${(DATA.reduce((s, x) => s + x.strain.score, 0) / 7).toFixed(1)}. Suggested plan: two hard days when recovery is green, one tempo day, and keep every red day under strain 8. Tomorrow, target ${d.strain.target.toFixed(1)} if you wake up green.`;
+  if (ql.includes('strain'))
+    return `Day strain is ${d.strain.score.toFixed(1)} of your ${d.strain.target.toFixed(1)} optimal target. You have ${Math.max(0, d.strain.target - d.strain.score).toFixed(1)} of headroom left, roughly a 40 minute zone 2 session.`;
+  if (ql.includes('stress') || ql.includes('calm'))
+    return `Your calm score today is ${d.stressCalm}. ${d.stressCalm >= 70 ? 'Nicely settled, keep the breaks you are taking.' : 'It is running low. A 5 minute slow breathing session usually lifts yours by around 8 points.'}`;
+  return `Here is where you stand: recovery ${d.rec}, sleep ${d.sleep.score}, strain ${d.strain.score.toFixed(1)}. Ask me about recovery, sleep, strain, stress, or your training plan.`;
+}
+function addMsg(text, me){
+  const m = document.createElement('div');
+  m.className = 'msg ' + (me ? 'me' : 'bot');
+  m.textContent = text;
+  $('#chat').appendChild(m);
+  m.scrollIntoView({behavior:'smooth', block:'end'});
+}
+function ask(q){
+  if (!q.trim()) return;
+  addMsg(q, true);
+  setTimeout(() => addMsg(coachReply(q), false), 420);
+}
+function initCoach(){
+  const d = cur();
+  $('#chat').innerHTML = '';
+  addMsg(`Good day. Recovery is ${d.rec} and you are ${bandWord(d.rec).toLowerCase()}. What would you like to know?`, false);
+  $('#coachChips').innerHTML = COACH_QS.map(q => `<button class="chipq">${q}</button>`).join('');
+  document.querySelectorAll('#coachChips .chipq').forEach(b =>
+    b.addEventListener('click', () => b.textContent === 'Log my journal' ? openSheet('journal') : ask(b.textContent)));
+}
+
+/* ---------- SHEET BUILDERS ---------- */
+const HEAD = title => `<div class="sheethead"><div class="st">${title}</div><button class="xbtn" data-close>&#10005;</button></div>`;
+
+const SHEETS = {
+
+  recovery(){
+    const d = cur(), col = bandColor(d.rec);
+    const rows = [
+      {n:'HRV', v:d.hrv + ' ms', pct:Math.min(1, d.hrv / 90), col:C.optimal},
+      {n:'Resting HR', v:d.rhr + ' bpm', pct:1 - (d.rhr - 45) / 25, col:C.optimal},
+      {n:'Sleep', v:d.sleep.score + '', pct:d.sleep.score / 100, col:C.sleep},
+      {n:'Resp rate', v:d.resp + ' rpm', pct:1 - (d.resp - 13) / 5, col:C.stress}
+    ];
+    const W = 300, H = 130;
+    let pair = '';
+    DATA.forEach((x, i) => {
+      const bx = 10 + i * (W - 20) / 7, bw = (W - 20) / 7 - 10;
+      const bh = Math.max(4, x.strain.score / 21 * (H - 34));
+      pair += `<rect x="${bx}" y="${H - 20 - bh}" width="${bw}" height="${bh}" rx="3" fill="${C.strain}" opacity=".8"/>`;
+    });
+    const rpx = i => 10 + i * (W - 20) / 7 + ((W - 20) / 7 - 10) / 2;
+    const rpy = v => H - 20 - (v / 100) * (H - 34);
+    pair += `<polyline points="${DATA.map((x, i) => rpx(i) + ',' + rpy(x.rec)).join(' ')}" fill="none" stroke="${C.optimal}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    pair += DATA.map((x, i) => `<circle cx="${rpx(i)}" cy="${rpy(x.rec)}" r="3.5" fill="${bandColor(x.rec)}"/>`).join('');
+    return HEAD('Recovery') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, d.rec / 100, col, `<div class="ringcenter"><div class="heronum" style="font-size:54px;color:${col}">${d.rec}</div><div class="heropct">RECOVERY %</div></div>`)}</div>
+        <div class="why">${d.rec >= 75 ? 'Your body absorbed yesterday well. Spend it.' : d.rec >= 50 ? 'Partial recharge. A moderate day keeps you moving forward.' : 'Yesterday cost more than you recharged. Back off today.'}</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:8px">What moved it</div>
+        ${rows.map(r => `<div class="zrow"><div class="zl">${r.n}</div><div class="zbar"><i style="width:${Math.round(Math.max(.05, Math.min(1, r.pct)) * 100)}%;background:${r.col}"></i></div><div class="zm">${r.v}</div></div>`).join('')}
+      </div>
+      <div class="card"><div class="label">Strain vs recovery, 7 days</div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;margin-top:10px">${pair}</svg>
+        <div class="legend"><span><i style="background:${C.strain}"></i>Strain</span><span><i style="background:${C.optimal}"></i>Recovery</span></div>
+      </div>`;
+  },
+
+  sleep(){
+    const d = cur(), s = d.sleep, col = C.sleep;
+    const stages = [
+      {n:'Deep', h:s.stages.deep, c:'#4E7A96'},
+      {n:'REM', h:s.stages.rem, c:'#7BA1BB'},
+      {n:'Light', h:s.stages.light, c:'#A9C6D9'},
+      {n:'Awake', h:s.stages.awake, c:'#3A424C'}
+    ];
+    const total = stages.reduce((a, x) => a + x.h, 0);
+    const seq = ['l','d','l','r','l','d','l','r','w','l','d','r','l','r','w','l'];
+    const per = {d:s.stages.deep / 3, r:s.stages.rem / 4, l:s.stages.light / 7, w:s.stages.awake / 2};
+    const lane = {w:0, r:1, l:2, d:3};
+    const scol2 = {d:'#4E7A96', r:'#7BA1BB', l:'#A9C6D9', w:'#565D6B'};
+    const HW = 300, HH = 96, laneH = 18;
+    let x = 8, hyp = '';
+    seq.forEach(k => {
+      const w = per[k] / total * (HW - 16);
+      hyp += `<rect x="${x}" y="${8 + lane[k] * laneH}" width="${Math.max(2, w - 1.5)}" height="12" rx="3" fill="${scol2[k]}"/>`;
+      x += w;
+    });
+    const R = 40, CC = 2 * Math.PI * R;
+    let acc = 0, donut = '';
+    stages.forEach(st => {
+      const f = st.h / total;
+      donut += `<circle cx="55" cy="55" r="${R}" fill="none" stroke="${st.c}" stroke-width="14" stroke-dasharray="${f * CC - 2} ${CC}" stroke-dashoffset="${-acc * CC}" transform="rotate(-90 55 55)"/>`;
+      acc += f;
+    });
+    const bl = +(s.need - 0.5).toFixed(1);
+    return HEAD('Sleep') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, s.score / 100, col, `<div class="ringcenter"><div class="heronum" style="font-size:54px;color:${col}">${s.score}%</div><div class="heropct">PERFORMANCE</div></div>`)}</div>
+        <div class="why">You slept ${s.hrs.toFixed(1)} h of the ${s.need.toFixed(1)} h you needed. Sleep debt is ${s.debt.toFixed(1)} h.</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Tonight&#8217;s sleep need</div>
+        <div class="hmrow"><span class="hn">Baseline</span><span class="hv">${bl} h</span></div>
+        <div class="hmrow"><span class="hn">Sleep debt</span><span class="hv" style="color:${C.fair}">+0.4 h</span></div>
+        <div class="hmrow"><span class="hn">Yesterday&#8217;s strain</span><span class="hv" style="color:${C.strain}">+0.1 h</span></div>
+        <div class="hmrow"><span class="hn">Naps</span><span class="hv">0.0 h</span></div>
+        <div class="hmrow"><span class="hn" style="color:var(--hi);font-weight:700">Total need</span><span class="hv" style="color:${C.sleep}">${s.need.toFixed(1)} h</span></div>
+      </div>
+      <div class="card"><div class="label">Night timeline</div>
+        <svg viewBox="0 0 ${HW} ${HH}" style="width:100%;margin-top:10px">${hyp}</svg>
+        <div class="legend">${stages.map(st => `<span><i style="background:${st.c}"></i>${st.n}</span>`).join('')}</div>
+      </div>
+      <div class="card rowline">
+        <svg width="110" height="110" viewBox="0 0 110 110">${donut}</svg>
+        <div style="flex:1;margin-left:14px">
+          ${stages.map(st => `<div class="rowline" style="padding:5px 0"><span style="font-size:13px;color:var(--mid);font-weight:600">${st.n}</span><b style="font-family:var(--fn);font-size:14px">${st.h.toFixed(1)} h</b></div>`).join('')}
+        </div>
+      </div>
+      <div class="card"><div class="label">Sleep score, last 14 nights</div>
+        ${lineChart(SLEEP14, {min:0, max:100, color:C.sleep, noDots:true, endLabel:SLEEP14[SLEEP14.length-1]})}
+      </div>
+      <div class="card rowline">
+        <div><div class="label">Tonight&#8217;s target</div><div style="font-family:var(--fn);font-weight:600;font-size:26px;margin-top:6px">${s.need.toFixed(1)} h</div></div>
+        <div style="text-align:right"><div class="label">In bed by</div><div style="font-family:var(--fn);font-weight:600;font-size:26px;margin-top:6px;color:${C.sleep}">10:30 pm</div></div>
+      </div>`;
+  },
+
+  strain(){
+    const d = cur(), st = d.strain, col = C.strain;
+    const gap = Math.max(0, st.target - st.score);
+    const zc = ['#3A424C', '#2E8B8B', '#0093E7', '#FFDE00', '#FF0026'];
+    const zmax = Math.max(...st.zones, 1);
+    return HEAD('Strain') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, st.score / 21, col, `<div class="ringcenter"><div class="heronum" style="font-size:50px;color:${col}">${st.score.toFixed(1)}</div><div class="heropct">OF 21</div></div>`)}</div>
+        <div class="why">${gap > 0 ? gap.toFixed(1) + ' more strain to reach your optimal target of ' + st.target.toFixed(1) + '.' : 'Target reached. Anything more digs into tomorrow&#8217;s recovery.'}</div>
+      </div>
+      <div class="statgrid">
+        <div class="stat"><div class="sv">${st.cal.toLocaleString()}</div><div class="sl">Calories</div></div>
+        <div class="stat"><div class="sv">${st.avgHr} <span style="font-size:13px;color:var(--lo)">bpm</span></div><div class="sl">Avg heart rate</div></div>
+      </div>
+      <div class="card rowline">
+        <div><div class="label">Muscular load</div><div style="font-family:var(--fn);font-weight:600;font-size:24px;margin-top:4px">${st.load}</div></div>
+        <div style="flex:1;margin-left:14px"><div class="zbar" style="height:14px"><i style="width:${st.load}%;background:${C.stress}"></i></div><div class="sub" style="margin-top:6px">${st.load >= 60 ? 'Heavy lifting day. Protein and sleep matter tonight.' : 'Light muscular day. Cardio carried the strain.'}</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Heart rate zones</div>
+        ${st.zones.map((m, i) => `<div class="zrow"><div class="zl">Zone ${i + 1}</div><div class="zbar"><i style="width:${Math.round(m / zmax * 100)}%;background:${zc[i]}"></i></div><div class="zm">${m} min</div></div>`).join('')}
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:2px">Activities</div>
+        ${st.workouts.map(w => `<div class="wrow"><div><div class="wn">${w.name}</div><div class="wd">${w.dur}, ${w.cal} cal</div></div><div class="ws">${w.strain.toFixed(1)}</div></div>`).join('')}
+      </div>`;
+  },
+
+  live(){
+    const d = cur(), st = d.strain;
+    const gap = Math.max(0, st.target - st.score);
+    const zc = ['#3A424C', '#2E8B8B', '#0093E7', '#FFDE00', '#FF0026'];
+    const zmax = Math.max(...st.zones, 1);
+    return HEAD('Live') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, st.score / 21, C.strain, `<div class="ringcenter"><div class="heronum" style="font-size:50px;color:${C.strain}">${st.score.toFixed(1)}</div><div class="heropct">LIVE STRAIN</div></div>`)}</div>
+        <div class="why" style="display:flex;align-items:center;gap:8px"><span class="pulse" style="width:8px;height:8px;border-radius:50%;background:${C.poor};display:inline-block"></span>Streaming. <b id="liveHr2" style="color:var(--hi)">64</b>&nbsp;bpm, Zone 1</div>
+        <div class="sub" style="margin-top:6px">${gap > 0 ? gap.toFixed(1) + ' more strain to today&#8217;s target of ' + st.target.toFixed(1) : 'Target reached for today'}</div>
+      </div>
+      <div class="statgrid">
+        <div class="stat"><div class="sv">${d.hrv} <span style="font-size:13px;color:var(--lo)">ms</span></div><div class="sl">HRV now</div></div>
+        <div class="stat"><div class="sv">${d.resp} <span style="font-size:13px;color:var(--lo)">rpm</span></div><div class="sl">Resp rate</div></div>
+        <div class="stat"><div class="sv">${d.spo2}<span style="font-size:13px;color:var(--lo)">%</span></div><div class="sl">SpO2</div></div>
+        <div class="stat"><div class="sv">${(d.temp > 0 ? '+' : '') + d.temp}<span style="font-size:13px;color:var(--lo)">&deg;C</span></div><div class="sl">Skin temp</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Zones so far today</div>
+        ${st.zones.map((m, i) => `<div class="zrow"><div class="zl">Zone ${i + 1}</div><div class="zbar"><i style="width:${Math.round(m / zmax * 100)}%;background:${zc[i]}"></i></div><div class="zm">${m} min</div></div>`).join('')}
+      </div>`;
+  },
+
+  stress(){
+    const d = cur();
+    const lvl = (100 - d.stressCalm) * 3 / 100;
+    const lcol = lvl < 1 ? C.optimal : lvl < 2 ? C.fair : C.poor;
+    const tl = d.stressCalm >= 75 ? 'RCRRRCRRRCRRSRCC' : d.stressCalm >= 50 ? 'RSRRCRRSRRCRSRRC' : 'SSRSRCSSRRSSRSRC';
+    const tcol = {S:C.poor, R:'#565D6B', C:C.optimal};
+    const mins = {S:0, R:0, C:0};
+    [...tl].forEach(ch => mins[ch] += 60);
+    const fmtM = m => m >= 60 ? (m / 60).toFixed(1).replace('.0','') + ' h' : m + ' min';
+    return HEAD('Stress monitor') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, lvl / 3, lcol, `<div class="ringcenter"><div class="heronum" style="font-size:54px;color:${lcol}">${lvl.toFixed(1)}</div><div class="heropct">OF 3</div></div>`)}</div>
+        <div class="why">${lvl < 1 ? 'Low stress right now. A settled nervous system.' : lvl < 2 ? 'Moderate stress. Normal for a working day.' : 'High stress. Your body is carrying load right now.'}</div>
+      </div>
+      <div class="card"><div class="label">Your day, hour by hour</div>
+        <div class="stl">${[...tl].map(ch => `<i style="background:${ch === 'R' ? tcol.R : 'color-mix(in srgb,' + tcol[ch] + ' 70%,var(--bg3))'}"></i>`).join('')}</div>
+        <div class="stlx"><span>7 am</span><span>3 pm</span><span>11 pm</span></div>
+        <div class="legend"><span><i style="background:${C.poor}"></i>Stressed</span><span><i style="background:#565D6B"></i>Relaxed</span><span><i style="background:${C.optimal}"></i>Restorative</span></div>
+      </div>
+      <div class="card">
+        <div class="zrow"><div class="zl">Stressed</div><div class="zbar"><i style="width:${mins.S / 9.6}%;background:${C.poor}"></i></div><div class="zm">${fmtM(mins.S)}</div></div>
+        <div class="zrow"><div class="zl">Relaxed</div><div class="zbar"><i style="width:${mins.R / 9.6}%;background:#565D6B"></i></div><div class="zm">${fmtM(mins.R)}</div></div>
+        <div class="zrow"><div class="zl">Restorative</div><div class="zbar"><i style="width:${mins.C / 9.6}%;background:${C.optimal}"></i></div><div class="zm">${fmtM(mins.C)}</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Breathwork</div>
+        <div class="sub">Guided breathing to lower stress or sharpen up.</div>
+        <div class="chips" style="margin-top:10px">
+          <button class="chipq" data-toast="1 minute session opens in the full app">Calm, 1 min</button>
+          <button class="chipq" data-toast="5 minute session opens in the full app">Unwind, 5 min</button>
+          <button class="chipq" data-toast="Energize session opens in the full app">Energize, 2 min</button>
+        </div>
+      </div>`;
+  },
+
+  healthspan(){
+    const d = cur();
+    const wAge = (BASE.age + d.vit).toFixed(1);
+    const nine = [
+      {n:'Sleep consistency', v:71, col:C.fair},
+      {n:'Hours of sleep', v:82, col:C.optimal},
+      {n:'Daily steps', v:76, col:C.optimal},
+      {n:'Zone 1 to 3 time', v:80, col:C.optimal},
+      {n:'Zone 4 to 5 time', v:58, col:C.fair},
+      {n:'Strength time', v:52, col:C.fair},
+      {n:'VO2 max', v:84, col:C.optimal},
+      {n:'Resting HR', v:78, col:C.optimal},
+      {n:'Lean body mass', v:66, col:C.fair}
+    ];
+    return HEAD('Healthspan') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, Math.min(1, Math.abs(d.vit) / 5), C.optimal, `<div class="ringcenter"><div class="heronum" style="font-size:44px;color:${C.optimal}">${wAge}</div><div class="heropct">LASO AGE</div></div>`)}</div>
+        <div class="why">Your body performs ${Math.abs(d.vit).toFixed(1)} years ${d.vit < 0 ? 'younger' : 'older'} than your ${BASE.age} calendar years.</div>
+      </div>
+      <div class="card rowline">
+        <div><div class="label">Pace of aging</div><div style="font-family:var(--fn);font-weight:600;font-size:26px;margin-top:4px;color:${C.optimal}">0.7x</div></div>
+        <div class="sub" style="flex:1;margin-left:14px">You are aging slower than the calendar. Under 1.0 is the goal.</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">The 9 habits that drive it</div>
+        ${nine.map(m => `<div class="zrow"><div class="zl">${m.n}</div><div class="zbar"><i style="width:${m.v}%;background:${m.col}"></i></div><div class="zm">${m.v}</div></div>`).join('')}
+        <div class="sub" style="margin-top:10px">Biggest lever: more zone 4 and 5 minutes. One interval session a week moves your age down about 0.3 years.</div>
+      </div>
+      <div class="card"><div class="label">Fitness pace, last 14 days</div>
+        ${lineChart(VO214, {min:44, max:47, color:C.optimal, noDots:true, endLabel:'46.2'})}
+      </div>`;
+  },
+
+  healthmonitor(){
+    const d = cur();
+    return HEAD('Health monitor') + `
+      <div class="sub" style="margin:4px 2px 0">Every vital against your 30 day baseline.</div>
+      <div class="card">
+        ${Object.keys(METRICS).map(k => {
+          const m = METRICS[k], v = m.v(d), st = metricStatus(m, v);
+          return `<button class="crow" data-open="metric:${k}">
+            <div class="cn">${m.n}</div>
+            <div class="cv">${m.fmt(v)}</div>
+            ${bandBar(v, m.base, m.sp, m.min, m.max, st.col)}
+            <div class="cstat" style="color:${st.col}">${st.word}</div>
+          </button>`;
+        }).join('')}
+      </div>
+      <div class="card rowline">
+        <div><div class="it">Heart screener</div><div class="sub">Rhythm looks steady. No irregular runs this month.</div></div>
+        <span class="dot" style="background:${C.optimal};width:10px;height:10px"></span>
+      </div>
+      <button class="cta" style="margin-top:14px" data-toast="Monthly report PDF exports in the full app">Export monthly report</button>`;
+  },
+
+  insights(){
+    const items = [
+      {t:'Sleep is trending up. Four of your last five nights beat your average.', s:SLEEP14, c:C.sleep},
+      {t:'Strain and recovery are in balance this week. Keep alternating hard and easy days.', s:STRAIN14, c:C.strain},
+      {t:'Calm dipped midweek, then recovered. Wednesday looks like your loaded day.', s:CALM14, c:C.stress}
+    ];
+    return HEAD('Insights') + `
+      <div class="hero2">
+        <div class="label" style="color:color-mix(in srgb,var(--hi) 60%,transparent)">Top insight today</div>
+        <div style="font-size:17px;font-weight:700;line-height:1.4;margin-top:8px">Your recovery jumps around 14 points after nights with 1.5 h or more of deep sleep.</div>
+        <div style="margin-top:10px">${spark(REC14, C.optimal, 140, 34)}</div>
+      </div>
+      <div class="card">
+        ${items.map(x => `<div class="rowline" style="padding:10px 0;border-bottom:1px solid var(--line)"><span style="flex:1;font-size:14px;color:var(--mid);line-height:1.45;padding-right:10px">${x.t}</span>${spark(x.s, x.c)}</div>`).join('')}
+      </div>`;
+  },
+
+  journal(){
+    const s = journalSet(state.day);
+    return HEAD('Journal') + `
+      <div class="card rowline">
+        <div><div class="it">${s.size} of ${HABITS.length} logged</div><div class="sub">${fmtLong(dateFor(state.day))}</div></div>
+        <span class="streak">&#128221; 9 day run</span>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">What happened today</div>
+        <div class="chips">${HABITS.map(h2 => `<button class="chipq ${s.has(h2) ? 'on' : ''}" data-jt="${h2}">${h2}</button>`).join('')}</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">What moves your recovery</div>
+        ${IMPACTS.map(im => `<div class="zrow"><div class="zl">${im.n}</div><div class="zbar"><i style="width:${Math.round(Math.abs(im.v) / 18 * 100)}%;background:${im.v > 0 ? C.optimal : C.poor}"></i></div><div class="zm" style="color:${im.v > 0 ? C.optimal : C.poor}">${im.v > 0 ? '+' : ''}${im.v}</div></div>`).join('')}
+        <div class="sub" style="margin-top:10px">Average change in next day recovery, from your last 90 days.</div>
+      </div>`;
+  },
+
+  metric(key){
+    const m = METRICS[key], d = cur(), v = m.v(d), s = metricStatus(m, v);
+    const sAvg = m.series.reduce((a, b) => a + b, 0) / m.series.length;
+    return HEAD(m.n) + `
+      <div class="hero" style="margin-top:2px">
+        <div style="font-family:var(--fn);font-weight:600;font-size:50px;color:${s.col}">${m.fmt(v)}</div>
+        <div class="tier" style="color:${s.col};font-size:15px;margin-top:4px">${s.word}</div>
+        <div class="sub" style="margin-top:6px">Your normal is ${m.base} &#177; ${m.sp}</div>
+      </div>
+      <div class="card"><div class="label">Last 14 days vs your band</div>
+        ${lineChart(m.series, {min:m.min, max:m.max, color:m.color, zones:[{from:m.base - m.sp, to:m.base + m.sp}], endLabel:m.series[m.series.length-1]})}
+      </div>
+      <div class="statgrid">
+        <div class="stat"><div class="sv">${+sAvg.toFixed(1)}</div><div class="sl">14 day avg</div></div>
+        <div class="stat"><div class="sv">${+Math.max(...m.series).toFixed(1)} / ${+Math.min(...m.series).toFixed(1)}</div><div class="sl">High / low</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:8px">Why it matters</div>
+        <div style="font-size:14px;color:var(--mid);line-height:1.5">${m.why}</div>
+      </div>`;
+  },
+
+  wpa(){
+    const recs = DATA.map(d => d.rec);
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const week = Math.round(avg(recs) * 0.5 + avg(DATA.map(d => d.sleep.score)) * 0.3 + avg(DATA.map(d => d.strain.score / d.strain.target * 100)) * 0.2);
+    const wcol = bandColor(week);
+    const W = 320, H = 130, gw = W / 7;
+    let bars = '';
+    DATA.forEach((d, i) => {
+      const x0 = i * gw + 6, bw = (gw - 18) / 3;
+      [{p:d.rec / 100, c:bandColor(d.rec)}, {p:d.sleep.score / 100, c:C.sleep}, {p:d.strain.score / 21, c:C.strain}].forEach((v, j) => {
+        const bh = Math.max(4, v.p * (H - 26));
+        bars += `<rect x="${x0 + j * (bw + 3)}" y="${H - 22 - bh}" width="${bw}" height="${bh}" rx="2.5" fill="${v.c}" opacity="${i === state.day ? 1 : .55}"/>`;
+      });
+      const dt = dateFor(i);
+      bars += `<text x="${i * gw + gw / 2}" y="${H - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="${i === state.day ? 'rgba(242,244,247,.9)' : 'rgba(242,244,247,.35)'}">${WD[dt.getDay()]}</text>`;
+    });
+    const stats = [
+      {v:avg(DATA.map(d => d.sleep.hrs)).toFixed(1) + ' h', l:'Avg sleep'},
+      {v:avg(DATA.map(d => d.strain.score)).toFixed(1), l:'Avg strain'},
+      {v:Math.max(...recs) + '', l:'Best recovery'},
+      {v:Math.round(DATA.filter(d => d.sleep.hrs >= d.sleep.need * 0.85).length / 7 * 100) + '%', l:'Sleep consistency'}
+    ];
+    return HEAD('Weekly assessment') + `
+      <div class="card rowline">
+        <div>
+          <div class="label">Week score</div>
+          <div style="font-family:var(--fn);font-weight:600;font-size:38px;margin-top:6px;color:${wcol}">${week}</div>
+          <div class="sub" style="margin-top:2px">${week >= 75 ? 'A strong week. Keep the rhythm.' : week >= 50 ? 'A fair week. Sleep is the lever.' : 'A tough week. Protect recovery.'}</div>
+        </div>
+        <div class="ringbox">${arcSVG(96, 9, week / 100, wcol)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Last 7 days</div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;margin-top:12px">${bars}</svg>
+        <div class="legend"><span><i style="background:${C.optimal}"></i>Recovery</span><span><i style="background:${C.sleep}"></i>Sleep</span><span><i style="background:${C.strain}"></i>Strain</span></div>
+      </div>
+      <div class="card"><div class="label">Recovery, last 14 days</div>
+        <div style="margin-top:12px">${lineChart(REC14, {min:0, max:100, color:C.optimal, dot:bandColor, endLabel:REC14[REC14.length-1],
+          zones:[{from:75, to:100, fill:'rgba(22,236,6,.06)'}, {from:50, to:75, fill:'rgba(255,222,0,.06)'}]})}</div>
+      </div>
+      <div class="statgrid">${stats.map(s => `<div class="stat"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join('')}</div>`;
+  },
+
+  mpa(){
+    const steady = HS30.filter(v => v >= 50).length;
+    const start = new Date(); start.setDate(start.getDate() - 29);
+    let cells = '';
+    for (let e = 0; e < start.getDay(); e++) cells += '<i></i>';
+    HS30.forEach((v, i) => {
+      const dt2 = new Date(); dt2.setDate(dt2.getDate() - (29 - i));
+      const cc = bandColor(v);
+      cells += `<i class="${i === 29 ? 'today' : ''}" style="background:color-mix(in srgb,${cc} 24%,var(--bg3));color:${cc}">${dt2.getDate()}</i>`;
+    });
+    const P1 = SLEEP14.slice(0, 13).map((x, i) => [x, REC14[i + 1]]);
+    const P2 = [[0.12,1.5],[0.9,0.9],[0.16,1.4],[0.86,0.8],[0.1,1.6],[0.2,1.3],[0.88,1.0],[0.14,1.7]];
+    return HEAD('Monthly assessment') + `
+      <div class="card">
+        <div class="label">Health state, last 30 days</div>
+        <div class="it" style="margin-top:8px">${steady} of 30 days steady or better</div>
+        <div class="cal">${cells}</div>
+        <div class="legend"><span><i style="background:${C.optimal}"></i>Thriving</span><span><i style="background:${C.fair}"></i>Steady</span><span><i style="background:${C.poor}"></i>Strained</span></div>
+      </div>
+      <button class="card rowline" style="width:100%" data-open="risk">
+        <div style="text-align:left"><div class="it">Health risk</div><div class="sub">Low, trending down over 8 weeks</div></div>
+        <div style="display:flex;align-items:center;gap:10px">${spark(RISK8, C.optimal, 70, 26)}<span style="font-family:var(--fn);font-weight:600;font-size:22px;color:${C.optimal}">18</span></div>
+      </button>
+      <div class="card"><div class="label">Correlations</div>
+        <div class="it" style="margin-top:10px">Consistent sleep lifts tomorrow</div>
+        ${scatter(P1, {color:C.sleep})}
+        <div class="sub">Sleep score vs next day recovery. r = 0.62, strong</div>
+        <div class="it" style="margin-top:18px">Alcohol cuts your deep sleep</div>
+        ${scatter(P2, {color:C.poor})}
+        <div class="sub">Alcohol nights vs deep sleep hours. r = -0.48, moderate</div>
+      </div>
+      <div class="card"><div class="label">Discoveries</div>
+        <div class="it" style="margin-top:10px">Your best recoveries follow bedtimes before 11 pm.</div>
+        <div style="margin-top:8px">
+          <button class="setrow" data-toast="Saved in your discoveries">Deep sleep rises 22% on strength days<span>&#8250;</span></button>
+          <button class="setrow" data-toast="Saved in your discoveries">Recovery dips 2 days after poor sleep, not 1<span>&#8250;</span></button>
+        </div>
+      </div>`;
+  },
+
+  risk(){
+    const riskCol = v => v < 25 ? C.optimal : v < 50 ? C.fair : C.poor;
+    return HEAD('Health risk') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, RISK8[7] / 100, riskCol(RISK8[7]), `<div class="ringcenter"><div class="heronum" style="font-size:54px;color:${riskCol(RISK8[7])}">${RISK8[7]}</div><div class="heropct">LOW RISK</div></div>`)}</div>
+        <div class="why">Your long term risk score is low and has fallen 4 points in 8 weeks.</div>
+      </div>
+      <div class="card" style="border-color:color-mix(in srgb,var(--strain) 34%,transparent)">
+        <div class="label" style="color:#69c2f5">Biggest lever</div>
+        <div style="font-size:15px;font-weight:600;line-height:1.45;margin-top:8px">Raise VO2 max. One more run each week moves this score to about 15.</div>
+      </div>
+      <div class="card"><div class="label">8 week trend</div>
+        ${lineChart(RISK8, {min:10, max:30, color:C.optimal, noDots:true, endLabel:'18'})}
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Focus areas</div>
+        <div class="zrow"><div class="zl">Cardio fitness</div><div class="zbar"><i style="width:62%;background:${C.fair}"></i></div><div class="zm">62</div></div>
+        <div class="zrow"><div class="zl">Sleep regularity</div><div class="zbar"><i style="width:71%;background:${C.fair}"></i></div><div class="zm">71</div></div>
+        <div class="zrow"><div class="zl">Stress load</div><div class="zbar"><i style="width:82%;background:${C.optimal}"></i></div><div class="zm">82</div></div>
+      </div>`;
+  },
+
+  cycle(){
+    const phases = [
+      {from:0, to:4, fill:'rgba(255,0,38,.10)'},
+      {from:4, to:12, fill:'rgba(22,236,6,.07)'},
+      {from:12, to:15, fill:'rgba(0,147,231,.10)'},
+      {from:15, to:27, fill:'rgba(167,139,250,.10)'}
+    ];
+    return HEAD('Cycle') + `
+      <div class="hero" style="margin-top:6px">
+        <div class="ringbox">${arcSVG(180, 13, 21 / 28, C.stress, `<div class="ringcenter"><div class="heronum" style="font-size:40px;color:${C.stress}">Day 21</div><div class="heropct">LUTEAL</div></div>`)}</div>
+        <div class="why">In this phase your body runs a little hotter and needs more rest. That is normal for you.</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:8px">How this phase moves your data</div>
+        <div class="insitem"><span class="idot" style="background:${C.optimal}"></span><span>HRV runs about 6 ms lower for you in the luteal phase.</span></div>
+        <div class="insitem" style="margin-top:8px"><span class="idot" style="background:${C.sleep}"></span><span>Sleep need rises by 0.4 h. Tonight&#8217;s target already includes it.</span></div>
+        <div class="insitem" style="margin-top:8px"><span class="idot" style="background:${C.strain}"></span><span>Strain tolerance dips near day 24. Plan hard sessions after your next phase starts.</span></div>
+      </div>
+      <div class="card"><div class="label">Recovery across your cycle</div>
+        ${lineChart(CYCLE28, {min:40, max:100, color:C.stress, noDots:true, vbands:phases})}
+        <div class="legend"><span><i style="background:${C.poor}"></i>Menstrual</span><span><i style="background:${C.optimal}"></i>Follicular</span><span><i style="background:${C.strain}"></i>Ovulation</span><span><i style="background:${C.stress}"></i>Luteal</span></div>
+      </div>`;
+  },
+
+  notifications(){
+    const groups = [
+      {g:'Priority', rows:[
+        {n:'Morning readiness', d:'Your recovery, right when you wake', on:true},
+        {n:'Red recovery alert', d:'Only when your body asks for rest', on:true}]},
+      {g:'Coaching', rows:[
+        {n:'Bedtime nudge', d:'Tonight: wind down at 10:00 pm', on:true},
+        {n:'Move reminder', d:'After 90 still minutes in your day', on:false}]},
+      {g:'Weekly', rows:[
+        {n:'Weekly report', d:'Sunday evening summary', on:true}]}
+    ];
+    return HEAD('Notifications') + `
+      <div class="card rowline">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:9px;height:9px;border-radius:50%;background:${C.optimal}"></span><span class="it">Notifications are allowed</span></div>
+        <button class="chipq" data-toast="iOS Settings opens in the full app">iOS Settings</button>
+      </div>
+      ${groups.map(g => `<div class="card"><div class="label" style="margin-bottom:2px">${g.g}</div>
+        ${g.rows.map(r => `<div class="swrow"><div><div class="wn">${r.n}</div><div class="wd">${r.d}</div></div><span class="sw ${r.on ? 'on' : ''}" data-sw><i></i></span></div>`).join('')}
+      </div>`).join('')}`;
+  },
+
+  devices(){
+    return HEAD('Devices') + `
+      <div class="card">
+        <div class="rowline">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="ringbox">${ringSVG(56, 6, 0.68, C.optimal, '<div style="position:absolute;font-family:var(--fn);font-weight:600;font-size:13px">68</div>')}</div>
+            <div><div class="wn">Apple Watch Ultra</div><div class="wd">Worn 4 min ago</div></div>
+          </div>
+          <span class="chipq" style="color:${C.optimal};border-color:color-mix(in srgb,${C.optimal} 40%,transparent)">Active</span>
+        </div>
+        <div style="margin-top:10px">
+          <div class="zrow"><div class="zl">Heart rate</div><div class="zbar"><i style="width:98%;background:${C.optimal}"></i></div><div class="zm">98%</div></div>
+          <div class="zrow"><div class="zl">HRV</div><div class="zbar"><i style="width:96%;background:${C.optimal}"></i></div><div class="zm">96%</div></div>
+          <div class="zrow"><div class="zl">Sleep</div><div class="zbar"><i style="width:92%;background:${C.optimal}"></i></div><div class="zm">92%</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="rowline">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="ringbox">${ringSVG(56, 6, 0.54, C.fair, '<div style="position:absolute;font-family:var(--fn);font-weight:600;font-size:13px">54</div>')}</div>
+            <div><div class="wn">iPhone</div><div class="wd">Steps and workouts</div></div>
+          </div>
+          <span class="chipq">Backup</span>
+        </div>
+        <div style="margin-top:10px">
+          <div class="zrow"><div class="zl">Steps</div><div class="zbar"><i style="width:100%;background:${C.optimal}"></i></div><div class="zm">100%</div></div>
+          <div class="zrow"><div class="zl">Workouts</div><div class="zbar"><i style="width:88%;background:${C.optimal}"></i></div><div class="zm">88%</div></div>
+        </div>
+      </div>`;
+  },
+
+  achievements(){
+    const badges = [
+      {e:'&#127942;', n:'30 green days', p:1},
+      {e:'&#128564;', n:'Sleep streak 7', p:1},
+      {e:'&#128293;', n:'Strain 18 club', p:0.78},
+      {e:'&#127939;', n:'100 workouts', p:0.64},
+      {e:'&#127749;', n:'Early bird 30', p:0.4},
+      {e:'&#129496;', n:'Calm 50 sessions', p:0.22}
+    ];
+    return HEAD('Achievements') + `
+      <div class="badgegrid">
+        ${badges.map(b => `<div class="badge">
+          <div class="ringbox">${ringSVG(64, 6, b.p, b.p >= 1 ? C.optimal : C.strain, `<div class="be">${b.e}</div>`)}</div>
+          <div class="bn">${b.n}</div>
+          <div class="bp" style="color:${b.p >= 1 ? C.optimal : 'var(--lo)'}">${b.p >= 1 ? 'Done' : Math.round(b.p * 100) + '%'}</div>
+        </div>`).join('')}
+      </div>
+      <div class="sub" style="margin-top:14px;text-align:center">Levels are tied to health wins, not just streaks.</div>`;
+  },
+
+  report(){
+    return HEAD('Web report') + `
+      <div class="card"><div class="label" style="margin-bottom:4px">Date range</div>
+        <div class="chips">${['7','30','90'].map(r => `<button class="chipq ${reportRange === r ? 'on' : ''}" data-rng="${r}">${r} days</button>`).join('')}</div>
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:4px">Include</div>
+        <div class="chips">${['Recovery','Sleep','Strain','HRV','Stress'].map(mn => `<button class="chipq ${reportMets.has(mn) ? 'on' : ''}" data-met="${mn}">${mn}</button>`).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="label">Preview</div>
+        <div style="margin-top:10px">${spark(REC14, C.optimal, 280, 60)}</div>
+        <div class="sub" style="margin-top:8px">${reportRange} day report, ${reportMets.size} metrics, PDF for your doctor or coach.</div>
+      </div>
+      <button class="cta" style="margin-top:14px" data-toast="Report ready, share sheet opens in the full app">Create and share</button>`;
+  },
+
+  paywall(){
+    return HEAD('Membership') + `
+      <div class="hero2">
+        <div style="font-family:var(--fn);font-size:20px;font-weight:600;letter-spacing:.06em;text-transform:uppercase">We watch what moves you</div>
+        <div style="font-size:14.5px;color:var(--mid);line-height:1.5;margin-top:8px">Built from your last 90 days, not generic advice.</div>
+      </div>
+      <div class="plan"><div><div class="pnm">Laso One</div><div class="pps">Recovery, sleep and strain basics</div></div><div class="ppr">$59<span style="font-size:12px;color:var(--lo)">/yr</span></div></div>
+      <div class="plan best"><span class="bv">YOUR PLAN</span><div><div class="pnm">Laso Peak</div><div class="pps">Adds stress monitor, coach and plans</div></div><div class="ppr">$89<span style="font-size:12px;color:var(--lo)">/yr</span></div></div>
+      <div class="plan"><div><div class="pnm">Laso Life</div><div class="pps">Adds heart screener and health reports</div></div><div class="ppr">$129<span style="font-size:12px;color:var(--lo)">/yr</span></div></div>
+      <div class="card">
+        <div class="insitem"><span class="idot" style="background:${C.optimal}"></span><span>An alert when your HRV dips under 54 ms, your early warning line.</span></div>
+        <div class="insitem" style="margin-top:9px"><span class="idot" style="background:${C.sleep}"></span><span>A bedtime nudge at 10:30 pm tuned to tomorrow&#8217;s plan.</span></div>
+        <div class="insitem" style="margin-top:9px"><span class="idot" style="background:#69c2f5"></span><span>Unlimited coach questions on your own data.</span></div>
+        <div class="insitem" style="margin-top:9px"><span class="idot" style="background:${C.stress}"></span><span>Correlations and discoveries as they emerge.</span></div>
+      </div>
+      <button class="cta" style="margin-top:14px" data-toast="Upgrade flow opens in the full app">Upgrade to Life</button>
+      <button class="setrow" style="justify-content:center;border:0;color:var(--lo)" data-toast="Restore runs in the full app">Restore purchase</button>`;
+  }
+};
+
+function openSheet(kind, arg){
+  const p = $('#sheetPanel');
+  p.innerHTML = '<div class="grab"></div>' + SHEETS[kind](arg);
+  $('#sheetwrap').classList.add('open');
+  p.scrollTop = 0;
+  animateRings(p);
+}
+function closeSheet(){ $('#sheetwrap').classList.remove('open'); }
+
+/* ---------- ONBOARDING ---------- */
+let onbI = 0, onbTimer = null;
+function showOnb(){ onbI = 0; $('#onb').classList.add('open'); renderOnb(); }
+function hideOnb(){
+  clearTimeout(onbTimer);
+  $('#onb').classList.remove('open');
+  try{ localStorage.setItem('laso_intro', '1'); }catch(e){}
+}
+function renderOnb(){
+  clearTimeout(onbTimer);
+  const o = $('#onb');
+  if (onbI === 0){
+    o.innerHTML = `<div class="orb o0"></div>
+      <h2>Your body is talking</h2>
+      <p>Laso reads your heart every night and turns it into one clear number each morning.</p>
+      <button class="onbbtn" id="onbNext">Get started</button>
+      <button class="onbskip" id="onbSkip">Skip</button>`;
+  } else if (onbI === 1){
+    o.innerHTML = `<div class="orb o1"></div>
+      <h2>Connect Apple Health</h2>
+      <p>Heart rate, sleep and workouts. Everything stays on your device.</p>
+      <button class="onbbtn" id="onbNext">Allow access</button>
+      <button class="onbskip" id="onbSkip">Skip</button>`;
+  } else if (onbI === 2){
+    o.innerHTML = `<div class="ringbox">${arcSVG(150, 10, 1, C.strain, '<div class="ringcenter"><div class="heronum" id="scanPct" style="font-size:40px;color:#69c2f5">0</div><div class="heropct">%</div></div>')}</div>
+      <h2>Reading your last 90 days</h2>
+      <p>Finding your baselines. This is what makes your numbers yours.</p>`;
+    const ring = o.querySelector('.ringp');
+    ring.style.transition = 'stroke-dasharray 2s linear';
+    animateRings(o);
+    countUp($('#scanPct'), 100, 0, 2000);
+    onbTimer = setTimeout(() => { onbI = 3; renderOnb(); }, 2300);
+  } else if (onbI === 3){
+    o.innerHTML = `<div class="ringbox">${arcSVG(170, 12, 0.78, C.optimal, '<div class="ringcenter"><div class="heronum" id="onbRec" style="font-size:54px;color:var(--optimal)">0</div><div class="heropct">RECOVERY %</div></div>')}</div>
+      <h2>Your recovery is 78</h2>
+      <p>You are ready for a big day. This number will greet you every morning.</p>
+      <button class="onbbtn" id="onbNext">Continue</button>`;
+    animateRings(o);
+    countUp($('#onbRec'), 78);
+  } else {
+    o.innerHTML = `<div class="onbdials">
+        ${arcSVG(64, 6, 0.78, C.optimal)}${arcSVG(64, 6, 0.85, C.sleep)}${arcSVG(64, 6, 0.4, C.strain)}
+      </div>
+      <h2>One glance, three answers</h2>
+      <p>Recovery, sleep and strain. Green means go, red means rest. Open once a day and Laso does the rest.</p>
+      <button class="onbbtn" id="onbNext">Start my day</button>`;
+    animateRings(o);
+  }
+  const nx = $('#onbNext'), sk = $('#onbSkip');
+  if (nx) nx.addEventListener('click', () => { if (onbI >= 4){ hideOnb(); } else { onbI++; renderOnb(); } });
+  if (sk) sk.addEventListener('click', hideOnb);
+}
+
+/* ---------- nav + wiring ---------- */
+function setTab(t){
+  state.tab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'view-' + t));
+  $('#fab').classList.toggle('hide', t === 'coaching');
+  if (t === 'coaching' && !$('#chat').childElementCount) initCoach();
+}
+function renderAll(){
+  buildDayStrip();
+  renderHome();
+  renderCoaching();
+  renderCommunity();
+}
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#backdrop').addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+$('#askBtn').addEventListener('click', () => { ask($('#askInput').value); $('#askInput').value = ''; });
+$('#askInput').addEventListener('keydown', e => { if (e.key === 'Enter'){ ask(e.target.value); e.target.value = ''; } });
+
+/* one delegated handler for every data-* action, page and sheets alike */
+document.body.addEventListener('click', e => {
+  const el = e.target.closest('[data-close],[data-open],[data-go],[data-toast],[data-jt],[data-sw],[data-rng],[data-met],[data-sp],[data-replay]');
+  if (!el) return;
+  if (el.hasAttribute('data-close')) return closeSheet();
+  if (el.hasAttribute('data-replay')){ closeSheet(); return showOnb(); }
+  if (el.hasAttribute('data-go')) return setTab(el.dataset.go);
+  if (el.hasAttribute('data-open')){
+    const parts = el.dataset.open.split(':');
+    return openSheet(parts[0], parts[1]);
+  }
+  if (el.hasAttribute('data-jt')){
+    const s = journalSet(state.day), h = el.dataset.jt;
+    if (s.has(h)) s.delete(h); else s.add(h);
+    renderHome();
+    return openSheet('journal');
+  }
+  if (el.hasAttribute('data-sw')) return el.classList.toggle('on');
+  if (el.hasAttribute('data-rng')){ reportRange = el.dataset.rng; return openSheet('report'); }
+  if (el.hasAttribute('data-met')){
+    const mn = el.dataset.met;
+    if (reportMets.has(mn)) reportMets.delete(mn); else reportMets.add(mn);
+    return openSheet('report');
+  }
+  if (el.hasAttribute('data-sp')){ spLevel = el.dataset.sp; return renderCoaching(); }
+  if (el.hasAttribute('data-toast')) return toast(el.dataset.toast);
+});
+
+/* live heart rate ticker, cosmetic */
+setInterval(() => {
+  const v = 60 + Math.round(Math.random() * 6);
+  const a = $('#liveHr'), b = $('#liveHr2');
+  if (a) a.textContent = v;
+  if (b) b.textContent = v + 2;
+}, 2200);
+
+renderAll();
+try{ if (!localStorage.getItem('laso_intro')) showOnb(); }catch(e){ showOnb(); }
+</script>
+</body>
+</html>

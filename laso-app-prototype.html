@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Laso, Current App Prototype</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    --bg:#000000; --bg2:#1C1C1E; --bg3:#2C2C2E; --bg4:#3A3A3C;
+    --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.10); --line3:rgba(255,255,255,.14);
+    --hi:#FFFFFF; --mid:rgba(255,255,255,.6); --lo:rgba(255,255,255,.3);
+    --primary:#4DA3FF; --accent:#22D3EE; --success:#10B981; --warning:#F59E0B; --danger:#E5484D; --info:#4DA3FF;
+    --optimal:#10B981; --good:#34D399; --fair:#F59E0B; --poor:#E5484D;
+    --heart:#F87171; --sleep:#818CF8; --activity:#FBBF24; --stress:#A78BFA; --vitality:#34D399; --brain:#F472B6;
+    --fn:-apple-system,"SF Pro Rounded","SF Pro Display","Helvetica Neue",Arial,sans-serif;
+    --fp:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  }
+  html{background:#000}
+  body{font-family:var(--fp);color:var(--hi);display:flex;justify-content:center;overflow-x:hidden;background:#000}
+  button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  svg{display:block}
+
+  .app{width:100%;max-width:480px;min-height:100dvh;position:relative;background:var(--bg);display:flex;flex-direction:column}
+  @media (min-width:560px){
+    body{padding:28px 0}
+    .app{min-height:calc(100dvh - 56px);border:1px solid #26262a;border-radius:40px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.7)}
+  }
+
+  main{flex:1;position:relative}
+  .view{display:none;padding:14px 12px 110px;animation:fadeUp .3s ease}
+  .view.on{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){
+    .view,.sheet-panel,.ringp,.orb{animation:none!important;transition:none!important}
+  }
+
+  .h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:8px 4px 2px}
+  .sub{font-size:14px;color:var(--mid);margin:2px 4px 0}
+  .label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lo);margin:20px 6px 0}
+  .it{font-size:15.5px;font-weight:600}
+
+  .card{background:#000;border:1px solid var(--line2);border-radius:24px;padding:16px;margin-top:12px;box-shadow:0 1px 8px rgba(0,0,0,.4)}
+  .rowline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .chev{color:var(--lo)}
+
+  /* rings */
+  .ringbox{position:relative;display:flex;align-items:center;justify-content:center}
+  .ringp{transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1),stroke-dasharray 1s cubic-bezier(.22,1,.36,1)}
+  .ringcenter{position:absolute;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .heronum{font-family:var(--fn);font-weight:700;font-size:44px;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .heropct{font-size:11px;letter-spacing:.14em;color:var(--lo);font-weight:700;margin-top:3px;text-transform:uppercase}
+
+  /* hero recovery card */
+  .hero{display:flex;gap:16px;align-items:center}
+  .hero .hr2{flex:1}
+  .hero .ht{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .hero .hw{font-size:13.5px;color:var(--mid);line-height:1.45;margin-top:6px}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px}
+  .livedot{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--success)}
+  .livedot i{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* activation dots */
+  .actdots{display:flex;align-items:center;gap:0;margin-top:12px}
+  .actdots .ad{width:14px;height:14px;border-radius:50%;background:var(--bg3);border:2px solid var(--line3);flex:0 0 auto}
+  .actdots .ad.on{background:var(--accent);border-color:var(--accent)}
+  .actdots .al{flex:1;height:2px;background:var(--line2)}
+  .actdots .al.on{background:var(--accent)}
+
+  /* morning check-in */
+  .emorow{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+  .emorow .en{font-size:14px;font-weight:600;color:var(--mid);flex:0 0 110px}
+  .emos{display:flex;gap:6px}
+  .emo{font-size:20px;padding:6px 8px;border-radius:12px;border:1px solid transparent;transition:.15s;filter:grayscale(60%);opacity:.6}
+  .emo.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);filter:none;opacity:1}
+
+  /* action card */
+  .acticon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+
+  /* intelligence scroll */
+  .hscroll{display:flex;gap:10px;overflow-x:auto;margin:12px -16px 0;padding:0 16px 4px;scrollbar-width:none}
+  .hscroll::-webkit-scrollbar{display:none}
+  .intel{flex:0 0 220px;background:#000;border:1px solid var(--line2);border-radius:16px;padding:12px;position:relative;overflow:hidden}
+  .intel .ib{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .intel .il{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--lo)}
+  .intel .ih{font-size:14px;font-weight:700;margin-top:6px;line-height:1.35}
+  .intel .idt{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.4}
+  .conf{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 8px;background:var(--bg4);color:var(--mid);margin-top:9px}
+
+  /* vitals strip */
+  .tile{flex:0 0 96px;background:#000;border:1px solid var(--line2);border-radius:16px;padding:12px 10px;text-align:left}
+  .tile .tv{font-family:var(--fn);font-weight:700;font-size:20px;margin-top:8px;font-variant-numeric:tabular-nums}
+  .tile .tl{font-size:11px;color:var(--mid);font-weight:600;margin-top:3px}
+  .tico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+
+  /* forecast + generic rows */
+  .frow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .frow:last-child{border-bottom:0}
+  .frow .fi{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  .frow .fn2{flex:1;min-width:0}
+  .frow .ft1{font-size:14.5px;font-weight:600}
+  .frow .ft2{font-size:12px;color:var(--lo);margin-top:2px}
+  .frow .fv{font-family:var(--fn);font-weight:700;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
+  .frow .fv small{display:block;font-size:10.5px;color:var(--lo);font-weight:600}
+
+  .sev{font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 9px;letter-spacing:.06em}
+
+  /* segmented */
+  .seg{display:flex;background:var(--bg3);border-radius:12px;padding:3px;gap:3px;margin-top:12px}
+  .seg button{flex:1;font-size:13px;font-weight:600;color:var(--mid);padding:8px 0;border-radius:9px;transition:.15s}
+  .seg button.on{background:var(--bg4);color:var(--hi)}
+
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .statgrid.four{grid-template-columns:repeat(4,1fr)}
+  .stat{background:#000;border:1px solid var(--line2);border-radius:18px;padding:12px 10px;text-align:center}
+  .stat .sv{font-family:var(--fn);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+  .stat .sl{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lo);margin-top:4px}
+
+  .zrow{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .zrow .zl{flex:0 0 104px;font-size:12.5px;font-weight:700;color:var(--mid)}
+  .zbar{flex:1;height:12px;border-radius:6px;background:var(--bg3);overflow:hidden;position:relative}
+  .zbar i{display:block;height:100%;border-radius:6px}
+  .zrow .zm{flex:0 0 66px;text-align:right;font-family:var(--fn);font-size:12.5px;font-weight:700;color:var(--mid);font-variant-numeric:tabular-nums}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mid);font-weight:600}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:12px}
+  .cal i{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;font-style:normal}
+  .cal i.today{box-shadow:0 0 0 2px var(--hi)}
+
+  /* settings form */
+  .form{background:var(--bg2);border:1px solid var(--line);border-radius:16px;margin-top:10px;overflow:hidden}
+  .srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px;font-weight:500}
+  .srow:last-child{border-bottom:0}
+  .srow .si{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  .srow .sn{flex:1;min-width:0}
+  .srow .sd{font-size:12px;color:var(--lo);margin-top:2px}
+  .srow .sx{color:var(--lo);font-size:13px}
+  .probadge{font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:999px;padding:3px 8px;background:linear-gradient(135deg,#FFD973,#F5A32E);color:#3a2800}
+
+  /* coach chat (ask your data) */
+  .chat{display:flex;flex-direction:column;gap:10px;margin-top:12px;min-height:120px}
+  .msg{max-width:88%;padding:11px 13px;border-radius:16px;font-size:14px;line-height:1.5}
+  .msg.bot{background:var(--bg3);border-bottom-left-radius:6px;align-self:flex-start}
+  .msg.me{background:color-mix(in srgb,var(--primary) 26%,var(--bg3));border-bottom-right-radius:6px;align-self:flex-end}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chipq{font-size:13px;color:var(--mid);background:var(--bg2);border:1px solid var(--line2);border-radius:999px;padding:9px 14px;transition:.15s}
+  .chipq:hover{color:var(--hi);border-color:var(--accent)}
+  .chipq.on{color:var(--hi);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .askrow{display:flex;gap:8px;margin-top:12px}
+  .askrow input{flex:1;background:var(--bg3);border:1px solid var(--line2);border-radius:13px;padding:12px 14px;color:var(--hi);font-size:14px;font-family:var(--fp);outline:none}
+  .askrow input:focus{border-color:var(--accent)}
+  .askrow button{background:var(--primary);color:#04121f;border-radius:13px;padding:0 18px;font-weight:700;font-size:14px}
+
+  .cta{width:100%;background:var(--primary);color:#04121f;border-radius:14px;padding:14px;font-size:15px;font-weight:700;letter-spacing:-.01em;margin-top:14px;transition:filter .15s}
+  .cta:hover{filter:brightness(1.1)}
+
+  /* tab bar */
+  .tabbar{position:sticky;bottom:0;z-index:30;display:flex;justify-content:space-around;align-items:center;padding:9px 4px calc(11px + env(safe-area-inset-bottom));background:rgba(10,10,12,.85);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--lo);font-size:10px;font-weight:600;padding:4px 12px;border-radius:12px;transition:color .18s}
+  .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .tab.on{color:var(--primary)}
+
+  /* sheet */
+  .sheetwrap{position:fixed;inset:0;z-index:50;display:none;justify-content:center;align-items:flex-end}
+  .sheetwrap.open{display:flex}
+  .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;transition:opacity .25s}
+  .sheetwrap.open .backdrop{opacity:1}
+  .sheet-panel{position:relative;width:100%;max-width:480px;max-height:92dvh;background:#0B0B0D;border:1px solid var(--line2);border-bottom:0;border-radius:26px 26px 0 0;overflow-y:auto;padding:14px 16px 40px;transform:translateY(24px);animation:sheetUp .3s ease forwards}
+  @keyframes sheetUp{to{transform:none}}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line3);margin:0 auto 10px}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .sheethead .st{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .xbtn{width:32px;height:32px;border-radius:50%;background:var(--bg3);color:var(--mid);font-size:15px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+
+  details.disc summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:14.5px;font-weight:600;padding:4px 0}
+  details.disc summary::-webkit-details-marker{display:none}
+  details.disc[open] summary svg{transform:rotate(180deg)}
+  details.disc summary svg{transition:transform .2s}
+
+  .swrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .swrow:last-child{border-bottom:0}
+  .sw{position:relative;width:44px;height:26px;border-radius:13px;background:var(--bg3);transition:background .2s;flex:0 0 auto}
+  .sw.on{background:var(--success)}
+  .sw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+  .sw.on i{left:21px}
+
+  /* vitality orb */
+  .orbwrap{background:#000;border-radius:24px;padding:26px 16px;display:flex;flex-direction:column;align-items:center;border:1px solid var(--line)}
+  .orb{width:190px;height:190px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 38% 32%,rgba(52,211,153,.55),rgba(52,211,153,.12) 55%,transparent 75%);
+    box-shadow:0 0 80px rgba(52,211,153,.25), inset 0 0 40px rgba(52,211,153,.2);animation:float 5s ease-in-out infinite}
+  .orb::before,.orb::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(52,211,153,.25)}
+  .orb::after{inset:-20px;border-color:rgba(52,211,153,.12)}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .orbnum{font-family:var(--fn);font-weight:800;font-size:52px;color:#fff;line-height:1}
+  .orbchip{position:absolute;background:rgba(28,28,30,.9);border:1px solid var(--line2);border-radius:12px;padding:6px 10px;font-size:11px;font-weight:700}
+
+  .plan{background:#000;border:1.5px solid var(--line2);border-radius:18px;padding:14px 16px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left}
+  .plan.on{border-color:var(--accent)}
+  .plan .pnm{font-size:15px;font-weight:700}
+  .plan .pps{font-size:12px;color:var(--lo);margin-top:3px}
+  .plan .ppr{font-family:var(--fn);font-weight:700;font-size:17px}
+  .save{font-size:10.5px;font-weight:800;background:color-mix(in srgb,var(--success) 18%,transparent);color:var(--success);border-radius:999px;padding:3px 8px;margin-left:8px}
+
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--line2);color:var(--hi);font-size:13px;font-weight:600;border-radius:999px;padding:10px 18px;opacity:0;transition:.25s;z-index:90;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="app">
+<main>
+
+  <!-- ============ TODAY ============ -->
+  <section class="view on" id="view-today">
+    <div class="h1" id="greetTitle">Good morning, Ayush</div>
+    <div class="sub" id="greetDate"></div>
+
+    <!-- recovery hero -->
+    <button class="card" style="width:100%;text-align:left;background:linear-gradient(135deg,rgba(16,185,129,.28),rgba(16,185,129,.10));border-color:rgba(16,185,129,.18)" data-open="recoveryinfo">
+      <div class="hero">
+        <div class="ringbox" id="heroRing"></div>
+        <div class="hr2">
+          <div class="livedot"><i></i> RIGHT NOW</div>
+          <div class="ht" id="heroTitle" style="margin-top:6px">Fully Recovered</div>
+          <div class="hw" id="heroWhy"></div>
+          <div class="pillrow">
+            <span class="pill" style="color:var(--optimal);background:rgba(16,185,129,.14)">&#9650; 4 vs last week</span>
+            <span class="pill" style="color:var(--optimal);background:rgba(16,185,129,.14)" id="dayTypePill">Push day</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--lo);margin-top:8px">HRV steady across the last 7 days</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--lo);margin-top:10px">Tap to understand your score</div>
+    </button>
+
+    <!-- activation banner -->
+    <div class="card">
+      <div class="rowline"><span class="it" style="font-size:14px">Day 5 of 8, learning your patterns</span><span style="font-family:var(--fn);font-weight:700;color:var(--accent)">62%</span></div>
+      <div class="actdots">
+        <span class="ad on"></span><span class="al on"></span><span class="ad on"></span><span class="al on"></span><span class="ad on"></span><span class="al on"></span><span class="ad on"></span><span class="al on"></span><span class="ad on"></span><span class="al"></span><span class="ad"></span><span class="al"></span><span class="ad"></span><span class="al"></span><span class="ad"></span>
+      </div>
+    </div>
+
+    <!-- morning check-in -->
+    <div class="card" id="checkinCard">
+      <div class="rowline"><span class="it">How do you feel this morning?</span><button class="xbtn" style="width:26px;height:26px;font-size:12px" id="ciClose">&#10005;</button></div>
+      <div class="emorow"><span class="en">Sleep quality</span><span class="emos" data-ci="sleep">&#128564;&#128554;&#128528;&#128524;&#129321;</span></div>
+      <div class="emorow"><span class="en">Energy level</span><span class="emos" data-ci="energy">&#128555;&#128531;&#128528;&#128513;&#9889;</span></div>
+      <div class="emorow"><span class="en">Body soreness</span><span class="emos" data-ci="sore">&#128547;&#128533;&#128528;&#128522;&#128170;</span></div>
+      <button class="cta" id="ciDone" style="display:none">Done</button>
+    </div>
+
+    <!-- today's action -->
+    <button class="card rowline" style="width:100%" data-open="ask">
+      <div style="display:flex;align-items:center;gap:12px;text-align:left">
+        <div class="acticon" style="background:rgba(16,185,129,.14)">&#127939;</div>
+        <div><div class="it">Take a 30 minute zone 2 run</div><div class="sub" style="font-size:12.5px">Your body is ready for load. Last green day like this you ran 5k.</div></div>
+      </div>
+      <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <!-- daily narrative -->
+    <div class="card">
+      <div class="label" style="margin:0 0 8px">&#10024; For you today</div>
+      <div style="font-size:14px;color:var(--mid);line-height:1.55">Your HRV climbed overnight and your resting heart rate is back at baseline. Sleep debt is nearly cleared. Today is the day to spend energy, not save it.</div>
+    </div>
+
+    <!-- body intelligence -->
+    <div class="card">
+      <div class="label" style="margin:0">&#129504; Body intelligence</div>
+      <div class="hscroll">
+        <div class="intel"><span class="ib" style="background:var(--success)"></span><div class="il">Recovery</div><div class="ih">HRV bounced back 12% overnight</div><div class="idt">Two easy days did their job.</div><span class="conf">92% confident</span></div>
+        <div class="intel"><span class="ib" style="background:var(--warning)"></span><div class="il">Sleep</div><div class="ih">Bedtime drifted 40 min later this week</div><div class="idt">Your deep sleep follows your bedtime.</div><span class="conf">84% confident</span></div>
+        <div class="intel"><span class="ib" style="background:var(--stress)"></span><div class="il">Stress</div><div class="ih">Wednesday is your loaded day</div><div class="idt">Plan light training midweek.</div><span class="conf">78% confident</span></div>
+      </div>
+    </div>
+
+    <!-- forecast -->
+    <div class="card">
+      <div class="label" style="margin:0 0 4px">&#128200; Your forecast <span style="float:right;letter-spacing:0;text-transform:none;font-weight:600">Next 7 days</span></div>
+      <div id="forecastRows"></div>
+    </div>
+
+    <!-- ask your data -->
+    <button class="card" style="width:100%;text-align:left" data-open="ask">
+      <div class="label" style="margin:0">Ask your data</div>
+      <div class="rowline" style="margin-top:10px;border:1px solid var(--line3);border-radius:999px;padding:11px 16px">
+        <span style="font-size:14px;color:var(--mid);font-style:italic" id="askPrompt">Why was my recovery low on Tuesday?</span>
+        <span style="color:var(--accent)">&#8594;</span>
+      </div>
+    </button>
+
+    <!-- alert banner -->
+    <div class="card" style="border-color:rgba(229,72,77,.18);background:rgba(229,72,77,.04)">
+      <div class="rowline">
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:16px">&#9888;&#65039;</span>
+          <div><div class="it" style="font-size:14.5px">Early warning</div><div class="sub" style="font-size:12.5px">Resting heart rate 2 bpm above baseline for 2 days. Worth watching, not worrying.</div></div>
+        </div>
+        <span class="sev" style="color:var(--warning);background:rgba(245,158,11,.14)">Moderate</span>
+      </div>
+      <button class="frow" style="width:100%;margin-top:6px" data-open="risk">
+        <div class="fi" style="background:rgba(248,113,113,.14)">&#10084;&#65039;</div>
+        <div class="fn2" style="text-align:left"><div class="ft1">Cardio fitness risk</div><div class="ft2">Grade B, improving</div></div>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <!-- vitals strip -->
+    <div class="label">Vitals</div>
+    <div class="hscroll" style="margin-top:8px" id="vitalStrip"></div>
+
+    <!-- weekly review entry -->
+    <div class="label">Review</div>
+    <button class="card rowline" style="width:100%" data-open="weekly">
+      <div style="display:flex;align-items:center;gap:12px;text-align:left">
+        <div class="acticon" style="background:rgba(77,163,255,.14)">&#128197;</div>
+        <div><div class="it">Weekly review</div><div class="sub" style="font-size:12.5px" id="wkSub">Score 74 (+3), 3 wins this week</div></div>
+      </div>
+      <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <div style="text-align:center;font-size:12px;color:var(--lo);margin-top:18px">Updated 4m ago</div>
+  </section>
+
+  <!-- ============ LIVE ============ -->
+  <section class="view" id="view-live">
+    <div class="rowline">
+      <div class="h1">Live</div>
+      <span class="livedot" style="font-size:11px"><i></i> STREAMING &#183; WATCH</span>
+    </div>
+
+    <div class="card" style="text-align:center;padding:22px 16px">
+      <div style="font-size:13px;color:var(--heart);font-weight:700">&#10084;&#65039; HEART RATE</div>
+      <div style="font-family:var(--fn);font-weight:800;font-size:64px;line-height:1;margin-top:8px"><span id="liveHr">62</span><span style="font-size:18px;color:var(--lo);font-weight:600"> bpm</span></div>
+      <div class="sub" style="margin-top:6px">Zone 1, resting &#183; last reading 5s ago</div>
+      <div class="statgrid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="sv" style="color:var(--info)">54</div><div class="sl">Min</div></div>
+        <div class="stat"><div class="sv">68</div><div class="sl">Avg</div></div>
+        <div class="stat"><div class="sv" style="color:var(--danger)">141</div><div class="sl">Max</div></div>
+      </div>
+      <div id="hrChart" style="margin-top:12px"></div>
+    </div>
+
+    <div class="statgrid">
+      <button class="stat" style="text-align:left;padding:14px" data-open="metric:spo2"><div class="sl" style="margin:0 0 6px">SpO2</div><div class="sv">97.5<span style="font-size:13px;color:var(--lo)">%</span></div><div style="font-size:11.5px;color:var(--success);font-weight:700;margin-top:4px">Normal &#183; 2m ago</div></button>
+      <button class="stat" style="text-align:left;padding:14px" data-open="metric:resp"><div class="sl" style="margin:0 0 6px">Resp rate</div><div class="sv">15.0<span style="font-size:13px;color:var(--lo)"> rpm</span></div><div style="font-size:11.5px;color:var(--success);font-weight:700;margin-top:4px">Normal &#183; 8m ago</div></button>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin:0 0 10px">Activity rings</div>
+      <div class="rowline">
+        <div class="ringbox" id="actRings" style="width:120px;height:120px"></div>
+        <div style="flex:1;margin-left:12px">
+          <div class="frow"><div class="fi" style="background:rgba(250,45,72,.15)">&#128293;</div><div class="fn2"><div class="ft1">Move</div><div class="ft2">462 / 600 cal</div></div><div class="fv" style="color:#FA2D48">77%</div></div>
+          <div class="frow"><div class="fi" style="background:rgba(168,240,62,.12)">&#127939;</div><div class="fn2"><div class="ft1">Exercise</div><div class="ft2">22 / 30 min</div></div><div class="fv" style="color:#A8F03E">73%</div></div>
+          <div class="frow"><div class="fi" style="background:rgba(26,213,205,.12)">&#129485;</div><div class="fn2"><div class="ft1">Stand</div><div class="ft2">8 / 12 hours</div></div><div class="fv" style="color:#1AD5CD">67%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="statgrid">
+      <div class="stat" style="text-align:left;padding:14px"><div class="sl" style="margin:0 0 6px;color:var(--stress)">Blood pressure</div><div class="sv">118/76<span style="font-size:12px;color:var(--lo)"> mmHg</span></div><div style="font-size:11.5px;color:var(--success);font-weight:700;margin-top:4px">Optimal &#183; this morning</div></div>
+      <div class="stat" style="text-align:left;padding:14px"><div class="sl" style="margin:0 0 6px;color:var(--warning)">Temperature</div><div class="sv">36.5<span style="font-size:13px;color:var(--lo)"> &#176;C</span></div><div style="font-size:11.5px;color:var(--mid);font-weight:600;margin-top:4px">On baseline &#183; 1h ago</div></div>
+    </div>
+
+    <div class="card rowline">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="acticon" style="background:rgba(16,185,129,.14)">&#129336;</div>
+        <div><div class="it">Morning yoga</div><div class="sub" style="font-size:12.5px">22 min &#183; 110 kcal &#183; 7:30 am</div></div>
+      </div>
+      <span class="pill" style="color:var(--success);background:rgba(16,185,129,.14)">Done</span>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:var(--lo);margin-top:18px">Last signal 5s ago</div>
+  </section>
+
+  <!-- ============ EXPLORE ============ -->
+  <section class="view" id="view-explore">
+    <div class="h1">Explore</div>
+
+    <div class="card">
+      <div class="rowline"><span class="label" style="margin:0">Weekly health score</span><button class="xbtn" style="width:24px;height:24px;font-size:12px;font-style:italic;font-family:Georgia" data-open="scoreguide">i</button></div>
+      <div class="sub" style="font-size:12px;margin-top:4px">Updated each morning. Recent days count more.</div>
+      <div class="rowline" style="margin-top:10px">
+        <div>
+          <span style="font-family:var(--fn);font-weight:800;font-size:56px;color:var(--good)" id="weekScore">74</span>
+          <span class="pill" style="color:var(--success);background:rgba(16,185,129,.14);margin-left:8px">&#9650; 3 pts this week</span>
+          <div style="font-size:14px;font-weight:700;color:var(--good);margin-top:4px">Good</div>
+        </div>
+        <div class="ringbox" id="exploreRing"></div>
+      </div>
+      <div class="pill" style="display:inline-block;color:var(--activity);background:rgba(251,191,36,.12);margin-top:12px">&#127939; Activity has the most room to grow</div>
+    </div>
+
+    <div class="statgrid four">
+      <div class="stat"><div class="sv">32</div><div class="sl">Metrics</div></div>
+      <div class="stat"><div class="sv">184k</div><div class="sl">Data points</div></div>
+      <div class="stat"><div class="sv">96</div><div class="sl">Days</div></div>
+      <div class="stat"><div class="sv">41</div><div class="sl">Insights</div></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin:0">Your trends</div>
+      <div class="seg" id="tfSeg">
+        <button data-tf="7" class="">7D</button>
+        <button data-tf="30" class="on">30D</button>
+        <button data-tf="90" class="">90D</button>
+      </div>
+      <div id="trendRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin:0 0 4px">Categories</div>
+      <div id="catRows"></div>
+    </div>
+
+    <button class="card rowline" style="width:100%" data-open="healthstate">
+      <div style="text-align:left"><div class="it">Health states</div><div class="sub" style="font-size:12.5px">Thriving for 4 days. See your patterns.</div></div>
+      <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <div class="pill" style="display:inline-flex;align-items:center;gap:6px;color:var(--success);background:rgba(16,185,129,.12);margin:14px 4px 0;padding:8px 14px;font-size:12.5px">&#127942; Strongest: Sleep</div>
+
+    <div class="card">
+      <div class="label" style="margin:0 0 4px">Areas to focus</div>
+      <button class="frow" style="width:100%" data-open="metric:rhr"><div class="fi" style="background:rgba(248,113,113,.14)">&#10084;&#65039;</div><div class="fn2" style="text-align:left"><div class="ft1">Resting heart rate</div><div class="ft2">2 bpm above your normal this week</div></div><div class="fv" style="color:var(--warning)">-3 pts</div></button>
+      <button class="frow" style="width:100%" data-open="category:activity"><div class="fi" style="background:rgba(251,191,36,.12)">&#127939;</div><div class="fn2" style="text-align:left"><div class="ft1">Activity</div><div class="ft2">Two workouts short of your usual week</div></div><div class="fv" style="color:var(--warning)">62</div></button>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin:0">Why this week</div>
+      <div class="sub" style="font-size:12px;margin-top:3px">What changed and why, in plain English.</div>
+      <button class="frow" style="width:100%;margin-top:6px" data-open="metric:hrv"><div class="fi" style="background:rgba(16,185,129,.12)">&#128147;</div><div class="fn2" style="text-align:left"><div class="ft1">Deep sleep fell 18%</div><div class="ft2">Later bedtimes on 3 nights. Tap to see why.</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="frow" style="width:100%" data-open="correlations"><div class="fi" style="background:rgba(167,139,250,.14)">&#128279;</div><div class="fn2" style="text-align:left"><div class="ft1">Alcohol &#8594; deep sleep &#8594; recovery</div><div class="ft2">Causal chain, 81% confidence. See all connections.</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+
+    <button class="card rowline" style="width:100%" data-open="paywall">
+      <div style="text-align:left"><div class="it">&#128279; Connections <span class="probadge" style="margin-left:6px">PRO</span></div><div class="sub" style="font-size:12.5px">Find hidden links between your health metrics.</div></div>
+      <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="view" id="view-settings">
+    <div class="h1">Settings</div>
+
+    <div class="form">
+      <div class="srow">
+        <div class="si" style="background:rgba(34,211,238,.14)">&#128153;</div>
+        <div class="sn"><div>Laso</div><div class="sd">Version 2.49 (312)</div></div>
+        <span class="probadge">&#128081; Pro Member</span>
+      </div>
+      <button class="srow" data-toast="Manage subscription opens the App Store"><div class="si" style="background:rgba(245,158,11,.14)">&#128179;</div><div class="sn"><div>Manage subscription</div><div class="sd">Renews March 12, 2027. Pause or cancel anytime</div></div><span class="sx">&#8599;</span></button>
+    </div>
+
+    <div class="label">Your data</div>
+    <div class="form">
+      <button class="srow" data-open="devices"><div class="si" style="background:rgba(77,163,255,.14)">&#8987;</div><div class="sn"><div>Manage devices</div><div class="sd">2 connected</div></div><span class="sx">&#8250;</span></button>
+      <button class="srow" data-toast="184,392 samples on device"><div class="si" style="background:rgba(16,185,129,.14)">&#128190;</div><div class="sn"><div>On device data</div><div class="sd">184k samples &#183; 96 days &#183; 32 metrics</div></div><span class="sx">&#8250;</span></button>
+      <button class="srow" data-open="report"><div class="si" style="background:rgba(129,140,248,.14)">&#128228;</div><div class="sn"><div>Generate web report</div><div class="sd">Share a PDF with your doctor</div></div><span class="sx">&#8250;</span></button>
+    </div>
+
+    <div class="label">Notifications</div>
+    <div class="form">
+      <button class="srow" data-open="notifications"><div class="si" style="background:rgba(245,158,11,.14)">&#128276;</div><div class="sn"><div>Notifications</div><div class="sd">4 active</div></div><span class="sx">&#8250;</span></button>
+    </div>
+
+    <div class="label">About</div>
+    <div class="form">
+      <button class="srow" data-toast="Signed in via Apple"><div class="si" style="background:rgba(77,163,255,.14)">&#128100;</div><div class="sn"><div>Signed in as</div><div class="sd">developers@kutumbapp.com</div></div></button>
+      <button class="srow" data-toast="Siri shortcuts open in the full app"><div class="si" style="background:rgba(167,139,250,.14)">&#127908;</div><div class="sn"><div>Siri and Shortcuts</div></div><span class="sx">&#8250;</span></button>
+      <button class="srow" data-toast="Opens in browser"><div class="si" style="background:rgba(77,163,255,.14)">&#9995;</div><div class="sn"><div>Privacy policy</div></div><span class="sx">&#8599;</span></button>
+      <button class="srow" data-toast="Opens in browser"><div class="si" style="background:rgba(129,140,248,.14)">&#128196;</div><div class="sn"><div>Terms of use</div></div><span class="sx">&#8599;</span></button>
+      <button class="srow" data-toast="Open source libraries used in Laso"><div class="si" style="background:rgba(255,255,255,.08)">&#9881;&#65039;</div><div class="sn"><div>Acknowledgements</div><div class="sd">Open source libraries used in Laso</div></div><span class="sx">&#8250;</span></button>
+    </div>
+
+    <div class="label">Support</div>
+    <div class="form">
+      <button class="srow" data-toast="App is up to date, v2.49"><div class="si" style="background:rgba(16,185,129,.14)">&#11015;&#65039;</div><div class="sn"><div>Update app</div><div class="sd">App is up to date &#183; v2.49</div></div></button>
+      <button class="srow" data-toast="Rating opens the App Store"><div class="si" style="background:rgba(255,214,0,.14)">&#11088;</div><div class="sn"><div>Rate on App Store</div></div><span class="sx">&#8599;</span></button>
+      <button class="srow" data-toast="Bug report sheet opens in the full app"><div class="si" style="background:rgba(229,72,77,.14)">&#128030;</div><div class="sn"><div>Report a bug</div></div><span class="sx">&#8250;</span></button>
+      <button class="srow" data-toast="Support sheet opens in the full app"><div class="si" style="background:rgba(77,163,255,.14)">&#128172;</div><div class="sn"><div>Contact us</div></div><span class="sx">&#8250;</span></button>
+    </div>
+
+    <div class="label" style="color:var(--danger)">Danger zone</div>
+    <div class="form">
+      <button class="srow" id="deleteBtn" style="color:var(--danger)"><div class="si" style="background:rgba(229,72,77,.14)">&#128465;</div><div class="sn"><div>Delete account and all data</div></div></button>
+    </div>
+    <div style="font-size:11.5px;color:var(--lo);text-align:center;margin-top:16px;line-height:1.5;padding:0 10px">Laso is not a medical device. Information shown is for general wellness and is not a diagnosis. Always talk to your doctor about health concerns.</div>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button class="tab on" data-tab="today">
+    <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.2-9A5.2 5.2 0 0 1 12 6.3 5.2 5.2 0 0 1 21.2 12C19 16.4 12 21 12 21z"/><path d="M8 12h2.2l1.2-2.4 1.6 4 1.1-1.6H16"/></svg>
+    Today
+  </button>
+  <button class="tab" data-tab="live">
+    <svg viewBox="0 0 24 24"><path d="M2 12h3l2.2-5 3.4 10 2.6-7 1.6 2H22"/></svg>
+    Live
+  </button>
+  <button class="tab" data-tab="explore">
+    <svg viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>
+    Explore
+  </button>
+  <button class="tab" data-tab="settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.14-1.4l2-1.55-2-3.46-2.36.95A7 7 0 0 0 14 5.1L13.7 2.6h-3.4L10 5.1a7 7 0 0 0-2.5 1.44l-2.36-.95-2 3.46 2 1.55A7 7 0 0 0 5 12c0 .47.05.94.14 1.4l-2 1.55 2 3.46 2.36-.95A7 7 0 0 0 10 18.9l.3 2.5h3.4l.3-2.5a7 7 0 0 0 2.5-1.44l2.36.95 2-3.46-2-1.55c.09-.46.14-.93.14-1.4z"/></svg>
+    Settings
+  </button>
+</nav>
+</div>
+
+<div class="sheetwrap" id="sheetwrap">
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet-panel" id="sheetPanel"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+
+const C = {
+  optimal:'#10B981', good:'#34D399', fair:'#F59E0B', poor:'#E5484D',
+  success:'#10B981', warning:'#F59E0B', danger:'#E5484D', info:'#4DA3FF',
+  primary:'#4DA3FF', accent:'#22D3EE',
+  heart:'#F87171', sleep:'#818CF8', activity:'#FBBF24', stress:'#A78BFA', vitality:'#34D399', brain:'#F472B6',
+  track:'#2C2C2E'
+};
+const bandColor = s => s >= 75 ? C.optimal : s >= 50 ? C.fair : C.poor;
+
+/* ---------- data (today = index 6) ---------- */
+const DATA = [
+  {rec:62, hrv:58, rhr:57, resp:15.4, spo2:97.2, stress:1.1, brain:74, sleep:{score:71, hrs:6.9, need:7.9, debt:1.0}, strain:9.4},
+  {rec:45, hrv:49, rhr:60, resp:15.9, spo2:96.9, stress:1.8, brain:69, sleep:{score:58, hrs:6.1, need:8.3, debt:2.2}, strain:14.2},
+  {rec:28, hrv:41, rhr:63, resp:16.4, spo2:96.6, stress:2.3, brain:61, sleep:{score:52, hrs:5.8, need:8.6, debt:3.1}, strain:5.1},
+  {rec:55, hrv:54, rhr:58, resp:15.6, spo2:97.0, stress:1.5, brain:71, sleep:{score:74, hrs:7.4, need:8.1, debt:2.4}, strain:8.6},
+  {rec:71, hrv:60, rhr:56, resp:15.3, spo2:97.3, stress:0.9, brain:78, sleep:{score:82, hrs:7.8, need:7.9, debt:1.6}, strain:11.8},
+  {rec:88, hrv:71, rhr:52, resp:14.9, spo2:97.6, stress:0.5, brain:83, sleep:{score:91, hrs:8.2, need:7.7, debt:0.6}, strain:13.4},
+  {rec:78, hrv:68, rhr:53, resp:15.0, spo2:97.5, stress:0.6, brain:81, sleep:{score:85, hrs:7.6, need:7.8, debt:0.8}, strain:8.4}
+];
+const d0 = () => DATA[6];
+const HRV14 = [55,61,64,52,59,66,63,58,49,41,54,60,71,68];
+const RHR14 = [58,56,55,59,57,54,55,57,60,63,58,56,52,53];
+const RESP14 = [15.4,15.1,15.0,15.6,15.3,14.9,15.1,15.4,15.9,16.4,15.6,15.3,14.9,15.0];
+const SPO214 = [97.1,97.3,97.5,96.8,97.2,97.6,97.4,97.2,96.9,96.6,97.0,97.3,97.6,97.5];
+const VIT14 = [27.4,27.3,27.3,27.2,27.1,27.1,27.0,26.9,26.9,26.8,26.8,26.7,26.7,26.6];
+const HS30 = [61,72,55,48,66,74,80,58,45,62,70,77,52,64,69,73,58,66,71,49,63,75,69,62,45,28,55,71,88,78];
+
+const METRICS = {
+  hrv:{n:'HRV', unit:'ms', color:C.success, base:62, sp:8, min:30, max:90, hib:true, v:68, series:HRV14},
+  rhr:{n:'Resting HR', unit:'bpm', color:C.heart, base:55, sp:3, min:45, max:70, hib:false, v:53, series:RHR14},
+  resp:{n:'Resp rate', unit:'rpm', color:C.stress, base:15.2, sp:0.6, min:13, max:18, hib:false, v:15.0, series:RESP14},
+  spo2:{n:'SpO2', unit:'%', color:C.accent, base:97.4, sp:0.5, min:94, max:100, hib:true, v:97.5, series:SPO214}
+};
+
+let spLevel = 'Perform';
+let trendTF = '30';
+let metricRange = '30D';
+let selectedPlan = 'yearly';
+const CI = {sleep:0, energy:0, sore:0};
+
+/* ---------- helpers ---------- */
+function ringSVG(size, stroke, pct, color, center){
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const off = c * (1 - Math.max(0, Math.min(1, pct)));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${C.track}" stroke-width="${stroke}" fill="none"/>
+    <circle class="ringp" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" data-off="${off}"/>
+  </svg>${center || ''}`;
+}
+function arcSVG(size, stroke, pct, color, center, frac, rot){
+  frac = frac || 0.75; rot = rot === undefined ? 135 : rot;
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, arc = c * frac;
+  const fill = arc * Math.max(0, Math.min(1, pct));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(${rot}deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${C.track}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-dasharray="${arc} ${c}"/>
+    <circle class="ringp" cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-dasharray="0 ${c}" data-dash="${fill} ${c}"/>
+  </svg>${center || ''}`;
+}
+function animateRings(root){
+  root.querySelectorAll('.ringp').forEach(el => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (el.dataset.dash) el.style.strokeDasharray = el.dataset.dash;
+      if (el.dataset.off) el.style.strokeDashoffset = el.dataset.off;
+    }));
+  });
+}
+function countUp(el, to, decimals, dur){
+  if (el._raf) cancelAnimationFrame(el._raf);
+  const D = dur || 900, t0 = performance.now();
+  const step = t => {
+    const p = Math.min(1, Math.max(0, (t - t0) / D)), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (to * e).toFixed(decimals || 0);
+    if (p < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+function lineChart(series, o){
+  const W = o.w || 320, H = o.h || 110, pad = 8;
+  const lo = o.min !== undefined ? o.min : Math.min(...series);
+  const hi = o.max !== undefined ? o.max : Math.max(...series);
+  const px = i => pad + i * (W - 2 * pad) / (series.length - 1);
+  const py = v => H - 14 - ((v - lo) / ((hi - lo) || 1)) * (H - 24);
+  let s = '';
+  (o.zones || []).forEach(z => {
+    const y1 = py(Math.min(z.to, hi)), y2 = py(Math.max(z.from, lo));
+    s += `<rect x="${pad}" y="${y1}" width="${W - 2 * pad}" height="${Math.max(2, y2 - y1)}" fill="${z.fill || 'rgba(255,255,255,.06)'}" rx="4"/>`;
+  });
+  if (o.baseline !== undefined){
+    s += `<line x1="${pad}" y1="${py(o.baseline)}" x2="${W - pad}" y2="${py(o.baseline)}" stroke="rgba(255,255,255,.25)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  }
+  s += `<polyline points="${series.map((v, i) => px(i) + ',' + py(v)).join(' ')}" fill="none" stroke="${o.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if (!o.noDots) s += series.map((v, i) => `<circle cx="${px(i)}" cy="${py(v)}" r="${i === series.length - 1 ? 4.5 : 2.2}" fill="${o.color}"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%">${s}</svg>`;
+}
+function barsChart(vals, colorFn, o){
+  o = o || {};
+  const W = o.w || 320, H = o.h || 110, n = vals.length, gw = W / n;
+  const mx = o.max !== undefined ? o.max : Math.max(...vals);
+  let s = '';
+  (o.rules || []).forEach(rv => {
+    const y = H - 18 - (rv / mx) * (H - 30);
+    s += `<line x1="6" y1="${y}" x2="${W - 6}" y2="${y}" stroke="rgba(255,255,255,.28)" stroke-width="1.3" stroke-dasharray="5 4"/>`;
+  });
+  vals.forEach((v, i) => {
+    const bh = Math.max(4, (v / mx) * (H - 30));
+    s += `<rect x="${i * gw + gw * 0.2}" y="${H - 18 - bh}" width="${gw * 0.6}" height="${bh}" rx="3.5" fill="${colorFn(v, i)}"/>`;
+    if (o.labels) s += `<text x="${i * gw + gw / 2}" y="${H - 5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.35)">${o.labels[i]}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%">${s}</svg>`;
+}
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 1600);
+}
+const WDL = ['S','M','T','W','T','F','S'];
+function dayLabel(back){ const dt = new Date(); dt.setDate(dt.getDate() - back); return WDL[dt.getDay()]; }
+
+/* ---------- TODAY renders ---------- */
+function renderToday(){
+  const d = d0();
+  const h = new Date().getHours();
+  $('#greetTitle').textContent = h < 12 ? 'Good morning, Ayush' : h < 18 ? 'Good afternoon, Ayush' : 'Good evening, Ayush';
+  $('#greetDate').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+
+  $('#heroRing').innerHTML = ringSVG(120, 12, d.rec / 100, bandColor(d.rec),
+    `<div class="ringcenter"><div class="heronum" id="heroNum" style="color:${bandColor(d.rec)}">0</div><div class="heropct">Score</div></div>`);
+  animateRings($('#heroRing'));
+  countUp($('#heroNum'), d.rec);
+  $('#heroWhy').textContent = `HRV up 10% vs your 2 week average and resting heart rate back at baseline. Your body recharged well.`;
+
+  const fc = [
+    {i:'&#128147;', bg:'rgba(16,185,129,.12)', n:'HRV', r:'62 to 70 ms', dir:'&#9650;', dc:C.success, conf:'86%'},
+    {i:'&#128564;', bg:'rgba(129,140,248,.12)', n:'Sleep score', r:'80 to 88', dir:'&#9650;', dc:C.success, conf:'78%'},
+    {i:'&#10084;&#65039;', bg:'rgba(248,113,113,.12)', n:'Resting HR', r:'53 to 56 bpm', dir:'&#8596;', dc:'rgba(255,255,255,.4)', conf:'81%'}
+  ];
+  $('#forecastRows').innerHTML = fc.map(f => `
+    <button class="frow" style="width:100%" data-open="metric:hrv">
+      <div class="fi" style="background:${f.bg}">${f.i}</div>
+      <div class="fn2" style="text-align:left"><div class="ft1">${f.n}</div><div class="ft2">Expected: ${f.r}</div></div>
+      <div class="fv" style="color:${f.dc}">${f.dir}<small>${f.conf} confidence</small></div>
+    </button>`).join('');
+
+  const tiles = [
+    {n:'Sleep', v:d.sleep.score + '%', c:C.sleep, i:'&#128564;', sheet:'sleep'},
+    {n:'Strain', v:d.strain.toFixed(1), c:C.activity, i:'&#128293;', sheet:'strain'},
+    {n:'Brain', v:d.brain, c:C.brain, i:'&#129504;', sheet:'brain'},
+    {n:'Stress', v:d.stress.toFixed(1), c:C.stress, i:'&#127794;', sheet:'stressm'},
+    {n:'Vitality', v:'26.6y', c:C.vitality, i:'&#10024;', sheet:'vitality'}
+  ];
+  $('#vitalStrip').innerHTML = tiles.map(t => `
+    <button class="tile" data-open="${t.sheet}">
+      <div class="tico" style="background:color-mix(in srgb,${t.c} 16%,transparent)">${t.i}</div>
+      <div class="tv" style="color:${t.c}">${t.v}</div>
+      <div class="tl">${t.n}</div>
+    </button>`).join('');
+}
+
+/* ---------- LIVE renders ---------- */
+function renderLive(){
+  const hrs = [62,64,61,66,72,88,104,96,78,70,66,68,74,81,72,66,63,65,70,64];
+  $('#hrChart').innerHTML = barsChart(hrs, () => 'rgba(248,113,113,.75)', {h:70, max:140});
+  $('#actRings').innerHTML =
+    `<div style="position:absolute">${ringSVG(120, 11, 0.77, '#FA2D48')}</div>
+     <div style="position:absolute">${ringSVG(92, 11, 0.73, '#A8F03E')}</div>
+     <div style="position:absolute">${ringSVG(64, 11, 0.67, '#1AD5CD')}</div>`;
+  animateRings($('#actRings'));
+}
+
+/* ---------- EXPLORE renders ---------- */
+const TRENDS = {
+  '7':[{n:'HRV', p:'+9%', good:true},{n:'Sleep score', p:'+6%', good:true},{n:'Resting HR', p:'+3%', good:false},{n:'Steps', p:'-12%', good:false}],
+  '30':[{n:'HRV', p:'+6%', good:true},{n:'Sleep score', p:'+4%', good:true},{n:'Deep sleep', p:'-18%', good:false},{n:'Steps', p:'-8%', good:false}],
+  '90':[{n:'HRV', p:'+11%', good:true},{n:'VO2 max', p:'+3%', good:true},{n:'Sleep debt', p:'-22%', good:true},{n:'Resting HR', p:'-4%', good:true}]
+};
+function renderExplore(){
+  $('#exploreRing').innerHTML = ringSVG(84, 9, 0.74, C.good);
+  animateRings($('#exploreRing'));
+
+  $('#trendRows').innerHTML = TRENDS[trendTF].map(t => `
+    <button class="frow" style="width:100%" data-open="metric:hrv">
+      <div class="fn2" style="text-align:left"><div class="ft1">${t.n}</div><div class="ft2">${t.good ? 'Improving' : 'Slipping'} over ${trendTF} days</div></div>
+      <div class="fv" style="color:${t.good ? C.success : C.warning}">${t.p}</div>
+    </button>`).join('');
+  document.querySelectorAll('#tfSeg button').forEach(b => b.classList.toggle('on', b.dataset.tf === trendTF));
+
+  const cats = [
+    {n:'Heart', s:78, c:C.heart, st:'On track', ins:3, i:'&#10084;&#65039;', key:'heart'},
+    {n:'Sleep', s:85, c:C.sleep, st:'Doing well', ins:4, i:'&#128564;', key:'sleep'},
+    {n:'Activity', s:62, c:C.activity, st:'Building up', ins:2, i:'&#127939;', key:'activity'},
+    {n:'Stress', s:80, c:C.stress, st:'On track', ins:2, i:'&#127794;', key:'stress'},
+    {n:'Vitality', s:74, c:C.vitality, st:'Doing well', ins:3, i:'&#10024;', key:'vitality'},
+    {n:'Brain', s:81, c:C.brain, st:'Doing well', ins:2, i:'&#129504;', key:'brain'}
+  ];
+  $('#catRows').innerHTML = cats.map(ct => `
+    <button class="frow" style="width:100%" data-open="category:${ct.key}">
+      <div class="fi" style="background:color-mix(in srgb,${ct.c} 15%,transparent)">${ct.i}</div>
+      <div class="fn2" style="text-align:left"><div class="ft1">${ct.n}</div><div class="ft2">${ct.st} &#183; ${ct.ins} insights</div></div>
+      <div class="fv" style="color:${ct.c}">${ct.s}</div>
+    </button>`).join('');
+}
+
+/* ---------- ASK / coach replies ---------- */
+function askReply(q){
+  const d = d0(), ql = q.toLowerCase();
+  if (ql.includes('recover')) return `Your recovery is ${d.rec}. HRV is 68 ms against your 62 ms baseline and resting heart rate is 53 bpm. You are ready for a hard session today.`;
+  if (ql.includes('sleep')) return `Aim for ${d.sleep.need.toFixed(1)} hours tonight. You slept ${d.sleep.hrs.toFixed(1)} h last night and carry ${d.sleep.debt.toFixed(1)} h of debt. In bed by 10:30 pm clears it.`;
+  if (ql.includes('tuesday') || ql.includes('low')) return `Tuesday's recovery dropped to 28 because you logged alcohol and a late meal on Monday night. Deep sleep fell 40% and your HRV was 21 ms under baseline.`;
+  if (ql.includes('run') || ql.includes('workout') || ql.includes('train')) return `Green light today. A 30 to 40 minute zone 2 run fits your 8.4 strain so far. Keep your heart rate under 150.`;
+  return `Here is where you stand today: recovery ${d.rec}, sleep ${d.sleep.score}, strain ${d.strain.toFixed(1)}. Ask me about recovery, sleep, or training.`;
+}
+function addMsg(text, me){
+  const m = document.createElement('div');
+  m.className = 'msg ' + (me ? 'me' : 'bot');
+  m.textContent = text;
+  $('#askChat').appendChild(m);
+  m.scrollIntoView({behavior:'smooth', block:'end'});
+}
+function ask(q){
+  if (!q || !q.trim()) return;
+  addMsg(q, true);
+  setTimeout(() => addMsg(askReply(q), false), 400);
+}
+
+/* ---------- SHEETS ---------- */
+const HEAD = title => `<div class="sheethead"><div class="st">${title}</div><button class="xbtn" data-close>&#10005;</button></div>`;
+
+const SHEETS = {
+
+  recoveryinfo(){
+    const rows = [
+      {n:'Fully Recovered', r:'75 to 100', c:C.success, t:'Your body absorbed the load. Train hard.'},
+      {n:'Moderate', r:'50 to 74', c:C.warning, t:'Partial recharge. Keep it steady.'},
+      {n:'Low', r:'0 to 49', c:C.danger, t:'Your body is asking for rest.'}
+    ];
+    const factors = [
+      {n:'HRV', w:'35%', c:C.stress}, {n:'Resting heart rate', w:'25%', c:C.heart},
+      {n:'Sleep duration', w:'20%', c:C.sleep}, {n:'Sleep quality', w:'12%', c:C.info},
+      {n:'Workout recovery', w:'8%', c:C.success}
+    ];
+    return HEAD('Your recovery score') + `
+      <div style="display:flex;justify-content:center;margin-top:8px"><div class="ringbox">${ringSVG(120, 12, 0.78, C.optimal, '<div class="ringcenter"><div class="heronum" style="color:var(--optimal)">78</div><div class="heropct">Recovery</div></div>')}</div></div>
+      <div class="sub" style="text-align:center;margin-top:10px">One number for how ready your body is today, judged against your own baseline.</div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Score levels</div>
+        ${rows.map(r => `<div class="frow"><span style="width:10px;height:10px;border-radius:50%;background:${r.c};flex:0 0 auto"></span><div class="fn2"><div class="ft1">${r.n} <span style="color:var(--lo);font-weight:600">${r.r}</span></div><div class="ft2">${r.t}</div></div></div>`).join('')}
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">How it is calculated</div>
+        ${factors.map(f => `<div class="zrow"><div class="zl">${f.n}</div><div class="zbar"><i style="width:${parseInt(f.w) * 2.4}%;background:${f.c}"></i></div><div class="zm">${f.w}</div></div>`).join('')}
+        <div class="sub" style="font-size:12px;margin-top:10px">Updates each morning after your watch syncs. Wear your watch to sleep for best accuracy.</div>
+      </div>`;
+  },
+
+  scoreguide(){
+    return HEAD('Score guide') + `
+      <div class="card"><div class="label" style="margin:0 0 6px">Bands</div>
+        <div class="frow"><span style="width:10px;height:10px;border-radius:50%;background:${C.optimal}"></span><div class="fn2"><div class="ft1">Optimal, 75 and up</div><div class="ft2">Everything is compounding. Protect the routine.</div></div></div>
+        <div class="frow"><span style="width:10px;height:10px;border-radius:50%;background:${C.fair}"></span><div class="fn2"><div class="ft1">Fair, 50 to 74</div><div class="ft2">Solid base with one or two levers to pull.</div></div></div>
+        <div class="frow"><span style="width:10px;height:10px;border-radius:50%;background:${C.poor}"></span><div class="fn2"><div class="ft1">Poor, under 50</div><div class="ft2">Your body needs attention. Start with sleep.</div></div></div>
+      </div>
+      <div class="sub" style="margin-top:12px;text-align:center">Recent days weigh more than older ones, so wins show up fast.</div>`;
+  },
+
+  ask(){
+    return HEAD('Ask your data') + `
+      <div class="chat" id="askChat"></div>
+      <div class="chips">
+        <button class="chipq" data-ask>Why was my recovery low on Tuesday?</button>
+        <button class="chipq" data-ask>How much sleep do I need tonight?</button>
+        <button class="chipq" data-ask>Should I train hard today?</button>
+      </div>
+      <div class="askrow">
+        <input id="askInput" type="text" placeholder="Ask anything about your data..." autocomplete="off" />
+        <button id="askBtn">Ask</button>
+      </div>`;
+  },
+
+  sleep(){
+    const d = d0().sleep;
+    const adj = {Peak:0.75, Perform:0, 'Get by':-0.75}[spLevel];
+    const need = d.need + adj;
+    const hh = Math.floor(need), mm = Math.round((need - hh) * 60);
+    const bedMin = 390 - (need * 60 + 25);
+    const bm = ((bedMin % 1440) + 1440) % 1440;
+    const bh = Math.floor(bm / 60) % 12 || 12, bmm = String(Math.round(bm % 60)).padStart(2, '0');
+    const hist = DATA.map(x => x.sleep.hrs).concat([7.2, 6.8, 7.9, 8.1, 6.5, 7.7, 7.4]).slice(0, 14);
+    return HEAD('Sleep coach') + `
+      <div style="display:flex;justify-content:center;margin-top:8px"><div class="ringbox">${ringSVG(130, 12, need / 12, C.sleep, `<div class="ringcenter"><div class="heronum" style="font-size:30px;color:${C.sleep}">${hh}h ${mm}m</div><div class="heropct">Tonight</div></div>`)}</div></div>
+      <div class="card"><div class="label" style="margin:0">Performance level</div>
+        <div class="seg">${['Peak','Perform','Get by'].map(k => `<button class="${spLevel === k ? 'on' : ''}" data-sp="${k}">${k}</button>`).join('')}</div>
+        <div class="statgrid">
+          <div class="stat"><div class="sv" style="color:${C.sleep}">${bh}:${bmm} pm</div><div class="sl">&#127769; Bedtime</div></div>
+          <div class="stat"><div class="sv" style="color:${C.warning}">6:30 am</div><div class="sl">&#127749; Wake up</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Sleep debt</div>
+        <div class="rowline"><span style="font-family:var(--fn);font-weight:700;font-size:26px">${d.debt.toFixed(1)} h</span><span class="pill" style="color:${C.info};background:rgba(77,163,255,.14)">Low debt</span></div>
+        <div class="zbar" style="margin-top:10px;height:12px"><i style="width:${d.debt * 10}%;background:${C.success}"></i></div>
+        <div class="sub" style="font-size:12.5px;margin-top:8px">Paying off. Clear in about 2 nights at this pace.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">14 day history</div>
+        ${barsChart(hist, v => v >= 7.5 ? C.sleep : 'rgba(245,158,11,.8)', {h:100, max:10, rules:[7.8]})}
+        <div class="sub" style="font-size:12px">Dashed line is your need. Blue bars hit the goal.</div>
+      </div>
+      <div class="card rowline">
+        <div><div class="label" style="margin:0">Consistency</div><div class="sub" style="font-size:12.5px;margin-top:6px">Good. Same bedtime within 35 min.</div></div>
+        <div class="ringbox">${ringSVG(72, 8, 0.72, C.info, '<div class="ringcenter" style="font-family:var(--fn);font-weight:700;font-size:18px">72</div>')}</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Sleep tips</div>
+        <div class="frow"><div class="fi" style="background:rgba(129,140,248,.12)">&#128213;</div><div class="fn2"><div class="ft1">Screens off 30 min before bed</div><div class="ft2">Your deep sleep runs 22% higher when you do.</div></div></div>
+        <div class="frow"><div class="fi" style="background:rgba(129,140,248,.12)">&#9749;</div><div class="fn2"><div class="ft1">No caffeine after 2 pm</div><div class="ft2">It costs you about 7 recovery points the next day.</div></div></div>
+      </div>`;
+  },
+
+  strain(){
+    const v = d0().strain, tLo = 12, tHi = 16;
+    const week = DATA.map(x => x.strain);
+    return HEAD('Strain') + `
+      <div style="display:flex;justify-content:center;margin-top:8px">
+        <div class="ringbox">${ringSVG(150, 13, v / 21, C.info, `<div class="ringcenter"><div class="heronum" style="font-size:38px;color:${C.info}">${v.toFixed(1)}</div><div class="heropct">of 21 &#183; Light</div></div>`)}</div>
+      </div>
+      <div class="sub" style="text-align:center;margin-top:10px">Target zone today: ${tLo.toFixed(1)} to ${tHi.toFixed(1)}. Room for a solid session.</div>
+      <div class="card"><div class="label" style="margin:0 0 4px">7 day history</div>
+        ${barsChart(week, x => x >= tLo && x <= tHi ? C.success : x > tHi ? C.danger : C.info, {h:110, max:21, rules:[tLo, tHi], labels:week.map((_, i) => dayLabel(6 - i))})}
+        <div class="sub" style="font-size:12px">Dashed lines mark your target zone. 7 day average 10.1, moderate.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Today's snapshot</div>
+        <div class="frow"><span style="color:${C.warning}">&#9650;</span><div class="fn2"><div class="ft1">Below target</div><div class="ft2">7.6 more strain to reach the zone</div></div></div>
+        <div class="frow"><span style="color:${C.success}">&#9679;</span><div class="fn2"><div class="ft1">Balance: optimal</div><div class="ft2">Strain is tracking your recovery well this week</div></div></div>
+        <div class="frow"><span style="color:${C.info}">&#9679;</span><div class="fn2"><div class="ft1">Zone 2 day</div><div class="ft2">Keep heart rate 120 to 145 for the best return</div></div></div>
+      </div>
+      <div class="card"><details class="disc"><summary>Learn more <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="zrow"><div class="zl">Zone 1 recovery</div><div class="zbar"><i style="width:60%;background:#3A424C"></i></div><div class="zm">34 min</div></div>
+        <div class="zrow"><div class="zl">Zone 2 fat burn</div><div class="zbar"><i style="width:39%;background:#2E8B8B"></i></div><div class="zm">22 min</div></div>
+        <div class="zrow"><div class="zl">Zone 3 aerobic</div><div class="zbar"><i style="width:18%;background:${C.info}"></i></div><div class="zm">10 min</div></div>
+        <div class="zrow"><div class="zl">Zone 4 threshold</div><div class="zbar"><i style="width:5%;background:${C.warning}"></i></div><div class="zm">3 min</div></div>
+        <div class="zrow"><div class="zl">Zone 5 anaerobic</div><div class="zbar"><i style="width:2%;background:${C.danger}"></i></div><div class="zm">0 min</div></div>
+      </details></div>
+      <div class="sub" style="font-size:11.5px;margin-top:12px;text-align:center">Strain is a 0 to 21 log scale. The last few points are the hardest to earn.</div>`;
+  },
+
+  stressm(){
+    const v = d0().stress;
+    const col = v < 0.75 ? C.success : v < 1.5 ? C.warning : v < 2.25 ? C.fair : C.danger;
+    const week = DATA.map(x => x.stress);
+    return HEAD('Stress monitor') + `
+      <div style="display:flex;justify-content:center;margin-top:8px">
+        <div class="ringbox">${arcSVG(160, 13, v / 3, col, `<div class="ringcenter"><div class="heronum" style="font-size:40px;color:${col}">${v.toFixed(1)}</div><div class="heropct">of 3 &#183; Calm</div></div>`, 0.667, 150)}</div>
+      </div>
+      <div class="sub" style="text-align:center;margin-top:8px">Your body is settled right now. Good window for focused work.</div>
+      <div class="card"><div class="label" style="margin:0 0 6px">What is driving stress</div>
+        <div class="zrow"><div class="zl">HRV deviation</div><div class="zbar"><i style="width:18%;background:${C.success}"></i></div><div class="zm">Low</div></div>
+        <div class="zrow"><div class="zl">HR elevation</div><div class="zbar"><i style="width:24%;background:${C.success}"></i></div><div class="zm">Low</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">7 day stress</div>
+        ${barsChart(week, x => x < 0.75 ? C.success : x < 1.5 ? C.warning : x < 2.25 ? C.fair : C.danger, {h:100, max:3, labels:week.map((_, i) => dayLabel(6 - i))})}
+      </div>
+      <div class="statgrid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="sv">1.1</div><div class="sl">This week</div></div>
+        <div class="stat"><div class="sv">1.4</div><div class="sl">Last week</div></div>
+        <div class="stat"><div class="sv" style="color:${C.success}">&#9660; Improved</div><div class="sl">Change</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Reduce stress</div>
+        <div class="frow"><div class="fi" style="background:rgba(167,139,250,.14)">&#127794;</div><div class="fn2"><div class="ft1">Afternoon walk without your phone</div><div class="ft2">10 minutes drops your score by about 0.3</div></div></div>
+      </div>
+      <button class="cta" data-toast="Breathing session opens in the full app">&#129513; Start breathing session</button>`;
+  },
+
+  vitality(){
+    return HEAD('Vitality age') + `
+      <div class="orbwrap" style="margin-top:8px">
+        <div class="orb">
+          <div style="text-align:center"><div class="orbnum">26.6</div><div class="heropct" style="color:rgba(255,255,255,.5)">Vitality age</div></div>
+          <span class="orbchip" style="top:6px;right:-4px;color:${C.success}">&#9660; 2.7y younger</span>
+          <span class="orbchip" style="bottom:14px;left:-10px">VO2 46 &#183; -1.2y</span>
+        </div>
+        <div class="pillrow" style="justify-content:center;margin-top:18px">
+          <span class="pill" style="color:var(--mid);background:var(--bg3)">Actual 29.3</span>
+          <span class="pill" style="color:${C.success};background:rgba(16,185,129,.14)">90 day pace: younger</span>
+        </div>
+        <div class="sub" style="text-align:center;margin-top:10px">Your engine runs like someone 2.7 years younger.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Metric contributions</div>
+        <div class="zrow"><div class="zl">VO2 max</div><div class="zbar"><i style="width:82%;background:${C.success}"></i></div><div class="zm">-1.2y</div></div>
+        <div class="zrow"><div class="zl">Resting HR</div><div class="zbar"><i style="width:74%;background:${C.success}"></i></div><div class="zm">-0.8y</div></div>
+        <div class="zrow"><div class="zl">Sleep consistency</div><div class="zbar"><i style="width:48%;background:${C.warning}"></i></div><div class="zm">+0.4y</div></div>
+        <div class="zrow"><div class="zl">HRV</div><div class="zbar"><i style="width:76%;background:${C.success}"></i></div><div class="zm">-0.9y</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">90 day trend</div>
+        ${lineChart(VIT14, {min:26, max:28.2, color:C.vitality, noDots:true, baseline:27.9})}
+        <div class="sub" style="font-size:12px">Dashed line is your calendar age pace. You are pulling away from it.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Top improvement</div>
+        <div class="frow"><div class="fi" style="background:rgba(245,158,11,.14)">&#128161;</div><div class="fn2"><div class="ft1">Steadier bedtime</div><div class="ft2">Worth about -0.4 years within a month</div></div></div>
+      </div>`;
+  },
+
+  brain(){
+    const v = d0().brain;
+    const week = DATA.map(x => x.brain);
+    return HEAD('Brain health') + `
+      <div style="text-align:center;margin-top:14px">
+        <div style="font-family:var(--fn);font-weight:800;font-size:72px;line-height:1;color:${C.success}">${v}</div>
+        <div class="heropct" style="margin-top:6px">Brain health &#183; 0 to 100</div>
+        <div style="font-size:15px;font-weight:700;color:${C.success};margin-top:8px">Sharp today</div>
+        <div class="sub" style="margin-top:4px">Sleep and recovery are feeding your focus.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">Last 7 days</div>
+        ${barsChart(week, x => x >= 80 ? C.success : x >= 65 ? C.info : x >= 45 ? 'rgba(255,255,255,.3)' : C.warning, {h:100, max:100, labels:week.map((_, i) => dayLabel(6 - i))})}
+        <div class="sub" style="font-size:12px">Average 74, trending up.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Sleep and recovery drivers</div>
+        <div class="zrow"><div class="zl">Heart recovery</div><div class="zbar"><i style="width:81%;background:${C.success}"></i></div><div class="zm">81</div></div>
+        <div class="zrow"><div class="zl">Deep sleep</div><div class="zbar"><i style="width:72%;background:${C.success}"></i></div><div class="zm">72</div></div>
+        <div class="zrow"><div class="zl">REM sleep</div><div class="zbar"><i style="width:78%;background:${C.success}"></i></div><div class="zm">78</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">What helped and hurt</div>
+        <div class="frow"><span style="color:${C.success}">&#9650;</span><div class="fn2"><div class="ft1">1.5 h deep sleep last night</div><div class="ft2">Your focus runs 11 points higher after nights like this</div></div></div>
+        <div class="frow"><span style="color:${C.warning}">&#9660;</span><div class="fn2"><div class="ft1">Late screen time Wednesday</div><div class="ft2">Cut REM and cost 4 points the next day</div></div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Improve your score</div>
+        <div class="frow"><div class="fi" style="background:rgba(244,114,182,.14)">&#127919;</div><div class="fn2"><div class="ft1">Biggest lever: deep sleep</div><div class="ft2">Consistent 10:30 bedtime projects +6 points</div></div></div>
+        <div class="zrow"><div class="zl">Readiness 40%</div><div class="zbar"><i style="width:81%;background:${C.brain}"></i></div><div class="zm">-2 pts</div></div>
+        <div class="zrow"><div class="zl">Memory 25%</div><div class="zbar"><i style="width:72%;background:${C.brain}"></i></div><div class="zm">-4 pts</div></div>
+        <div class="zrow"><div class="zl">Stress load 20%</div><div class="zbar"><i style="width:84%;background:${C.brain}"></i></div><div class="zm">-1 pt</div></div>
+      </div>`;
+  },
+
+  weekly(){
+    const recs = DATA.map(x => x.rec);
+    return HEAD('Weekly review') + `
+      <div class="card" style="background:linear-gradient(135deg,rgba(52,211,153,.28),rgba(52,211,153,.10));border-color:rgba(52,211,153,.18)">
+        <div class="rowline">
+          <div>
+            <div class="label" style="margin:0">This week</div>
+            <div style="font-family:var(--fn);font-weight:800;font-size:44px;color:${C.good};margin-top:6px">74</div>
+            <span class="pill" style="color:${C.success};background:rgba(16,185,129,.16)">&#9650; 3 from last week</span>
+          </div>
+          ${ringSVG(96, 10, 0.74, C.good)}
+        </div>
+        <div class="statgrid four" style="margin-top:14px">
+          <div class="stat" style="background:transparent;border:0;padding:4px"><div class="sv">74</div><div class="sl">Score</div></div>
+          <div class="stat" style="background:transparent;border:0;padding:4px"><div class="sv" style="color:${C.success}">&#9650;</div><div class="sl">Trend</div></div>
+          <div class="stat" style="background:transparent;border:0;padding:4px"><div class="sv">3</div><div class="sl">Wins</div></div>
+          <div class="stat" style="background:transparent;border:0;padding:4px"><div class="sv">1</div><div class="sl">Alerts</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Highlights</div>
+        <div class="frow"><span style="color:${C.success}">&#9650;</span><div class="fn2"><div class="ft1">Best: HRV</div><div class="ft2">Up 9% on your baseline, driven by two easy days</div></div><div class="fv" style="color:${C.success}">+9%</div></div>
+        <div class="frow"><span style="color:${C.warning}">&#9660;</span><div class="fn2"><div class="ft1">Worth noticing: deep sleep</div><div class="ft2">Later bedtimes on 3 nights cut it 18%</div></div><div class="fv" style="color:${C.warning}">-18%</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">&#127942; Wins</div>
+        <div class="frow"><div class="fn2"><div class="ft1">Longest green streak in 3 weeks</div></div><span class="pill" style="color:${C.success};background:rgba(16,185,129,.14)">3 days</span></div>
+        <div class="frow"><div class="fn2"><div class="ft1">Sleep debt cleared to 0.8 h</div></div><span class="pill" style="color:${C.success};background:rgba(16,185,129,.14)">&#9660; 62%</span></div>
+        <div class="frow"><div class="fn2"><div class="ft1">Resting HR back at 53</div></div><span class="pill" style="color:${C.success};background:rgba(16,185,129,.14)">Baseline</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)"><div class="label" style="margin:0 0 6px;color:${C.fair}">&#128161; Top insight of the week</div>
+        <div style="font-size:14px;color:var(--mid);line-height:1.5">Every green morning this week followed a night with more than 1.4 h of deep sleep. Bedtime is your recovery dial.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">Recovery, last 7 days</div>
+        ${barsChart(recs, v => bandColor(v), {h:100, max:100, labels:recs.map((_, i) => dayLabel(6 - i))})}
+      </div>
+      <div class="card" style="border-color:rgba(77,163,255,.3)"><div class="label" style="margin:0 0 6px;color:${C.info}">Next week outlook</div>
+        <div style="font-size:14px;color:var(--mid);line-height:1.5">If bedtimes hold near 10:30, your score projects to 77. One interval session would push VO2 max up too.</div>
+      </div>`;
+  },
+
+  insights(){
+    const cards = [
+      {cat:'Sleep', c:C.sleep, imp:'18% above your baseline', t:'Deep sleep is your recovery engine', a:'Keep the 10:30 bedtime streak going tonight.'},
+      {cat:'Heart', c:C.heart, imp:'2 bpm above your baseline', t:'Resting heart rate is drifting up', a:'Skip alcohol tonight and it resets in 1 to 2 days.'},
+      {cat:'Activity', c:C.activity, imp:'2 workouts below usual', t:'Volume dipped this week', a:'A 30 minute zone 2 session today closes the gap.'}
+    ];
+    return HEAD('Insights') + `
+      <div class="chips" style="margin-top:4px">
+        <button class="chipq on">All 41</button><button class="chipq">Sleep 12</button><button class="chipq">Activity 9</button><button class="chipq">Heart 11</button><button class="chipq">Body 9</button>
+      </div>
+      ${cards.map(x => `<div class="card">
+        <div class="rowline"><span class="pill" style="color:${x.c};background:color-mix(in srgb,${x.c} 14%,transparent)">${x.cat}</span><span style="font-size:11.5px;color:var(--lo);font-weight:700">${x.imp}</span></div>
+        <div class="it" style="margin-top:10px">${x.t}</div>
+        <div class="sub" style="font-size:13px;margin-top:5px">${x.a}</div>
+      </div>`).join('')}
+      <button class="card rowline" style="width:100%;border-color:rgba(77,163,255,.3)" data-open="paywall">
+        <div style="text-align:left"><div class="it">38 more insights <span class="probadge" style="margin-left:6px">PRO</span></div><div class="sub" style="font-size:12.5px">Unlock everything your data is saying.</div></div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="sub" style="font-size:11.5px;text-align:center;margin-top:12px">Insights are patterns, not diagnoses.</div>`;
+  },
+
+  correlations(){
+    const pillStyle = 'display:inline-block;background:var(--bg3);border:1px solid var(--line2);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700';
+    return HEAD('Connections') + `
+      <div class="card" style="border-color:rgba(245,158,11,.3)"><div class="label" style="margin:0 0 8px;color:${C.fair}">&#128161; Key discoveries</div>
+        <div class="it">Your best recoveries follow bedtimes before 11 pm</div>
+        <div class="sub" style="font-size:13px;margin-top:5px">Seen 9 times in your last 90 days.</div>
+        <span class="conf" style="margin-top:10px">94% confidence</span>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Why things changed</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="${pillStyle}">Alcohol</span><span style="color:var(--lo)">&#8594;</span>
+          <span style="${pillStyle};color:${C.sleep}">Deep sleep -40%</span><span style="color:var(--lo)">&#8594;</span>
+          <span style="${pillStyle};color:${C.poor}">Recovery -21</span>
+        </div>
+        <div class="sub" style="font-size:12.5px;margin-top:10px">81% confidence, built from 12 matching nights.</div>
+        <details class="disc" style="margin-top:8px"><summary>Evidence <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <div class="sub" style="font-size:12.5px;margin-top:8px">On your 12 alcohol nights, deep sleep averaged 0.9 h vs 1.5 h normally. Next day recovery averaged 44 vs 65.</div>
+        </details>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">How much matters</div>
+        <div class="frow"><div class="fn2"><div class="ft1">Caffeine dose response</div><div class="ft2">Each cup after 2 pm costs about 3 recovery points</div></div><span style="color:${C.warning};letter-spacing:2px">&#9679;&#9679;&#9679;&#9675;&#9675;</span></div>
+        <div class="frow"><div class="fn2"><div class="ft1">Walking threshold</div><div class="ft2">Benefits kick in past 6,000 steps</div></div><span style="color:${C.success};letter-spacing:2px">&#9679;&#9679;&#9679;&#9679;&#9675;</span></div>
+      </div>
+      <div class="card"><details class="disc"><summary>All connections, 14 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+        ${[['Bedtime','Deep sleep'],['Steps','HRV'],['Late meals','Resting HR'],['Screen time','REM']].map(p => `<div class="frow"><div class="fn2"><div class="ft1" style="font-weight:600">${p[0]} &#8594; ${p[1]}</div></div></div>`).join('')}
+      </details></div>`;
+  },
+
+  healthstate(){
+    let cells = '';
+    const start = new Date(); start.setDate(start.getDate() - 29);
+    for (let e = 0; e < start.getDay(); e++) cells += '<i></i>';
+    HS30.forEach((v, i) => {
+      const dt = new Date(); dt.setDate(dt.getDate() - (29 - i));
+      const cc = bandColor(v);
+      cells += `<i class="${i === 29 ? 'today' : ''}" style="background:color-mix(in srgb,${cc} 24%,var(--bg3));color:${cc}">${dt.getDate()}</i>`;
+    });
+    return HEAD('Health states') + `
+      <div class="card" style="background:rgba(16,185,129,.04);border-color:rgba(16,185,129,.18)">
+        <div class="rowline">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="acticon" style="background:rgba(16,185,129,.2)">&#127793;</div>
+            <div><div class="it">Thriving</div><div class="sub" style="font-size:12.5px">4 days in this state</div></div>
+          </div>
+        </div>
+        <div class="sub" style="font-size:13px;margin-top:10px">Recovery, sleep and stress are all above your normal. Likely to hold if bedtime stays steady.</div>
+      </div>
+      <div class="card"><div class="label" style="margin:0">Last 30 days</div>
+        <div class="cal">${cells}</div>
+        <div class="legend"><span><i style="background:${C.optimal}"></i>Thriving</span><span><i style="background:${C.fair}"></i>Steady</span><span><i style="background:${C.poor}"></i>Strained</span></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 8px">Distribution</div>
+        <div style="display:flex;height:16px;border-radius:8px;overflow:hidden">
+          <span style="width:47%;background:${C.optimal}"></span><span style="width:36%;background:${C.fair}"></span><span style="width:17%;background:${C.poor}"></span>
+        </div>
+        <div class="legend"><span>47% thriving</span><span>36% steady</span><span>17% strained</span></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Common transitions</div>
+        <div class="frow"><div class="fn2"><div class="ft1">Steady &#8594; Thriving</div><div class="ft2">Usually after 2 good nights</div></div><div class="fv">64%</div></div>
+        <div class="frow"><div class="fn2"><div class="ft1">Thriving &#8594; Strained</div><div class="ft2">Alcohol or a late hard workout</div></div><div class="fv">22%</div></div>
+      </div>`;
+  },
+
+  risk(){
+    return HEAD('Cardio fitness risk') + `
+      <div style="display:flex;justify-content:center;margin-top:8px">
+        <div class="ringbox">${arcSVG(160, 13, 0.28, C.good, `<div class="ringcenter"><div class="heronum" style="font-size:40px;color:${C.good}">B</div><div class="heropct">Low risk &#183; improving</div></div>`, 0.5, 180)}</div>
+      </div>
+      <div class="sub" style="text-align:center;margin-top:8px">7 of 9 related metrics measured. Your fitness risk is low and falling.</div>
+      <div class="card"><div class="label" style="margin:0 0 8px">What to focus on</div>
+        <div class="frow"><div class="fi" style="background:rgba(16,185,129,.12)">&#127939;</div><div class="fn2"><div class="ft1">Raise VO2 max</div><div class="ft2">Target: one interval session weekly. Highest impact.</div></div><span class="sev" style="color:${C.success};background:rgba(16,185,129,.14)">High</span></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Contributing factors</div>
+        <div class="zrow"><div class="zl">VO2 max 46</div><div class="zbar"><i style="width:76%;background:${C.success}"></i></div><div class="zm">Good</div></div>
+        <div class="zrow"><div class="zl">Resting HR 53</div><div class="zbar"><i style="width:82%;background:${C.success}"></i></div><div class="zm">Good</div></div>
+        <div class="zrow"><div class="zl">Weekly zone 4+</div><div class="zbar"><i style="width:31%;background:${C.warning}"></i></div><div class="zm">Low</div></div>
+      </div>
+      <div class="sub" style="font-size:11.5px;text-align:center;margin-top:12px">Estimates from your trends, not a medical assessment.</div>`;
+  },
+
+  metric(key){
+    const m = METRICS[key];
+    const dev = m.v - m.base;
+    const okDir = m.hib ? dev >= 0 : dev <= 0;
+    const col = Math.abs(dev) <= m.sp || okDir ? C.success : C.warning;
+    const series = metricRange === '7D' ? m.series.slice(7) : m.series;
+    const avg = (series.reduce((a, b) => a + b, 0) / series.length).toFixed(1);
+    return HEAD(m.n) + `
+      <div style="text-align:center;margin-top:10px">
+        <span style="font-family:var(--fn);font-weight:800;font-size:56px;color:${col}">${m.v}</span>
+        <span style="font-size:16px;color:var(--lo);font-weight:600"> ${m.unit}</span>
+        <div class="pillrow" style="justify-content:center">
+          <span class="pill" style="color:${col};background:color-mix(in srgb,${col} 14%,transparent)">${okDir ? '&#9650; Better than baseline' : 'Off baseline'}</span>
+          <span class="pill" style="color:var(--mid);background:var(--bg3)">&#8986; Apple Watch</span>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.28)">
+        <div style="font-size:13.5px;color:var(--mid);line-height:1.5">&#128161; ${m.hib ? 'Two easy days in a row lift this fastest for you.' : 'Late meals and alcohol push this up overnight for you.'}</div>
+      </div>
+      <div class="card">
+        <div class="seg" style="margin-top:0">${['7D','30D'].map(r => `<button class="${metricRange === r ? 'on' : ''}" data-mr="${r}:${key}">${r}</button>`).join('')}</div>
+        <div style="margin-top:12px">${lineChart(series, {min:m.min, max:m.max, color:m.color, baseline:m.base, zones:[{from:m.base - m.sp, to:m.base + m.sp}]})}</div>
+        <div class="sub" style="font-size:12px">Band is your normal range, dashed line your baseline.</div>
+      </div>
+      <div class="statgrid">
+        <div class="stat"><div class="sv">${avg}</div><div class="sl">Period avg</div></div>
+        <div class="stat"><div class="sv" style="color:${C.success}">Within range</div><div class="sl">Status</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">This month vs last</div>
+        <div class="frow"><div class="fn2"><div class="ft1">Average ${m.n}</div></div><div class="fv" style="color:${C.success}">${avg} vs ${(avg * 0.97).toFixed(1)}</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 6px">Score impact</div>
+        <div class="frow"><div class="fn2"><div class="ft1">Contribution to today's score</div></div><div class="fv" style="color:${okDir ? C.success : C.warning}">${okDir ? '+4 pts' : '-3 pts'}</div></div>
+      </div>
+      <div class="sub" style="font-size:11.5px;text-align:center;margin-top:12px">For general wellness, not a diagnosis.</div>`;
+  },
+
+  category(key){
+    const cats = {
+      heart:{n:'Heart', s:78, c:C.heart}, sleep:{n:'Sleep', s:85, c:C.sleep},
+      activity:{n:'Activity', s:62, c:C.activity}, stress:{n:'Stress', s:80, c:C.stress},
+      vitality:{n:'Vitality', s:74, c:C.vitality}, brain:{n:'Brain', s:81, c:C.brain}
+    };
+    const ct = cats[key] || cats.heart;
+    return HEAD(ct.n) + `
+      <div style="display:flex;justify-content:center;margin-top:8px"><div class="ringbox">${ringSVG(120, 12, ct.s / 100, ct.c, `<div class="ringcenter"><div class="heronum" style="color:${ct.c}">${ct.s}</div><div class="heropct">${ct.n}</div></div>`)}</div></div>
+      <div class="statgrid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat"><div class="sv" style="color:${C.success}">4</div><div class="sl">Improving</div></div>
+        <div class="stat"><div class="sv">2</div><div class="sl">Stable</div></div>
+        <div class="stat"><div class="sv" style="color:${C.warning}">1</div><div class="sl">Declining</div></div>
+      </div>
+      <div class="card"><div class="label" style="margin:0 0 4px">Metrics</div>
+        <button class="frow" style="width:100%" data-open="metric:hrv"><div class="fn2" style="text-align:left"><div class="ft1">HRV</div><div class="ft2">68 ms &#183; up 6% week over week</div></div><div class="fv" style="color:${C.success}">&#9650;</div></button>
+        <button class="frow" style="width:100%" data-open="metric:rhr"><div class="fn2" style="text-align:left"><div class="ft1">Resting HR</div><div class="ft2">53 bpm &#183; steady</div></div><div class="fv" style="color:var(--lo)">&#8596;</div></button>
+        <button class="frow" style="width:100%" data-open="metric:resp"><div class="fn2" style="text-align:left"><div class="ft1">Resp rate</div><div class="ft2">15.0 rpm &#183; steady</div></div><div class="fv" style="color:var(--lo)">&#8596;</div></button>
+      </div>
+      <div class="sub" style="font-size:11.5px;text-align:center;margin-top:12px">Patterns from your history, not medical advice.</div>`;
+  },
+
+  devices(){
+    return HEAD('Manage devices') + `
+      <div class="card">
+        <div class="rowline">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="ringbox">${ringSVG(56, 6, 0.68, C.success, '<div style="position:absolute;font-family:var(--fn);font-weight:700;font-size:13px">68</div>')}</div>
+            <div><div class="it">Apple Watch Ultra</div><div class="sub" style="font-size:12px">Worn 4 min ago</div></div>
+          </div>
+          <span class="pill" style="color:${C.success};background:rgba(16,185,129,.14)">Active</span>
+        </div>
+        <div style="margin-top:10px">
+          <div class="zrow"><div class="zl">Heart rate</div><div class="zbar"><i style="width:98%;background:${C.success}"></i></div><div class="zm">98%</div></div>
+          <div class="zrow"><div class="zl">HRV</div><div class="zbar"><i style="width:96%;background:${C.success}"></i></div><div class="zm">96%</div></div>
+          <div class="zrow"><div class="zl">Sleep</div><div class="zbar"><i style="width:92%;background:${C.success}"></i></div><div class="zm">92%</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="rowline">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="ringbox">${ringSVG(56, 6, 0.54, C.warning, '<div style="position:absolute;font-family:var(--fn);font-weight:700;font-size:13px">54</div>')}</div>
+            <div><div class="it">iPhone</div><div class="sub" style="font-size:12px">Steps and workouts</div></div>
+          </div>
+          <span class="pill" style="color:var(--mid);background:var(--bg3)">Backup</span>
+        </div>
+      </div>
+      <div class="sub" style="font-size:12px;text-align:center;margin-top:12px">Health access enabled. Data stays on your device.</div>`;
+  },
+
+  notifications(){
+    const groups = [
+      {g:'Priority', rows:[{n:'Morning readiness', d:'Your recovery, right when you wake', on:true},{n:'Early warning alerts', d:'Only when something needs attention', on:true}]},
+      {g:'Coaching', rows:[{n:'Bedtime nudge', d:'Tonight: wind down at 10:00 pm', on:true},{n:'Move reminder', d:'After 90 still minutes', on:false}]},
+      {g:'Summaries', rows:[{n:'Weekly review', d:'Sunday evening', on:true}]}
+    ];
+    return HEAD('Notifications') + `
+      <div class="card rowline">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:9px;height:9px;border-radius:50%;background:${C.success}"></span><span class="it" style="font-size:14.5px">Notifications are allowed</span></div>
+        <button class="chipq" data-toast="iOS Settings opens in the full app">iOS Settings</button>
+      </div>
+      ${groups.map(g => `<div class="card"><div class="label" style="margin:0 0 2px">${g.g}</div>
+        ${g.rows.map(r => `<div class="swrow"><div><div class="ft1">${r.n}</div><div class="ft2">${r.d}</div></div><span class="sw ${r.on ? 'on' : ''}" data-sw><i></i></span></div>`).join('')}
+      </div>`).join('')}`;
+  },
+
+  report(){
+    return HEAD('Web report') + `
+      <div class="card"><div class="label" style="margin:0 0 6px">Included</div>
+        <div class="chips" style="margin-top:6px">
+          <span class="chipq on">Recovery</span><span class="chipq on">Sleep</span><span class="chipq on">Heart</span><span class="chipq on">30 days</span>
+        </div>
+        <div style="margin-top:12px">${lineChart(HRV14, {min:30, max:90, color:C.success, noDots:true, baseline:62})}</div>
+        <div class="sub" style="font-size:12.5px;margin-top:8px">A clean PDF your doctor can read in a minute.</div>
+      </div>
+      <button class="cta" data-toast="Report ready, share sheet opens in the full app">Generate and share</button>`;
+  },
+
+  paywall(){
+    return HEAD('Unlock Laso') + `
+      <div style="text-align:center;margin-top:8px">
+        <div style="width:76px;height:76px;border-radius:20px;background:linear-gradient(135deg,#22D3EE33,#4DA3FF33);border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;font-size:34px">&#128153;</div>
+        <div style="font-size:24px;font-weight:800;margin-top:12px">Unlock Laso</div>
+        <div class="sub" style="margin-top:6px">Your personal health guide, powered by Apple Health and your wearable.</div>
+      </div>
+      <div class="card">
+        ${[['&#128147;','Live vitals and 32+ health metrics'],['&#129504;','Insights that explain why, not just what'],['&#128200;','Trends, connections, and weekly reports'],['&#128276;','Smart alerts when something needs attention'],['&#128274;','Your health data stays on your phone']].map(f => `
+          <div class="frow"><div class="fi" style="background:rgba(34,211,238,.12)">${f[0]}</div><div class="fn2"><div class="ft1" style="font-weight:600">${f[1]}</div></div></div>`).join('')}
+      </div>
+      <button class="plan ${selectedPlan === 'yearly' ? 'on' : ''}" data-plan="yearly">
+        <div><div class="pnm">Yearly <span class="save">Save 40%</span></div><div class="pps">$59.99 per year</div></div>
+        <span style="font-size:20px;color:${selectedPlan === 'yearly' ? 'var(--accent)' : 'var(--lo)'}">${selectedPlan === 'yearly' ? '&#10003;' : '&#9675;'}</span>
+      </button>
+      <button class="plan ${selectedPlan === 'monthly' ? 'on' : ''}" data-plan="monthly">
+        <div><div class="pnm">Monthly</div><div class="pps">$6.99 per month</div></div>
+        <span style="font-size:20px;color:${selectedPlan === 'monthly' ? 'var(--accent)' : 'var(--lo)'}">${selectedPlan === 'monthly' ? '&#10003;' : '&#9675;'}</span>
+      </button>
+      <button class="cta" data-toast="Free trial starts in the full app">Start free trial</button>
+      <div class="sub" style="text-align:center;font-size:12px;margin-top:10px">7 day free trial, then ${selectedPlan === 'yearly' ? '$59.99 a year' : '$6.99 a month'}. Cancel anytime.</div>
+      <button style="display:block;margin:14px auto 0;color:var(--lo);font-size:13px;font-weight:600" data-toast="Restore runs in the full app">Restore purchases</button>`;
+  }
+};
+
+function openSheet(kind, arg){
+  const p = $('#sheetPanel');
+  p.innerHTML = '<div class="grab"></div>' + SHEETS[kind](arg);
+  $('#sheetwrap').classList.add('open');
+  p.scrollTop = 0;
+  animateRings(p);
+  if (kind === 'ask'){
+    addMsg('Ask me anything about your last 96 days of data.', false);
+    const inp = $('#askInput');
+    $('#askBtn').addEventListener('click', () => { ask(inp.value); inp.value = ''; });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ ask(inp.value); inp.value = ''; } });
+  }
+}
+function closeSheet(){ $('#sheetwrap').classList.remove('open'); }
+
+/* ---------- nav + wiring ---------- */
+function setTab(t){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'view-' + t));
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#backdrop').addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+document.body.addEventListener('click', e => {
+  const el = e.target.closest('[data-close],[data-open],[data-toast],[data-sw],[data-sp],[data-tf],[data-mr],[data-plan],[data-ask]');
+  if (!el) return;
+  if (el.hasAttribute('data-close')) return closeSheet();
+  if (el.hasAttribute('data-open')){
+    const parts = el.dataset.open.split(':');
+    return openSheet(parts[0], parts[1]);
+  }
+  if (el.hasAttribute('data-sw')) return el.classList.toggle('on');
+  if (el.hasAttribute('data-sp')){ spLevel = el.dataset.sp; return openSheet('sleep'); }
+  if (el.hasAttribute('data-tf')){ trendTF = el.dataset.tf; return renderExplore(); }
+  if (el.hasAttribute('data-mr')){ const p2 = el.dataset.mr.split(':'); metricRange = p2[0]; return openSheet('metric', p2[1]); }
+  if (el.hasAttribute('data-plan')){ selectedPlan = el.dataset.plan; return openSheet('paywall'); }
+  if (el.hasAttribute('data-ask')) return ask(el.textContent);
+  if (el.hasAttribute('data-toast')) return toast(el.dataset.toast);
+});
+
+/* morning check-in */
+document.querySelectorAll('.emos').forEach(row => {
+  const key = row.dataset.ci;
+  [...row.textContent].forEach((ch, i) => {});
+  const chars = [...row.textContent];
+  row.innerHTML = chars.map((ch, i) => `<button class="emo" data-v="${i + 1}">${ch}</button>`).join('');
+  row.querySelectorAll('.emo').forEach(b => b.addEventListener('click', () => {
+    CI[key] = +b.dataset.v;
+    row.querySelectorAll('.emo').forEach(x => x.classList.toggle('on', x === b));
+    if (CI.sleep && CI.energy && CI.sore) $('#ciDone').style.display = 'block';
+  }));
+});
+$('#ciDone').addEventListener('click', () => { $('#checkinCard').style.display = 'none'; toast('Check-in saved. It sharpens today’s score.'); });
+$('#ciClose').addEventListener('click', () => { $('#checkinCard').style.display = 'none'; });
+$('#deleteBtn').addEventListener('click', () => toast('Deletion needs a typed confirmation in the full app'));
+
+/* ask prompt rotation + live HR ticker */
+const PROMPTS = ['Why was my recovery low on Tuesday?', 'What helps my deep sleep most?', 'Am I overtraining this week?'];
+let pi = 0;
+setInterval(() => { pi = (pi + 1) % PROMPTS.length; const el = $('#askPrompt'); if (el) el.textContent = PROMPTS[pi]; }, 3400);
+setInterval(() => { const el = $('#liveHr'); if (el) el.textContent = 60 + Math.round(Math.random() * 6); }, 2200);
+
+renderToday();
+renderLive();
+renderExplore();
+</script>
+</body>
+</html>

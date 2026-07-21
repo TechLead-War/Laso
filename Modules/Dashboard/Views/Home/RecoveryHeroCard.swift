@@ -164,68 +164,32 @@ struct RecoveryHeroCard: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score). \(summaryHead) \(summarySub). " + whyReasons.map { "\($0.name), \($0.value) \($0.status)" }.joined(separator: ". "))
+        .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score). \(summaryHead) \(summarySub). " + whyReasons.map { "\($0.label), \($0.value)" }.joined(separator: ". "))
         .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
         .accessibilityIdentifier("home.recoveryCard")
     }
 
     // MARK: - Why Row
 
-    @ViewBuilder
+    /// One plain line: a colored dot, the interpretation, and the value.
     private func whyRow(_ reason: DashboardViewModel.RecoveryWhyReason) -> some View {
-        let accent = kindColor(reason.kind)
-        let dim = reason.tone == .noData
-        HStack(spacing: 12) {
-            Image(systemName: kindIcon(reason.kind))
-                .font(DS.Typography.footnoteMedium)
-                .foregroundStyle(dim ? AppColour.textTertiary : accent)
-                .frame(width: 34, height: 34)
-                .background((dim ? AppColour.textTertiary : accent).opacity(0.15),
-                            in: RoundedRectangle(cornerRadius: 9))
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(reason.name)
-                    .font(DS.Typography.subheadlineSemibold)
-                    .foregroundStyle(AppColour.textPrimary)
-                Text(reason.sub)
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(AppColour.textTertiary)
-            }
-
+        HStack(spacing: 11) {
+            Circle()
+                .fill(dotColor(reason.tone))
+                .frame(width: 8, height: 8)
+            Text(reason.label)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textPrimary)
             Spacer(minLength: 8)
-
-            VStack(alignment: .trailing, spacing: 1) {
-                Text(reason.value)
-                    .font(DS.Typography.subheadlineSemibold)
-                    .foregroundStyle(dim ? AppColour.textTertiary : AppColour.textPrimary)
-                    .postHogMask()
-                if !reason.status.isEmpty {
-                    Text(reason.status)
-                        .font(DS.Typography.caption2Semibold)
-                        .foregroundStyle(toneColor(reason.tone))
-                }
-            }
+            Text(reason.value)
+                .font(DS.Typography.footnote)
+                .foregroundStyle(AppColour.textSecondary)
+                .postHogMask()
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
     }
 
-    private func kindIcon(_ kind: DashboardViewModel.RecoveryWhyReason.Kind) -> String {
-        switch kind {
-        case .sleep:  return "moon.fill"
-        case .heart:  return "heart.fill"
-        case .energy: return "bolt.fill"
-        }
-    }
-
-    private func kindColor(_ kind: DashboardViewModel.RecoveryWhyReason.Kind) -> Color {
-        switch kind {
-        case .sleep:  return AppColour.categorySleep
-        case .heart:  return AppColour.categoryHeart
-        case .energy: return AppColour.categoryActivity
-        }
-    }
-
-    private func toneColor(_ tone: DashboardViewModel.RecoveryWhyReason.Tone) -> Color {
+    private func dotColor(_ tone: DashboardViewModel.RecoveryWhyReason.Tone) -> Color {
         switch tone {
         case .good:            return AppColour.success
         case .okay, .concern:  return AppColour.warning
@@ -240,9 +204,9 @@ struct RecoveryHeroCard: View {
         summaryHead: "Higher than usual today.",
         summarySub: "Good to push a little.",
         whyReasons: [
-            .init(kind: .sleep, name: "Sleep", sub: "A bit under your usual", value: "6h 40m", status: "Okay", tone: .okay),
-            .init(kind: .heart, name: "Heart", sub: "Rested and calm", value: "Calm", status: "Good", tone: .good),
-            .init(kind: .energy, name: "Energy", sub: "Ready for the day", value: "Ready", status: "Good", tone: .good)
+            .init(kind: .sleep, label: "Sleep was short", value: "5h 40m", tone: .concern),
+            .init(kind: .heart, label: "Heart is calm", value: "Good", tone: .good),
+            .init(kind: .energy, label: "Energy is low", value: "Below usual", tone: .concern)
         ]
     )
     .padding(.vertical)

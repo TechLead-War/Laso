@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laso Home — Design Prototype (beat Whoop & Oura)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow+Condensed:wght@600;700&family=Oswald:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    --ink:#E9ECF1; --ink2:#9AA3AD; --ink3:#5E6670;
+    --shell:#0a0b0d; --panel:#14161a; --line:#23272e; --accent:#22D3EE;
+  }
+  html,body{background:#070809;color:var(--ink);font-family:-apple-system,"SF Pro Text",Inter,system-ui,sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:26px 16px 80px}
+
+  /* ---------- top chrome ---------- */
+  .top{width:100%;max-width:980px;margin-bottom:18px}
+  .top h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .top p{color:var(--ink2);font-size:13.5px;margin-top:6px;line-height:1.5;max-width:760px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+  .seg button{background:none;border:0;color:var(--ink2);font-size:13px;font-weight:600;padding:8px 13px;border-radius:9px;cursor:pointer;transition:.18s;white-space:nowrap}
+  .seg button.on{background:#23262d;color:#fff}
+  .seg button:hover:not(.on){color:var(--ink)}
+  .btn{background:var(--panel);border:1px solid var(--line);color:var(--ink);font-size:13px;font-weight:600;padding:9px 14px;border-radius:11px;cursor:pointer;transition:.18s;display:inline-flex;gap:7px;align-items:center}
+  .btn:hover{border-color:#3a4049;background:#1b1e23}
+  .btn.primary{background:var(--accent);color:#04282d;border-color:transparent}
+  .btn.primary:hover{filter:brightness(1.08)}
+
+  .stage{display:flex;gap:26px;align-items:flex-start;width:100%;max-width:980px;justify-content:center;flex-wrap:wrap}
+
+  /* ---------- phone ---------- */
+  .phonewrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .phone{
+    width:362px;height:760px;border-radius:46px;padding:13px;position:relative;flex:0 0 auto;
+    background:#000;border:1px solid #2a2e35;box-shadow:0 40px 80px rgba(0,0,0,.6),inset 0 0 0 2px #000;
+    transition:background .4s;
+  }
+  .notch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:120px;height:27px;background:#000;border-radius:0 0 17px 17px;z-index:20}
+  .screen{position:absolute;inset:13px;border-radius:34px;overflow:hidden;background:var(--bg);transition:background .4s}
+  .scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:44px 18px 96px}
+  .scroll::-webkit-scrollbar{width:0}
+  .statusbar{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--t-hi);padding:0 4px 8px;opacity:.85}
+
+  /* theme variables live on .screen */
+  .screen{
+    --bg:#121212; --bg2:#1C1C1E; --track:#2C2C2E;
+    --t-hi:#F0F0F0; --t-mid:rgba(240,240,240,.62); --t-lo:rgba(240,240,240,.4);
+    --good:#34D399; --warn:#F59E0B; --bad:#D55E00;
+    --sleep:#7BA1BB; --strain:#0093E7; --act:#22D3EE;
+    --fp:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+    --fn:-apple-system,"SF Pro Rounded","SF Pro Display","Helvetica Neue",sans-serif;
+    --ringD:168; --ringStroke:10;
+    font-family:var(--fp);
+  }
+  .screen.theme-intensity{
+    --bg:#101518; --bg2:#1b242b; --track:#283339;
+    --t-hi:#FFFFFF; --t-mid:rgba(255,255,255,.62); --t-lo:rgba(255,255,255,.42);
+    --good:#16EC06; --warn:#FFDE00; --bad:#FF0026;
+    --sleep:#7BA1BB; --strain:#0093E7; --act:#00F19F;
+    --fp:'Barlow Semi Condensed','Helvetica Neue',Arial,sans-serif;
+    --fn:'Oswald','Barlow Condensed','DIN Alternate','Helvetica Neue',sans-serif;
+    --ringD:150; --ringStroke:14;
+    background:linear-gradient(180deg,#283339 0%,#101518 70%);
+  }
+  .screen.theme-calm{
+    --bg:#0E0E12; --bg2:#16161c; --track:#26262e;
+    --t-hi:#F2F0EC; --t-mid:rgba(242,240,236,.6); --t-lo:rgba(242,240,236,.38);
+    --good:#86C5A8; --warn:#E3B373; --bad:#DD8A78;
+    --sleep:#9FB6C6; --strain:#86A7C2; --act:#7FB6A6;
+    --fp:'Inter',-apple-system,'Helvetica Neue',sans-serif;
+    --fn:'Inter',-apple-system,'Helvetica Neue',sans-serif;
+    --ringD:160; --ringStroke:7;
+    background:linear-gradient(180deg,#15151b 0%,#0E0E12 60%);
+  }
+  .screen.theme-signature{ background:linear-gradient(180deg,#1C1C1E 0%,#121212 55%); }
+
+  /* ---------- shared bits ---------- */
+  .greet{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 2px}
+  .greet .hi{font-size:17px;color:var(--t-mid);font-weight:500}
+  .streak{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--act) 14%,transparent);border:1px solid color-mix(in srgb,var(--act) 38%,transparent);color:var(--act);border-radius:999px;padding:6px 11px;font-weight:600;font-size:14px;font-family:var(--fn);cursor:pointer}
+  .freshstart{font-size:12px;color:var(--t-lo);letter-spacing:.12em;text-transform:uppercase;margin:14px 2px 2px;font-weight:600}
+
+  .hero{display:flex;flex-direction:column;align-items:center;margin-top:6px;position:relative}
+  .ringbox{position:relative;display:flex;align-items:center;justify-content:center}
+  .ringbox svg{transform:rotate(-90deg)}
+  .ringnum{position:absolute;display:flex;flex-direction:column;align-items:center}
+  .ringnum .v{font-family:var(--fn);font-weight:700;font-size:84px;line-height:.95;letter-spacing:-.013em;font-variant-numeric:tabular-nums;color:var(--t-hi)}
+  .theme-intensity .ringnum .v{font-weight:600}
+  .deltachip{position:absolute;top:6px;right:-2px;font-family:var(--fn);font-weight:600;font-size:16px;font-variant-numeric:tabular-nums;color:var(--good);background:color-mix(in srgb,var(--good) 16%,transparent);border:1px solid color-mix(in srgb,var(--good) 34%,transparent);border-radius:999px;padding:3px 9px;display:flex;align-items:center;gap:3px}
+  .tier{margin-top:14px;font-size:22px;font-weight:600;letter-spacing:-.007em;font-family:var(--fp)}
+  .imper{margin-top:6px;font-size:17px;color:var(--t-hi);text-align:center;letter-spacing:-.02em}
+  .label{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t-lo)}
+
+  .contribs{margin:18px 2px 4px;display:flex;flex-direction:column;gap:9px}
+  .crow{display:flex;align-items:center;gap:9px;font-size:16px;color:var(--t-mid);letter-spacing:-.02em}
+  .crow b{color:var(--t-hi);font-weight:600}
+  .crow .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+
+  .chips{display:flex;gap:11px;margin:18px 2px 0}
+  .chip{flex:1;background:var(--bg2);border:1px solid var(--line,rgba(255,255,255,.06));border-radius:16px;padding:13px 14px;cursor:pointer;transition:.18s}
+  .chip:hover{transform:translateY(-2px)}
+  .chip .cv{font-family:var(--fn);font-weight:600;font-size:27px;letter-spacing:-.008em;font-variant-numeric:tabular-nums}
+  .chip .cl{margin-top:7px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-lo)}
+
+  .cta{width:100%;margin-top:18px;background:var(--act);color:#04282d;border:0;border-radius:16px;padding:16px;font-size:16px;font-weight:700;letter-spacing:-.01em;cursor:pointer;font-family:var(--fp);transition:.18s}
+  .theme-calm .cta{color:#10231d}
+  .cta:hover{filter:brightness(1.07)}
+
+  .invest{margin-top:16px}
+  .invest .it{font-size:13px;color:var(--t-lo);margin-bottom:8px;font-weight:600;letter-spacing:.04em}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{font-size:13px;color:var(--t-mid);background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:8px 13px;cursor:pointer;transition:.16s}
+  .tag:hover,.tag.on{color:var(--t-hi);border-color:var(--act);background:color-mix(in srgb,var(--act) 12%,transparent)}
+
+  /* tab bar */
+  .tabbar{position:absolute;left:13px;right:13px;bottom:13px;height:66px;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-around;border-radius:0 0 34px 34px;z-index:10}
+  .tabbar button{background:none;border:0;color:var(--t-lo);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;font-family:var(--fp)}
+  .tabbar button .ti{font-size:19px;line-height:1}
+  .tabbar button.on{color:var(--act)}
+
+  /* deep-dive / detail screens */
+  .navhdr{display:flex;align-items:center;gap:12px;padding:2px 0 6px}
+  .navhdr .bk{font-size:24px;color:var(--t-mid);cursor:pointer;line-height:1}
+  .navhdr h2{font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .recap{display:flex;align-items:baseline;gap:10px;margin:8px 2px 16px}
+  .recap .rv{font-family:var(--fn);font-size:40px;font-weight:700;font-variant-numeric:tabular-nums}
+  .recap .rt{font-size:15px;font-weight:600}
+  .card{background:var(--bg2);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:15px;margin:12px 0}
+  .card h3{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-lo);margin-bottom:11px}
+  .rank{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px}
+  .rank:last-child{border-bottom:0}
+  .rank .rl{color:var(--t-hi);font-weight:500}
+  .rank .rr{font-family:var(--fn);font-variant-numeric:tabular-nums;color:var(--t-mid);font-size:14px}
+  .coach{font-size:15px;color:var(--t-hi);line-height:1.5;letter-spacing:-.01em}
+  .linkrow{display:flex;justify-content:space-between;align-items:center;color:var(--act);font-size:15px;font-weight:600;padding:14px 2px 2px;cursor:pointer}
+
+  .gridv{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .gauge{background:var(--bg2);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;transition:.18s}
+  .gauge:hover{transform:translateY(-2px)}
+  .gauge .gv{font-family:var(--fn);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums;position:absolute}
+  .gauge .gwrap{position:relative;display:flex;align-items:center;justify-content:center}
+  .gauge .gl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t-mid)}
+  .gauge .gs{font-size:11px;color:var(--t-lo)}
+
+  .setrow{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px;color:var(--t-hi)}
+  .setrow:last-child{border-bottom:0}
+  .setrow .sv{color:var(--t-mid);font-size:14px;font-family:var(--fn)}
+  .pips{display:flex;gap:5px}
+  .pips i{width:9px;height:9px;border-radius:50%;background:var(--act);display:block}
+  .pips i.used{background:#3a3f47}
+
+  .entrance{opacity:0}
+
+  /* page dots + arrows */
+  .navrow{display:flex;align-items:center;gap:16px}
+  .dots{display:flex;gap:8px}
+  .dots i{width:8px;height:8px;border-radius:50%;background:#2c313a;cursor:pointer;transition:.2s}
+  .dots i.on{background:var(--accent);width:22px;border-radius:999px}
+  .scrname{font-size:12.5px;color:var(--ink2);min-width:150px;text-align:center}
+
+  /* ---------- science panel ---------- */
+  .sci{flex:1 1 340px;max-width:430px;min-width:300px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;align-self:stretch;max-height:786px;overflow-y:auto}
+  .sci::-webkit-scrollbar{width:8px}.sci::-webkit-scrollbar-thumb{background:#2a2f37;border-radius:8px}
+  .sci.hide{display:none}
+  .sci h2{font-size:15px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .sci .sub{color:var(--ink2);font-size:12.5px;margin:6px 0 16px;line-height:1.5}
+  .acc{border:1px solid var(--line);border-radius:13px;margin-bottom:10px;overflow:hidden;background:#0f1115}
+  .acc>summary{cursor:pointer;padding:13px 15px;font-size:13.5px;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  .acc>summary::-webkit-details-marker{display:none}
+  .acc>summary .cnt{color:var(--ink3);font-weight:600;font-size:12px}
+  .acc[open]>summary{border-bottom:1px solid var(--line)}
+  .sitem{padding:12px 15px;border-bottom:1px solid #1a1d22}
+  .sitem:last-child{border-bottom:0}
+  .sitem .sh{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .sitem .nm{font-size:13px;font-weight:700;color:var(--ink)}
+  .sitem .spec{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:#aeb6c0;background:#1a1e24;border:1px solid #262b32;border-radius:6px;padding:2px 7px}
+  .sw{width:13px;height:13px;border-radius:4px;border:1px solid rgba(255,255,255,.18);flex:0 0 auto}
+  .sitem .why{font-size:12.5px;color:var(--ink2);line-height:1.5;margin-top:6px}
+  .sitem a{color:var(--accent);font-size:11.5px;text-decoration:none;word-break:break-all}
+  .sitem a:hover{text-decoration:underline}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:7px}
+  .pill.eff{background:#12251f;color:#5fe3a3;border:1px solid #1f5a3c}
+  .beat{background:#0f1115;border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:14px}
+  .beat li{font-size:12.5px;color:var(--ink2);line-height:1.55;margin-left:16px;margin-bottom:7px}
+  .note{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:10px}
+
+  @media(max-width:820px){.stage{flex-direction:column;align-items:center}.sci{max-width:362px;width:100%}}
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>Laso Home — design prototype</h1>
+    <p>Three directions, switchable. Walk the 5-screen flow with Next/Prev (or tap the ring, chips, tab bar). Hit <b>Show science</b> to see the study behind every font, color, size, animation and retention choice. Recommended direction is <b>Laso Signature</b>.</p>
+    <div class="controls">
+      <div class="seg" id="dirSeg">
+        <button data-dir="intensity">Whoop Intensity</button>
+        <button data-dir="calm">Oura Calm</button>
+        <button data-dir="signature" class="on">Laso Signature ★</button>
+      </div>
+      <button class="btn" id="replayBtn">↻ Replay reveal</button>
+      <button class="btn primary" id="sciBtn">Show science</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phonewrap">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen theme-signature" id="screen">
+          <div class="scroll" id="scroll"></div>
+          <div class="tabbar" id="tabbar">
+            <button data-screen="0" class="on"><span class="ti">◎</span>Today</button>
+            <button data-screen="3"><span class="ti">▥</span>Vitals</button>
+            <button data-screen="4"><span class="ti">❤</span>My Health</button>
+          </div>
+        </div>
+      </div>
+      <div class="navrow">
+        <button class="btn" id="prevBtn">‹ Prev</button>
+        <div class="dots" id="dots"></div>
+        <button class="btn" id="nextBtn">Next ›</button>
+      </div>
+      <div class="scrname" id="scrname"></div>
+    </div>
+
+    <div class="sci hide" id="sci"></div>
+  </div>
+
+<script>
+/* ============================ SPEC DATA (from research workflow) ============================ */
+const SPEC = {
+  philosophy: "Win the same quiet morning glance Whoop and Oura own, then beat them on three gaps neither solved: ONE chosen hero (not a 7-card grid, and the user picks it — Oura forbids reordering); the plain-English WHY on the home itself (Whoop's coaching is jargon, Oura buries insight in Labs); and a real daily-return engine layered on the readiness ritual (the score alone is not the habit).",
+  beat: [
+    "Beat Whoop's information overload: one hero ring + 2 glance numbers on first paint; hide the 7-metric grid behind taps (the5krunner cites Whoop's 'daunting' amount of info).",
+    "Put the WHY on home in first-person plain English ('HRV up 12% vs your 2-week average') instead of jargon (Whoop) or buried Labs insight (Oura).",
+    "Never show a naked 0-100: number + 3-tier word + one imperative line; render the tier word in the band color so the legend self-teaches (fixes Oura's unexplained colors).",
+    "Near-zero-effort streak (open + glance) with TWO freezes at signup — neither Whoop nor Oura ships a habit streak on readiness; the 1→2 day jump is Duolingo's biggest lift.",
+    "Frame return around LOSS ('Keep your 12-day run') — losses loom ~2.25× larger than gains (Kahneman, λ=2.25).",
+    "Morning reset as a Fresh Start landmark ('Yesterday 58 · today, clean slate') so a bad day never discourages return (people act +33% at period starts).",
+    "One engineered peak per open: ring snaps shut + number locks in under ~900ms, then freezes static and instantly readable (Peak-End + Doherty 400ms feel-threshold)."
+  ],
+  recommended: "signature",
+  type: [
+    {nm:"Hero score numeral", spec:"84px · 700 · -0.013em · tabular", why:"Bigger is significantly faster to read at a glance (p<0.01). Hero lands ~72–88pt on a 390pt iPhone; monospacedDigit stops layout jitter as it ticks.", src:"https://www.nngroup.com/articles/glanceable-fonts/"},
+    {nm:"Tier word", spec:"22px · 600", why:"Never show a naked 0-100; pair with a 3-tier label. Rendering the tier word in the band hue makes Oura's hidden color mapping legible.", src:"https://ouraring.com/blog/readiness-score/"},
+    {nm:"Imperative line", spec:"17px · 400 · 87% white", why:"The number is always paired with a plain-language verdict the user can act on. Body 17pt; step weight down on dark.", src:"https://ouraring.com/blog/readiness-score/"},
+    {nm:"Delta chip '+18'", spec:"17px · 600 · tabular", why:"Garmin's +/- charge delta maps an abstract score onto a battery model everyone understands; tabular figures so it never reflows.", src:"https://www8.garmin.com/manuals/webhelp/"},
+    {nm:"Glance chip numeral", spec:"27px · 600 · tabular", why:"1.25 Major Third scale (17→21→27) gives clean low-contrast dashboard hierarchy.", src:"https://imperavi.com/books/ui-typography/principles/modular-scale/"},
+    {nm:"All-caps label", spec:"12px · 600 · +0.0125em", why:"Uppercase reads faster at a glance; small sizes need POSITIVE tracking (Caption1 12pt +0.12px).", src:"https://www.nngroup.com/articles/glanceable-fonts/"},
+    {nm:"Streak counter", spec:"17px · 600 · tabular", why:"The 1→2 day streak jump is Duolingo's biggest retention lift; show the count once past day 2.", src:"https://www.recall.it/summary/lennys-podcast/behind-the-product-duolingo-streaks"}
+  ],
+  color: [
+    {nm:"Base background", hex:"#121212", why:"Pure #000 strains eyes and kills depth (shadows invisible); #121212 keeps OLED savings. White on it = 18.73:1.", src:"https://www.fourzerothree.in/p/scalable-accessible-dark-mode"},
+    {nm:"Raised surface", hex:"#1C1C1E", why:"Apple HIG dark mode pairs base + elevated backgrounds; lighter surfaces advance (#000→#1C1C1E→#2C2C2E).", src:"https://developer.apple.com/design/human-interface-guidelines/dark-mode"},
+    {nm:"Ring track / elevated", hex:"#2C2C2E", why:"Material elevation overlay: higher surfaces get a brighter white tint to separate without shadows (invisible on near-black).", src:"https://m2.material.io/design/color/dark-theme.html"},
+    {nm:"High-emphasis text", hex:"#F0F0F0", why:"Don't use pure #FFF on #000 (halation/bloom); off-white ~87% is gentler and still high-contrast.", src:"https://www.smashingmagazine.com/2025/04/inclusive-dark-mode-designing-accessible-dark-themes/"},
+    {nm:"State High — PRIMED", hex:"#34D399", why:"Discrete band, not gradient; desaturated teal so it doesn't vibrate on dark. 10.92:1; locked as highest luminance for red-green CVD safety.", src:"https://m2.material.io/design/color/dark-theme.html"},
+    {nm:"State Mid — STEADY", hex:"#F59E0B", why:"Amber 9.78:1; distinct luminance between green and red so bands separate by lightness, not hue alone (CVD-safe).", src:"https://www.lyssna.com/blog/color-blind-friendly-palette/"},
+    {nm:"State Low — RECOVER", hex:"#D55E00", why:"Okabe-Ito vermillion widens red-green separation vs a pure red; only rendered at hero size where 3:1 large-text rules apply.", src:"https://conceptviz.app/blog/okabe-ito-palette-hex-codes-complete-reference"},
+    {nm:"Single action accent", hex:"#22D3EE", why:"60-30-10: one vivid accent earns meaning through scarcity. Cyan is highest contrast (11.62:1), reserved for the ONE daily action.", src:"https://hype4.academy/articles/design/60-30-10-rule-in-ui"},
+    {nm:"Sleep raw-data hue", hex:"#7BA1BB", why:"Whoop gives Sleep its own muted blue-grey so recovery green/amber/red is never reused for non-recovery metrics.", src:"https://developer.whoop.com/"},
+    {nm:"Strain raw-data hue", hex:"#0093E7", why:"Whoop's dedicated Strain blue keeps Strain and Recovery in different color languages so they never share meaning.", src:"https://developer.whoop.com/"}
+  ],
+  motion: [
+    {nm:"Hero ring fill sweep", spec:"850ms · cubic-bezier(0.05,0.7,0.1,1)", why:"A value reveal (not a transition) worth savoring for the emotional peak; finishes under Nielsen's 1s thought-limit. Emphasized-Decelerate is M3's hero curve.", src:"https://m3.material.io/styles/motion/easing-and-duration/tokens-specs"},
+    {nm:"Hero number count-up", spec:"850ms, starts +100ms", why:"Animate the reveal for the daily hit, but the final value must land exactly and HOLD — moving values are unreadable. Trails the fill (Follow-Through).", src:"https://www.microsoft.com/en-us/research/"},
+    {nm:"Perceived-instant peak", spec:"~400ms", why:"Doherty Threshold: response under 400ms raised throughput 106% and felt 'addicting'. The daily open must feel instant.", src:"https://lawsofux.com/doherty-threshold/"},
+    {nm:"Secondary stagger", spec:"300ms · 70ms steps · ease-out", why:"Cascade chips/contributors AFTER the ring so the eye lands on Recovery first; ~60-80ms stagger guides attention top-down.", src:"https://motion.dev/docs/stagger"},
+    {nm:"Tap / tab response", spec:"250ms · standard", why:"100ms feels instant; tap feedback must respond within 100ms and complete well under 1s. Long expressive timing only for the once-per-open hero.", src:"https://www.nngroup.com/articles/response-times-3-important-limits/"},
+    {nm:"Reduce Motion fallback", spec:"180ms cross-fade", why:"Hard accessibility requirement: replace sweep/count-up with a dissolve to the final value — never delete the info.", src:"https://developer.apple.com/help/app-store-connect/manage-app-accessibility/reduced-motion-evaluation-criteria/"}
+  ],
+  retention: [
+    {nm:"Overnight score = morning variable reward", why:"Variable-ratio rewards are the most extinction-resistant schedule and drive the strongest dopamine; a score that truly differs daily IS a built-in variable reward.", src:"https://www.psychologytoday.com/us/blog/brain-wise/201311/use-unpredictable-rewards-to-keep-behavior-going", eff:"Core daily-return loop"},
+    {nm:"Near-zero-effort streak (open + glance)", why:"The 1→2 day jump is Duolingo's biggest funnel lift; at day 7 retention rises significantly. Fogg B=MAP — raise ability, not motivation.", src:"https://www.recall.it/summary/lennys-podcast/behind-the-product-duolingo-streaks", eff:"Large compounding lift"},
+    {nm:"Loss-framed streak copy", why:"People feel a loss ~2.25× more than an equal gain (Tversky & Kahneman 1992). 'Keep your 12-day run' outpulls 'earn a badge'.", src:"https://www.sciencedirect.com/science/article/pii/S0167487024000485", eff:"~2× the streak's pull"},
+    {nm:"Two freezes + same-day repair", why:"Two freezes beat one on retention; three add nothing. Removes loss anxiety while keeping loss aversion intact.", src:"https://www.recall.it/summary/lennys-podcast/behind-the-product-duolingo-streaks", eff:"Prevents single-miss churn"},
+    {nm:"Fresh Start landmark reset", why:"People are +33% likely to act at the start of a period; a daily score reset is a temporal landmark that buries yesterday's bad day.", src:"https://faculty.wharton.upenn.edu/wp-content/uploads/2014/06/Dai_Fresh_Start_2014_Mgmt_Sci.pdf", eff:"Cuts post-bad-day churn"},
+    {nm:"5-second Investment (tag last night)", why:"Completes the Hook loop's Investment stage; loading data raises switching cost and makes tomorrow's reward feel earned.", src:"https://www.nirandfar.com/how-to-manufacture-desire/", eff:"Deepens loop to internal trigger"},
+    {nm:"Per-user tuned morning push", why:"A tailored, well-timed push raised next-24h engagement +3.9%; best slot beat morning +8.8% — so test timing, don't assume.", src:"https://pmc.ncbi.nlm.nih.gov/articles/PMC6293241/", eff:"Measurable next-24h lift"},
+    {nm:"A/B-tested CTA copy", why:"One Duolingo button-copy change drove 10,000+ incremental DAU. Tiny copy at the action moment moves DAU at scale.", src:"https://www.lennysnewsletter.com/p/how-duolingo-reignited-user-growth", eff:"High-leverage DAU mover"}
+  ]
+};
+
+/* per-direction geometry + tier word */
+const THEMES = {
+  intensity:{ringD:150,stroke:14,tier:"HIGH",numFont:"'Oswald','Barlow Condensed',sans-serif"},
+  calm:{ringD:160,stroke:7,tier:"BALANCED",numFont:"'Inter',sans-serif"},
+  signature:{ringD:168,stroke:10,tier:"PRIMED",numFont:""}
+};
+
+let dir = "signature";
+let scr = 0;
+const SCREENS = ["Home — Today","Recovery deep-dive","Raw biometrics","Vitals tab","My Health tab"];
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const $ = s => document.querySelector(s);
+const scroll = $("#scroll"), screenEl = $("#screen");
+
+/* ---------- ring builder ---------- */
+function ringSVG(score, diameter, stroke, color, trackVar="var(--track)", numClass="v"){
+  const r = (diameter - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const off = c * (1 - score/100);
+  return `<div class="ringbox" style="width:${diameter}px;height:${diameter}px">
+    <svg width="${diameter}" height="${diameter}" viewBox="0 0 ${diameter} ${diameter}">
+      <circle cx="${diameter/2}" cy="${diameter/2}" r="${r}" fill="none" style="stroke:${trackVar}" stroke-width="${stroke}"/>
+      <circle class="arc" cx="${diameter/2}" cy="${diameter/2}" r="${r}" fill="none" style="stroke:${color}" stroke-width="${stroke}"
+        stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${reduce?off.toFixed(1):c.toFixed(1)}"
+        data-final="${off.toFixed(1)}" data-circ="${c.toFixed(1)}"/>
+    </svg>
+    <div class="ringnum"><span class="${numClass}" data-count="${score}">${reduce?score:0}</span></div>
+  </div>`;
+}
+
+/* tier word color by score (signature band model used for all; palette differs per theme) */
+function band(score){ return score>=67?'var(--good)':score>=34?'var(--warn)':'var(--bad)'; }
+
+/* ---------- screen renderers ---------- */
+function homeHTML(){
+  const t = THEMES[dir];
+  const score = 82;
+  return `
+  <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;100%</span></div>
+  <div class="greet">
+    <div class="hi">Good morning,<br><b style="color:var(--t-hi);font-weight:700;font-size:20px">Aanya</b></div>
+    <div class="streak entrance" data-d="3">🔥 12-day run</div>
+  </div>
+  <div class="freshstart entrance" data-d="3">Yesterday 58 · today, clean slate</div>
+
+  <div class="hero">
+    ${ringSVG(score, t.ringD, t.stroke, band(score))}
+    <div class="deltachip entrance" data-d="4">▲ +18</div>
+    <div class="tier entrance" data-d="3" style="color:${band(score)}">${t.tier}</div>
+    <div class="imper entrance" data-d="4">Push today, you recharged well.</div>
+  </div>
+
+  <div class="contribs">
+    <div class="crow entrance" data-d="5"><span class="dot" style="background:var(--good)"></span>HRV <b>up 12%</b> vs your 2-week average</div>
+    <div class="crow entrance" data-d="6"><span class="dot" style="background:var(--good)"></span>Slept <b>7h 40m</b>, an hour more than usual</div>
+  </div>
+
+  <div class="chips">
+    <div class="chip entrance" data-d="7"><div class="cv" style="color:var(--sleep)">7:40</div><div class="cl">Sleep</div></div>
+    <div class="chip entrance" data-d="8"><div class="cv" style="color:var(--strain)">8.4</div><div class="cl">Strain</div></div>
+  </div>
+
+  <button class="cta entrance" data-d="9">See why →</button>
+
+  <div class="invest entrance" data-d="10">
+    <div class="it">Tag last night — personalizes tomorrow</div>
+    <div class="tags">
+      <span class="tag">Late caffeine</span><span class="tag">Alcohol</span>
+      <span class="tag">Stress</span><span class="tag on">Slept well</span>
+    </div>
+  </div>`;
+}
+
+function deepHTML(){
+  const trend = [58,64,55,70,66,74,82];
+  const pts = trend.map((v,i)=>`${10+i*52},${110-(v/100*90)}`).join(' ');
+  const dotsvg = trend.map((v,i)=>`<circle cx="${10+i*52}" cy="${110-(v/100*90)}" r="3.5" style="fill:${band(v)}"/>`).join('');
+  return `
+  <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;100%</span></div>
+  <div class="navhdr"><span class="bk" data-screen="0">‹</span><h2>Recovery</h2></div>
+  <div class="recap"><span class="rv" style="color:var(--good)">82</span><span class="rt" style="color:var(--good)">PRIMED</span><span class="rt" style="color:var(--t-mid)">▲ +18 overnight</span></div>
+
+  <div class="card">
+    <h3>This week</h3>
+    <svg width="100%" viewBox="0 0 322 120" preserveAspectRatio="xMidYMid meet">
+      <polyline points="${pts}" fill="none" style="stroke:var(--t-lo)" stroke-width="2"/>
+      ${dotsvg}
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t-lo);margin-top:4px">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Today</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Why — ranked</h3>
+    <div class="rank"><span class="rl">HRV</span><span class="rr" style="color:var(--good)">up 12% vs baseline</span></div>
+    <div class="rank"><span class="rl">Resting heart rate</span><span class="rr" style="color:var(--good)">48 · 3 below usual</span></div>
+    <div class="rank"><span class="rl">Sleep</span><span class="rr" style="color:var(--good)">7h 40m · +1h</span></div>
+    <div class="rank"><span class="rl">Yesterday's strain</span><span class="rr">moderate</span></div>
+    <div class="rank"><span class="rl">Body temperature</span><span class="rr">normal</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Coach</h3>
+    <div class="coach">Your nervous system is well recovered. A hard session is well tolerated today.</div>
+  </div>
+  <div class="linkrow" data-screen="2"><span>See raw HRV &amp; RHR</span><span>›</span></div>`;
+}
+
+function rawHTML(){
+  const mk=(data,color)=>{const p=data.map((v,i)=>`${8+i*44},${70-v}`).join(' ');return `<svg width="100%" viewBox="0 0 300 80"><polyline points="${p}" fill="none" style="stroke:${color}" stroke-width="2.5" stroke-linecap="round"/></svg>`};
+  return `
+  <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;100%</span></div>
+  <div class="navhdr"><span class="bk" data-screen="1">‹</span><h2>Biometrics</h2></div>
+  <div style="font-size:13px;color:var(--t-lo);margin:2px 0 8px">Last night · tap to scrub dates</div>
+  <div class="card"><h3>HRV (ms)</h3>${mk([28,34,40,46,52,58,55,60],'var(--good)')}<div style="font-family:var(--fn);font-size:22px;font-variant-numeric:tabular-nums;margin-top:6px">62 ms</div></div>
+  <div class="card"><h3>Resting heart rate (bpm)</h3>${mk([40,38,36,34,33,32,33,32],'var(--strain)')}<div style="font-family:var(--fn);font-size:22px;font-variant-numeric:tabular-nums;margin-top:6px">48 bpm</div></div>
+  <div class="card"><h3>Respiratory rate</h3>${mk([30,31,30,29,30,31,30,30],'var(--sleep)')}<div style="font-family:var(--fn);font-size:22px;font-variant-numeric:tabular-nums;margin-top:6px">13.8 /min</div></div>
+  <div class="card"><h3>Skin temp deviation</h3>${mk([34,33,35,34,33,34,33,34],'var(--warn)')}<div style="font-family:var(--fn);font-size:22px;font-variant-numeric:tabular-nums;margin-top:6px">-0.1 °C</div></div>`;
+}
+
+function vitalsHTML(){
+  const t=THEMES[dir];
+  const g=(score,label,sub,color)=>{const d=78,s=6,r=(d-s)/2,c=2*Math.PI*r,off=c*(1-score/100);
+    return `<div class="gauge"><div class="gwrap" style="width:${d}px;height:${d}px">
+      <svg width="${d}" height="${d}" style="transform:rotate(-90deg)"><circle cx="${d/2}" cy="${d/2}" r="${r}" fill="none" style="stroke:var(--track)" stroke-width="${s}"/><circle cx="${d/2}" cy="${d/2}" r="${r}" fill="none" style="stroke:${color}" stroke-width="${s}" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
+      <div class="gv" style="color:${color}">${sub}</div></div>
+      <div class="gl">${label}</div></div>`};
+  return `
+  <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;100%</span></div>
+  <div class="navhdr"><h2>Vitals</h2></div>
+  <div style="font-size:13px;color:var(--t-lo);margin:2px 0 4px">One gauge language for every metric. Tap any for trend + raw.</div>
+  <div class="gridv">
+    ${g(78,'Sleep','78','var(--sleep)')}
+    ${g(40,'Strain','8.4','var(--strain)')}
+    ${g(72,'Stress','Low','var(--good)')}
+    ${g(64,'Vitality','-3y','var(--good)')}
+    ${g(85,'Brain','85','var(--good)')}
+    ${g(46,'Cycle','D14','var(--warn)')}
+  </div>
+  <div class="card" style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-size:14px;font-weight:600;color:var(--t-hi)">Set your hero metric</div>
+    <div style="font-size:12px;color:var(--t-lo);margin-top:3px">Pick what leads Home (Oura won't let you)</div></div>
+    <span style="color:var(--act);font-size:20px">›</span>
+  </div>`;
+}
+
+function healthHTML(){
+  return `
+  <div class="statusbar"><span>9:41</span><span>5G&nbsp;&nbsp;100%</span></div>
+  <div class="navhdr"><h2>My Health</h2></div>
+  <div class="card">
+    <h3>Streak</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:var(--fn);font-size:30px;font-weight:700">🔥 12 days</div>
+      <div style="text-align:right"><div style="font-size:12px;color:var(--t-lo)">Freezes left</div><div class="pips" style="justify-content:flex-end;margin-top:5px"><i></i><i class="used"></i></div></div>
+    </div>
+    <div class="linkrow" style="padding-bottom:0">Missed a day? Check in to keep your run ›</div>
+  </div>
+  <div class="card"><h3>Trends</h3>
+    <div class="rank"><span class="rl">Recovery · 30 day avg</span><span class="rr" style="color:var(--good)">71 ▲</span></div>
+    <div class="rank"><span class="rl">Sleep · 90 day avg</span><span class="rr">7h 12m</span></div>
+    <div class="rank"><span class="rl">Resting HR · 30 day</span><span class="rr" style="color:var(--good)">↓ trending down</span></div>
+  </div>
+  <div class="card"><h3>Settings</h3>
+    <div class="setrow">Morning recovery push<span class="sv">7:00 AM</span></div>
+    <div class="setrow">Reduce Motion<span class="sv">Follows system</span></div>
+    <div class="setrow">Data &amp; privacy<span class="sv">›</span></div>
+  </div>`;
+}
+
+const RENDER = [homeHTML, deepHTML, rawHTML, vitalsHTML, healthHTML];
+
+/* ---------- cubic-bezier easing solver ---------- */
+function bezier(x1,y1,x2,y2){
+  const cx=3*x1, bx=3*(x2-x1)-cx, ax=1-cx-bx;
+  const cy=3*y1, by=3*(y2-y1)-cy, ay=1-cy-by;
+  const fx=t=>((ax*t+bx)*t+cx)*t, fy=t=>((ay*t+by)*t+cy)*t, dfx=t=>(3*ax*t+2*bx)*t+cx;
+  return x=>{let t=x;for(let i=0;i<6;i++){const e=fx(t)-x;if(Math.abs(e)<1e-4)break;const d=dfx(t);if(Math.abs(d)<1e-6)break;t-=e/d;}return fy(t);};
+}
+const easeEmph = bezier(0.05,0.7,0.1,1);
+
+/* ---------- animation ---------- */
+function animate(){
+  if(reduce){ scroll.querySelectorAll('.entrance').forEach(e=>e.style.opacity=1); return; }
+  // ring sweep + count
+  const arc = scroll.querySelector('.arc');
+  const numEl = scroll.querySelector('[data-count]');
+  if(arc){
+    const circ=parseFloat(arc.dataset.circ), fin=parseFloat(arc.dataset.final), target=+numEl.dataset.count;
+    const dur=850, t0=performance.now();
+    function step(now){
+      const p=Math.min(1,(now-t0)/dur), e=easeEmph(p);
+      arc.style.strokeDashoffset=(circ-(circ-fin)*e).toFixed(1);
+      numEl.textContent=Math.round(target*e);
+      if(p<1) requestAnimationFrame(step); else numEl.textContent=target;
+    }
+    requestAnimationFrame(step);
+  }
+  // staggered entrances
+  scroll.querySelectorAll('.entrance').forEach(el=>{
+    const d=(+el.dataset.d||3)*70;
+    el.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],
+      {duration:300,delay:d,easing:'cubic-bezier(0,0,0.2,1)',fill:'both'});
+  });
+}
+
+/* ---------- paint ---------- */
+function paint(){
+  screenEl.className = "screen theme-"+dir;
+  scroll.innerHTML = RENDER[scr]();
+  // dots + names + tabbar
+  $("#dots").querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i===scr));
+  $("#scrname").textContent = (scr+1)+" / 5 · "+SCREENS[scr];
+  $("#tabbar").querySelectorAll('button').forEach(b=>b.classList.toggle('on', +b.dataset.screen===scr || (scr<3&&+b.dataset.screen===0)));
+  $("#prevBtn").disabled = scr===0;
+  // wire taps
+  scroll.querySelectorAll('[data-screen]').forEach(el=>el.onclick=()=>go(+el.dataset.screen));
+  const ring=scroll.querySelector('.ringbox'); if(ring&&scr===0) ring.style.cursor='pointer', ring.onclick=()=>go(1);
+  const cta=scroll.querySelector('.cta'); if(cta) cta.onclick=()=>go(1);
+  scroll.querySelectorAll('.tag').forEach(t=>t.onclick=()=>{t.classList.toggle('on')});
+  scroll.scrollTop=0;
+  animate();
+}
+function go(n){ scr=Math.max(0,Math.min(4,n)); paint(); }
+
+/* dots build */
+$("#dots").innerHTML = SCREENS.map((_,i)=>`<i data-i="${i}"></i>`).join('');
+$("#dots").querySelectorAll('i').forEach(d=>d.onclick=()=>go(+d.dataset.i));
+
+/* controls */
+$("#nextBtn").onclick=()=>go(scr+1);
+$("#prevBtn").onclick=()=>go(scr-1);
+$("#replayBtn").onclick=()=>paint();
+$("#dirSeg").querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  dir=b.dataset.dir; $("#dirSeg").querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  buildSci(); paint();
+});
+$("#tabbar").querySelectorAll('button').forEach(b=>b.onclick=()=>go(+b.dataset.screen));
+
+/* ---------- science panel ---------- */
+function buildSci(){
+  const swatch=h=>`<span class="sw" style="background:${h}"></span>`;
+  const tItems=SPEC.type.map(x=>`<div class="sitem"><div class="sh"><span class="nm">${x.nm}</span><span class="spec">${x.spec}</span></div><div class="why">${x.why}</div><a href="${x.src}" target="_blank">${x.src}</a></div>`).join('');
+  const cItems=SPEC.color.map(x=>`<div class="sitem"><div class="sh">${swatch(x.hex)}<span class="nm">${x.nm}</span><span class="spec">${x.hex}</span></div><div class="why">${x.why}</div><a href="${x.src}" target="_blank">${x.src}</a></div>`).join('');
+  const mItems=SPEC.motion.map(x=>`<div class="sitem"><div class="sh"><span class="nm">${x.nm}</span><span class="spec">${x.spec}</span></div><div class="why">${x.why}</div><a href="${x.src}" target="_blank">${x.src}</a></div>`).join('');
+  const rItems=SPEC.retention.map(x=>`<div class="sitem"><div class="sh"><span class="nm">${x.nm}</span></div><div class="why">${x.why}</div><span class="pill eff">${x.eff}</span><br><a href="${x.src}" target="_blank">${x.src}</a></div>`).join('');
+  $("#sci").innerHTML=`
+    <h2>🔬 Science behind Laso Signature</h2>
+    <div class="sub">${SPEC.philosophy}</div>
+    <div class="beat"><div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--ink)">How it beats Whoop &amp; Oura</div><ul>${SPEC.beat.map(b=>`<li>${b}</li>`).join('')}</ul></div>
+    <details class="acc" open><summary>Typography <span class="cnt">${SPEC.type.length} rules</span></summary>${tItems}</details>
+    <details class="acc"><summary>Color <span class="cnt">${SPEC.color.length} tokens</span></summary>${cItems}</details>
+    <details class="acc"><summary>Motion &amp; animation <span class="cnt">${SPEC.motion.length} rules</span></summary>${mItems}</details>
+    <details class="acc"><summary>Retention engine <span class="cnt">${SPEC.retention.length} mechanics</span></summary>${rItems}</details>
+    <div class="note">Sources are real and clickable. A few Whoop ring stroke/diameter values are eyeballed from teardowns (official PDF gives colors + fonts, not exact geometry). Retention figures are vendor/single-study, directional not universal.${reduce?' Reduced-motion is ON in your browser, so reveals are dissolves.':''}</div>`;
+}
+buildSci();
+
+$("#sciBtn").onclick=()=>{
+  const p=$("#sci"); p.classList.toggle('hide');
+  $("#sciBtn").textContent = p.classList.contains('hide')?'Show science':'Hide science';
+};
+
+paint();
+</script>
+</body>
+</html>

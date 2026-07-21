@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laso Dynamic Island — What We Could Have Done Better</title>
+<style>
+  :root {
+    --black: #000000;
+    --surface: #0c0c0e;
+    --surface-2: #131316;
+    --hair: rgba(255,255,255,0.08);
+    --hair-strong: rgba(255,255,255,0.14);
+    --text: #f5f5f7;
+    --text-2: #a1a1aa;
+    --text-3: #6b6b73;
+    --accent: #0a84ff;
+    --green: #30d158;
+    --amber: #ffd60a;
+    --red: #ff453a;
+    --ring: #5ac8fa;
+    --pill: #1c1c1e;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--black);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--hair);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 40px;
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #c8c8cf 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .intro {
+    font-size: 16px;
+    color: var(--text-2);
+    max-width: 720px;
+  }
+  .intro strong { color: var(--text); font-weight: 600; }
+
+  /* Section heads */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 56px 0 24px;
+  }
+  .section-head h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .section-head .meta {
+    font-size: 13px;
+    color: var(--text-3);
+  }
+
+  /* Already fixed strip */
+  .fixed-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 8px;
+  }
+  .fixed-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 700;
+    align-self: center;
+    margin-right: 6px;
+  }
+  .fixed-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-2);
+    background: rgba(48,209,88,0.08);
+    border: 1px solid rgba(48,209,88,0.22);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .fixed-chip .tick { color: var(--green); font-weight: 700; }
+
+  /* Recommendations board */
+  .board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: var(--radius);
+    padding: 20px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .card:hover {
+    border-color: var(--hair-strong);
+    background: var(--surface-2);
+  }
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .rank {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-3);
+    min-width: 22px;
+  }
+  .card-title {
+    font-size: 15.5px;
+    font-weight: 650;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    flex: 1;
+  }
+  .why {
+    font-size: 13.5px;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+  .card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid var(--hair);
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge.low { color: var(--green); background: rgba(48,209,88,0.10); border: 1px solid rgba(48,209,88,0.28); }
+  .badge.med { color: var(--amber); background: rgba(255,214,10,0.10); border: 1px solid rgba(255,214,10,0.28); }
+  .badge.high { color: var(--red); background: rgba(255,69,58,0.10); border: 1px solid rgba(255,69,58,0.28); }
+  .src {
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 58%;
+  }
+  .src:hover { text-decoration: underline; }
+  .tier-label {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-3);
+    margin: 22px 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--hair);
+  }
+  .donext {
+    border: 1px solid rgba(10,132,255,0.32) !important;
+    background: linear-gradient(180deg, rgba(10,132,255,0.07), rgba(10,132,255,0.02)) !important;
+  }
+  .donext .card-title::before {
+    content: "★ ";
+    color: var(--accent);
+  }
+
+  /* Before / After */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 8px;
+  }
+  .compare-col { display: flex; flex-direction: column; gap: 14px; }
+  .compare-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .compare-head h3 { font-size: 16px; font-weight: 700; }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .tag.busy { color: var(--red); background: rgba(255,69,58,0.12); }
+  .tag.lean { color: var(--green); background: rgba(48,209,88,0.12); }
+  .compare-sub { font-size: 13px; color: var(--text-2); }
+
+  /* Dynamic Island stage */
+  .di-stage {
+    background: radial-gradient(120% 120% at 50% 0%, #161618 0%, #060607 70%);
+    border: 1px solid var(--hair);
+    border-radius: 24px;
+    padding: 26px 18px;
+    display: flex;
+    justify-content: center;
+  }
+  /* Pill: 371x150pt proportion (2.473:1). Rendered at ~300px wide. */
+  .island {
+    width: 300px;
+    height: 121px;
+    background: #000;
+    border-radius: 30px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 8px 30px rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+    padding: 10px 14px;
+    color: var(--text);
+  }
+  /* Camera / sensor cluster top-center */
+  .sensor {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34px;
+    height: 9px;
+    background: #0a0a0a;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .sensor::after {
+    content: "";
+    position: absolute;
+    right: 3px; top: 50%;
+    transform: translateY(-50%);
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #1a1a2a;
+    box-shadow: inset 0 0 2px rgba(120,140,200,0.5);
+  }
+
+  /* Ring */
+  .ring {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    position: relative;
+  }
+  .ring.lg { width: 52px; height: 52px; font-size: 16px; }
+  .ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 3px;
+    background: conic-gradient(var(--green) 0deg 270deg, rgba(255,255,255,0.10) 270deg 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .ring.lg::before {
+    background: conic-gradient(var(--green) 0deg 270deg, rgba(255,255,255,0.10) 270deg 360deg);
+    padding: 4px;
+  }
+  .ring span { position: relative; z-index: 1; }
+  .ring .unit { font-size: 8px; color: var(--text-3); font-weight: 600; }
+
+  .eyebrow-sm {
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 700;
+  }
+
+  /* NOW (busy) layout */
+  .now-grid {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: 10px;
+  }
+  .now-top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .now-top .col { flex: 1; min-width: 0; }
+  .mode-pill {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(90,200,250,0.14);
+    color: var(--ring);
+    margin-bottom: 3px;
+  }
+  .insight {
+    font-size: 10px;
+    color: var(--text);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hrv-chip {
+    font-size: 8px;
+    color: var(--text-2);
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
+    padding: 2px 6px;
+    flex: none;
+  }
+  .stats {
+    display: flex;
+    gap: 4px;
+    margin: 5px 0;
+  }
+  .stat {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 4px 5px;
+    text-align: center;
+  }
+  .stat .v { font-size: 11px; font-weight: 700; }
+  .stat .l { font-size: 7px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+  .now-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .progress-strip {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-strip i { display: block; height: 100%; width: 62%; background: var(--green); border-radius: 999px; }
+  .chip-weak {
+    font-size: 8px;
+    color: var(--text-2);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--hair-strong);
+    border-radius: 999px;
+    padding: 3px 8px;
+    flex: none;
+  }
+  .btn {
+    font-size: 9px;
+    font-weight: 700;
+    color: #000;
+    background: var(--text);
+    border-radius: 999px;
+    padding: 4px 11px;
+    flex: none;
+  }
+  .btn.accent { background: var(--accent); color: #fff; }
+
+  /* BETTER (lean) layout */
+  .lean-grid {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 10px;
+    gap: 9px;
+  }
+  .lean-hero {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .lean-hero .col { flex: 1; min-width: 0; }
+  .lean-insight {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .lean-action {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .lean-action .btn { font-size: 9.5px; padding: 5px 14px; }
+
+  .callouts {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .callouts li {
+    list-style: none;
+    font-size: 12.5px;
+    color: var(--text-2);
+    display: flex;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .callouts .mark { flex: none; font-weight: 700; }
+  .callouts.remove .mark { color: var(--red); }
+  .callouts.keep .mark { color: var(--green); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hair);
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 760px) {
+    .board, .compare { grid-template-columns: 1fr; }
+    h1 { font-size: 30px; }
+    .island { width: 260px; height: 105px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Laso · Dynamic Island Review</div>
+    <h1>What we could have done better</h1>
+    <p class="intro">A ranked, impact-per-effort board of improvements for the Laso Live Activities, synthesized across design, content, engineering, accessibility, and analytics. The theme is <strong>restraint</strong>: a surface glanced at for seconds cannot carry seven competing elements. Most of the top wins are deletion, not addition. Items already shipped this release are dropped; their accessibility and lifecycle follow-ons are kept.</p>
+  </header>
+
+  <!-- ALREADY FIXED STRIP -->
+  <div class="section-head">
+    <h2>Already fixed this release</h2>
+    <span class="meta">shipped — not on the board below</span>
+  </div>
+  <div class="fixed-strip">
+    <span class="fixed-label">Done</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Crash on font sizing (pinned)</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Text clipping at large type</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Action-button CTA routing wired</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Lifecycle dedup / coexistence guard</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Reversed timer ranges</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Swipe-to-reset</span>
+    <span class="fixed-chip"><span class="tick">✓</span> Stale-on-paused state</span>
+  </div>
+
+  <!-- BEFORE vs AFTER -->
+  <div class="section-head">
+    <h2>Before vs after</h2>
+    <span class="meta">expanded island, to-scale (~371×150pt)</span>
+  </div>
+  <div class="compare">
+
+    <!-- NOW -->
+    <div class="compare-col">
+      <div class="compare-head">
+        <h3>Now</h3>
+        <span class="tag busy">Busy · 7 elements</span>
+      </div>
+      <p class="compare-sub">Ring + mode pill + insight + HRV chip + 3-stat row + day-progress strip + weakest-pillar chip + action, all fighting for a two-second glance.</p>
+      <div class="di-stage">
+        <div class="island">
+          <div class="sensor"></div>
+          <div class="now-grid">
+            <div class="now-top">
+              <div class="ring"><span>75</span></div>
+              <div class="col">
+                <span class="mode-pill">Readiness</span>
+                <div class="insight">Recovered well, push today</div>
+              </div>
+              <span class="hrv-chip">HRV 62</span>
+            </div>
+            <div class="stats">
+              <div class="stat"><div class="v">57</div><div class="l">RHR</div></div>
+              <div class="stat"><div class="v">7.4h</div><div class="l">Sleep</div></div>
+              <div class="stat"><div class="v">8.2k</div><div class="l">Steps</div></div>
+            </div>
+            <div class="now-bottom">
+              <div class="progress-strip"><i></i></div>
+              <span class="chip-weak">Sleep weak</span>
+              <span class="btn accent">Set intention</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="callouts remove">
+        <li><span class="mark">−</span> 3-stat row: P2 reference nobody acts on in 2s</li>
+        <li><span class="mark">−</span> Day-progress strip: redundant time chrome</li>
+        <li><span class="mark">−</span> Weakest-pillar chip looks tappable next to the real button</li>
+        <li><span class="mark">−</span> "Forehead" shape: sensor flanked by empty space, dense slab below</li>
+      </ul>
+    </div>
+
+    <!-- BETTER -->
+    <div class="compare-col">
+      <div class="compare-head">
+        <h3>Better</h3>
+        <span class="tag lean">Lean · hero + insight + action</span>
+      </div>
+      <p class="compare-sub">One hero ring, one insight line, one unmistakable action. Content hugs the sensor; the bottom carries only what you can act on.</p>
+      <div class="di-stage">
+        <div class="island">
+          <div class="sensor"></div>
+          <div class="lean-grid">
+            <div class="lean-hero">
+              <div class="ring lg"><span>75</span></div>
+              <div class="col">
+                <span class="eyebrow-sm">Readiness · Today</span>
+                <div class="lean-insight">Recovered well — push today</div>
+              </div>
+            </div>
+            <div class="lean-action">
+              <span class="btn accent">Set intention</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="callouts keep">
+        <li><span class="mark">+</span> Ring carries the score; number isn't repeated in compact</li>
+        <li><span class="mark">+</span> One insight line, one tappable action, zero ambiguity</li>
+        <li><span class="mark">+</span> Stale state folds into the VoiceOver label, not a second clock</li>
+        <li><span class="mark">+</span> Stats live in the widget/complication, where they belong</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- RECOMMENDATIONS BOARD -->
+  <div class="section-head">
+    <h2>Recommendations board</h2>
+    <span class="meta">ranked by impact-per-effort · ★ = do next</span>
+  </div>
+  <div class="board">
+
+    <div class="tier-label">Do next (top 3) — quick high-impact wins</div>
+
+    <div class="card donext">
+      <div class="card-top"><span class="rank">1</span><span class="card-title">Cut the expanded island to one hero + one insight + one action</span></div>
+      <p class="why">The expanded and lock cards pack 6–7 competing elements. A two-second glance can't carry that — it defeats glanceability and premium restraint. Drop the 3-stat row and day-progress strip; keep ring + one insight + the action. Mostly deletion.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://www.uber.com/us/en/blog/live-activity-on-ios/" target="_blank" rel="noopener">uber.com/blog/live-activity-on-ios</a></div>
+    </div>
+
+    <div class="card donext">
+      <div class="card-top"><span class="rank">2</span><span class="card-title">Log the compact-pill / Lock Screen deep-link tap</span></div>
+      <p class="why">The core success signal — did the glance drive a tap into the app — is invisible for all three activities. One event in <code>handleDeepLink</code> before <code>navigate(to:)</code> makes tap-through rate computable. Add <code>?src=</code> to separate the surfaces. Already identified, still unfixed.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/documentation/ActivityKit/launching-your-app-from-a-live-activity" target="_blank" rel="noopener">developer.apple.com · launch from LA</a></div>
+    </div>
+
+    <div class="card donext">
+      <div class="card-top"><span class="rank">3</span><span class="card-title">Fold staleness into the VoiceOver score label</span></div>
+      <p class="why">A sighted user sees the greyed ring; a VoiceOver user is told a stale score with full confidence. When stale, append the age phrase: "Recovery 75 out of 100, updated 22 hours ago." A real trust and correctness fix, not polish.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/documentation/activitykit/adding-accessible-descriptions-to-widgets-and-live-activities" target="_blank" rel="noopener">developer.apple.com · accessible LA</a></div>
+    </div>
+
+    <div class="tier-label">More low-effort wins</div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">4</span><span class="card-title">Set distinct relevanceScores instead of force-ending the loser</span></div>
+      <p class="why">All managers omit relevanceScore (defaults to 0.0 = undefined ordering). The code tears down the loser, killing its score and still leaving a race window. relevanceScore is Apple's intended mechanism: live 100, wind-down 75, score 25, night near-0. Lets both coexist with correct priority.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/documentation/activitykit/activitycontent/relevancescore" target="_blank" rel="noopener">developer.apple.com · relevanceScore</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">5</span><span class="card-title">Make the compact pill non-redundant</span></div>
+      <p class="why">Compact leading is a full ring and trailing is a 3-digit number — they say the same thing twice and widen the pill against "snug to the sensor." Show the ring alone with a tiny mode glyph, or cap the number. Compact is the most-seen state.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10194/" target="_blank" rel="noopener">WWDC23 · 10194</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">6</span><span class="card-title">Add a Large Content Viewer to the small numbers</span></div>
+      <p class="why">With fonts now pinned, low-vision users get zero scaling on the score, orb number, HRV and steps. <code>.accessibilityShowsLargeContentViewer</code> is Apple's documented compensation: long-press shows the value large without changing the at-rest layout. Closes the hole pinning created.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://www.createwithswift.com/supporting-dynamic-type-and-larger-text-in-your-app-to-enhance-accessibility/" target="_blank" rel="noopener">createwithswift.com · large text</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">7</span><span class="card-title">Remove the affordance ambiguity between button and chip</span></div>
+      <p class="why">A tappable Button capsule sits beside a near-identical non-tappable chip in the same row — the chip looks pressable. Restyle the chip as plain text, or move it to the lock card only, so the one real action is unmistakable.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/design/human-interface-guidelines/live-activities" target="_blank" rel="noopener">HIG · Live Activities</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">8</span><span class="card-title">Drive grey-out from system isStale, not a 20h clock</span></div>
+      <p class="why">Freshness uses two thresholds that can contradict — render heuristic <code>lastUpdated &gt; 20h</code> vs system <code>staleDate = midnight</code>. The ring can look confident while the system already considers it stale. Drive "old data" UI from <code>isStale</code> and advance staleDate on each update — one source of truth.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/documentation/widgetkit/activityviewcontext/isstale" target="_blank" rel="noopener">developer.apple.com · isStale</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">9</span><span class="card-title">Attribute Live Activity opens in session source</span></div>
+      <p class="why">A LA tap mints a session counted as <code>.organic</code> / <code>opened_from='app_icon'</code> because nothing sets <code>pendingSessionSource</code>. The taxonomy comment even promises "live_activity" values the enum never produces. Set the source in <code>handleDeepLink</code>; implement or delete the promised cases.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="#" target="_blank" rel="noopener">code · SessionTracker / AppAnalytics</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">10</span><span class="card-title">Measure time-to-tap (dwell proxy)</span></div>
+      <p class="why">No dwell API exists, but CoachActionBridge already stamps a pending timestamp — log <code>now − pendingTimestamp</code> on the action event, and stamp activity-start time in the App Group for the deep-link path. Proxies engagement quality and helps tune staleDate windows. Cheap, timestamp already exists.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="#" target="_blank" rel="noopener">code · CoachActionIntents / ContentView</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">11</span><span class="card-title">Don't hold a Live Activity overnight with nothing to act on</span></div>
+      <p class="why">Night mode renders a full card with a passive readout and a <code>.noop</code> action — an always-on health readout, which Apple explicitly calls the job of a widget/complication. At night drop relevanceScore near-0 or end the activity and let a widget carry the number.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/news/?id=qpqf1gru" target="_blank" rel="noopener">developer.apple.com/news · LA dos & don'ts</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">12</span><span class="card-title">Fire one AlertConfiguration at the key moment</span></div>
+      <p class="why">No manager uses AlertConfiguration, so WindDown silently re-renders when the bedtime window opens or HRV flips low — the user may never glance. One alert on that single transition lights up the island and a synced Watch. Use once per night to serve bedtime behavior change without nagging.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10184/" target="_blank" rel="noopener">WWDC23 · 10184</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">13</span><span class="card-title">Let completion cards linger instead of vanishing</span></div>
+      <p class="why">TodayScore and WindDown end with <code>.immediate</code>, so "Session complete" / "You hit your bedtime" disappear with no final state. Use <code>.default</code> or a short <code>.after(date)</code> for genuine end states so the completion moment gets a beat of visibility, reinforcing the habit loop.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10184/" target="_blank" rel="noopener">WWDC23 · 10184</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">14</span><span class="card-title">Cut redundant progress chrome</span></div>
+      <p class="why">The lock card stacks three time encodings (strip + day-track ring + score orb); WindDown shows moon-arc + countdown + stage phrase, all describing "time to bed." Decorative motion, not information. Keep one time signal per surface — for WindDown keep the numeric countdown, drop the phrase.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/design/human-interface-guidelines/live-activities" target="_blank" rel="noopener">HIG · Live Activities</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">15</span><span class="card-title">Standardize WindDown's background surface</span></div>
+      <p class="why">WindDown uses a 0.82-opacity overlay that can let wallpaper bleed through and reduce contrast; the other two use the opaque surfaceBase. A consistency and contrast nit, but a cheap one.</p>
+      <div class="card-foot"><span class="badge low">Low</span><a class="src" href="https://developer.apple.com/design/human-interface-guidelines/live-activities" target="_blank" rel="noopener">HIG · Live Activities</a></div>
+    </div>
+
+    <div class="tier-label">Medium effort</div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">16</span><span class="card-title">Stop pushing an update on every breathwork phase</span></div>
+      <p class="why">Breathwork pushes a full <code>activity.update()</code> per phase — ~50–100 updates over 4–5 min — yet the widget already derives phase from <code>sessionStartDate</code> and self-advances via <code>Text(timerInterval:)</code>. The pushes are redundant, drain the budget, and can stutter the island. Keep update() only for pause/resume/protocol change.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10185/" target="_blank" rel="noopener">WWDC23 · 10185</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">17</span><span class="card-title">Make the hero number match the mode (or delete heroValue)</span></div>
+      <p class="why"><code>heroValue</code> (readiness/strain/tonight) is computed and stored but the ring always renders <code>overallScore</code>, while the eyebrow says "Strain" or "Readiness." The most prominent element contradicts its own caption, and heroValue is dead state. Render it per mode, or delete it.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://vertu.com/guides/whoop-vs-oura-for-athletes-decoding-sleep-recovery-metrics/" target="_blank" rel="noopener">vertu.com · whoop vs oura</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">18</span><span class="card-title">Re-derive mode by the clock, not the last refresh</span></div>
+      <p class="why"><code>deriveCoachContext</code> runs once at update time with <code>CoachMode.current</code>, so a 09:00 refresh still says "Readiness / Set intention" at 14:00. Schedule mode-boundary updates (10/18/22h) or render mode from the current clock in the widget. Otherwise the time-of-day relevance breaks for most of the day.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/documentation/activitykit/activitycontent/staledate" target="_blank" rel="noopener">developer.apple.com · staleDate</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">19</span><span class="card-title">Guarantee overnight teardown with a dismissal deadline</span></div>
+      <p class="why">TodayScore relies on an in-process midnight Task plus staleDate=midnight. staleDate only dims, it doesn't end — if the app is suspended before midnight, yesterday's score sits live until next launch. End with <code>dismissalPolicy: .after(nextMidnight)</code> at start so iOS removes it even if the process never wakes.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/documentation/activitykit/activitycontent/staledate" target="_blank" rel="noopener">developer.apple.com · staleDate</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">20</span><span class="card-title">Cap Dynamic Type with a range instead of fully pinning</span></div>
+      <p class="why">Pinning fixed clipping but means zero scaling for large-text users. Apple's sanctioned middle path is adaptive styles with a capped range — e.g. <code>.dynamicTypeSize(.large ... .accessibility1)</code> on the lock card, tighter on the island — so text grows partway then stops within the cap. Pair with #6.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://yaacoub.github.io/articles/swift-tip/get-started-with-dynamic-type-wwdc24/" target="_blank" rel="noopener">yaacoub.github.io · dynamic type</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">21</span><span class="card-title">Lift WindDown's dismissal-reason observer into all three</span></div>
+      <p class="why">Only WindDown observes <code>activityStateUpdates</code> to log user_swiped vs system_ended. TodayScore and Breathwork have no observer, so a swipe-away is never recorded — you can't tell a valued completion from an irritated swipe for two of three surfaces. Share the WWDC loop.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10184/" target="_blank" rel="noopener">WWDC23 · 10184</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">22</span><span class="card-title">Wrap content around the sensor, not a sparse "forehead"</span></div>
+      <p class="why">All three widgets leave the expanded centre empty and dump every wide element into <code>.bottom</code>, producing the "forehead" shape WWDC warns against. Move a lightweight head signal (mode label or score) up to flank the camera so the layout hugs the sensor and the bottom holds only hero + action.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/videos/play/wwdc2023/10194/" target="_blank" rel="noopener">WWDC23 · 10194</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">23</span><span class="card-title">Enrich start_failed with a reason</span></div>
+      <p class="why">All three log <code>start_failed</code> with no detail, so you can't tell <code>areActivitiesEnabled==false</code> from the 8-activity cap or a payload error. Attach the error type and the enabled flag, plus a one-time <code>live_activities_enabled</code> user property — turns a flat count into a funnel and sizes the audience.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/documentation/activitykit" target="_blank" rel="noopener">developer.apple.com · ActivityKit</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">24</span><span class="card-title">Add a per-instance activity id to join start → tap → dismissal</span></div>
+      <p class="why">Events carry <code>activity_kind</code> but no shared instance id, so you can only compute ratio-of-aggregates, not true per-impression conversion. Generate an <code>activity_instance_id</code> at start and echo it on the start event, the widgetURL query, and the action intent.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://documentation.onesignal.com/docs/en/live-activities" target="_blank" rel="noopener">onesignal.com · live activities</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">25</span><span class="card-title">Centralize coaching copy and band thresholds</span></div>
+      <p class="why">Insight strings are hardcoded ternary ladders, despite a comment claiming they're "generated server-side from ML context"; thresholds (30/70 strain, 85/70/50 readiness) are inline magic numbers. Move copy into TodayScoreCopy, pull thresholds into the named clinical config with a source, and either wire the server insight or fix the comment.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://www.createwithswift.com/exploring-widgets-crafting-glanceable-experiences/" target="_blank" rel="noopener">createwithswift.com · glanceable widgets</a></div>
+    </div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">26</span><span class="card-title">Reduce VoiceOver-focusable elements per region</span></div>
+      <p class="why">The expanded leading region exposes a bare Image and the trailing stamp is a separate raw Text, so each region is several independent elements. ActivityKit re-reads each region 2–4× after every update (known bug) — fewer focusable nodes is the only mitigation. Keep one concise label per region.</p>
+      <div class="card-foot"><span class="badge med">Med</span><a class="src" href="https://developer.apple.com/forums/thread/719235" target="_blank" rel="noopener">developer.apple.com/forums · 719235</a></div>
+    </div>
+
+    <div class="tier-label">Higher effort</div>
+
+    <div class="card">
+      <div class="card-top"><span class="rank">27</span><span class="card-title">Use ViewThatFits / AnyLayout so the card reflows</span></div>
+      <p class="why">The expanded card is one rigid HStack relying on <code>minimumScaleFactor(0.7)</code> — at large type everything just shrinks. ViewThatFits (Apple's exact answer to "widget overflows at large type") with a roomy and a stacked fallback lets text grow within the cap rather than shrink. Restructures the layout; do after the simpler cap (#20).</p>
+      <div class="card-foot"><span class="badge high">High</span><a class="src" href="https://developer.apple.com/forums/thread/734224" target="_blank" rel="noopener">developer.apple.com/forums · 734224</a></div>
+    </div>
+
+  </div>
+
+  <footer>
+    Synthesized from the design, content, engineering, accessibility, and analytics research lenses. Duplicates merged across lenses (relevanceScore, the seven-element cut), and items already shipped this release were removed — their accessibility (#6, #20) and lifecycle (#4) follow-ons are kept. Effort labels are the research authors' estimates and were not independently re-validated against the current Laso code.
+  </footer>
+
+</div>
+</body>
+</html>
