@@ -97,7 +97,7 @@ extension Copy {
             days: Int,
             rootCauseName: String
         ) -> String {
-            "At this rate, your \(metricName.lowercased()) could reach warning level in about \(days) days. The main driver is your \(rootCauseName.lowercased())."
+            "At this rate, your \(metricName.lowercased()) could reach warning level in about \(days) days. The main reason is your \(rootCauseName.lowercased())."
         }
 
         /// "At this pace, this could hit a warning level in about N days."
@@ -140,7 +140,7 @@ extension Copy {
             } else if !isPositive, let cause = rootCauseName {
                 return "Your \(metricName.lowercased()) was improving but just reversed. Your \(cause.lowercased()) may be the reason."
             } else if isPositive {
-                return "Your \(metricName.lowercased()) trend just flipped positive. Whatever you changed recently is working."
+                return "Your \(metricName.lowercased()) just turned upward. Whatever you changed recently is working."
             } else {
                 return "Your \(metricName.lowercased()) was improving but just reversed direction."
             }
@@ -211,10 +211,10 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_cause_change", default: "%@ %@"), change, dev)
         }
         static func chainBaselineParenthetical(baseline: String, unit: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_baseline_parenthetical", default: " (from your %@ %@ baseline)"), baseline, unit)
+            String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_baseline_parenthetical", default: " (from your usual %@ %@)"), baseline, unit)
         }
         static func chainPersonalPattern(strength: String, r: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_personal_pattern", default: "Your data shows a %@ personal pattern between these metrics (r=%@)"), strength, r)
+            String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_personal_pattern", default: "Your data shows a %@ personal pattern between these two (r=%@)"), strength, r)
         }
         static var chainNextDay: String { RemoteConfigManager.shared.copyString("copy_causation_chain_next_day", default: "the next day") }
         static func chainAfterDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_causation_chain_after_days", default: "after %d days"), days) }
@@ -236,13 +236,13 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_causation_two_link_root_deeper", default: "Looking deeper, your %@ %@ %@"), root, direction, dev)
         }
         static func twoLinkCorrelation(intermediateChange: String, intermediate: String, r: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_causation_two_link_correlation", default: ", which correlates with %@ %@ for you (r=%@). "), intermediateChange, intermediate, r)
+            String(format: RemoteConfigManager.shared.copyString("copy_causation_two_link_correlation", default: ", which usually moves with %@ %@ for you (r=%@). "), intermediateChange, intermediate, r)
         }
         static func twoLinkChainPunchline(rootDir: String, root: String, intermDir: String, intermediate: String, affDir: String, affected: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_causation_two_link_chain_punchline", default: "The likely chain: %@ %@ -> %@ %@ -> %@ %@."), rootDir, root, intermDir, intermediate, affDir, affected)
         }
 
-        static var threeLinkCascade: String { RemoteConfigManager.shared.copyString("copy_causation_three_link_cascade", default: "Your data suggests a cascade of connected changes. ") }
+        static var threeLinkCascade: String { RemoteConfigManager.shared.copyString("copy_causation_three_link_cascade", default: "Your data suggests a chain of connected changes. ") }
         static func threeLinkRootStarted(root: String, direction: String, dev: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_causation_three_link_root_started", default: "It started with your %@, which %@ %@. "), root, direction, dev)
         }

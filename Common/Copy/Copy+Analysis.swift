@@ -28,16 +28,16 @@ extension Copy {
 
             // BP summary templates
             static func bpTrendingSummary(slopePerMonth: String, dayCount: Int, stage: String, nextStageInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_bp_trending_summary", default: "Your systolic BP has been rising %@ mmHg/month over the past %d days. Current stage: %@. %@"), slopePerMonth, dayCount, stage, nextStageInfo)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_bp_trending_summary", default: "Your top blood pressure number has been rising %@ mmHg per month over the past %d days. Right now: %@. %@"), slopePerMonth, dayCount, stage, nextStageInfo)
             }
             static func pulsePressureSummary(pulsePressure: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_pulse_pressure_summary", default: "Your pulse pressure (%d mmHg) is above the typical range of 40 to 60 mmHg. Based on your patterns, this is worth a look."), pulsePressure)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_pulse_pressure_summary", default: "The gap between your blood pressure numbers (%d mmHg) is wider than the usual 40 to 60 mmHg. Based on your patterns, this is worth a look."), pulsePressure)
             }
             static func glucoseTrendingSummary(slopePerMonth: String, latest: String, stage: String, nextInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_glucose_trending_summary", default: "Your fasting glucose has been rising %@ mg/dL per month. Current: %@ mg/dL (%@). %@"), slopePerMonth, latest, stage, nextInfo)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_glucose_trending_summary", default: "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@"), slopePerMonth, latest, stage, nextInfo)
             }
             static func respiratorySummary(rate: String, stage: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_summary", default: "Your respiratory rate (%@ br/min) falls in the %@ range. The typical range is 12-20 breaths per minute."), rate, stage)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_summary", default: "Your breathing rate (%@ br/min) falls in the %@ range. Most people sit between 12 and 20 breaths per minute."), rate, stage)
             }
         }
 
@@ -81,15 +81,15 @@ extension Copy {
             static var scaleIntensityNote: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_scale_intensity_note", default: "Your body is reacting more than usual right now. Take it easier for the next 2 days and see how you feel.") }
             static var keepLoggingNote: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_keep_logging_note", default: "Keep logging every day so we can better learn what is normal for you.") }
 
-            static var menstrualBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_menstrual_baseline", default: "Lower energy and recovery variability can be normal during menstruation.") }
-            static var follicularBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_follicular_baseline", default: "Energy and training readiness often improve through the follicular phase.") }
-            static var ovulatoryBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_ovulatory_baseline", default: "Many people experience peak readiness around ovulation.") }
+            static var menstrualBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_menstrual_baseline", default: "Lower energy and up-and-down recovery can be normal during your period.") }
+            static var follicularBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_follicular_baseline", default: "Energy and how ready you feel to train often pick up through the follicular phase.") }
+            static var ovulatoryBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_ovulatory_baseline", default: "Many people feel their most ready around ovulation.") }
             static var lutealBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_luteal_baseline", default: "Slightly lower energy in the luteal phase is common and usually expected.") }
 
-            static var menstrualRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_menstrual_recommendation", default: "Prioritize recovery-first days: lighter training, hydration, and consistent sleep.") }
-            static var follicularRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_follicular_recommendation", default: "Use this phase for progressive overload and higher-focus tasks while readiness is trending up.") }
-            static var ovulatoryRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_ovulatory_recommendation", default: "Schedule your key workouts here, then protect sleep and hydration to stabilize recovery.") }
-            static var lutealRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_luteal_recommendation", default: "Plan slightly lower-intensity sessions, lock in an earlier bedtime, and favor steady routines.") }
+            static var menstrualRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_menstrual_recommendation", default: "Put recovery first: lighter training, drink plenty of water, and keep your sleep steady.") }
+            static var follicularRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_follicular_recommendation", default: "Use this phase to push a bit harder in training and take on focus-heavy tasks while your energy is climbing.") }
+            static var ovulatoryRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_ovulatory_recommendation", default: "Do your key workouts now, then protect your sleep and water to keep recovery steady.") }
+            static var lutealRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_phase_luteal_recommendation", default: "Plan slightly easier sessions, go to bed a little earlier, and stick to steady routines.") }
 
             static func phaseSummary(phase: String, day: Int, cycleLength: Int, expectation: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_cycle_phase_phase_summary", default: "You are in your %@ phase (day %d of ~%d). %@"), phase, day, cycleLength, expectation)
@@ -115,7 +115,7 @@ extension Copy {
             static var tenKStepDay: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_ten_k_step_day", default: "10K Step Day") }
             static var eightKPlusSteps: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_eight_k_plus_steps", default: "8K+ Steps") }
             static var thirtyPlusMinExercise: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_thirty_plus_min_exercise", default: "30+ Min Exercise") }
-            static var hrvAbove50ms: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_hrv_above50ms", default: "HRV Above 50ms") }
+            static var hrvAbove50ms: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_hrv_above50ms", default: "Heart Recovery Above 50ms") }
             static var eightHourSleepNight: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_eight_hour_sleep_night", default: "8-Hour Sleep Night") }
             static var sevenPlusHrSleep: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_seven_plus_hr_sleep", default: "7+ Hr Sleep") }
             static var tenPlusStandHours: String { RemoteConfigManager.shared.copyString("copy_analysis_personal_record_ten_plus_stand_hours", default: "10+ Stand Hours") }
@@ -162,7 +162,7 @@ extension Copy {
 
         enum BaselineDrift {
             static func title(metricName: String, period: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_baseline_drift_title", default: "%@ Baseline Shifted Over %@"), metricName, period)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_baseline_drift_title", default: "%@ Usual Level Shifted Over %@"), metricName, period)
             }
         }
 
@@ -170,7 +170,7 @@ extension Copy {
 
         enum MultiMetricCluster {
             static func categoryDeclining(_ categoryName: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_category_declining", default: "%@: Multiple Metrics Declining"), categoryName)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_category_declining", default: "%@: Several Numbers Dropping"), categoryName)
             }
             static var widespreadHealthDecline: String { RemoteConfigManager.shared.copyString("copy_analysis_widespread_health_decline", default: "Widespread Health Decline") }
 
@@ -178,10 +178,10 @@ extension Copy {
             static var directionBelow: String { RemoteConfigManager.shared.copyString("copy_analysis_direction_below", default: "below") }
 
             static func metricDetail(name: String, formatted: String, unit: String, dev: String, dir: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_metric_detail", default: "%@: %@ %@ (%@%% %@ baseline)"), name, formatted, unit, dev, dir)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_metric_detail", default: "%@: %@ %@ (%@%% %@ usual)"), name, formatted, unit, dev, dir)
             }
             static func metricDeviation(name: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_metric_deviation", default: "%@ (%@%% deviation)"), name, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_metric_deviation", default: "%@ (%@%% off usual)"), name, dev)
             }
             static func clusterSummary(count: Int, categoryName: String, details: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_cluster_summary", default: "%d metrics declining together in %@: %@."), count, categoryName, details)
@@ -194,31 +194,31 @@ extension Copy {
             }
 
             static func heartCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_heart_cluster", default: "Multiple heart metrics declining simultaneously \u{2014} %d metrics affected: %@. Avg %@%% below baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_heart_cluster", default: "Several heart numbers are dropping at once. %d numbers affected: %@. On average %@%% below usual."), count, names, dev)
             }
             static func sleepCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_sleep_cluster", default: "Sleep deteriorating across %d dimensions \u{2014} %@. Avg %@%% below baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_sleep_cluster", default: "Sleep is getting worse across %d areas. %@. On average %@%% below usual."), count, names, dev)
             }
             static func activityCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_activity_cluster", default: "Activity declining across %d metrics \u{2014} %@. Avg %@%% below baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_activity_cluster", default: "Activity is dropping across %d numbers. %@. On average %@%% below usual."), count, names, dev)
             }
             static func bodyCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_body_cluster", default: "Body composition metrics shifting \u{2014} %d metrics affected: %@. Avg %@%% from baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_body_cluster", default: "Body numbers are shifting. %d numbers affected: %@. On average %@%% off usual."), count, names, dev)
             }
             static func respiratoryCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_respiratory_cluster", default: "Respiratory metrics elevated \u{2014} %d metrics affected: %@. Avg %@%% from baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_respiratory_cluster", default: "Breathing numbers are higher than usual. %d numbers affected: %@. On average %@%% off usual."), count, names, dev)
             }
             static func mindfulnessCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_mindfulness_cluster", default: "Mindfulness metrics declining \u{2014} %d metrics affected: %@. Avg %@%% below baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_mindfulness_cluster", default: "Mindfulness numbers are dropping. %d numbers affected: %@. On average %@%% below usual."), count, names, dev)
             }
             static func mobilityCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_mobility_cluster", default: "Mobility metrics declining across %d indicators \u{2014} %@. Avg %@%% below baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_mobility_cluster", default: "Movement numbers are dropping across %d signs. %@. On average %@%% below usual."), count, names, dev)
             }
             static func nutritionCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_nutrition_cluster", default: "Nutrition metrics shifted from baseline \u{2014} %d metrics affected: %@. Avg %@%% from baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_nutrition_cluster", default: "Nutrition numbers have shifted from usual. %d numbers affected: %@. On average %@%% off usual."), count, names, dev)
             }
             static func hearingCluster(count: Int, names: String, dev: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_hearing_cluster", default: "Hearing metrics changed \u{2014} %d metrics affected: %@. Avg %@%% from baseline."), count, names, dev)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_cluster_hearing_cluster", default: "Hearing numbers have changed. %d numbers affected: %@. On average %@%% off usual."), count, names, dev)
             }
         }
 
@@ -226,19 +226,19 @@ extension Copy {
 
         enum CrossMetricNarratives {
             static func extremelyRare(metrics: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_extremely_rare", default: "This combination of metric values (%@) is extremely rare for you. Worth exploring what was different yesterday \u{2014} travel, diet timing, late workouts, or stress shifts often trigger this. If this pattern shows up for 2+ days, it may be worth discussing with a healthcare provider."), metrics)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_extremely_rare", default: "This mix of numbers (%@) is very rare for you. Think about what was different yesterday. Travel, meal timing, late workouts, or stress can often set this off. If this keeps up for 2 or more days, it may be worth talking to a doctor."), metrics)
             }
             static func brokenRelationship(metricA: String, metricB: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_broken_relationship", default: "The usual relationship between your %@ and %@ has broken down. Review what was different yesterday \u{2014} travel, diet changes, late exercise, or unusual stress are common triggers. Track whether this normalizes within 48 hours."), metricA, metricB)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_broken_relationship", default: "The usual link between your %@ and %@ has broken down. Look at what was different yesterday. Travel, diet changes, late exercise, or extra stress are common causes. See if it goes back to normal within 48 hours."), metricA, metricB)
             }
             static func unusualMultiCategory(categoryCount: Int, metrics: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_multi_category", default: "Unusual pattern across %d categories (%@). Review what was different yesterday \u{2014} travel, diet, late exercise, or stress changes are the most common triggers. If you feel fine, this may be a one-off."), categoryCount, metrics)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_multi_category", default: "Unusual pattern across %d areas (%@). Look at what was different yesterday. Travel, diet, late exercise, or stress are the most common causes. If you feel fine, this may be a one-off."), categoryCount, metrics)
             }
             static func unusualCombination(metrics: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_combination", default: "Unusual combination in %@. Review what was different yesterday \u{2014} travel, diet, late exercise, or stress changes are common triggers."), metrics)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_combination", default: "Unusual mix in %@. Look at what was different yesterday. Travel, diet, late exercise, or stress are common causes."), metrics)
             }
             static func unusualMild(metrics: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_mild", default: "Unusual but mild pattern in %@. No immediate action needed \u{2014} track whether this recurs over the next 3 days to determine if it's a one-off or emerging trend."), metrics)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cross_metric_narratives_unusual_mild", default: "Unusual but mild pattern in %@. Nothing to do right now. Just watch whether it comes back over the next 3 days to see if it is a one-off or a real trend."), metrics)
             }
         }
 
@@ -267,37 +267,37 @@ extension Copy {
 
             // Component fragments
             static func downFromBaseline(percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_down_from_baseline", default: "down %@%% from baseline"), percent)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_down_from_baseline", default: "down %@%% from usual"), percent)
             }
             static func belowBaseline(percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_below_baseline", default: "%@%% below baseline"), percent)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_below_baseline", default: "%@%% below usual"), percent)
             }
             static func hoursBelowBaseline(hours: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_hours_below_baseline", default: "%@ hrs below your baseline"), hours)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_hours_below_baseline", default: "%@ hrs below your usual"), hours)
             }
 
             // Cognitive readiness narratives (analyzer)
             static func cognitiveLowSummary(score: Int, componentText: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_low_summary", default: "Your cognitive energy is at %d/100%@. Addressing these factors can sharpen mental clarity and processing speed."), score, componentText)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_low_summary", default: "Your mental energy is at %d/100%@. Fixing these can help you think sharper and faster."), score, componentText)
             }
             static func cognitiveLowRecommendation(topComponent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_low_recommendation", default: "Consider extending tonight's sleep by 45 min. Your %@ is the biggest factor right now. A single night of 8+ hr sleep typically improves next-day HRV and deep sleep."), topComponent)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_low_recommendation", default: "Try sleeping 45 minutes longer tonight. Your %@ is the biggest thing weighing on you right now. Just one night of 8 or more hours usually helps your heart recovery and deep sleep the next day."), topComponent)
             }
             static func cognitiveStrongSummary(score: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_strong_summary", default: "Your cognitive energy is strong at %d/100. HRV, sleep quality, and recovery markers are all above baseline."), score)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_cognitive_strong_summary", default: "Your mental energy is strong at %d/100. How rested your heart is, your sleep quality, and your recovery signs are all better than usual."), score)
             }
 
             // Sleep debt
             static func sleepDebtSummary(debt: String, avg: String, baseline: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_sleep_debt_summary", default: "You have built up %@ hours of sleep debt this week (averaging %@ hrs vs your %@ hr baseline). Short sleep can affect how alert and clear-headed you feel each day."), debt, avg, baseline)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_sleep_debt_summary", default: "You have built up %@ hours of sleep debt this week (averaging %@ hrs vs your usual %@ hrs). Short sleep can affect how alert and clear-headed you feel each day."), debt, avg, baseline)
             }
             static func sleepDebtRecommendation(catchUpNights: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_sleep_debt_recommendation", default: "An extra hour per night for %d nights can help clear this deficit. Setting a bedtime alarm 45 min before your target sleep time is a good starting point."), catchUpNights)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_sleep_debt_recommendation", default: "An extra hour each night for %d nights can help clear this. Setting a bedtime alarm 45 minutes before you want to sleep is a good start."), catchUpNights)
             }
 
             // Mental fatigue
             static func mentalFatigueSummary(parts: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_mental_fatigue_summary", default: "Your %@ over the past week \u{2014} this combination is strongly associated with mental fatigue, slower processing, and difficulty concentrating."), parts)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_mental_fatigue_summary", default: "Your %@ over the past week. This combination often goes with mental tiredness, slower thinking, and trouble focusing."), parts)
             }
             static func mentalFatigueRecommendation(actions: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_mental_fatigue_recommendation", default: "Three actions ranked by impact: %@."), actions)
@@ -305,12 +305,12 @@ extension Copy {
 
             // Low physical energy
             static func lowPhysicalSummary(signalText: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_low_physical_summary", default: "Your physical energy indicators are low: %@. You're likely feeling fatigued and heavy."), signalText)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_low_physical_summary", default: "Your physical energy signs are low: %@. You are probably feeling tired and heavy."), signalText)
             }
 
             // Recovery needed
             static func recoveryNeededSummary(consecutiveHighDays: Int, signalText: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_recovery_needed_summary", default: "You've been highly active for %d days straight and your recovery markers are strained \u{2014} %@. Without recovery, both mental sharpness and physical performance decline."), consecutiveHighDays, signalText)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_cognitive_energy_recovery_needed_summary", default: "You have been very active for %d days straight and your recovery signs are strained. %@. Without rest, both your sharpness and your performance drop."), consecutiveHighDays, signalText)
             }
 
             // Daylight chain
@@ -318,10 +318,10 @@ extension Copy {
                 let stage = deepDeclining
                     ? RemoteConfigManager.shared.copyString("copy_analysis_daylight_stage_deep", default: "deep sleep")
                     : RemoteConfigManager.shared.copyString("copy_analysis_daylight_stage_duration", default: "sleep duration")
-                return String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_summary", default: "Your daylight exposure dropped %@%% and %@ declined %@%% in the same window. These are connected. Natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity."), daylightChange, stage, deepChange)
+                return String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_summary", default: "Your daylight dropped %@%% and %@ dropped %@%% in the same window. These are linked. Sunlight sets your body clock, which shapes how you sleep and how clearly you think the next day."), daylightChange, stage, deepChange)
             }
             static func daylightChainRecommendation(effectNote: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_recommendation", default: "Get 20+ min of outdoor light before noon tomorrow.%@ This single change impacts your sleep timing, deep sleep percentage, and next-day mental sharpness."), effectNote)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_daylight_chain_recommendation", default: "Get 20 or more minutes of outdoor light before noon tomorrow.%@ This one change affects when you sleep, how much deep sleep you get, and how sharp you feel the next day."), effectNote)
             }
         }
 
@@ -427,16 +427,16 @@ extension Copy {
 
             // Metric status
             static func statusKeepDoing(metric: String, latest: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_keep_doing", default: "Keep doing what you're doing. Your %@ is above your personal baseline at %@. Whatever your routine is right now, it's working."), metric, latest)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_keep_doing", default: "Keep doing what you're doing. Your %@ is above your usual at %@. Whatever your routine is right now, it's working."), metric, latest)
             }
             static func statusEaseUp(metric: String, latest: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_ease_up", default: "Try to ease up a bit today. Your %@ is running high at %@, above your usual baseline."), metric, latest)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_ease_up", default: "Try to ease up a bit today. Your %@ is running high at %@, above your usual."), metric, latest)
             }
             static func statusDipped(metric: String, latest: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_dipped", default: "Your %@ has dipped to %@, below your usual level. Focus on recovery. Sleep, hydration, and lighter activity can help bring it back up."), metric, latest)
             }
             static func statusBelowGood(metric: String, latest: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_below_good", default: "Nice, your %@ is at %@, below your baseline, which is a good sign. Keep it up."), metric, latest)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_below_good", default: "Nice, your %@ is at %@, below your usual, which is a good sign. Keep it up."), metric, latest)
             }
             static func statusOnBaseline(metric: String, latest: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_status_on_baseline", default: "Your %@ is right where it should be at %@. Steady and consistent. That's what you want to see."), metric, latest)
@@ -461,7 +461,7 @@ extension Copy {
             static var riskNothingConcerning: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_nothing_concerning", default: "Based on the data I have, nothing looks concerning right now. All your recent readings are within your normal ranges. I'll keep monitoring and alert you if anything changes.") }
             static var riskAllHealthy: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_all_healthy", default: "No significant health risks detected. your fatigue, burnout, overtraining, sleep, immune, and activity signals all look healthy.") }
             static var riskCritical: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_critical", default: "at a critical level") }
-            static var riskHigh: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_high", default: "elevated") }
+            static var riskHigh: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_high", default: "higher than usual") }
             static var riskWatching: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_watching", default: "worth watching") }
             static func riskAnswer(recommendation: String, name: String, level: String, explanation: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_risk_answer", default: "%@ Your %@ is %@. %@"), recommendation, name, level, explanation)
@@ -476,9 +476,9 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_improve_biggest_impact", default: "The metrics with the biggest impact on your score are: %@. Small improvements here will move the needle the most."), levers)
             }
             static func improveMostRoom(_ tips: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_improve_most_room", default: "Here's where you have the most room to improve right now: %@. Focus on bringing these back to your baseline and you should feel the difference."), tips)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_improve_most_room", default: "Here's where you have the most room to improve right now: %@. Focus on bringing these back to your usual and you should feel the difference."), tips)
             }
-            static var improveAllOnBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_improve_all_on_baseline", default: "Your key metrics are all close to your personal baselines right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.") }
+            static var improveAllOnBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_improve_all_on_baseline", default: "Your key numbers are all close to your usual right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.") }
 
             // Data point labels
             static var labelAverage: String { RemoteConfigManager.shared.copyString("copy_analysis_label_average", default: "Average") }
@@ -508,7 +508,7 @@ extension Copy {
             static var yourMetrics: String { RemoteConfigManager.shared.copyString("copy_analysis_your_metrics", default: "your metrics") }
 
             // Circadian
-            static var buildingCircadianProfile: String { RemoteConfigManager.shared.copyString("copy_analysis_building_circadian_profile", default: "I'm still building your full circadian profile.") }
+            static var buildingCircadianProfile: String { RemoteConfigManager.shared.copyString("copy_analysis_building_circadian_profile", default: "I'm still learning your full body clock.") }
             static func circadianRecentSleep(avg: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_circadian_recent_sleep", default: " Based on your recent sleep (%@ average), aim to be consistent with your bedtime."), avg)
             }
@@ -562,7 +562,7 @@ extension Copy {
             static var rqHowAmIDoingOverall: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_how_am_i_doing_overall", default: "How am I doing overall?") }
             static var rqAmIAtRiskForAnything: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_am_i_at_risk_for_anything", default: "Am I at risk for anything?") }
             static var rqWhatDataDoIHave: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_what_data_do_i_have", default: "What data do I have?") }
-            static var rqHowIsMyHRVTrending: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_how_is_my_hrv_trending", default: "How is my HRV trending?") }
+            static var rqHowIsMyHRVTrending: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_how_is_my_hrv_trending", default: "How is my heart recovery trending?") }
             static var rqHowIsMySleepTrending: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_how_is_my_sleep_trending", default: "How is my sleep trending?") }
             static var rqWhatStateIsMyBody: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_what_state_is_my_body", default: "What state is my body in?") }
             static var rqWhatShouldIDoToday: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_what_should_i_do_today", default: "What should I do today?") }
@@ -602,30 +602,30 @@ extension Copy {
 
             // Cardio
             static func rhrAboveBaseline(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_above_baseline", default: "%@Your resting HR is %@above your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_above_baseline", default: "%@Your resting heart rate is %@above your usual."), valStr, devStr)
             }
             static var rhrCheckChanges: String { RemoteConfigManager.shared.copyString("copy_analysis_rhr_check_changes", default: " Check for recent changes in sleep, stress, or caffeine intake.") }
             static func rhrTrendingDown(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_trending_down", default: "%@Resting HR is trending down from your recent average."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_trending_down", default: "%@Your resting heart rate is trending down from your recent average."), valStr)
             }
             static func rhrConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_consistent", default: "%@Resting HR is consistent with your 30-day average."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_rhr_consistent", default: "%@Your resting heart rate is in line with your 30-day average."), valStr)
             }
             static func hrvDownBaseline(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_hrv_down_baseline", default: "%@HRV is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_hrv_down_baseline", default: "%@Your heart recovery is down %@from your usual."), valStr, devStr)
             }
             static var hrvCheckChanges: String { RemoteConfigManager.shared.copyString("copy_analysis_hrv_check_changes", default: " Check recent changes in sleep or recovery patterns.") }
             static func hrvConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_hrv_consistent", default: "%@HRV is consistent with your 30-day average."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_hrv_consistent", default: "%@Your heart recovery is in line with your 30-day average."), valStr)
             }
             static func vo2Improving(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_vo2_improving", default: "%@VO2 Max is up %@from your baseline \u{2014} your cardiovascular fitness is improving."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_vo2_improving", default: "%@Your VO2 Max is up %@from your usual. Your heart and lung fitness is improving."), valStr, devStr)
             }
             static func vo2Flat(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_vo2_flat", default: "%@VO2 Max has been flat or declining %@compared to your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_vo2_flat", default: "%@VO2 Max has been flat or declining %@compared to your usual."), valStr, devStr)
             }
             static func bloodOxygenCritical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_blood_oxygen_critical", default: "%@Blood oxygen is critically low, below the 90%% emergency threshold. This level of hypoxemia requires immediate attention. If you experience shortness of breath, confusion, bluish lips or fingertips, or chest pain, seek emergency medical care. Retake the reading to confirm, and if it remains below 90%%, contact a healthcare provider urgently."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_blood_oxygen_critical", default: "%@Blood oxygen is very low, below the 90%% emergency mark. This needs attention right away. If you feel short of breath, confused, have bluish lips or fingertips, or chest pain, get emergency care. Take the reading again to be sure, and if it stays below 90%%, contact a doctor urgently."), valStr)
             }
             static func bloodOxygenDropped(valStr: String, devStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_blood_oxygen_dropped", default: "%@Blood oxygen has dropped %@below your typical level."), valStr, devStr)
@@ -634,27 +634,27 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_blood_oxygen_typical", default: "%@Blood oxygen is tracking at your typical level."), valStr)
             }
             static func afibElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_afib_elevated", default: "%@AFib burden is elevated %@compared to your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_afib_elevated", default: "%@Irregular heartbeat activity is %@higher than your usual."), valStr, devStr)
             }
             static func afibTypical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_afib_typical", default: "%@AFib burden is tracking at your typical level."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_afib_typical", default: "%@Irregular heartbeat activity is at your usual level."), valStr)
             }
             static func perfusionElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_perfusion_elevated", default: "%@Perfusion index is %@outside your typical range."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_perfusion_elevated", default: "%@Your blood flow reading is %@outside your usual range."), valStr, devStr)
             }
             static func perfusionTypical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_perfusion_typical", default: "%@Peripheral perfusion is tracking at your typical level."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_perfusion_typical", default: "%@Your blood flow is at your usual level."), valStr)
             }
 
             // Sleep
             static func sleepDurationBelow(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_duration_below", default: "%@Sleep duration is %@below your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_duration_below", default: "%@Sleep duration is %@below your usual."), valStr, devStr)
             }
             static func sleepDurationConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_duration_consistent", default: "%@Sleep duration is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_duration_consistent", default: "%@Sleep duration is consistent with your usual."), valStr)
             }
             static func sleepStage(valStr: String, stage: String, devStr: String, direction: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_stage", default: "%@%@ sleep is %@%@ your baseline."), valStr, stage, devStr, direction)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_stage", default: "%@%@ sleep is %@%@ your usual."), valStr, stage, devStr, direction)
             }
             static func sleepCoreTypical(valStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_sleep_core_typical", default: "%@Core sleep is tracking at your typical level."), valStr)
@@ -668,19 +668,19 @@ extension Copy {
 
             // Activity
             static func stepsDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_down", default: "%@Step count is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_down", default: "%@Step count is down %@from your usual."), valStr, devStr)
             }
             static func stepsUp(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_up", default: "%@Step count is up %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_up", default: "%@Step count is up %@from your usual."), valStr, devStr)
             }
             static func stepsConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_consistent", default: "%@Step count is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_steps_consistent", default: "%@Step count is consistent with your usual."), valStr)
             }
             static func activeCaloriesDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_active_calories_down", default: "%@Active calorie burn is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_active_calories_down", default: "%@Active calorie burn is down %@from your usual."), valStr, devStr)
             }
             static func activeCaloriesAbove(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_active_calories_above", default: "%@Active calorie burn is tracking above your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_active_calories_above", default: "%@Active calorie burn is tracking above your usual."), valStr)
             }
             static func exerciseDown(valStr: String, devStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_exercise_down", default: "%@Exercise time has dropped %@from your recent average."), valStr, devStr)
@@ -689,105 +689,105 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_exercise_consistent", default: "%@Exercise time is consistent with your recent average."), valStr)
             }
             static func cyclingDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_cycling_down", default: "%@Cycling distance is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_cycling_down", default: "%@Cycling distance is down %@from your usual."), valStr, devStr)
             }
             static func cyclingConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_cycling_consistent", default: "%@Cycling distance is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_cycling_consistent", default: "%@Cycling distance is consistent with your usual."), valStr)
             }
             static func swimmingDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_swimming_down", default: "%@Swimming activity has declined %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_swimming_down", default: "%@Swimming activity has declined %@from your usual."), valStr, devStr)
             }
             static func swimmingConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_swimming_consistent", default: "%@Swimming activity is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_swimming_consistent", default: "%@Swimming activity is consistent with your usual."), valStr)
             }
             static func moveTimeDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_move_time_down", default: "%@Move time is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_move_time_down", default: "%@Move time is down %@from your usual."), valStr, devStr)
             }
             static func moveTimeConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_move_time_consistent", default: "%@Move time is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_move_time_consistent", default: "%@Move time is consistent with your usual."), valStr)
             }
             static func walkingSpeedDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_speed_down", default: "%@Walking speed is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_speed_down", default: "%@Walking speed is down %@from your usual."), valStr, devStr)
             }
             static func walkingSpeedConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_speed_consistent", default: "%@Walking speed is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_speed_consistent", default: "%@Walking speed is consistent with your usual."), valStr)
             }
             static func stepLengthDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_step_length_down", default: "%@Step length has shortened %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_step_length_down", default: "%@Step length has shortened %@from your usual."), valStr, devStr)
             }
             static func stepLengthConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_step_length_consistent", default: "%@Step length is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_step_length_consistent", default: "%@Step length is consistent with your usual."), valStr)
             }
             static func walkingAsymmetryElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_asymmetry_elevated", default: "%@Walking asymmetry is elevated %@above your typical level."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_asymmetry_elevated", default: "%@Your walking is %@more uneven than usual."), valStr, devStr)
             }
             static func walkingSymmetryConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_symmetry_consistent", default: "%@Walking symmetry is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_walking_symmetry_consistent", default: "%@Walking symmetry is consistent with your usual."), valStr)
             }
             static func doubleSupportElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_double_support_elevated", default: "%@Double support time is elevated %@above your typical level."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_double_support_elevated", default: "%@The time both feet spend on the ground is %@higher than usual."), valStr, devStr)
             }
             static func doubleSupportTypical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_double_support_typical", default: "%@Double support percentage is tracking at your typical level."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_double_support_typical", default: "%@The time both feet spend on the ground is at your usual level."), valStr)
             }
             static func stairSpeedDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_stair_speed_down", default: "%@Stair speed is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_stair_speed_down", default: "%@Stair speed is down %@from your usual."), valStr, devStr)
             }
             static func stairSpeedConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_stair_speed_consistent", default: "%@Stair speed is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_stair_speed_consistent", default: "%@Stair speed is consistent with your usual."), valStr)
             }
             static func sixMinuteWalkDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_six_minute_walk_down", default: "%@Six-minute walk distance is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_six_minute_walk_down", default: "%@Six-minute walk distance is down %@from your usual."), valStr, devStr)
             }
             static func sixMinuteWalkConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_six_minute_walk_consistent", default: "%@Six-minute walk distance is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_six_minute_walk_consistent", default: "%@Six-minute walk distance is consistent with your usual."), valStr)
             }
 
             // Body & vitals
             static func bodyCompTrendingUp(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_body_comp_trending_up", default: "%@Trending up %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_body_comp_trending_up", default: "%@Trending up %@from your usual."), valStr, devStr)
             }
             static func bodyCompConsistent(valStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_body_comp_consistent", default: "%@Body composition is consistent with your recent trend."), valStr)
             }
             static func leanMassDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_lean_mass_down", default: "%@Lean body mass is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_lean_mass_down", default: "%@Lean body mass is down %@from your usual."), valStr, devStr)
             }
             static func leanMassConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_lean_mass_consistent", default: "%@Lean body mass is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_lean_mass_consistent", default: "%@Lean body mass is consistent with your usual."), valStr)
             }
             static func waistAbove(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_waist_above", default: "%@Waist circumference is %@above your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_waist_above", default: "%@Waist circumference is %@above your usual."), valStr, devStr)
             }
             static func waistConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_waist_consistent", default: "%@Waist circumference is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_waist_consistent", default: "%@Waist circumference is consistent with your usual."), valStr)
             }
             static func wristTempDeviated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_wrist_temp_deviated", default: "%@Wrist temperature has deviated %@from your typical range."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_wrist_temp_deviated", default: "%@Your wrist temperature is %@off your usual range."), valStr, devStr)
             }
             static func wristTempTypical(valStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_wrist_temp_typical", default: "%@Sleeping wrist temperature is tracking at your typical level."), valStr)
             }
             static func bpAbove(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_bp_above", default: "%@Blood pressure is %@above your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_bp_above", default: "%@Blood pressure is %@above your usual."), valStr, devStr)
             }
             static func bpConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_bp_consistent", default: "%@Blood pressure is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_bp_consistent", default: "%@Blood pressure is consistent with your usual."), valStr)
             }
             static func respiratoryElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_respiratory_elevated", default: "%@Respiratory rate is elevated %@above your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_respiratory_elevated", default: "%@Your breathing rate is %@higher than usual."), valStr, devStr)
             }
             static func respiratoryTypical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_respiratory_typical", default: "%@Respiratory rate is tracking at your typical level."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_respiratory_typical", default: "%@Your breathing rate is at your usual level."), valStr)
             }
             static func peakFlowDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_peak_flow_down", default: "%@Peak flow rate has dropped %@below your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_peak_flow_down", default: "%@Peak flow rate has dropped %@below your usual."), valStr, devStr)
             }
             static func peakFlowTypical(valStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_peak_flow_typical", default: "%@Peak expiratory flow rate is tracking at your typical level."), valStr)
             }
             static func forcedVitalDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_forced_vital_down", default: "%@Forced vital capacity is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_forced_vital_down", default: "%@Forced vital capacity is down %@from your usual."), valStr, devStr)
             }
             static func lungCapacityTypical(valStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_lung_capacity_typical", default: "%@Lung capacity is tracking at your typical level."), valStr)
@@ -799,27 +799,27 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_body_temp_typical", default: "%@Body temperature is tracking at your typical level."), valStr)
             }
             static func mindfulnessDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_mindfulness_down", default: "%@Mindfulness time has dropped %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_mindfulness_down", default: "%@Mindfulness time has dropped %@from your usual."), valStr, devStr)
             }
             static func mindfulnessConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_mindfulness_consistent", default: "%@Mindfulness time is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_mindfulness_consistent", default: "%@Mindfulness time is consistent with your usual."), valStr)
             }
             static func daylightDown(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_daylight_down", default: "%@Daylight exposure is down %@from your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_daylight_down", default: "%@Daylight exposure is down %@from your usual."), valStr, devStr)
             }
             static func daylightConsistent(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_daylight_consistent", default: "%@Daylight exposure is consistent with your baseline."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_daylight_consistent", default: "%@Daylight exposure is consistent with your usual."), valStr)
             }
             static func edaElevated(valStr: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_eda_elevated", default: "%@Electrodermal activity is elevated %@above your baseline."), valStr, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_eda_elevated", default: "%@Your skin stress signal is %@higher than your usual."), valStr, devStr)
             }
             static func edaTypical(valStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_eda_typical", default: "%@Electrodermal activity is tracking at your typical level."), valStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_eda_typical", default: "%@Your skin stress signal is at your usual level."), valStr)
             }
 
             // Default
             static func defaultDeclining(valStr: String, metricName: String, devStr: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_default_declining", default: "%@%@ is declining %@from your baseline."), valStr, metricName, devStr)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_default_declining", default: "%@%@ is declining %@from your usual."), valStr, metricName, devStr)
             }
             static func defaultTypical(valStr: String, metricName: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_rules_engine_default_typical", default: "%@%@ is tracking at your typical level."), valStr, metricName)
@@ -838,7 +838,7 @@ extension Copy {
                 "Aim for steady, lower readings over time"
             )
             static let improveHRV: Recommendation = (
-                "Improve Heart Rate Variability",
+                "Improve Your Heart Recovery",
                 "Better sleep, slow breathing (4 in, 4 hold, 4 out, 4 hold), and recovery days between hard workouts can help.",
                 "Aim for steady, higher readings over time"
             )
@@ -848,7 +848,7 @@ extension Copy {
                 "Aim for steady readings in your usual range"
             )
             static let improveHRR: Recommendation = (
-                "Improve Heart Rate Recovery",
+                "Improve Your Heart Rate Bounce-Back",
                 "Faster recovery often follows regular cardio. Try adding short cool-down walks at the end of workouts.",
                 "Aim for a quicker drop after exercise over time"
             )
@@ -862,17 +862,17 @@ extension Copy {
             static let increaseSleepDuration: Recommendation = (
                 "Increase Sleep Duration",
                 "Set a fixed bedtime 8 hours before your alarm. No screens 1 hour before bed. Keep your bedroom cool (65-68°F) and dark.",
-                "Target: 7\u{2013}9 hours"
+                "Target: 7 to 9 hours"
             )
             static let boostDeepSleep: Recommendation = (
                 "Boost Deep Sleep",
-                "Exercise earlier in the day (not within 3 hours of bedtime), avoid alcohol which fragments deep sleep, and maintain a cool bedroom.",
-                "Target: 1\u{2013}2 hours per night"
+                "Exercise earlier in the day (not within 3 hours of bedtime), avoid alcohol which breaks up deep sleep, and keep your bedroom cool.",
+                "Target: 1 to 2 hours per night"
             )
             static let improveREM: Recommendation = (
                 "Improve REM Sleep",
-                "REM sleep is essential for memory and emotional processing. Consistent sleep schedule and avoiding sleep aids can increase REM proportion.",
-                "Target: 1.5\u{2013}2 hours per night"
+                "REM sleep helps your memory and mood. A steady sleep schedule and skipping sleep aids can raise how much REM you get.",
+                "Target: 1.5 to 2 hours per night"
             )
             static let reduceWaking: Recommendation = (
                 "Reduce Nighttime Waking",
@@ -883,18 +883,18 @@ extension Copy {
             // Overtraining
             static let allowRecovery: Recommendation = (
                 "Allow Recovery Time",
-                "Low HRV with high training load signals insufficient recovery. Take 1-2 rest days, prioritize sleep, and reduce workout intensity by 20%.",
-                "Target: HRV returning to baseline"
+                "When your heart recovery is low but you keep training hard, your body is not getting enough rest. Take 1-2 rest days, put sleep first, and ease your workout effort by 20%.",
+                "Target: heart recovery back to your usual"
             )
             static let watchElevatedRHR: Recommendation = (
-                "Watch for Elevated RHR",
-                "A rising RHR despite regular training is a classic overtraining sign. Reduce volume this week and monitor RHR each morning before getting up.",
-                "Target: Within 5 bpm of personal baseline"
+                "Watch for a Rising Resting Heart Rate",
+                "A rising resting heart rate even though you train regularly is a classic sign of overdoing it. Do less this week and check your resting heart rate each morning before you get up.",
+                "Target: within 5 beats per minute of your usual"
             )
             static let balanceLoad: Recommendation = (
                 "Balance Training Load",
                 "More isn't always better. Follow the 80/20 rule: 80% easy, 20% hard. Include at least 2 rest days per week.",
-                "Target: 150\u{2013}300 min/week with rest days"
+                "Target: 150 to 300 min/week with rest days"
             )
 
             // Respiratory
@@ -917,45 +917,45 @@ extension Copy {
             // Metabolic
             static let optimizeBodyComp: Recommendation = (
                 "Optimize Body Composition",
-                "Focus on sustainable changes: reduce processed foods, increase protein and vegetables, combine cardio with resistance training.",
-                "Target: BMI 18.5\u{2013}25"
+                "Focus on changes you can keep up: eat less processed food, more protein and vegetables, and mix cardio with strength training.",
+                "Target: BMI 18.5 to 25"
             )
             static let reduceBodyFat: Recommendation = (
                 "Reduce Body Fat",
-                "Combine resistance training 3x/week with 150+ min cardio/week. Prioritize protein (0.8g/lb bodyweight) and sleep for fat loss.",
-                "Target: 10\u{2013}20% (men) / 18\u{2013}28% (women)"
+                "Mix strength training 3x a week with 150+ min of cardio a week. Get plenty of protein (0.8g per lb of bodyweight) and sleep for fat loss.",
+                "Target: 10 to 20% (men) / 18 to 28% (women)"
             )
             static let reduceWaist: Recommendation = (
                 "Reduce Waist Circumference",
-                "Abdominal fat is a key metabolic risk indicator. Daily walks, core exercises, and reduced sugar intake have the biggest impact.",
+                "Belly fat is a key warning sign for your health. Daily walks, core exercises, and less sugar have the biggest impact.",
                 "Target: <94 cm (men) / <80 cm (women)"
             )
             static let increaseMovement: Recommendation = (
                 "Increase Daily Movement",
-                "Low step count is strongly linked to metabolic risk. Start with 2,000 more steps than current average. Take walking meetings and post-meal walks.",
-                "Target: 8,000\u{2013}10,000 steps/day"
+                "A low step count is strongly linked to health risks. Start with 2,000 more steps than your current average. Try walking meetings and walks after meals.",
+                "Target: 8,000 to 10,000 steps/day"
             )
 
             // Stress
             static let reduceChronicStress: Recommendation = (
                 "Reduce Chronic Stress",
-                "HRV is the most reliable stress biomarker. Try 10 minutes of meditation daily, box breathing before bed, and time in nature.",
-                "Target: HRV trending upward week over week"
+                "Your heart recovery is the most reliable stress signal. Try 10 minutes of meditation daily, slow box breathing before bed, and time in nature.",
+                "Target: heart recovery rising week over week"
             )
             static let prioritizeRecoverySleep: Recommendation = (
                 "Prioritize Recovery Sleep",
-                "Sleep is the #1 stress recovery tool. Set a non-negotiable bedtime. Remove work apps from your phone after 9 PM.",
-                "Target: 7\u{2013}8 hours consistently"
+                "Sleep is the #1 stress recovery tool. Set a bedtime you will not skip. Remove work apps from your phone after 9 PM.",
+                "Target: 7 to 8 hours consistently"
             )
             static let buildMindfulness: Recommendation = (
                 "Build Mindfulness Practice",
-                "Even 5 minutes of daily mindfulness reduces cortisol levels. Use a guided app to start. Morning sessions have the most impact.",
-                "Target: 10\u{2013}20 min daily"
+                "Even 5 minutes of daily mindfulness lowers your stress hormones. Use a guided app to start. Morning sessions help the most.",
+                "Target: 10 to 20 min daily"
             )
             static let manageSympathetic: Recommendation = (
-                "Manage Sympathetic Activation",
-                "Elevated EDA reflects sympathetic nervous system arousal. Practice progressive muscle relaxation and reduce stimulant intake.",
-                "Target: Return to personal baseline"
+                "Calm Your Stress Response",
+                "A higher skin stress signal means your body is stuck in fight-or-flight mode. Try relaxing your muscles one group at a time, and cut back on stimulants like caffeine.",
+                "Target: back to your usual"
             )
 
             // Mobility
@@ -965,19 +965,19 @@ extension Copy {
                 "Target: >1.0 m/s (3.6 km/h)"
             )
             static let correctGaitAsymmetry: Recommendation = (
-                "Correct Gait Asymmetry",
-                "Asymmetry above 10% may indicate muscle imbalance or joint issues. Single-leg exercises and stretching can help. See a PT if persistent.",
-                "Target: <10% asymmetry"
+                "Even Out Your Walking",
+                "Unevenness above 10% between your left and right steps can point to muscle imbalance or joint issues. Single-leg exercises and stretching can help. See a physical therapist if it keeps up.",
+                "Target: under 10% unevenness"
             )
             static let buildFunctionalEndurance: Recommendation = (
-                "Build Functional Endurance",
-                "The 6-minute walk distance reflects overall functional capacity. Daily walks of increasing duration will improve this steadily.",
+                "Build Everyday Stamina",
+                "How far you can walk in 6 minutes shows your everyday stamina. Daily walks that get a little longer will build this steadily.",
                 "Target: >500 meters"
             )
             static let improveBalance: Recommendation = (
                 "Improve Balance",
-                "High double support time indicates balance challenges. Practice single-leg stands, heel-to-toe walking, and tai chi or yoga.",
-                "Target: 20\u{2013}30%"
+                "Spending a lot of time with both feet on the ground points to balance trouble. Practice single-leg stands, heel-to-toe walking, and tai chi or yoga.",
+                "Target: 20 to 30%"
             )
 
             // Default
@@ -1080,39 +1080,39 @@ extension Copy {
             // MARK: HRR Fitness
 
             enum HRRFitness {
-                static var belowClinicalTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_title", default: "Heart Rate Recovery Below Clinical Threshold") }
-                static var excellentTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_title", default: "Excellent Heart Rate Recovery") }
-                static var decliningTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_title", default: "Heart Recovery Declining") }
+                static var belowClinicalTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_title", default: "Heart Rate Bounce-Back Below Healthy Level") }
+                static var excellentTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_title", default: "Great Heart Rate Bounce-Back") }
+                static var decliningTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_title", default: "Heart Rate Bounce-Back Slowing") }
                 static func improvingTitle(months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_title", default: "Heart Recovery Improving Over %d Months"), months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_title", default: "Heart Rate Bounce-Back Improving Over %d Months"), months)
                 }
 
                 static func belowClinicalSummary(currentHRR: String, threshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_summary", default: "Your heart rate recovery is %@ bpm. below the clinical threshold of %d bpm. This indicates reduced parasympathetic reactivation after exercise."), currentHRR, threshold)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_summary", default: "Your heart rate drops %@ bpm in the minute after exercise, below the healthy mark of %d bpm. That means your body is slow to switch into rest-and-recover mode."), currentHRR, threshold)
                 }
                 static func belowClinicalRecommendation(threshold: Int, currentHRR: String, sampleCount: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_recommendation", default: "A heart rate recovery <%d bpm at 1 minute post-exercise is associated with reduced overall fitness in large population studies. Your average HRR of %@ bpm across %d measurements suggests blunted autonomic recovery."), threshold, currentHRR, sampleCount)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_below_clinical_recommendation", default: "A heart rate drop under %d bpm one minute after exercise is linked with lower overall fitness in large studies. Your average of %@ bpm across %d readings suggests your body is slow to shift into rest-and-recover mode."), threshold, currentHRR, sampleCount)
                 }
 
                 static func excellentSummary(currentHRR: String, goodThreshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_summary", default: "Your heart rate drops %@ bpm after exercise. well above the %d bpm threshold for good autonomic function. This indicates strong parasympathetic tone."), currentHRR, goodThreshold)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_summary", default: "Your heart rate drops %@ bpm after exercise, well above the %d bpm mark for a healthy body. This shows your body switches into rest-and-recover mode fast."), currentHRR, goodThreshold)
                 }
                 static func excellentRecommendation(currentHRR: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_recommendation", default: "An HRR of %@ bpm places you in the excellent range. Research shows this level of post-exercise recovery is associated with better heart fitness and superior autonomic nervous system health."), currentHRR)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_excellent_recommendation", default: "A drop of %@ bpm puts you in the top range. Research links this kind of fast recovery after exercise to better heart fitness and a healthier rest-and-recover system."), currentHRR)
                 }
 
                 static func improvingSummary(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_summary", default: "Your heart rate recovery has improved by %@ bpm over the past %d months. Research shows HRR improves dose-dependently with regular exercise training."), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_summary", default: "Your heart rate bounce-back has improved by %@ bpm over the past %d months. Research shows the more you exercise, the more this improves."), change, months)
                 }
                 static func improvingRecommendation(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_recommendation", default: "A %@ bpm improvement in HRR over %d months reflects measurable gains in autonomic fitness. Studies show as few as 6 months of consistent exercise produces this kind of parasympathetic adaptation."), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_improving_recommendation", default: "A %@ bpm gain over %d months is real progress in how fast your body recovers. Studies show as little as 6 months of steady exercise can bring this kind of change."), change, months)
                 }
 
                 static func decliningSummary(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_summary", default: "Your heart rate recovery has worsened by %@ bpm over %d months. A declining HRR trajectory suggests reduced autonomic fitness."), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_summary", default: "Your heart rate bounce-back has gotten worse by %@ bpm over %d months. A falling trend suggests your body is slower to recover."), change, months)
                 }
                 static func decliningRecommendation(start: String, current: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_recommendation", default: "HRR dropped from %@ to %@ bpm over %d months. This may reflect detraining, increased stress, or an underlying condition. Regular aerobic exercise is the strongest intervention for improving HRR."), start, current, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_hrr_fitness_declining_recommendation", default: "Your bounce-back dropped from %@ to %@ bpm over %d months. This can come from training less, more stress, or a health issue. Regular cardio is the best way to bring it back up."), start, current, months)
                 }
             }
 
@@ -1123,43 +1123,43 @@ extension Copy {
                 static var needsAttentionTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_needs_attention_title", default: "Sleep Regularity Needs Attention") }
                 static var excellentTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_excellent_title", default: "Excellent Sleep Regularity") }
                 static func socialJetLagTitle(minutes: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_social_jet_lag_title", default: "Social Jet Lag: %@ Minutes"), minutes)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_social_jet_lag_title", default: "Weekend Sleep Shift: %@ Minutes"), minutes)
                 }
 
                 static func irregularSummary(sri: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_summary", default: "Your Sleep Regularity Index is %@/100. placing you in the irregular category. Research shows this is a stronger predictor of long-term wellness than sleep duration alone."), sri)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_summary", default: "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Research shows how steady your sleep is matters more for long-term health than how long you sleep."), sri)
                 }
                 static func irregularRecommendation(sri: String, samples: Int, socialJetLag: Double, jetLagMinutes: String) -> String {
                     let jetLagSuffix = socialJetLag > 60
-                        ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_suffix", default: " Social jet lag of %@ min is also elevated."), jetLagMinutes)
+                        ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_suffix", default: " Your weekend sleep shift of %@ min is also on the high side."), jetLagMinutes)
                         : ""
-                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_recommendation", default: "Across 5 large cohorts, irregular sleepers (SRI <60) may experience reduced cognitive performance and overall wellness over time, independent of how many hours they sleep. Your SRI of %@ over %d measured nights suggests significant night-to-night variability."), sri, samples)
+                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_recommendation", default: "Across 5 large studies, people with irregular sleep (a steadiness score under 60) may think less clearly and feel worse over time, no matter how many hours they sleep. Your score of %@ over %d nights shows your sleep changes a lot from night to night."), sri, samples)
                     return body + jetLagSuffix
                 }
 
                 static func needsAttentionSummary(sri: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_summary", default: "Your Sleep Regularity Index is %@/100. moderate but room for improvement. Consistent sleep timing matters more than duration for long-term health."), sri)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_summary", default: "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times matters more than how long you sleep for long-term health."), sri)
                 }
                 static func needsAttentionRecommendation(sri: String, samples: Int, socialJetLag: Double, jetLagMinutes: String) -> String {
                     let jetLagSuffix = socialJetLag > 45
-                        ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_reduce", default: " Reducing your %@-min social jet lag would help most."), jetLagMinutes)
+                        ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_reduce", default: " Cutting your %@-min weekend sleep shift would help most."), jetLagMinutes)
                         : ""
-                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_recommendation", default: "Your SRI of %@ across %d nights falls in the moderate range. Research links each 10-point SRI improvement to measurable gains in heart and metabolic wellness."), sri, samples)
+                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_recommendation", default: "Your steadiness score of %@ across %d nights is in the middle range. Research links every 10-point gain in this score to real gains in heart and body health."), sri, samples)
                     return body + jetLagSuffix
                 }
 
                 static func excellentSummary(sri: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_excellent_summary", default: "Your Sleep Regularity Index is %@/100. your sleep timing and duration are highly consistent. This is independently supportive of long-term wellness."), sri)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_excellent_summary", default: "Your sleep steadiness score is %@/100. Your sleep times and length are very steady. That on its own helps your long-term health."), sri)
                 }
                 static func excellentRecommendation(sri: String, samples: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_excellent_recommendation", default: "An SRI of %@ across %d nights places you in the most regular category. Research shows this level of sleep consistency is associated with better cognitive performance and substantially better overall wellness over time."), sri, samples)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_excellent_recommendation", default: "A score of %@ across %d nights puts you in the steadiest group. Research shows this level of steady sleep goes with clearer thinking and much better overall health over time."), sri, samples)
                 }
 
                 static func socialJetLagSummary(minutes: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_social_jet_lag_summary", default: "Your weekend sleep timing shifts by %@ minutes compared to weekdays. equivalent to crossing a time zone every week. This is linked to reduced metabolic wellness independent of sleep duration."), minutes)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_social_jet_lag_summary", default: "Your sleep time shifts by %@ minutes on weekends compared to weekdays. That is like crossing a time zone every week. It is linked to worse body health no matter how long you sleep."), minutes)
                 }
                 static func socialJetLagRecommendation(minutes: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_social_jet_lag_recommendation", default: "Social jet lag >60 min is associated with reduced metabolic wellness and increased body stress in adults with otherwise normal sleep duration. Your %@-min shift suggests significant circadian misalignment on weekends."), minutes)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_social_jet_lag_recommendation", default: "A weekend sleep shift over 60 min is linked to worse body health and more body stress, even in adults who sleep enough. Your %@-min shift means your body clock is well out of sync on weekends."), minutes)
                 }
             }
 
@@ -1167,28 +1167,28 @@ extension Copy {
 
             enum InflammationRisk {
                 static var bodyStressSignalTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_body_stress_signal_title", default: "Body Stress Signal") }
-                static var elevatedBodyStressTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_title", default: "Elevated Body Stress") }
-                static var strongRecoveryToneTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_tone_title", default: "Strong Recovery Tone") }
+                static var elevatedBodyStressTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_title", default: "Higher Body Stress") }
+                static var strongRecoveryToneTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_tone_title", default: "Strong Recovery") }
 
                 static func bodyStressSummary(dropPercent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_body_stress_summary", default: "Your HRV has dropped %@%% below baseline while wrist temperature is elevated. a compound pattern suggesting your body may be under increased stress."), dropPercent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_body_stress_summary", default: "Your heart recovery has dropped %@%% below usual while your wrist is warmer than usual. Together, these hint your body may be under more stress."), dropPercent)
                 }
                 static func bodyStressRecommendation(currentHRV: String, baseline: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_body_stress_recommendation", default: "The combination of suppressed HRV (autonomic stress) and elevated body temperature is a well-validated early signal that your body is working harder than usual to recover. In research studies, this pattern often appears 1 to 3 days before you feel off. Current HRV: %@ ms vs baseline %@ ms."), currentHRV, baseline)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_body_stress_recommendation", default: "Low heart recovery plus a warmer body is a well-proven early sign that your body is working harder than usual to recover. In studies, this often shows up 1 to 3 days before you feel off. Your heart recovery now: %@ ms vs your usual %@ ms."), currentHRV, baseline)
                 }
 
                 static func elevatedBodyStressSummary(consecutiveDeclines: Int, dropPercent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_summary", default: "Your HRV has been declining for %d consecutive measurement windows. currently %@%% below your personal baseline. This sustained drop pattern suggests your body may be under increased stress."), consecutiveDeclines, dropPercent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_summary", default: "Your heart recovery has been dropping for %d readings in a row, now %@%% below your usual. A steady drop like this hints your body may be under more stress."), consecutiveDeclines, dropPercent)
                 }
                 static func elevatedBodyStressRecommendation(currentHRV: String, baseline: String, days: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_recommendation", default: "Research shows sustained HRV suppression (without increased exercise load) reflects reduced recovery capacity. In wearable studies, this pattern often appeared days before people felt run down. HRV: %@ ms vs baseline %@ ms over %d days."), currentHRV, baseline, days)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_elevated_body_stress_recommendation", default: "Research shows a long dip in heart recovery (without training harder) means your body is recovering less well. In wearable studies, this often showed up days before people felt run down. Heart recovery: %@ ms vs your usual %@ ms over %d days."), currentHRV, baseline, days)
                 }
 
                 static func strongRecoverySummary(abovePercent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_summary", default: "Your HRV is %@%% above baseline. indicating strong vagal tone. Research links elevated parasympathetic activity to better overall recovery and resilience."), abovePercent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_summary", default: "Your heart recovery is %@%% above usual, a sign your body is deep in rest-and-recover mode. Research links this to better recovery and resilience."), abovePercent)
                 }
                 static func strongRecoveryRecommendation(currentHRV: String, baseline: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_recommendation", default: "An HRV of %@ ms (vs baseline %@ ms) reflects robust parasympathetic dominance. When vagal tone is high, your body is in a strong recovery state."), currentHRV, baseline)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_inflammation_risk_strong_recovery_recommendation", default: "A heart recovery of %@ ms (vs your usual %@ ms) shows your body is firmly in rest-and-recover mode. When this is high, your body is recovering well."), currentHRV, baseline)
                 }
             }
 
@@ -1197,44 +1197,44 @@ extension Copy {
             enum MobilityDecline {
                 static var walkingSpeedLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_label", default: "walking speed") }
                 static var stepLengthLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_step_length_label", default: "step length") }
-                static var doubleSupportLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_double_support_label", default: "double support time") }
-                static var asymmetryLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_label", default: "gait asymmetry") }
+                static var doubleSupportLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_double_support_label", default: "time with both feet down") }
+                static var asymmetryLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_label", default: "uneven walking") }
                 static var stairAscentLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_stair_ascent_label", default: "stair climbing speed") }
                 static var stairDescentLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_stair_descent_label", default: "stair descent speed") }
                 static var steadinessLabel: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_steadiness_label", default: "walking steadiness") }
 
-                static var multiMetricDeclineTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_multi_metric_decline_title", default: "Multi-Metric Mobility Decline") }
+                static var multiMetricDeclineTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_multi_metric_decline_title", default: "Several Movement Signs Dropping") }
                 static var walkingSpeedDecliningTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_declining_title", default: "Walking Speed Declining") }
-                static var asymmetryIncreasingTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_increasing_title", default: "Gait Asymmetry Increasing") }
-                static var mobilityStableTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_title", default: "Mobility Profile Stable") }
+                static var asymmetryIncreasingTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_increasing_title", default: "Walking Getting More Uneven") }
+                static var mobilityStableTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_title", default: "Your Movement Is Steady") }
 
                 static func multiMetricSummary(declining: Int, total: Int, metricList: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_multi_metric_summary", default: "%d of %d mobility metrics are declining over the past 6 months: %@. Concurrent deterioration across multiple gait parameters warrants attention."), declining, total, metricList)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_multi_metric_summary", default: "%d of %d movement signs are dropping over the past 6 months: %@. Several walking measures slipping at once is worth a look."), declining, total, metricList)
                 }
-                static var multiMetricRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_recommendation", default: "Research shows simultaneous decline in walking speed, step length, and gait symmetry can be an early indicator of shifts in overall wellness. Changes in mobility patterns are often detectable well before they become noticeable in daily life.") }
+                static var multiMetricRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_multi_metric_recommendation", default: "Research shows walking speed, step length, and even steps dropping together can be an early sign of changes in your overall health. These shifts often show up long before you notice them in daily life.") }
 
                 static func walkingSpeedSummary(percent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_summary", default: "Your walking speed has decreased %@%% over the past 6 months. Walking speed is called the 'sixth vital sign'. it's one of the strongest predictors of functional health and longevity."), percent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_summary", default: "Your walking speed has dropped %@%% over the past 6 months. Walking speed is called the 'sixth vital sign' because it is one of the strongest signs of how well your body works and how long you live."), percent)
                 }
                 static func walkingSpeedRecommendation(percent: String, samples: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_recommendation", default: "In population studies, each 0.1 m/s decrease in walking speed is associated with reduced overall wellness. Your %@%% decline across %d measurements is worth monitoring."), percent, samples)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_walking_speed_recommendation", default: "In large studies, every 0.1 m/s that walking speed drops is linked to worse overall health. Your %@%% drop across %d readings is worth keeping an eye on."), percent, samples)
                 }
 
                 static func asymmetrySummary(percent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_summary", default: "Your walking asymmetry has increased %@%% over 6 months. Growing left-right imbalance in gait is an early indicator of changes in movement quality."), percent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_summary", default: "Your walking has gotten %@%% more uneven over 6 months. A growing left-right difference in your steps is an early sign of changes in how you move."), percent)
                 }
                 static func asymmetryRecommendation(percent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_recommendation", default: "Increasing gait asymmetry. the difference between left and right step patterns. can reflect changes in balance, joint comfort, or overall movement quality. A %@%% increase warrants attention."), percent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_asymmetry_recommendation", default: "More uneven walking, meaning a bigger difference between your left and right steps, can point to changes in balance, joint comfort, or how well you move. A %@%% rise is worth a look."), percent)
                 }
 
                 static func mobilityStableSummary(total: Int, improvingList: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_summary", default: "All %d tracked mobility metrics are stable or improving over the past 6 months. This indicates strong functional movement quality.%@"), total, improvingList)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_summary", default: "All %d movement signs are steady or improving over the past 6 months. That points to strong, healthy movement.%@"), total, improvingList)
                 }
                 static func mobilityStableImprovingFragment(items: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_improving_fragment", default: " Improving: %@."), items)
                 }
                 static func mobilityStableRecommendation(total: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_recommendation", default: "Stable or improving gait metrics across %d parameters (walking speed, step length, symmetry, steadiness) reflect strong functional health. Research shows these are among the best predictors of healthspan and longevity."), total)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_mobility_decline_mobility_stable_recommendation", default: "Steady or improving walking measures across %d areas (walking speed, step length, evenness, steadiness) point to strong, healthy movement. Research shows these are among the best signs of a long, healthy life."), total)
                 }
             }
 
@@ -1245,29 +1245,29 @@ extension Copy {
                 static var restingHeartRateComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_resting_heart_rate_component", default: "Resting Heart Rate") }
                 static var activityRhythmComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_activity_rhythm_component", default: "Activity Rhythm") }
                 static var mobilityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_mobility_component", default: "Mobility") }
-                static var autonomicComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_autonomic_component", default: "Autonomic Nervous System") }
+                static var autonomicComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_autonomic_component", default: "Rest-and-Recover System") }
 
                 static func fitnessAgeTitle(years: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_title", default: "Fitness Age Estimate: ~%@"), years)
                 }
-                static var imbalanceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_imbalance_title", default: "Age Component Imbalance") }
+                static var imbalanceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_imbalance_title", default: "Some Body Systems Age Faster") }
 
                 static func componentBreakdownEntry(component: String, years: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_component_breakdown_entry", default: "%@: ~%@ yrs"), component, years)
                 }
 
                 static func fitnessAgeSummary(componentCount: Int, years: String, strongest: String, oldest: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_summary", default: "Based on %d physiological markers, your body performs like someone around %@ years old. Strongest area: %@. Area with most room: %@."), componentCount, years, strongest, oldest)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_summary", default: "Based on %d body signals, your body works like someone around %@ years old. Strongest area: %@. Most room to improve: %@."), componentCount, years, strongest, oldest)
                 }
                 static func fitnessAgeRecommendation(breakdown: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_recommendation", default: "Breakdown. %@. Each component is mapped to population norms from large-scale studies. VO2max alone (one of the most meaningful indicators of your overall fitness) suggests a fitness age equivalent."), breakdown)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_recommendation", default: "Breakdown. %@. Each part is compared to typical results from large studies. Your VO2 Max on its own (one of the best signs of overall fitness) points to a matching fitness age."), breakdown)
                 }
 
                 static func imbalanceSummary(spread: String, youngestComponent: String, youngestAge: String, oldestComponent: String, oldestAge: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_summary", default: "There's a %@-year gap between your youngest system (%@: ~%@) and oldest (%@: ~%@). This imbalance is worth addressing."), spread, youngestComponent, youngestAge, oldestComponent, oldestAge)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_summary", default: "There's a %@-year gap between your youngest system (%@: ~%@) and your oldest (%@: ~%@). This gap is worth working on."), spread, youngestComponent, youngestAge, oldestComponent, oldestAge)
                 }
                 static func imbalanceRecommendation(oldestComponent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_recommendation", default: "A large spread between fitness age components suggests one system is aging faster than others. Focusing on your %@ could bring your overall fitness age down significantly."), oldestComponent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_recommendation", default: "A big gap between these parts means one system is aging faster than the rest. Working on your %@ could bring your overall fitness age down a lot."), oldestComponent)
                 }
             }
 
@@ -1278,7 +1278,7 @@ extension Copy {
                 static var activityLevelSignal: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_activity_level_signal", default: "Activity Level") }
                 static var daylightSignal: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_daylight_signal", default: "Daylight") }
                 static var mindfulnessSignal: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_mindfulness_signal", default: "Mindfulness") }
-                static var autonomicToneSignal: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_autonomic_tone_signal", default: "Autonomic Tone") }
+                static var autonomicToneSignal: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_autonomic_tone_signal", default: "Rest-and-Recover State") }
 
                 static var sleepVeryRegular: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_sleep_very_regular", default: "sleep is very regular") }
                 static var sleepModeratelyRegular: String { RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_sleep_moderately_regular", default: "sleep regularity is moderate") }
@@ -1302,67 +1302,67 @@ extension Copy {
 
                 static var mindfulnessConsistent: String { RemoteConfigManager.shared.copyString("copy_analysis_mindfulness_consistent", default: "consistent mindfulness practice") }
                 static var mindfulnessSome: String { RemoteConfigManager.shared.copyString("copy_analysis_mindfulness_some", default: "some mindfulness activity") }
-                static var mindfulnessMinimal: String { RemoteConfigManager.shared.copyString("copy_analysis_mindfulness_minimal", default: "minimal mindfulness engagement") }
+                static var mindfulnessMinimal: String { RemoteConfigManager.shared.copyString("copy_analysis_mindfulness_minimal", default: "hardly any mindfulness") }
 
-                static var autonomicStrong: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_strong", default: "autonomic tone is strong") }
-                static var autonomicNormal: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_normal", default: "autonomic tone is normal") }
-                static var autonomicBelowBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_below_baseline", default: "HRV below baseline (autonomic stress)") }
-                static var autonomicSuppressed: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_suppressed", default: "HRV significantly suppressed") }
+                static var autonomicStrong: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_strong", default: "your rest-and-recover state is strong") }
+                static var autonomicNormal: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_normal", default: "your rest-and-recover state is normal") }
+                static var autonomicBelowBaseline: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_below_baseline", default: "heart recovery below usual (body under stress)") }
+                static var autonomicSuppressed: String { RemoteConfigManager.shared.copyString("copy_analysis_autonomic_suppressed", default: "heart recovery is well down") }
 
-                static var patternShiftTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_pattern_shift_title", default: "Wellbeing Pattern Shift Detected") }
+                static var patternShiftTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_pattern_shift_title", default: "Your Wellbeing Pattern Is Shifting") }
                 static var mildPatternChangeTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_mild_pattern_change_title", default: "Mild Wellbeing Pattern Change") }
-                static var strongIndicatorsTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_strong_indicators_title", default: "Strong Wellbeing Indicators") }
+                static var strongIndicatorsTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_strong_indicators_title", default: "Strong Wellbeing Signs") }
 
                 static func patternShiftSummary(concerningCount: Int, total: Int, concerns: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_pattern_shift_summary", default: "%d of %d behavioral indicators are trending in directions associated with mood decline: %@."), concerningCount, total, concerns)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_pattern_shift_summary", default: "%d of %d daily habits are moving in ways often tied to a dip in mood: %@."), concerningCount, total, concerns)
                 }
                 static func patternShiftRecommendation(score: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_pattern_shift_recommendation", default: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with high accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: %@/100."), score)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_pattern_shift_recommendation", default: "Research shows that changes in sleep steadiness, activity, daylight, and your rest-and-recover state, all at once, can predict mood shifts well. This is just an observation, not a diagnosis, but it is worth noting. Score: %@/100."), score)
                 }
 
                 static func mildSummary(concerns: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_mild_summary", default: "Two behavioral indicators are shifting: %@. Not yet a strong signal, but worth monitoring."), concerns)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_trend_mild_summary", default: "Two daily habits are shifting: %@. Not a strong signal yet, but worth watching."), concerns)
                 }
-                static var mildRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_mild_recommendation", default: "Research shows that isolated changes in one or two behavioral markers are common and often transient. If these patterns persist for another week alongside further deterioration, they become more meaningful.") }
+                static var mildRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_mild_recommendation", default: "Research shows changes in just one or two habits are common and often pass. If they keep up for another week and things get worse, they matter more.") }
 
                 static func strongSummary(total: Int, includeMindfulness: Bool) -> String {
                     let mindfulText = includeMindfulness
                         ? RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_strong_mindful_fragment", default: ", mindfulness")
                         : ""
-                    return String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_strong_summary", default: "Your behavioral pattern across %d indicators. sleep regularity, activity, daylight exposure%@. is consistent with positive mental wellbeing."), total, mindfulText)
+                    return String(format: RemoteConfigManager.shared.copyString("copy_analysis_wellbeing_strong_summary", default: "Your habits across %d signs, sleep steadiness, activity, daylight%@, line up with good mental wellbeing."), total, mindfulText)
                 }
-                static var strongRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_strong_recommendation", default: "Research on digital phenotyping shows that consistent sleep, regular activity, adequate daylight exposure, and strong autonomic tone are collectively protective for mental health. Your current patterns reflect all of these.") }
+                static var strongRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_strong_recommendation", default: "Research shows that steady sleep, regular activity, enough daylight, and a strong rest-and-recover state together protect your mental health. Your current habits show all of these.") }
             }
 
             // MARK: Circadian Disruption
 
             enum CircadianDisruption {
-                static var amplitudeComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_amplitude_component", default: "activity amplitude") }
-                static var regularityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_regularity_component", default: "rhythm regularity") }
-                static var restActivityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_rest_activity_component", default: "rest-activity contrast") }
+                static var amplitudeComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_amplitude_component", default: "how active vs still you are") }
+                static var regularityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_regularity_component", default: "how steady your daily rhythm is") }
+                static var restActivityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_rest_activity_component", default: "gap between active and rest times") }
                 static var sleepTimingComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_sleep_timing_component", default: "sleep timing") }
 
-                static var disruptedTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_disrupted_title", default: "Circadian Rhythm Disrupted") }
-                static var needsImprovementTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_title", default: "Circadian Rhythm: Room for Improvement") }
-                static var strongRhythmTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_title", default: "Strong Circadian Rhythm") }
+                static var disruptedTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_disrupted_title", default: "Body Clock Out of Sync") }
+                static var needsImprovementTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_title", default: "Body Clock: Room to Improve") }
+                static var strongRhythmTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_title", default: "Strong Body Clock") }
 
                 static func disruptedSummary(score: String, weakest: String, weakestScore: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_disrupted_summary", default: "Your circadian health score is %@/100. indicating significant disruption in your daily biological rhythm. Weakest area: %@ (%@/100)."), score, weakest, weakestScore)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_disrupted_summary", default: "Your body clock health score is %@/100, which points to a big disruption in your daily rhythm. Weakest area: %@ (%@/100)."), score, weakest, weakestScore)
                 }
-                static var disruptedRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_disrupted_recommendation", default: "Research shows circadian disruption is linked to reduced metabolic health, heart wellness, mood, and long-term wellness. Your activity patterns lack the strong daily rhythm (high daytime activity, low nighttime activity) associated with healthy circadian function. Circadian rhythm amplitude measured from wearables strongly correlates with overall fitness age.") }
+                static var disruptedRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_disrupted_recommendation", default: "Research shows a disrupted body clock is linked to worse body health, heart health, mood, and long-term health. Your day lacks the strong rhythm (active by day, quiet at night) of a healthy body clock. How strong this day-night rhythm is on wearables lines up closely with your fitness age.") }
 
                 static func needsImprovementSummary(score: String, weakest: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_summary", default: "Your circadian health score is %@/100. Your daily rhythm is present but could be stronger. Focus area: %@."), score, weakest)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_summary", default: "Your body clock health score is %@/100. Your daily rhythm is there but could be stronger. Focus area: %@."), score, weakest)
                 }
                 static func needsImprovementRecommendation(score: String, weakest: String, weakestScore: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_recommendation", default: "A circadian score of %@ suggests your body's 24-hour rhythm is moderately aligned. Strengthening your %@ (currently %@/100) would have the most impact. Regular light exposure in the morning and consistent sleep timing are the most effective interventions."), score, weakest, weakestScore)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_needs_improvement_recommendation", default: "A body clock score of %@ means your 24-hour rhythm is partly in sync. Strengthening your %@ (now %@/100) would help the most. Morning light every day and steady sleep times work best."), score, weakest, weakestScore)
                 }
 
                 static func strongRhythmSummary(score: String, strongest: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_summary", default: "Your circadian health score is %@/100. Your daily biological rhythm shows strong amplitude, good regularity, and clear rest-activity contrast. Strongest area: %@."), score, strongest)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_summary", default: "Your body clock health score is %@/100. Your daily rhythm is strong and steady, with a clear gap between active and rest times. Strongest area: %@."), score, strongest)
                 }
                 static func strongRhythmRecommendation(score: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_recommendation", default: "A circadian score of %@ reflects a well-entrained biological clock. Research shows strong circadian rhythmicity is independently supportive of metabolic health, cognitive performance, and long-term wellness. correlating with a younger fitness age."), score)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_strong_rhythm_recommendation", default: "A body clock score of %@ shows a well-tuned inner clock. Research shows a strong body clock on its own supports body health, clear thinking, and long-term health, and goes with a younger fitness age."), score)
                 }
             }
 
@@ -1370,28 +1370,28 @@ extension Copy {
 
             enum SleepCoherence {
                 static var outOfSyncTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_out_of_sync_title", default: "Sleep Systems Out of Sync") }
-                static var strongCoherenceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_title", default: "Strong Sleep Coherence") }
-                static var decliningCoherenceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_coherence_title", default: "Sleep Coherence Declining") }
+                static var strongCoherenceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_title", default: "Your Sleep Systems Are In Sync") }
+                static var decliningCoherenceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_coherence_title", default: "Sleep Systems Falling Out of Sync") }
 
                 static func outOfSyncSummary(incoherent: Int, total: Int, score: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_out_of_sync_summary", default: "Your body's systems aren't fully aligning during sleep. On %d of %d recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns. coherence score: %@/100."), incoherent, total, score)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_out_of_sync_summary", default: "Your body's systems aren't fully lining up during sleep. On %d of %d recent nights, your heart rate and heart recovery didn't follow the usual sleep-stage patterns. Sync score: %@/100."), incoherent, total, score)
                 }
                 static func outOfSyncRecommendation(score: String, severityLabel: String, total: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_out_of_sync_recommendation", default: "Research shows that physiological incoherence during sleep. when your heart stays 'awake' while your brain sleeps. is associated with reduced overall wellness. Your coherence score of %@ suggests %@ desynchronization across %d measured nights."), score, severityLabel, total)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_out_of_sync_recommendation", default: "Research shows that when your body is out of sync during sleep, meaning your heart stays 'awake' while your brain sleeps, it is linked to worse overall health. Your sync score of %@ points to %@ mismatch across %d nights."), score, severityLabel, total)
                 }
 
                 static func strongCoherenceSummary(score: String, total: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_summary", default: "Your body's systems sync well during sleep. heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: %@/100 across %d nights."), score, total)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_summary", default: "Your body's systems sync well during sleep. Your heart rate drops as it should, your heart recovery rises, and your sleep stages look healthy. Sync score: %@/100 across %d nights."), score, total)
                 }
                 static func strongCoherenceRecommendation(score: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_recommendation", default: "A coherence score of %@ means your heart and nervous system are well-aligned during sleep. Research links high sleep coherence to better overall wellness across many dimensions of health."), score)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_strong_coherence_recommendation", default: "A sync score of %@ means your heart and nervous system line up well during sleep. Research links good sleep sync to better health in many areas."), score)
                 }
 
                 static func decliningSummary(prior: String, recent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_summary", default: "Your sleep coherence dropped from %@ to %@ over the past two weeks. Your heart and nervous system are less synchronized during sleep than before."), prior, recent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_summary", default: "Your sleep sync dropped from %@ to %@ over the past two weeks. Your heart and nervous system are less in step during sleep than before."), prior, recent)
                 }
                 static func decliningRecommendation(drop: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_recommendation", default: "A %@-point drop in sleep coherence over 2 weeks may reflect increased stress, an irregular schedule, or your body working harder to recover. This pattern often appears before you start feeling off."), drop)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_coherence_declining_recommendation", default: "A %@-point drop in sleep sync over 2 weeks can come from more stress, an off schedule, or your body working harder to recover. This often shows up before you start feeling off."), drop)
                 }
 
                 static var severitySignificant: String { RemoteConfigManager.shared.copyString("copy_analysis_severity_significant", default: "significant") }
@@ -1402,38 +1402,38 @@ extension Copy {
 
             enum TemperatureCompound {
                 static func bodyTempElevatedTitle(nights: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_body_temp_elevated_title", default: "Body Temperature Elevated %d Nights"), nights)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_body_temp_elevated_title", default: "Body Warmer Than Usual for %d Nights"), nights)
                 }
-                static var nighttimeAboveBaselineTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_nighttime_above_baseline_title", default: "Nighttime Temperature Above Baseline") }
-                static var cyclePatternTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_pattern_title", default: "Temperature Cycle Pattern Detected") }
-                static var highVariabilityTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_high_variability_title", default: "High Temperature Variability") }
+                static var nighttimeAboveBaselineTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_nighttime_above_baseline_title", default: "Nighttime Temperature Above Usual") }
+                static var cyclePatternTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_cycle_pattern_title", default: "Temperature Follows a Cycle") }
+                static var highVariabilityTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_high_variability_title", default: "Temperature Jumps Around a Lot") }
 
                 static func compoundSummary(deviation: String, nights: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_compound_summary", default: "Your sleeping wrist temperature is %@°C above your 30-day baseline for %d consecutive nights. Combined with suppressed HRV, this compound pattern is associated with early immune response."), deviation, nights)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_compound_summary", default: "Your wrist runs %@°C warmer than your 30-day usual while you sleep, %d nights in a row. Together with low heart recovery, this can be an early sign your body is fighting something."), deviation, nights)
                 }
                 static func compoundRecommendation(deviation: String, baseline: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_compound_recommendation", default: "Sustained nighttime temperature elevation (%@°C vs baseline %@°C) alongside low HRV reflects the autonomic and thermoregulatory signatures of immune activation. This compound signal typically precedes symptom onset by 1-3 days."), deviation, baseline)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_compound_recommendation", default: "A steady rise in nighttime temperature (%@°C vs your usual %@°C) along with low heart recovery is the kind of body signal seen when your immune system kicks in. Together they often show up 1 to 3 days before symptoms."), deviation, baseline)
                 }
 
                 static func tempOnlySummary(deviation: String, nights: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_temp_only_summary", default: "Your sleeping wrist temperature has been %@°C above your personal baseline for %d nights. Sustained elevation can reflect metabolic shifts, stress, or early subclinical changes."), deviation, nights)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_temp_only_summary", default: "Your wrist has run %@°C warmer than usual while you sleep for %d nights. A steady rise can come from body changes, stress, or an early shift before you feel anything."), deviation, nights)
                 }
                 static func tempOnlyRecommendation(recent: String, baseline: String, sd: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_temp_only_recommendation", default: "Your nighttime temperature: %@°C vs 30-day baseline of %@°C (\u{00B1}%@). Research shows wrist temperature deviations >0.3°C sustained over multiple nights may indicate metabolic changes, hormonal shifts, or early immune responses."), recent, baseline, sd)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_temp_only_recommendation", default: "Your nighttime temperature: %@°C vs your 30-day usual of %@°C (\u{00B1}%@). Research shows a wrist change over 0.3°C that lasts several nights can point to body changes, hormone shifts, or an early immune response."), recent, baseline, sd)
                 }
 
                 static func cyclePatternSummary(amplitude: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_cycle_pattern_summary", default: "Your wrist temperature shows a recurring cyclical pattern with %@°C amplitude. consistent with hormonal cycle influence. Research shows wrist temperature tracks ovulation with 82-93%% accuracy."), amplitude)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_cycle_pattern_summary", default: "Your wrist temperature rises and falls in a repeating cycle of %@°C, which fits your hormone cycle. Research shows wrist temperature tracks ovulation 82-93%% of the time."), amplitude)
                 }
                 static func cyclePatternRecommendation(amplitude: String, baseline: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_cycle_pattern_recommendation", default: "The cyclical temperature variation of %@°C around your baseline of %@°C reflects the biphasic pattern driven by progesterone. Post-ovulation temperatures typically rise 0.2-0.5°C above the follicular phase baseline."), amplitude, baseline)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_cycle_pattern_recommendation", default: "The %@°C rise and fall around your usual of %@°C follows the two-part pattern set by your hormones. After ovulation, temperature usually rises 0.2 to 0.5°C above the level earlier in your cycle."), amplitude, baseline)
                 }
 
                 static func highVariabilitySummary(sd: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_summary", default: "Your nighttime wrist temperature varies significantly night to night (\u{00B1}%@°C). High thermoregulatory variability is associated with disrupted circadian rhythm and metabolic health."), sd)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_summary", default: "Your nighttime wrist temperature jumps around a lot from night to night (\u{00B1}%@°C). Big swings like this are linked to an off body clock and body health."), sd)
                 }
                 static func highVariabilityRecommendation(cvPercent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_recommendation", default: "Temperature coefficient of variation: %@%%. Research links elevated nighttime temperature variability to circadian disruption, poor sleep quality, and reduced metabolic wellness. Stable temperatures reflect stronger circadian entrainment."), cvPercent)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_recommendation", default: "How much your temperature swings: %@%%. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock."), cvPercent)
                 }
             }
 
@@ -1444,39 +1444,39 @@ extension Copy {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_title", default: "Cardio Fitness Age: ~%@"), age)
                 }
                 static func vo2ImprovingTitle(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_title", default: "VO2max Improving: +%@ Over %d Months"), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_title", default: "VO2 Max Improving: +%@ Over %d Months"), change, months)
                 }
                 static func vo2DecliningTitle(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_title", default: "VO2max Declining: %@ Over %d Months"), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_title", default: "VO2 Max Declining: %@ Over %d Months"), change, months)
                 }
-                static var belowThresholdTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_below_threshold_title", default: "VO2max Below Typical Threshold") }
+                static var belowThresholdTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_below_threshold_title", default: "VO2 Max Below Healthy Level") }
 
                 static func cardioFitnessAgeSummary(vo2: String, age: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_summary", default: "Your VO2max of %@ mL/kg/min is average for someone around age %@. VO2max is one of the most important indicators of long-term fitness and overall wellness."), vo2, age)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_summary", default: "Your VO2 Max of %@ mL/kg/min is average for someone around age %@. VO2 Max is one of the most important signs of long-term fitness and overall health."), vo2, age)
                 }
                 static func cardioFitnessAgeRecommendation(vo2: String, percentile: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_recommendation", default: "At %@ mL/kg/min, your cardiorespiratory fitness places you approximately at the %@th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with meaningful health benefits."), vo2, percentile)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_recommendation", default: "At %@ mL/kg/min, your heart and lung fitness is higher than about %@ out of 100 middle-aged adults. Every small step up (about 3.5 mL/kg/min) brings real health benefits."), vo2, percentile)
                 }
 
                 static func vo2ImprovingSummary(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_summary", default: "Your cardiorespiratory fitness has improved by %@ mL/kg/min over %d months. This is a meaningful fitness gain based on population wellness studies."), change, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_summary", default: "Your heart and lung fitness has improved by %@ mL/kg/min over %d months. That is a real gain based on large health studies."), change, months)
                 }
                 static func vo2ImprovingRecommendation(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_recommendation", default: "A %@ mL/kg/min VO2max improvement represents real progress. This shifts your fitness age younger and is associated with better long-term wellness outcomes."), change)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_recommendation", default: "A %@ mL/kg/min gain in VO2 Max is real progress. It makes your fitness age younger and goes with better long-term health."), change)
                 }
 
                 static func vo2DecliningSummary(absChange: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_summary", default: "Your cardiorespiratory fitness has dropped by %@ mL/kg/min over %d months. Since VO2max is a key fitness indicator, this trend is worth reversing."), absChange, months)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_summary", default: "Your heart and lung fitness has dropped by %@ mL/kg/min over %d months. Since VO2 Max is a key fitness sign, this is worth turning around."), absChange, months)
                 }
                 static func vo2DecliningRecommendation(absChange: String, perMonth: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_recommendation", default: "A %@ mL/kg/min decline shifts your fitness age older. The decline rate of %@ mL/kg/min per month is faster than typical aging (~1 to 2 mL/kg/min per decade). Increasing aerobic exercise frequency or intensity can help reverse this."), absChange, perMonth)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_recommendation", default: "A %@ mL/kg/min drop makes your fitness age older. Losing %@ mL/kg/min per month is faster than normal aging (about 1 to 2 mL/kg/min every 10 years). Doing cardio more often or a bit harder can help turn it around."), absChange, perMonth)
                 }
 
                 static func belowThresholdSummary(vo2: String, threshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_summary", default: "Your VO2max of %@ mL/kg/min is below %d. a threshold associated with reduced fitness capacity across all age groups."), vo2, threshold)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_summary", default: "Your VO2 Max of %@ mL/kg/min is below %d, a level linked to lower fitness at any age."), vo2, threshold)
                 }
                 static func belowThresholdRecommendation(threshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_recommendation", default: "A VO2max below %d mL/kg/min places you in the lowest fitness category regardless of age. Population studies consistently show this threshold as an important point for overall wellness. Even modest improvements from this baseline can make a meaningful difference."), threshold)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_recommendation", default: "A VO2 Max below %d mL/kg/min puts you in the lowest fitness group at any age. Large studies keep showing this level matters for overall health. Even small gains from here can make a real difference."), threshold)
                 }
             }
 
@@ -1484,22 +1484,22 @@ extension Copy {
 
             enum RHRTrajectory {
                 static var risingTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_title", default: "Resting Heart Rate Rising") }
-                static var improvingTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_improving_title", default: "Heart Rate Trajectory Improving") }
+                static var improvingTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_improving_title", default: "Resting Heart Rate Improving") }
 
                 static func risingSummary(change: String, windowLabel: String, startRHR: String, currentRHR: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_summary", default: "Your resting heart rate has increased by %@ bpm over the past %@. from %@ to %@ bpm. without a decline in your activity levels."), change, windowLabel, startRHR, currentRHR)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_summary", default: "Your resting heart rate has risen by %@ bpm over the past %@, from %@ to %@ bpm, even though you have not slowed down your activity."), change, windowLabel, startRHR, currentRHR)
                 }
                 static func risingRecommendation(change: String, windowLabel: String, includeMedicalNote: Bool) -> String {
                     let suffix = includeMedicalNote
                         ? RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_doctor_suffix", default: " Consider discussing this trend with your doctor.")
                         : ""
-                    return String(format: RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_recommendation", default: "Population studies show a rising resting heart rate is an important long-term fitness indicator. A %@ bpm rise over %@ while maintaining activity is worth paying attention to.%@"), change, windowLabel, suffix)
+                    return String(format: RemoteConfigManager.shared.copyString("copy_analysis_rhr_trajectory_rising_recommendation", default: "Large studies show a rising resting heart rate is an important long-term fitness sign. A %@ bpm rise over %@ while staying just as active is worth paying attention to.%@"), change, windowLabel, suffix)
                 }
 
                 static func improvingSummary(change: String, windowLabel: String, startRHR: String, currentRHR: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_improving_summary", default: "Your resting heart rate has dropped %@ bpm over the past %@. from %@ to %@ bpm. This is a positive trend for your heart fitness."), change, windowLabel, startRHR, currentRHR)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_improving_summary", default: "Your resting heart rate has dropped %@ bpm over the past %@, from %@ to %@ bpm. That is a good sign for your heart fitness."), change, windowLabel, startRHR, currentRHR)
                 }
-                static var improvingRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_improving_recommendation", default: "A declining RHR trajectory reflects improved cardiovascular efficiency. A lower resting heart rate over time is associated with better overall fitness and wellness in population studies.") }
+                static var improvingRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_improving_recommendation", default: "A falling resting heart rate means your heart is working more efficiently. A lower resting heart rate over time goes with better overall fitness and health in large studies.") }
             }
         }
 
@@ -1536,44 +1536,44 @@ extension Copy {
 
         enum Circadian {
             static func alignmentTitle(level: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_title", default: "Circadian alignment is %@"), level)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_title", default: "Your body clock is %@"), level)
             }
             static var levelExcellent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_level_excellent", default: "excellent") }
             static var levelGood: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_level_good", default: "good") }
             static var levelStrong: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_level_strong", default: "strong") }
             static var levelModerate: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_level_moderate", default: "moderate") }
             static var levelDisrupted: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_level_disrupted", default: "disrupted") }
-            static var alignmentRecDisrupted: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_rec_disrupted", default: "Strengthen your circadian rhythm by keeping consistent sleep/wake times and getting daylight exposure in the morning.") }
-            static var alignmentRecAligned: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_rec_aligned", default: "Your circadian rhythm is well-aligned. Keep maintaining consistent daily patterns.") }
+            static var alignmentRecDisrupted: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_rec_disrupted", default: "Strengthen your body clock by keeping steady sleep and wake times and getting morning daylight.") }
+            static var alignmentRecAligned: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_alignment_rec_aligned", default: "Your body clock is well in sync. Keep up your steady daily routine.") }
             static func socialJetLagTitle(hours: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_title", default: "Social jet lag detected: %@h shift"), hours)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_title", default: "Weekend sleep shift: %@h"), hours)
             }
             static func socialJetLagSummary(hours: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_summary", default: "Your weekend sleep midpoint shifts %@ hours from weekdays."), hours)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_summary", default: "Your sleep time shifts %@ hours on weekends compared to weekdays."), hours)
             }
-            static var socialJetLagRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_rec", default: "Try keeping weekend wake times within 1 hour of weekdays to reduce circadian disruption.") }
+            static var socialJetLagRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_social_jet_lag_rec", default: "Try keeping weekend wake times within 1 hour of weekdays to keep your body clock steady.") }
             static var irregularPatternTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_irregular_pattern_title", default: "Irregular sleep pattern detected") }
             static func irregularPatternSummary(sri: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_irregular_pattern_summary", default: "Your sleep regularity index is %d/100."), sri)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_irregular_pattern_summary", default: "Your sleep steadiness score is %d/100."), sri)
             }
-            static var irregularPatternRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_irregular_pattern_rec", default: "Aim for consistent bed and wake times. Irregular sleep timing is linked to metabolic disruption and mood changes.") }
-            static var fragmentedRhythmTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_title", default: "Activity rhythm is fragmented") }
+            static var irregularPatternRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_irregular_pattern_rec", default: "Aim for steady bed and wake times. Irregular sleep is linked to body and mood problems.") }
+            static var fragmentedRhythmTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_title", default: "Your activity is scattered through the day") }
             static func fragmentedRhythmSummary(iv: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_summary", default: "Your daily activity pattern shows high fragmentation (IV: %@)."), iv)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_summary", default: "Your daily activity is spread out in scattered bursts (score: %@)."), iv)
             }
-            static var fragmentedRhythmRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_rec", default: "A more consolidated active period during the day supports better circadian health.") }
+            static var fragmentedRhythmRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_fragmented_rhythm_rec", default: "Being active in steadier stretches during the day supports a healthier body clock.") }
             static var strongRhythmTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_strong_rhythm_title", default: "Your daily rhythm is strong and consistent") }
             static func strongRhythmSummary(stabilityPct: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_strong_rhythm_summary", default: "High inter-daily stability (%d%%) with robust activity amplitude."), stabilityPct)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_circadian_strong_rhythm_summary", default: "Your day-to-day routine is very steady (%d%%) with strong active periods."), stabilityPct)
             }
-            static var strongRhythmRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_strong_rhythm_rec", default: "This pattern is associated with better metabolic health and mood regulation. Keep it up.") }
+            static var strongRhythmRec: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_strong_rhythm_rec", default: "This pattern goes with better body health and steadier mood. Keep it up.") }
         }
 
         // MARK: - Sleep Performance Analyzer (lifted from SleepPerformanceAnalyzer.swift)
 
         enum SleepPerformance {
             static func goodSleepBoostSummary(metricName: String, percent: String, avgGood: String, avgPoor: String, unit: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_perf_good_sleep_boost_summary", default: "Good sleep (7+ hrs) boosts your next-day %@ by %@%%. averaging %@ %@ vs %@ on shorter nights."), metricName, percent, avgGood, unit, avgPoor)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_perf_good_sleep_boost_summary", default: "Good sleep (7+ hrs) lifts your next-day %@ by %@%%, averaging %@ %@ vs %@ on shorter nights."), metricName, percent, avgGood, unit, avgPoor)
             }
             static func goodSleepBoostRec(percent: String, metricName: String, avgGood: String, unit: String, avgPoor: String, totalNights: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_sleep_perf_good_sleep_boost_rec", default: "Your data shows a %@%% difference in next-day %@ between 7+ hr sleep nights (%@ %@) and <6 hr nights (%@ %@) across %d measured nights."), percent, metricName, avgGood, unit, avgPoor, unit, totalNights)
@@ -1650,10 +1650,10 @@ extension Copy {
 
         enum ClinicalSentences {
             static func systolicTrendSummary(slopePerMonth: String, recentDays: Int, currentStage: String, nextStageInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_systolic_trend_summary", default: "Your systolic trend shows a rise of %@ mmHg/month over the past %d days. Currently in the %@ range. This is still modifiable with lifestyle changes. %@"), slopePerMonth, recentDays, currentStage, nextStageInfo)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_systolic_trend_summary", default: "Your top blood pressure number has risen %@ mmHg per month over the past %d days. Right now it is in the %@ range. You can still turn this around with everyday habits. %@"), slopePerMonth, recentDays, currentStage, nextStageInfo)
             }
             static func glucoseTrendSummary(slopePerMonth: String, latest: String, currentStage: String, nextInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_glucose_trend_summary", default: "Your fasting glucose has been rising %@ mg/dL per month. Current: %@ mg/dL (%@). %@"), slopePerMonth, latest, currentStage, nextInfo)
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_glucose_trend_summary", default: "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@"), slopePerMonth, latest, currentStage, nextInfo)
             }
         }
     }

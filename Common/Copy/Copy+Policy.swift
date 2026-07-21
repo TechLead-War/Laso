@@ -6,28 +6,28 @@ extension Copy {
         // MARK: - Prescriptive Headlines (Excellent)
 
         static let excellentHeadlines = [
-            "Recovery metrics are well above baseline",
-            "All key metrics recovered. Above baseline across the board.",
-            "Full recovery. Metrics are in the green.",
-            "Recovery metrics at their strongest this week"
+            "Recovery numbers are well above your usual",
+            "All key numbers bounced back. Above your usual across the board.",
+            "Fully recovered. Numbers are in the green.",
+            "Recovery numbers at their strongest this week"
         ]
 
         // MARK: - Prescriptive Headlines (Good)
 
         static let goodHeadlines = [
-            "Recovery metrics are above baseline",
-            "Metrics bounced back. Sitting above baseline.",
-            "Good recovery signal. Most metrics above baseline.",
-            "Recovery metrics trending positive"
+            "Recovery numbers are above your usual",
+            "Numbers bounced back. Sitting above your usual.",
+            "Good recovery. Most numbers above your usual.",
+            "Recovery numbers are heading up"
         ]
 
         // MARK: - Prescriptive Headlines (Moderate)
 
         static let moderateHeadlines = [
-            "Recovery metrics are near baseline",
-            "Metrics are mixed. Some above, some below baseline.",
-            "Moderate recovery. Metrics hovering around baseline.",
-            "Recovery metrics are partially restored"
+            "Recovery numbers are near your usual",
+            "Numbers are mixed. Some above, some below your usual.",
+            "So-so recovery. Numbers are hovering around your usual.",
+            "Recovery numbers are partly back"
         ]
 
         // MARK: - Prescriptive Headlines (Poor)
@@ -50,9 +50,9 @@ extension Copy {
 
         // MARK: - Strain Budget
 
-        static var highIntensityOK: String { RemoteConfigManager.shared.copyString("copy_policy_policy_high_intensity_ok", default: "High intensity OK") }
-        static var moderateEffort: String { RemoteConfigManager.shared.copyString("copy_policy_policy_moderate_effort", default: "Moderate effort recommended") }
-        static var lightActivityOnly: String { RemoteConfigManager.shared.copyString("copy_policy_policy_light_activity_only", default: "Light activity only") }
+        static var highIntensityOK: String { RemoteConfigManager.shared.copyString("copy_policy_policy_high_intensity_ok", default: "A hard workout is fine") }
+        static var moderateEffort: String { RemoteConfigManager.shared.copyString("copy_policy_policy_moderate_effort", default: "Aim for medium effort") }
+        static var lightActivityOnly: String { RemoteConfigManager.shared.copyString("copy_policy_policy_light_activity_only", default: "Keep it light today") }
 
         // MARK: - Source Descriptions
 
@@ -94,43 +94,43 @@ extension Copy {
         static var rateSlightly: String { RemoteConfigManager.shared.copyString("copy_policy_policy_rate_slightly", default: "slightly") }
 
         static func predictiveWithFactor(prob: Int, factorMetric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_policy_predictive_with_factor", default: "Your risk score for tomorrow is elevated (%d%% model confidence). The #1 driver is your %@. this action directly targets it."), prob, factorMetric)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_policy_predictive_with_factor", default: "Your risk for tomorrow is higher than usual (%d%% sure). The biggest cause is your %@, and this step fixes it directly."), prob, factorMetric)
         }
         static func predictiveDefault(prob: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_policy_predictive_default", default: "Your risk score for tomorrow is elevated (%d%% confidence). This targets the top risk factor."), prob)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_policy_predictive_default", default: "Your risk for tomorrow is higher than usual (%d%% sure). This tackles the biggest cause."), prob)
         }
         static func causalWithLag(effectLabel: String, metric: String, lag: Int) -> String {
             let unit = lag == 1
                 ? RemoteConfigManager.shared.copyString("copy_policy_causal_lag_day_singular", default: "day")
                 : RemoteConfigManager.shared.copyString("copy_policy_causal_lag_day_plural", default: "days")
-            return String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_with_lag", default: "Your data shows a %@ causal link: changes in %@ predict downstream health changes %d %@ later. This isn't just correlation. it's a directional cause."), effectLabel, metric, lag, unit)
+            return String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_with_lag", default: "Your data shows a %@ link: changes in %@ lead to health changes %d %@ later. This isn't just a coincidence, it's a real cause."), effectLabel, metric, lag, unit)
         }
         static func causalDefault(metric: String, effectLabel: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_default", default: "Causal analysis identified %@ as a %@ upstream driver of your overall health."), metric, effectLabel)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_default", default: "Your data points to %@ as a %@ cause of your overall health."), metric, effectLabel)
         }
         static func stateTransition(days: Int, metricName: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_state_transition", default: "Your body has been in its current state for %d days. %@ is the key metric differentiating this state from a healthier one. improving it accelerates the transition."), days, metricName)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_state_transition", default: "Your body has been in this state for %d days. %@ is the main thing keeping you from a healthier one, so improving it speeds up the change."), days, metricName)
         }
         static func anomalyWithDeviation(metric: String, devPct: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_anomaly_with_deviation", default: "Your %@ is %d%% outside your normal range. Unusual readings that persist can affect sleep, recovery, and next-day performance."), metric, devPct)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_anomaly_with_deviation", default: "Your %@ is %d%% outside your normal range. Odd readings that stick around can hurt sleep, recovery, and how you feel the next day."), metric, devPct)
         }
         static func anomalyDefault(metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_anomaly_default", default: "An unusual reading in %@ was detected. Addressing it early prevents cascading effects."), metric)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_anomaly_default", default: "We spotted an odd reading in %@. Handling it early stops it from spreading."), metric)
         }
         static func trendDeclining(metric: String, rate: String, wowPct: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_trend_declining", default: "Your %@ has been %@ declining (%d%% per week). Early intervention requires far less effort than reversing a deep decline."), metric, rate, wowPct)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_trend_declining", default: "Your %@ has been %@ dropping (%d%% a week). Acting early takes far less effort than turning around a big drop."), metric, rate, wowPct)
         }
-        static var trendDecliningDefault: String { RemoteConfigManager.shared.copyString("copy_policy_trend_declining_default", default: "Stopping a negative trend early requires less effort than reversing a well-established decline.") }
+        static var trendDecliningDefault: String { RemoteConfigManager.shared.copyString("copy_policy_trend_declining_default", default: "Stopping a slide early takes less effort than turning around a long, deep drop.") }
         static func circadianTiming(metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_circadian_timing", default: "Your biological rhythms make this window 2-3x more effective for %@ improvement. Working with your circadian clock, not against it."), metric)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_circadian_timing", default: "Your body clock makes right now 2-3x better for improving %@. This works with your body clock, not against it."), metric)
         }
         static func baselineRecovery(gap: String, unit: String, baseline: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_baseline_recovery", default: "You're %@ %@ below your personal baseline. Your body performs best near %@ %@. closing this gap yields the biggest payoff right now."), gap, unit, baseline, unit)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_baseline_recovery", default: "You're %@ %@ below your usual. Your body feels best near %@ %@, so closing this gap gives you the biggest win right now."), gap, unit, baseline, unit)
         }
-        static var baselineRecoveryDefault: String { RemoteConfigManager.shared.copyString("copy_policy_baseline_recovery_default", default: "Being below your personal baseline means your body isn't operating at its best. Returning to baseline is the highest-ROI action right now.") }
+        static var baselineRecoveryDefault: String { RemoteConfigManager.shared.copyString("copy_policy_baseline_recovery_default", default: "Being below your usual means your body isn't at its best. Getting back to your usual is the most worthwhile thing to do right now.") }
         static func counterfactualWithDelta(delta: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_counterfactual_with_delta", default: "Simulated scenario: making this change could shift your overall score by %d points tomorrow. the largest single-action impact available."), delta)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_counterfactual_with_delta", default: "What-if check: making this change could move your overall score by %d points tomorrow. That's the biggest boost one step can give."), delta)
         }
-        static var counterfactualDefault: String { RemoteConfigManager.shared.copyString("copy_policy_counterfactual_default", default: "Scenario analysis shows this is the single change most likely to improve your overall score tomorrow.") }
+        static var counterfactualDefault: String { RemoteConfigManager.shared.copyString("copy_policy_counterfactual_default", default: "A what-if check shows this is the one change most likely to lift your overall score tomorrow.") }
     }
 }

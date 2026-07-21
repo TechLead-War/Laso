@@ -38,7 +38,7 @@ extension Copy {
         // MARK: - Pace
 
         static var normalOrSlower: String { RemoteConfigManager.shared.copyString("copy_vitality_normal_or_slower", default: "Normal or slower") }
-        static var agingTooQuickly: String { RemoteConfigManager.shared.copyString("copy_vitality_aging_too_quickly", default: "Accelerating") }
+        static var agingTooQuickly: String { RemoteConfigManager.shared.copyString("copy_vitality_aging_too_quickly", default: "Speeding up") }
         static var agingVeryFast: String { RemoteConfigManager.shared.copyString("copy_vitality_aging_very_fast", default: "Could use some care") }
 
         // MARK: - Delta Labels
@@ -73,7 +73,7 @@ extension Copy {
 
         static var improveVO2Max: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_vo2_max", default: "Try running, cycling, or swimming 2 to 3 times a week to build your cardio fitness.") }
         static var improveRHR: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_rhr", default: "Regular exercise and less stress can bring your resting heart rate down over time.") }
-        static var improveHRV: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_hrv", default: "Better sleep, deep breathing, and regular exercise all help improve HRV.") }
+        static var improveHRV: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_hrv", default: "Better sleep, deep breathing, and regular exercise all help your heart recover better.") }
         static var improveSleep: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_sleep", default: "Aim for 7 to 9 hours of sleep on a regular schedule. Cut screens and caffeine before bed.") }
         static var improveWalkingSpeed: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_walking_speed", default: "Walking speed shows your overall fitness. Regular walks, strength work, and balance exercises can help.") }
         static var improveSteps: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_steps", default: "Move more during the day. Take walking meetings, use stairs, and add a daily walk.") }

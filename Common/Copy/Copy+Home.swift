@@ -57,7 +57,7 @@ extension Copy {
         static var whyHeartCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_calm", default: "Heart is calm") }
         static var whyHeartWorking: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_working", default: "Heart is working hard") }
         static var whyHeartGoodValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_good_value", default: "Good") }
-        static var whyHeartHighValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_high_value", default: "Elevated") }
+        static var whyHeartHighValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_high_value", default: "Higher") }
         static var whyEnergyLow: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low", default: "Energy is low") }
         static var whyEnergyGood: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good", default: "Energy is good") }
         static var whyEnergyLowValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low_value", default: "Below usual") }
@@ -67,7 +67,7 @@ extension Copy {
         // is marked done, reporting how the readiness score moved.
         static var dailyResultHeader: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_header", default: "YESTERDAY'S RESULT") }
         static func dailyResultUp(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_up", default: "Your recovery is +%d higher this morning."), delta) }
-        static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Consistency is what compounds.") }
+        static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Small steps add up.") }
         static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
         static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
 
@@ -247,9 +247,9 @@ extension Copy {
 
             // Categories
             static var howItsCalculated: String { RemoteConfigManager.shared.copyString("copy_home_how_its_calculated", default: "How it\u{2019}s calculated") }
-            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_how_its_calculated_body", default: "Your Health Score is a weighted average across four areas. Areas with more data and more change carry more weight. Each number is scored against your usual, and changes and trends move the score up or down.") }
+            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_how_its_calculated_body", default: "Your Health Score blends four areas. Areas with more data and more change count for more. Each number is compared to your usual, and shifts and trends move the score up or down.") }
             static var heartCardioName: String { RemoteConfigManager.shared.copyString("copy_home_heart_cardio_name", default: "Heart & Cardio") }
-            static var heartCardioDetail: String { RemoteConfigManager.shared.copyString("copy_home_heart_cardio_detail", default: "Resting heart rate, HRV, and cardio fitness") }
+            static var heartCardioDetail: String { RemoteConfigManager.shared.copyString("copy_home_heart_cardio_detail", default: "Resting heart rate, heart calm signal, and cardio fitness") }
             static var sleepName: String { RemoteConfigManager.shared.copyString("copy_home_sleep_name", default: "Sleep") }
             static var sleepDetail: String { RemoteConfigManager.shared.copyString("copy_home_sleep_detail", default: "Duration, consistency, and sleep stages") }
             static var activityName: String { RemoteConfigManager.shared.copyString("copy_home_activity_name", default: "Activity") }
@@ -321,17 +321,17 @@ extension Copy {
             }
 
             // Factor descriptions (positive)
-            static var hrvBounced: String { RemoteConfigManager.shared.copyString("copy_home_hrv_bounced", default: "HRV bounced back") }
-            static var hrvHigh: String { RemoteConfigManager.shared.copyString("copy_home_hrv_high", default: "HRV is above your usual") }
+            static var hrvBounced: String { RemoteConfigManager.shared.copyString("copy_home_hrv_bounced", default: "heart calm signal bounced back") }
+            static var hrvHigh: String { RemoteConfigManager.shared.copyString("copy_home_hrv_high", default: "heart calm signal is above your usual") }
             static var rhrLow: String { RemoteConfigManager.shared.copyString("copy_home_rhr_low", default: "resting heart rate is low") }
             static var rhrDropped: String { RemoteConfigManager.shared.copyString("copy_home_rhr_dropped", default: "resting heart rate dropped back down") }
             static var sleepSolid: String { RemoteConfigManager.shared.copyString("copy_home_sleep_solid", default: "solid night of sleep") }
-            static var sleepGreat: String { RemoteConfigManager.shared.copyString("copy_home_sleep_great", default: "sleep was long and restorative") }
-            static var sleepGood: String { RemoteConfigManager.shared.copyString("copy_home_sleep_good", default: "decent sleep duration") }
+            static var sleepGreat: String { RemoteConfigManager.shared.copyString("copy_home_sleep_great", default: "sleep was long and restful") }
+            static var sleepGood: String { RemoteConfigManager.shared.copyString("copy_home_sleep_good", default: "a decent amount of sleep") }
 
             // Factor descriptions (negative)
-            static var hrvLow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_low", default: "HRV has not recovered yet") }
-            static var hrvBelow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_below", default: "HRV is below your usual") }
+            static var hrvLow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_low", default: "heart calm signal has not come back yet") }
+            static var hrvBelow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_below", default: "heart calm signal is below your usual") }
             static var rhrElevated: String { RemoteConfigManager.shared.copyString("copy_home_rhr_elevated", default: "resting heart rate is higher than usual") }
             static var rhrHigh: String { RemoteConfigManager.shared.copyString("copy_home_rhr_high", default: "resting heart rate is still high") }
             static var sleepShort: String { RemoteConfigManager.shared.copyString("copy_home_sleep_short", default: "sleep was short") }
@@ -389,13 +389,13 @@ extension Copy {
 
             // Concierge-style home card
             static var caption: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data_caption", default: "CONCIERGE") }
-            static var conciergePrompts: [String] { RemoteConfigManager.shared.copyArray("copy_home_ask_your_data_concierge_prompts", default: ["Ask me how to spend today well.", "How is my HRV trending?", "What is affecting my sleep this week?", "Am I getting enough deep sleep?", "How does exercise shift my recovery?", "What changed in my body last week?", "How consistent is my sleep schedule?"]) }
+            static var conciergePrompts: [String] { RemoteConfigManager.shared.copyArray("copy_home_ask_your_data_concierge_prompts", default: ["Ask me how to spend today well.", "How is my heart calm signal trending?", "What is affecting my sleep this week?", "Am I getting enough deep sleep?", "How does exercise shift my recovery?", "What changed in my body last week?", "How consistent is my sleep schedule?"]) }
 
             static func confidence(_ percent: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_home_ask_your_data_confidence", default: "%d%% confidence"), percent)
             }
 
-            static var suggestedQuestions: [String] { RemoteConfigManager.shared.copyArray("copy_home_suggested_questions", default: ["How is my sleep this week?", "What affects my HRV the most?", "Am I getting enough deep sleep?", "How does exercise affect my recovery?", "What is my resting heart rate trend?", "How consistent is my sleep schedule?"]) }
+            static var suggestedQuestions: [String] { RemoteConfigManager.shared.copyArray("copy_home_suggested_questions", default: ["How is my sleep this week?", "What affects my heart calm signal the most?", "Am I getting enough deep sleep?", "How does exercise affect my recovery?", "What is my resting heart rate trend?", "How consistent is my sleep schedule?"]) }
         }
 
         // MARK: - Recovery Info
@@ -418,13 +418,13 @@ extension Copy {
 
             // How it's calculated
             static var howItsCalculated: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated", default: "How it\u{2019}s calculated") }
-            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated_body", default: "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it affects the score.") }
-            static var hrvName: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_name", default: "Heart Rate Variability") }
+            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated_body", default: "Recovery blends a few signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it moves the score.") }
+            static var hrvName: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_name", default: "Heart Calm Signal") }
             static var hrvWeight: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_weight", default: "40% weight") }
-            static var hrvDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_detail", default: "Higher HRV means better recovery and lower stress. Compared to your usual.") }
+            static var hrvDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_detail", default: "A higher heart calm signal means better recovery and lower stress. Compared to your usual.") }
             static var restingHRName: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_resting_hr_name", default: "Resting Heart Rate") }
             static var restingHRWeight: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_resting_hr_weight", default: "35% weight") }
-            static var restingHRDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_resting_hr_detail", default: "Lower resting HR means your heart is recovering well. Compared to your usual.") }
+            static var restingHRDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_resting_hr_detail", default: "A lower resting heart rate means your heart is recovering well. Compared to your usual.") }
             static var sleepDurationName: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_sleep_duration_name", default: "Sleep Duration") }
             static var sleepDurationWeight: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_sleep_duration_weight", default: "15% weight") }
             static var sleepDurationDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_sleep_duration_detail", default: "7.5 hours is best. Too little or too much lowers the score.") }
@@ -438,9 +438,9 @@ extension Copy {
             // Device requirement
             static func wearRequirement(deviceName: String?) -> String {
                 if let deviceName {
-                    return String(format: RemoteConfigManager.shared.copyString("copy_home_wear_requirement_named", default: "Wear your %@ overnight so it can measure HRV and resting heart rate while you sleep."), deviceName)
+                    return String(format: RemoteConfigManager.shared.copyString("copy_home_wear_requirement_named", default: "Wear your %@ overnight so it can measure your heart calm signal and resting heart rate while you sleep."), deviceName)
                 }
-                return RemoteConfigManager.shared.copyString("copy_home_wear_requirement_default", default: "Wear your Apple Watch overnight so it can measure HRV and resting heart rate while you sleep.")
+                return RemoteConfigManager.shared.copyString("copy_home_wear_requirement_default", default: "Wear your Apple Watch overnight so it can measure your heart calm signal and resting heart rate while you sleep.")
             }
 
             // Refresh timing
@@ -451,9 +451,9 @@ extension Copy {
         // MARK: - Recovery Trend (7-day HRV caption)
 
         enum RecoveryTrend {
-            static var improving: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_improving", default: "HRV trending up this week") }
-            static var stable: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_stable", default: "HRV steady this week") }
-            static var declining: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_declining", default: "HRV trending down this week") }
+            static var improving: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_improving", default: "heart calm signal trending up this week") }
+            static var stable: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_stable", default: "heart calm signal steady this week") }
+            static var declining: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_declining", default: "heart calm signal trending down this week") }
         }
 
         // MARK: - Cycle Phase Card
@@ -513,7 +513,7 @@ extension Copy {
 
             // Live data: high stress
             static var highStressTitle: String { RemoteConfigManager.shared.copyString("copy_home_smart_action_high_stress_title", default: "Your stress is higher than usual right now") }
-            static var highStressSubtitle: String { RemoteConfigManager.shared.copyString("copy_home_smart_action_high_stress_subtitle", default: "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset.") }
+            static var highStressSubtitle: String { RemoteConfigManager.shared.copyString("copy_home_smart_action_high_stress_subtitle", default: "Slow breathing (in for 4, hold 4, out 4, hold 4) for 5 min can bring it down. Your body is asking for a reset.") }
             static func highStressRationale(_ stress: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_high_stress_rationale", default: "Your live stress reading is %d%%, which is above your comfortable range."), stress)
             }
@@ -528,9 +528,9 @@ extension Copy {
             // Live data: low readiness
             static var lowReadinessTitle: String { RemoteConfigManager.shared.copyString("copy_home_low_readiness_title", default: "Recovery day. Your body needs it") }
             static func lowReadinessSubtitle(_ readiness: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_low_readiness_subtitle", default: "Readiness is %d%%. Stretching or yoga only"), readiness)
+                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_low_readiness_subtitle", default: "Your body is %d%% ready. Stretching or yoga only"), readiness)
             }
-            static var lowReadinessRationale: String { RemoteConfigManager.shared.copyString("copy_home_low_readiness_rationale", default: "A few signals (HRV, resting HR, sleep) suggest your body has not recovered from recent strain.") }
+            static var lowReadinessRationale: String { RemoteConfigManager.shared.copyString("copy_home_low_readiness_rationale", default: "A few signals (heart calm signal, resting heart rate, sleep) suggest your body has not fully recovered from recent strain.") }
 
             // Activity progress: goal reached
             static var exerciseGoalTitle: String { RemoteConfigManager.shared.copyString("copy_home_exercise_goal_title", default: "Exercise goal reached!") }
@@ -556,7 +556,7 @@ extension Copy {
             static func deepSleepSubtitle(_ minutes: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_deep_sleep_subtitle", default: "Only %d min of deep sleep. Try cutting caffeine after 2 PM"), minutes)
             }
-            static var deepSleepRationale: String { RemoteConfigManager.shared.copyString("copy_home_deep_sleep_rationale", default: "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than the 45-minute mark.") }
+            static var deepSleepRationale: String { RemoteConfigManager.shared.copyString("copy_home_deep_sleep_rationale", default: "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than 45 minutes.") }
 
             // Focus: bedtime
             static var earlyBedTitle: String { RemoteConfigManager.shared.copyString("copy_home_early_bed_title", default: "Get to bed 30 min earlier") }
@@ -575,18 +575,18 @@ extension Copy {
             }
 
             // Focus: resting HR up
-            static var restingHRUpTitle: String { RemoteConfigManager.shared.copyString("copy_home_resting_hr_up_title", default: "Your resting HR is trending up") }
+            static var restingHRUpTitle: String { RemoteConfigManager.shared.copyString("copy_home_resting_hr_up_title", default: "Your resting heart rate is trending up") }
             static var restingHRUpSubtitle: String { RemoteConfigManager.shared.copyString("copy_home_resting_hr_up_subtitle", default: "Try 10 min of meditation or deep breathing to bring it down") }
             static func restingHRUpRationale(currentRHR: Int, baselineRHR: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_resting_hr_up_rationale", default: "Your resting heart rate is %d bpm, above your usual of %d bpm. This could hint at incomplete recovery or higher stress."), currentRHR, baselineRHR)
+                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_resting_hr_up_rationale", default: "Your resting heart rate is %d beats per minute, above your usual of %d. This could mean your body has not fully recovered, or stress is higher."), currentRHR, baselineRHR)
             }
 
             // Focus: recovery
             static var focusRecoveryTitle: String { RemoteConfigManager.shared.copyString("copy_home_focus_recovery_title", default: "Focus on recovery today") }
             static func focusRecoverySubtitle(_ readiness: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_focus_recovery_subtitle", default: "Readiness is %d%%. Light stretching and water will help"), readiness)
+                String(format: RemoteConfigManager.shared.copyString("copy_home_smart_action_focus_recovery_subtitle", default: "Your body is %d%% ready. Light stretching and water will help"), readiness)
             }
-            static var focusRecoveryRationale: String { RemoteConfigManager.shared.copyString("copy_home_focus_recovery_rationale", default: "Recovery is your focus area and your readiness score suggests your body has not fully bounced back yet.") }
+            static var focusRecoveryRationale: String { RemoteConfigManager.shared.copyString("copy_home_focus_recovery_rationale", default: "Recovery is your focus area, and today's signals suggest your body has not fully bounced back yet.") }
 
             // Insight-driven titles
             static func insightEaseOff(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_insight_ease_off", default: "Ease off. %@ needs attention"), metric) }
@@ -604,7 +604,7 @@ extension Copy {
             static var whatsLeadingToWhat: String { RemoteConfigManager.shared.copyString("copy_home_todays_action_detail_whats_leading_to_what", default: "What's leading to what") }
             static var yourCoachsNotes: String { RemoteConfigManager.shared.copyString("copy_home_todays_action_detail_your_coachs_notes", default: "Your coach's notes") }
             static var todaysWorkout: String { RemoteConfigManager.shared.copyString("copy_home_todays_action_detail_todays_workout", default: "Today's Workout") }
-            static var baseline: String { RemoteConfigManager.shared.copyString("copy_home_todays_action_detail_baseline", default: "baseline") }
+            static var baseline: String { RemoteConfigManager.shared.copyString("copy_home_todays_action_detail_baseline", default: "usual") }
         }
 
         // MARK: - Weekly Review Section Headers

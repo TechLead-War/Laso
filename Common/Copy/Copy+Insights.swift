@@ -6,16 +6,16 @@ extension Copy {
         // MARK: - Summary Templates
 
         static func decliningSummary(metricLower: String, deviation: String, direction: String, baseline: String, unit: String, current: String, inflectionNote: String, projectionNote: String, causalHint: String, historyNote: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining_summary", default: "Your %@ is %@%% %@ your baseline (%@ %@). Current: %@ %@.%@%@%@%@"), metricLower, deviation, direction, baseline, unit, current, unit, inflectionNote, projectionNote, causalHint, historyNote)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining_summary", default: "Your %@ is %@%% %@ your usual (%@ %@). Now: %@ %@.%@%@%@%@"), metricLower, deviation, direction, baseline, unit, current, unit, inflectionNote, projectionNote, causalHint, historyNote)
         }
         static func improvingSummary(metricLower: String, deviation: String, current: String, unit: String, inflectionNote: String, causalHint: String, historyNote: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_improving_summary", default: "Your %@ has improved %@%% from your baseline. Current: %@ %@.%@%@%@"), metricLower, deviation, current, unit, inflectionNote, causalHint, historyNote)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_improving_summary", default: "Your %@ has improved %@%% from your usual. Now: %@ %@.%@%@%@"), metricLower, deviation, current, unit, inflectionNote, causalHint, historyNote)
         }
         static func stableSummary(metricLower: String, deviation: String, direction: String, baseline: String, unit: String, causalHint: String, historyNote: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable_summary", default: "Your %@ is %@%% %@ your baseline (%@ %@).%@%@"), metricLower, deviation, direction, baseline, unit, causalHint, historyNote)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable_summary", default: "Your %@ is %@%% %@ your usual (%@ %@).%@%@"), metricLower, deviation, direction, baseline, unit, causalHint, historyNote)
         }
         static func projectionWarning(days: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_projection_warning", default: " At the current rate, this could reach warning level in about %d days."), days)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_projection_warning", default: " At this pace, this could reach warning level in about %d days."), days)
         }
         static func priorityToday(actionProtocol: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_priority_today", default: "Priority today: %@."), actionProtocol)
@@ -24,18 +24,18 @@ extension Copy {
         // MARK: - Compound Insight Engine Titles
 
         static var healthBuildingMomentum: String { RemoteConfigManager.shared.copyString("copy_insights_health_building_momentum", default: "Your Health Is Building Momentum") }
-        static var multipleMetricsDecliningTogether: String { RemoteConfigManager.shared.copyString("copy_insights_multiple_metrics_declining_together", default: "Multiple Metrics Declining Together") }
+        static var multipleMetricsDecliningTogether: String { RemoteConfigManager.shared.copyString("copy_insights_multiple_metrics_declining_together", default: "Several Health Numbers Dropping Together") }
         static func newHealthPhase(_ label: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_new_health_phase", default: "New Health Phase: %@"), label) }
         static func troughProblem(_ name: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_trough_problem", default: "Your %@ Problem"), name) }
         static func categoriesLinked(_ a: String, _ b: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_categories_linked", default: "Your %@ and %@ Are Linked"), a, b) }
-        static var mostResponsiveMetric: String { RemoteConfigManager.shared.copyString("copy_insights_most_responsive_metric", default: "Your Most Responsive Metric") }
-        static var warningSignsConverging: String { RemoteConfigManager.shared.copyString("copy_insights_warning_signs_converging", default: "Warning Signs Converging") }
+        static var mostResponsiveMetric: String { RemoteConfigManager.shared.copyString("copy_insights_most_responsive_metric", default: "Your Fastest-Reacting Number") }
+        static var warningSignsConverging: String { RemoteConfigManager.shared.copyString("copy_insights_warning_signs_converging", default: "Warning Signs Adding Up") }
         static func tomorrowsRisk(_ percent: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_tomorrows_risk", default: "Tomorrow's Risk: %d%%"), percent) }
         static func biggestOpportunity(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_biggest_opportunity", default: "Biggest Opportunity: %@"), metric) }
         static var yourBestDayFormula: String { RemoteConfigManager.shared.copyString("copy_insights_your_best_day_formula", default: "Your Best-Day Formula") }
-        static var recoveryUnderway: String { RemoteConfigManager.shared.copyString("copy_insights_recovery_underway", default: "Recovery Underway") }
-        static var normalAcrossMetrics: String { RemoteConfigManager.shared.copyString("copy_insights_normal_across_metrics", default: "This state is characterized by normal levels across metrics.") }
-        static func characterizedBy(_ descriptions: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_characterized_by", default: "Characterized by %@."), descriptions) }
+        static var recoveryUnderway: String { RemoteConfigManager.shared.copyString("copy_insights_recovery_underway", default: "You're Recovering") }
+        static var normalAcrossMetrics: String { RemoteConfigManager.shared.copyString("copy_insights_normal_across_metrics", default: "All your numbers look normal right now.") }
+        static func characterizedBy(_ descriptions: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_characterized_by", default: "You'll notice %@."), descriptions) }
 
         // MARK: - ML Risk Levels
 
@@ -77,23 +77,23 @@ extension Copy {
         static func activeWarning(_ predictedEvent: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_active_warning", default: "Active Warning: %@"), predictedEvent)
         }
-        static var sequenceInProgress: String { RemoteConfigManager.shared.copyString("copy_insights_sequence_in_progress", default: "Sequence In Progress") }
+        static var sequenceInProgress: String { RemoteConfigManager.shared.copyString("copy_insights_sequence_in_progress", default: "Pattern In Progress") }
         static func optimizationGap(_ percent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_optimization_gap", default: "Optimization: %d%% Gap to Your Best"), percent)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_optimization_gap", default: "Room to Improve: %d%% From Your Best"), percent)
         }
-        static var yourIdealDayBlueprint: String { RemoteConfigManager.shared.copyString("copy_insights_your_ideal_day_blueprint", default: "Your Ideal Day Blueprint") }
+        static var yourIdealDayBlueprint: String { RemoteConfigManager.shared.copyString("copy_insights_your_ideal_day_blueprint", default: "Your Perfect Day Plan") }
 
         // MARK: - Inflection Notes
 
-        static var accelerating: String { RemoteConfigManager.shared.copyString("copy_insights_accelerating", default: " The rate of change is speeding up.") }
+        static var accelerating: String { RemoteConfigManager.shared.copyString("copy_insights_accelerating", default: " The change is speeding up.") }
         static var decelerating: String { RemoteConfigManager.shared.copyString("copy_insights_decelerating", default: " The drop is slowing down. A recovery may be starting.") }
         static var reversing: String { RemoteConfigManager.shared.copyString("copy_insights_reversing", default: " The trend has just turned around.") }
 
         // MARK: - Inflection Suffixes (for titles)
 
-        static var andAccelerating: String { RemoteConfigManager.shared.copyString("copy_insights_and_accelerating", default: " & Accelerating") }
+        static var andAccelerating: String { RemoteConfigManager.shared.copyString("copy_insights_and_accelerating", default: " & Speeding Up") }
         static var slowing: String { RemoteConfigManager.shared.copyString("copy_insights_slowing", default: " (Slowing)") }
-        static var dashReversing: String { RemoteConfigManager.shared.copyString("copy_insights_dash_reversing", default: " (Reversing)") }
+        static var dashReversing: String { RemoteConfigManager.shared.copyString("copy_insights_dash_reversing", default: " (Turning Around)") }
         static var andGainingMomentum: String { RemoteConfigManager.shared.copyString("copy_insights_and_gaining_momentum", default: " & Gaining Momentum") }
 
         // MARK: - Title Patterns
@@ -105,7 +105,7 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_needs_attention", default: "%@ %@Worth a Look%@"), metric, prefix, suffix)
         }
         static func declining(_ metric: String, prefix: String, suffix: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining", default: "%@ %@Declining%@"), metric, prefix, suffix)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining", default: "%@ %@Dropping%@"), metric, prefix, suffix)
         }
         static func improving(_ metric: String, prefix: String, momentum: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_improving", default: "%@ %@Improving%@"), metric, prefix, momentum)
@@ -117,13 +117,13 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_elevated", default: "%@ Higher Than Usual"), metric)
         }
         static func stable(_ metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable", default: "%@ Stable"), metric)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable", default: "%@ Steady"), metric)
         }
 
         // MARK: - Follow-Up Sentences
 
         static var recheckIn48Hours: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_in48_hours", default: "Follow up: Check again in 48 hours to make sure this is steadying before it reaches warning range.") }
-        static var reviewIn3Days: String { RemoteConfigManager.shared.copyString("copy_insights_review_in3_days", default: "Follow up: Review this trend again in 3 days to confirm the direction has gotten better.") }
+        static var reviewIn3Days: String { RemoteConfigManager.shared.copyString("copy_insights_review_in3_days", default: "Follow up: Check this again in 3 days to make sure it's getting better.") }
 
         // MARK: - Lead Time Labels
 
@@ -168,11 +168,11 @@ extension Copy {
         static var causalHintBloodOxygen: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_blood_oxygen", default: "Worth knowing: lower blood oxygen often goes with broken sleep patterns.") }
         static var causalHintSleepDuration: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_sleep_duration", default: "Worth knowing: shorter sleep often follows days with low activity or late workouts.") }
         static var causalHintSleepDeep: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_sleep_deep", default: "Worth knowing: drops in deep sleep often go with higher stress or shifting bedtimes.") }
-        static var causalHintVO2Max: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_vo2_max", default: "Worth knowing: VO2 Max changes tend to follow shifts in workout routine over 2 to 4 weeks.") }
+        static var causalHintVO2Max: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_vo2_max", default: "Worth knowing: VO2 Max changes usually follow changes in your workouts over 2 to 4 weeks.") }
         static var causalHintActiveCalories: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_active_calories", default: "Worth knowing: lower calorie burn often follows fewer steps and workout minutes.") }
         static var causalHintExercise: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_exercise", default: "Worth knowing: dips in exercise often line up with broken sleep patterns.") }
-        static var causalHintBodyTemp: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_body_temp", default: "Worth knowing: changes in temperature often go with shifts in sleep length and HRV.") }
-        static var causalHintRespiratoryRate: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_respiratory_rate", default: "Worth knowing: breathing rate changes often track with sleep quality and stress levels.") }
+        static var causalHintBodyTemp: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_body_temp", default: "Worth knowing: changes in temperature often go with changes in sleep length and your heart recovery signal.") }
+        static var causalHintRespiratoryRate: String { RemoteConfigManager.shared.copyString("copy_insights_causal_hint_respiratory_rate", default: "Worth knowing: breathing rate changes often go with sleep quality and stress levels.") }
 
         // MARK: - Action Protocol Strings
 
@@ -183,7 +183,7 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_activity_deviation", default: "Your activity is %d%% %@ your recent average"), dev, direction)
         }
         static func hrvTrending(direction: String, dev: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_hrv_trending", default: "Your HRV is trending %@, %d%% from your usual"), direction, dev)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_hrv_trending", default: "Your heart recovery signal is heading %@, %d%% from your usual"), direction, dev)
         }
         static func rhrShifted(dev: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_rhr_shifted", default: "Your resting heart rate shifted %d%% from your usual"), dev)
@@ -195,14 +195,14 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_daylight_deviation", default: "Your daylight time is %d%% %@ your average"), dev, direction)
         }
         static var bpOutsideRange: String { RemoteConfigManager.shared.copyString("copy_insights_bp_outside_range", default: "Your blood pressure reading is outside your usual range") }
-        static var recheckSingleReading: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_single_reading", default: "Check again to confirm, since single readings can vary") }
+        static var recheckSingleReading: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_single_reading", default: "Check again to be sure, because one reading can be off") }
         static var readingOutsideRange: String { RemoteConfigManager.shared.copyString("copy_insights_reading_outside_range", default: "this reading is outside your usual range. Keep an eye on it.") }
-        static var recheckMetricTrend: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_metric_trend", default: "Check this again to confirm the trend") }
+        static var recheckMetricTrend: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_metric_trend", default: "Check this again to be sure") }
         static func bodyMetricsShifted(dev: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_body_metrics_shifted", default: "Your body numbers shifted %d%% from your usual"), dev)
         }
         static func vo2MaxTrending(direction: String, dev: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_vo2_max_trending", default: "Your VO2 max is trending %@, %d%% from your usual"), direction, dev)
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_vo2_max_trending", default: "Your VO2 max is heading %@, %d%% from your usual"), direction, dev)
         }
         static func mobilityMetricsOff(dev: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_mobility_metrics_off", default: "Your mobility numbers are %d%% off your usual"), dev)
@@ -218,13 +218,13 @@ extension Copy {
             static var whyThingsChanged: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_why_things_changed", default: "Why Things Changed") }
             static var howMuchMatters: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_how_much_matters", default: "How Much It Matters") }
             static var allConnections: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_all_connections", default: "All Connections") }
-            static var buildingIntelligence: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_building_intelligence", default: "Still building your insight profile.") }
+            static var buildingIntelligence: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_building_intelligence", default: "Still building your insights.") }
             static var keepWearingDevice: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_keep_wearing_device", default: "Keep wearing your device and syncing daily so we can find patterns in your data.") }
 
             // MARK: - Detail / Cards
 
             static var navigationTitle: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_navigation_title", default: "Health Intelligence") }
-            static var actionableBadge: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_actionable_badge", default: "Actionable") }
+            static var actionableBadge: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_actionable_badge", default: "Try This") }
             static var evidenceLabel: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_evidence_label", default: "Evidence") }
             static var sameDay: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_same_day", default: "Same day") }
             static var nextDay: String { RemoteConfigManager.shared.copyString("copy_insights_correlations_next_day", default: "Next day") }
@@ -248,7 +248,7 @@ extension Copy {
 
         enum MetricDetail {
             static func expandedRangeNotice(_ days: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_metric_detail_expanded_range_notice", default: "Expanded to %d days to show available data"), days)
+                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_metric_detail_expanded_range_notice", default: "Showing %d days so we have enough data"), days)
             }
 
             static var noDataYet: String { RemoteConfigManager.shared.copyString("copy_insights_no_data_yet", default: "No Data Yet") }
@@ -271,10 +271,10 @@ extension Copy {
             static var withinRange: String { RemoteConfigManager.shared.copyString("copy_insights_within_range", default: "Within Range") }
             static var thisMonthVsLastMonth: String { RemoteConfigManager.shared.copyString("copy_insights_this_month_vs_last_month", default: "This Month vs Last Month") }
             static var scoreImpact: String { RemoteConfigManager.shared.copyString("copy_insights_score_impact", default: "Score Impact") }
-            static var historicalContext: String { RemoteConfigManager.shared.copyString("copy_insights_historical_context", default: "Historical Context") }
+            static var historicalContext: String { RemoteConfigManager.shared.copyString("copy_insights_historical_context", default: "Your History") }
 
             static func dataPointsSummary(_ count: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_metric_detail_data_points_summary", default: "Based on %d data points"), count)
+                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_metric_detail_data_points_summary", default: "Based on %d readings"), count)
             }
         }
 
@@ -307,7 +307,7 @@ extension Copy {
         static func xText2(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_x_text2", default: "+%d"), p0) }
         static func stepChainText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_step_chain_text", default: "%d-step chain"), p0) }
         static func xText3(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_x_text3", default: "%d"), p0) }
-        static func causalChainAffectingLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_causal_chain_affecting_label", default: "Causal chain affecting %@"), p0) }
+        static func causalChainAffectingLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_causal_chain_affecting_label", default: "Chain of effects on %@"), p0) }
         static func daysText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_days_text", default: "%d days"), p0) }
         static func affectsLabel(_ p0: String, _ p1: String, _ p2: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_affects_label", default: "%@: %@ affects %@"), p0, p1, p2) }
         static func xText4(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_x_text4", default: "%@ → %@"), p0, p1) }
