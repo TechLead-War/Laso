@@ -2184,51 +2184,76 @@ final class DashboardViewModel {
         }
     }
 
-    /// One plain-word reason shown in the score card's "Why" list. Built only
-    /// from real signals; a signal with no data is omitted rather than faked.
+    /// One signal row in the score card's "Why" list. The three signals (Sleep,
+    /// Heart, Energy) ALWAYS show so the card is never half empty; a signal with
+    /// no reading shows `.noData` (never a faked value).
     struct RecoveryWhyReason: Identifiable {
-        enum Tone { case good, concern }
+        enum Kind { case sleep, heart, energy }
+        enum Tone { case good, okay, concern, noData }
         let id = UUID()
-        let label: String
-        let value: String
+        let kind: Kind
+        let name: String     // "Sleep"
+        let sub: String      // short meaning line
+        let value: String    // "6h 40m" / "Calm" / "—"
+        let status: String   // "Good" / "Short" / "No reading yet"
         let tone: Tone
+
+        /// Placeholder row for a signal that has no reading yet.
+        static func noData(kind: Kind, name: String) -> RecoveryWhyReason {
+            .init(kind: kind, name: name, sub: Copy.Home.whyNoData, value: "—", status: "", tone: .noData)
+        }
     }
 
-    /// The top real reasons behind today's readiness, as {label, value, tone}.
-    /// Sleep from last-night duration vs goal, Heart from HRV/RHR vs baseline,
-    /// Energy from the readiness score. Rows with missing data are dropped.
+    /// The three signals behind today's readiness, always in order Sleep, Heart,
+    /// Energy. Sleep from last-night duration vs goal, Heart from HRV vs your
+    /// baseline, Energy from the readiness score. Missing signals return a
+    /// `.noData` row instead of being dropped.
     @MainActor
     func recoveryWhyReasons(liveVM: LiveViewModel) -> [RecoveryWhyReason] {
         let s = todayRecoverySignals(liveVM: liveVM)
-        var reasons: [RecoveryWhyReason] = []
 
+        // Sleep
+        let sleepRow: RecoveryWhyReason
         if let sleep = s.sleepHoursLast {
-            let short = sleep < s.sleepHoursGoal - 0.75
             let h = Int(sleep), m = Int((sleep - Double(h)) * 60)
-            reasons.append(.init(
-                label: short ? Copy.Home.whySleepShort : Copy.Home.whySleepGood,
-                value: "\(h)h \(m)m",
-                tone: short ? .concern : .good))
+            let short = sleep < s.sleepHoursGoal - 1.0
+            let okay = !short && sleep < s.sleepHoursGoal - 0.25
+            sleepRow = .init(kind: .sleep, name: Copy.Home.whyNameSleep,
+                             sub: short ? Copy.Home.whySubSleepShort : Copy.Home.whySubSleepGood,
+                             value: "\(h)h \(m)m",
+                             status: short ? Copy.Home.whyStatusShort : (okay ? Copy.Home.whyStatusOkay : Copy.Home.whyStatusGood),
+                             tone: short ? .concern : (okay ? .okay : .good))
+        } else {
+            sleepRow = .noData(kind: .sleep, name: Copy.Home.whyNameSleep)
         }
 
+        // Heart
+        let heartRow: RecoveryWhyReason
         if let hrv = s.hrvCurrent, let hrvBase = s.hrvBaseline, hrvBase > 0 {
-            // HRV at or above baseline means the body has recovered (calm).
             let calm = hrv >= hrvBase * 0.95
-            reasons.append(.init(
-                label: calm ? Copy.Home.whyHeartCalm : Copy.Home.whyHeartWorking,
-                value: calm ? Copy.Home.whyHeartGoodValue : Copy.Home.whyHeartHighValue,
-                tone: calm ? .good : .concern))
+            heartRow = .init(kind: .heart, name: Copy.Home.whyNameHeart,
+                             sub: calm ? Copy.Home.whySubHeartCalm : Copy.Home.whySubHeartWorking,
+                             value: calm ? Copy.Home.whyValueCalm : Copy.Home.whyValueWorking,
+                             status: calm ? Copy.Home.whyStatusGood : Copy.Home.whyStatusElevated,
+                             tone: calm ? .good : .concern)
+        } else {
+            heartRow = .noData(kind: .heart, name: Copy.Home.whyNameHeart)
         }
 
+        // Energy
+        let energyRow: RecoveryWhyReason
         if let readiness = liveVM.recovery.readinessScore {
             let low = readiness < 60
-            reasons.append(.init(
-                label: low ? Copy.Home.whyEnergyLow : Copy.Home.whyEnergyGood,
-                value: low ? Copy.Home.whyEnergyLowValue : Copy.Home.whyEnergyGoodValue,
-                tone: low ? .concern : .good))
+            energyRow = .init(kind: .energy, name: Copy.Home.whyNameEnergy,
+                              sub: low ? Copy.Home.whySubEnergyLow : Copy.Home.whySubEnergyGood,
+                              value: low ? Copy.Home.whyValueLow : Copy.Home.whyValueReady,
+                              status: low ? Copy.Home.whyStatusBelow : Copy.Home.whyStatusGood,
+                              tone: low ? .concern : .good)
+        } else {
+            energyRow = .noData(kind: .energy, name: Copy.Home.whyNameEnergy)
         }
 
-        return Array(reasons.prefix(3))
+        return [sleepRow, heartRow, energyRow]
     }
 
     /// Plain-English summary line under the score, keyed to the 3-band model.

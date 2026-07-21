@@ -63,6 +63,28 @@ extension Copy {
         static var whyEnergyLowValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low_value", default: "Below usual") }
         static var whyEnergyGoodValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good_value", default: "Good") }
 
+        // Richer Why rows: the three signals always show (Sleep, Heart, Energy),
+        // each with a name, a short meaning line, a value and a status word.
+        static var whyNameSleep: String { RemoteConfigManager.shared.copyString("copy_home_why_name_sleep", default: "Sleep") }
+        static var whyNameHeart: String { RemoteConfigManager.shared.copyString("copy_home_why_name_heart", default: "Heart") }
+        static var whyNameEnergy: String { RemoteConfigManager.shared.copyString("copy_home_why_name_energy", default: "Energy") }
+        static var whySubSleepShort: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_sleep_short", default: "A bit under your usual") }
+        static var whySubSleepGood: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_sleep_good", default: "Solid rest last night") }
+        static var whySubHeartCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_heart_calm", default: "Rested and calm") }
+        static var whySubHeartWorking: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_heart_working", default: "Under some load") }
+        static var whySubEnergyGood: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_energy_good", default: "Ready for the day") }
+        static var whySubEnergyLow: String { RemoteConfigManager.shared.copyString("copy_home_why_sub_energy_low", default: "Running low") }
+        static var whyValueCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_value_calm", default: "Calm") }
+        static var whyValueWorking: String { RemoteConfigManager.shared.copyString("copy_home_why_value_working", default: "Working") }
+        static var whyValueReady: String { RemoteConfigManager.shared.copyString("copy_home_why_value_ready", default: "Ready") }
+        static var whyValueLow: String { RemoteConfigManager.shared.copyString("copy_home_why_value_low", default: "Low") }
+        static var whyStatusGood: String { RemoteConfigManager.shared.copyString("copy_home_why_status_good", default: "Good") }
+        static var whyStatusOkay: String { RemoteConfigManager.shared.copyString("copy_home_why_status_okay", default: "Okay") }
+        static var whyStatusShort: String { RemoteConfigManager.shared.copyString("copy_home_why_status_short", default: "Short") }
+        static var whyStatusElevated: String { RemoteConfigManager.shared.copyString("copy_home_why_status_elevated", default: "Elevated") }
+        static var whyStatusBelow: String { RemoteConfigManager.shared.copyString("copy_home_why_status_below", default: "Below usual") }
+        static var whyNoData: String { RemoteConfigManager.shared.copyString("copy_home_why_no_data", default: "No reading yet") }
+
         // Yesterday's result: the loop-closer shown the morning after an action
         // is marked done, reporting how the readiness score moved.
         static var dailyResultHeader: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_header", default: "YESTERDAY'S RESULT") }
