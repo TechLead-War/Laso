@@ -2188,9 +2188,11 @@ final class DashboardViewModel {
     /// Heart, Energy) ALWAYS show so the card is never half empty; a signal with
     /// no reading shows `.noData` (never a faked value).
     struct RecoveryWhyReason: Identifiable {
-        enum Kind { case sleep, heart, energy }
+        enum Kind: Hashable { case sleep, heart, energy }
         enum Tone { case good, okay, concern, noData }
-        let id = UUID()
+        /// Stable per-signal id so SwiftUI diffs the rows instead of rebuilding
+        /// all three on every home refresh (a fresh UUID would churn every time).
+        var id: Kind { kind }
         let kind: Kind
         let name: String     // "Sleep"
         let sub: String      // short meaning line

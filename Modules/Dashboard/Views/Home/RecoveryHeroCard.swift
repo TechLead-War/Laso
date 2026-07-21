@@ -106,11 +106,15 @@ struct RecoveryHeroCard: View {
             // Centered hero orb with a soft glow, heading and sub line below.
             VStack(spacing: 12) {
                 ZStack {
+                    // Soft glow via a radial gradient (cheap) rather than a
+                    // Gaussian blur, which re-renders offscreen every frame and
+                    // makes scrolling lag.
                     Circle()
-                        .fill(ringTint)
-                        .frame(width: 96, height: 96)
-                        .blur(radius: 34)
-                        .opacity(0.30)
+                        .fill(RadialGradient(
+                            colors: [ringTint.opacity(0.28), .clear],
+                            center: .center, startRadius: 8, endRadius: 92))
+                        .frame(width: 184, height: 184)
+                        .allowsHitTesting(false)
                     HealthScoreRing(
                         score: score,
                         label: Copy.Home.scoreReadyLabel,
