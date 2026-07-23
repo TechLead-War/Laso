@@ -604,12 +604,13 @@ final class HealthKitManager: @unchecked Sendable {
                 let calendar = Date.cal
 
                 results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
-                    let value: Double?
+                    let raw: Double?
                     if config.statisticsOption == .cumulativeSum {
-                        value = statistics.sumQuantity()?.doubleValue(for: config.unit)
+                        raw = statistics.sumQuantity()?.doubleValue(for: config.unit)
                     } else {
-                        value = statistics.averageQuantity()?.doubleValue(for: config.unit)
+                        raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
                     }
+                    let value = raw.map { $0 * config.valueScale }
                     if let value, value > 0 {
                         let hour = calendar.component(.hour, from: statistics.startDate)
                         guard hour >= 0, hour < 24 else { return }
@@ -761,12 +762,13 @@ final class HealthKitManager: @unchecked Sendable {
                 var samples: [MetricSample] = []
                 // Use midnight boundaries so daily buckets include today's partial data
                 results.enumerateStatistics(from: startDate.startOfDay, to: endDate) { statistics, _ in
-                    let value: Double?
+                    let raw: Double?
                     if config.statisticsOption == .cumulativeSum {
-                        value = statistics.sumQuantity()?.doubleValue(for: config.unit)
+                        raw = statistics.sumQuantity()?.doubleValue(for: config.unit)
                     } else {
-                        value = statistics.averageQuantity()?.doubleValue(for: config.unit)
+                        raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
                     }
+                    let value = raw.map { $0 * config.valueScale }
                     if let value, value > 0 {
                         samples.append(MetricSample(date: statistics.startDate, value: value))
                     }
@@ -805,7 +807,7 @@ final class HealthKitManager: @unchecked Sendable {
                 var dailyValues: [Date: [Double]] = [:]
                 for sample in results {
                     let day = sample.startDate.startOfDay
-                    let value = sample.quantity.doubleValue(for: config.unit)
+                    let value = sample.quantity.doubleValue(for: config.unit) * config.valueScale
                     dailyValues[day, default: []].append(value)
                 }
 

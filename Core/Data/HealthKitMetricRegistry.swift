@@ -17,6 +17,11 @@ struct HealthKitMetricRegistry {
         let unit: HKUnit
         let strategy: QueryStrategy
         let statisticsOption: HKStatisticsOptions
+        /// Multiplier applied to the raw HealthKit value after unit conversion.
+        /// Oxygen saturation reads as a 0–1 fraction via HKUnit.percent(); ×100
+        /// puts it on the 0–100 scale the rest of the app (thresholds, normal
+        /// ranges, display, alerts) expects. Defaults to 1 for every other metric.
+        var valueScale: Double = 1.0
     }
 
     static func config(for metric: HealthMetric) -> MetricConfig {
@@ -116,7 +121,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.oxygenSaturation),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives SpO2 as 0–1; app expects 0–100
             )
         default:
             preconditionFailure("cardioConfig called with non-cardio metric: \(metric)")

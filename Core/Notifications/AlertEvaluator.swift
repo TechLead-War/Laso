@@ -280,9 +280,13 @@ final class AlertEvaluator {
             }
         }
 
-        // Check blood oxygen for dangerous drops
+        // Check blood oxygen for dangerous drops. Ignore implausible readings
+        // (< 50%): the Apple Watch only reports SpO2 down to ~70%, so anything
+        // lower is sensor noise or a unit glitch — never fire a scary medical
+        // alert on it. This guards against firing on bad data of any kind.
         if let spo2Series = timeSeries[.bloodOxygen],
-           let latestSpO2 = spo2Series.latestValue {
+           let latestSpO2 = spo2Series.latestValue,
+           latestSpO2 >= 50 {
             let avg7d = spo2Series.mean(lastDays: 7)
             let triage = SafetyTriageEngine.assess(
                 metric: .bloodOxygen,

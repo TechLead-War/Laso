@@ -23,6 +23,10 @@ struct HomeView: View {
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
     @State private var showSoftLockPaywall = false
+    /// One-shot full live fetch on first appear. Without it, Home only starts the
+    /// tiered refresh timers, which defer the slow tier (HRV, resting HR, sleep),
+    /// so the "Why" list shows only Energy until the user pulls to refresh.
+    @State private var didInitialLiveFetch = false
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -92,6 +96,12 @@ struct HomeView: View {
         }
         .onAppear {
             ensureWeeklyReviewVM()
+            if !didInitialLiveFetch {
+                didInitialLiveFetch = true
+                // Load HRV, resting HR and sleep right away so the Why list is
+                // complete on first open, not after a manual refresh.
+                liveViewModel.fetchHomeData()
+            }
             startHomeRefresh()
             startReadinessRefresh()
             rebuildMetricTilesFromLive()
