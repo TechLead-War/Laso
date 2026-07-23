@@ -438,60 +438,30 @@ enum AccelerateML {
 
     // MARK: - Linear System Solver (LAPACK)
 
-    /// Solve Ax = b for x using Gaussian elimination with partial pivoting.
-    /// A is n x n (row-major), b is length n. Returns x, or nil if singular.
+    /// Solve Ax = b for x using LAPACK's LU factorization with partial pivoting
+    /// (dgesv) — Apple's blocked, SIMD-vectorized solver. A is n x n (row-major),
+    /// b is length n. Returns x, or nil if singular.
     static func solveLinearSystem(A: [Double], b: [Double], n: Int) -> [Double]? {
         guard A.count >= n * n, b.count >= n, n > 0 else { return nil }
 
-        // Augmented matrix [A|b]. work in-place
-        var aug = [Double](repeating: 0, count: n * (n + 1))
+        // LAPACK is column-major; transpose the row-major A into column-major.
+        // n is tiny here (<= ~15), so the copy is negligible.
+        var a = [Double](repeating: 0, count: n * n)
         for i in 0..<n {
-            for j in 0..<n {
-                aug[i * (n + 1) + j] = A[i * n + j]
-            }
-            aug[i * (n + 1) + n] = b[i]
+            for j in 0..<n { a[j * n + i] = A[i * n + j] }
         }
+        var rhs = Array(b[0..<n])                 // dgesv overwrites this with the solution
+        var nDim = __CLPK_integer(n)
+        var nrhs = __CLPK_integer(1)
+        var lda = nDim
+        var ldb = nDim
+        var ipiv = [__CLPK_integer](repeating: 0, count: n)
+        var info = __CLPK_integer(0)
 
-        // Forward elimination with partial pivoting
-        for col in 0..<n {
-            // Find pivot
-            var maxVal = abs(aug[col * (n + 1) + col])
-            var maxRow = col
-            for row in (col + 1)..<n {
-                let val = abs(aug[row * (n + 1) + col])
-                if val > maxVal { maxVal = val; maxRow = row }
-            }
-            guard maxVal > 1e-12 else { return nil } // Singular
+        dgesv_(&nDim, &nrhs, &a, &lda, &ipiv, &rhs, &ldb, &info)
 
-            // Swap rows
-            if maxRow != col {
-                for j in col...(n) {
-                    let tmp = aug[col * (n + 1) + j]
-                    aug[col * (n + 1) + j] = aug[maxRow * (n + 1) + j]
-                    aug[maxRow * (n + 1) + j] = tmp
-                }
-            }
-
-            // Eliminate below
-            let pivot = aug[col * (n + 1) + col]
-            for row in (col + 1)..<n {
-                let factor = aug[row * (n + 1) + col] / pivot
-                for j in col...(n) {
-                    aug[row * (n + 1) + j] -= factor * aug[col * (n + 1) + j]
-                }
-            }
-        }
-
-        // Back substitution
-        var x = [Double](repeating: 0, count: n)
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            var sum = aug[i * (n + 1) + n]
-            for j in (i + 1)..<n {
-                sum -= aug[i * (n + 1) + j] * x[j]
-            }
-            x[i] = sum / aug[i * (n + 1) + i]
-        }
-        return x
+        guard info == 0 else { return nil }       // info != 0 => singular / bad arg
+        return rhs
     }
 
     // MARK: - Pearson Correlation
