@@ -111,10 +111,15 @@ final class MLPipelineRunner {
 
         // --- 1. TimeSeriesForecaster (7+ days) ---
         if totalDays >= TimeSeriesForecaster.minimumDays {
-            if components.forecaster.needsRetrain || !components.forecaster.isReady {
-                logger.debug("Running TimeSeriesForecaster")
+            if components.forecaster.needsRetrain {
+                // Full grid search — only every 30 days (or first ever fit).
+                logger.debug("Running TimeSeriesForecaster (full retrain)")
                 components.forecaster.fit(timeSeries: input.timeSeries)
                 output.componentsRunCount += 1
+            } else {
+                // Restored models present: fit only newly tracked metrics so a new
+                // metric gets a forecast now instead of waiting for the next retrain.
+                components.forecaster.fitMissing(timeSeries: input.timeSeries)
             }
         }
 

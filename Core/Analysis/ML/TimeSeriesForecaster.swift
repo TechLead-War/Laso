@@ -164,6 +164,20 @@ final class TimeSeriesForecaster {
         lastRetrainDate = Date()
     }
 
+    /// Fit only metrics that have no model yet (e.g. a newly tracked metric after a
+    /// restore). Cheap: already-fitted metrics skip the grid search. Does not touch
+    /// lastRetrainDate — this fills gaps, it is not the 30-day full retrain, so a new
+    /// metric gets its forecast on the next run instead of waiting for the retrain.
+    func fitMissing(timeSeries: [HealthMetric: MetricTimeSeries]) {
+        for (metric, series) in timeSeries where states[metric] == nil {
+            let values = series.sortedSamples.map(\.value)
+            guard values.count >= Self.minimumDays else { continue }
+            let useDoubleSeasonal = values.count >= Self.monthlyMinimumDays
+            states[metric] = gridSearchFit(values: values, doubleSeasonal: useDoubleSeasonal)
+        }
+        arimaForecaster.fit(timeSeries: timeSeries, onlyMissing: true)
+    }
+
     /// Fit a single metric
     func fit(metric: HealthMetric, values: [Double]) {
         guard values.count >= Self.minimumDays else { return }

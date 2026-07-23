@@ -44,8 +44,11 @@ final class ARIMAForecaster {
     // MARK: - Training
     
     /// Automated ARIMA fitting using an exhaustive grid search to minimize AIC (Akaike Information Criterion)
-    func fit(timeSeries: [HealthMetric: MetricTimeSeries]) {
+    /// - Parameter onlyMissing: when true, skip metrics that already have a fitted
+    ///   model so a normal launch only fits newly tracked metrics, not the whole set.
+    func fit(timeSeries: [HealthMetric: MetricTimeSeries], onlyMissing: Bool = false) {
         for (metric, series) in timeSeries {
+            if onlyMissing, params[metric] != nil { continue }
             let values = series.sortedSamples.map(\.value)
             guard values.count >= Self.minimumDays else { continue }
             
