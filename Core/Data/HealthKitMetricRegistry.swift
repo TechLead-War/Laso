@@ -113,7 +113,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.peripheralPerfusionIndex),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; app scores/shows 0–100 (range 0.5–5)
             )
         case .bloodOxygen:
             return MetricConfig(
@@ -278,7 +279,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.walkingAsymmetryPercentage),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; app scores/shows 0–100 (range 0–10)
             )
         case .walkingDoubleSupportPercentage:
             return MetricConfig(
@@ -286,7 +288,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.walkingDoubleSupportPercentage),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; app scores/shows 0–100 (range 20–40)
             )
         case .stairAscentSpeed:
             return MetricConfig(
@@ -318,7 +321,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.appleWalkingSteadiness),
                 unit: .percent(),
                 strategy: .quantitySample,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; app scores/shows 0–100 (range 50–100)
             )
         case .numberOfTimesFallen:
             return MetricConfig(
@@ -391,7 +395,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.bodyFatPercentage),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; app scores/shows 0–100 (range 8–30)
             )
         case .bloodPressureSystolic:
             return MetricConfig(
