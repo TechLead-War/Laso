@@ -158,7 +158,14 @@ final class HealthKitManager: @unchecked Sendable {
                     metrics: HealthMetric.allCases.map(\.rawValue) + ["menstrual_flow", "electrocardiogram"]
                 )
             }
-            try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
+            // Cold-launch race: HealthKit's privacy daemon (HealthPrivacyService)
+            // is often not ready in the first second after launch and throws
+            // "Unable to acquire legacy assertion on com.apple.HealthPrivacyService".
+            // It warms up shortly after, which is why killing and reopening works.
+            // A read-denial never throws (Apple hides read grants), so a throw here
+            // is a transient system error — retry with backoff before failing, so
+            // the first launch no longer shows a false "Unable to Load Data".
+            try await requestAuthorizationWithRetry(share: shareTypes, read: readTypes)
             isAuthorized = true
             // Do NOT emit health_permission_result here: HealthKit never reveals which
             // READ permissions the user granted (Apple hides it so apps cannot infer
@@ -174,6 +181,28 @@ final class HealthKitManager: @unchecked Sendable {
                 // failures separately from generic errors so churn analysis can isolate
                 // permission-related drop-off from runtime errors.
                 AppAnalytics.shared.trackSyncFailed(reason: "healthkit_authorization: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Requests HealthKit authorization, retrying the transient cold-launch
+    /// daemon error a few times with growing backoff (~0.3s, 0.6s, 1.2s). Only
+    /// the final attempt's error propagates. Total wait is capped near 2s, which
+    /// covers the daemon warm-up without a visible stall.
+    private func requestAuthorizationWithRetry(
+        share: Set<HKSampleType>,
+        read: Set<HKObjectType>,
+        attempts: Int = 4
+    ) async throws {
+        var delayNs: UInt64 = 300_000_000
+        for attempt in 1...attempts {
+            do {
+                try await healthStore.requestAuthorization(toShare: share, read: read)
+                return
+            } catch {
+                guard attempt < attempts else { throw error }
+                try? await Task.sleep(nanoseconds: delayNs)
+                delayNs *= 2
             }
         }
     }
