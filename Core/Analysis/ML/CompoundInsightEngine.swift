@@ -333,7 +333,7 @@ final class CompoundInsightEngine {
             let context = LLMInsightGenerator.InsightContext(
                 baseTopic: "system",
                 primaryMetric: topMetric.metric,
-                trendChange: topMetric.percentChange * -1.0, // Negate for semantic interpretation
+                trendChange: topMetric.percentChange, // real signed change: a decline must read as downward, not upward
                 riskScore: 0.8, // High proxy for decline
                 relatedMetrics: Array(metrics.prefix(3)),
                 causalLag: nil,

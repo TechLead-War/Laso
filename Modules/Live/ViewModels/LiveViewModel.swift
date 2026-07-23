@@ -485,6 +485,9 @@ final class LiveViewModel {
     /// Flush buffered heart rate data to @Observable properties (triggers view redraws).
     @MainActor
     private func applyPendingHeartRateUpdate() {
+        // Streaming may have stopped between buffering and this flush; drop the
+        // stale batch so old HR never overwrites the live vitals after stop.
+        guard isStreaming else { pendingHeartRateUpdate = nil; return }
         guard let update = pendingHeartRateUpdate else { return }
         pendingHeartRateUpdate = nil
         lastUIUpdateTime = Date()

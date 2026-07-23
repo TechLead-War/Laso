@@ -2007,8 +2007,8 @@ final class DashboardViewModel {
         let sleepHours = sleepSeries?.latestValue ?? 0
         let sleep = WidgetSleepSnapshot(
             hoursSlept: sleepHours,
-            deepMinutes: healthKitManager.timeSeries[.sleepDeep]?.latestValue ?? 0,
-            remMinutes: healthKitManager.timeSeries[.sleepREM]?.latestValue ?? 0,
+            deepMinutes: (healthKitManager.timeSeries[.sleepDeep]?.latestValue ?? 0) * 60,  // series is in hours; field is minutes
+            remMinutes: (healthKitManager.timeSeries[.sleepREM]?.latestValue ?? 0) * 60,
             quality: sleepHours >= 7 ? "Good" : sleepHours >= 6 ? "Fair" : "Low",
             updatedAt: Date()
         )

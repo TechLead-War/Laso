@@ -213,7 +213,7 @@ struct HomeView: View {
     private func buildDailyNarrativeSignals() -> DailyNarrativeSignals {
         let hrv: Int? = liveViewModel.recovery.latestHRV.map { Int($0.rounded()) }
         let sleepHours: Double? = liveViewModel.sleep.lastNightSleepDuration > 0
-            ? liveViewModel.sleep.lastNightSleepDuration
+            ? liveViewModel.sleep.lastNightSleepDuration / 3600  // duration is seconds; narrative wants hours
             : nil
         return DailyNarrativeSignals(
             userFirstName: nil,

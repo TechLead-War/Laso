@@ -523,7 +523,7 @@ struct HealthKitMetricRegistry {
             return MetricConfig(
                 sampleType: HKQuantityType(.dietaryWater),
                 quantityType: HKQuantityType(.dietaryWater),
-                unit: .liter(),
+                unit: HKUnit.literUnit(with: .milli),  // app scores/shows water in mL (range 1500–4000)
                 strategy: .statisticsDaily,
                 statisticsOption: .cumulativeSum
             )

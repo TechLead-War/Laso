@@ -196,9 +196,12 @@ final class AlertEvaluator {
         dropThreshold: Double,
         maxPerDay: Int
     ) {
-        // Check resting heart rate for sustained elevation
+        // Check resting heart rate for sustained elevation. Skip stale series so
+        // an old dip (e.g. from an illness that already passed) can't fire a
+        // fresh "seek care" alert days later when the watch finally syncs.
         if let rhrSeries = timeSeries[.restingHeartRate],
-           let latestRHR = rhrSeries.latestValue {
+           let latestRHR = rhrSeries.latestValue,
+           !rhrSeries.isStale(thresholdDays: 1) {
             let avg7d = rhrSeries.mean(lastDays: 7)
             let triage = SafetyTriageEngine.assess(
                 metric: .restingHeartRate,
@@ -286,7 +289,8 @@ final class AlertEvaluator {
         // alert on it. This guards against firing on bad data of any kind.
         if let spo2Series = timeSeries[.bloodOxygen],
            let latestSpO2 = spo2Series.latestValue,
-           latestSpO2 >= 50 {
+           latestSpO2 >= 50,
+           !spo2Series.isStale(thresholdDays: 1) {
             let avg7d = spo2Series.mean(lastDays: 7)
             let triage = SafetyTriageEngine.assess(
                 metric: .bloodOxygen,

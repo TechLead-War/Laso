@@ -51,7 +51,9 @@ enum DailyActionResultStore {
     static func resultToShow(todayScore: Int) -> Result? {
         guard todayScore > 0, let record = pending else { return nil }
         guard !Date.cal.isDateInToday(record.doneDate) else { return nil }
-        let days = Date.cal.dateComponents([.day], from: record.doneDate, to: Date()).day ?? 0
+        // Compare calendar days, not 24h spans: an action done at 11pm must count
+        // as "yesterday" by 8am, so normalize both ends to start of day first.
+        let days = Date.cal.dateComponents([.day], from: Date.cal.startOfDay(for: record.doneDate), to: Date.cal.startOfDay(for: Date())).day ?? 0
         guard (1...2).contains(days) else {
             if days > 2 { clear() }
             return nil

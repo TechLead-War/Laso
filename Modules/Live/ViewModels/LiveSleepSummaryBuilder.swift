@@ -58,8 +58,13 @@ struct LiveSleepSummaryBuilder {
                 summary.totalDuration += duration
             case .awake:
                 summary.awakeTime += duration
-            case .asleepUnspecified, .inBed:
+            case .asleepUnspecified:
                 summary.totalDuration += duration
+            case .inBed:
+                // Time in bed is not time asleep — exclude from the total so it
+                // matches the canonical Core sleep sum (asleep* stages only) and
+                // does not inflate last night's sleep or the readiness score.
+                break
             @unknown default:
                 break
             }

@@ -333,7 +333,10 @@ struct CorrelationAnalyzer {
         let formatted = metric.formatValue(avgAbove)
         let diffPct = Int(abs(percentDiff))
         let timing = dayOffset > 0 ? " next day" : ""
-        return "\(metric.displayName) \(diffPct)% \(percentDiff > 0 ? "higher" : "lower")\(timing) (\(formatted)\(metric.unit))"
+        // percentDiff arrives as an absolute value, so its sign can't give the
+        // direction. Derive it from the averages, which also match the printed
+        // value (avgAbove) so the word and the number never contradict.
+        return "\(metric.displayName) \(diffPct)% \(avgAbove >= avgBelow ? "higher" : "lower")\(timing) (\(formatted)\(metric.unit))"
     }
 
     /// Natural language summary that reads like a coach, not a stats report.
