@@ -663,7 +663,14 @@ struct GrangerCausalityEngine {
     private static func solveLinearSystem(a: [Double], b: [Double], n: Int) -> [Double]? {
         guard a.count == n * n, b.count == n, n > 0 else { return nil }
 
-        // First attempt: direct solve via AccelerateML
+        // X'X is symmetric positive definite when well-conditioned — Cholesky
+        // (dposv) is the textbook-correct, fastest solver for normal equations.
+        if let solution = AccelerateML.solveSPD(A: a, b: b, n: n),
+           solution.allSatisfy({ $0.isFinite }) {
+            return solution
+        }
+
+        // Not positive definite: general LU (dgesv).
         if let solution = AccelerateML.solveLinearSystem(A: a, b: b, n: n),
            solution.allSatisfy({ $0.isFinite }) {
             return solution
@@ -1013,18 +1020,15 @@ struct GrangerCausalityEngine {
     /// This gives the variance multipliers for computing standard errors of coefficients.
     /// Returns an array of diagonal values, or nil if the system is singular.
     private static func computeXtXInverseDiagonal(xtx: [Double], n: Int) -> [Double]? {
-        var diagonal = [Double](repeating: 0, count: n)
-
-        for j in 0..<n {
-            // Solve (X'X) * column_j = e_j where e_j is the j-th standard basis vector
-            var ej = [Double](repeating: 0, count: n)
-            ej[j] = 1.0
-
-            guard let col = solveLinearSystem(a: xtx, b: ej, n: n) else { return nil }
-            diagonal[j] = col[j]
+        // One LU factorization for the whole inverse, not n separate solves of the
+        // same matrix — O(n^3) instead of O(n^4). Ridge-retry mirrors solveLinearSystem.
+        if let inv = AccelerateML.inverse(xtx, n: n) {
+            return (0..<n).map { inv[$0 * n + $0] }
         }
-
-        return diagonal
+        var regularized = xtx
+        for i in 0..<n { regularized[i * n + i] += 1e-6 }
+        guard let inv = AccelerateML.inverse(regularized, n: n) else { return nil }
+        return (0..<n).map { inv[$0 * n + $0] }
     }
 
     // MARK: - t-Distribution P-Value

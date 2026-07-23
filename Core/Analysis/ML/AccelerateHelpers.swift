@@ -464,6 +464,51 @@ enum AccelerateML {
         return rhs
     }
 
+    /// Solve Ax = b where A is symmetric positive definite, via Cholesky (dposv) —
+    /// the fastest, most stable solver for normal equations (X'X). A is n x n
+    /// (symmetric, so layout-agnostic), b is length n. Returns nil if A is not
+    /// positive definite (caller should fall back to a general solver).
+    static func solveSPD(A: [Double], b: [Double], n: Int) -> [Double]? {
+        guard A.count >= n * n, b.count >= n, n > 0 else { return nil }
+        var a = Array(A[0..<n * n])               // symmetric: row-major == column-major
+        var rhs = Array(b[0..<n])                 // overwritten with the solution
+        var uplo = Int8(UInt8(ascii: "U"))
+        var nDim = __CLPK_integer(n)
+        var nrhs = __CLPK_integer(1)
+        var lda = nDim
+        var ldb = nDim
+        var info = __CLPK_integer(0)
+
+        dposv_(&uplo, &nDim, &nrhs, &a, &lda, &rhs, &ldb, &info)
+
+        guard info == 0 else { return nil }       // info > 0 => not positive definite
+        return rhs
+    }
+
+    /// Invert an n x n matrix (row-major) with a single LU factorization (dgesv,
+    /// identity RHS) — O(n^3), versus n separate solves. Returns row-major inverse,
+    /// or nil if singular.
+    static func inverse(_ A: [Double], n: Int) -> [Double]? {
+        guard A.count >= n * n, n > 0 else { return nil }
+        var a = [Double](repeating: 0, count: n * n)
+        for i in 0..<n { for j in 0..<n { a[j * n + i] = A[i * n + j] } }   // column-major
+        var b = [Double](repeating: 0, count: n * n)                        // identity RHS
+        for i in 0..<n { b[i * n + i] = 1.0 }
+        var nDim = __CLPK_integer(n)
+        var nrhs = __CLPK_integer(n)
+        var lda = nDim
+        var ldb = nDim
+        var ipiv = [__CLPK_integer](repeating: 0, count: n)
+        var info = __CLPK_integer(0)
+
+        dgesv_(&nDim, &nrhs, &a, &lda, &ipiv, &b, &ldb, &info)
+
+        guard info == 0 else { return nil }
+        var inv = [Double](repeating: 0, count: n * n)
+        for i in 0..<n { for j in 0..<n { inv[i * n + j] = b[j * n + i] } }  // back to row-major
+        return inv
+    }
+
     // MARK: - Pearson Correlation
 
     /// Pearson correlation coefficient between x and y using vDSP.
