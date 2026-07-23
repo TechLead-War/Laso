@@ -1191,9 +1191,12 @@ final class HealthKitManager: @unchecked Sendable {
             healthStore.execute(observer)
             dashboardObserverQueries.append(observer)
 
-            // .immediate = wake the app as soon as new data arrives, not
-            // hourly-batched. Matches the pattern in WatchMonitor.
-            healthStore.enableBackgroundDelivery(for: sampleType, frequency: .immediate) { _, bgError in
+            // .hourly, not .immediate: the dashboard is not a real-time surface
+            // (it refreshes on foreground), so waking the app on every watch
+            // sample all day — steps/HR arrive constantly during activity — is
+            // pure battery waste. Hourly background refresh is plenty. Real-time
+            // heart-rate monitoring stays on its own .immediate query in WatchMonitor.
+            healthStore.enableBackgroundDelivery(for: sampleType, frequency: .hourly) { _, bgError in
                 if let bgError {
                     AnalyticsBackend.provider.captureError(
                         bgError,
