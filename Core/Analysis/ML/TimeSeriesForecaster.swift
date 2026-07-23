@@ -492,6 +492,30 @@ final class TimeSeriesForecaster {
         }
     }
 
+    // MARK: - Cross-launch Persistence
+
+    /// Bundle of fitted models for saving across launches. Persisting this is what
+    /// stops the expensive grid search from re-running on every cold launch.
+    struct PersistedModel: Codable {
+        let holtWinters: [String: HoltWintersState]
+        let arima: [String: ARIMAForecaster.ARIMAParameters]
+        let lastRetrain: Date
+    }
+
+    /// Snapshot of the current fitted models, or nil before the first fit.
+    func persistedModel() -> PersistedModel? {
+        guard !states.isEmpty, let lastRetrain = lastRetrainDate else { return nil }
+        return PersistedModel(holtWinters: getState(), arima: getArimaState(), lastRetrain: lastRetrain)
+    }
+
+    /// Restore models saved in a previous launch. Restores lastRetrainDate too, so
+    /// needsRetrain stays false until the 30-day window elapses — the grid search is
+    /// then skipped while forecasts still regenerate cheaply from these states.
+    func restore(_ model: PersistedModel) {
+        restoreState(model.holtWinters, arimaSaved: model.arima)
+        lastRetrainDate = model.lastRetrain
+    }
+
     // MARK: - Private: Grid Search Fit
 
     /// Expanded grid search with damping and double-seasonal support.

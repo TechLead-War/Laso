@@ -11,6 +11,7 @@ final class PersistenceManager {
     private let cloud = NSUbiquitousKeyValueStore.default
 
     private let baselinesKey = AppKeys.Data.baselines
+    private let forecasterModelKey = AppKeys.Data.forecasterModel
     private let preferencesKey = AppKeys.Data.preferences
     private let lastAnalysisKey = AppKeys.Data.lastAnalysis
 
@@ -25,6 +26,7 @@ final class PersistenceManager {
     /// Sensitive keys that use encrypted storage
     private static let encryptedKeys: Set<String> = [
         AppKeys.Data.baselines,
+        AppKeys.Data.forecasterModel,
         AppKeys.Data.preferences,
         AppKeys.Data.healthFocuses,
         AppKeys.Data.previousWeekScore,
@@ -156,6 +158,16 @@ final class PersistenceManager {
                 result[metric] = pair.value
             }
         }
+    }
+
+    // MARK: - Forecaster Model
+
+    func saveForecasterModel(_ model: TimeSeriesForecaster.PersistedModel) {
+        saveEncryptedValue(model, forKey: forecasterModelKey)
+    }
+
+    func loadForecasterModel() -> TimeSeriesForecaster.PersistedModel? {
+        loadEncryptedValue(TimeSeriesForecaster.PersistedModel.self, forKey: forecasterModelKey)
     }
 
     // MARK: - Preferences

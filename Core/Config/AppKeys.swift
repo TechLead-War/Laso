@@ -69,6 +69,7 @@ enum AppKeys {
 
     enum Data {
         static let baselines         = "healthpulse.baselines"
+        static let forecasterModel   = "healthpulse.forecasterModel"
         static let preferences       = "healthpulse.preferences"
         static let lastAnalysis      = "healthpulse.lastAnalysis"
         static let previousWeekScore = "healthpulse.previousWeekScore"

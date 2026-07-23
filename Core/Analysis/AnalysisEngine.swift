@@ -170,6 +170,12 @@ final class AnalysisEngine {
     init() {
         baselines = persistence.loadBaselines()
         lastAnalysis = persistence.loadLastAnalysisDate()
+        // Restore fitted forecaster models so the grid search runs on its 30-day
+        // cadence instead of refitting from scratch on every launch (the fresh-every-
+        // launch refit pegged a background core for seconds and heated the device).
+        if let model = persistence.loadForecasterModel() {
+            mlOrchestrator.forecaster.restore(model)
+        }
     }
 
     func runFullAnalysis(
@@ -385,6 +391,12 @@ final class AnalysisEngine {
             todayScore: overallScore.score,
             todayAnomalyCount: anomalies.count
         )
+
+        // Persist the fitted models (including today's incremental update) so the
+        // next launch restores them and skips the grid search.
+        if let model = mlOrchestrator.forecaster.persistedModel() {
+            persistence.saveForecasterModel(model)
+        }
     }
 
     func topInsights(_ count: Int = 3) -> [Insight] {
