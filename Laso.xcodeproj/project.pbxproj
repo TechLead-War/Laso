@@ -432,7 +432,6 @@
 		ECE35010F12F68B525CBA2EB /* OnboardingAbandonmentScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF65F1DEF8141B3AF16D780 /* OnboardingAbandonmentScheduler.swift */; };
 		ED4D58D4C2BBEA008EE7B2D2 /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233D9210207A5576939CE250 /* ExploreView.swift */; };
 		EE2C582EDF480EA346B57D98 /* OnboardingHealthSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */; };
-		EE64B47AB1B4367FCB9CC4C0 /* ARIMAForecaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62EDD27B6CC876FF840F03F3 /* ARIMAForecaster.swift */; };
 		EF71B5ECAFEE8239B534BED7 /* ExpandedJournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10E5F64725035FBB8ABBC78 /* ExpandedJournalView.swift */; };
 		EF7B83B980E7F3DD1DA44495 /* PersonalHealthForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */; };
 		F0E669E7CEA290C532C2CA8C /* TodayBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2630646758E72C032CFF3399 /* TodayBriefingView.swift */; };
@@ -672,7 +671,6 @@
 		60A38DC63EDF5882A08302CF /* SampleDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataProvider.swift; sourceTree = "<group>"; };
 		60EEBCBC7F8B24E469CA038E /* ExploreHealthStateLinkSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreHealthStateLinkSection.swift; sourceTree = "<group>"; };
 		6129398803D9F5EB1C5F30B0 /* HealthScorerConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorerConfig.swift; sourceTree = "<group>"; };
-		62EDD27B6CC876FF840F03F3 /* ARIMAForecaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARIMAForecaster.swift; sourceTree = "<group>"; };
 		631DC3E7D86ED955D4B00A05 /* ChangePointDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePointDetector.swift; sourceTree = "<group>"; };
 		632C894749F24040044533EB /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		633B2EFC90D8AB04B94FB59B /* CompoundInsightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompoundInsightEngine.swift; sourceTree = "<group>"; };
@@ -1344,7 +1342,6 @@
 				3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */,
 				89FE81F5724B1DB26A582D26 /* AdaptiveAnomalyDetector.swift */,
 				6AB176B907DB584496194E70 /* AdherenceTracker.swift */,
-				62EDD27B6CC876FF840F03F3 /* ARIMAForecaster.swift */,
 				631DC3E7D86ED955D4B00A05 /* ChangePointDetector.swift */,
 				AB7100A86FE84DF728F2303E /* CircadianAnalyzer.swift */,
 				633B2EFC90D8AB04B94FB59B /* CompoundInsightEngine.swift */,
@@ -2423,7 +2420,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE64B47AB1B4367FCB9CC4C0 /* ARIMAForecaster.swift in Sources */,
 				1C3500C4B4D3622DA2535EA9 /* AccelerateHelpers.swift in Sources */,
 				7A51132C40FC657213FDAE3F /* AchievementsView.swift in Sources */,
 				6586834C90CD59645EF0DAD4 /* AcknowledgementsView.swift in Sources */,
@@ -2966,7 +2962,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -2975,7 +2971,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.39;
+				MARKETING_VERSION = 1.2.40;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3045,7 +3041,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3054,7 +3050,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.39;
+				MARKETING_VERSION = 1.2.40;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -3072,7 +3068,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -3081,7 +3077,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.39;
+				MARKETING_VERSION = 1.2.40;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3095,7 +3091,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3104,7 +3100,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.39;
+				MARKETING_VERSION = 1.2.40;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;

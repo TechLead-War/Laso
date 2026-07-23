@@ -119,9 +119,6 @@ final class TimeSeriesForecaster {
     /// Last full retrain date -- guards against expensive grid search too frequently
     private var lastRetrainDate: Date?
 
-    /// Ensemble member
-    private let arimaForecaster = ARIMAForecaster()
-
     /// Whether a full retrain is needed (never trained, or >30 days since last)
     var needsRetrain: Bool {
         guard let lastRetrain = lastRetrainDate else { return true }
@@ -142,9 +139,6 @@ final class TimeSeriesForecaster {
             states[metric] = bestState
         }
 
-        // 2. Fit rigorous ARIMA pipeline mathematically alongside it
-        arimaForecaster.fit(timeSeries: timeSeries)
-
         lastRetrainDate = Date()
     }
 
@@ -159,7 +153,6 @@ final class TimeSeriesForecaster {
             let useDoubleSeasonal = values.count >= Self.monthlyMinimumDays
             states[metric] = gridSearchFit(values: values, doubleSeasonal: useDoubleSeasonal)
         }
-        arimaForecaster.fit(timeSeries: timeSeries, onlyMissing: true)
     }
 
     /// Fit a single metric
@@ -242,31 +235,9 @@ final class TimeSeriesForecaster {
 
     /// Get forecast for a metric N steps ahead via Model Ensembling Selection
     func forecast(metric: HealthMetric, stepsAhead: Int = 1) -> (value: Double, ci: Double)? {
-        let hwState = states[metric]
-        
-        let hwValue = hwState?.forecast(stepsAhead: stepsAhead)
-        let hwCI = hwState?.confidenceInterval(stepsAhead: stepsAhead)
-        
-        let arimaForecast = arimaForecaster.forecast(metric: metric, stepsAhead: stepsAhead)
-        
-        // Model Selection Logic (Ensemble Picker):
-        // Pick the model with the lowest uncertainty/variance on the targeted horizon.
-        if let hwV = hwValue, let hwC = hwCI, let arima = arimaForecast {
-            if arima.ci < hwC {
-                #if DEBUG
-                print("[TimeSeriesForecaster] ARIMA Selected for \(metric.rawValue) (CI: \(arima.ci) vs HW: \(hwC))")
-                #endif
-                return arima
-            } else {
-                return (hwV, hwC)
-            }
-        } else if let hwV = hwValue, let hwC = hwCI {
-             return (hwV, hwC)
-        } else if let arima = arimaForecast {
-             return arima
-        }
-        
-        return nil
+        guard let hwState = states[metric] else { return nil }
+        return (hwState.forecast(stepsAhead: stepsAhead),
+                hwState.confidenceInterval(stepsAhead: stepsAhead))
     }
 
     /// Multi-horizon forecast with per-horizon confidence intervals (Ensemble execution)
@@ -354,20 +325,12 @@ final class TimeSeriesForecaster {
         Dictionary(uniqueKeysWithValues: states.map { ($0.key.rawValue, $0.value) })
     }
 
-    /// Get ARIMA serializable state for persistence
-    func getArimaState() -> [String: ARIMAForecaster.ARIMAParameters] {
-        arimaForecaster.getState()
-    }
-
     /// Restore from persisted state
-    func restoreState(_ saved: [String: HoltWintersState], arimaSaved: [String: ARIMAForecaster.ARIMAParameters]? = nil) {
+    func restoreState(_ saved: [String: HoltWintersState]) {
         for (rawValue, state) in saved {
             if let metric = HealthMetric(rawValue: rawValue) {
                 states[metric] = state
             }
-        }
-        if let arima = arimaSaved {
-            arimaForecaster.restoreState(arima)
         }
     }
 
@@ -377,21 +340,20 @@ final class TimeSeriesForecaster {
     /// stops the expensive grid search from re-running on every cold launch.
     struct PersistedModel: Codable {
         let holtWinters: [String: HoltWintersState]
-        let arima: [String: ARIMAForecaster.ARIMAParameters]
         let lastRetrain: Date
     }
 
     /// Snapshot of the current fitted models, or nil before the first fit.
     func persistedModel() -> PersistedModel? {
         guard !states.isEmpty, let lastRetrain = lastRetrainDate else { return nil }
-        return PersistedModel(holtWinters: getState(), arima: getArimaState(), lastRetrain: lastRetrain)
+        return PersistedModel(holtWinters: getState(), lastRetrain: lastRetrain)
     }
 
     /// Restore models saved in a previous launch. Restores lastRetrainDate too, so
     /// needsRetrain stays false until the 30-day window elapses — the grid search is
     /// then skipped while forecasts still regenerate cheaply from these states.
     func restore(_ model: PersistedModel) {
-        restoreState(model.holtWinters, arimaSaved: model.arima)
+        restoreState(model.holtWinters)
         lastRetrainDate = model.lastRetrain
     }
 
