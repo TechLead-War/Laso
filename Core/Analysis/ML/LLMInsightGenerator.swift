@@ -12,7 +12,9 @@ final class LLMInsightGenerator {
     struct InsightContext {
         var baseTopic: String
         var primaryMetric: HealthMetric
-        var trendChange: Double
+        /// Measured percent change, when one exists. nil for causal/risk syntheses
+        /// that have no trend magnitude — those must not print a fabricated number.
+        var trendChange: Double?
         var riskScore: Double
         var relatedMetrics: [HealthMetric]
         var causalLag: Int?
@@ -49,7 +51,7 @@ final class LLMInsightGenerator {
     
     private func determineSentiment(for context: InsightContext) -> NLEmbeddingAnalyzer.SentimentTier {
         if context.riskScore > 0.6 || context.severity == .urgent { return .negative }
-        if context.riskScore < 0.3 && context.trendChange > 5.0 { return .positive }
+        if context.riskScore < 0.3 && (context.trendChange ?? 0) > 5.0 { return .positive }
         return .neutral
     }
     
@@ -69,11 +71,15 @@ final class LLMInsightGenerator {
     
     private func constructEvidence(context: InsightContext, sentiment: NLEmbeddingAnalyzer.SentimentTier) -> String {
         let metricName = context.primaryMetric.displayName
-        let formattedChange = String(format: "%.1f%%", abs(context.trendChange))
-        let direction = context.trendChange > 0 ? "upward" : "downward"
-        
         let shiftDesc = semanticAnalyzer.contextualizeWord("shift", targetSentiment: sentiment)
-        
+
+        // Only state a percentage when we actually measured one. Causal/risk
+        // syntheses pass nil and get a qualitative sentence instead of a made-up number.
+        guard let change = context.trendChange else {
+            return "\(metricName) stands out as the strongest signal in this \(shiftDesc)."
+        }
+        let formattedChange = String(format: "%.1f%%", abs(change))
+        let direction = change > 0 ? "upward" : "downward"
         return "\(metricName) has experienced a \(formattedChange) \(direction) \(shiftDesc)."
     }
     

@@ -596,7 +596,7 @@ final class CompoundInsightEngine {
             let context = LLMInsightGenerator.InsightContext(
                 baseTopic: "system performance",
                 primaryMetric: best.source,
-                trendChange: combinedR * 10.0, // Arbitrary trend scalar for NLP
+                trendChange: nil, // causal chain has no trend magnitude — no fabricated %
                 riskScore: 0.2, 
                 relatedMetrics: [best.mid, best.dest],
                 causalLag: totalLag,
@@ -629,7 +629,7 @@ final class CompoundInsightEngine {
             let context = LLMInsightGenerator.InsightContext(
                 baseTopic: "biological metrics",
                 primaryMetric: strongestDirect.cause,
-                trendChange: strongestDirect.effectSize * 15.0, // Scalar
+                trendChange: nil, // effect size is not a percent change — no fabricated %
                 riskScore: 0.3,
                 relatedMetrics: [strongestDirect.effect],
                 causalLag: strongestDirect.lag,
@@ -704,7 +704,7 @@ final class CompoundInsightEngine {
             let context = LLMInsightGenerator.InsightContext(
                 baseTopic: "overall readiness",
                 primaryMetric: uniqueMetrics.first ?? .restingHeartRate,
-                trendChange: -15.0, // Heavily negative for NLP 
+                trendChange: nil, // converging-risk synthesis has no single trend %
                 riskScore: predictionRisk > 0 ? predictionRisk : 0.8,
                 relatedMetrics: Array(uniqueMetrics.prefix(2)),
                 causalLag: nil,

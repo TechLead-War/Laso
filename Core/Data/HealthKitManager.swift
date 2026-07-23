@@ -1144,10 +1144,13 @@ final class HealthKitManager: @unchecked Sendable {
     /// Core dashboard metrics that should trigger an auto-refresh when new data
     /// arrives (typically via Apple Watch sync). Kept deliberately small to avoid
     /// refresh storms from seldom-changing metrics.
+    // heartRate deliberately excluded: WatchMonitor owns it at .immediate for
+    // real-time monitoring. A second observer here would fire the full dashboard
+    // refresh on every watch HR sample all day (immediate wins the per-type
+    // background-delivery cadence), defeating the hourly battery choice below.
     private static let dashboardObserverMetrics: [HealthMetric] = [
         .steps,
         .activeCalories,
-        .heartRate,
         .restingHeartRate,
         .heartRateVariability,
         .sleepDuration
@@ -1206,6 +1209,24 @@ final class HealthKitManager: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    /// Stop dashboard observers and disable their background delivery. Called on
+    /// account/data deletion or logout so the app stops getting woken once the
+    /// user no longer wants it observing HealthKit. Idempotent.
+    @MainActor
+    func stopDashboardObservers() {
+        dashboardObserverDebounceTask?.cancel()
+        dashboardObserverDebounceTask = nil
+        for query in dashboardObserverQueries {
+            healthStore.stop(query)
+        }
+        dashboardObserverQueries.removeAll()
+        for metric in Self.dashboardObserverMetrics {
+            guard let sampleType = HealthKitMetricRegistry.config(for: metric).sampleType else { continue }
+            healthStore.disableBackgroundDelivery(for: sampleType) { _, _ in }
+        }
+        hasSetupDashboardObservers = false
     }
 
     /// Cancel and reschedule the debounced refresh callback. Multiple observer

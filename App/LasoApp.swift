@@ -149,6 +149,10 @@ struct LasoApp: App {
             // so the user lands back on onboarding instead of an empty dashboard.
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LasoDidWipeAccount"))) { _ in
                 appStateStore.setOnboardingCompleted(false)
+                // Stop HealthKit observers + background delivery so the app is not
+                // woken after the user deletes their data.
+                container.healthKitManager.stopDashboardObservers()
+                WatchMonitor.shared.stopMonitoring()
             }
             .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
         }

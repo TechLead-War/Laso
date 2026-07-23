@@ -76,9 +76,16 @@ final class WatchMonitor {
     }
 
     func stopMonitoring() {
-        if let query = observerQuery, let store = healthStore {
-            store.stop(query)
-            observerQuery = nil
+        if let store = healthStore {
+            if let query = observerQuery {
+                store.stop(query)
+                observerQuery = nil
+            }
+            // Also stop background delivery, otherwise the app keeps getting woken
+            // for HR after monitoring is off (e.g. after the user deletes their data).
+            if let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) {
+                store.disableBackgroundDelivery(for: heartRateType) { _, _ in }
+            }
         }
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
     }
