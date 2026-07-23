@@ -68,9 +68,6 @@ final class HealthStateClassifier {
     /// Hash of input data from last training run. Skip recomputation if unchanged.
     private var lastInputHash: Int = 0
 
-    /// Apple Neural Engine (CoreML) Pipeline
-    private let coreMLEngine = CoreMLEngine()
-
     /// Laplace smoothing parameter for HMM transition matrix (adaptive: 1/k at train time)
 
     /// Whether a full retrain is needed (never trained, or >30 days since last)
@@ -368,37 +365,8 @@ final class HealthStateClassifier {
 
     // MARK: - Classification
 
-    /// Classify a single day into a health state using CoreML (Primary) or soft GMM assignment (Fallback)
+    /// Classify a single day into a health state via soft GMM assignment.
     func classify(vector: DailyFeatureVector) -> HealthState? {
-        // 1. CoreML Neural Inference (Primary Engine)
-        if coreMLEngine.isAvailable {
-            do {
-                let riskScore = try coreMLEngine.predictRisk(vector: vector, orderedKeys: trainedKeys)
-                
-                // Construct a Neural-assigned state representation
-                // In a full implementation, we would extract the ML feature matrix and clustering
-                // explicitly from `coreml_classifier`. We use the Risk Score for direct narrative here.
-                let stateLabel: String
-                if riskScore > 0.75 { stateLabel = "Stressed" }
-                else if riskScore > 0.5 { stateLabel = "Fatigued" }
-                else if riskScore < 0.2 { stateLabel = "Peak Performance" }
-                else { stateLabel = "Recovery" }
-                
-                return HealthState(
-                    label: stateLabel,
-                    centroid: [],
-                    characteristics: [HealthState.StateCharacteristic(metric: .heartRateVariability, level: riskScore > 0.5 ? .low : .high, zScore: riskScore)],
-                    daysInState: 1,
-                    transitionProbabilities: [:]
-                )
-            } catch {
-                #if DEBUG
-                print("[HealthStateClassifier] CoreML inference failed. Falling back to GMM. Error: \(error)")
-                #endif
-            }
-        }
-        
-        // 2. GMM Fallback
         guard !means.isEmpty, numComponents > 0 else { return nil }
 
         // Use training-derived medians for missing values (consistent with train-time imputation)

@@ -362,7 +362,6 @@
 		C4A226B7B45FB84FBB55C2C2 /* StatBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59FDF9333C23739810C55C5C /* StatBoxView.swift */; };
 		C4B214F033824C67DA2327BB /* DashboardSmartActionAdvisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9918769144FC023D22876D2 /* DashboardSmartActionAdvisor.swift */; };
 		C69418ED9D3029D43AB43D6A /* TemperatureCompoundAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8AA6C651893546E9CD0AC1 /* TemperatureCompoundAnalyzer.swift */; };
-		C707BEB9D25571B2FF38292F /* CoreMLEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D77EF02BEAA6CCDBD0BE35DF /* CoreMLEngine.swift */; };
 		C71A55E39174630EE464CCBD /* MLOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */; };
 		C7729BA468CFB0B2CA3D1F92 /* CopyOverridesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474720A7DEC11561E860BC07 /* CopyOverridesStore.swift */; };
 		C782912B245ACF19023C1CCC /* DashboardHousekeepingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFF271AA73B1889E41C4880 /* DashboardHousekeepingService.swift */; };
@@ -886,7 +885,6 @@
 		D5AF3056B11384BB1F143500 /* PredictionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionBuilder.swift; sourceTree = "<group>"; };
 		D5CA49C6E7F5AAE50F74BA43 /* MetricCue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCue.swift; sourceTree = "<group>"; };
 		D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationDiscovery.swift; sourceTree = "<group>"; };
-		D77EF02BEAA6CCDBD0BE35DF /* CoreMLEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMLEngine.swift; sourceTree = "<group>"; };
 		D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendDirection.swift; sourceTree = "<group>"; };
 		D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
 		D8F6915E5718E8B9919DC3FD /* MetricDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailViewModel.swift; sourceTree = "<group>"; };
@@ -1351,7 +1349,6 @@
 				AB7100A86FE84DF728F2303E /* CircadianAnalyzer.swift */,
 				633B2EFC90D8AB04B94FB59B /* CompoundInsightEngine.swift */,
 				583A7B8F215D7D8FAE8830D7 /* ConformalCalibrator.swift */,
-				D77EF02BEAA6CCDBD0BE35DF /* CoreMLEngine.swift */,
 				2B9B4E13B3E0CBF33D986638 /* CorrelationDiscovery.swift */,
 				6DFF5C101A5DE3F1A74990CC /* DailyNarrativeEngine.swift */,
 				36A650A85671846F162958D4 /* DecisionPolicyEngine.swift */,
@@ -2530,7 +2527,6 @@
 				9CBF62DC542F7C0B2CFEC340 /* Copy+Vitality.swift in Sources */,
 				F86FCDD7F9DAEAB2543F3F42 /* Copy.swift in Sources */,
 				C7729BA468CFB0B2CA3D1F92 /* CopyOverridesStore.swift in Sources */,
-				C707BEB9D25571B2FF38292F /* CoreMLEngine.swift in Sources */,
 				26FDBB5C7AE73A57D3DCE5A9 /* CorrelationAnalyzer.swift in Sources */,
 				0E711768815897CC79DB2F03 /* CorrelationDiscovery.swift in Sources */,
 				A09E993B0FAA2DE5A9FB421E /* CorrelationsSection.swift in Sources */,
@@ -2970,7 +2966,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -2979,7 +2975,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.38;
+				MARKETING_VERSION = 1.2.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3049,7 +3045,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3058,7 +3054,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.38;
+				MARKETING_VERSION = 1.2.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -3076,7 +3072,7 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -3085,7 +3081,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.38;
+				MARKETING_VERSION = 1.2.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3099,7 +3095,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3108,7 +3104,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.38;
+				MARKETING_VERSION = 1.2.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
