@@ -202,7 +202,7 @@ final class AnalysisEngine {
 
         var newTrends: [HealthMetric: TrendAnalyzer.TrendResult] = [:]
         for (metric, series) in timeSeries {
-            guard series.values.count >= 3 else { continue }
+            guard series.samples.count >= 3 else { continue }
             newTrends[metric] = TrendAnalyzer.analyze(series: series, higherIsBetter: metric.higherIsBetter)
         }
 

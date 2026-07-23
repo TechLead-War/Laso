@@ -32,7 +32,6 @@ final class TimeSeriesForecaster {
         var monthlySeasonals: [Double]?     // length = monthlyPeriod (30), nil when single-season
         var dampingFactor: Double            // phi for damped trend (1.0 = undamped)
         var gamma2: Double?                 // monthly seasonal smoothing
-        var fourierCoefficients: [[Double]]? // outer: per period, inner: [a1,b1,a2,b2,...] coefficients
 
         /// One-step-ahead forecast (backward compatible)
         func forecast(stepsAhead: Int = 1) -> Double {
@@ -108,21 +107,6 @@ final class TimeSeriesForecaster {
             let ciLower: Double         // lower bound of confidence interval
             let ciUpper: Double         // upper bound of confidence interval
             let ciWidth: Double         // total CI width
-        }
-    }
-
-    /// Fourier decomposition result
-    struct FourierDecomposition {
-        let mean: Double
-        let coefficients: [PeriodCoefficients]
-        let residuals: [Double]
-        let varianceExplained: Double
-
-        struct PeriodCoefficients {
-            let period: Int
-            let harmonics: [(a: Double, b: Double)] // cosine and sine coefficients per harmonic
-            let amplitude: [Double]                   // amplitude per harmonic
-            let phase: [Double]                       // phase per harmonic (radians)
         }
     }
 
@@ -302,125 +286,6 @@ final class TimeSeriesForecaster {
         
         guard !results.isEmpty else { return nil }
         return MultiHorizonForecast(metric: metric, horizons: results)
-    }
-
-    // MARK: - Fourier Seasonal Decomposition
-
-    /// Fit a Fourier seasonal decomposition model.
-    ///
-    /// Model: y(t) = mu + sum_k sum_j [a_kj * cos(2*pi*j*t / P_k) + b_kj * sin(2*pi*j*t / P_k)]
-    ///
-    /// Solves via OLS using normal equations (X'X)^{-1} X'y.
-    ///
-    /// - Parameters:
-    ///   - values: Time series values
-    ///   - periods: Seasonal periods to decompose (default: [7, 30])
-    ///   - harmonics: Number of harmonics per period (default: 3)
-    /// - Returns: Decomposition result with coefficients, residuals, and variance explained
-    func fourierDecompose(
-        values: [Double],
-        periods: [Int] = [7, 30],
-        harmonics: Int = 3
-    ) -> FourierDecomposition? {
-        let n = values.count
-        guard n > 0 else { return nil }
-        guard harmonics > 0, periods.allSatisfy({ $0 > 0 }) else { return nil }
-
-        // Total number of Fourier terms: 2 * harmonics per period (cos + sin) + 1 for intercept
-        let numFourierTerms = periods.count * harmonics * 2
-        let numParams = 1 + numFourierTerms  // intercept + Fourier terms
-
-        guard n > numParams else { return nil } // Need more data than parameters
-
-        // Build design matrix X (n x numParams), row-major
-        var designMatrix = [Double](repeating: 0, count: n * numParams)
-
-        for t in 0..<n {
-            // Intercept
-            designMatrix[t * numParams + 0] = 1.0
-
-            var col = 1
-            for period in periods {
-                let pDouble = Double(period)
-                for j in 1...harmonics {
-                    let angle = 2.0 * .pi * Double(j) * Double(t) / pDouble
-                    designMatrix[t * numParams + col] = cos(angle)
-                    col += 1
-                    designMatrix[t * numParams + col] = sin(angle)
-                    col += 1
-                }
-            }
-        }
-
-        // Solve via normal equations: (X'X) beta = X'y
-        // X'X is (numParams x numParams)
-        let XtX = AccelerateML.matrixMultiply(
-            A: transposeRowMajor(designMatrix, rows: n, cols: numParams),
-            B: designMatrix,
-            rows: numParams, cols: n, n: numParams
-        )
-        guard !XtX.isEmpty else { return nil }
-
-        // X'y is (numParams x 1)
-        let Xt = transposeRowMajor(designMatrix, rows: n, cols: numParams)
-        let XtY = AccelerateML.matVecMultiply(matrix: Xt, vector: values, rows: numParams, cols: n)
-        guard XtY.count == numParams else { return nil }
-
-        // Solve (X'X) beta = X'y
-        // Add small ridge regularization for numerical stability
-        var XtXReg = XtX
-        for i in 0..<numParams {
-            XtXReg[i * numParams + i] += 1e-8
-        }
-
-        guard let beta = AccelerateML.solveLinearSystem(A: XtXReg, b: XtY, n: numParams) else {
-            return nil
-        }
-
-        // Compute fitted values and residuals
-        let fitted = AccelerateML.matVecMultiply(matrix: designMatrix, vector: beta, rows: n, cols: numParams)
-        let residuals = AccelerateML.subtract(values, fitted)
-
-        // Variance explained
-        let totalVariance = AccelerateML.sumOfSquares(
-            AccelerateML.scalarAdd(values, -AccelerateML.mean(values))
-        )
-        let residualVariance = AccelerateML.sumOfSquares(residuals)
-        let varianceExplained = totalVariance > 0 ? 1.0 - residualVariance / totalVariance : 0.0
-
-        // Parse coefficients into structured form
-        let meanCoeff = beta[0]
-        var periodCoefficients: [FourierDecomposition.PeriodCoefficients] = []
-
-        var idx = 1
-        for period in periods {
-            var harmonicPairs: [(a: Double, b: Double)] = []
-            var amplitudes: [Double] = []
-            var phases: [Double] = []
-
-            for _ in 1...harmonics {
-                let a = beta[idx]
-                let b = beta[idx + 1]
-                harmonicPairs.append((a: a, b: b))
-                amplitudes.append((a * a + b * b).squareRoot())
-                phases.append(atan2(b, a))
-                idx += 2
-            }
-
-            periodCoefficients.append(FourierDecomposition.PeriodCoefficients(
-                period: period,
-                harmonics: harmonicPairs,
-                amplitude: amplitudes,
-                phase: phases
-            ))
-        }
-
-        return FourierDecomposition(
-            mean: meanCoeff,
-            coefficients: periodCoefficients,
-            residuals: residuals,
-            varianceExplained: varianceExplained
-        )
     }
 
     // MARK: - Anomaly Detection
@@ -661,23 +526,6 @@ final class TimeSeriesForecaster {
             state.residualStdDev = variance.squareRoot()
         }
 
-        // Optionally compute Fourier coefficients for interpretability
-        if values.count >= Self.monthlyMinimumDays {
-            let periods = doubleSeasonal ? [Self.weeklyPeriod, Self.monthlyPeriod] : [Self.weeklyPeriod]
-            if let decomp = fourierDecompose(values: values, periods: periods, harmonics: 3) {
-                var allCoeffs: [[Double]] = []
-                for pc in decomp.coefficients {
-                    var flat: [Double] = []
-                    for h in pc.harmonics {
-                        flat.append(h.a)
-                        flat.append(h.b)
-                    }
-                    allCoeffs.append(flat)
-                }
-                state.fourierCoefficients = allCoeffs
-            }
-        }
-
         return state
     }
 
@@ -775,8 +623,7 @@ final class TimeSeriesForecaster {
             fittedCount: 0,
             monthlySeasonals: monthlySeasonals,
             dampingFactor: 1.0,
-            gamma2: gamma2,
-            fourierCoefficients: nil
+            gamma2: gamma2
         )
     }
 
@@ -844,17 +691,4 @@ final class TimeSeriesForecaster {
         return totalAbsError / Double(count)
     }
 
-    // MARK: - Private: Matrix Helpers
-
-    /// Transpose a row-major matrix (rows x cols) -> (cols x rows)
-    private func transposeRowMajor(_ matrix: [Double], rows: Int, cols: Int) -> [Double] {
-        guard matrix.count >= rows * cols else { return [] }
-        var result = [Double](repeating: 0, count: rows * cols)
-        for i in 0..<rows {
-            for j in 0..<cols {
-                result[j * rows + i] = matrix[i * cols + j]
-            }
-        }
-        return result
-    }
 }

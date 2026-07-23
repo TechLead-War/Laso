@@ -372,11 +372,12 @@ final class DashboardViewModel {
             guard !periodSamples.isEmpty else { return nil }
             let periodAvg = periodSamples.map(\.value).mean
 
-            // Compare with previous equivalent period
-            let previousSamples = series.sortedSamples.filter { sample in
-                let daysAgo = Date.cal.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
-                return daysAgo >= days && daysAgo < days * 2
-            }
+            // Compare with previous equivalent period. Same day-shifted boundary as
+            // samples(lastDays:), via O(log n) binary search rather than a per-sample
+            // calendar diff over full history.
+            let prevEnd = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+            let prevStart = Date.cal.date(byAdding: .day, value: -days * 2, to: Date()) ?? Date()
+            let previousSamples = series.samples(from: prevStart, until: prevEnd)
             let previousAvg = previousSamples.isEmpty ? 0.0 : previousSamples.map(\.value).mean
             let changePercent: Double
             if previousAvg != 0 {
@@ -477,12 +478,16 @@ final class DashboardViewModel {
         var declined: [MetricChange] = []
         var stable: [MetricChange] = []
 
+        // Previous-period window abuts the current one and reuses the same
+        // day-shifted boundary as samples(lastDays:), resolved by O(log n) binary
+        // search instead of a per-sample calendar diff over the full history.
+        let now = Date()
+        let prevEnd = Date.cal.date(byAdding: .day, value: -days, to: now) ?? now
+        let prevStart = Date.cal.date(byAdding: .day, value: -days * 2, to: now) ?? now
+
         for (metric, series) in healthKitManager.timeSeries {
             let currentSamples = series.samples(lastDays: days)
-            let previousSamples = series.sortedSamples.filter { sample in
-                let daysAgo = Date.cal.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
-                return daysAgo >= days && daysAgo < days * 2
-            }
+            let previousSamples = series.samples(from: prevStart, until: prevEnd)
 
             guard !currentSamples.isEmpty, !previousSamples.isEmpty else { continue }
 

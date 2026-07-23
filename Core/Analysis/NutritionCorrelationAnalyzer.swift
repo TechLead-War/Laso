@@ -79,8 +79,8 @@ struct NutritionCorrelationAnalyzer {
         for pair in curatedPairs {
             guard let nutritionSeries = timeSeries[pair.nutrition],
                   let outcomeSeries = timeSeries[pair.outcome],
-                  nutritionSeries.values.count >= 14,
-                  outcomeSeries.values.count >= 14 else { continue }
+                  nutritionSeries.samples.count >= 14,
+                  outcomeSeries.samples.count >= 14 else { continue }
 
             // Build date-indexed lookup
             let nutritionByDate = buildDateLookup(samples: nutritionSeries.sortedSamples)

@@ -190,7 +190,7 @@ struct ClinicalIntelligence {
         var insights: [Insight] = []
 
         guard let sysSeries = timeSeries[.bloodPressureSystolic],
-              sysSeries.values.count >= minSamplesForInsight else { return [] }
+              sysSeries.samples.count >= minSamplesForInsight else { return [] }
 
         let sysValues = sysSeries.sortedSamples
         let diaSeries = timeSeries[.bloodPressureDiastolic]
@@ -275,7 +275,7 @@ struct ClinicalIntelligence {
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         guard let glucoseSeries = timeSeries[.bloodGlucose],
-              glucoseSeries.values.count >= minSamplesForInsight else { return nil }
+              glucoseSeries.samples.count >= minSamplesForInsight else { return nil }
 
         let samples = glucoseSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }
@@ -332,7 +332,7 @@ struct ClinicalIntelligence {
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         guard let rrSeries = timeSeries[.respiratoryRate],
-              rrSeries.values.count >= minSamplesForInsight else { return nil }
+              rrSeries.samples.count >= minSamplesForInsight else { return nil }
 
         let samples = rrSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }

@@ -103,7 +103,7 @@ struct TrendAnalyzer {
         analysisEngine: AnalysisEngine?,
         days: Int
     ) -> TrendResult? {
-        guard let series, series.values.count >= 3 else { return nil }
+        guard let series, series.samples.count >= 3 else { return nil }
         if days == homeTrendDays, let cachedTrend = analysisEngine?.trend(for: metric) {
             return cachedTrend
         }
