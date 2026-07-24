@@ -682,13 +682,17 @@ struct InsightGenerator {
         default: inflectionSuffix = ""
         }
 
+        // "Low" vs "High" must follow the metric's direction. `.declining` means
+        // "getting worse" after higherIsBetter normalization, so for a metric where
+        // higher is worse (uneven walking, resting HR) the bad value is HIGH, not low.
+        // Without this, walking asymmetry read "Critically Low" while actually high.
         switch (trend, severity) {
-        case (.declining, .critical): return "\(metricName) Critically Low\(inflectionSuffix)"
+        case (.declining, .critical): return "\(metricName) \(metric.higherIsBetter ? "Critically Low" : "Critically High")\(inflectionSuffix)"
         case (.declining, .warning): return "\(metricName) \(ratePrefix)Needs Attention\(inflectionSuffix)"
         case (.declining, .info): return "\(metricName) \(ratePrefix)Declining\(inflectionSuffix)"
         case (.improving, _): return "\(metricName) \(ratePrefix)Improving\(inflection == .accelerating ? Copy.Insights.andGainingMomentum : "")"
         case (.stable, .critical): return "\(metricName) Outside Safe Range"
-        case (.stable, .warning): return "\(metricName) Elevated"
+        case (.stable, .warning): return "\(metricName) \(metric.higherIsBetter ? "Below Usual" : "Elevated")"
         case (.stable, .info): return "\(metricName) Stable"
         }
     }
