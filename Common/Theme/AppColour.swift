@@ -84,9 +84,9 @@ enum AppColour {
     )
 
     // MARK: - 3. Semantic State
-    static let success = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
-    static let warning = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B amber
-    static let danger  = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D soft red
+    static let success = Color(uiColor: #colorLiteral(red: 0.20, green: 0.77, blue: 0.55, alpha: 1.00)) // #33C48D calm emerald
+    static let warning = Color(uiColor: #colorLiteral(red: 0.89, green: 0.71, blue: 0.35, alpha: 1.00)) // #E3B45A soft gold (was harsh amber)
+    static let danger  = Color(uiColor: #colorLiteral(red: 0.88, green: 0.36, blue: 0.39, alpha: 1.00)) // #E05C64 muted coral
     static let info    = Color(uiColor: #colorLiteral(red: 0.00, green: 0.44, blue: 0.89, alpha: 1.00)) // #0071E3 matches primary
 
     // MARK: - Remote-overridable wrapper
@@ -115,10 +115,10 @@ enum AppColour {
     static var scoreFair:    Color { remote(RC.colorScoreFair,    fallback: _scoreFair) }
     static var scorePoor:    Color { remote(RC.colorScorePoor,    fallback: _scorePoor) }
 
-    private static let _scoreOptimal = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
-    private static let _scoreGood    = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
-    private static let _scoreFair    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B
-    private static let _scorePoor    = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D
+    private static let _scoreOptimal = Color(uiColor: #colorLiteral(red: 0.20, green: 0.77, blue: 0.55, alpha: 1.00)) // #33C48D calm emerald
+    private static let _scoreGood    = Color(uiColor: #colorLiteral(red: 0.24, green: 0.80, blue: 0.60, alpha: 1.00)) // #3DCC99 soft teal
+    private static let _scoreFair    = Color(uiColor: #colorLiteral(red: 0.89, green: 0.71, blue: 0.35, alpha: 1.00)) // #E3B45A soft gold (was harsh amber)
+    private static let _scorePoor    = Color(uiColor: #colorLiteral(red: 0.88, green: 0.36, blue: 0.39, alpha: 1.00)) // #E05C64 muted coral
 
     // MARK: - 5. Health Categories (RC-overridable, desaturated)
     static var categoryHeart:    Color { remote(RC.colorCategoryHeart,    fallback: _categoryHeart) }
