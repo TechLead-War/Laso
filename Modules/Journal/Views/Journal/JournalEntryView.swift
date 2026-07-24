@@ -244,6 +244,7 @@ struct JournalEntryView: View {
             TextField(Copy.Journal.notesPlaceholder, text: $notes, axis: .vertical)
                 .lineLimit(2...4)
                 .textFieldStyle(.plain)
+                .writingToolsFull()
                 .padding(DS.cardPadding)
                 .cardStyle()
         }
