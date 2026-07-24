@@ -110,8 +110,6 @@ extension Copy {
 
         static var watchNotWornReminder: String { RemoteConfigManager.shared.copyString("copy_settings_watch_not_worn_reminder", default: "Watch Not Worn Reminder") }
         static var watchNotWornDescription: String { RemoteConfigManager.shared.copyString("copy_settings_watch_not_worn_description", default: "Get notified if your Apple Watch has not recorded data for over an hour.") }
-        static var lowBatteryReminder: String { RemoteConfigManager.shared.copyString("copy_settings_low_battery_reminder", default: "Low Battery Reminder") }
-        static var lowBatteryDescription: String { RemoteConfigManager.shared.copyString("copy_settings_low_battery_description", default: "Get a one-time alert when your watch battery drops below 10%.") }
         static var watchRemindersFooter: String { RemoteConfigManager.shared.copyString("copy_settings_watch_reminders_footer", default: "These reminders help you keep your watch on and charged so you do not miss any health data.") }
 
         // MARK: - Alerts

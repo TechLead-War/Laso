@@ -880,8 +880,7 @@ struct ContentView: View {
             prefs.heartRateSpikeAlertsEnabled,
             prefs.trendReversalAlertsEnabled,
             prefs.improvementAlertsEnabled,
-            prefs.watchNotWornReminderEnabled,
-            prefs.lowBatteryReminderEnabled
+            prefs.watchNotWornReminderEnabled
         ].filter { $0 }.count
 
         AppAnalytics.shared.trackUserHealthSnapshot(

@@ -46,9 +46,6 @@ struct NotificationPreferences: Codable, Equatable {
     /// Apple Watch not-worn reminder
     var watchNotWornReminderEnabled: Bool = true
 
-    /// Low battery reminder
-    var lowBatteryReminderEnabled: Bool = true
-
     var maxNotificationsPerDay: Int = 2
 
     /// Metrics for which warning alerts are enabled. only the most safety-critical metrics by default
@@ -81,6 +78,6 @@ extension NotificationPreferences {
         case warningAlertMetrics
         case heartRateSpikeAlertsEnabled, heartRateSpikeThreshold, heartRateDropThreshold
         case trendReversalAlertsEnabled, improvementAlertsEnabled
-        case watchNotWornReminderEnabled, lowBatteryReminderEnabled
+        case watchNotWornReminderEnabled
     }
 }

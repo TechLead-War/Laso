@@ -100,8 +100,7 @@ final class DashboardHousekeepingService {
             preferences.heartRateSpikeAlertsEnabled ||
             preferences.trendReversalAlertsEnabled ||
             preferences.improvementAlertsEnabled ||
-            preferences.watchNotWornReminderEnabled ||
-            preferences.lowBatteryReminderEnabled
+            preferences.watchNotWornReminderEnabled
         // Check current authorization status without prompting. Permission is
         // requested during onboarding so we should not show a random dialog here.
         return notificationsEnabled

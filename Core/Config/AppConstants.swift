@@ -15,7 +15,6 @@ enum AppConstants {
         static let actionReminder = "healthpulse.actionReminder"
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
-        static let watchLowBattery = "healthpulse.watch.lowBattery"
 
         // Onboarding abandonment (Journey 1): three reminders after the user
         // drops out mid-onboarding, cancelled the moment onboarding completes.

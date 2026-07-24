@@ -212,15 +212,15 @@ extension Copy {
             // Concrete deadline ("11:59 PM tonight") outperforms vague "tonight" in
             // Customer.io 2026 urgency tests because users can mentally schedule it.
             if streakDays >= 3 {
-                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_streak", default: "Your %d day streak ends tonight."), streakDays)))
+                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_streak", default: "You are on a %d day roll. Keep it going tonight?"), streakDays)))
             }
             if let delta = scoreDelta, delta <= -3 {
-                candidates.append((.lossFrame, RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_ground", default: "You slipped a little from last week.")))
+                candidates.append((.lossFrame, RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_ground", default: "A little below last week. Easy to pick back up.")))
             }
             // Only fire the "slipping" loss frame when we have a concrete delta to cite.
             // Vague "Yesterday's gains are slipping" without data tested as filler.
             if improvingDays == 0, let delta = scoreDelta, delta < 0 {
-                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_delta", default: "Down %d from yesterday. Easy to get back."), abs(delta))))
+                candidates.append((.lossFrame, String(format: RemoteConfigManager.shared.copyString("copy_notifications_hook_loss_delta", default: "A bit below yesterday, by %d. A small step gets it back."), abs(delta))))
             }
 
             // Progress hooks (endowed progress)
@@ -317,7 +317,7 @@ extension Copy {
 
             // Streak (compact, loss-frame when long)
             if streakDays >= 3 {
-                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_streak_risk", default: "Your %d day streak is on the line."), streakDays))
+                parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_streak_risk", default: "Your %d day streak is going strong."), streakDays))
             } else if streakDays > 1 {
                 parts.append(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_body_streak", default: "%d day streak."), streakDays))
             }
@@ -585,10 +585,6 @@ extension Copy {
 
         // MARK: - Watch Monitor
 
-        static var watchBatteryLow: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_watch_battery_low", default: "Your watch battery is low"), max: titleMax) }
-        static func watchBatteryBody(device: String, percent: Int) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_watch_battery_body", default: "Your %@ is at %d%%. Charge it soon so you do not miss health data."), device, percent), max: bodyMax)
-        }
         static func watchNotWornScheduled(device: String, wearToTrack: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_watch_not_worn_scheduled", default: "Your %@ has not recorded data in a while. %@"), device, wearToTrack), max: bodyMax)
         }

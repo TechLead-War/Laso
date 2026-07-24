@@ -260,11 +260,6 @@ final class RemoteConfigManager {
         doubleValue(forKey: "watch_not_worn_threshold_hours")
     }
 
-    /// Battery percentage below which low battery alert fires (0.0-1.0)
-    var watchBatteryLowThreshold: Double {
-        doubleValue(forKey: "watch_battery_low_threshold")
-    }
-
     // MARK: - Notification Optimizer
 
     /// Maximum non-daily-summary notifications per day

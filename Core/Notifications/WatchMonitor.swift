@@ -28,19 +28,12 @@ final class WatchMonitor {
     // MARK: - UserDefaults Keys
 
     private let lastWatchDataKey = AppKeys.Watch.lastWatchDataTime
-    private let lowBatteryAlertShownKey = AppKeys.Watch.lowBatteryAlertShown
     private let lastObserverProcessingKey = AppKeys.Watch.lastObserverProcessing
     private let lastScheduleRefreshKey = AppKeys.Watch.lastScheduleRefresh
 
     /// Cached preferences to avoid repeated Keychain + AES-GCM decryption
     private var cachedPreferences: NotificationPreferences?
     private var preferencesLoadedAt: Date?
-
-    /// Watch samples effectively never carry battery metadata, so an
-    /// unguarded report would fire on every observer wake and drown the real
-    /// suppression funnel. Once per launch keeps the breadcrumb visible
-    /// without the flood.
-    private var batteryGapReported = false
 
     private var observerProcessingInterval: TimeInterval {
         ThermalManager.shared.watchMonitorQueryInterval
@@ -178,7 +171,6 @@ final class WatchMonitor {
                     if self.isFromAppleWatch(sample: sample) {
                         UserDefaults.standard.set(sample.startDate.timeIntervalSince1970, forKey: self.lastWatchDataKey)
                         self.scheduleNotWornNotification()
-                        self.checkBatteryFromSample(sample)
                         return
                     }
                 }
@@ -297,87 +289,6 @@ final class WatchMonitor {
     }
 
     // MARK: - Battery Check (Background-Capable)
-
-    /// Extract battery level from HealthKit sample metadata.
-    /// This runs on every background delivery, so it works even when app is not open.
-    ///
-    /// Note: HealthKit does not have a standard battery metadata key.
-    /// Some watchOS versions may include it under custom keys. If battery data
-    /// is never present in your samples, a watchOS companion app with
-    /// WatchConnectivity would be needed for reliable battery monitoring.
-    private func checkBatteryFromSample(_ sample: HKSample) {
-        // Check known metadata keys that may contain battery level (0.0–1.0)
-        let batteryKeys = ["WatchBatteryLevel", "DeviceBatteryLevel", "HKDeviceBatteryLevel"]
-        if let metadata = sample.metadata {
-            for key in batteryKeys {
-                if let batteryLevel = metadata[key] as? Double {
-                    handleBatteryLevel(batteryLevel)
-                    return
-                }
-            }
-        }
-
-        // No battery key present. Make the gap observable instead of silently
-        // dropping it. HealthKit has no standard battery metadata key, so true
-        // watch battery needs a watchOS companion + WatchConnectivity, which is
-        // out of scope here. The suppressed event lets us see how often samples
-        // arrive without battery data.
-        reportBatteryMetadataAbsent()
-    }
-
-    private func reportBatteryMetadataAbsent() {
-        // With the reminder off no notification would ever be attempted, so
-        // there is nothing being suppressed worth reporting.
-        guard !batteryGapReported, loadCachedPreferences().lowBatteryReminderEnabled else { return }
-        batteryGapReported = true
-        AppAnalytics.shared.trackNotificationSuppressed(
-            type: NotificationManager.notificationType(AppConstants.NotificationID.watchLowBattery),
-            identifier: AppConstants.NotificationID.watchLowBattery,
-            reason: "battery_metadata_absent"
-        )
-    }
-
-    /// Process a battery level reading (0.0–1.0). Sends a notification if below threshold.
-    private func handleBatteryLevel(_ level: Double) {
-        let preferences = loadCachedPreferences()
-        guard preferences.lowBatteryReminderEnabled else { return }
-
-        let defaults = UserDefaults.standard
-
-        if level < RemoteConfigManager.shared.watchBatteryLowThreshold {
-            // Only show once per low-battery cycle
-            guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
-
-            // Actionable-but-not-clinical: bypassCap keeps a dying watch out of
-            // the daily budget so it is never swallowed, severity:.warning keeps
-            // it below the critical alarm tier. Routing through NotificationManager
-            // means it is tracked like every other notification (replaces the raw
-            // trackNotificationSent that bypassed the standard funnel).
-            let scheduled = NotificationManager.shared.scheduleNotification(
-                title: Copy.Notifications.watchBatteryLow,
-                body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
-                identifier: AppConstants.NotificationID.watchLowBattery,
-                maxPerDay: 1,
-                severity: .warning,
-                bypassCap: true
-            )
-
-            // Mark the cycle only for a notification that actually exists, so
-            // a suppressed schedule retries on the next delivery instead of
-            // muting battery alerts for the whole discharge cycle.
-            if scheduled {
-                defaults.set(true, forKey: lowBatteryAlertShownKey)
-            }
-        } else {
-            // Battery recovered. reset so we can alert again next cycle
-            defaults.set(false, forKey: lowBatteryAlertShownKey)
-        }
-    }
-
-    /// Reset low battery alert flag (e.g. when user manually charges watch)
-    func resetLowBatteryAlert() {
-        UserDefaults.standard.set(false, forKey: lowBatteryAlertShownKey)
-    }
 
     // MARK: - Foreground Re-evaluation
 

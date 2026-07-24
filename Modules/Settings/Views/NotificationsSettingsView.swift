@@ -217,17 +217,6 @@ struct NotificationsSettingsView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Toggle(Copy.Settings.lowBatteryReminder, isOn: $preferences.lowBatteryReminderEnabled)
-                    .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
-                        AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder", value: newValue)
-                    }
-                if preferences.lowBatteryReminderEnabled {
-                    Text(Copy.Settings.lowBatteryDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
         } header: {
             Text(Copy.Settings.appleWatch)
         } footer: {
