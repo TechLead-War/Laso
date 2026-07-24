@@ -92,6 +92,10 @@ final class HealthKitManager: @unchecked Sendable {
     @ObservationIgnored
     private var dashboardObserverDebounceTask: Task<Void, Never>?
 
+    /// Dedupes concurrent sleep-stage scans so one sync issues one .sleepAnalysis query.
+    @ObservationIgnored
+    private let sleepCoordinator = SleepStageCoordinator()
+
     /// Result of a loadAndSync call. tells callers what changed
     struct SyncResult {
         let metricsWithNewData: Set<HealthMetric>
@@ -954,7 +958,22 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
+    /// Return one sleep-stage series. All stages come from a SINGLE .sleepAnalysis
+    /// scan per sync: concurrent per-metric callers for the same window share one
+    /// in-flight query via `sleepCoordinator`, replacing the old 4-5 full category
+    /// scans with one.
     private func fetchSleepSamples(metric: HealthMetric, from startDate: Date, to endDate: Date) async -> MetricTimeSeries? {
+        let key = "\(Int(startDate.timeIntervalSince1970))_\(Int(endDate.timeIntervalSince1970))"
+        let all = await sleepCoordinator.stages(key: key) { [weak self] in
+            await self?.fetchAllSleepStages(from: startDate, to: endDate) ?? [:]
+        }
+        return all[metric]
+    }
+
+    /// Run one HKSampleQuery over .sleepAnalysis and bucket every stage in a single
+    /// pass — reproducing the per-metric daily-duration + wake-time logic for each
+    /// sleep metric at once.
+    private func fetchAllSleepStages(from startDate: Date, to endDate: Date) async -> [HealthMetric: MetricTimeSeries] {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
@@ -964,16 +983,20 @@ final class HealthKitManager: @unchecked Sendable {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
-            ) { [metric] _, results, error in
+            ) { _, results, error in
                 if let error {
-                    recordHealthKitFetchError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
+                    recordHealthKitFetchError(error, context: "healthkit_fetch_sleep", metadata: ["metric": "all_stages"])
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: [:])
                     return
                 }
 
-                var dailyDurations: [Date: Double] = [:]
+                let sleepMetrics: [HealthMetric] = [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake]
+                var durations: [HealthMetric: [Date: Double]] = [:]
+                var wakeTimes: [HealthMetric: [Date: Date]] = [:]
+                for m in sleepMetrics { durations[m] = [:]; wakeTimes[m] = [:] }
+
                 let asleepStageValues: Set<Int> = [
                     HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
                     HKCategoryValueSleepAnalysis.asleepCore.rawValue,
@@ -981,53 +1004,51 @@ final class HealthKitManager: @unchecked Sendable {
                     HKCategoryValueSleepAnalysis.asleepREM.rawValue
                 ]
 
-                var dailyWakeTimes: [Date: Date] = [:]
-
-                for sample in results {
-                    let day = sample.endDate.startOfDay
-                    let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
-
-                    let matchesStage: Bool
-                    switch metric {
-                    case .sleepDuration:
-                        matchesStage = asleepStageValues.contains(sample.value)
-                    case .sleepREM:
-                        matchesStage = sample.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue
-                    case .sleepDeep:
-                        matchesStage = sample.value == HKCategoryValueSleepAnalysis.asleepDeep.rawValue
-                    case .sleepCore:
-                        matchesStage = sample.value == HKCategoryValueSleepAnalysis.asleepCore.rawValue
-                    case .sleepAwake:
-                        matchesStage = sample.value == HKCategoryValueSleepAnalysis.awake.rawValue
-                    default:
-                        matchesStage = false
-                    }
-
-                    if matchesStage {
-                        dailyDurations[day, default: 0] += duration
-                        // Track wake time from overnight sleep only (ends 4 AM–noon).
-                        // This filters out afternoon naps that would skew the average.
-                        let endHour = Date.cal.component(.hour, from: sample.endDate)
-                        if endHour >= 4 && endHour < 12 {
-                            if let existing = dailyWakeTimes[day] {
-                                if sample.endDate > existing { dailyWakeTimes[day] = sample.endDate }
-                            } else {
-                                dailyWakeTimes[day] = sample.endDate
-                            }
+                // Add one sample's duration to a metric's daily bucket and track its
+                // wake time from overnight sleep only (ends 4 AM–noon); skips naps.
+                func route(_ m: HealthMetric, day: Date, duration: Double, end: Date, endHour: Int) {
+                    durations[m]?[day, default: 0] += duration
+                    if endHour >= 4 && endHour < 12 {
+                        if let existing = wakeTimes[m]?[day] {
+                            if end > existing { wakeTimes[m]?[day] = end }
+                        } else {
+                            wakeTimes[m]?[day] = end
                         }
                     }
                 }
 
-                // Use actual wake time as the sample date so downstream
-                // consumers (e.g. SleepNeedCalculator) can infer when the
-                // user woke up instead of seeing midnight for every sample.
-                let samples = dailyDurations.map { entry in
-                    MetricSample(date: dailyWakeTimes[entry.key] ?? entry.key, value: entry.value)
-                }
-                    .sorted { $0.date < $1.date }
+                for sample in results {
+                    let day = sample.endDate.startOfDay
+                    let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
+                    let endHour = Date.cal.component(.hour, from: sample.endDate)
 
-                let series = MetricTimeSeries(metric: metric, samples: samples)
-                continuation.resume(returning: series)
+                    if asleepStageValues.contains(sample.value) {
+                        route(.sleepDuration, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                    }
+                    switch sample.value {
+                    case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
+                        route(.sleepREM, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                    case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
+                        route(.sleepDeep, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                    case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
+                        route(.sleepCore, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                    case HKCategoryValueSleepAnalysis.awake.rawValue:
+                        route(.sleepAwake, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                    default:
+                        break
+                    }
+                }
+
+                // Use actual wake time as the sample date so downstream consumers
+                // (e.g. SleepNeedCalculator) can infer when the user woke up.
+                var out: [HealthMetric: MetricTimeSeries] = [:]
+                for m in sleepMetrics {
+                    let samples = (durations[m] ?? [:]).map { entry in
+                        MetricSample(date: wakeTimes[m]?[entry.key] ?? entry.key, value: entry.value)
+                    }.sorted { $0.date < $1.date }
+                    out[m] = MetricTimeSeries(metric: m, samples: samples)
+                }
+                continuation.resume(returning: out)
             }
 
             healthStore.execute(query)
@@ -1348,4 +1369,22 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
+}
+
+/// Dedupes concurrent sleep-stage scans: the first caller for a given window runs
+/// the query; others await the same in-flight task, so one sync does one scan.
+private actor SleepStageCoordinator {
+    private var inFlight: [String: Task<[HealthMetric: MetricTimeSeries], Never>] = [:]
+
+    func stages(
+        key: String,
+        build: @Sendable @escaping () async -> [HealthMetric: MetricTimeSeries]
+    ) async -> [HealthMetric: MetricTimeSeries] {
+        if let existing = inFlight[key] { return await existing.value }
+        let task = Task { await build() }
+        inFlight[key] = task
+        let value = await task.value
+        inFlight[key] = nil
+        return value
+    }
 }
