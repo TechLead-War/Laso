@@ -219,7 +219,11 @@ struct HistoricalAnalyzer {
               let lastYearValue = ctx.yearOverYearValue else { return nil }
 
         let improving = metric.higherIsBetter ? yoyChange > 0 : yoyChange < 0
-        let absChange = String(format: "%.0f", abs(yoyChange))
+        // Bound the shown percent. A near-zero value a year ago (sparse/missing data)
+        // makes the year-over-year change explode — this is what surfaced "1612%
+        // Worse Than Last July". Real changes fit inside ±500%.
+        let boundedYoY = max(-500, min(500, yoyChange))
+        let absChange = String(format: "%.0f", abs(boundedYoY))
         let lastYearFormatted = metric.formatValue(lastYearValue)
 
         let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]

@@ -207,8 +207,10 @@ enum DS {
 
     /// Threshold table — must stay aligned with `DashboardViewModel.RecoveryState.init(score:)`.
     private static func recoveryTier(for score: Int) -> RecoveryTier {
-        if score > 75 { return .optimal }
-        if score >= 50 { return .fair }
+        // Green from 67 up (WHOOP-style "good recovery" zone): a 73 Ready is a good
+        // day and should read green, not the amber warning it showed before.
+        if score >= 67 { return .optimal }
+        if score >= 45 { return .fair }
         return .poor
     }
 }
