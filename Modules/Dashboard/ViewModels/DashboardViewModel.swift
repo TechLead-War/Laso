@@ -75,6 +75,12 @@ final class DashboardViewModel {
     @MainActor private var lastScorerInputHash: Int = 0
     @MainActor private var lastScorerDay: Int = 0
 
+    /// Fingerprint of the inputs that drive the expensive derived caches (trend
+    /// metrics, historical highlights, correlations). updateCachedProperties runs
+    /// 4-5× per refresh; this lets those heavy recomputes run only when their
+    /// inputs actually changed, while the cheap assignments still run every call.
+    @MainActor private var lastExpensiveCacheHash: Int = 0
+
     /// Cached daily action. computed once per calendar day (or after analysis refresh)
     @MainActor private var _cachedDailyAction: SmartAction?
     @MainActor private var _cachedDailyActionDate: Date?
@@ -1249,9 +1255,17 @@ final class DashboardViewModel {
             .min(by: { $0.1 < $1.1 })?
             .0
 
+        // The heavy derived caches (trend metrics ×3, historical highlights, top
+        // correlations) only need recomputing when their inputs changed — within a
+        // single refresh this method runs 4-5× with identical timeSeries/analysis.
+        let expensiveHash = cacheInputFingerprint()
+        let expensiveInputsChanged = expensiveHash != lastExpensiveCacheHash
+        lastExpensiveCacheHash = expensiveHash
+
         // Update trend state
         trends.cachedTrendsSummary = computeTrendsSummary()
-        if !(ThermalManager.shared.shouldThrottle && !trends.cachedTrendMetricsByTimeframe.isEmpty) {
+        if (expensiveInputsChanged || trends.cachedTrendMetricsByTimeframe.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !trends.cachedTrendMetricsByTimeframe.isEmpty) {
             trends.cachedTrendMetricsByTimeframe = [
                 7: computeTrendMetrics(days: 7),
                 30: computeTrendMetrics(days: 30),
@@ -1260,10 +1274,12 @@ final class DashboardViewModel {
         }
 
         // Update analysis state
-        if !(ThermalManager.shared.shouldThrottle && !analysis.cachedHistoricalHighlights.isEmpty) {
+        if (expensiveInputsChanged || analysis.cachedHistoricalHighlights.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !analysis.cachedHistoricalHighlights.isEmpty) {
             analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
         }
-        if !(ThermalManager.shared.shouldThrottle && !analysis.cachedTopCorrelations.isEmpty) {
+        if (expensiveInputsChanged || analysis.cachedTopCorrelations.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !analysis.cachedTopCorrelations.isEmpty) {
             analysis.cachedTopCorrelations = computeTopCorrelations()
         }
         analysis.correlations = analysisEngine.correlations
@@ -1315,6 +1331,25 @@ final class DashboardViewModel {
                 store.saveRecommendation(insight)
             }
         }
+    }
+
+    /// Fingerprint of the inputs that drive the expensive derived caches. Changes
+    /// when timeSeries (per-metric sample count + latest date), correlations, or the
+    /// overall score change — i.e. whenever trend metrics / highlights / correlations
+    /// would actually differ. Stable across the 4-5 phase calls of one refresh.
+    @MainActor
+    private func cacheInputFingerprint() -> Int {
+        var hasher = Hasher()
+        let ts = healthKitManager.timeSeries
+        hasher.combine(ts.count)
+        for (metric, series) in ts.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
+            hasher.combine(metric)
+            hasher.combine(series.samples.count)
+            hasher.combine(series.samples.last?.date ?? .distantPast)
+        }
+        hasher.combine(analysisEngine.correlations.count)
+        hasher.combine(analysisEngine.overallScore.score)
+        return hasher.finalize()
     }
 
     // MARK: - Age Resolution
