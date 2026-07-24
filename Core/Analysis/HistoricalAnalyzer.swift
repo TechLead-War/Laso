@@ -215,15 +215,15 @@ struct HistoricalAnalyzer {
     // MARK: - Individual Insight Types
 
     private static func yearOverYearInsight(metric: HealthMetric, ctx: HistoricalContext) -> Insight? {
-        guard let yoyChange = ctx.yearOverYearChange, abs(yoyChange) > 5,
+        // Only fire for a believable change. Below 5% is noise; above 200% almost
+        // always means last year's data was sparse/near-zero, so the percentage is a
+        // division artifact ("1612% Worse Than Last July"), not a real trend — skip it
+        // rather than show an unreal number.
+        guard let yoyChange = ctx.yearOverYearChange, (5...200).contains(abs(yoyChange)),
               let lastYearValue = ctx.yearOverYearValue else { return nil }
 
         let improving = metric.higherIsBetter ? yoyChange > 0 : yoyChange < 0
-        // Bound the shown percent. A near-zero value a year ago (sparse/missing data)
-        // makes the year-over-year change explode — this is what surfaced "1612%
-        // Worse Than Last July". Real changes fit inside ±500%.
-        let boundedYoY = max(-500, min(500, yoyChange))
-        let absChange = String(format: "%.0f", abs(boundedYoY))
+        let absChange = String(format: "%.0f", abs(yoyChange))
         let lastYearFormatted = metric.formatValue(lastYearValue)
 
         let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
