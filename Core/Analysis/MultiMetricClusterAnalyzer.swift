@@ -39,14 +39,18 @@ struct MultiMetricClusterAnalyzer {
             guard trend.direction == .declining else { continue }
 
             let severity: Severity
-            let deviation: Double
+            let rawDeviation: Double
             if let anomaly = anomalies.first(where: { $0.metric == metric }) {
                 severity = anomaly.severity
-                deviation = anomaly.deviationPercent
+                rawDeviation = anomaly.deviationPercent
             } else {
                 severity = .info
-                deviation = trend.weekOverWeekChange
+                rawDeviation = trend.weekOverWeekChange
             }
+            // Bound the deviation shown to the user. The week-over-week path is a raw
+            // percent change that, on a near-zero baseline, can read as thousands of
+            // percent (the "24606% off usual" bug); the anomaly path is already bounded.
+            let deviation = max(-500, min(500, rawDeviation))
 
             decliningByCategory[metric.category, default: []].append(
                 (metric: metric, severity: severity, deviation: deviation)
