@@ -14,6 +14,19 @@ extension Copy {
         static func stableSummary(metricLower: String, deviation: String, direction: String, baseline: String, unit: String, causalHint: String, historyNote: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable_summary", default: "Your %@ is %@%% %@ your usual (%@ %@).%@%@"), metricLower, deviation, direction, baseline, unit, causalHint, historyNote)
         }
+
+        // Word only variants, used when the usual value sits so close to zero that a
+        // percentage would read as nonsense (walking asymmetry, mindful minutes).
+
+        static func decliningSummaryWithoutPercent(metricLower: String, direction: String, baseline: String, unit: String, current: String, inflectionNote: String, projectionNote: String, causalHint: String, historyNote: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining_summary_no_percent", default: "Your %@ is far %@ your usual (%@ %@). Now: %@ %@.%@%@%@%@"), metricLower, direction, baseline, unit, current, unit, inflectionNote, projectionNote, causalHint, historyNote)
+        }
+        static func improvingSummaryWithoutPercent(metricLower: String, current: String, unit: String, inflectionNote: String, causalHint: String, historyNote: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_improving_summary_no_percent", default: "Your %@ has improved a lot from your usual. Now: %@ %@.%@%@%@"), metricLower, current, unit, inflectionNote, causalHint, historyNote)
+        }
+        static func stableSummaryWithoutPercent(metricLower: String, direction: String, baseline: String, unit: String, causalHint: String, historyNote: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable_summary_no_percent", default: "Your %@ is far %@ your usual (%@ %@).%@%@"), metricLower, direction, baseline, unit, causalHint, historyNote)
+        }
         static func projectionWarning(days: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_projection_warning", default: " At this pace, this could reach warning level in about %d days."), days)
         }
@@ -210,6 +223,11 @@ extension Copy {
         static func genericMetricDeviation(metricName: String, dev: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_generic_metric_deviation", default: "Your %@ is %d%% from your usual"), metricName, dev)
         }
+        /// Used in place of every action protocol above when the usual value sits so close
+        /// to zero that a percentage would read as nonsense.
+        static func farFromUsual(metricName: String, direction: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_far_from_usual", default: "Your %@ is far %@ your usual"), metricName, direction)
+        }
 
         // MARK: - Correlations
 
@@ -258,7 +276,6 @@ extension Copy {
             }
 
             static var insights: String { RemoteConfigManager.shared.copyString("copy_insights_insights", default: "Insights") }
-            static var outsideNormalRange: String { RemoteConfigManager.shared.copyString("copy_insights_outside_normal_range", default: "Outside Range") }
 
             static func baselineDeviation(_ deviation: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_metric_detail_baseline_deviation", default: "%@ from your usual"), deviation)
@@ -267,8 +284,6 @@ extension Copy {
             static var trend: String { RemoteConfigManager.shared.copyString("copy_insights_trend", default: "Trend") }
             static var forecast: String { RemoteConfigManager.shared.copyString("copy_insights_forecast", default: "Forecast") }
             static var periodAvg: String { RemoteConfigManager.shared.copyString("copy_insights_period_avg", default: "Period Avg") }
-            static var outsideRange: String { RemoteConfigManager.shared.copyString("copy_insights_outside_range", default: "Outside Range") }
-            static var withinRange: String { RemoteConfigManager.shared.copyString("copy_insights_within_range", default: "Within Range") }
             static var thisMonthVsLastMonth: String { RemoteConfigManager.shared.copyString("copy_insights_this_month_vs_last_month", default: "This Month vs Last Month") }
             static var scoreImpact: String { RemoteConfigManager.shared.copyString("copy_insights_score_impact", default: "Score Impact") }
             static var historicalContext: String { RemoteConfigManager.shared.copyString("copy_insights_historical_context", default: "Your History") }

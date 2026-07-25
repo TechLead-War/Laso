@@ -326,6 +326,24 @@ struct RiskContributionBar: View {
     }
 }
 
+/// Small badge showing the risk grade.
+private struct RiskGradeBadge: View {
+    let grade: RiskGrade
+
+    var body: some View {
+        HStack(spacing: DS.space1) {
+            Image(systemName: grade.icon)
+                .font(DS.Typography.footnote)
+            Text(grade.displayName)
+                .font(DS.Typography.captionSemibold)
+        }
+        .foregroundStyle(grade.color)
+        .padding(.horizontal, DS.badgeH)
+        .padding(.vertical, DS.badgeV)
+        .background(grade.color.opacity(DS.badgeBg), in: Capsule())
+    }
+}
+
 #if DEBUG
 #Preview {
     NavigationStack {

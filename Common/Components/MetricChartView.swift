@@ -6,7 +6,7 @@ struct MetricChartView: View {
     let samples: [MetricSample]
     let metric: HealthMetric
     let baseline: Double?
-    let normalRange: RulesConfiguration.NormalRange?
+    let verdict: MetricVerdict?
     let trendLine: [MetricSample]?
     let forecastPoints: [MetricSample]?
     private let dataSpanDays: Int
@@ -22,7 +22,7 @@ struct MetricChartView: View {
         samples: [MetricSample],
         metric: HealthMetric,
         baseline: Double? = nil,
-        normalRange: RulesConfiguration.NormalRange? = nil,
+        verdict: MetricVerdict? = nil,
         trendLine: [MetricSample]? = nil,
         forecastPoints: [MetricSample]? = nil
     ) {
@@ -30,7 +30,7 @@ struct MetricChartView: View {
         self.samples = samples
         self.metric = metric
         self.baseline = baseline
-        self.normalRange = normalRange
+        self.verdict = verdict
         self.trendLine = trendLine
         self.forecastPoints = forecastPoints
         self.dataSpanDays = dataSpanDays
@@ -78,15 +78,15 @@ struct MetricChartView: View {
 
     private var chart: some View {
         Chart {
-            // Normal range area
-            if let range = normalRange {
+            // Normal band, shaded so the user can see at a glance which points sit inside it
+            if let verdict {
                 RectangleMark(
                     xStart: nil,
                     xEnd: nil,
-                    yStart: .value("Low", range.low),
-                    yEnd: .value("High", range.high)
+                    yStart: .value("Low", verdict.low),
+                    yEnd: .value("High", verdict.high)
                 )
-                .foregroundStyle(.green.opacity(0.05))
+                .foregroundStyle(AppColour.success.opacity(0.08))
             }
 
             // Data line + area under curve (single pass)
@@ -450,7 +450,7 @@ struct MetricChartView: View {
         samples: samples,
         metric: .restingHeartRate,
         baseline: 65,
-        normalRange: RulesConfiguration.normalRange(for: .restingHeartRate)
+        verdict: MetricVerdict.make(metric: .restingHeartRate, value: 65, baseline: nil)
     )
     .padding()
 }

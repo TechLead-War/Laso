@@ -214,8 +214,7 @@ struct OnboardingV2View: View {
                                      advance(to: .bridge)
                                  })
         case .bridge:
-            OnbV2Screen8Bridge(goal: profile.primaryGoal,
-                               onBack: { advance(to: .symptoms) },
+            OnbV2Screen8Bridge(onBack: { advance(to: .symptoms) },
                                onCTA: requestHealthKitAndAdvance)
         case .scan:
             OnbV2Screen10Scan(snapshot: healthSnapshot) {

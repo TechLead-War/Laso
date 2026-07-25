@@ -12,12 +12,14 @@ struct RecoveryHeroCard: View {
     /// The real reasons behind the score (sleep, heart, energy).
     var whyReasons: [DashboardViewModel.RecoveryWhyReason] = []
     var hasLiveReadiness: Bool = true
-    var lastRefresh: Date? = nil
+    /// Points gained or lost since yesterday. Nil when yesterday has no score,
+    /// which renders nothing rather than a misleading zero.
+    var scoreChange: Int? = nil
     var isWearingWatch: Bool = true
     var onTap: (() -> Void)? = nil
+    /// Opens the detail screen for one signal in the Why list.
+    var onTapWhy: ((DashboardViewModel.RecoveryWhyReason.Kind) -> Void)? = nil
     var onShare: (() -> Void)? = nil
-
-    @State private var appeared = false
 
     private var recoveryState: DashboardViewModel.RecoveryState {
         DashboardViewModel.RecoveryState(score: score)
@@ -29,18 +31,14 @@ struct RecoveryHeroCard: View {
     }
 
     var body: some View {
-        Button {
-            onTap?()
-        } label: {
-            Group {
-                if shouldShowWearWatch {
-                    wearWatchEmptyState
-                } else {
-                    cardContent
-                }
+        Group {
+            if shouldShowWearWatch {
+                Button { onTap?() } label: { wearWatchEmptyState }
+                    .buttonStyle(.dsPress)
+            } else {
+                cardContent
             }
         }
-        .buttonStyle(.dsPress)
         .overlay(alignment: .topTrailing) {
             if let onShare, !shouldShowWearWatch, score > 0 {
                 Button(action: onShare) {
@@ -57,7 +55,6 @@ struct RecoveryHeroCard: View {
         }
         .padding(.horizontal, DS.screenPadding)
         .onAppear {
-            appeared = true
             guard isWearingWatch, hasLiveReadiness, score > 0 else { return }
             if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
                 EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
@@ -101,29 +98,18 @@ struct RecoveryHeroCard: View {
         hasLiveReadiness ? recoveryState.color : AppColour.scoreGood
     }
 
+    /// The card is a stack of separate buttons, not one big button, because a
+    /// Button nested inside another Button's label never receives the tap.
     private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Ring on the left, the "Why" list on the right — compact side by
             // side. Ring is vertically centered against the taller Why column.
             HStack(alignment: .center, spacing: 16) {
-                ZStack {
-                    // Soft glow via a radial gradient (cheap) rather than a
-                    // Gaussian blur, which re-renders offscreen every frame and
-                    // makes scrolling lag.
-                    Circle()
-                        .fill(RadialGradient(
-                            colors: [ringTint.opacity(0.28), .clear],
-                            center: .center, startRadius: 6, endRadius: 66))
-                        .frame(width: 132, height: 132)
-                        .allowsHitTesting(false)
-                    HealthScoreRing(
-                        score: score,
-                        label: Copy.Home.scoreReadyLabel,
-                        size: 104,
-                        lineWidth: 9,
-                        tint: hasLiveReadiness ? recoveryState.color : nil
-                    )
-                }
+                Button { onTap?() } label: { ringColumn }
+                    .buttonStyle(.dsPress)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score)" + (scoreChange.map { ". \(changeChipText($0))" } ?? ""))
+                    .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
 
                 if !whyReasons.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
@@ -134,7 +120,12 @@ struct RecoveryHeroCard: View {
                             .padding(.bottom, 2)
 
                         ForEach(Array(whyReasons.enumerated()), id: \.element.id) { index, reason in
-                            whyRow(reason)
+                            Button { onTapWhy?(reason.kind) } label: { whyRow(reason) }
+                                .buttonStyle(.dsPress)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("\(reason.label), \(reason.value)")
+                                .accessibilityHint(Copy.Home.viewDetailsHint(reason.kind.displayName))
+
                             if index < whyReasons.count - 1 {
                                 Divider().overlay(AppColour.borderLow.opacity(0.6))
                             }
@@ -150,15 +141,23 @@ struct RecoveryHeroCard: View {
                     .overlay(AppColour.borderLow)
                     .padding(.vertical, 14)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(summaryHead)
-                        .font(DS.Typography.headline)
-                        .foregroundStyle(AppColour.textPrimary)
-                    Text(summarySub)
-                        .font(DS.Typography.subheadline)
-                        .foregroundStyle(AppColour.textSecondary)
+                Button { onTap?() } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(summaryHead)
+                            .font(DS.Typography.headline)
+                            .foregroundStyle(AppColour.textPrimary)
+                        Text(summarySub)
+                            .font(DS.Typography.subheadline)
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .fixedSize(horizontal: false, vertical: true)
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(summaryHead) \(summarySub)")
+                .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
             }
         }
         .padding(DS.cardPadding + 4)
@@ -166,10 +165,82 @@ struct RecoveryHeroCard: View {
         .background(AppColour.surfaceRaised)
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score). \(summaryHead) \(summarySub). " + whyReasons.map { "\($0.label), \($0.value)" }.joined(separator: ". "))
-        .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
         .accessibilityIdentifier("home.recoveryCard")
+    }
+
+    private var ringColumn: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                // Soft glow via a radial gradient (cheap) rather than a
+                // Gaussian blur, which re-renders offscreen every frame and
+                // makes scrolling lag.
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [ringTint.opacity(0.28), .clear],
+                        center: .center, startRadius: 6, endRadius: 66))
+                    .frame(width: 132, height: 132)
+                    .allowsHitTesting(false)
+                HealthScoreRing(
+                    score: score,
+                    label: Copy.Home.scoreReadyLabel,
+                    size: 104,
+                    lineWidth: 9,
+                    tint: hasLiveReadiness ? recoveryState.color : nil
+                )
+            }
+
+            changeChip
+            confidenceRow
+        }
+        .frame(width: 132)
+        .contentShape(Rectangle())
+    }
+
+    /// How much of the score is real readings today. Counted off the rows the
+    /// card is already showing, so the number can never drift from the list.
+    @ViewBuilder
+    private var confidenceRow: some View {
+        if !whyReasons.isEmpty {
+            Text(Copy.Home.scoreConfidence(whyReasons.filter { $0.tone != .noData }.count, whyReasons.count))
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textTertiary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+    }
+
+    /// Yesterday comparison. Up, down and flat each read differently; a missing
+    /// yesterday shows nothing at all.
+    @ViewBuilder
+    private var changeChip: some View {
+        if let scoreChange {
+            let tint: Color = scoreChange == 0
+                ? AppColour.textSecondary
+                : (scoreChange > 0 ? AppColour.success : AppColour.danger)
+
+            HStack(spacing: 3) {
+                if scoreChange != 0 {
+                    Image(systemName: scoreChange > 0 ? "arrow.up" : "arrow.down")
+                        .font(DS.Typography.caption2)
+                }
+                Text(changeChipText(scoreChange))
+                    .font(DS.Typography.captionSemibold)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(tint.opacity(DS.badgeBg), in: Capsule())
+        }
+    }
+
+    private func changeChipText(_ change: Int) -> String {
+        if change > 0 { return Copy.Home.scoreChangeUp(change) }
+        if change < 0 { return Copy.Home.scoreChangeDown(abs(change)) }
+        return Copy.Home.scoreChangeSame
     }
 
     // MARK: - Why Row
@@ -177,24 +248,32 @@ struct RecoveryHeroCard: View {
     /// One plain line: a colored dot, the interpretation, and the value. The
     /// label auto-shrinks a touch rather than wrapping, so long reasons like
     /// "Resting heart rate is up" stay on one line in the narrow right column.
+    /// A signal with no reading stays in place, greyed, so the list never looks
+    /// like it is holding something back.
     private func whyRow(_ reason: DashboardViewModel.RecoveryWhyReason) -> some View {
-        HStack(spacing: 9) {
+        let missing = reason.tone == .noData
+        return HStack(spacing: 9) {
             Circle()
                 .fill(dotColor(reason.tone))
                 .frame(width: 7, height: 7)
+            // The signal name has to survive intact; the reading beside it can
+            // shrink, because a clipped label leaves the row meaningless.
             Text(reason.label)
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(missing ? AppColour.textTertiary : AppColour.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+                .layoutPriority(1)
             Spacer(minLength: 6)
             Text(reason.value)
                 .font(DS.Typography.footnote)
-                .foregroundStyle(AppColour.textSecondary)
+                .foregroundStyle(missing ? AppColour.textTertiary : AppColour.textSecondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .postHogMask()
         }
         .padding(.vertical, 9)
+        .contentShape(Rectangle())
     }
 
     private func dotColor(_ tone: DashboardViewModel.RecoveryWhyReason.Tone) -> Color {
@@ -214,8 +293,11 @@ struct RecoveryHeroCard: View {
         whyReasons: [
             .init(kind: .sleep, label: "Sleep was short", value: "5h 40m", tone: .concern),
             .init(kind: .heart, label: "Heart is calm", value: "Good", tone: .good),
-            .init(kind: .energy, label: "Energy is low", value: "Below usual", tone: .concern)
-        ]
+            .init(kind: .energy, label: "Energy is low", value: "Below usual", tone: .concern),
+            .noData(kind: .restingHR),
+            .noData(kind: .stress)
+        ],
+        scoreChange: 4
     )
     .padding(.vertical)
     .background(Color.black)

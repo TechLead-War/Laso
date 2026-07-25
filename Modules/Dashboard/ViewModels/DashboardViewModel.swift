@@ -120,6 +120,8 @@ final class DashboardViewModel {
         /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
         /// describes the same series as the displayed weekly score.
         fileprivate(set) var cachedWeeklyScoreChange: Int?
+        /// Yesterday's stored score, kept separately from the delta above.
+        fileprivate(set) var cachedYesterdayScore: Int?
         /// Set by parent after each analysis refresh
         fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
         fileprivate(set) var categoryScores: [HealthScore] = []
@@ -127,6 +129,14 @@ final class DashboardViewModel {
         var scoreChangeFromLastWeek: Int? { cachedScoreChangeFromLastWeek }
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
         var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
+
+        /// Same delta as `scoreChangeFromYesterday` but keeping an explicit
+        /// zero. That one folds zero into nil so analytics and push stay quiet
+        /// on flat days; the Home chip has to show "same as yesterday" and
+        /// stay blank only when yesterday has no reading at all.
+        var scoreDeltaFromYesterday: Int? {
+            cachedYesterdayScore.map { overallScore.score - $0 }
+        }
 
         var recoveryState: RecoveryState {
             RecoveryState(score: overallScore.score)
@@ -1226,6 +1236,7 @@ final class DashboardViewModel {
         scores.categoryScores = analysisEngine.categoryScores
         scores.cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
+        scores.cachedYesterdayScore = computeYesterdayScore()
         scores.rollingAverageScore = computeRollingAverageScore()
         scores.cachedWeeklyScoreChange = computeWeeklyScoreChange()
         scores.scoreExplanation = analysisEngine.scoreExplanation
@@ -1692,6 +1703,22 @@ final class DashboardViewModel {
             currentScore: overallScore.score,
             history: scoreHistoryCached(days: 3)
         )
+    }
+
+    /// Yesterday's own score, so a flat day can be told apart from a day with
+    /// no reading behind it. Same window the delta above uses.
+    @MainActor
+    private func computeYesterdayScore() -> Int? {
+        let cal = Date.cal
+        let today = cal.startOfDay(for: Date())
+        guard let yesterday = cal.date(byAdding: .day, value: -1, to: today) else { return nil }
+        // A stored zero means the day was never scored, not that the user scored
+        // zero, so it must not become a delta. The rest of the app applies the
+        // same `> 0` rule to a persisted score.
+        return scoreHistoryCached(days: 3)
+            .last { $0.date >= yesterday && $0.date < today }
+            .map(\.score)
+            .flatMap { $0 > 0 ? $0 : nil }
     }
 
     /// EWMA-smoothed weekly score for the Explore tab.
@@ -2242,7 +2269,20 @@ final class DashboardViewModel {
     /// Heart, Energy) ALWAYS show so the card is never half empty; a signal with
     /// no reading shows `.noData` (never a faked value).
     struct RecoveryWhyReason: Identifiable {
-        enum Kind: Hashable { case sleep, heart, restingHR, energy, stress }
+        enum Kind: Hashable, CaseIterable {
+            case sleep, heart, restingHR, energy, stress
+
+            /// Plain name, shown when there is no reading to interpret.
+            var displayName: String {
+                switch self {
+                case .sleep:     return Copy.Home.whyNameSleep
+                case .heart:     return Copy.Home.whyNameHeart
+                case .restingHR: return Copy.Home.whyNameRestingHR
+                case .energy:    return Copy.Home.whyNameEnergy
+                case .stress:    return Copy.Home.whyNameStress
+                }
+            }
+        }
         enum Tone { case good, okay, concern, noData }
         /// Stable per-signal id so SwiftUI diffs the rows instead of rebuilding
         /// all three on every home refresh (a fresh UUID would churn every time).
@@ -2253,18 +2293,18 @@ final class DashboardViewModel {
         let tone: Tone
 
         /// Placeholder row for a signal that has no reading yet.
-        static func noData(kind: Kind, name: String) -> RecoveryWhyReason {
-            .init(kind: kind, label: name, value: Copy.Home.whyNoData, tone: .noData)
+        static func noData(kind: Kind) -> RecoveryWhyReason {
+            .init(kind: kind, label: kind.displayName, value: Copy.Home.whyNoData, tone: .noData)
         }
     }
 
-    /// The "Why" list, built dynamically. Every signal that has a reading today
-    /// (sleep, heart/HRV, resting heart rate, energy, stress) becomes a
-    /// candidate; each is scored by how far it is from your usual (times a small
-    /// weight for the signals that matter most), and the three that matter most
-    /// today are shown. The label is the plain interpretation with the real
-    /// value beside it. When no signal has data, three placeholders keep the
-    /// card from looking empty.
+    /// The "Why" list. Every signal (sleep, heart/HRV, resting heart rate,
+    /// energy, stress) always gets a row, so the card keeps the same shape day
+    /// to day and the score card can say how many signals it actually had.
+    /// Signals with a reading come first, ranked by how far they are from your
+    /// usual (times a small weight for the ones that matter most), each labelled
+    /// with the plain interpretation and the real value. Signals with no reading
+    /// follow as greyed placeholders instead of being dropped.
     @MainActor
     func recoveryWhyReasons(liveVM: LiveViewModel) -> [RecoveryWhyReason] {
         let s = todayRecoverySignals(liveVM: liveVM)
@@ -2321,12 +2361,21 @@ final class DashboardViewModel {
                 tone: high ? .concern : .good), high ? dev * 1.1 : dev * 0.6))
         }
 
-        guard !candidates.isEmpty else {
-            return [.noData(kind: .sleep, name: Copy.Home.whyNameSleep),
-                    .noData(kind: .heart, name: Copy.Home.whyNameHeart),
-                    .noData(kind: .energy, name: Copy.Home.whyNameEnergy)]
-        }
-        return candidates.sorted { $0.relevance > $1.relevance }.prefix(3).map(\.reason)
+        // Swift's sort is not stable, so ties fall back to the order the signals
+        // are appended above. Without it two equally relevant rows swap places
+        // on every refresh and the list looks like it is jumping around.
+        let withReading = candidates.enumerated()
+            .sorted {
+                $0.element.relevance == $1.element.relevance
+                    ? $0.offset < $1.offset
+                    : $0.element.relevance > $1.element.relevance
+            }
+            .map(\.element.reason)
+        let readKinds = Set(withReading.map(\.kind))
+        let missing = RecoveryWhyReason.Kind.allCases
+            .filter { !readKinds.contains($0) }
+            .map { RecoveryWhyReason.noData(kind: $0) }
+        return withReading + missing
     }
 
     /// Plain-English summary under the score as a bold heading + a lighter sub

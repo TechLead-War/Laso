@@ -130,6 +130,24 @@ struct RulesConfiguration {
         }
     }
 
+    /// Population range usable as a verdict band. Nil when the table has no spread for the metric,
+    /// for example falls, where the only healthy value is zero and "0 to 0" would read as nonsense.
+    /// Callers show no verdict at all rather than inventing bounds.
+    static func verdictPopulationRange(for metric: HealthMetric) -> NormalRange? {
+        let range = normalRange(for: metric)
+        guard range.high > range.low else { return nil }
+        return range
+    }
+
+    /// Half width of the personal normal band, in standard deviations around the user's baseline mean.
+    /// Same threshold AnomalyDetector uses to raise a warning, so the verdict can never call a value
+    /// normal while the anomaly badge on the same screen calls it a warning.
+    static let personalNormalBandDeviations: Double = 1.5
+
+    /// Days of the user's own data required before the personal band replaces the population table.
+    /// BaselineCalculator refuses to build a baseline below this count for the same reason.
+    static let minimumDaysForPersonalBand: Int = 7
+
     /// Trend significance: minimum absolute slope to be considered non-stable
     static var trendSlopeThreshold: Double { RemoteConfigManager.shared.analysisTrendSlopeThreshold }
 

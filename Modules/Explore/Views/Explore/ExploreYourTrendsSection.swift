@@ -34,6 +34,8 @@ struct ExploreYourTrendsSection: View {
             }
 
             ForEach(trendMetrics.prefix(8)) { item in
+                // Computed once per row: building the band walks the whole window.
+                let verdict = item.verdict
                 Button {
                     AppAnalytics.shared.trackBlockTap(
                         title: item.metric.displayName,
@@ -47,19 +49,19 @@ struct ExploreYourTrendsSection: View {
                     )
                     onMetricTapped(item)
                 } label: {
-                    trendMetricRow(item)
+                    trendMetricRow(item, verdict: verdict)
                 }
                 .buttonStyle(.dsPress)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(Copy.Explore.trendLabel(item.metric.displayName))
-                .accessibilityValue(item.rateLabel)
+                .accessibilityValue(verdict.map { "\($0.label), \($0.rangeText)" } ?? item.rateLabel)
                 .accessibilityHint(Copy.Explore.opensDetailedMetricHistoryHint)
                 .padding(.horizontal, DS.screenPadding)
             }
         }
     }
 
-    private func trendMetricRow(_ item: TrendMetricItem) -> some View {
+    private func trendMetricRow(_ item: TrendMetricItem, verdict: MetricVerdict?) -> some View {
         HStack(spacing: DS.itemSpacing) {
             Image(systemName: item.metric.systemImageName)
                 .font(DS.Typography.caption)
@@ -72,9 +74,15 @@ struct ExploreYourTrendsSection: View {
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(AppColour.textPrimary)
 
-                Text(item.rateLabel)
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(AppColour.textSecondary)
+                if let verdict {
+                    Text(verdict.label)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(verdict.color)
+                } else {
+                    Text(item.rateLabel)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
+                }
             }
 
             Spacer()
@@ -122,6 +130,15 @@ struct TrendMetricItem: Identifiable {
             values.append(last)
         }
         return values
+    }
+
+    /// The row only carries its own samples, so the band is built from the visible window
+    /// with the same calculator the rest of the app uses.
+    var verdict: MetricVerdict? {
+        MetricVerdict.make(
+            metric: metric,
+            series: MetricTimeSeries(metric: metric, samples: sparklineSamples)
+        )
     }
 
     var trendColor: Color {

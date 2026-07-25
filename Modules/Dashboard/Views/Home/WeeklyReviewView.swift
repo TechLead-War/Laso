@@ -86,6 +86,14 @@ struct WeeklyReviewView: View {
     @State private var winsTracker = SectionTracker(section: .weeklyReviewWins, tab: .weeklyReview)
     @State private var watchOutTracker = SectionTracker(section: .weeklyReviewWatchOut, tab: .weeklyReview)
 
+    /// First sentence of the recommendation for a declined metric. A full
+    /// recommendation is several sentences and overruns these compact rows.
+    private func nudgeFor(_ metric: HealthMetric) -> String? {
+        let rec = RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
+        guard let dotIndex = rec.firstIndex(of: ".") else { return rec }
+        return String(rec[rec.startIndex...dotIndex])
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -407,7 +415,7 @@ struct WeeklyReviewView: View {
                     Text("\(topDecline.metric.displayName) dropped \(String(format: "%.1f%%", abs(topDecline.changePercent))) this week.")
                         .font(DS.Typography.bodyMedium)
 
-                    if let nudge = MetricChangeRow.nudgeFor(topDecline.metric) {
+                    if let nudge = nudgeFor(topDecline.metric) {
                         Text(nudge)
                             .font(DS.Typography.callout)
                             .foregroundStyle(AppColour.textSecondary)
@@ -478,7 +486,7 @@ struct WeeklyReviewView: View {
                 .background(AppColour.danger.opacity(DS.badgeBg), in: Capsule())
             }
 
-            if let nudge = MetricChangeRow.nudgeFor(change.metric) {
+            if let nudge = nudgeFor(change.metric) {
                 Text(nudge)
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textSecondary)

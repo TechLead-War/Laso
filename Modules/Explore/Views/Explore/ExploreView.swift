@@ -89,6 +89,21 @@ struct ExploreView: View {
                         .onDisappear { yourTrendsTracker.disappeared() }
                     }
 
+                    // 3b. Body Intelligence and forecast. Both moved off Home,
+                    // where they restated the score card. Here they sit beside
+                    // the other analysis the user came to this tab to read.
+                    TodayBriefingView(cards: viewModel.intelligenceBriefing)
+
+                    PersonalHealthForecastCard(forecasts: viewModel.healthForecasts) { metric in
+                        AppAnalytics.shared.trackBlockTap(
+                            title: metric.displayName,
+                            type: .exploreTrendMetric,
+                            screen: .explore,
+                            metadata: ["metric_id": metric.rawValue, "source": "forecast"]
+                        )
+                        navigationPath.append(metric)
+                    }
+
                     // 4. Categories. primary navigation
                     ExploreCategoriesSection(
                         categories: sortedCategories,

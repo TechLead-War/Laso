@@ -34,8 +34,7 @@ struct ShareableRingsCard: View {
         }
     }
 
-    /// Same ±10-year band as `VitalityCard.ringProgress`: full ring at 10+
-    /// years younger, half at on-age, empty at 10+ years older.
+    /// Full ring at 10+ years younger, half at on-age, empty at 10+ years older.
     private var vitalityProgress: Double {
         guard let vitalityAge, let realAge else { return 0 }
         let clamped = max(-10, min(10, realAge - vitalityAge))

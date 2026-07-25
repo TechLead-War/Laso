@@ -433,7 +433,7 @@
   },
   {
     "key": "copy_analysis_analysis_clinical_bp_trending_summary",
-    "defaultValue": "Your systolic BP has been rising %@ mmHg/month over the past %d days. Current stage: %@. %@",
+    "defaultValue": "Your top blood pressure number has been rising %@ mmHg per month over the past %d days. Right now: %@. %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -451,7 +451,7 @@
   },
   {
     "key": "copy_analysis_analysis_clinical_glucose_trending_summary",
-    "defaultValue": "Your fasting glucose has been rising %@ mg/dL per month. Current: %@ mg/dL (%@). %@",
+    "defaultValue": "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -481,7 +481,7 @@
   },
   {
     "key": "copy_analysis_analysis_clinical_pulse_pressure_summary",
-    "defaultValue": "Your pulse pressure (%d mmHg) is above the typical range of 40 to 60 mmHg. Based on your patterns, this is worth a look.",
+    "defaultValue": "The gap between your blood pressure numbers (%d mmHg) is wider than the usual 40 to 60 mmHg. Based on your patterns, this is worth a look.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -493,7 +493,7 @@
   },
   {
     "key": "copy_analysis_analysis_clinical_respiratory_summary",
-    "defaultValue": "Your respiratory rate (%@ br/min) falls in the %@ range. The typical range is 12-20 breaths per minute.",
+    "defaultValue": "Your breathing rate (%@ br/min) falls in the %@ range. Most people sit between 12 and 20 breaths per minute.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -535,31 +535,31 @@
   },
   {
     "key": "copy_analysis_autonomic_below_baseline",
-    "defaultValue": "HRV below baseline (autonomic stress)",
+    "defaultValue": "heart recovery below usual (body under stress)",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_autonomic_normal",
-    "defaultValue": "autonomic tone is normal",
+    "defaultValue": "your rest-and-recover state is normal",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_autonomic_strong",
-    "defaultValue": "autonomic tone is strong",
+    "defaultValue": "your rest-and-recover state is strong",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_autonomic_suppressed",
-    "defaultValue": "HRV significantly suppressed",
+    "defaultValue": "heart recovery is well down",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_baseline_drift_title",
-    "defaultValue": "%@ Baseline Shifted Over %@",
+    "defaultValue": "%@ Usual Level Shifted Over %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -571,7 +571,7 @@
   },
   {
     "key": "copy_analysis_below_threshold_title",
-    "defaultValue": "VO2max Below Typical Threshold",
+    "defaultValue": "VO2 Max Below Healthy Level",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -589,7 +589,7 @@
   },
   {
     "key": "copy_analysis_biological_age_autonomic_component",
-    "defaultValue": "Autonomic Nervous System",
+    "defaultValue": "Rest-and-Recover System",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -607,13 +607,13 @@
   },
   {
     "key": "copy_analysis_biological_age_fitness_age_recommendation",
-    "defaultValue": "Breakdown. %@. Each component is mapped to population norms from large-scale studies. VO2max alone (one of the most meaningful indicators of your overall fitness) suggests a fitness age equivalent.",
+    "defaultValue": "Breakdown. %@. Each part is compared to typical results from large studies. Your VO2 Max on its own (one of the best signs of overall fitness) points to a matching fitness age.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_biological_age_fitness_age_summary",
-    "defaultValue": "Based on %d physiological markers, your body performs like someone around %@ years old. Strongest area: %@. Area with most room: %@.",
+    "defaultValue": "Based on %d body signals, your body works like someone around %@ years old. Strongest area: %@. Most room to improve: %@.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -625,13 +625,13 @@
   },
   {
     "key": "copy_analysis_biological_age_imbalance_recommendation",
-    "defaultValue": "A large spread between fitness age components suggests one system is aging faster than others. Focusing on your %@ could bring your overall fitness age down significantly.",
+    "defaultValue": "A big gap between these parts means one system is aging faster than the rest. Working on your %@ could bring your overall fitness age down a lot.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_biological_age_imbalance_summary",
-    "defaultValue": "There's a %@-year gap between your youngest system (%@: ~%@) and oldest (%@: ~%@). This imbalance is worth addressing.",
+    "defaultValue": "There's a %@-year gap between your youngest system (%@: ~%@) and your oldest (%@: ~%@). This gap is worth working on.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -661,31 +661,31 @@
   },
   {
     "key": "copy_analysis_building_circadian_profile",
-    "defaultValue": "I'm still building your full circadian profile.",
+    "defaultValue": "I'm still learning your full body clock.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_below_threshold_recommendation",
-    "defaultValue": "A VO2max below %d mL/kg/min places you in the lowest fitness category regardless of age. Population studies consistently show this threshold as an important point for overall wellness. Even modest improvements from this baseline can make a meaningful difference.",
+    "defaultValue": "A VO2 Max below %d mL/kg/min puts you in the lowest fitness group at any age. Large studies keep showing this level matters for overall health. Even small gains from here can make a real difference.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_below_threshold_summary",
-    "defaultValue": "Your VO2max of %@ mL/kg/min is below %d. a threshold associated with reduced fitness capacity across all age groups.",
+    "defaultValue": "Your VO2 Max of %@ mL/kg/min is below %d, a level linked to lower fitness at any age.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_cardio_fitness_age_recommendation",
-    "defaultValue": "At %@ mL/kg/min, your cardiorespiratory fitness places you approximately at the %@th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with meaningful health benefits.",
+    "defaultValue": "At %@ mL/kg/min, your heart and lung fitness is higher than about %@ out of 100 middle-aged adults. Every small step up (about 3.5 mL/kg/min) brings real health benefits.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_cardio_fitness_age_summary",
-    "defaultValue": "Your VO2max of %@ mL/kg/min is average for someone around age %@. VO2max is one of the most important indicators of long-term fitness and overall wellness.",
+    "defaultValue": "Your VO2 Max of %@ mL/kg/min is average for someone around age %@. VO2 Max is one of the most important signs of long-term fitness and overall health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -697,37 +697,37 @@
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_declining_recommendation",
-    "defaultValue": "A %@ mL/kg/min decline shifts your fitness age older. The decline rate of %@ mL/kg/min per month is faster than typical aging (~1 to 2 mL/kg/min per decade). Increasing aerobic exercise frequency or intensity can help reverse this.",
+    "defaultValue": "A %@ mL/kg/min drop makes your fitness age older. Losing %@ mL/kg/min per month is faster than normal aging (about 1 to 2 mL/kg/min every 10 years). Doing cardio more often or a bit harder can help turn it around.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_declining_summary",
-    "defaultValue": "Your cardiorespiratory fitness has dropped by %@ mL/kg/min over %d months. Since VO2max is a key fitness indicator, this trend is worth reversing.",
+    "defaultValue": "Your heart and lung fitness has dropped by %@ mL/kg/min over %d months. Since VO2 Max is a key fitness sign, this is worth turning around.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_declining_title",
-    "defaultValue": "VO2max Declining: %@ Over %d Months",
+    "defaultValue": "VO2 Max Declining: %@ Over %d Months",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_improving_recommendation",
-    "defaultValue": "A %@ mL/kg/min VO2max improvement represents real progress. This shifts your fitness age younger and is associated with better long-term wellness outcomes.",
+    "defaultValue": "A %@ mL/kg/min gain in VO2 Max is real progress. It makes your fitness age younger and goes with better long-term health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_improving_summary",
-    "defaultValue": "Your cardiorespiratory fitness has improved by %@ mL/kg/min over %d months. This is a meaningful fitness gain based on population wellness studies.",
+    "defaultValue": "Your heart and lung fitness has improved by %@ mL/kg/min over %d months. That is a real gain based on large health studies.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cardio_respiratory_age_vo2_improving_title",
-    "defaultValue": "VO2max Improving: +%@ Over %d Months",
+    "defaultValue": "VO2 Max Improving: +%@ Over %d Months",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -745,67 +745,67 @@
   },
   {
     "key": "copy_analysis_circadian_alignment_rec_aligned",
-    "defaultValue": "Your circadian rhythm is well-aligned. Keep maintaining consistent daily patterns.",
+    "defaultValue": "Your body clock is well in sync. Keep up your steady daily routine.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_alignment_rec_disrupted",
-    "defaultValue": "Strengthen your circadian rhythm by keeping consistent sleep/wake times and getting daylight exposure in the morning.",
+    "defaultValue": "Strengthen your body clock by keeping steady sleep and wake times and getting morning daylight.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_alignment_title",
-    "defaultValue": "Circadian alignment is %@",
+    "defaultValue": "Your body clock is %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_amplitude_component",
-    "defaultValue": "activity amplitude",
+    "defaultValue": "how active vs still you are",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_disrupted_summary",
-    "defaultValue": "Your circadian health score is %@/100. indicating significant disruption in your daily biological rhythm. Weakest area: %@ (%@/100).",
+    "defaultValue": "Your body clock health score is %@/100, which points to a big disruption in your daily rhythm. Weakest area: %@ (%@/100).",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_disrupted_title",
-    "defaultValue": "Circadian Rhythm Disrupted",
+    "defaultValue": "Body Clock Out of Sync",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_needs_improvement_recommendation",
-    "defaultValue": "A circadian score of %@ suggests your body's 24-hour rhythm is moderately aligned. Strengthening your %@ (currently %@/100) would have the most impact. Regular light exposure in the morning and consistent sleep timing are the most effective interventions.",
+    "defaultValue": "A body clock score of %@ means your 24-hour rhythm is partly in sync. Strengthening your %@ (now %@/100) would help the most. Morning light every day and steady sleep times work best.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_needs_improvement_summary",
-    "defaultValue": "Your circadian health score is %@/100. Your daily rhythm is present but could be stronger. Focus area: %@.",
+    "defaultValue": "Your body clock health score is %@/100. Your daily rhythm is there but could be stronger. Focus area: %@.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_needs_improvement_title",
-    "defaultValue": "Circadian Rhythm: Room for Improvement",
+    "defaultValue": "Body Clock: Room to Improve",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_regularity_component",
-    "defaultValue": "rhythm regularity",
+    "defaultValue": "how steady your daily rhythm is",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_rest_activity_component",
-    "defaultValue": "rest-activity contrast",
+    "defaultValue": "gap between active and rest times",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -817,37 +817,37 @@
   },
   {
     "key": "copy_analysis_circadian_disruption_strong_rhythm_recommendation",
-    "defaultValue": "A circadian score of %@ reflects a well-entrained biological clock. Research shows strong circadian rhythmicity is independently supportive of metabolic health, cognitive performance, and long-term wellness. correlating with a younger fitness age.",
+    "defaultValue": "A body clock score of %@ shows a well-tuned inner clock. Research shows a strong body clock on its own supports body health, clear thinking, and long-term health, and goes with a younger fitness age.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_strong_rhythm_summary",
-    "defaultValue": "Your circadian health score is %@/100. Your daily biological rhythm shows strong amplitude, good regularity, and clear rest-activity contrast. Strongest area: %@.",
+    "defaultValue": "Your body clock health score is %@/100. Your daily rhythm is strong and steady, with a clear gap between active and rest times. Strongest area: %@.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_disruption_strong_rhythm_title",
-    "defaultValue": "Strong Circadian Rhythm",
+    "defaultValue": "Strong Body Clock",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_fragmented_rhythm_rec",
-    "defaultValue": "A more consolidated active period during the day supports better circadian health.",
+    "defaultValue": "Being active in steadier stretches during the day supports a healthier body clock.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_fragmented_rhythm_summary",
-    "defaultValue": "Your daily activity pattern shows high fragmentation (IV: %@).",
+    "defaultValue": "Your daily activity is spread out in scattered bursts (score: %@).",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_fragmented_rhythm_title",
-    "defaultValue": "Activity rhythm is fragmented",
+    "defaultValue": "Your activity is scattered through the day",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -859,13 +859,13 @@
   },
   {
     "key": "copy_analysis_circadian_irregular_pattern_rec",
-    "defaultValue": "Aim for consistent bed and wake times. Irregular sleep timing is linked to metabolic disruption and mood changes.",
+    "defaultValue": "Aim for steady bed and wake times. Irregular sleep is linked to body and mood problems.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_irregular_pattern_summary",
-    "defaultValue": "Your sleep regularity index is %d/100.",
+    "defaultValue": "Your sleep steadiness score is %d/100.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -907,31 +907,31 @@
   },
   {
     "key": "copy_analysis_circadian_social_jet_lag_rec",
-    "defaultValue": "Try keeping weekend wake times within 1 hour of weekdays to reduce circadian disruption.",
+    "defaultValue": "Try keeping weekend wake times within 1 hour of weekdays to keep your body clock steady.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_social_jet_lag_summary",
-    "defaultValue": "Your weekend sleep midpoint shifts %@ hours from weekdays.",
+    "defaultValue": "Your sleep time shifts %@ hours on weekends compared to weekdays.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_social_jet_lag_title",
-    "defaultValue": "Social jet lag detected: %@h shift",
+    "defaultValue": "Weekend sleep shift: %@h",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_strong_rhythm_rec",
-    "defaultValue": "This pattern is associated with better metabolic health and mood regulation. Keep it up.",
+    "defaultValue": "This pattern goes with better body health and steadier mood. Keep it up.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_circadian_strong_rhythm_summary",
-    "defaultValue": "High inter-daily stability (%d%%) with robust activity amplitude.",
+    "defaultValue": "Your day-to-day routine is very steady (%d%%) with strong active periods.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -943,31 +943,31 @@
   },
   {
     "key": "copy_analysis_clinical_glucose_trend_summary",
-    "defaultValue": "Your fasting glucose has been rising %@ mg/dL per month. Current: %@ mg/dL (%@). %@",
+    "defaultValue": "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_clinical_systolic_trend_summary",
-    "defaultValue": "Your systolic trend shows a rise of %@ mmHg/month over the past %d days. Currently in the %@ range. This is still modifiable with lifestyle changes. %@",
+    "defaultValue": "Your top blood pressure number has risen %@ mmHg per month over the past %d days. Right now it is in the %@ range. You can still turn this around with everyday habits. %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cognitive_energy_below_baseline",
-    "defaultValue": "%@%% below baseline",
+    "defaultValue": "%@%% below usual",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cognitive_energy_cognitive_low_recommendation",
-    "defaultValue": "Consider extending tonight's sleep by 45 min. Your %@ is the biggest factor right now. A single night of 8+ hr sleep typically improves next-day HRV and deep sleep.",
+    "defaultValue": "Try sleeping 45 minutes longer tonight. Your %@ is the biggest thing weighing on you right now. Just one night of 8 or more hours usually helps your heart recovery and deep sleep the next day.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cognitive_energy_cognitive_low_summary",
-    "defaultValue": "Your cognitive energy is at %d/100%@. Addressing these factors can sharpen mental clarity and processing speed.",
+    "defaultValue": "Your mental energy is at %d/100%@. Fixing these can help you think sharper and faster.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -985,7 +985,7 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_cognitive_strong_summary",
-    "defaultValue": "Your cognitive energy is strong at %d/100. HRV, sleep quality, and recovery markers are all above baseline.",
+    "defaultValue": "Your mental energy is strong at %d/100. How rested your heart is, your sleep quality, and your recovery signs are all better than usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -997,13 +997,13 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_down_from_baseline",
-    "defaultValue": "down %@%% from baseline",
+    "defaultValue": "down %@%% from usual",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cognitive_energy_hours_below_baseline",
-    "defaultValue": "%@ hrs below your baseline",
+    "defaultValue": "%@ hrs below your usual",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1021,7 +1021,7 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_low_physical_summary",
-    "defaultValue": "Your physical energy indicators are low: %@. You're likely feeling fatigued and heavy.",
+    "defaultValue": "Your physical energy signs are low: %@. You are probably feeling tired and heavy.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1039,7 +1039,7 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_mental_fatigue_summary",
-    "defaultValue": "Your %@ over the past week \\u{2014} this combination is strongly associated with mental fatigue, slower processing, and difficulty concentrating.",
+    "defaultValue": "Your %@ over the past week. This combination often goes with mental tiredness, slower thinking, and trouble focusing.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1051,7 +1051,7 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_recovery_needed_summary",
-    "defaultValue": "You've been highly active for %d days straight and your recovery markers are strained \\u{2014} %@. Without recovery, both mental sharpness and physical performance decline.",
+    "defaultValue": "You have been very active for %d days straight and your recovery signs are strained. %@. Without rest, both your sharpness and your performance drop.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1063,13 +1063,13 @@
   },
   {
     "key": "copy_analysis_cognitive_energy_sleep_debt_recommendation",
-    "defaultValue": "An extra hour per night for %d nights can help clear this deficit. Setting a bedtime alarm 45 min before your target sleep time is a good starting point.",
+    "defaultValue": "An extra hour each night for %d nights can help clear this. Setting a bedtime alarm 45 minutes before you want to sleep is a good start.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cognitive_energy_sleep_debt_summary",
-    "defaultValue": "You have built up %@ hours of sleep debt this week (averaging %@ hrs vs your %@ hr baseline). Short sleep can affect how alert and clear-headed you feel each day.",
+    "defaultValue": "You have built up %@ hours of sleep debt this week (averaging %@ hrs vs your usual %@ hrs). Short sleep can affect how alert and clear-headed you feel each day.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1135,49 +1135,49 @@
   },
   {
     "key": "copy_analysis_cross_metric_narratives_broken_relationship",
-    "defaultValue": "The usual relationship between your %@ and %@ has broken down. Review what was different yesterday \\u{2014} travel, diet changes, late exercise, or unusual stress are common triggers. Track whether this normalizes within 48 hours.",
+    "defaultValue": "The usual link between your %@ and %@ has broken down. Look at what was different yesterday. Travel, diet changes, late exercise, or extra stress are common causes. See if it goes back to normal within 48 hours.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cross_metric_narratives_extremely_rare",
-    "defaultValue": "This combination of metric values (%@) is extremely rare for you. Worth exploring what was different yesterday \\u{2014} travel, diet timing, late workouts, or stress shifts often trigger this. If this pattern shows up for 2+ days, it may be worth discussing with a healthcare provider.",
+    "defaultValue": "This mix of numbers (%@) is very rare for you. Think about what was different yesterday. Travel, meal timing, late workouts, or stress can often set this off. If this keeps up for 2 or more days, it may be worth talking to a doctor.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cross_metric_narratives_unusual_combination",
-    "defaultValue": "Unusual combination in %@. Review what was different yesterday \\u{2014} travel, diet, late exercise, or stress changes are common triggers.",
+    "defaultValue": "Unusual mix in %@. Look at what was different yesterday. Travel, diet, late exercise, or stress are common causes.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cross_metric_narratives_unusual_mild",
-    "defaultValue": "Unusual but mild pattern in %@. No immediate action needed \\u{2014} track whether this recurs over the next 3 days to determine if it's a one-off or emerging trend.",
+    "defaultValue": "Unusual but mild pattern in %@. Nothing to do right now. Just watch whether it comes back over the next 3 days to see if it is a one-off or a real trend.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cross_metric_narratives_unusual_multi_category",
-    "defaultValue": "Unusual pattern across %d categories (%@). Review what was different yesterday \\u{2014} travel, diet, late exercise, or stress changes are the most common triggers. If you feel fine, this may be a one-off.",
+    "defaultValue": "Unusual pattern across %d areas (%@). Look at what was different yesterday. Travel, diet, late exercise, or stress are the most common causes. If you feel fine, this may be a one-off.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_pattern_title",
-    "defaultValue": "Temperature Cycle Pattern Detected",
+    "defaultValue": "Temperature Follows a Cycle",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_follicular_baseline",
-    "defaultValue": "Energy and training readiness often improve through the follicular phase.",
+    "defaultValue": "Energy and how ready you feel to train often pick up through the follicular phase.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_follicular_recommendation",
-    "defaultValue": "Use this phase for progressive overload and higher-focus tasks while readiness is trending up.",
+    "defaultValue": "Use this phase to push a bit harder in training and take on focus-heavy tasks while your energy is climbing.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1195,31 +1195,31 @@
   },
   {
     "key": "copy_analysis_cycle_phase_luteal_recommendation",
-    "defaultValue": "Plan slightly lower-intensity sessions, lock in an earlier bedtime, and favor steady routines.",
+    "defaultValue": "Plan slightly easier sessions, go to bed a little earlier, and stick to steady routines.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_menstrual_baseline",
-    "defaultValue": "Lower energy and recovery variability can be normal during menstruation.",
+    "defaultValue": "Lower energy and up-and-down recovery can be normal during your period.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_menstrual_recommendation",
-    "defaultValue": "Prioritize recovery-first days: lighter training, hydration, and consistent sleep.",
+    "defaultValue": "Put recovery first: lighter training, drink plenty of water, and keep your sleep steady.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_ovulatory_baseline",
-    "defaultValue": "Many people experience peak readiness around ovulation.",
+    "defaultValue": "Many people feel their most ready around ovulation.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_cycle_phase_ovulatory_recommendation",
-    "defaultValue": "Schedule your key workouts here, then protect sleep and hydration to stabilize recovery.",
+    "defaultValue": "Do your key workouts now, then protect your sleep and water to keep recovery steady.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1237,13 +1237,13 @@
   },
   {
     "key": "copy_analysis_daylight_chain_recommendation",
-    "defaultValue": "Get 20+ min of outdoor light before noon tomorrow.%@ This single change impacts your sleep timing, deep sleep percentage, and next-day mental sharpness.",
+    "defaultValue": "Get 20 or more minutes of outdoor light before noon tomorrow.%@ This one change affects when you sleep, how much deep sleep you get, and how sharp you feel the next day.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_daylight_chain_summary",
-    "defaultValue": "Your daylight exposure dropped %@%% and %@ declined %@%% in the same window. These are connected. Natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity.",
+    "defaultValue": "Your daylight dropped %@%% and %@ dropped %@%% in the same window. These are linked. Sunlight sets your body clock, which shapes how you sleep and how clearly you think the next day.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1309,19 +1309,19 @@
   },
   {
     "key": "copy_analysis_disrupted_recommendation",
-    "defaultValue": "Research shows circadian disruption is linked to reduced metabolic health, heart wellness, mood, and long-term wellness. Your activity patterns lack the strong daily rhythm (high daytime activity, low nighttime activity) associated with healthy circadian function. Circadian rhythm amplitude measured from wearables strongly correlates with overall fitness age.",
+    "defaultValue": "Research shows a disrupted body clock is linked to worse body health, heart health, mood, and long-term health. Your day lacks the strong rhythm (active by day, quiet at night) of a healthy body clock. How strong this day-night rhythm is on wearables lines up closely with your fitness age.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_excellent_recommendation",
-    "defaultValue": "An SRI of %@ across %d nights places you in the most regular category. Research shows this level of sleep consistency is associated with better cognitive performance and substantially better overall wellness over time.",
+    "defaultValue": "A score of %@ across %d nights puts you in the steadiest group. Research shows this level of steady sleep goes with clearer thinking and much better overall health over time.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_excellent_summary",
-    "defaultValue": "Your Sleep Regularity Index is %@/100. your sleep timing and duration are highly consistent. This is independently supportive of long-term wellness.",
+    "defaultValue": "Your sleep steadiness score is %@/100. Your sleep times and length are very steady. That on its own helps your long-term health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1471,7 +1471,7 @@
   },
   {
     "key": "copy_analysis_health_data_query_improve_most_room",
-    "defaultValue": "Here's where you have the most room to improve right now: %@. Focus on bringing these back to your baseline and you should feel the difference.",
+    "defaultValue": "Here's where you have the most room to improve right now: %@. Focus on bringing these back to your usual and you should feel the difference.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1663,7 +1663,7 @@
   },
   {
     "key": "copy_analysis_health_data_query_status_below_good",
-    "defaultValue": "Nice, your %@ is at %@, below your baseline, which is a good sign. Keep it up.",
+    "defaultValue": "Nice, your %@ is at %@, below your usual, which is a good sign. Keep it up.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1675,13 +1675,13 @@
   },
   {
     "key": "copy_analysis_health_data_query_status_ease_up",
-    "defaultValue": "Try to ease up a bit today. Your %@ is running high at %@, above your usual baseline.",
+    "defaultValue": "Try to ease up a bit today. Your %@ is running high at %@, above your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_health_data_query_status_keep_doing",
-    "defaultValue": "Keep doing what you're doing. Your %@ is above your personal baseline at %@. Whatever your routine is right now, it's working.",
+    "defaultValue": "Keep doing what you're doing. Your %@ is above your usual at %@. Whatever your routine is right now, it's working.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1753,7 +1753,7 @@
   },
   {
     "key": "copy_analysis_high_variability_title",
-    "defaultValue": "High Temperature Variability",
+    "defaultValue": "Temperature Jumps Around a Lot",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1795,31 +1795,31 @@
   },
   {
     "key": "copy_analysis_imbalance_title",
-    "defaultValue": "Age Component Imbalance",
+    "defaultValue": "Some Body Systems Age Faster",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_improve_all_on_baseline",
-    "defaultValue": "Your key metrics are all close to your personal baselines right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.",
+    "defaultValue": "Your key numbers are all close to your usual right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_improving_recommendation",
-    "defaultValue": "A declining RHR trajectory reflects improved cardiovascular efficiency. A lower resting heart rate over time is associated with better overall fitness and wellness in population studies.",
+    "defaultValue": "A falling resting heart rate means your heart is working more efficiently. A lower resting heart rate over time goes with better overall fitness and health in large studies.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_improving_summary",
-    "defaultValue": "Your resting heart rate has dropped %@ bpm over the past %@. from %@ to %@ bpm. This is a positive trend for your heart fitness.",
+    "defaultValue": "Your resting heart rate has dropped %@ bpm over the past %@, from %@ to %@ bpm. That is a good sign for your heart fitness.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_body_stress_recommendation",
-    "defaultValue": "The combination of suppressed HRV (autonomic stress) and elevated body temperature is a well-validated early signal that your body is working harder than usual to recover. In research studies, this pattern often appears 1 to 3 days before you feel off. Current HRV: %@ ms vs baseline %@ ms.",
+    "defaultValue": "Low heart recovery plus a warmer body is a well-proven early sign that your body is working harder than usual to recover. In studies, this often shows up 1 to 3 days before you feel off. Your heart recovery now: %@ ms vs your usual %@ ms.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1831,43 +1831,43 @@
   },
   {
     "key": "copy_analysis_inflammation_risk_body_stress_summary",
-    "defaultValue": "Your HRV has dropped %@%% below baseline while wrist temperature is elevated. a compound pattern suggesting your body may be under increased stress.",
+    "defaultValue": "Your heart recovery has dropped %@%% below usual while your wrist is warmer than usual. Together, these hint your body may be under more stress.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_elevated_body_stress_recommendation",
-    "defaultValue": "Research shows sustained HRV suppression (without increased exercise load) reflects reduced recovery capacity. In wearable studies, this pattern often appeared days before people felt run down. HRV: %@ ms vs baseline %@ ms over %d days.",
+    "defaultValue": "Research shows a long dip in heart recovery (without training harder) means your body is recovering less well. In wearable studies, this often showed up days before people felt run down. Heart recovery: %@ ms vs your usual %@ ms over %d days.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_elevated_body_stress_summary",
-    "defaultValue": "Your HRV has been declining for %d consecutive measurement windows. currently %@%% below your personal baseline. This sustained drop pattern suggests your body may be under increased stress.",
+    "defaultValue": "Your heart recovery has been dropping for %d readings in a row, now %@%% below your usual. A steady drop like this hints your body may be under more stress.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_elevated_body_stress_title",
-    "defaultValue": "Elevated Body Stress",
+    "defaultValue": "Higher Body Stress",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_strong_recovery_recommendation",
-    "defaultValue": "An HRV of %@ ms (vs baseline %@ ms) reflects robust parasympathetic dominance. When vagal tone is high, your body is in a strong recovery state.",
+    "defaultValue": "A heart recovery of %@ ms (vs your usual %@ ms) shows your body is firmly in rest-and-recover mode. When this is high, your body is recovering well.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_strong_recovery_summary",
-    "defaultValue": "Your HRV is %@%% above baseline. indicating strong vagal tone. Research links elevated parasympathetic activity to better overall recovery and resilience.",
+    "defaultValue": "Your heart recovery is %@%% above usual, a sign your body is deep in rest-and-recover mode. Research links this to better recovery and resilience.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_inflammation_risk_strong_recovery_tone_title",
-    "defaultValue": "Strong Recovery Tone",
+    "defaultValue": "Strong Recovery",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1927,7 +1927,7 @@
   },
   {
     "key": "copy_analysis_mild_recommendation",
-    "defaultValue": "Research shows that isolated changes in one or two behavioral markers are common and often transient. If these patterns persist for another week alongside further deterioration, they become more meaningful.",
+    "defaultValue": "Research shows changes in just one or two habits are common and often pass. If they keep up for another week and things get worse, they matter more.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1951,7 +1951,7 @@
   },
   {
     "key": "copy_analysis_mindfulness_minimal",
-    "defaultValue": "minimal mindfulness engagement",
+    "defaultValue": "hardly any mindfulness",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1963,31 +1963,31 @@
   },
   {
     "key": "copy_analysis_mobility_decline_asymmetry_increasing_title",
-    "defaultValue": "Gait Asymmetry Increasing",
+    "defaultValue": "Walking Getting More Uneven",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_asymmetry_label",
-    "defaultValue": "gait asymmetry",
+    "defaultValue": "uneven walking",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_asymmetry_recommendation",
-    "defaultValue": "Increasing gait asymmetry. the difference between left and right step patterns. can reflect changes in balance, joint comfort, or overall movement quality. A %@%% increase warrants attention.",
+    "defaultValue": "More uneven walking, meaning a bigger difference between your left and right steps, can point to changes in balance, joint comfort, or how well you move. A %@%% rise is worth a look.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_asymmetry_summary",
-    "defaultValue": "Your walking asymmetry has increased %@%% over 6 months. Growing left-right imbalance in gait is an early indicator of changes in movement quality.",
+    "defaultValue": "Your walking has gotten %@%% more uneven over 6 months. A growing left-right difference in your steps is an early sign of changes in how you move.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_double_support_label",
-    "defaultValue": "double support time",
+    "defaultValue": "time with both feet down",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1999,31 +1999,31 @@
   },
   {
     "key": "copy_analysis_mobility_decline_mobility_stable_recommendation",
-    "defaultValue": "Stable or improving gait metrics across %d parameters (walking speed, step length, symmetry, steadiness) reflect strong functional health. Research shows these are among the best predictors of healthspan and longevity.",
+    "defaultValue": "Steady or improving walking measures across %d areas (walking speed, step length, evenness, steadiness) point to strong, healthy movement. Research shows these are among the best signs of a long, healthy life.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_mobility_stable_summary",
-    "defaultValue": "All %d tracked mobility metrics are stable or improving over the past 6 months. This indicates strong functional movement quality.%@",
+    "defaultValue": "All %d movement signs are steady or improving over the past 6 months. That points to strong, healthy movement.%@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_mobility_stable_title",
-    "defaultValue": "Mobility Profile Stable",
+    "defaultValue": "Your Movement Is Steady",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_multi_metric_decline_title",
-    "defaultValue": "Multi-Metric Mobility Decline",
+    "defaultValue": "Several Movement Signs Dropping",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_multi_metric_summary",
-    "defaultValue": "%d of %d mobility metrics are declining over the past 6 months: %@. Concurrent deterioration across multiple gait parameters warrants attention.",
+    "defaultValue": "%d of %d movement signs are dropping over the past 6 months: %@. Several walking measures slipping at once is worth a look.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2065,13 +2065,13 @@
   },
   {
     "key": "copy_analysis_mobility_decline_walking_speed_recommendation",
-    "defaultValue": "In population studies, each 0.1 m/s decrease in walking speed is associated with reduced overall wellness. Your %@%% decline across %d measurements is worth monitoring.",
+    "defaultValue": "In large studies, every 0.1 m/s that walking speed drops is linked to worse overall health. Your %@%% drop across %d readings is worth keeping an eye on.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_mobility_decline_walking_speed_summary",
-    "defaultValue": "Your walking speed has decreased %@%% over the past 6 months. Walking speed is called the 'sixth vital sign'. it's one of the strongest predictors of functional health and longevity.",
+    "defaultValue": "Your walking speed has dropped %@%% over the past 6 months. Walking speed is called the 'sixth vital sign' because it is one of the strongest signs of how well your body works and how long you live.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2083,19 +2083,19 @@
   },
   {
     "key": "copy_analysis_multi_metric_cluster_activity_cluster",
-    "defaultValue": "Activity declining across %d metrics \\u{2014} %@. Avg %@%% below baseline.",
+    "defaultValue": "Activity is dropping across %d numbers. %@. On average %@%% below usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_body_cluster",
-    "defaultValue": "Body composition metrics shifting \\u{2014} %d metrics affected: %@. Avg %@%% from baseline.",
+    "defaultValue": "Body numbers are shifting. %d numbers affected: %@. On average %@%% off usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_category_declining",
-    "defaultValue": "%@: Multiple Metrics Declining",
+    "defaultValue": "%@: Several Numbers Dropping",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2119,67 +2119,67 @@
   },
   {
     "key": "copy_analysis_multi_metric_cluster_hearing_cluster",
-    "defaultValue": "Hearing metrics changed \\u{2014} %d metrics affected: %@. Avg %@%% from baseline.",
+    "defaultValue": "Hearing numbers have changed. %d numbers affected: %@. On average %@%% off usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_heart_cluster",
-    "defaultValue": "Multiple heart metrics declining simultaneously \\u{2014} %d metrics affected: %@. Avg %@%% below baseline.",
+    "defaultValue": "Several heart numbers are dropping at once. %d numbers affected: %@. On average %@%% below usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_metric_detail",
-    "defaultValue": "%@: %@ %@ (%@%% %@ baseline)",
+    "defaultValue": "%@: %@ %@ (%@%% %@ usual)",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_metric_deviation",
-    "defaultValue": "%@ (%@%% deviation)",
+    "defaultValue": "%@ (%@%% off usual)",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_mindfulness_cluster",
-    "defaultValue": "Mindfulness metrics declining \\u{2014} %d metrics affected: %@. Avg %@%% below baseline.",
+    "defaultValue": "Mindfulness numbers are dropping. %d numbers affected: %@. On average %@%% below usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_mobility_cluster",
-    "defaultValue": "Mobility metrics declining across %d indicators \\u{2014} %@. Avg %@%% below baseline.",
+    "defaultValue": "Movement numbers are dropping across %d signs. %@. On average %@%% below usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_nutrition_cluster",
-    "defaultValue": "Nutrition metrics shifted from baseline \\u{2014} %d metrics affected: %@. Avg %@%% from baseline.",
+    "defaultValue": "Nutrition numbers have shifted from usual. %d numbers affected: %@. On average %@%% off usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_respiratory_cluster",
-    "defaultValue": "Respiratory metrics elevated \\u{2014} %d metrics affected: %@. Avg %@%% from baseline.",
+    "defaultValue": "Breathing numbers are higher than usual. %d numbers affected: %@. On average %@%% off usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_cluster_sleep_cluster",
-    "defaultValue": "Sleep deteriorating across %d dimensions \\u{2014} %@. Avg %@%% below baseline.",
+    "defaultValue": "Sleep is getting worse across %d areas. %@. On average %@%% below usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_multi_metric_recommendation",
-    "defaultValue": "Research shows simultaneous decline in walking speed, step length, and gait symmetry can be an early indicator of shifts in overall wellness. Changes in mobility patterns are often detectable well before they become noticeable in daily life.",
+    "defaultValue": "Research shows walking speed, step length, and even steps dropping together can be an early sign of changes in your overall health. These shifts often show up long before you notice them in daily life.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_nighttime_above_baseline_title",
-    "defaultValue": "Nighttime Temperature Above Baseline",
+    "defaultValue": "Nighttime Temperature Above Usual",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2203,7 +2203,7 @@
   },
   {
     "key": "copy_analysis_pattern_shift_title",
-    "defaultValue": "Wellbeing Pattern Shift Detected",
+    "defaultValue": "Your Wellbeing Pattern Is Shifting",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2221,7 +2221,7 @@
   },
   {
     "key": "copy_analysis_personal_record_hrv_above50ms",
-    "defaultValue": "HRV Above 50ms",
+    "defaultValue": "Heart Recovery Above 50ms",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2329,115 +2329,115 @@
   },
   {
     "key": "copy_analysis_research_hrr_fitness_below_clinical_recommendation",
-    "defaultValue": "A heart rate recovery <%d bpm at 1 minute post-exercise is associated with reduced overall fitness in large population studies. Your average HRR of %@ bpm across %d measurements suggests blunted autonomic recovery.",
+    "defaultValue": "A heart rate drop under %d bpm one minute after exercise is linked with lower overall fitness in large studies. Your average of %@ bpm across %d readings suggests your body is slow to shift into rest-and-recover mode.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_below_clinical_summary",
-    "defaultValue": "Your heart rate recovery is %@ bpm. below the clinical threshold of %d bpm. This indicates reduced parasympathetic reactivation after exercise.",
+    "defaultValue": "Your heart rate drops %@ bpm in the minute after exercise, below the healthy mark of %d bpm. That means your body is slow to switch into rest-and-recover mode.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_below_clinical_title",
-    "defaultValue": "Heart Rate Recovery Below Clinical Threshold",
+    "defaultValue": "Heart Rate Bounce-Back Below Healthy Level",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_declining_recommendation",
-    "defaultValue": "HRR dropped from %@ to %@ bpm over %d months. This may reflect detraining, increased stress, or an underlying condition. Regular aerobic exercise is the strongest intervention for improving HRR.",
+    "defaultValue": "Your bounce-back dropped from %@ to %@ bpm over %d months. This can come from training less, more stress, or a health issue. Regular cardio is the best way to bring it back up.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_declining_summary",
-    "defaultValue": "Your heart rate recovery has worsened by %@ bpm over %d months. A declining HRR trajectory suggests reduced autonomic fitness.",
+    "defaultValue": "Your heart rate bounce-back has gotten worse by %@ bpm over %d months. A falling trend suggests your body is slower to recover.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_declining_title",
-    "defaultValue": "Heart Recovery Declining",
+    "defaultValue": "Heart Rate Bounce-Back Slowing",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_excellent_recommendation",
-    "defaultValue": "An HRR of %@ bpm places you in the excellent range. Research shows this level of post-exercise recovery is associated with better heart fitness and superior autonomic nervous system health.",
+    "defaultValue": "A drop of %@ bpm puts you in the top range. Research links this kind of fast recovery after exercise to better heart fitness and a healthier rest-and-recover system.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_excellent_summary",
-    "defaultValue": "Your heart rate drops %@ bpm after exercise. well above the %d bpm threshold for good autonomic function. This indicates strong parasympathetic tone.",
+    "defaultValue": "Your heart rate drops %@ bpm after exercise, well above the %d bpm mark for a healthy body. This shows your body switches into rest-and-recover mode fast.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_excellent_title",
-    "defaultValue": "Excellent Heart Rate Recovery",
+    "defaultValue": "Great Heart Rate Bounce-Back",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_improving_recommendation",
-    "defaultValue": "A %@ bpm improvement in HRR over %d months reflects measurable gains in autonomic fitness. Studies show as few as 6 months of consistent exercise produces this kind of parasympathetic adaptation.",
+    "defaultValue": "A %@ bpm gain over %d months is real progress in how fast your body recovers. Studies show as little as 6 months of steady exercise can bring this kind of change.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_improving_summary",
-    "defaultValue": "Your heart rate recovery has improved by %@ bpm over the past %d months. Research shows HRR improves dose-dependently with regular exercise training.",
+    "defaultValue": "Your heart rate bounce-back has improved by %@ bpm over the past %d months. Research shows the more you exercise, the more this improves.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_hrr_fitness_improving_title",
-    "defaultValue": "Heart Recovery Improving Over %d Months",
+    "defaultValue": "Heart Rate Bounce-Back Improving Over %d Months",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_needs_attention_recommendation",
-    "defaultValue": "Your SRI of %@ across %d nights falls in the moderate range. Research links each 10-point SRI improvement to measurable gains in heart and metabolic wellness.",
+    "defaultValue": "Your steadiness score of %@ across %d nights is in the middle range. Research links every 10-point gain in this score to real gains in heart and body health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_needs_attention_summary",
-    "defaultValue": "Your Sleep Regularity Index is %@/100. moderate but room for improvement. Consistent sleep timing matters more than duration for long-term health.",
+    "defaultValue": "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times matters more than how long you sleep for long-term health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_irregular_recommendation",
-    "defaultValue": "Across 5 large cohorts, irregular sleepers (SRI <60) may experience reduced cognitive performance and overall wellness over time, independent of how many hours they sleep. Your SRI of %@ over %d measured nights suggests significant night-to-night variability.",
+    "defaultValue": "Across 5 large studies, people with irregular sleep (a steadiness score under 60) may think less clearly and feel worse over time, no matter how many hours they sleep. Your score of %@ over %d nights shows your sleep changes a lot from night to night.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_irregular_summary",
-    "defaultValue": "Your Sleep Regularity Index is %@/100. placing you in the irregular category. Research shows this is a stronger predictor of long-term wellness than sleep duration alone.",
+    "defaultValue": "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Research shows how steady your sleep is matters more for long-term health than how long you sleep.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_jet_lag_reduce",
-    "defaultValue": " Reducing your %@-min social jet lag would help most.",
+    "defaultValue": " Cutting your %@-min weekend sleep shift would help most.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_jet_lag_suffix",
-    "defaultValue": " Social jet lag of %@ min is also elevated.",
+    "defaultValue": " Your weekend sleep shift of %@ min is also on the high side.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_social_jet_lag_title",
-    "defaultValue": "Social Jet Lag: %@ Minutes",
+    "defaultValue": "Weekend Sleep Shift: %@ Minutes",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2449,7 +2449,7 @@
   },
   {
     "key": "copy_analysis_rhr_trajectory_improving_title",
-    "defaultValue": "Heart Rate Trajectory Improving",
+    "defaultValue": "Resting Heart Rate Improving",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2461,13 +2461,13 @@
   },
   {
     "key": "copy_analysis_rhr_trajectory_rising_recommendation",
-    "defaultValue": "Population studies show a rising resting heart rate is an important long-term fitness indicator. A %@ bpm rise over %@ while maintaining activity is worth paying attention to.%@",
+    "defaultValue": "Large studies show a rising resting heart rate is an important long-term fitness sign. A %@ bpm rise over %@ while staying just as active is worth paying attention to.%@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rhr_trajectory_rising_summary",
-    "defaultValue": "Your resting heart rate has increased by %@ bpm over the past %@. from %@ to %@ bpm. without a decline in your activity levels.",
+    "defaultValue": "Your resting heart rate has risen by %@ bpm over the past %@, from %@ to %@ bpm, even though you have not slowed down your activity.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2514,8 +2514,38 @@
     "isArray": false
   },
   {
+    "key": "copy_analysis_risk_grade_elevated",
+    "defaultValue": "Worth a look",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_grade_high",
+    "defaultValue": "Needs attention",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_grade_low",
+    "defaultValue": "Looks good",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_grade_moderate",
+    "defaultValue": "Mostly steady",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_grade_very_high",
+    "defaultValue": "Talk to a doctor",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_analysis_risk_high",
-    "defaultValue": "elevated",
+    "defaultValue": "higher than usual",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2563,7 +2593,7 @@
   },
   {
     "key": "copy_analysis_rq_how_is_my_hrv_trending",
-    "defaultValue": "How is my HRV trending?",
+    "defaultValue": "How is my heart recovery trending?",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2599,31 +2629,31 @@
   },
   {
     "key": "copy_analysis_rules_engine_active_calories_above",
-    "defaultValue": "%@Active calorie burn is tracking above your baseline.",
+    "defaultValue": "%@Active calorie burn is tracking above your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_active_calories_down",
-    "defaultValue": "%@Active calorie burn is down %@from your baseline.",
+    "defaultValue": "%@Active calorie burn is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_afib_elevated",
-    "defaultValue": "%@AFib burden is elevated %@compared to your baseline.",
+    "defaultValue": "%@Irregular heartbeat activity is %@higher than your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_afib_typical",
-    "defaultValue": "%@AFib burden is tracking at your typical level.",
+    "defaultValue": "%@Irregular heartbeat activity is at your usual level.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_blood_oxygen_critical",
-    "defaultValue": "%@Blood oxygen is critically low, below the 90%% emergency threshold. This level of hypoxemia requires immediate attention. If you experience shortness of breath, confusion, bluish lips or fingertips, or chest pain, seek emergency medical care. Retake the reading to confirm, and if it remains below 90%%, contact a healthcare provider urgently.",
+    "defaultValue": "%@Blood oxygen is very low, below the 90%% emergency mark. This needs attention right away. If you feel short of breath, confused, have bluish lips or fingertips, or chest pain, get emergency care. Take the reading again to be sure, and if it stays below 90%%, contact a doctor urgently.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2647,7 +2677,7 @@
   },
   {
     "key": "copy_analysis_rules_engine_body_comp_trending_up",
-    "defaultValue": "%@Trending up %@from your baseline.",
+    "defaultValue": "%@Trending up %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2665,13 +2695,13 @@
   },
   {
     "key": "copy_analysis_rules_engine_bp_above",
-    "defaultValue": "%@Blood pressure is %@above your baseline.",
+    "defaultValue": "%@Blood pressure is %@above your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_bp_consistent",
-    "defaultValue": "%@Blood pressure is consistent with your baseline.",
+    "defaultValue": "%@Blood pressure is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2683,31 +2713,31 @@
   },
   {
     "key": "copy_analysis_rules_engine_cycling_consistent",
-    "defaultValue": "%@Cycling distance is consistent with your baseline.",
+    "defaultValue": "%@Cycling distance is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_cycling_down",
-    "defaultValue": "%@Cycling distance is down %@from your baseline.",
+    "defaultValue": "%@Cycling distance is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_daylight_consistent",
-    "defaultValue": "%@Daylight exposure is consistent with your baseline.",
+    "defaultValue": "%@Daylight exposure is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_daylight_down",
-    "defaultValue": "%@Daylight exposure is down %@from your baseline.",
+    "defaultValue": "%@Daylight exposure is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_default_declining",
-    "defaultValue": "%@%@ is declining %@from your baseline.",
+    "defaultValue": "%@%@ is declining %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2719,25 +2749,25 @@
   },
   {
     "key": "copy_analysis_rules_engine_double_support_elevated",
-    "defaultValue": "%@Double support time is elevated %@above your typical level.",
+    "defaultValue": "%@The time both feet spend on the ground is %@higher than usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_double_support_typical",
-    "defaultValue": "%@Double support percentage is tracking at your typical level.",
+    "defaultValue": "%@The time both feet spend on the ground is at your usual level.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_eda_elevated",
-    "defaultValue": "%@Electrodermal activity is elevated %@above your baseline.",
+    "defaultValue": "%@Your skin stress signal is %@higher than your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_eda_typical",
-    "defaultValue": "%@Electrodermal activity is tracking at your typical level.",
+    "defaultValue": "%@Your skin stress signal is at your usual level.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2755,7 +2785,7 @@
   },
   {
     "key": "copy_analysis_rules_engine_forced_vital_down",
-    "defaultValue": "%@Forced vital capacity is down %@from your baseline.",
+    "defaultValue": "%@Forced vital capacity is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2785,25 +2815,25 @@
   },
   {
     "key": "copy_analysis_rules_engine_hrv_consistent",
-    "defaultValue": "%@HRV is consistent with your 30-day average.",
+    "defaultValue": "%@Your heart recovery is in line with your 30-day average.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_hrv_down_baseline",
-    "defaultValue": "%@HRV is down %@from your baseline.",
+    "defaultValue": "%@Your heart recovery is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_lean_mass_consistent",
-    "defaultValue": "%@Lean body mass is consistent with your baseline.",
+    "defaultValue": "%@Lean body mass is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_lean_mass_down",
-    "defaultValue": "%@Lean body mass is down %@from your baseline.",
+    "defaultValue": "%@Lean body mass is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2815,31 +2845,31 @@
   },
   {
     "key": "copy_analysis_rules_engine_mindfulness_consistent",
-    "defaultValue": "%@Mindfulness time is consistent with your baseline.",
+    "defaultValue": "%@Mindfulness time is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_mindfulness_down",
-    "defaultValue": "%@Mindfulness time has dropped %@from your baseline.",
+    "defaultValue": "%@Mindfulness time has dropped %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_move_time_consistent",
-    "defaultValue": "%@Move time is consistent with your baseline.",
+    "defaultValue": "%@Move time is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_move_time_down",
-    "defaultValue": "%@Move time is down %@from your baseline.",
+    "defaultValue": "%@Move time is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_peak_flow_down",
-    "defaultValue": "%@Peak flow rate has dropped %@below your baseline.",
+    "defaultValue": "%@Peak flow rate has dropped %@below your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2851,13 +2881,13 @@
   },
   {
     "key": "copy_analysis_rules_engine_perfusion_elevated",
-    "defaultValue": "%@Perfusion index is %@outside your typical range.",
+    "defaultValue": "%@Your blood flow reading is %@outside your usual range.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_perfusion_typical",
-    "defaultValue": "%@Peripheral perfusion is tracking at your typical level.",
+    "defaultValue": "%@Your blood flow is at your usual level.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2869,31 +2899,31 @@
   },
   {
     "key": "copy_analysis_rules_engine_respiratory_elevated",
-    "defaultValue": "%@Respiratory rate is elevated %@above your baseline.",
+    "defaultValue": "%@Your breathing rate is %@higher than usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_respiratory_typical",
-    "defaultValue": "%@Respiratory rate is tracking at your typical level.",
+    "defaultValue": "%@Your breathing rate is at your usual level.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_rhr_above_baseline",
-    "defaultValue": "%@Your resting HR is %@above your baseline.",
+    "defaultValue": "%@Your resting heart rate is %@above your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_rhr_consistent",
-    "defaultValue": "%@Resting HR is consistent with your 30-day average.",
+    "defaultValue": "%@Your resting heart rate is in line with your 30-day average.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_rhr_trending_down",
-    "defaultValue": "%@Resting HR is trending down from your recent average.",
+    "defaultValue": "%@Your resting heart rate is trending down from your recent average.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2905,13 +2935,13 @@
   },
   {
     "key": "copy_analysis_rules_engine_six_minute_walk_consistent",
-    "defaultValue": "%@Six-minute walk distance is consistent with your baseline.",
+    "defaultValue": "%@Six-minute walk distance is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_six_minute_walk_down",
-    "defaultValue": "%@Six-minute walk distance is down %@from your baseline.",
+    "defaultValue": "%@Six-minute walk distance is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2935,73 +2965,73 @@
   },
   {
     "key": "copy_analysis_rules_engine_sleep_duration_below",
-    "defaultValue": "%@Sleep duration is %@below your baseline.",
+    "defaultValue": "%@Sleep duration is %@below your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_sleep_duration_consistent",
-    "defaultValue": "%@Sleep duration is consistent with your baseline.",
+    "defaultValue": "%@Sleep duration is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_sleep_stage",
-    "defaultValue": "%@%@ sleep is %@%@ your baseline.",
+    "defaultValue": "%@%@ sleep is %@%@ your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_stair_speed_consistent",
-    "defaultValue": "%@Stair speed is consistent with your baseline.",
+    "defaultValue": "%@Stair speed is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_stair_speed_down",
-    "defaultValue": "%@Stair speed is down %@from your baseline.",
+    "defaultValue": "%@Stair speed is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_step_length_consistent",
-    "defaultValue": "%@Step length is consistent with your baseline.",
+    "defaultValue": "%@Step length is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_step_length_down",
-    "defaultValue": "%@Step length has shortened %@from your baseline.",
+    "defaultValue": "%@Step length has shortened %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_steps_consistent",
-    "defaultValue": "%@Step count is consistent with your baseline.",
+    "defaultValue": "%@Step count is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_steps_down",
-    "defaultValue": "%@Step count is down %@from your baseline.",
+    "defaultValue": "%@Step count is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_steps_up",
-    "defaultValue": "%@Step count is up %@from your baseline.",
+    "defaultValue": "%@Step count is up %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_swimming_consistent",
-    "defaultValue": "%@Swimming activity is consistent with your baseline.",
+    "defaultValue": "%@Swimming activity is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_swimming_down",
-    "defaultValue": "%@Swimming activity has declined %@from your baseline.",
+    "defaultValue": "%@Swimming activity has declined %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3013,55 +3043,55 @@
   },
   {
     "key": "copy_analysis_rules_engine_vo2_flat",
-    "defaultValue": "%@VO2 Max has been flat or declining %@compared to your baseline.",
+    "defaultValue": "%@VO2 Max has been flat or declining %@compared to your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_vo2_improving",
-    "defaultValue": "%@VO2 Max is up %@from your baseline \\u{2014} your cardiovascular fitness is improving.",
+    "defaultValue": "%@Your VO2 Max is up %@from your usual. Your heart and lung fitness is improving.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_waist_above",
-    "defaultValue": "%@Waist circumference is %@above your baseline.",
+    "defaultValue": "%@Waist circumference is %@above your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_waist_consistent",
-    "defaultValue": "%@Waist circumference is consistent with your baseline.",
+    "defaultValue": "%@Waist circumference is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_walking_asymmetry_elevated",
-    "defaultValue": "%@Walking asymmetry is elevated %@above your typical level.",
+    "defaultValue": "%@Your walking is %@more uneven than usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_walking_speed_consistent",
-    "defaultValue": "%@Walking speed is consistent with your baseline.",
+    "defaultValue": "%@Walking speed is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_walking_speed_down",
-    "defaultValue": "%@Walking speed is down %@from your baseline.",
+    "defaultValue": "%@Walking speed is down %@from your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_walking_symmetry_consistent",
-    "defaultValue": "%@Walking symmetry is consistent with your baseline.",
+    "defaultValue": "%@Walking symmetry is consistent with your usual.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_rules_engine_wrist_temp_deviated",
-    "defaultValue": "%@Wrist temperature has deviated %@from your typical range.",
+    "defaultValue": "%@Your wrist temperature is %@off your usual range.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3133,31 +3163,31 @@
   },
   {
     "key": "copy_analysis_sleep_coherence_declining_coherence_title",
-    "defaultValue": "Sleep Coherence Declining",
+    "defaultValue": "Sleep Systems Falling Out of Sync",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_declining_recommendation",
-    "defaultValue": "A %@-point drop in sleep coherence over 2 weeks may reflect increased stress, an irregular schedule, or your body working harder to recover. This pattern often appears before you start feeling off.",
+    "defaultValue": "A %@-point drop in sleep sync over 2 weeks can come from more stress, an off schedule, or your body working harder to recover. This often shows up before you start feeling off.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_declining_summary",
-    "defaultValue": "Your sleep coherence dropped from %@ to %@ over the past two weeks. Your heart and nervous system are less synchronized during sleep than before.",
+    "defaultValue": "Your sleep sync dropped from %@ to %@ over the past two weeks. Your heart and nervous system are less in step during sleep than before.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_out_of_sync_recommendation",
-    "defaultValue": "Research shows that physiological incoherence during sleep. when your heart stays 'awake' while your brain sleeps. is associated with reduced overall wellness. Your coherence score of %@ suggests %@ desynchronization across %d measured nights.",
+    "defaultValue": "Research shows that when your body is out of sync during sleep, meaning your heart stays 'awake' while your brain sleeps, it is linked to worse overall health. Your sync score of %@ points to %@ mismatch across %d nights.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_out_of_sync_summary",
-    "defaultValue": "Your body's systems aren't fully aligning during sleep. On %d of %d recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns. coherence score: %@/100.",
+    "defaultValue": "Your body's systems aren't fully lining up during sleep. On %d of %d recent nights, your heart rate and heart recovery didn't follow the usual sleep-stage patterns. Sync score: %@/100.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3169,19 +3199,19 @@
   },
   {
     "key": "copy_analysis_sleep_coherence_strong_coherence_recommendation",
-    "defaultValue": "A coherence score of %@ means your heart and nervous system are well-aligned during sleep. Research links high sleep coherence to better overall wellness across many dimensions of health.",
+    "defaultValue": "A sync score of %@ means your heart and nervous system line up well during sleep. Research links good sleep sync to better health in many areas.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_strong_coherence_summary",
-    "defaultValue": "Your body's systems sync well during sleep. heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: %@/100 across %d nights.",
+    "defaultValue": "Your body's systems sync well during sleep. Your heart rate drops as it should, your heart recovery rises, and your sleep stages look healthy. Sync score: %@/100 across %d nights.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_sleep_coherence_strong_coherence_title",
-    "defaultValue": "Strong Sleep Coherence",
+    "defaultValue": "Your Sleep Systems Are In Sync",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3217,7 +3247,7 @@
   },
   {
     "key": "copy_analysis_sleep_perf_good_sleep_boost_summary",
-    "defaultValue": "Good sleep (7+ hrs) boosts your next-day %@ by %@%%. averaging %@ %@ vs %@ on shorter nights.",
+    "defaultValue": "Good sleep (7+ hrs) lifts your next-day %@ by %@%%, averaging %@ %@ vs %@ on shorter nights.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3271,13 +3301,13 @@
   },
   {
     "key": "copy_analysis_social_jet_lag_recommendation",
-    "defaultValue": "Social jet lag >60 min is associated with reduced metabolic wellness and increased body stress in adults with otherwise normal sleep duration. Your %@-min shift suggests significant circadian misalignment on weekends.",
+    "defaultValue": "A weekend sleep shift over 60 min is linked to worse body health and more body stress, even in adults who sleep enough. Your %@-min shift means your body clock is well out of sync on weekends.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_social_jet_lag_summary",
-    "defaultValue": "Your weekend sleep timing shifts by %@ minutes compared to weekdays. equivalent to crossing a time zone every week. This is linked to reduced metabolic wellness independent of sleep duration.",
+    "defaultValue": "Your sleep time shifts by %@ minutes on weekends compared to weekdays. That is like crossing a time zone every week. It is linked to worse body health no matter how long you sleep.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3361,13 +3391,13 @@
   },
   {
     "key": "copy_analysis_strong_indicators_title",
-    "defaultValue": "Strong Wellbeing Indicators",
+    "defaultValue": "Strong Wellbeing Signs",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_strong_recommendation",
-    "defaultValue": "Research on digital phenotyping shows that consistent sleep, regular activity, adequate daylight exposure, and strong autonomic tone are collectively protective for mental health. Your current patterns reflect all of these.",
+    "defaultValue": "Research shows that steady sleep, regular activity, enough daylight, and a strong rest-and-recover state together protect your mental health. Your current habits show all of these.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3379,55 +3409,55 @@
   },
   {
     "key": "copy_analysis_temperature_compound_body_temp_elevated_title",
-    "defaultValue": "Body Temperature Elevated %d Nights",
+    "defaultValue": "Body Warmer Than Usual for %d Nights",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_compound_recommendation",
-    "defaultValue": "Sustained nighttime temperature elevation (%@°C vs baseline %@°C) alongside low HRV reflects the autonomic and thermoregulatory signatures of immune activation. This compound signal typically precedes symptom onset by 1-3 days.",
+    "defaultValue": "A steady rise in nighttime temperature (%@°C vs your usual %@°C) along with low heart recovery is the kind of body signal seen when your immune system kicks in. Together they often show up 1 to 3 days before symptoms.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_compound_summary",
-    "defaultValue": "Your sleeping wrist temperature is %@°C above your 30-day baseline for %d consecutive nights. Combined with suppressed HRV, this compound pattern is associated with early immune response.",
+    "defaultValue": "Your wrist runs %@°C warmer than your 30-day usual while you sleep, %d nights in a row. Together with low heart recovery, this can be an early sign your body is fighting something.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_cycle_pattern_recommendation",
-    "defaultValue": "The cyclical temperature variation of %@°C around your baseline of %@°C reflects the biphasic pattern driven by progesterone. Post-ovulation temperatures typically rise 0.2-0.5°C above the follicular phase baseline.",
+    "defaultValue": "The %@°C rise and fall around your usual of %@°C follows the two-part pattern set by your hormones. After ovulation, temperature usually rises 0.2 to 0.5°C above the level earlier in your cycle.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_cycle_pattern_summary",
-    "defaultValue": "Your wrist temperature shows a recurring cyclical pattern with %@°C amplitude. consistent with hormonal cycle influence. Research shows wrist temperature tracks ovulation with 82-93%% accuracy.",
+    "defaultValue": "Your wrist temperature rises and falls in a repeating cycle of %@°C, which fits your hormone cycle. Research shows wrist temperature tracks ovulation 82-93%% of the time.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_high_variability_recommendation",
-    "defaultValue": "Temperature coefficient of variation: %@%%. Research links elevated nighttime temperature variability to circadian disruption, poor sleep quality, and reduced metabolic wellness. Stable temperatures reflect stronger circadian entrainment.",
+    "defaultValue": "How much your temperature swings: %@%%. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_high_variability_summary",
-    "defaultValue": "Your nighttime wrist temperature varies significantly night to night (\\u{00B1}%@°C). High thermoregulatory variability is associated with disrupted circadian rhythm and metabolic health.",
+    "defaultValue": "Your nighttime wrist temperature jumps around a lot from night to night (\\u{00B1}%@°C). Big swings like this are linked to an off body clock and body health.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_temp_only_recommendation",
-    "defaultValue": "Your nighttime temperature: %@°C vs 30-day baseline of %@°C (\\u{00B1}%@). Research shows wrist temperature deviations >0.3°C sustained over multiple nights may indicate metabolic changes, hormonal shifts, or early immune responses.",
+    "defaultValue": "Your nighttime temperature: %@°C vs your 30-day usual of %@°C (\\u{00B1}%@). Research shows a wrist change over 0.3°C that lasts several nights can point to body changes, hormone shifts, or an early immune response.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_temperature_compound_temp_only_summary",
-    "defaultValue": "Your sleeping wrist temperature has been %@°C above your personal baseline for %d nights. Sustained elevation can reflect metabolic shifts, stress, or early subclinical changes.",
+    "defaultValue": "Your wrist has run %@°C warmer than usual while you sleep for %d nights. A steady rise can come from body changes, stress, or an early shift before you feel anything.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3571,7 +3601,7 @@
   },
   {
     "key": "copy_analysis_wellbeing_strong_summary",
-    "defaultValue": "Your behavioral pattern across %d indicators. sleep regularity, activity, daylight exposure%@. is consistent with positive mental wellbeing.",
+    "defaultValue": "Your habits across %d signs, sleep steadiness, activity, daylight%@, line up with good mental wellbeing.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3601,7 +3631,7 @@
   },
   {
     "key": "copy_analysis_wellbeing_trend_autonomic_tone_signal",
-    "defaultValue": "Autonomic Tone",
+    "defaultValue": "Rest-and-Recover State",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3625,7 +3655,7 @@
   },
   {
     "key": "copy_analysis_wellbeing_trend_mild_summary",
-    "defaultValue": "Two behavioral indicators are shifting: %@. Not yet a strong signal, but worth monitoring.",
+    "defaultValue": "Two daily habits are shifting: %@. Not a strong signal yet, but worth watching.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3637,13 +3667,13 @@
   },
   {
     "key": "copy_analysis_wellbeing_trend_pattern_shift_recommendation",
-    "defaultValue": "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with high accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: %@/100.",
+    "defaultValue": "Research shows that changes in sleep steadiness, activity, daylight, and your rest-and-recover state, all at once, can predict mood shifts well. This is just an observation, not a diagnosis, but it is worth noting. Score: %@/100.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_wellbeing_trend_pattern_shift_summary",
-    "defaultValue": "%d of %d behavioral indicators are trending in directions associated with mood decline: %@.",
+    "defaultValue": "%d of %d daily habits are moving in ways often tied to a dip in mood: %@.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -4597,7 +4627,7 @@
   },
   {
     "key": "copy_causation_chain_baseline_parenthetical",
-    "defaultValue": " (from your %@ %@ baseline)",
+    "defaultValue": " (from your usual %@ %@)",
     "sourceFile": "Copy+Causation.swift",
     "isArray": false
   },
@@ -4639,7 +4669,7 @@
   },
   {
     "key": "copy_causation_chain_personal_pattern",
-    "defaultValue": "Your data shows a %@ personal pattern between these metrics (r=%@)",
+    "defaultValue": "Your data shows a %@ personal pattern between these two (r=%@)",
     "sourceFile": "Copy+Causation.swift",
     "isArray": false
   },
@@ -4813,7 +4843,7 @@
   },
   {
     "key": "copy_causation_three_link_cascade",
-    "defaultValue": "Your data suggests a cascade of connected changes. ",
+    "defaultValue": "Your data suggests a chain of connected changes. ",
     "sourceFile": "Copy+Causation.swift",
     "isArray": false
   },
@@ -4885,7 +4915,7 @@
   },
   {
     "key": "copy_causation_two_link_correlation",
-    "defaultValue": ", which correlates with %@ %@ for you (r=%@). ",
+    "defaultValue": ", which usually moves with %@ %@ for you (r=%@). ",
     "sourceFile": "Copy+Causation.swift",
     "isArray": false
   },
@@ -5366,6 +5396,36 @@
   {
     "key": "copy_common_update_your_payment_method_to_keep",
     "defaultValue": "Update your payment method to keep your subscription active.",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_verdict_above_normal",
+    "defaultValue": "Above normal",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_verdict_below_normal",
+    "defaultValue": "Below normal",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_verdict_normal",
+    "defaultValue": "Normal range",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_verdict_typical_range",
+    "defaultValue": "Typical range %@ to %@",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_verdict_your_usual_range",
+    "defaultValue": "Your usual range %@ to %@",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -6194,6 +6254,54 @@
   {
     "key": "copy_devices_these_sources_were_detected_before_but",
     "defaultValue": "These sources were detected before, but they haven't written data to Apple Health in the last 7 days.",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_added",
+    "defaultValue": "Laso is on your watch face.",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_dismiss",
+    "defaultValue": "Not now",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_dismiss_label",
+    "defaultValue": "Hide this tip",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_step_one",
+    "defaultValue": "Press and hold your watch face",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_step_three",
+    "defaultValue": "Tap a slot and choose Laso",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_step_two",
+    "defaultValue": "Tap Edit, then swipe to Complications",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_subtitle",
+    "defaultValue": "See your readiness by raising your wrist, without opening the app.",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_title",
+    "defaultValue": "Put your score on your watch face",
     "sourceFile": "Copy+Devices.swift",
     "isArray": false
   },
@@ -7200,12 +7308,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_body_insight_briefing_label",
-    "defaultValue": "Body insight briefing",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_body_intelligence",
     "defaultValue": "Body Intelligence",
     "sourceFile": "Copy+Home.swift",
@@ -7224,18 +7326,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_brain_health_score_out_of_label",
-    "defaultValue": "Brain Health score %d out of 100, %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_bed_by",
-    "defaultValue": "Bed by %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_cards_for_you_today",
     "defaultValue": "FOR YOU TODAY",
     "sourceFile": "Copy+Home.swift",
@@ -7248,12 +7338,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_cards_last_nights_sleep",
-    "defaultValue": "Last Night's Sleep",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_cards_next_seven_days",
     "defaultValue": "Next 7 days",
     "sourceFile": "Copy+Home.swift",
@@ -7262,42 +7346,6 @@
   {
     "key": "copy_home_cards_reading_todays_signals",
     "defaultValue": "Reading today's signals…",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_right_now",
-    "defaultValue": "Right now",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_see_all",
-    "defaultValue": "See all",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_stress_level",
-    "defaultValue": "Stress Level",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_todays_strain",
-    "defaultValue": "Today's Strain",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_tonights_goal",
-    "defaultValue": "Tonight's Goal",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_cards_vs_last_week",
-    "defaultValue": "vs last week",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7410,20 +7458,32 @@
     "isArray": false
   },
   {
-    "key": "copy_home_correlation_value",
-    "defaultValue": "%@ correlation",
+    "key": "copy_home_daily_result_dismiss",
+    "defaultValue": "Got it",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_cycle_phase_day_of_cycle",
-    "defaultValue": "Day %d of %d",
+    "key": "copy_home_daily_result_down",
+    "defaultValue": "Your recovery dipped %d. Rest is part of the plan too.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_day_of_days_until_next_label",
-    "defaultValue": "%@, day %d of %d, %d days until next period",
+    "key": "copy_home_daily_result_header",
+    "defaultValue": "YESTERDAY'S RESULT",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_daily_result_steady",
+    "defaultValue": "Your recovery held steady. Small steps add up.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_daily_result_up",
+    "defaultValue": "Your recovery is +%d higher this morning.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7446,14 +7506,8 @@
     "isArray": false
   },
   {
-    "key": "copy_home_debt_text",
-    "defaultValue": "%@ debt",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_deep_sleep_rationale",
-    "defaultValue": "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than the 45-minute mark.",
+    "defaultValue": "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than 45 minutes.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7554,26 +7608,14 @@
     "isArray": false
   },
   {
-    "key": "copy_home_filter_to_show_metrics_hint",
-    "defaultValue": "Filter to show %@ metrics",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_fitness_gap_subtitle",
     "defaultValue": "A brisk walk or quick workout would close the gap",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_focus_areas_title",
-    "defaultValue": "Your Focus Areas",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_focus_recovery_rationale",
-    "defaultValue": "Recovery is your focus area and your readiness score suggests your body has not fully bounced back yet.",
+    "defaultValue": "Recovery is your focus area, and today's signals suggest your body has not fully bounced back yet.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7586,12 +7628,6 @@
   {
     "key": "copy_home_forecast_label",
     "defaultValue": "%@ forecast",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_from_your_data",
-    "defaultValue": "From Your Data",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7699,25 +7735,25 @@
   },
   {
     "key": "copy_home_greeting_good_afternoon",
-    "defaultValue": "Good Afternoon",
+    "defaultValue": "Afternoon",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_greeting_good_evening",
-    "defaultValue": "Good Evening",
+    "defaultValue": "Evening",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_greeting_good_morning",
-    "defaultValue": "Good Morning",
+    "defaultValue": "Morning",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_greeting_good_night",
-    "defaultValue": "Good Night",
+    "defaultValue": "Night",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7801,7 +7837,7 @@
   },
   {
     "key": "copy_home_heart_cardio_detail",
-    "defaultValue": "Resting heart rate, HRV, and cardio fitness",
+    "defaultValue": "Resting heart rate, heart calm signal, and cardio fitness",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7825,7 +7861,7 @@
   },
   {
     "key": "copy_home_how_its_calculated_body",
-    "defaultValue": "Your Health Score is a weighted average across four areas. Areas with more data and more change carry more weight. Each number is scored against your usual, and changes and trends move the score up or down.",
+    "defaultValue": "Your Health Score blends four areas. Areas with more data and more change count for more. Each number is compared to your usual, and shifts and trends move the score up or down.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7836,32 +7872,26 @@
     "isArray": false
   },
   {
-    "key": "copy_home_how_was_today",
-    "defaultValue": "How was today?",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_hrv_below",
-    "defaultValue": "HRV is below your usual",
+    "defaultValue": "heart calm signal is below your usual",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_hrv_bounced",
-    "defaultValue": "HRV bounced back",
+    "defaultValue": "heart calm signal bounced back",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_hrv_high",
-    "defaultValue": "HRV is above your usual",
+    "defaultValue": "heart calm signal is above your usual",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_hrv_low",
-    "defaultValue": "HRV has not recovered yet",
+    "defaultValue": "heart calm signal has not come back yet",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7902,32 +7932,14 @@
     "isArray": false
   },
   {
-    "key": "copy_home_journal_subtitle",
-    "defaultValue": "A quick check-in helps track patterns over time",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_last_night_s_sleep_label",
-    "defaultValue": "Last night's sleep %@, %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_last_updated_ago",
     "defaultValue": "Last updated %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_leads_to_label",
-    "defaultValue": "%@ leads to %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_low_readiness_rationale",
-    "defaultValue": "A few signals (HRV, resting HR, sleep) suggest your body has not recovered from recent strain.",
+    "defaultValue": "A few signals (heart calm signal, resting heart rate, sleep) suggest your body has not fully recovered from recent strain.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7958,12 +7970,6 @@
   {
     "key": "copy_home_manage_devices",
     "defaultValue": "Manage Devices",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_metrics_label",
-    "defaultValue": "%d metrics %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8046,6 +8052,24 @@
     "isArray": false
   },
   {
+    "key": "copy_home_next_up_marked_done",
+    "defaultValue": "Done",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_remind",
+    "defaultValue": "Remind %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_reminder_set",
+    "defaultValue": "Reminder set",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_week_target",
     "defaultValue": "Next week target",
     "sourceFile": "Copy+Home.swift",
@@ -8088,32 +8112,14 @@
     "isArray": false
   },
   {
-    "key": "copy_home_opens_guidance_for_today_s_recommended_hint",
-    "defaultValue": "Opens guidance for today's recommended action",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_opens_score_breakdown_hint",
     "defaultValue": "Opens score breakdown",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_opens_the_full_health_intelligence_view_hint",
-    "defaultValue": "Opens the full health intelligence view",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_opens_the_full_insight_hint",
     "defaultValue": "Opens the full insight",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_opens_the_full_insights_screen_hint",
-    "defaultValue": "Opens the full insights screen",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8203,19 +8209,19 @@
   },
   {
     "key": "copy_home_recovery_info_how_its_calculated_body",
-    "defaultValue": "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it affects the score.",
+    "defaultValue": "Recovery blends a few signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it moves the score.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_recovery_info_hrv_detail",
-    "defaultValue": "Higher HRV means better recovery and lower stress. Compared to your usual.",
+    "defaultValue": "A higher heart calm signal means better recovery and lower stress. Compared to your usual.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_recovery_info_hrv_name",
-    "defaultValue": "Heart Rate Variability",
+    "defaultValue": "Heart Calm Signal",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8263,7 +8269,7 @@
   },
   {
     "key": "copy_home_recovery_info_resting_hr_detail",
-    "defaultValue": "Lower resting HR means your heart is recovering well. Compared to your usual.",
+    "defaultValue": "A lower resting heart rate means your heart is recovering well. Compared to your usual.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8347,19 +8353,19 @@
   },
   {
     "key": "copy_home_recovery_trend_declining",
-    "defaultValue": "HRV trending down this week",
+    "defaultValue": "heart calm signal trending down this week",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_recovery_trend_improving",
-    "defaultValue": "HRV trending up this week",
+    "defaultValue": "heart calm signal trending up this week",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_recovery_trend_stable",
-    "defaultValue": "HRV steady this week",
+    "defaultValue": "heart calm signal steady this week",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8419,7 +8425,7 @@
   },
   {
     "key": "copy_home_resting_hr_up_title",
-    "defaultValue": "Your resting HR is trending up",
+    "defaultValue": "Your resting heart rate is trending up",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8454,14 +8460,32 @@
     "isArray": false
   },
   {
-    "key": "copy_home_risk_label",
-    "defaultValue": "%@, %@ risk",
+    "key": "copy_home_saves_your_sleep_energy_and_soreness_hint",
+    "defaultValue": "Saves your sleep, energy, and soreness ratings",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_saves_your_sleep_energy_and_soreness_hint",
-    "defaultValue": "Saves your sleep, energy, and soreness ratings",
+    "key": "copy_home_score_change_down",
+    "defaultValue": "%d down from yesterday",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_change_same",
+    "defaultValue": "Same as yesterday",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_change_up",
+    "defaultValue": "%d up from yesterday",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_confidence",
+    "defaultValue": "Based on %d of %d signals",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8492,6 +8516,48 @@
   {
     "key": "copy_home_score_levels",
     "defaultValue": "Score levels",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_ready_label",
+    "defaultValue": "Ready",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_high_head",
+    "defaultValue": "Higher than usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_high_sub",
+    "defaultValue": "Good to push a little.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_low_head",
+    "defaultValue": "Lower than usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_low_sub",
+    "defaultValue": "Worth an easy day.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_moderate_head",
+    "defaultValue": "About usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_moderate_sub",
+    "defaultValue": "A steady day suits you.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8532,14 +8598,8 @@
     "isArray": false
   },
   {
-    "key": "copy_home_see_all_correlations_label",
-    "defaultValue": "See all correlations",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_see_sleep_tips",
-    "defaultValue": "See sleep tips \\u{2192}",
+    "key": "copy_home_score_why_label",
+    "defaultValue": "Why",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8587,13 +8647,13 @@
   },
   {
     "key": "copy_home_sleep_good",
-    "defaultValue": "decent sleep duration",
+    "defaultValue": "a decent amount of sleep",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_sleep_great",
-    "defaultValue": "sleep was long and restorative",
+    "defaultValue": "sleep was long and restful",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8618,12 +8678,6 @@
   {
     "key": "copy_home_sleep_solid",
     "defaultValue": "solid night of sleep",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_sleep_stage_duration_text",
-    "defaultValue": "%@ %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8677,7 +8731,7 @@
   },
   {
     "key": "copy_home_smart_action_focus_recovery_subtitle",
-    "defaultValue": "Readiness is %d%%. Light stretching and water will help",
+    "defaultValue": "Your body is %d%% ready. Light stretching and water will help",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8689,7 +8743,7 @@
   },
   {
     "key": "copy_home_smart_action_high_stress_subtitle",
-    "defaultValue": "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset.",
+    "defaultValue": "Slow breathing (in for 4, hold 4, out 4, hold 4) for 5 min can bring it down. Your body is asking for a reset.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8701,7 +8755,7 @@
   },
   {
     "key": "copy_home_smart_action_low_readiness_subtitle",
-    "defaultValue": "Readiness is %d%%. Stretching or yoga only",
+    "defaultValue": "Your body is %d%% ready. Stretching or yoga only",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8719,7 +8773,7 @@
   },
   {
     "key": "copy_home_smart_action_resting_hr_up_rationale",
-    "defaultValue": "Your resting heart rate is %d bpm, above your usual of %d bpm. This could hint at incomplete recovery or higher stress.",
+    "defaultValue": "Your resting heart rate is %d beats per minute, above your usual of %d. This could mean your body has not fully recovered, or stress is higher.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8742,26 +8796,8 @@
     "isArray": false
   },
   {
-    "key": "copy_home_strain_card_label",
-    "defaultValue": "Today's strain %@, %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_strain_card_zone_label",
-    "defaultValue": "Z%d",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_strained",
     "defaultValue": "Strained",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_stress_card_label",
-    "defaultValue": "Stress level %@, %@, trending %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8814,18 +8850,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_time_period_selector_label",
-    "defaultValue": "Time period selector",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_today_s_action_label",
-    "defaultValue": "Today's action: %@",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_todays_action",
     "defaultValue": "Today's Action",
     "sourceFile": "Copy+Home.swift",
@@ -8833,7 +8857,7 @@
   },
   {
     "key": "copy_home_todays_action_detail_baseline",
-    "defaultValue": "baseline",
+    "defaultValue": "usual",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8868,12 +8892,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_trends",
-    "defaultValue": "Trends",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_try_again",
     "defaultValue": "Try Again",
     "sourceFile": "Copy+Home.swift",
@@ -8898,68 +8916,8 @@
     "isArray": false
   },
   {
-    "key": "copy_home_view_brain_health_details_hint",
-    "defaultValue": "View brain health details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_cycle_tracking_details_hint",
-    "defaultValue": "View cycle tracking details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_view_details_hint",
     "defaultValue": "View %@ details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_metric_details_hint",
-    "defaultValue": "View metric details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_risk_details_and_recommendations_hint",
-    "defaultValue": "View risk details and recommendations",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_sleep_coach_details_hint",
-    "defaultValue": "View sleep coach details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_sleep_details_hint",
-    "defaultValue": "View sleep details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_strain_details_hint",
-    "defaultValue": "View strain details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_stress_monitor_details_hint",
-    "defaultValue": "View stress monitor details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_view_vitality_age_details_hint",
-    "defaultValue": "View vitality age details",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_vs_avg_text",
-    "defaultValue": "%@%d%% vs avg",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8971,13 +8929,13 @@
   },
   {
     "key": "copy_home_wear_requirement_default",
-    "defaultValue": "Wear your Apple Watch overnight so it can measure HRV and resting heart rate while you sleep.",
+    "defaultValue": "Wear your Apple Watch overnight so it can measure your heart calm signal and resting heart rate while you sleep.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_wear_requirement_named",
-    "defaultValue": "Wear your %@ overnight so it can measure HRV and resting heart rate while you sleep.",
+    "defaultValue": "Wear your %@ overnight so it can measure your heart calm signal and resting heart rate while you sleep.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -9036,6 +8994,138 @@
     "isArray": false
   },
   {
+    "key": "copy_home_why_energy_good",
+    "defaultValue": "Energy is good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_good_value",
+    "defaultValue": "Good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_low",
+    "defaultValue": "Energy is low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_low_value",
+    "defaultValue": "Below usual",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_calm",
+    "defaultValue": "Heart is calm",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_good_value",
+    "defaultValue": "Good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_high_value",
+    "defaultValue": "Higher",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_working",
+    "defaultValue": "Heart is working hard",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_energy",
+    "defaultValue": "Energy",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_heart",
+    "defaultValue": "Heart",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_resting_hr",
+    "defaultValue": "Resting heart rate",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_sleep",
+    "defaultValue": "Sleep",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_stress",
+    "defaultValue": "Stress",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_no_data",
+    "defaultValue": "No reading yet",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_calm",
+    "defaultValue": "Heart rate is calm at rest",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_up",
+    "defaultValue": "Resting heart rate is up",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_value_calm",
+    "defaultValue": "Good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_value_up",
+    "defaultValue": "Above usual",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_sleep_good",
+    "defaultValue": "Sleep was solid",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_sleep_short",
+    "defaultValue": "Sleep was short",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_stress_high",
+    "defaultValue": "Stress is high",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_stress_low",
+    "defaultValue": "Stress is low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_why_this_today",
     "defaultValue": "Why this, today",
     "sourceFile": "Copy+Home.swift",
@@ -9062,12 +9152,6 @@
   {
     "key": "copy_home_works_with",
     "defaultValue": "Works with",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_worth_noticing_text",
-    "defaultValue": "%d worth noticing",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -9133,7 +9217,7 @@
   },
   {
     "key": "copy_insights_accelerating",
-    "defaultValue": " The rate of change is speeding up.",
+    "defaultValue": " The change is speeding up.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9145,7 +9229,7 @@
   },
   {
     "key": "copy_insights_and_accelerating",
-    "defaultValue": " & Accelerating",
+    "defaultValue": " & Speeding Up",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9175,7 +9259,7 @@
   },
   {
     "key": "copy_insights_causal_chain_affecting_label",
-    "defaultValue": "Causal chain affecting %@",
+    "defaultValue": "Chain of effects on %@",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9193,7 +9277,7 @@
   },
   {
     "key": "copy_insights_causal_hint_body_temp",
-    "defaultValue": "Worth knowing: changes in temperature often go with shifts in sleep length and HRV.",
+    "defaultValue": "Worth knowing: changes in temperature often go with changes in sleep length and your heart recovery signal.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9211,7 +9295,7 @@
   },
   {
     "key": "copy_insights_causal_hint_respiratory_rate",
-    "defaultValue": "Worth knowing: breathing rate changes often track with sleep quality and stress levels.",
+    "defaultValue": "Worth knowing: breathing rate changes often go with sleep quality and stress levels.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9235,19 +9319,19 @@
   },
   {
     "key": "copy_insights_causal_hint_vo2_max",
-    "defaultValue": "Worth knowing: VO2 Max changes tend to follow shifts in workout routine over 2 to 4 weeks.",
+    "defaultValue": "Worth knowing: VO2 Max changes usually follow changes in your workouts over 2 to 4 weeks.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_characterized_by",
-    "defaultValue": "Characterized by %@.",
+    "defaultValue": "You'll notice %@.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_correlations_actionable_badge",
-    "defaultValue": "Actionable",
+    "defaultValue": "Try This",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9259,7 +9343,7 @@
   },
   {
     "key": "copy_insights_correlations_building_intelligence",
-    "defaultValue": "Still building your insight profile.",
+    "defaultValue": "Still building your insights.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9313,7 +9397,7 @@
   },
   {
     "key": "copy_insights_dash_reversing",
-    "defaultValue": " (Reversing)",
+    "defaultValue": " (Turning Around)",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9427,7 +9511,7 @@
   },
   {
     "key": "copy_insights_historical_context",
-    "defaultValue": "Historical Context",
+    "defaultValue": "Your History",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9481,13 +9565,19 @@
   },
   {
     "key": "copy_insights_insights_declining",
-    "defaultValue": "%@ %@Declining%@",
+    "defaultValue": "%@ %@Dropping%@",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_insights_declining_summary",
-    "defaultValue": "Your %@ is %@%% %@ your baseline (%@ %@). Current: %@ %@.%@%@%@%@",
+    "defaultValue": "Your %@ is %@%% %@ your usual (%@ %@). Now: %@ %@.%@%@%@%@",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_insights_insights_declining_summary_no_percent",
+    "defaultValue": "Your %@ is far %@ your usual (%@ %@). Now: %@ %@.%@%@%@%@",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9510,6 +9600,12 @@
     "isArray": false
   },
   {
+    "key": "copy_insights_insights_far_from_usual",
+    "defaultValue": "Your %@ is far %@ your usual",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_insights_insights_generic_metric_deviation",
     "defaultValue": "Your %@ is %d%% from your usual",
     "sourceFile": "Copy+Insights.swift",
@@ -9523,7 +9619,7 @@
   },
   {
     "key": "copy_insights_insights_hrv_trending",
-    "defaultValue": "Your HRV is trending %@, %d%% from your usual",
+    "defaultValue": "Your heart recovery signal is heading %@, %d%% from your usual",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9535,7 +9631,13 @@
   },
   {
     "key": "copy_insights_insights_improving_summary",
-    "defaultValue": "Your %@ has improved %@%% from your baseline. Current: %@ %@.%@%@%@",
+    "defaultValue": "Your %@ has improved %@%% from your usual. Now: %@ %@.%@%@%@",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_insights_insights_improving_summary_no_percent",
+    "defaultValue": "Your %@ has improved a lot from your usual. Now: %@ %@.%@%@%@",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9577,13 +9679,13 @@
   },
   {
     "key": "copy_insights_insights_metric_detail_data_points_summary",
-    "defaultValue": "Based on %d data points",
+    "defaultValue": "Based on %d readings",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_insights_metric_detail_expanded_range_notice",
-    "defaultValue": "Expanded to %d days to show available data",
+    "defaultValue": "Showing %d days so we have enough data",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9613,7 +9715,7 @@
   },
   {
     "key": "copy_insights_insights_optimization_gap",
-    "defaultValue": "Optimization: %d%% Gap to Your Best",
+    "defaultValue": "Room to Improve: %d%% From Your Best",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9643,7 +9745,7 @@
   },
   {
     "key": "copy_insights_insights_projection_warning",
-    "defaultValue": " At the current rate, this could reach warning level in about %d days.",
+    "defaultValue": " At this pace, this could reach warning level in about %d days.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9667,13 +9769,19 @@
   },
   {
     "key": "copy_insights_insights_stable",
-    "defaultValue": "%@ Stable",
+    "defaultValue": "%@ Steady",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_insights_stable_summary",
-    "defaultValue": "Your %@ is %@%% %@ your baseline (%@ %@).%@%@",
+    "defaultValue": "Your %@ is %@%% %@ your usual (%@ %@).%@%@",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_insights_insights_stable_summary_no_percent",
+    "defaultValue": "Your %@ is far %@ your usual (%@ %@).%@%@",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9685,7 +9793,7 @@
   },
   {
     "key": "copy_insights_insights_vo2_max_trending",
-    "defaultValue": "Your VO2 max is trending %@, %d%% from your usual",
+    "defaultValue": "Your VO2 max is heading %@, %d%% from your usual",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9697,13 +9805,13 @@
   },
   {
     "key": "copy_insights_most_responsive_metric",
-    "defaultValue": "Your Most Responsive Metric",
+    "defaultValue": "Your Fastest-Reacting Number",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_multiple_metrics_declining_together",
-    "defaultValue": "Multiple Metrics Declining Together",
+    "defaultValue": "Several Health Numbers Dropping Together",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9727,19 +9835,7 @@
   },
   {
     "key": "copy_insights_normal_across_metrics",
-    "defaultValue": "This state is characterized by normal levels across metrics.",
-    "sourceFile": "Copy+Insights.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_insights_outside_normal_range",
-    "defaultValue": "Outside Range",
-    "sourceFile": "Copy+Insights.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_insights_outside_range",
-    "defaultValue": "Outside Range",
+    "defaultValue": "All your numbers look normal right now.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9763,19 +9859,19 @@
   },
   {
     "key": "copy_insights_recheck_metric_trend",
-    "defaultValue": "Check this again to confirm the trend",
+    "defaultValue": "Check this again to be sure",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_recheck_single_reading",
-    "defaultValue": "Check again to confirm, since single readings can vary",
+    "defaultValue": "Check again to be sure, because one reading can be off",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
   {
     "key": "copy_insights_recovery_underway",
-    "defaultValue": "Recovery Underway",
+    "defaultValue": "You're Recovering",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9787,7 +9883,7 @@
   },
   {
     "key": "copy_insights_review_in3_days",
-    "defaultValue": "Follow up: Review this trend again in 3 days to confirm the direction has gotten better.",
+    "defaultValue": "Follow up: Check this again in 3 days to make sure it's getting better.",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9829,7 +9925,7 @@
   },
   {
     "key": "copy_insights_sequence_in_progress",
-    "defaultValue": "Sequence In Progress",
+    "defaultValue": "Pattern In Progress",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9871,13 +9967,7 @@
   },
   {
     "key": "copy_insights_warning_signs_converging",
-    "defaultValue": "Warning Signs Converging",
-    "sourceFile": "Copy+Insights.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_insights_within_range",
-    "defaultValue": "Within Range",
+    "defaultValue": "Warning Signs Adding Up",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -9919,7 +10009,7 @@
   },
   {
     "key": "copy_insights_your_ideal_day_blueprint",
-    "defaultValue": "Your Ideal Day Blueprint",
+    "defaultValue": "Your Perfect Day Plan",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -10747,7 +10837,7 @@
   },
   {
     "key": "copy_notifications_abandonment_24h_body",
-    "defaultValue": "Finish setting up and we will start checking the link you asked about.",
+    "defaultValue": "Finish setting up and we will start checking the thing you asked about.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10759,7 +10849,7 @@
   },
   {
     "key": "copy_notifications_abandonment_2h_body",
-    "defaultValue": "Your answer is one step away. Pick up where you left off and see what your body is telling you.",
+    "defaultValue": "You are one step away. Pick up where you left off and see what your body is telling you.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10782,8 +10872,20 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_action_reminder_body",
+    "defaultValue": "%@",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_action_reminder_title",
+    "defaultValue": "Time for your one thing",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_all_metrics_healthy",
-    "defaultValue": "All metrics looking healthy!",
+    "defaultValue": "Everything looks healthy today.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10825,19 +10927,19 @@
   },
   {
     "key": "copy_notifications_bedtime_anchor_easy",
-    "defaultValue": "Lights out by %@ to protect tomorrow.",
+    "defaultValue": "Sleep by %@ to feel good tomorrow.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_bedtime_anchor_hard",
-    "defaultValue": "Lights out 15 min earlier than usual (around %@).",
+    "defaultValue": "Try to sleep 15 minutes earlier than usual (around %@).",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_bedtime_anchor_moderate",
-    "defaultValue": "Lights out around %@ tonight.",
+    "defaultValue": "Try to sleep around %@ tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10867,73 +10969,73 @@
   },
   {
     "key": "copy_notifications_critical_metric",
-    "defaultValue": "%@ Worth a Look",
+    "defaultValue": "Check your %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_activity",
-    "defaultValue": "A short walk will reset things.",
+    "defaultValue": "A short walk will help.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_blood_oxygen",
-    "defaultValue": "Rest 5 minutes, then recheck.",
+    "defaultValue": "Rest for five minutes, then check again.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_heart_rate_above",
-    "defaultValue": "Try a 60-second box breath.",
+    "defaultValue": "Breathe slowly for a minute.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_heart_rate_below",
-    "defaultValue": "Sit, sip water, recheck in 10 min.",
+    "defaultValue": "Sit down, sip water, and check again in ten minutes.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_hrv_above",
-    "defaultValue": "Recovery is showing.",
+    "defaultValue": "Your body is recovering well.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_hrv_below",
-    "defaultValue": "Aim for an early night.",
+    "defaultValue": "Try to sleep early tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_other",
-    "defaultValue": "Check the dip when you can.",
+    "defaultValue": "Take a look when you can.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_respiratory_above",
-    "defaultValue": "Slow, deep breaths can reset it.",
+    "defaultValue": "Slow, deep breaths can help.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_respiratory_below",
-    "defaultValue": "Recheck if it stays low.",
+    "defaultValue": "Check again if it stays low.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_cue_sleep",
-    "defaultValue": "Plan a calmer wind-down tonight.",
+    "defaultValue": "Wind down calmly tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_daily_body_anomaly",
-    "defaultValue": "%@ needs a look. 📊",
+    "defaultValue": "Your %@ needs a look.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10951,7 +11053,7 @@
   },
   {
     "key": "copy_notifications_daily_body_score",
-    "defaultValue": "Score: %d/100.",
+    "defaultValue": "Your score is %d out of 100.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10963,19 +11065,19 @@
   },
   {
     "key": "copy_notifications_daily_body_streak",
-    "defaultValue": "%d-day streak.",
+    "defaultValue": "%d day streak.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_daily_body_streak_risk",
-    "defaultValue": "%d-day streak on the line.",
+    "defaultValue": "Your %d day streak is going strong.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_daily_summary_title",
-    "defaultValue": "Health Score: %d/100 (%@)%@",
+    "defaultValue": "Your health score: %d out of 100 (%@)%@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10999,7 +11101,7 @@
   },
   {
     "key": "copy_notifications_engagement_day1_body",
-    "defaultValue": "Log your morning heart rate to start your recovery baseline. Check today's number. ❤️",
+    "defaultValue": "Log your morning heart rate so we learn what is normal for you. Check today's number.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11017,19 +11119,19 @@
   },
   {
     "key": "copy_notifications_engagement_day2_body",
-    "defaultValue": "%@ See what changed and today's one-minute action. 📊",
+    "defaultValue": "%@ See what changed and today's quick action.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day2_fallback",
-    "defaultValue": "See today's recovery score and your one-minute morning action. 📊",
+    "defaultValue": "See today's recovery score and your quick morning action.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day2_fallback_title",
-    "defaultValue": "Your morning health briefing",
+    "defaultValue": "Your morning health update",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11041,19 +11143,19 @@
   },
   {
     "key": "copy_notifications_engagement_day3_body",
-    "defaultValue": "%@ See what changed and a small tweak to try tonight. 😴",
+    "defaultValue": "%@ See what changed and one small thing to try tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day3_fallback",
-    "defaultValue": "Your sleep is starting to tell a story. See the early pattern and a small tweak. 😴",
+    "defaultValue": "Your sleep is starting to show a pattern. See it and one small thing to try.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day3_finding",
-    "defaultValue": "Your %@ is trending %@ %d%% over the last few nights.",
+    "defaultValue": "Your %@ has been going %@ %d%% over the last few nights.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11065,13 +11167,13 @@
   },
   {
     "key": "copy_notifications_engagement_day5_body",
-    "defaultValue": "Your baseline is ready. See patterns built from your first month of data. 📊",
+    "defaultValue": "We now know your normal. See patterns built from your first month of data.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day5_body_remaining",
-    "defaultValue": "Check in for %d more %@ to build a stronger baseline. 🎯",
+    "defaultValue": "Check in for %d more %@ so we learn your normal even better.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11083,31 +11185,31 @@
   },
   {
     "key": "copy_notifications_engagement_day5_soft_title",
-    "defaultValue": "Your baseline is still forming",
+    "defaultValue": "We are still learning your normal",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day5_title",
-    "defaultValue": "Personalization is %d%% complete",
+    "defaultValue": "Your setup is %d%% done",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day7_body_generic",
-    "defaultValue": "%d early patterns waiting in your data. Read the 30-sec note before they fade. 📊",
+    "defaultValue": "%d early patterns in your data. Read the quick note before they fade.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day7_body_trend",
-    "defaultValue": "Your %@ is %@. Read the 30-sec note before the trend slips. 📈",
+    "defaultValue": "Your %@ is %@. Read the quick note before it changes.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_engagement_day7_title",
-    "defaultValue": "We have found %d early signals",
+    "defaultValue": "We found %d early signs",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11119,55 +11221,55 @@
   },
   {
     "key": "copy_notifications_engagement_default_title",
-    "defaultValue": "Your Health Update",
+    "defaultValue": "Your health update",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_evening_summary_body",
-    "defaultValue": "%@ day ended at %d/100. %@ 🌙",
+    "defaultValue": "Your %@ day ended at %d out of 100. %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_evening_summary_title",
-    "defaultValue": "Today's Recap: %@ Day",
+    "defaultValue": "Today's recap: a %@ day",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_health_snapshot",
-    "defaultValue": "Your Health Snapshot Is Waiting",
+    "defaultValue": "Your health update is waiting",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_high_h_r_body",
-    "defaultValue": "HR hit %d bpm, %d above your usual %d. Try a 60-second box breath. ❤️",
+    "defaultValue": "Your heart rate is %d, about %d above your usual %d. Breathe slowly for a minute.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_high_h_r_title",
-    "defaultValue": "Heart Rate Above Your Usual",
+    "defaultValue": "Your heart rate is high right now",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_curiosity_metric",
-    "defaultValue": "Something shifted in your %@ overnight.",
+    "defaultValue": "Your %@ changed overnight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_curiosity_pattern",
-    "defaultValue": "A pattern is forming in your data.",
+    "defaultValue": "A pattern is showing up in your data.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_curiosity_score",
-    "defaultValue": "Your score moved overnight.",
+    "defaultValue": "Your score changed overnight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11179,37 +11281,37 @@
   },
   {
     "key": "copy_notifications_hook_loss_delta",
-    "defaultValue": "Down %d since yesterday. Easy to claw back.",
+    "defaultValue": "A bit below yesterday, by %d. A small step gets it back.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_loss_ground",
-    "defaultValue": "You are losing ground from last week.",
+    "defaultValue": "A little below last week. Easy to pick back up.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_loss_streak",
-    "defaultValue": "Your %d-day streak ends at 11:59 PM tonight.",
+    "defaultValue": "You are on a %d day roll. Keep it going tonight?",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_progress_days_up",
-    "defaultValue": "%d days up. Keep the run going?",
+    "defaultValue": "%d days up. Keep it going?",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_progress_milestone",
-    "defaultValue": "%d days in. New milestone.",
+    "defaultValue": "%d days in. Nice work.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hook_progress_top_tier",
-    "defaultValue": "Score: %d. You are in the top tier.",
+    "defaultValue": "Your score is %d. That is really good.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11239,7 +11341,7 @@
   },
   {
     "key": "copy_notifications_hook_record_biggest_jump",
-    "defaultValue": "Biggest jump in weeks: +%d points.",
+    "defaultValue": "Your biggest jump in weeks: up %d.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11251,13 +11353,13 @@
   },
   {
     "key": "copy_notifications_hrv_low_body",
-    "defaultValue": "HRV %d ms, %d%% below recent average. Take it easy and aim for an early night. 😴",
+    "defaultValue": "Your recovery is %d, about %d%% below usual. Take it easy and sleep early tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_hrv_low_title",
-    "defaultValue": "HRV Running Low",
+    "defaultValue": "Your body needs more rest",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11269,25 +11371,25 @@
   },
   {
     "key": "copy_notifications_improvement_body",
-    "defaultValue": "Your %@ got better this week. Keep it going. 💪",
+    "defaultValue": "Your %@ got better this week. Keep it going.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_improvement_title",
-    "defaultValue": "%@ Up %@%%!",
+    "defaultValue": "Your %@ is up %@%%",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_insight_looking_good",
-    "defaultValue": "Solid recovery. A good day to stay active.",
+    "defaultValue": "Good recovery. A nice day to stay active.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_insight_moderate",
-    "defaultValue": "Moderate recovery. Listen to your body today.",
+    "defaultValue": "Okay recovery. Listen to your body today.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11305,19 +11407,19 @@
   },
   {
     "key": "copy_notifications_insight_well_recovered",
-    "defaultValue": "You are well recovered today.",
+    "defaultValue": "You are well rested today.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_insights_ready",
-    "defaultValue": "Your Health Insights Are Ready",
+    "defaultValue": "Your health insights are ready",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_insights_ready_body",
-    "defaultValue": "It has been a few days. See what your body did while you were gone. 📊",
+    "defaultValue": "It has been a few days. See what your body did while you were away.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11353,31 +11455,31 @@
   },
   {
     "key": "copy_notifications_last_score_body",
-    "defaultValue": "Last score %d/100. 3 days on, your trends have moved. View the dip. 📊",
+    "defaultValue": "Your last score was %d out of 100. A few days on, your numbers have changed. See what is new.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_low_h_r_body",
-    "defaultValue": "HR dropped to %d bpm, %d below your usual %d. Sit and sip water. ❤️",
+    "defaultValue": "Your heart rate dropped to %d, about %d below your usual %d. Sit down and sip water.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_low_h_r_title",
-    "defaultValue": "Heart Rate Below Your Usual",
+    "defaultValue": "Your heart rate is low right now",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_metric_plural",
-    "defaultValue": "metrics",
+    "defaultValue": "things",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_metric_singular",
-    "defaultValue": "metric",
+    "defaultValue": "thing",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11401,7 +11503,7 @@
   },
   {
     "key": "copy_notifications_permission_rationale_body",
-    "defaultValue": "Get a heads up on heart rate, sleep, and weekly progress so you never miss a meaningful change.",
+    "defaultValue": "Get a heads up on heart rate, sleep, and weekly progress so you never miss a real change.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11431,7 +11533,7 @@
   },
   {
     "key": "copy_notifications_reprompt_body",
-    "defaultValue": "Notifications are off. You are missing alerts on heart rate, sleep, and weekly progress.",
+    "defaultValue": "Notifications are off. You are missing updates on heart rate, sleep, and weekly progress.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11449,55 +11551,55 @@
   },
   {
     "key": "copy_notifications_respiratory_rate_body",
-    "defaultValue": "Breathing %@ br/min, above your %@ avg. Slow, deep breaths can reset it. 🫁",
+    "defaultValue": "You are breathing %@ times a minute, above your usual %@. Slow, deep breaths can help.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_respiratory_rate_title",
-    "defaultValue": "Breathing Rate Higher Than Usual",
+    "defaultValue": "Your breathing is faster than usual",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_resting_h_r_elevated",
-    "defaultValue": "Resting HR %d bpm, %d%% above your %d avg. Rest and recheck. ❤️",
+    "defaultValue": "Your resting heart rate is %d, about %d%% above your usual %d. Rest and check again.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_resting_h_r_title",
-    "defaultValue": "Resting Heart Rate Higher Than Usual",
+    "defaultValue": "Your resting heart rate is up",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_spo2_critical_body",
-    "defaultValue": "Blood oxygen %@%%, below your usual range. Rest 5 minutes, then recheck. 🫁",
+    "defaultValue": "Your blood oxygen is %@%%, lower than usual. Rest for five minutes, then check again.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_spo2_critical_title",
-    "defaultValue": "Blood Oxygen Below Typical Range",
+    "defaultValue": "Your blood oxygen looks low",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_spo2_warning_body",
-    "defaultValue": "Blood oxygen %@%%, a touch below your typical range. Recheck in 10 min. 🫁",
+    "defaultValue": "Your blood oxygen is %@%%, a little low. Check again in ten minutes.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_spo2_warning_title",
-    "defaultValue": "Blood Oxygen Worth Monitoring",
+    "defaultValue": "Keep an eye on your blood oxygen",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_streak_days",
-    "defaultValue": "%d-day streak!",
+    "defaultValue": "%d day streak",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11515,31 +11617,31 @@
   },
   {
     "key": "copy_notifications_top_movers",
-    "defaultValue": "Top movers: ",
+    "defaultValue": "Biggest changes: ",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trend_declining_body",
-    "defaultValue": "%@ was improving but is starting to slip. Review recent sleep and stress. 📊",
+    "defaultValue": "Your %@ was getting better but is slipping a little. Check your sleep and stress.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trend_declining_title",
-    "defaultValue": "%@ Worth a Look",
+    "defaultValue": "Keep an eye on your %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trend_recovering_body",
-    "defaultValue": "%@ was declining, now trending back up. Whatever you changed is working. 📈",
+    "defaultValue": "Your %@ was dropping and is now going back up. Whatever you changed is working.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trend_recovering_title",
-    "defaultValue": "%@ Recovering",
+    "defaultValue": "Your %@ is bouncing back",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11569,7 +11671,7 @@
   },
   {
     "key": "copy_notifications_triage_level_monitor",
-    "defaultValue": "Monitor",
+    "defaultValue": "Keep watching",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11581,19 +11683,19 @@
   },
   {
     "key": "copy_notifications_triage_level_seek_care",
-    "defaultValue": "Seek Care",
+    "defaultValue": "Worth a check",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_triage_recommendation_decorated",
-    "defaultValue": "Triage level: %@. %@ %@",
+    "defaultValue": "%@. %@ %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_triage_summary_note",
-    "defaultValue": "Triage level: %@. %@",
+    "defaultValue": "%@. %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11617,13 +11719,13 @@
   },
   {
     "key": "copy_notifications_trial_insight_nudge_body",
-    "defaultValue": "A few days in, your data is starting to tell a story. Open the app to see what is taking shape.",
+    "defaultValue": "A few days in, your data is starting to show a pattern. Open the app to see it.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trial_insight_nudge_body_scored",
-    "defaultValue": "Your recovery sits at %d and a pattern is taking shape. Open the app to see what your data says.",
+    "defaultValue": "Your recovery is %d and a pattern is showing up. Open the app to see what your data says.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11635,7 +11737,7 @@
   },
   {
     "key": "copy_notifications_trial_renewal_body",
-    "defaultValue": "Keep every weekly insight by staying on. Manage your plan anytime in settings.",
+    "defaultValue": "Stay on to keep your weekly insights. You can manage your plan anytime in settings.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11653,13 +11755,13 @@
   },
   {
     "key": "copy_notifications_trial_winback_body",
-    "defaultValue": "Come back to see what your %@ data revealed while you were away.",
+    "defaultValue": "Come back to see what your %@ data showed while you were away.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_trial_winback_generic_body",
-    "defaultValue": "Come back to see what your body data revealed while you were away.",
+    "defaultValue": "Come back to see what your body data showed while you were away.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11677,31 +11779,19 @@
   },
   {
     "key": "copy_notifications_warning_metric",
-    "defaultValue": "%@ Worth Monitoring",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_notifications_watch_battery_body",
-    "defaultValue": "%@ battery at %d%%. Charge it soon to avoid missing health data.",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_notifications_watch_battery_low",
-    "defaultValue": "Watch Battery Low",
+    "defaultValue": "Keep an eye on %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_watch_not_worn_scheduled",
-    "defaultValue": "%@ has not recorded data for a while. %@",
+    "defaultValue": "Your %@ has not recorded data in a while. %@",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_weekly_movers_both",
-    "defaultValue": "%@ leads at %@, while %@ slipped to %@. 📊",
+    "defaultValue": "%@ went up to %@, and %@ slipped to %@.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11713,13 +11803,13 @@
   },
   {
     "key": "copy_notifications_weekly_movers_improver",
-    "defaultValue": "%@ is your top climber at %@. 💪",
+    "defaultValue": "%@ improved the most, up to %@.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_weekly_report_title",
-    "defaultValue": "Weekly Report: %d/100 (%@)",
+    "defaultValue": "Your week: %d out of 100 (%@)",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11731,13 +11821,13 @@
   },
   {
     "key": "copy_notifications_wind_down_body_with_hint",
-    "defaultValue": "%@ Lights out by %@.",
+    "defaultValue": "%@ Try to sleep by %@.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
   {
     "key": "copy_notifications_wind_down_hrv_hint",
-    "defaultValue": "Your HRV (%d ms) suggests an early night.",
+    "defaultValue": "Your recovery is low (%d), so an early night will help.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -12463,31 +12553,31 @@
   },
   {
     "key": "copy_policy_anomaly_default",
-    "defaultValue": "An unusual reading in %@ was detected. Addressing it early prevents cascading effects.",
+    "defaultValue": "We spotted an odd reading in %@. Handling it early stops it from spreading.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_anomaly_with_deviation",
-    "defaultValue": "Your %@ is %d%% outside your normal range. Unusual readings that persist can affect sleep, recovery, and next-day performance.",
+    "defaultValue": "Your %@ is %d%% outside your normal range. Odd readings that stick around can hurt sleep, recovery, and how you feel the next day.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_baseline_recovery",
-    "defaultValue": "You're %@ %@ below your personal baseline. Your body performs best near %@ %@. closing this gap yields the biggest payoff right now.",
+    "defaultValue": "You're %@ %@ below your usual. Your body feels best near %@ %@, so closing this gap gives you the biggest win right now.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_baseline_recovery_default",
-    "defaultValue": "Being below your personal baseline means your body isn't operating at its best. Returning to baseline is the highest-ROI action right now.",
+    "defaultValue": "Being below your usual means your body isn't at its best. Getting back to your usual is the most worthwhile thing to do right now.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_causal_default",
-    "defaultValue": "Causal analysis identified %@ as a %@ upstream driver of your overall health.",
+    "defaultValue": "Your data points to %@ as a %@ cause of your overall health.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -12505,25 +12595,25 @@
   },
   {
     "key": "copy_policy_causal_with_lag",
-    "defaultValue": "Your data shows a %@ causal link: changes in %@ predict downstream health changes %d %@ later. This isn't just correlation. it's a directional cause.",
+    "defaultValue": "Your data shows a %@ link: changes in %@ lead to health changes %d %@ later. This isn't just a coincidence, it's a real cause.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_circadian_timing",
-    "defaultValue": "Your biological rhythms make this window 2-3x more effective for %@ improvement. Working with your circadian clock, not against it.",
+    "defaultValue": "Your body clock makes right now 2-3x better for improving %@. This works with your body clock, not against it.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_counterfactual_default",
-    "defaultValue": "Scenario analysis shows this is the single change most likely to improve your overall score tomorrow.",
+    "defaultValue": "A what-if check shows this is the one change most likely to lift your overall score tomorrow.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_counterfactual_with_delta",
-    "defaultValue": "Simulated scenario: making this change could shift your overall score by %d points tomorrow. the largest single-action impact available.",
+    "defaultValue": "What-if check: making this change could move your overall score by %d points tomorrow. That's the biggest boost one step can give.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -12583,31 +12673,31 @@
   },
   {
     "key": "copy_policy_policy_high_intensity_ok",
-    "defaultValue": "High intensity OK",
+    "defaultValue": "A hard workout is fine",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_policy_light_activity_only",
-    "defaultValue": "Light activity only",
+    "defaultValue": "Keep it light today",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_policy_moderate_effort",
-    "defaultValue": "Moderate effort recommended",
+    "defaultValue": "Aim for medium effort",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_policy_predictive_default",
-    "defaultValue": "Your risk score for tomorrow is elevated (%d%% confidence). This targets the top risk factor.",
+    "defaultValue": "Your risk for tomorrow is higher than usual (%d%% sure). This tackles the biggest cause.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_policy_predictive_with_factor",
-    "defaultValue": "Your risk score for tomorrow is elevated (%d%% model confidence). The #1 driver is your %@. this action directly targets it.",
+    "defaultValue": "Your risk for tomorrow is higher than usual (%d%% sure). The biggest cause is your %@, and this step fixes it directly.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -12721,19 +12811,19 @@
   },
   {
     "key": "copy_policy_state_transition",
-    "defaultValue": "Your body has been in its current state for %d days. %@ is the key metric differentiating this state from a healthier one. improving it accelerates the transition.",
+    "defaultValue": "Your body has been in this state for %d days. %@ is the main thing keeping you from a healthier one, so improving it speeds up the change.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_trend_declining",
-    "defaultValue": "Your %@ has been %@ declining (%d%% per week). Early intervention requires far less effort than reversing a deep decline.",
+    "defaultValue": "Your %@ has been %@ dropping (%d%% a week). Acting early takes far less effort than turning around a big drop.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
   {
     "key": "copy_policy_trend_declining_default",
-    "defaultValue": "Stopping a negative trend early requires less effort than reversing a well-established decline.",
+    "defaultValue": "Stopping a slide early takes less effort than turning around a long, deep drop.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -13502,18 +13592,6 @@
   {
     "key": "copy_settings_loading_prices",
     "defaultValue": "Loading prices...",
-    "sourceFile": "Copy+Settings.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_settings_low_battery_description",
-    "defaultValue": "Get a one-time alert when your watch battery drops below 10%.",
-    "sourceFile": "Copy+Settings.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_settings_low_battery_reminder",
-    "defaultValue": "Low Battery Reminder",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },
@@ -15259,7 +15337,7 @@
   },
   {
     "key": "copy_vitality_aging_too_quickly",
-    "defaultValue": "Accelerating",
+    "defaultValue": "Speeding up",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -15325,7 +15403,7 @@
   },
   {
     "key": "copy_vitality_improve_hrv",
-    "defaultValue": "Better sleep, deep breathing, and regular exercise all help improve HRV.",
+    "defaultValue": "Better sleep, deep breathing, and regular exercise all help your heart recover better.",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },

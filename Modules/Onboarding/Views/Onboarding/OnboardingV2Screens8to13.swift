@@ -3,11 +3,14 @@ import SwiftUI
 // MARK: - Screen 8 — Bridge
 
 struct OnbV2Screen8Bridge: View {
-    let goal: OnbV2Goal?
     let onBack: () -> Void
     let onCTA: () -> Void
 
     @State private var connectTapped = false
+
+    private var uses: [String] {
+        [Copy.OnboardingV2.s8Use1, Copy.OnboardingV2.s8Use2, Copy.OnboardingV2.s8Use3]
+    }
 
     var body: some View {
         OnbV2ScreenContainer(ambient: .blueDual) {
@@ -16,9 +19,9 @@ struct OnbV2Screen8Bridge: View {
 
                 Spacer(minLength: 0)
 
-                OnbV2HeartHero(size: 200, color: OnbV2.blue)
+                permissionSheetPreview
 
-                Spacer().frame(height: 28)
+                Spacer().frame(height: 20)
 
                 Text(Copy.OnboardingV2.s8Title)
                     .font(.system(size: 28, weight: .bold))
@@ -27,16 +30,11 @@ struct OnbV2Screen8Bridge: View {
                     .lineSpacing(4)
                     .padding(.horizontal, OnbV2.bodyPadH)
 
+                Spacer().frame(height: 14)
+
+                usesList
+
                 Spacer().frame(height: 16)
-
-                Text(Copy.OnboardingV2.bridgeLede(for: goal))
-                    .font(.system(size: 16))
-                    .foregroundStyle(OnbV2.fg2)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 320)
-                    .padding(.horizontal, OnbV2.bodyPadH)
-
-                Spacer().frame(height: 24)
 
                 HStack(spacing: 6) {
                     Image(systemName: "lock.fill")
@@ -64,6 +62,103 @@ struct OnbV2Screen8Bridge: View {
             }
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: connectTapped)
+    }
+
+    /// A greyed mock of the system Health permission sheet. HealthKit never
+    /// reports which read categories were granted, so a user who leaves
+    /// switches off quietly gets weaker scores forever and neither side can
+    /// detect it. This screen is the only chance to point at "Turn On All".
+    private var permissionSheetPreview: some View {
+        VStack(spacing: 10) {
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    Text(Copy.OnboardingV2.s8SheetTurnOnAll)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(OnbV2.fg)
+                    Spacer(minLength: 0)
+                    togglePill(on: true)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(OnbV2.blue.opacity(0.16))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(OnbV2.blue.opacity(0.45), lineWidth: 1)
+                )
+                .padding(.horizontal, 12)
+
+                ForEach(placeholderRowWidths, id: \.self) { width in
+                    HStack(spacing: 10) {
+                        Circle()
+                            .fill(OnbV2.fg4)
+                            .frame(width: 14, height: 14)
+                        Capsule()
+                            .fill(OnbV2.fg4)
+                            .frame(width: width, height: 8)
+                        Spacer(minLength: 0)
+                        togglePill(on: false)
+                    }
+                    .padding(.horizontal, 24)
+                }
+            }
+            .padding(.vertical, 14)
+            .frame(maxWidth: 264)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.04))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(OnbV2.line, lineWidth: 1)
+            )
+
+            Text(Copy.OnboardingV2.s8SheetCaption)
+                .font(.system(size: 13))
+                .foregroundStyle(OnbV2.fg3)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 300)
+        }
+        .padding(.horizontal, OnbV2.bodyPadH)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Copy.OnboardingV2.s8SheetCaption)
+    }
+
+    /// Widths only, so the muted rows read as unnamed categories rather than
+    /// naming permissions the sheet may not actually list. Values stay distinct
+    /// because they are the ForEach identity.
+    private var placeholderRowWidths: [CGFloat] { [96, 72, 88] }
+
+    private func togglePill(on: Bool) -> some View {
+        Capsule()
+            .fill(on ? OnbV2.blue : Color.white.opacity(0.12))
+            .frame(width: 28, height: 17)
+            .overlay(alignment: on ? .trailing : .leading) {
+                Circle()
+                    .fill(Color.white.opacity(on ? 0.95 : 0.5))
+                    .frame(width: 13, height: 13)
+                    .padding(2)
+            }
+    }
+
+    private var usesList: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(uses, id: \.self) { use in
+                HStack(alignment: .firstTextBaseline, spacing: 9) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(OnbV2.blue)
+                    Text(use)
+                        .font(.system(size: 14))
+                        .foregroundStyle(OnbV2.fg2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .frame(maxWidth: 320, alignment: .leading)
+        .padding(.horizontal, OnbV2.bodyPadH)
     }
 }
 

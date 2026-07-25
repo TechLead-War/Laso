@@ -242,3 +242,25 @@ private struct JournalCorrelationCard: View {
         }
     }
 }
+
+/// Small badge showing correlation strength.
+private struct StrengthBadge: View {
+    let label: String
+
+    var body: some View {
+        Text(label)
+            .font(DS.Typography.captionSemibold)
+            .foregroundStyle(badgeColor)
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(badgeColor.opacity(DS.badgeBg), in: Capsule())
+    }
+
+    private var badgeColor: Color {
+        switch label {
+        case "Strong": return AppColour.success
+        case "Moderate": return AppColour.warning
+        default: return AppColour.textSecondary
+        }
+    }
+}

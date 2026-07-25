@@ -48,9 +48,8 @@ struct DashboardSmartActionAdvisor {
         if let r = recommendFromLiveDataRules(live: live) { return r }
 
         // 4. Any insight available. use it
-        if let topInsight = analysis.topInsights.first {
-            return insightDrivenRecommendation(topInsight)
-        }
+        if let topInsight = analysis.topInsights.first,
+           let r = insightDrivenRecommendation(topInsight) { return r }
 
         // 5. Focus-aware rules
         if let focusAction = focusAwareRecommendation(live: live, analysis: analysis) {
@@ -158,7 +157,8 @@ struct DashboardSmartActionAdvisor {
 
     // MARK: - Insight → Action
 
-    private func insightDrivenRecommendation(_ insight: Insight) -> Recommendation {
+    /// nil when the insight carries no action we can phrase for a person, so the caller falls through to the next rule
+    private func insightDrivenRecommendation(_ insight: Insight) -> Recommendation? {
         let icon = insight.metric.systemImageName
         let rationale = insight.summary
 
@@ -179,7 +179,8 @@ struct DashboardSmartActionAdvisor {
         case .maintain:
             title = Copy.Home.SmartAction.insightKeepItUp(insight.metric.displayName)
         case .informational:
-            title = insight.title
+            // insight.title is machine assembled, so it must never reach the hero headline
+            return nil
         }
 
         return Recommendation(

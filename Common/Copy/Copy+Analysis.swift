@@ -1018,6 +1018,16 @@ extension Copy {
             }
         }
 
+        // MARK: - Health Risk Grades
+
+        enum RiskGrades {
+            static var low: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_grade_low", default: "Looks good") }
+            static var moderate: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_grade_moderate", default: "Mostly steady") }
+            static var elevated: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_grade_elevated", default: "Worth a look") }
+            static var high: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_grade_high", default: "Needs attention") }
+            static var veryHigh: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_grade_very_high", default: "Talk to a doctor") }
+        }
+
         // MARK: - Health Risk Detail
 
         enum RiskDetail {

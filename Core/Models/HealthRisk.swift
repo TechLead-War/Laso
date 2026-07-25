@@ -46,11 +46,11 @@ enum RiskGrade: String {
 
     var displayName: String {
         switch self {
-        case .low: return "Within range"
-        case .moderate: return "Steady"
-        case .elevated: return "Worth a look"
-        case .high: return "Worth attention"
-        case .veryHigh: return "Pattern observed"
+        case .low: return Copy.Analysis.RiskGrades.low
+        case .moderate: return Copy.Analysis.RiskGrades.moderate
+        case .elevated: return Copy.Analysis.RiskGrades.elevated
+        case .high: return Copy.Analysis.RiskGrades.high
+        case .veryHigh: return Copy.Analysis.RiskGrades.veryHigh
         }
     }
 

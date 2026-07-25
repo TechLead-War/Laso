@@ -12,6 +12,22 @@ extension Copy {
         static var improved: String { RemoteConfigManager.shared.copyString("copy_common_common_improved", default: "Improved") }
         static var increased: String { RemoteConfigManager.shared.copyString("copy_common_common_increased", default: "Increased") }
 
+        // MARK: - Metric Verdict
+
+        enum Verdict {
+            static var belowNormal: String { RemoteConfigManager.shared.copyString("copy_common_verdict_below_normal", default: "Below normal") }
+            static var normal: String { RemoteConfigManager.shared.copyString("copy_common_verdict_normal", default: "Normal range") }
+            static var aboveNormal: String { RemoteConfigManager.shared.copyString("copy_common_verdict_above_normal", default: "Above normal") }
+
+            static func yourUsualRange(_ low: String, _ high: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_common_verdict_your_usual_range", default: "Your usual range %@ to %@"), low, high)
+            }
+
+            static func typicalRange(_ low: String, _ high: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_common_verdict_typical_range", default: "Typical range %@ to %@"), low, high)
+            }
+        }
+
         // MARK: - Shared Accessibility Labels
 
         static var sendingFeedbackContinueAnyway: String { RemoteConfigManager.shared.copyString("copy_common_common_continue_anyway", default: "Continue anyway") }

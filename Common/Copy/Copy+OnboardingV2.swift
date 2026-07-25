@@ -94,21 +94,18 @@ extension Copy {
 
         // MARK: - Screen 6 — Bridge
         static var s8Title: String       { s("copy_onboardingv2_s8_title", "Now Laso can read\nyour story.") }
-        static var s8DefaultLede: String { s("copy_onboardingv2_s8_default_lede", "We'll learn the rhythms only you have.") }
         static var s8PrivacyChip: String { s("copy_onboardingv2_s8_privacy_chip", "Your data never leaves your phone.") }
         static var s8CTA: String         { s("copy_onboardingv2_s8_cta", "Connect Apple Health") }
-
-        static func bridgeLede(for goal: OnbV2Goal?) -> String {
-            switch goal {
-            case .sleep:     return s("copy_onboardingv2_bridge_lede_sleep", "We'll learn how your nights shape your days.")
-            case .energy:    return s("copy_onboardingv2_bridge_lede_energy", "We'll find where your energy goes.")
-            case .training:  return s("copy_onboardingv2_bridge_lede_training", "We'll see how you push and how you recover.")
-            case .stress:    return s("copy_onboardingv2_bridge_lede_stress", "We'll catch the strain before you feel it.")
-            case .longevity: return s("copy_onboardingv2_bridge_lede_longevity", "We'll track the small shifts that add up.")
-            case .weight:    return s("copy_onboardingv2_bridge_lede_weight", "We'll connect what's beyond the scale.")
-            case .none:      return s8DefaultLede
-            }
-        }
+        // The three things the data actually buys the user, in the order the
+        // app delivers them. Each must fit one line on a 375pt screen, so the
+        // bridge screen stays the height it was.
+        static var s8Use1: String { s("copy_onboardingv2_s8_use1", "Score your Vitality Age every morning") }
+        static var s8Use2: String { s("copy_onboardingv2_s8_use2", "Find the pattern behind your tired days") }
+        static var s8Use3: String { s("copy_onboardingv2_s8_use3", "Give you one step, then check it worked") }
+        // Must match the button label Apple shows on the Health permission
+        // sheet, or the illustration stops teaching anything.
+        static var s8SheetTurnOnAll: String { s("copy_onboardingv2_s8_sheet_turn_on_all", "Turn On All") }
+        static var s8SheetCaption: String   { s("copy_onboardingv2_s8_sheet_caption", "On the next screen, tap Turn On All. Every switch left off is a blind spot in your read.") }
 
         // MARK: - Screen 10 — Scan
         static var s10Eyebrow: String     { s("copy_onboardingv2_s10_eyebrow", "READING") }

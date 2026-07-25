@@ -73,7 +73,13 @@ extension Copy {
         static var whyNameSleep: String { RemoteConfigManager.shared.copyString("copy_home_why_name_sleep", default: "Sleep") }
         static var whyNameHeart: String { RemoteConfigManager.shared.copyString("copy_home_why_name_heart", default: "Heart") }
         static var whyNameEnergy: String { RemoteConfigManager.shared.copyString("copy_home_why_name_energy", default: "Energy") }
-        static var whyNoData: String { RemoteConfigManager.shared.copyString("copy_home_why_no_data", default: "No reading yet") }
+        /// Abbreviated because the full name leaves no room for the reading
+        /// beside it. The metric screen it opens spells it out in full.
+        static var whyNameRestingHR: String { RemoteConfigManager.shared.copyString("copy_home_why_name_resting_hr", default: "Resting HR") }
+        static var whyNameStress: String { RemoteConfigManager.shared.copyString("copy_home_why_name_stress", default: "Stress") }
+        /// Kept short: it shares a narrow row with signal names as long as
+        /// "Resting heart rate", and the name must never be the part that clips.
+        static var whyNoData: String { RemoteConfigManager.shared.copyString("copy_home_why_no_data", default: "None yet") }
         // Extra dynamic signals that can surface in the Why list.
         static var whyRhrUp: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_up", default: "Resting heart rate is up") }
         static var whyRhrCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_calm", default: "Heart rate is calm at rest") }
@@ -81,6 +87,14 @@ extension Copy {
         static var whyRhrValueCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_value_calm", default: "Good") }
         static var whyStressHigh: String { RemoteConfigManager.shared.copyString("copy_home_why_stress_high", default: "Stress is high") }
         static var whyStressLow: String { RemoteConfigManager.shared.copyString("copy_home_why_stress_low", default: "Stress is low") }
+
+        // Chip under the ring comparing today's score with yesterday's.
+        static func scoreChangeUp(_ points: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_score_change_up", default: "%d up from yesterday"), points) }
+        static func scoreChangeDown(_ points: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_score_change_down", default: "%d down from yesterday"), points) }
+        static var scoreChangeSame: String { RemoteConfigManager.shared.copyString("copy_home_score_change_same", default: "Same as yesterday") }
+
+        /// How many of the score's signals actually had a reading today.
+        static func scoreConfidence(_ withData: Int, _ total: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_score_confidence", default: "Based on %d of %d signals"), withData, total) }
 
         // Yesterday's result: the loop-closer shown the morning after an action
         // is marked done, reporting how the readiness score moved.
@@ -158,23 +172,11 @@ extension Copy {
 
         static var healthRisks: String { RemoteConfigManager.shared.copyString("copy_home_health_risks", default: "Areas to Watch") }
 
-        // MARK: - Trends
-
-        static var trends: String { RemoteConfigManager.shared.copyString("copy_home_trends", default: "Trends") }
-
-        // MARK: - Journal
-
-        static var howWasToday: String { RemoteConfigManager.shared.copyString("copy_home_how_was_today", default: "How was today?") }
-        static var journalSubtitle: String { RemoteConfigManager.shared.copyString("copy_home_journal_subtitle", default: "A quick check-in helps track patterns over time") }
-
         // MARK: - Section & Card Labels
 
-        static var focusAreasTitle: String { RemoteConfigManager.shared.copyString("copy_home_focus_areas_title", default: "Your Focus Areas") }
-        static var fromYourData: String { RemoteConfigManager.shared.copyString("copy_home_from_your_data", default: "From Your Data") }
         static var whyThisToday: String { RemoteConfigManager.shared.copyString("copy_home_why_this_today", default: "Why this, today") }
         static var nextWeekTarget: String { RemoteConfigManager.shared.copyString("copy_home_next_week_target", default: "Next week target") }
         static var askYourData: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data", default: "Ask your data") }
-        static var seeSleepTips: String { RemoteConfigManager.shared.copyString("copy_home_see_sleep_tips", default: "See sleep tips \u{2192}") }
         static var wearAppleWatchForRecovery: String { RemoteConfigManager.shared.copyString("copy_home_wear_apple_watch_for_recovery", default: "Wear your Apple Watch to see your live energy") }
         static var tapToUnderstandScore: String { RemoteConfigManager.shared.copyString("copy_home_tap_to_understand_score", default: "Tap to understand your score") }
 
@@ -475,18 +477,6 @@ extension Copy {
             static var declining: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_declining", default: "heart calm signal trending down this week") }
         }
 
-        // MARK: - Cycle Phase Card
-
-        enum CyclePhase {
-            static func dayOfCycle(day: Int, total: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_cycle_phase_day_of_cycle", default: "Day %d of %d"), day, total) }
-        }
-
-        // MARK: - Strain Card
-
-        enum StrainCard {
-            static func zoneLabel(_ zone: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_strain_card_zone_label", default: "Z%d"), zone) }
-        }
-
         // MARK: - Cards
 
         enum Cards {
@@ -498,28 +488,8 @@ extension Copy {
             static var yourForecast: String { RemoteConfigManager.shared.copyString("copy_home_cards_your_forecast", default: "YOUR FORECAST") }
             static var nextSevenDays: String { RemoteConfigManager.shared.copyString("copy_home_cards_next_seven_days", default: "Next 7 days") }
 
-            // Sleep coach card
-            static var tonightsGoal: String { RemoteConfigManager.shared.copyString("copy_home_cards_tonights_goal", default: "Tonight's Goal") }
-            static func bedBy(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_cards_bed_by", default: "Bed by %@"), time) }
-
-            // Strain card
-            static var todaysStrain: String { RemoteConfigManager.shared.copyString("copy_home_cards_todays_strain", default: "Today's Strain") }
-
-            // Sleep card
-            static var lastNightsSleep: String { RemoteConfigManager.shared.copyString("copy_home_cards_last_nights_sleep", default: "Last Night's Sleep") }
-
-            // Stress card
-            static var stressLevel: String { RemoteConfigManager.shared.copyString("copy_home_cards_stress_level", default: "Stress Level") }
-
-            // Recovery hero
-            static var rightNow: String { RemoteConfigManager.shared.copyString("copy_home_cards_right_now", default: "Right now") }
-            static var vsLastWeek: String { RemoteConfigManager.shared.copyString("copy_home_cards_vs_last_week", default: "vs last week") }
-
             // Today briefing
             static var generatedByLasoIntelligence: String { RemoteConfigManager.shared.copyString("copy_home_cards_generated_by_laso_intelligence", default: "Generated by Laso intelligence") }
-
-            // Correlations section
-            static var seeAll: String { RemoteConfigManager.shared.copyString("copy_home_cards_see_all", default: "See all") }
         }
 
         // MARK: - Smart Action Recommendations
@@ -651,30 +621,11 @@ extension Copy {
         static func softLockPatterns(_ n: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_softlock_patterns", default: "Patterns found in your data: %d"), n) }
 
         // MARK: - Lifted view literals
-        static var bodyInsightBriefingLabel: String { RemoteConfigManager.shared.copyString("copy_home_body_insight_briefing_label", default: "Body insight briefing") }
-        static var opensTheFullInsightsScreenHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_the_full_insights_screen_hint", default: "Opens the full insights screen") }
         static var opensTheFullInsightHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_the_full_insight_hint", default: "Opens the full insight") }
-        static var seeAllCorrelationsLabel: String { RemoteConfigManager.shared.copyString("copy_home_see_all_correlations_label", default: "See all correlations") }
-        static var opensTheFullHealthIntelligenceViewHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_the_full_health_intelligence_view_hint", default: "Opens the full health intelligence view") }
-        static var viewMetricDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_metric_details_hint", default: "View metric details") }
-        static var viewBrainHealthDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_brain_health_details_hint", default: "View brain health details") }
         static var opensDetailedMetricViewHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_detailed_metric_view_hint", default: "Opens detailed metric view") }
-        static var viewSleepCoachDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_sleep_coach_details_hint", default: "View sleep coach details") }
-        static var opensGuidanceForTodaySRecommendedHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_guidance_for_today_s_recommended_hint", default: "Opens guidance for today's recommended action") }
         static var openScoreGuideButton: String { RemoteConfigManager.shared.copyString("copy_home_open_score_guide_button", default: "Open Score Guide") }
         static var retryLoadingHealthDataHint: String { RemoteConfigManager.shared.copyString("copy_home_retry_loading_health_data_hint", default: "Retry loading health data") }
-        static var viewCycleTrackingDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_cycle_tracking_details_hint", default: "View cycle tracking details") }
-        static var viewStrainDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_strain_details_hint", default: "View strain details") }
-        static var viewRiskDetailsAndRecommendationsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_risk_details_and_recommendations_hint", default: "View risk details and recommendations") }
         static var opensScoreBreakdownHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_score_breakdown_hint", default: "Opens score breakdown") }
-        static var viewStressMonitorDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_stress_monitor_details_hint", default: "View stress monitor details") }
-        static func strainCardLabel(value: String, level: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_home_strain_card_label", default: "Today's strain %@, %@"), value, level)
-        }
-        static func stressCardLabel(score: String, level: String, trend: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_home_stress_card_label", default: "Stress level %@, %@, trending %@"), score, level, trend)
-        }
-        static var timePeriodSelectorLabel: String { RemoteConfigManager.shared.copyString("copy_home_time_period_selector_label", default: "Time period selector") }
         static var dismissMorningCheckInLabel: String { RemoteConfigManager.shared.copyString("copy_home_dismiss_morning_check_in_label", default: "Dismiss morning check-in") }
         static var closesTheCheckInCardWithoutHint: String { RemoteConfigManager.shared.copyString("copy_home_closes_the_check_in_card_without_hint", default: "Closes the check-in card without submitting") }
         static var submitMorningCheckInLabel: String { RemoteConfigManager.shared.copyString("copy_home_submit_morning_check_in_label", default: "Submit morning check-in") }
@@ -690,28 +641,15 @@ extension Copy {
         static var sendsPositiveFeedbackOnThisAnswerHint: String { RemoteConfigManager.shared.copyString("copy_home_sends_positive_feedback_on_this_answer_hint", default: "Sends positive feedback on this answer") }
         static var thisAnswerWasNotHelpfulLabel: String { RemoteConfigManager.shared.copyString("copy_home_this_answer_was_not_helpful_label", default: "This answer was not helpful") }
         static var sendsNegativeFeedbackOnThisAnswerHint: String { RemoteConfigManager.shared.copyString("copy_home_sends_negative_feedback_on_this_answer_hint", default: "Sends negative feedback on this answer") }
-        static var viewSleepDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_sleep_details_hint", default: "View sleep details") }
-        static var viewVitalityAgeDetailsHint: String { RemoteConfigManager.shared.copyString("copy_home_view_vitality_age_details_hint", default: "View vitality age details") }
         static var pullsTheLatestHealthDataFromHint: String { RemoteConfigManager.shared.copyString("copy_home_pulls_the_latest_health_data_from_hint", default: "Pulls the latest health data from connected sources") }
 
         // MARK: - Lifted interpolated view literals
         static func xLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_label", default: "%@: %@"), p0, p1) }
-        static func leadsToLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_leads_to_label", default: "%@ leads to %@"), p0, p1) }
-        static func correlationValue(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_correlation_value", default: "%@ correlation"), p0) }
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_text", default: "%d"), p0) }
-        static func sleepStageDurationText(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_stage_duration_text", default: "%@ %@"), p0, p1) }
         static func baselineWithUnitText(_ p0: String, _ p1: String, _ p2: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_baseline_with_unit_text", default: "%@ %@ %@"), p0, p1, p2) }
-        static func brainHealthScoreOutOfLabel(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_brain_health_score_out_of_label", default: "Brain Health score %d out of 100, %@"), p0, p1) }
         static func forecastLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_forecast_label", default: "%@ forecast"), p0) }
         static func confidencePercentValue(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_confidence_percent_value", default: "%@, confidence %d percent"), p0, p1) }
         static func confText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_conf_text", default: "%d%% conf"), p0) }
-        static func debtText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_debt_text", default: "%@ debt"), p0) }
-        static func todaySActionLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_today_s_action_label", default: "Today's action: %@"), p0) }
-        static func dayOfDaysUntilNextLabel(_ p0: String, _ p1: Int, _ p2: Int, _ p3: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_of_days_until_next_label", default: "%@, day %d of %d, %d days until next period"), p0, p1, p2, p3) }
-        static func worthNoticingText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_worth_noticing_text", default: "%d worth noticing"), p0) }
-        static func riskLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_risk_label", default: "%@, %@ risk"), p0, p1) }
-        static func metricsLabel(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_metrics_label", default: "%d metrics %@"), p0, p1) }
-        static func filterToShowMetricsHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_filter_to_show_metrics_hint", default: "Filter to show %@ metrics"), p0) }
         static func xText2(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_text2", default: "%@ %@"), p0, p1) }
         static func viewDetailsHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_view_details_hint", default: "View %@ details"), p0) }
         static func ratingOf5Label(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_rating_of5_label", default: "%@ rating %d of 5"), p0, p1) }
@@ -721,8 +659,6 @@ extension Copy {
         static func dayText2(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text2", default: "%@/day"), p0) }
         static func dayText3(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text3", default: "%@/day"), p0) }
         static func insightLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_insight_label", default: "%@ insight: %@"), p0, p1) }
-        static func lastNightSSleepLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_last_night_s_sleep_label", default: "Last night's sleep %@, %@"), p0, p1) }
-        static func vsAvgText(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_vs_avg_text", default: "%@%d%% vs avg"), p0, p1) }
         static func ofMetricsText(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_of_metrics_text", default: "%d of %d metrics"), p0, p1) }
         static func confidenceText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_confidence_text", default: "%@ confidence"), p0) }
     }

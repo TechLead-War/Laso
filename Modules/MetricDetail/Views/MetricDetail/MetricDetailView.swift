@@ -231,6 +231,23 @@ struct MetricDetailView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// Verdict for the latest reading, so the badge always judges the number printed next to it.
+    private var latestVerdict: MetricVerdict? {
+        guard let value = viewModel.timeSeries?.latestValue else { return nil }
+        return MetricVerdict.make(metric: viewModel.metric, value: value, baseline: viewModel.baseline)
+    }
+
+    /// Verdict for the period average shown in the summary card, judged against the same band.
+    private var periodAverageVerdict: MetricVerdict? {
+        guard let series = viewModel.timeSeries,
+              !series.samples(lastDays: viewModel.selectedTimeRange).isEmpty else { return nil }
+        return MetricVerdict.make(
+            metric: viewModel.metric,
+            value: series.mean(lastDays: viewModel.selectedTimeRange),
+            baseline: viewModel.baseline
+        )
+    }
+
     private var headerSection: some View {
         VStack(spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -249,14 +266,20 @@ struct MetricDetailView: View {
                     numericChange: viewModel.trend?.weekOverWeekChange
                 )
 
-                if viewModel.isOutsideNormalRange {
-                    Text(Copy.Insights.MetricDetail.outsideNormalRange)
+                if let verdict = latestVerdict {
+                    Text(verdict.label)
                         .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
-                        .background(AppColour.danger, in: Capsule())
+                        .background(verdict.color, in: Capsule())
                 }
+            }
+
+            if let verdict = latestVerdict {
+                Text(verdict.rangeText)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(.secondary)
             }
 
             // Deviation from baseline
@@ -277,7 +300,7 @@ struct MetricDetailView: View {
         .cardStyle()
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(viewModel.metric.displayName), current value \(viewModel.currentValue) \(viewModel.metric.unit), \(viewModel.trendDirection == .improving ? "improving" : viewModel.trendDirection == .declining ? "declining" : "stable")\(viewModel.isOutsideNormalRange ? ", outside normal range" : "")")
+        .accessibilityLabel("\(viewModel.metric.displayName), current value \(viewModel.currentValue) \(viewModel.metric.unit), \(viewModel.trendDirection == .improving ? "improving" : viewModel.trendDirection == .declining ? "declining" : "stable")\(latestVerdict.map { ", \($0.label), \($0.rangeText)" } ?? "")")
     }
 
     private var chartSection: some View {
@@ -286,7 +309,7 @@ struct MetricDetailView: View {
                 samples: viewModel.chartSamples,
                 metric: viewModel.metric,
                 baseline: viewModel.baseline?.mean,
-                normalRange: viewModel.normalRange,
+                verdict: latestVerdict,
                 trendLine: viewModel.trendLineSamples.isEmpty ? nil : viewModel.trendLineSamples,
                 forecastPoints: viewModel.forecastSamples.isEmpty ? nil : viewModel.forecastSamples
             )
@@ -350,9 +373,11 @@ struct MetricDetailView: View {
                 Text(Copy.Insights.MetricDetail.periodAvg)
                     .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
-                Text(viewModel.isOutsideNormalRange ? Copy.Insights.MetricDetail.outsideRange : Copy.Insights.MetricDetail.withinRange)
-                    .font(DS.Typography.caption2Semibold)
-                    .foregroundStyle(viewModel.isOutsideNormalRange ? AppColour.danger : AppColour.success)
+                if let verdict = periodAverageVerdict {
+                    Text(verdict.label)
+                        .font(DS.Typography.caption2Semibold)
+                        .foregroundStyle(verdict.color)
+                }
             }
             .frame(maxWidth: .infinity)
 

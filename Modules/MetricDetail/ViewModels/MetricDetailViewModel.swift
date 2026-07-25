@@ -72,10 +72,6 @@ final class MetricDetailViewModel {
         return TrendAnalyzer.formattedPercentChange(trend.weekOverWeekChange)
     }
 
-    var normalRange: RulesConfiguration.NormalRange {
-        RulesConfiguration.normalRange(for: metric)
-    }
-
     var deviationFromBaseline: String {
         guard let anomaly else { return "--" }
         let sign = anomaly.deviationPercent >= 0 ? "+" : ""

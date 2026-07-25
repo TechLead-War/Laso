@@ -507,10 +507,9 @@ struct InsightGenerator {
         }
 
         guard let baseline = baselines[metric],
-              baseline.mean != 0,
               let latest = timeSeries[metric]?.latestValue else { return nil }
 
-        return ((latest - baseline.mean) / baseline.mean) * 100.0
+        return baseline.deviationPercent(for: latest)
     }
 
     // MARK: - Personalized Recommendation Composition
@@ -613,7 +612,17 @@ struct InsightGenerator {
         return Copy.Insights.evidenceEarly
     }
 
+    /// A deviation that saturated the producer bound came off a near-zero baseline, so the
+    /// number carries no information and the sentence has to describe the gap in words.
+    /// Both producers (TrendAnalyzer and UserBaseline) saturate at the same value.
+    private static func isPercentMeaningless(_ deviationPercent: Double) -> Bool {
+        abs(deviationPercent) >= TrendAnalyzer.maxPercentChange
+    }
+
     private static func actionProtocol(for metric: HealthMetric, severity: Severity, deviation: Double, direction: String) -> String {
+        if isPercentMeaningless(deviation) {
+            return Copy.Insights.farFromUsual(metricName: metric.displayName.lowercased(), direction: direction)
+        }
         let dev = Int(abs(deviation))
         switch metric {
         case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore, .sleepAwake:
@@ -935,13 +944,22 @@ struct InsightGenerator {
             projectionNote = ""
         }
 
+        let metricLower = metric.displayName.lowercased()
+        let wordsOnly = isPercentMeaningless(deviationPercent)
+
         switch trend {
         case .declining:
-            return Copy.Insights.decliningSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, current: formattedCurrent, inflectionNote: inflectionNote, projectionNote: projectionNote, causalHint: causalHint, historyNote: historyNote)
+            return wordsOnly
+                ? Copy.Insights.decliningSummaryWithoutPercent(metricLower: metricLower, direction: direction, baseline: formattedBaseline, unit: metric.unit, current: formattedCurrent, inflectionNote: inflectionNote, projectionNote: projectionNote, causalHint: causalHint, historyNote: historyNote)
+                : Copy.Insights.decliningSummary(metricLower: metricLower, deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, current: formattedCurrent, inflectionNote: inflectionNote, projectionNote: projectionNote, causalHint: causalHint, historyNote: historyNote)
         case .improving:
-            return Copy.Insights.improvingSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, current: formattedCurrent, unit: metric.unit, inflectionNote: inflectionNote, causalHint: causalHint, historyNote: historyNote)
+            return wordsOnly
+                ? Copy.Insights.improvingSummaryWithoutPercent(metricLower: metricLower, current: formattedCurrent, unit: metric.unit, inflectionNote: inflectionNote, causalHint: causalHint, historyNote: historyNote)
+                : Copy.Insights.improvingSummary(metricLower: metricLower, deviation: absDeviation, current: formattedCurrent, unit: metric.unit, inflectionNote: inflectionNote, causalHint: causalHint, historyNote: historyNote)
         case .stable:
-            return Copy.Insights.stableSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, causalHint: causalHint, historyNote: historyNote)
+            return wordsOnly
+                ? Copy.Insights.stableSummaryWithoutPercent(metricLower: metricLower, direction: direction, baseline: formattedBaseline, unit: metric.unit, causalHint: causalHint, historyNote: historyNote)
+                : Copy.Insights.stableSummary(metricLower: metricLower, deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, causalHint: causalHint, historyNote: historyNote)
         }
     }
 

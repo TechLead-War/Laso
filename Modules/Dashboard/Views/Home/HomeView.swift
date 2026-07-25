@@ -198,31 +198,44 @@ struct HomeView: View {
         AppAnalytics.shared.trackDailyResultShown(direction: direction, delta: result.delta)
     }
 
-    /// Plain-English caption for the 7-day HRV trend. Returns nil when the
-    /// trend is `.insufficientData` so the hero card hides the line cleanly.
+    /// Opens the screen behind one Why row on the score card. Energy has no
+    /// screen of its own — it is the ring's own number — so it opens the same
+    /// explainer the ring does.
+    private func openWhySignal(_ kind: DashboardViewModel.RecoveryWhyReason.Kind) {
+        let destination: String
+        switch kind {
+        case .sleep:
+            destination = "sleep_coach"
+            navigationPath.append(Route.sleepCoach)
+        case .heart:
+            destination = HealthMetric.heartRateVariability.rawValue
+            navigationPath.append(HealthMetric.heartRateVariability)
+        case .restingHR:
+            destination = HealthMetric.restingHeartRate.rawValue
+            navigationPath.append(HealthMetric.restingHeartRate)
+        case .stress:
+            destination = "stress_monitor"
+            navigationPath.append(Route.stressMonitor)
+        case .energy:
+            destination = "score_explainer"
+            if hasLiveReadiness {
+                showRecoveryInfo = true
+            } else {
+                showScoreGuide = true
+            }
+        }
+        AppAnalytics.shared.trackBlockTap(
+            title: "Why row",
+            type: .metricRow,
+            screen: .home,
+            metadata: ["source": "recovery_hero_why", "destination": destination]
+        )
+    }
 
     /// Name of the lowest-scoring category for personalized score explanation.
     /// Cached in DashboardViewModel.updateCachedProperties() to avoid recomputing on every render.
     private var weakestCategoryName: String? {
         viewModel.cachedWeakestCategoryName
-    }
-
-    /// Build the payload for the on-device daily narrative card. Pulls live
-    /// readiness, weakest pillar, latest HRV, and last night's sleep duration
-    /// from the existing dashboard / live view models — no additional HealthKit queries.
-    private func buildDailyNarrativeSignals() -> DailyNarrativeSignals {
-        let hrv: Int? = liveViewModel.recovery.latestHRV.map { Int($0.rounded()) }
-        let sleepHours: Double? = liveViewModel.sleep.lastNightSleepDuration > 0
-            ? liveViewModel.sleep.lastNightSleepDuration / 3600  // duration is seconds; narrative wants hours
-            : nil
-        return DailyNarrativeSignals(
-            userFirstName: nil,
-            readinessScore: hasLiveReadiness ? liveReadinessScore : nil,
-            weakestPillar: weakestCategoryName,
-            hrvMs: hrv,
-            sleepHours: sleepHours,
-            streakDays: SessionTracker.shared.streakDays
-        )
     }
 
     private func startReadinessRefresh() {
@@ -348,7 +361,7 @@ struct HomeView: View {
                         summarySub: viewModel.readinessSummary(score: liveReadinessScore).sub,
                         whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
                         hasLiveReadiness: hasLiveReadiness,
-                        lastRefresh: viewModel.lastRefresh,
+                        scoreChange: viewModel.scores.scoreDeltaFromYesterday,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
                         // When live Recovery exists the tap opens the Recovery
                         // explainer; otherwise the headline is the Daily Health
@@ -360,6 +373,7 @@ struct HomeView: View {
                                 showScoreGuide = true
                             }
                         },
+                        onTapWhy: { kind in openWhySignal(kind) },
                         onShare: {
                             // Entry step of the share funnel: without this the
                             // first event is the Share CTA inside the sheet, so
@@ -419,30 +433,6 @@ struct HomeView: View {
                     // 1d. Watch face complication nudge. Only when a watch is paired
                     // with the app installed and the complication is not on the face.
                     WatchComplicationCard(linkState: PhoneWatchSession.shared.linkState)
-
-                    // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
-                    // Proactive one-paragraph story of today, grounded in real signals.
-                    DailyNarrativeCard(signals: buildDailyNarrativeSignals())
-                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
-
-                    // 2b. Body Intelligence. non-obvious ML findings
-                    TodayBriefingView(cards: viewModel.intelligenceBriefing)
-                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
-
-                    // 2c. Personal Health Forecast (Paper 3: Conformal Prediction)
-                    PersonalHealthForecastCard(
-                        forecasts: viewModel.healthForecasts,
-                        onTapMetric: { metric in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: metric.displayName,
-                                type: .metricRow,
-                                screen: .home,
-                                metadata: ["source": "forecast_card"]
-                            )
-                            navigationPath.append(metric)
-                        }
-                    )
-                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
                     // 2d. Ask Your Data (Papers 1 & 2: PHIA)
                     // Stays visible and tappable while soft locked; the tap
@@ -781,12 +771,6 @@ struct HomeView: View {
     private func routeForAction(_ action: DashboardViewModel.SmartAction) -> Route {
         .todaysAction
     }
-
-    // MARK: - Recovery Why Line
-
-    /// Builds a short plain-English explanation of why the recovery score is what it is.
-    /// Inspects live HRV, resting heart rate, sleep duration, and recent workout data to
-    /// identify the top contributing factors, then templates them via Copy.Home.RecoveryHero.
 
     // MARK: - First Launch Loading
 

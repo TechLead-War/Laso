@@ -15,6 +15,15 @@ struct TrendAnalyzer {
     /// % difference between 30d and 365d moving averages above which the long-term trend tips improving/declining.
     static let longTermTrendPercent: Double = 3
 
+    /// Bound applied to every period-over-period % change this analyzer reports.
+    ///
+    /// Metrics whose usual value sits near zero (walking asymmetry, double-support %,
+    /// mindful minutes) make percent-of-mean explode for a tiny real change, and an
+    /// unbounded result once surfaced "24606% off your usual" to a user. Same bound
+    /// UserBaseline.deviationPercent already applies for the same reason, so both
+    /// producers saturate at the same value and callers can detect it with one check.
+    static let maxPercentChange: Double = 500
+
     // MARK: - Inflection slope thresholds (named so reviewers can audit them)
 
     /// Absolute slope (units per day) below which the recent/older slope is treated as effectively flat.
@@ -233,7 +242,8 @@ struct TrendAnalyzer {
             let olderMean = sumOlderHalf / Double(countOlderHalf)
             if olderMean != 0 {
                 let recentMean = countRecentHalf > 0 ? sumRecentHalf / Double(countRecentHalf) : 0
-                periodChange = ((recentMean - olderMean) / olderMean) * 100
+                let raw = ((recentMean - olderMean) / olderMean) * 100
+                periodChange = max(-maxPercentChange, min(maxPercentChange, raw))
             } else {
                 periodChange = 0
             }
