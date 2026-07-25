@@ -280,11 +280,9 @@ enum PersonalizationBlender {
     ///
     /// - Parameters:
     ///   - availableData: Per-metric arrays of raw values (can be as few as 1 value).
-    ///   - priors: The population priors type (default: `PopulationPriors.self`).
     /// - Returns: Risk score (0-1), confidence (0-1), and a human-readable explanation.
     static func coldStartPrediction(
-        availableData: [HealthMetric: [Double]],
-        priors: PopulationPriors.Type = PopulationPriors.self
+        availableData: [HealthMetric: [Double]]
     ) -> (riskScore: Double, confidence: Double, explanation: String) {
         guard !availableData.isEmpty else {
             return (

@@ -260,7 +260,6 @@ final class TemporalSequenceMiner {
     /// An event: a day where a metric deviates significantly from baseline
     private struct MetricEvent {
         let date: Date
-        let value: Double
         let deviation: Double        // signed: positive = above baseline, negative = below
         let direction: EventDirection
     }
@@ -303,11 +302,11 @@ final class TemporalSequenceMiner {
 
                 if sigma > 1.0 {
                     metricEvents.append(MetricEvent(
-                        date: date, value: value, deviation: deviation, direction: .high
+                        date: date, deviation: deviation, direction: .high
                     ))
                 } else if sigma < -1.0 {
                     metricEvents.append(MetricEvent(
-                        date: date, value: value, deviation: deviation, direction: .low
+                        date: date, deviation: deviation, direction: .low
                     ))
                 }
             }
@@ -402,6 +401,8 @@ final class TemporalSequenceMiner {
             effectMetric: effectMetric,
             causeCondition: causeCondition,
             causeThreshold: causeThreshold,
+            effectCondition: effectCondition,
+            effectThreshold: effectThreshold,
             sortedDates: sortedDates,
             dailyValues: dailyValues
         )
@@ -801,6 +802,8 @@ final class TemporalSequenceMiner {
         effectMetric: HealthMetric,
         causeCondition: TemporalSequence.StepCondition,
         causeThreshold: Double,
+        effectCondition: TemporalSequence.StepCondition,
+        effectThreshold: Double,
         sortedDates: [Date],
         dailyValues: [Date: [HealthMetric: Double]]
     ) -> (isActive: Bool, currentStep: Int?) {
@@ -811,12 +814,35 @@ final class TemporalSequenceMiner {
         for date in recentDays.reversed() {
             guard let value = dailyValues[date]?[causeMetric] else { continue }
             if meetsCondition(value: value, condition: causeCondition, threshold: causeThreshold) {
+                // The effect landing after the cause means the sequence finished, not that it is
+                // mid-flight. Without this the card keeps predicting an outcome that already happened.
+                if conditionMetAfter(date: date, metric: effectMetric, condition: effectCondition,
+                                     threshold: effectThreshold, sortedDates: sortedDates,
+                                     dailyValues: dailyValues) {
+                    return (false, nil)
+                }
                 // Step 1 is active. we're between cause and expected effect
                 return (true, 0)
             }
         }
 
         return (false, nil)
+    }
+
+    /// True if `metric` already met `condition` on a day later than `date`.
+    private func conditionMetAfter(
+        date: Date,
+        metric: HealthMetric,
+        condition: TemporalSequence.StepCondition,
+        threshold: Double,
+        sortedDates: [Date],
+        dailyValues: [Date: [HealthMetric: Double]]
+    ) -> Bool {
+        for later in sortedDates where later > date {
+            guard let value = dailyValues[later]?[metric] else { continue }
+            if meetsCondition(value: value, condition: condition, threshold: threshold) { return true }
+        }
+        return false
     }
 
     /// Check if a 3-step sequence is currently in progress.
@@ -837,6 +863,14 @@ final class TemporalSequenceMiner {
         for date in recentDays.reversed() {
             guard let value = dailyValues[date]?[steps[1].metric] else { continue }
             if meetsCondition(value: value, condition: steps[1].condition, threshold: steps[1].threshold) {
+                // Step 3 landing after step 2 means the chain completed, so there is nothing left
+                // to predict. Skipping this check made the card promise an outcome already seen.
+                // Fall through rather than return: step 1 may have fired again since.
+                if conditionMetAfter(date: date, metric: thirdMetric, condition: thirdCondition,
+                                     threshold: thirdThreshold, sortedDates: sortedDates,
+                                     dailyValues: dailyValues) {
+                    break
+                }
                 return (true, 1)
             }
         }

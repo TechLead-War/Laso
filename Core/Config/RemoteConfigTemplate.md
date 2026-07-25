@@ -243,8 +243,6 @@ Consumer: `Common/Theme/AppColour.swift`.
 | `color_category_sleep` | `#818CF8` | Sleep category |
 | `color_category_activity` | `#FBBF24` | Activity category |
 | `color_category_stress` | `#A78BFA` | Stress category |
-| `color_category_vitality` | `#34D399` | Vitality category |
-| `color_category_brain` | `#F472B6` | Brain category |
 | `color_state_recovery` | `#34D399` | Health state timeline — recovery |
 | `color_state_peak_performance` | `#0071E3` | Peak performance |
 | `color_state_stressed` | `#E5484D` | Stressed |
@@ -257,7 +255,6 @@ Consumer: `Common/Theme/AppColour.swift`.
 | `color_achievement_gold` | `#FFD600` | Achievement tier |
 | `color_achievement_platinum` | `#E6E8FA` | Achievement tier |
 | `color_achievement_diamond` | `#B8F2FF` | Achievement tier |
-| `color_achievement_legend` | `#BFB8FA` | Achievement tier |
 | `color_premium_gradient_top` | `#FFD972` | Premium badge gradient — top |
 | `color_premium_gradient_bottom` | `#F5A32E` | Premium badge gradient — bottom |
 | `color_vitality_green` | `#34D399` | Vitality pace ramp — green |

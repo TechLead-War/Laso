@@ -99,7 +99,7 @@ final class WindDownLiveActivityManager {
 
         do {
             let newActivity = try Activity.request(
-                attributes: WindDownActivityAttributes(userName: nil),
+                attributes: WindDownActivityAttributes(),
                 content: content,
                 pushType: nil
             )

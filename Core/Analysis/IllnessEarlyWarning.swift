@@ -186,14 +186,27 @@ struct IllnessEarlyWarning {
     /// Convert warnings into Insight objects for the insight pipeline.
     static func generateInsights(from warnings: [Warning]) -> [Insight] {
         warnings.map { warning in
-            let relatedMetrics = warning.activeSignals.map(\.metric)
-            let primaryMetric = relatedMetrics.first ?? .restingHeartRate
+            let primarySignal = warning.activeSignals.first
+            let primaryMetric = primarySignal?.metric ?? .restingHeartRate
 
             let recommendation = generateRecommendation(
                 signals: warning.activeSignals,
                 daysElevated: warning.daysElevated,
                 severity: warning.severity
             )
+
+            // InsightsDetailView renders `deviationPercent` to the user as
+            // "N% above your baseline", so it has to describe the same signal the
+            // insight is titled after. A count of signalling metrics is not a
+            // deviation and must never reach that line.
+            let baselineValue = primarySignal?.baselineValue ?? 0
+            let deviationPercent: Double
+            if let primarySignal, primarySignal.baselineValue > baselineSDFloor {
+                deviationPercent = (primarySignal.currentValue - primarySignal.baselineValue)
+                    / primarySignal.baselineValue * 100
+            } else {
+                deviationPercent = 0
+            }
 
             return Insight(
                 metric: primaryMetric,
@@ -202,9 +215,13 @@ struct IllnessEarlyWarning {
                 recommendation: recommendation,
                 severity: warning.severity,
                 trend: .declining,
-                baselineValue: 0,
-                deviationPercent: Double(warning.activeSignals.count * 10),
+                baselineValue: baselineValue,
+                deviationPercent: deviationPercent,
                 category: .watchSignal,
+                // `confidence` is computed from metric count, streak length and
+                // deviation size. Without this it never reached the card's
+                // "High / Moderate / Early confidence" line.
+                context: InsightContext(confidenceLevel: Double(warning.confidence) / 100)
             )
         }
     }

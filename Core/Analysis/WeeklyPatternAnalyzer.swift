@@ -292,7 +292,6 @@ struct CyclePhaseAnalyzer {
     private struct MetricSignal {
         let metric: HealthMetric
         let label: String
-        let current: Double
         let baseline: Double
         let deviationPercent: Double
     }
@@ -510,7 +509,6 @@ struct CyclePhaseAnalyzer {
             signals.append(MetricSignal(
                 metric: .heartRateVariability,
                 label: "HRV",
-                current: currentHRV,
                 baseline: baselineHRV,
                 deviationPercent: percentChange(current: currentHRV, baseline: baselineHRV)
             ))
@@ -519,7 +517,6 @@ struct CyclePhaseAnalyzer {
             signals.append(MetricSignal(
                 metric: .restingHeartRate,
                 label: "Resting HR",
-                current: currentRHR,
                 baseline: baselineRHR,
                 deviationPercent: percentChange(current: currentRHR, baseline: baselineRHR)
             ))
@@ -530,7 +527,6 @@ struct CyclePhaseAnalyzer {
             signals.append(MetricSignal(
                 metric: .sleepDuration,
                 label: "Sleep quality",
-                current: currentSleepQuality,
                 baseline: baselineSleepQuality,
                 deviationPercent: percentChange(current: currentSleepQuality, baseline: baselineSleepQuality)
             ))
@@ -539,7 +535,6 @@ struct CyclePhaseAnalyzer {
             signals.append(MetricSignal(
                 metric: .steps,
                 label: "Activity",
-                current: currentSteps,
                 baseline: baselineSteps,
                 deviationPercent: percentChange(current: currentSteps, baseline: baselineSteps)
             ))

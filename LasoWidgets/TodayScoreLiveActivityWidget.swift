@@ -658,7 +658,7 @@ private func previewState(
     )
 }
 
-#Preview("Lock Screen", as: .content, using: TodayScoreActivityAttributes(userName: "Ayush")) {
+#Preview("Lock Screen", as: .content, using: TodayScoreActivityAttributes()) {
     TodayScoreLiveActivityWidget()
 } contentStates: {
     previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
@@ -667,7 +667,7 @@ private func previewState(
     previewState(75, .good, .morning, .noop, "Open Laso to refresh. This reading is from yesterday.", ageHours: 22)
 }
 
-#Preview("Island Expanded", as: .dynamicIsland(.expanded), using: TodayScoreActivityAttributes(userName: "Ayush")) {
+#Preview("Island Expanded", as: .dynamicIsland(.expanded), using: TodayScoreActivityAttributes()) {
     TodayScoreLiveActivityWidget()
 } contentStates: {
     previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")

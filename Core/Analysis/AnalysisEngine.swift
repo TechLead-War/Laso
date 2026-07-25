@@ -368,7 +368,6 @@ final class AnalysisEngine {
 
         mlOrchestrator.trainIncremental(
             timeSeries: timeSeries,
-            baselines: baselines,
             todayScore: overallScore.score,
             todayAnomalyCount: anomalies.count
         )

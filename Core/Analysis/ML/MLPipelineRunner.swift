@@ -213,9 +213,7 @@ final class MLPipelineRunner {
         output.healthSignalReport = PredictiveHealthSignals.analyze(
             timeSeries: input.timeSeries,
             baselines: input.baselines,
-            trends: input.trends,
-            healthState: components.stateClassifier.isReady ? components.stateClassifier.currentState : nil,
-            prediction: (components.predictiveScorer.isReady && vectors.last != nil) ? components.predictiveScorer.predict(todayVector: vectors[vectors.count - 1]) : nil
+            trends: input.trends
         )
 
         if await shouldStopForThermal(after: "PredictiveHealthSignals") { output.stoppedEarly = true; return output }
@@ -259,7 +257,7 @@ final class MLPipelineRunner {
         // --- 11. ChangePointDetector (14+ days, tier 2) ---
         if thermal.shouldRunComponent(tier: 2), totalDays >= ChangePointDetector.minimumDays {
             logger.debug("Running ChangePointDetector")
-            components.changePointDetector.detect(timeSeries: input.timeSeries, baselines: input.baselines)
+            components.changePointDetector.detect(timeSeries: input.timeSeries)
             output.changePoints = components.changePointDetector.changePoints
         }
 
@@ -270,7 +268,6 @@ final class MLPipelineRunner {
             logger.debug("Running PersonalOptimizer")
             components.personalOptimizer.analyze(
                 timeSeries: input.timeSeries,
-                baselines: input.baselines,
                 scoreHistory: input.scoreHistory,
                 vectors: vectors
             )
@@ -301,7 +298,6 @@ final class MLPipelineRunner {
 
     func trainIncremental(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
         todayScore: Int,
         todayAnomalyCount: Int,
         components: Components,

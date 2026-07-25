@@ -17,7 +17,6 @@ enum UITestMode {
     private static let subscribedFlag = "--ui-test-subscribed"
     private static let initialTabPrefix = "--ui-test-initial-tab="
     private static let initialRoutePrefix = "--ui-test-initial-route="
-    private static let onboardingStepPrefix = "--ui-test-onboarding-step="
     private static let onboardingV2ScreenPrefix = "--ui-test-onboarding-v2-screen="
     private static let onboardingGoalPrefix = "--ui-test-onboarding-goal="
     private static let settingsRoutePrefix = "--ui-test-settings-route="
@@ -114,17 +113,10 @@ enum UITestMode {
         return String(arg.dropFirst(initialRoutePrefix.count))
     }
 
-    /// Onboarding step the test harness wants to land on when
-    /// `--ui-test-show-onboarding` is also set. Legacy hook kept for older test
-    /// launch args; current onboarding is V2 (see `onboardingV2StartScreen`).
-    /// Format: `--ui-test-onboarding-step=connect`
-    static var onboardingStartStep: String? { stringValue(for: onboardingStepPrefix) }
-
-    /// V2 onboarding screen the test harness wants to land on directly so each
-    /// of the 16 screens can be captured from a single launch (the V2 flow has
-    /// no TabView, so legacy `onboardingStartStep` does not reach it). Raw value
-    /// matches `OnboardingV2View.Screen` cases (welcome|promise|about|goal|
-    /// symptoms|activity|wearable|bridge|scan|heart|sleep|hrv|preview|signIn|
+    /// Onboarding screen the test harness wants to land on directly so each
+    /// screen can be captured from a single launch. Raw value must match an
+    /// `OnboardingV2View.Screen` case (welcome|about|goal|symptoms|bridge|scan|
+    /// verdict|cliffhanger|journalFirst|heart|sleep|hrv|preview|signIn|referral|
     /// paywall|done). Format: `--ui-test-onboarding-v2-screen=heart`
     static var onboardingV2StartScreen: String? { stringValue(for: onboardingV2ScreenPrefix) }
 
@@ -234,7 +226,6 @@ enum UITestMode {
     static var forceSubscribed: Bool { false }
     static var initialTab: String? { nil }
     static var initialRoute: String? { nil }
-    static var onboardingStartStep: String? { nil }
     static var onboardingV2StartScreen: String? { nil }
     static var onboardingGoal: String? { nil }
     static var settingsInitialRoute: String? { nil }

@@ -93,7 +93,6 @@ final class HealthDataQueryEngine {
     }
 
     struct QueryResult {
-        let question: String
         let answer: String
         let dataPoints: [DataPoint]
         let confidence: Double
@@ -261,7 +260,7 @@ final class HealthDataQueryEngine {
             return conversational
         }
 
-        let intent = parseIntent(normalized, context: context, matchingMode: matchingMode)
+        let intent = parseIntent(normalized, matchingMode: matchingMode)
 
         switch intent {
         case .trend(let metric, let period):
@@ -293,17 +292,16 @@ final class HealthDataQueryEngine {
         case .causal(let metric):
             return answerCausal(metric: metric, ctx: context)
         case .general:
-            return answerGeneral(question: normalized, ctx: context)
+            return answerGeneral(ctx: context)
         }
     }
 
     // MARK: - Intent Parsing
 
-    private func parseIntent(_ question: String, context: QueryContext, matchingMode: MatchingMode) -> QueryIntent {
+    private func parseIntent(_ question: String, matchingMode: MatchingMode) -> QueryIntent {
         let detectedMetrics = detectMetrics(in: question)
         let detectedPeriods = detectPeriods(in: question)
         let primaryMetric = detectedMetrics.first
-        _ = detectedPeriods.first ?? .last7Days
 
         // Try keyword matching first
         if let keywordResult = keywordIntent(question, metrics: detectedMetrics, periods: detectedPeriods) {
@@ -562,7 +560,6 @@ final class HealthDataQueryEngine {
         let answer = Copy.Analysis.HealthDataQuery.trendingAnswer(action: actionAdvice, metric: metric.displayName, direction: direction, period: period.displayName, avg: formatValue(avg, metric: metric))
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
             answer: answer,
             dataPoints: [
                 .init(label: Copy.Analysis.HealthDataQuery.labelAverage, value: avg, unit: metric.unit),
@@ -605,7 +602,6 @@ final class HealthDataQueryEngine {
         let answer = Copy.Analysis.HealthDataQuery.comparisonAnswer(action: comparisonAction, metric: metric.displayName, periodA: periodA.displayName, verdict: verdict, periodB: periodB.displayName, avgA: formatValue(avgA, metric: metric), avgB: formatValue(avgB, metric: metric))
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qCompare(metric.displayName),
             answer: answer,
             dataPoints: [
                 .init(label: periodA.displayName.capitalized, value: avgA, unit: metric.unit),
@@ -643,7 +639,6 @@ final class HealthDataQueryEngine {
             }
 
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
                 answer: answer,
                 dataPoints: [
                     .init(label: Copy.Analysis.HealthDataQuery.labelCorrelation, value: corr.pearsonR, unit: "r"),
@@ -666,7 +661,6 @@ final class HealthDataQueryEngine {
             dataPoints.append(.init(label: metricB.displayName, value: latestB.value, unit: metricB.unit))
         }
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
             answer: Copy.Analysis.HealthDataQuery.correlationNoLink(metricA: metricA.displayName, metricB: metricB.displayName),
             dataPoints: dataPoints,
             confidence: 0.5,
@@ -688,7 +682,6 @@ final class HealthDataQueryEngine {
                     let latest = recent.last?.value ?? avg
                     let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
                     return QueryResult(
-                        question: Copy.Analysis.HealthDataQuery.qWhatWillBe(metric.displayName),
                         answer: Copy.Analysis.HealthDataQuery.forecastNoModel(metric: metric.displayName, avg: formatValue(avg, metric: metric), latest: formatValue(latest, metric: metric), when: when),
                         dataPoints: [
                             .init(label: "7-day avg", value: avg, unit: metric.unit),
@@ -700,7 +693,6 @@ final class HealthDataQueryEngine {
                 }
             }
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qWhatWillBe(metric.displayName),
                 answer: Copy.Analysis.HealthDataQuery.forecastNeedMore(metric: metric.displayName),
                 dataPoints: [],
                 confidence: 0.3,
@@ -713,7 +705,6 @@ final class HealthDataQueryEngine {
         let answer = Copy.Analysis.HealthDataQuery.forecastAnswer(action: forecastAction, metric: metric.displayName, value: formatValue(result.value, metric: metric), when: when)
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qWhatWillBeWhen(metric.displayName, when: when),
             answer: answer,
             dataPoints: [
                 .init(label: "Predicted", value: result.value, unit: metric.unit),
@@ -741,7 +732,6 @@ final class HealthDataQueryEngine {
 
         if anomalies.isEmpty {
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qAnythingUnusual,
                 answer: Copy.Analysis.HealthDataQuery.anomalyAllNormal,
                 dataPoints: [],
                 confidence: 0.7,
@@ -760,7 +750,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qAnythingUnusual,
             answer: answer,
             dataPoints: anomalies.prefix(3).map {
                 .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
@@ -790,7 +779,6 @@ final class HealthDataQueryEngine {
         let answer = Copy.Analysis.HealthDataQuery.prAnswer(label: label, metric: metric.displayName, value: formatValue(target.value, metric: metric), dateStr: dateStr, suffix: suffix)
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qWhatWasLabel(label, metric.displayName),
             answer: answer,
             dataPoints: [.init(label: label.capitalized, value: target.value, unit: metric.unit)],
             confidence: 0.95,
@@ -803,7 +791,7 @@ final class HealthDataQueryEngine {
 
     private func answerStatus(metric: HealthMetric?, ctx: QueryContext) -> QueryResult {
         guard let m = metric, let series = ctx.timeSeries[m] else {
-            return answerGeneral(question: "status", ctx: ctx)
+            return answerGeneral(ctx: ctx)
         }
 
         let recent = recentSamples(from: series, days: 7)
@@ -833,7 +821,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qHowIsMetric(m.displayName),
             answer: answer,
             dataPoints: [
                 .init(label: "Current", value: latest, unit: m.unit),
@@ -857,7 +844,6 @@ final class HealthDataQueryEngine {
             let metricCount = activeMetrics.count
             if metricCount == 0 {
                 return QueryResult(
-                    question: Copy.Analysis.HealthDataQuery.qHowIsBodyDoing,
                     answer: Copy.Analysis.HealthDataQuery.bodyNoData,
                     dataPoints: [],
                     confidence: 0.3,
@@ -892,7 +878,6 @@ final class HealthDataQueryEngine {
                 : highlights.joined(separator: ". ") + "."
             let answer = Copy.Analysis.HealthDataQuery.bodySnapshot(summary: summary)
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qHowIsBodyDoing,
                 answer: answer,
                 dataPoints: dataPoints,
                 confidence: 0.5,
@@ -921,7 +906,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qWhatStateIsBody,
             answer: answer,
             dataPoints: dataPoints,
             confidence: 0.8,
@@ -941,7 +925,6 @@ final class HealthDataQueryEngine {
                     ? Copy.Analysis.HealthDataQuery.riskRoughDay(percent: pct, summary: riskFactorSummary(risk.topFactors))
                     : Copy.Analysis.HealthDataQuery.riskLowDay(percent: pct)
                 return QueryResult(
-                    question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
                     dataPoints: [.init(label: "Tomorrow risk", value: risk.probability * 100, unit: "%")],
                     confidence: risk.confidence,
@@ -961,7 +944,6 @@ final class HealthDataQueryEngine {
                 let top = warnings[0]
                 let answer = Copy.Analysis.HealthDataQuery.riskOutsideRange(metric: top.metric.displayName, value: formatValue(top.value, metric: top.metric))
                 return QueryResult(
-                    question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
                     dataPoints: warnings.prefix(3).map {
                         .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
@@ -971,7 +953,6 @@ final class HealthDataQueryEngine {
                 )
             }
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                 answer: Copy.Analysis.HealthDataQuery.riskNothingConcerning,
                 dataPoints: [],
                 confidence: 0.5,
@@ -997,7 +978,6 @@ final class HealthDataQueryEngine {
                 answer += " Tomorrow is looking good too."
             }
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                 answer: answer,
                 dataPoints: [],
                 confidence: 0.85,
@@ -1016,7 +996,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
             answer: answer,
             dataPoints: elevated.prefix(3).map {
                 .init(label: $0.name, value: $0.score * 100, unit: "%")
@@ -1056,7 +1035,6 @@ final class HealthDataQueryEngine {
             answer += Copy.Analysis.HealthDataQuery.optimizationAimFor(targetList: targetList, score: Int(ideal.predictedScore))
 
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qHowGreatDay,
                 answer: answer,
                 dataPoints: topTargets.map {
                     .init(label: $0.metric.displayName, value: $0.targetValue, unit: $0.metric.unit)
@@ -1076,7 +1054,6 @@ final class HealthDataQueryEngine {
             let levers = top.map { "\($0.metric.displayName) (\($0.description))" }.joined(separator: "; ")
 
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qHowImprove,
                 answer: Copy.Analysis.HealthDataQuery.improveBiggestImpact(levers),
                 dataPoints: top.map { .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ") },
                 confidence: 0.7,
@@ -1100,7 +1077,6 @@ final class HealthDataQueryEngine {
             let topSuggestions = suggestions.prefix(3)
             let tips = topSuggestions.map { $0.tip }.joined(separator: "; ")
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qHowImprove,
                 answer: Copy.Analysis.HealthDataQuery.improveMostRoom(tips),
                 dataPoints: topSuggestions.map {
                     .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
@@ -1110,7 +1086,6 @@ final class HealthDataQueryEngine {
             )
         }
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qHowImprove,
             answer: Copy.Analysis.HealthDataQuery.improveAllOnBaseline,
             dataPoints: [],
             confidence: 0.5,
@@ -1138,7 +1113,6 @@ final class HealthDataQueryEngine {
                     answer += Copy.Analysis.HealthDataQuery.patternCycleHint(type: weakTop.patternType.rawValue, dayName: weekdayName(peakDay))
                 }
                 return QueryResult(
-                    question: Copy.Analysis.HealthDataQuery.qAnyPatterns,
                     answer: answer,
                     dataPoints: weaker.prefix(2).map {
                         .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength")
@@ -1149,7 +1123,6 @@ final class HealthDataQueryEngine {
             }
             let target = metric?.displayName ?? Copy.Analysis.HealthDataQuery.yourMetrics
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qAnyPatterns,
                 answer: Copy.Analysis.HealthDataQuery.patternNoneFound(target: target),
                 dataPoints: [],
                 confidence: 0.4,
@@ -1173,7 +1146,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qAnyPatternsInData,
             answer: answer,
             dataPoints: strong.prefix(3).map {
                 .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength")
@@ -1212,7 +1184,6 @@ final class HealthDataQueryEngine {
                 answer += Copy.Analysis.HealthDataQuery.circadianGeneralAdvice
             }
             return QueryResult(
-                question: Copy.Analysis.HealthDataQuery.qWhenWorkOut,
                 answer: answer,
                 dataPoints: dataPoints,
                 confidence: 0.4,
@@ -1238,7 +1209,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: Copy.Analysis.HealthDataQuery.qBodyClock,
             answer: answer,
             dataPoints: [
                 .init(label: "Activity peak", value: profile.activityAcrophaseHour, unit: "hr"),
@@ -1291,7 +1261,6 @@ final class HealthDataQueryEngine {
             answer += "Your score is \(score). \(conclusion(sentiment))"
 
             return QueryResult(
-                question: "Why is my score \(score)?",
                 answer: answer,
                 dataPoints: topDrivers.map {
                     .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ")
@@ -1323,7 +1292,6 @@ final class HealthDataQueryEngine {
             answer += " Looking at your key metrics: \(details)."
         }
         return QueryResult(
-            question: "Why is my score \(score)?",
             answer: answer,
             dataPoints: noteworthy.prefix(3).map {
                 .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
@@ -1361,7 +1329,6 @@ final class HealthDataQueryEngine {
             }
 
             return QueryResult(
-                question: "What causes my \(metric.displayName) to change?",
                 answer: answer,
                 dataPoints: topCauses.map {
                     let driver = $0.metricA == metric ? $0.metricB : $0.metricA
@@ -1387,7 +1354,6 @@ final class HealthDataQueryEngine {
             let other = top.metricA == metric ? top.metricB : top.metricA
             let answer = "I haven't established clear causal links for your \(metric.displayName) yet, but it's correlated with your \(other.displayName) (r=\(String(format: "%.2f", top.pearsonR))). As I gather more data, I'll be able to tell you what actually drives the changes. not just what moves alongside them."
             return QueryResult(
-                question: "What causes my \(metric.displayName) to change?",
                 answer: answer,
                 dataPoints: [.init(label: other.displayName, value: top.pearsonR, unit: "r")],
                 confidence: 0.6,
@@ -1407,7 +1373,6 @@ final class HealthDataQueryEngine {
                 answer += " Your recent average is \(formatValue(avg, metric: metric)). As I gather more history, I'll identify what specifically makes it go up or down."
             }
             return QueryResult(
-                question: "What causes my \(metric.displayName) to change?",
                 answer: answer,
                 dataPoints: avg.map { [QueryResult.DataPoint(label: "Recent avg", value: $0, unit: metric.unit)] } ?? [],
                 confidence: 0.4,
@@ -1415,7 +1380,6 @@ final class HealthDataQueryEngine {
             )
         }
         return QueryResult(
-            question: "What causes my \(metric.displayName) to change?",
             answer: "I don't have \(metric.displayName) data yet. Once it starts coming in, I'll be able to analyze what drives it.",
             dataPoints: [],
             confidence: 0.3,
@@ -1460,7 +1424,6 @@ final class HealthDataQueryEngine {
                 : "Connect a device so I can start tracking your health."
 
             return QueryResult(
-                question: question,
                 answer: "Hey! \(scorePhrase) \(trackingNote) Ask me anything. like \"How's my sleep?\" or \"Am I at risk for anything?\"",
                 dataPoints: [],
                 confidence: 1.0,
@@ -1475,7 +1438,6 @@ final class HealthDataQueryEngine {
         // Thanks
         if Self.thanks.contains(words) || Self.thanks.contains(where: { words.hasPrefix($0) }) {
             return QueryResult(
-                question: question,
                 answer: "Happy to help! I'm here whenever you want to check in on your health.",
                 dataPoints: [],
                 confidence: 1.0,
@@ -1490,7 +1452,6 @@ final class HealthDataQueryEngine {
         // Farewells
         if Self.farewells.contains(words) || Self.farewells.contains(where: { words.hasPrefix($0) }) {
             return QueryResult(
-                question: question,
                 answer: "Take care! I'll keep watching your data in the background.",
                 dataPoints: [],
                 confidence: 1.0,
@@ -1501,12 +1462,11 @@ final class HealthDataQueryEngine {
         return nil
     }
 
-    private func answerGeneral(question: String, ctx: QueryContext) -> QueryResult {
+    private func answerGeneral(ctx: QueryContext) -> QueryResult {
         // 1. Surface compound insights first (richest, most synthesized)
         if let topInsight = ctx.compoundInsights.sorted(by: { $0.surpriseScore > $1.surpriseScore }).first,
            topInsight.surpriseScore > 0.3 {
             return QueryResult(
-                question: question,
                 answer: topInsight.narrative + (topInsight.isActionable ? " " + topInsight.recommendation : ""),
                 dataPoints: topInsight.involvedMetrics.prefix(3).compactMap { metric in
                     guard let series = ctx.timeSeries[metric],
@@ -1534,7 +1494,6 @@ final class HealthDataQueryEngine {
             ]
             if let warning = signals.filter({ $0.1 >= .high }).first {
                 return QueryResult(
-                    question: question,
                     answer: "Something worth your attention: \(warning.2)",
                     dataPoints: [],
                     confidence: 0.8,
@@ -1549,7 +1508,6 @@ final class HealthDataQueryEngine {
             let dir = top.value.weekOverWeekChange > 0 ? "up" : "down"
             let answer = "Here's what stands out: your \(top.key.displayName) is moving \(dir) \(String(format: "%.0f%%", abs(top.value.weekOverWeekChange))) week over week. That's the biggest shift in your data right now."
             return QueryResult(
-                question: question,
                 answer: answer,
                 dataPoints: [.init(label: "Change", value: top.value.weekOverWeekChange, unit: "%")],
                 confidence: 0.7,
@@ -1565,7 +1523,6 @@ final class HealthDataQueryEngine {
            abs(topCorr.pearsonR) > 0.4 {
             let dir = topCorr.pearsonR > 0 ? "move together" : "move in opposite directions"
             return QueryResult(
-                question: question,
                 answer: "Interesting discovery: your \(topCorr.metricA.displayName) and \(topCorr.metricB.displayName) \(dir) (r=\(String(format: "%.2f", topCorr.pearsonR))). This is one of the strongest connections in your data.",
                 dataPoints: [.init(label: "Correlation", value: topCorr.pearsonR, unit: "r")],
                 confidence: 0.7,
@@ -1580,7 +1537,6 @@ final class HealthDataQueryEngine {
         let metricCount = ctx.timeSeries.filter { !$0.value.samples.isEmpty }.count
         if metricCount == 0 {
             return QueryResult(
-                question: question,
                 answer: "No health data yet. Once you connect your Apple Watch or allow Health access, I'll start learning about your body and can answer questions like \"How is my HRV trending?\" or \"Am I at risk for anything?\"",
                 dataPoints: [],
                 confidence: 0.3,
@@ -1589,7 +1545,6 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: question,
             answer: "I'm tracking \(metricCount) metrics and everything looks within normal ranges right now. Try asking about a specific metric, or ask me things like \"Am I at risk?\" or \"What should I do today?\" to dig deeper.",
             dataPoints: [],
             confidence: 0.6,
@@ -1759,7 +1714,6 @@ final class HealthDataQueryEngine {
 
     private func noDataResult(for metric: HealthMetric) -> QueryResult {
         QueryResult(
-            question: "About \(metric.displayName)",
             answer: "I don't have \(metric.displayName) data available right now. This metric may need a compatible device (like Apple Watch) or manual entry in the Health app. Try asking about a different metric.",
             dataPoints: [],
             confidence: 0.3,

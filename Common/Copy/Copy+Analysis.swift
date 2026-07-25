@@ -311,18 +311,7 @@ extension Copy {
         enum HealthDataQuery {
             // Question templates
             static func qHowTrending(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_trending", default: "How is my %@ trending?"), metric) }
-            static func qCompare(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_compare", default: "Compare my %@"), metric) }
-            static func qDoesAffect(_ a: String, _ b: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_does_affect", default: "Does %@ affect %@?"), a, b) }
-            static func qWhatWillBe(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_what_will_be", default: "What will my %@ be?"), metric) }
-            static func qWhatWillBeWhen(_ metric: String, when: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_what_will_be_when", default: "What will my %@ be %@?"), metric, when) }
-            static var qAnythingUnusual: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_anything_unusual", default: "Anything unusual?") }
             static func qWhatWasLabel(_ label: String, _ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_what_was_label", default: "What was my %@ %@?"), label, metric) }
-            static func qHowIsMetric(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_is_metric", default: "How is my %@?"), metric) }
-            static var qHowIsBodyDoing: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_is_body_doing", default: "How is my body doing?") }
-            static var qWhatStateIsBody: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_what_state_is_body", default: "What state is my body in?") }
-            static var qAmIAtRisk: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_am_i_at_risk", default: "Am I at risk?") }
-            static var qHowGreatDay: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_great_day", default: "How do I have a great day?") }
-            static var qHowImprove: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_improve", default: "How do I improve?") }
 
             // Related questions
             static func relatedAffects(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_related_affects", default: "What affects my %@?"), metric) }
@@ -452,9 +441,6 @@ extension Copy {
             static var labelCorrelation: String { RemoteConfigManager.shared.copyString("copy_analysis_label_correlation", default: "Correlation") }
             static var labelStability: String { RemoteConfigManager.shared.copyString("copy_analysis_label_stability", default: "Stability") }
 
-            // Pattern Q
-            static var qAnyPatterns: String { RemoteConfigManager.shared.copyString("copy_analysis_q_any_patterns", default: "Any patterns?") }
-            static var qAnyPatternsInData: String { RemoteConfigManager.shared.copyString("copy_analysis_q_any_patterns_in_data", default: "Any patterns in my data?") }
             static func patternEmerging(target: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_pattern_emerging", default: "I'm seeing some emerging patterns in your %@, but they're not strong enough to be definitive yet."), target)
             }
@@ -481,8 +467,6 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_circadian_avg_steps", default: " You're averaging %d steps. a morning or afternoon walk is generally a great time to move."), steps)
             }
             static var circadianGeneralAdvice: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_general_advice", default: " In the meantime, a good general rule: exercise in the morning or early afternoon, wind down 1-2 hours before bed, and keep your sleep schedule consistent.") }
-            static var qWhenWorkOut: String { RemoteConfigManager.shared.copyString("copy_analysis_q_when_work_out", default: "When should I work out?") }
-            static var qBodyClock: String { RemoteConfigManager.shared.copyString("copy_analysis_q_body_clock", default: "What's my body clock like?") }
             static func circadianBestWindows(lines: String, chronotype: String, peak: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_circadian_best_windows", default: "Here are your best windows based on your body clock: %@. You're a %@, with peak energy around %@."), lines, chronotype, peak)
             }

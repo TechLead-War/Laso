@@ -122,32 +122,25 @@ enum AppColour {
     static var categorySleep:    Color { remote(RC.colorCategorySleep,    fallback: _categorySleep) }
     static var categoryActivity: Color { remote(RC.colorCategoryActivity, fallback: _categoryActivity) }
     static var categoryStress:   Color { remote(RC.colorCategoryStress,   fallback: _categoryStress) }
-    static var categoryVitality: Color { remote(RC.colorCategoryVitality, fallback: _categoryVitality) }
-    static var categoryBrain:    Color { remote(RC.colorCategoryBrain,    fallback: _categoryBrain) }
 
     private static let _categoryHeart    = Color(uiColor: #colorLiteral(red: 0.97, green: 0.44, blue: 0.44, alpha: 1.00)) // #F87171 soft rose
     private static let _categorySleep    = Color(uiColor: #colorLiteral(red: 0.51, green: 0.55, blue: 0.97, alpha: 1.00)) // #818CF8 soft indigo
     private static let _categoryActivity = Color(uiColor: #colorLiteral(red: 0.98, green: 0.75, blue: 0.14, alpha: 1.00)) // #FBBF24 soft amber
     private static let _categoryStress   = Color(uiColor: #colorLiteral(red: 0.65, green: 0.55, blue: 0.98, alpha: 1.00)) // #A78BFA soft purple
-    private static let _categoryVitality = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
-    private static let _categoryBrain    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.45, blue: 0.71, alpha: 1.00)) // #F472B6 soft magenta
 
     // MARK: - 6a. Achievement / Gamification Tiers (RC-overridable)
-    // Source: Modules/Profile/Views/Profile/AchievementsView.swift:29-33
-    //         Core/Analysis/GamificationEngine.swift:32-37 (same RGB + legend)
+    // Source: Modules/Profile/Views/Profile/AchievementsView.swift, one per `Level` case.
     static var achievementBronze:   Color { remote(RC.colorAchievementBronze,   fallback: _achievementBronze) }
     static var achievementSilver:   Color { remote(RC.colorAchievementSilver,   fallback: _achievementSilver) }
     static var achievementGold:     Color { remote(RC.colorAchievementGold,     fallback: _achievementGold) }
     static var achievementPlatinum: Color { remote(RC.colorAchievementPlatinum, fallback: _achievementPlatinum) }
     static var achievementDiamond:  Color { remote(RC.colorAchievementDiamond,  fallback: _achievementDiamond) }
-    static var achievementLegend:   Color { remote(RC.colorAchievementLegend,   fallback: _achievementLegend) }
 
     private static let _achievementBronze   = Color(uiColor: #colorLiteral(red: 0.80, green: 0.50, blue: 0.20, alpha: 1.00))
     private static let _achievementSilver   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.75, blue: 0.78, alpha: 1.00))
     private static let _achievementGold     = Color(uiColor: #colorLiteral(red: 1.00, green: 0.84, blue: 0.00, alpha: 1.00))
     private static let _achievementPlatinum = Color(uiColor: #colorLiteral(red: 0.90, green: 0.91, blue: 0.98, alpha: 1.00))
     private static let _achievementDiamond  = Color(uiColor: #colorLiteral(red: 0.72, green: 0.95, blue: 1.00, alpha: 1.00))
-    private static let _achievementLegend   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.72, blue: 0.98, alpha: 1.00)) // shifted toward calm lavender
 
     // MARK: - 6b. Vitality Pace Palette (RC-overridable, except `vitalityDeltaNegative`)
     // Source: Modules/Vitality/Views/Vitality/VitalityDetailHelpers.swift:3-5, 41

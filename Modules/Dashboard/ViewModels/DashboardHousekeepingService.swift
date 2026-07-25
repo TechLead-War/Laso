@@ -7,7 +7,6 @@ final class DashboardHousekeepingService {
         let currentAnomalies: [AnomalyDetector.AnomalyResult]
         let currentTrends: [HealthMetric: TrendAnalyzer.TrendResult]
         let previousTrends: [HealthMetric: TrendDirection]
-        let currentCategoryScores: [HealthScore]
         let metricsCount: Int
         let timeSeries: [HealthMetric: MetricTimeSeries]
         let insights: [Insight]

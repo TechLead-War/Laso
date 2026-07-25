@@ -142,7 +142,6 @@ final class FoundationModelQueryEngine: HealthQueryEngine, @unchecked Sendable {
         let dataPoints = extractDataPoints(from: context, question: question)
 
         return HealthDataQueryEngine.QueryResult(
-            question: question,
             answer: generated.answer,
             dataPoints: dataPoints,
             confidence: max(0.3, min(0.95, generated.confidence)),

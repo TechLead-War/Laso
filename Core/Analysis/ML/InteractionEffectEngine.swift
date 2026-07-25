@@ -95,7 +95,7 @@ final class InteractionEffectEngine {
             for j in 0..<available.count where i != j {
                 let (c, e) = (available[i], available[j])
                 guard !seen.contains(pairKey(c, e)) else { continue }
-                let (cv, ev) = aligned(c, e, dateValues, calendar)
+                let (cv, ev) = aligned(c, e, dateValues)
                 guard cv.count >= Self.minimumDays,
                       let r = [Double].pearsonCorrelation(cv, ev),
                       abs(r) >= Self.minCorrelation else { continue }
@@ -111,23 +111,23 @@ final class InteractionEffectEngine {
             // Bail out mid-loop if device reaches critical thermal state
             if idx % 5 == 0 && ProcessInfo.processInfo.thermalState == .critical { break }
 
-            let (cv, ev) = aligned(cause, effect, dateValues, calendar)
+            let (cv, ev) = aligned(cause, effect, dateValues)
             guard cv.count >= Self.minimumDays else { continue }
 
-            if let curve = analyzeDoseResponse(cause: cause, effect: effect, cv: cv, ev: ev, baselines: baselines) {
+            if let curve = analyzeDoseResponse(cause: cause, effect: effect, cv: cv, ev: ev) {
                 allCurves.append(curve)
                 if let ie = effectFromCurve(curve, n: cv.count) { allEffects.append(ie) }
             }
 
-            let (cv2, ev2, dates) = alignedWithDates(cause, effect, dateValues, calendar)
+            let (cv2, ev2, dates) = alignedWithDates(cause, effect, dateValues)
             if cv2.count >= Self.minimumDays {
-                let ce = analyzeConditional(cause: cause, effect: effect, cv: cv2, ev: ev2, dates: dates, baselines: baselines, cal: calendar)
+                let ce = analyzeConditional(cause: cause, effect: effect, cv: cv2, ev: ev2, dates: dates, baselines: baselines)
                 allEffects.append(contentsOf: ce)
             }
 
             allEffects.append(contentsOf: analyzeModeration(
                 cause: cause, effect: effect, dateValues: dateValues,
-                available: available, calendar: calendar
+                available: available
             ))
         }
 
@@ -140,8 +140,7 @@ final class InteractionEffectEngine {
 
     private func analyzeDoseResponse(
         cause: HealthMetric, effect: HealthMetric,
-        cv: [Double], ev: [Double],
-        baselines: [HealthMetric: UserBaseline]
+        cv: [Double], ev: [Double]
     ) -> DoseResponseCurve? {
         let n = cv.count
         guard n >= Self.minimumDays else { return nil }
@@ -173,7 +172,7 @@ final class InteractionEffectEngine {
         let shape = detectShape(bins)
         guard shape != .noPattern else { return nil }
         let optimal = findOptimalRange(bins, effect)
-        let desc = describeCurve(cause, effect, bins, shape, optimal, baselines)
+        let desc = describeCurve(cause, effect, bins, shape, optimal)
 
         return DoseResponseCurve(cause: cause, effect: effect, bins: bins, description: desc)
     }
@@ -270,7 +269,7 @@ final class InteractionEffectEngine {
     private func analyzeConditional(
         cause: HealthMetric, effect: HealthMetric,
         cv: [Double], ev: [Double], dates: [Date],
-        baselines: [HealthMetric: UserBaseline], cal: Calendar
+        baselines: [HealthMetric: UserBaseline]
     ) -> [InteractionEffect] {
         var results: [InteractionEffect] = []
         let n = cv.count
@@ -333,7 +332,7 @@ final class InteractionEffectEngine {
     private func analyzeModeration(
         cause: HealthMetric, effect: HealthMetric,
         dateValues: [HealthMetric: [Date: Double]],
-        available: [HealthMetric], calendar: Calendar
+        available: [HealthMetric]
     ) -> [InteractionEffect] {
         guard let cMap = dateValues[cause], let eMap = dateValues[effect] else { return [] }
         var results: [InteractionEffect] = []
@@ -378,8 +377,7 @@ final class InteractionEffectEngine {
         _ cause: HealthMetric, _ effect: HealthMetric,
         _ bins: [DoseResponseCurve.DoseResponseBin],
         _ shape: Shape,
-        _ optimal: (lower: Double, upper: Double)?,
-        _ baselines: [HealthMetric: UserBaseline]
+        _ optimal: (lower: Double, upper: Double)?
     ) -> String {
         let f = bins.first!, l = bins.last!
         let delta = l.effectMean - f.effectMean
@@ -449,7 +447,7 @@ final class InteractionEffectEngine {
 
     private func aligned(
         _ c: HealthMetric, _ e: HealthMetric,
-        _ dv: [HealthMetric: [Date: Double]], _ cal: Calendar
+        _ dv: [HealthMetric: [Date: Double]]
     ) -> ([Double], [Double]) {
         guard let cm = dv[c], let em = dv[e] else { return ([], []) }
         let dates = Set(cm.keys).intersection(em.keys).sorted()
@@ -458,7 +456,7 @@ final class InteractionEffectEngine {
 
     private func alignedWithDates(
         _ c: HealthMetric, _ e: HealthMetric,
-        _ dv: [HealthMetric: [Date: Double]], _ cal: Calendar
+        _ dv: [HealthMetric: [Date: Double]]
     ) -> ([Double], [Double], [Date]) {
         guard let cm = dv[c], let em = dv[e] else { return ([], [], []) }
         let dates = Set(cm.keys).intersection(em.keys).sorted()

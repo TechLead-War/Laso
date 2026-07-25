@@ -122,7 +122,7 @@ final class TodayScoreLiveActivityManager {
 
         do {
             activity = try Activity.request(
-                attributes: TodayScoreActivityAttributes(userName: nil),
+                attributes: TodayScoreActivityAttributes(),
                 content: content,
                 pushType: nil
             )

@@ -55,15 +55,13 @@ final class TodayIntelligenceEngine {
     func generateBriefing(
         orchestrator: MLOrchestrator,
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         timeSeries: [HealthMetric: MetricTimeSeries],
         liveHRV: Double?,
         liveRestingHR: Double?,
         sleepHours: Double,
         deepSleepMinutes: Double,
         exerciseMinutes: Double,
-        exerciseGoal: Double,
-        readinessScore: Int?
+        exerciseGoal: Double
     ) -> [IntelligenceCard] {
         var cards: [IntelligenceCard] = []
 
@@ -100,7 +98,6 @@ final class TodayIntelligenceEngine {
         if let card = systemCoherenceCard(orchestrator: orchestrator) { cards.append(card) }
 
         if let card = rhythmDeviationCard(
-            baselines: baselines,
             timeSeries: timeSeries,
             liveHRV: liveHRV,
             liveRestingHR: liveRestingHR,
@@ -857,7 +854,6 @@ final class TodayIntelligenceEngine {
     /// Combined deviation = sqrt(mean(z^2)) across all metrics with 14+ days of data.
     /// Highlights the 1-2 most deviating metrics.
     private func rhythmDeviationCard(
-        baselines: [HealthMetric: UserBaseline],
         timeSeries: [HealthMetric: MetricTimeSeries],
         liveHRV: Double?,
         liveRestingHR: Double?,

@@ -79,8 +79,5 @@ struct WindDownActivityAttributes: ActivityAttributes {
         /// Whether recent HRV is meaningfully below baseline — surfaces a gentler nudge.
         var hrvIsLow: Bool
     }
-
-    /// Static attribute — fixed for the life of the activity.
-    var userName: String?
 }
 #endif

@@ -970,7 +970,6 @@ final class DashboardViewModel {
                 currentAnomalies: currentAnomalies,
                 currentTrends: currentTrends,
                 previousTrends: prevTrends,
-                currentCategoryScores: currentCategoryScores,
                 metricsCount: metricsCount,
                 timeSeries: timeSeries,
                 insights: analysisEngine.insights,
@@ -1785,15 +1784,13 @@ final class DashboardViewModel {
         intelligenceBriefing = todayIntelligenceEngine.generateBriefing(
             orchestrator: analysisEngine.mlOrchestrator,
             baselines: analysisEngine.baselines,
-            trends: analysisEngine.trends,
             timeSeries: healthKitManager.timeSeries,
             liveHRV: nil,
             liveRestingHR: nil,
             sleepHours: 0,
             deepSleepMinutes: 0,
             exerciseMinutes: 0,
-            exerciseGoal: 30,
-            readinessScore: nil
+            exerciseGoal: 30
         )
     }
 
@@ -2212,7 +2209,6 @@ final class DashboardViewModel {
                 return try await engine.query(question: question, context: context)
             } catch {
                 return HealthDataQueryEngine.QueryResult(
-                    question: question,
                     answer: "Something went wrong processing your question. Try asking again.",
                     dataPoints: [],
                     confidence: 0.0,

@@ -57,18 +57,12 @@ final class DecisionPolicyEngine {
     ) -> [InterventionCandidate] {
         var candidates: [InterventionCandidate] = []
 
-        candidates.append(contentsOf: candidatesFromPrediction(
-            tomorrowRisk, baselines: baselines, timeSeries: timeSeries))
-        candidates.append(contentsOf: candidatesFromCausal(
-            causalDiscoveries, trends: trends, baselines: baselines, timeSeries: timeSeries))
-        candidates.append(contentsOf: candidatesFromState(
-            currentState, baselines: baselines, timeSeries: timeSeries))
-        candidates.append(contentsOf: candidatesFromAnomalies(
-            anomalies, baselines: baselines, timeSeries: timeSeries))
-        candidates.append(contentsOf: candidatesFromTrends(
-            trends, baselines: baselines, timeSeries: timeSeries))
-        candidates.append(contentsOf: candidatesFromCircadian(
-            circadianRecommendations, baselines: baselines, timeSeries: timeSeries))
+        candidates.append(contentsOf: candidatesFromPrediction(tomorrowRisk))
+        candidates.append(contentsOf: candidatesFromCausal(causalDiscoveries, trends: trends))
+        candidates.append(contentsOf: candidatesFromState(currentState))
+        candidates.append(contentsOf: candidatesFromAnomalies(anomalies))
+        candidates.append(contentsOf: candidatesFromTrends(trends))
+        candidates.append(contentsOf: candidatesFromCircadian(circadianRecommendations))
         candidates.append(contentsOf: candidatesFromBaselines(
             baselines, trends: trends, timeSeries: timeSeries))
 
@@ -882,9 +876,7 @@ final class DecisionPolicyEngine {
     // MARK: - Candidate Generators
 
     private func candidatesFromPrediction(
-        _ prediction: MLPrediction?,
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        _ prediction: MLPrediction?
     ) -> [InterventionCandidate] {
         guard let prediction, prediction.probability > 0.3 else { return [] }
 
@@ -931,9 +923,7 @@ final class DecisionPolicyEngine {
 
     private func candidatesFromCausal(
         _ correlations: [MLCorrelation],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> [InterventionCandidate] {
         // Only use Granger-causal relationships with significant p-values
         let causal = correlations.filter { $0.grangerCausal && $0.grangerPValue < 0.05 }
@@ -979,9 +969,7 @@ final class DecisionPolicyEngine {
     }
 
     private func candidatesFromState(
-        _ state: HealthState?,
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        _ state: HealthState?
     ) -> [InterventionCandidate] {
         guard let state else { return [] }
 
@@ -1029,9 +1017,7 @@ final class DecisionPolicyEngine {
     }
 
     private func candidatesFromAnomalies(
-        _ anomalies: [AnomalyDetector.AnomalyResult],
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        _ anomalies: [AnomalyDetector.AnomalyResult]
     ) -> [InterventionCandidate] {
         // Focus on significant anomalies in the suboptimal direction
         let actionable = anomalies.filter { anomaly in
@@ -1087,9 +1073,7 @@ final class DecisionPolicyEngine {
     }
 
     private func candidatesFromTrends(
-        _ trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        _ trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> [InterventionCandidate] {
         let declining = trends.filter { metric, result in
             result.direction == .declining
@@ -1148,9 +1132,7 @@ final class DecisionPolicyEngine {
     }
 
     private func candidatesFromCircadian(
-        _ recommendations: [CircadianAnalyzer.TimingRecommendation],
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        _ recommendations: [CircadianAnalyzer.TimingRecommendation]
     ) -> [InterventionCandidate] {
         return recommendations.compactMap { rec -> InterventionCandidate? in
             let metric: HealthMetric

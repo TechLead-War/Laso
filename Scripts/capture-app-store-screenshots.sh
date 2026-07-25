@@ -112,11 +112,11 @@ echo "▶ Admin mirror:  $ADMIN_OUT"
 SHOTS=(
   # ─── 01 Onboarding (first thing a user sees) ───
   "01_onboarding|01_pulse|--ui-test-show-onboarding --ui-test-initial-tab=home"
-  "01_onboarding|02_profile|--ui-test-show-onboarding --ui-test-onboarding-step=profile --ui-test-initial-tab=home"
-  "01_onboarding|03_connect|--ui-test-show-onboarding --ui-test-onboarding-step=connect --ui-test-initial-tab=home"
-  "01_onboarding|04_priorities|--ui-test-show-onboarding --ui-test-onboarding-step=priority --ui-test-initial-tab=home"
-  "01_onboarding|05_mirror|--ui-test-show-onboarding --ui-test-onboarding-step=mirror --ui-test-initial-tab=home"
-  "01_onboarding|06_promise|--ui-test-show-onboarding --ui-test-onboarding-step=promise --ui-test-initial-tab=home"
+  "01_onboarding|02_profile|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=about --ui-test-initial-tab=home"
+  "01_onboarding|03_connect|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=bridge --ui-test-initial-tab=home"
+  "01_onboarding|04_priorities|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=goal --ui-test-initial-tab=home"
+  "01_onboarding|05_mirror|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=preview --ui-test-initial-tab=home"
+  "01_onboarding|06_promise|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=verdict --ui-test-initial-tab=home"
 
   # ─── 02 Today (Home + morning + Today's Action + Weekly Review + Health State) ───
   "02_today|01_home|--ui-test-initial-tab=home"

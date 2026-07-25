@@ -180,7 +180,5 @@ struct TodayScoreActivityAttributes: ActivityAttributes {
             return min(1.0, Double(steps) / Double(stepsGoal))
         }
     }
-
-    var userName: String?
 }
 #endif

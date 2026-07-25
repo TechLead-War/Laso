@@ -231,7 +231,6 @@ final class MLOrchestrator {
                 baselines: baselines,
                 currentAdaptiveAnomalies: adaptiveAnomalies,
                 currentMLCorrelations: mlCorrelations,
-                currentDiscoveredPatterns: discoveredPatterns,
                 currentTomorrowRiskPrediction: tomorrowRiskPrediction,
                 smoothedStates: smoothedStates,
                 scoreHistory: scoreHistory,
@@ -246,13 +245,11 @@ final class MLOrchestrator {
             baselines: baselines,
             trends: trends,
             ruleBasedAnomalies: ruleBasedAnomalies,
-            scoreHistory: scoreHistory,
             focusCategories: focusCategories,
             components: components,
             calibrationManager: calibrationManager,
             evaluationSummaries: evaluationSummaries,
             dataSufficiency: dataSufficiency,
-            smoothedStates: smoothedStates,
             timingRecommendations: timingRecommendations
         )
         applyAggregatedResults(aggregated)
@@ -263,13 +260,11 @@ final class MLOrchestrator {
     /// Lightweight daily update without full retrain
     func trainIncremental(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
         todayScore: Int,
         todayAnomalyCount: Int
     ) {
         pipelineRunner.trainIncremental(
             timeSeries: timeSeries,
-            baselines: baselines,
             todayScore: todayScore,
             todayAnomalyCount: todayAnomalyCount,
             components: makeComponents(),

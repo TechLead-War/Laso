@@ -60,7 +60,7 @@ final class ChangePointDetector {
     // MARK: - Detection Entry Point
 
     /// Detect changepoints across all metrics with sufficient data.
-    func detect(timeSeries: [HealthMetric: MetricTimeSeries], baselines: [HealthMetric: UserBaseline]) {
+    func detect(timeSeries: [HealthMetric: MetricTimeSeries]) {
         // Skip if input data hasn't changed since last run
         let inputHash = computeInputHash(timeSeries: timeSeries)
         if inputHash == lastInputHash && isReady { return }

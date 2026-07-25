@@ -67,7 +67,6 @@ final class PersonalOptimizer {
 
     func analyze(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
         scoreHistory: [(date: Date, score: Int)],
         vectors: [DailyFeatureVector]
     ) {

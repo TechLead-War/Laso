@@ -21,13 +21,11 @@ final class MLResultAggregator {
         baselines: [HealthMetric: UserBaseline],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         ruleBasedAnomalies: [AnomalyDetector.AnomalyResult],
-        scoreHistory: [(date: Date, score: Int)],
         focusCategories: Set<HealthCategory>,
         components: MLPipelineRunner.Components,
         calibrationManager: MLCalibrationManager,
         evaluationSummaries: [String: ComponentEvaluation],
         dataSufficiency: UncertaintyEstimator.DataSufficiency?,
-        smoothedStates: [SmoothedHealthState],
         timingRecommendations: [CircadianAnalyzer.TimingRecommendation]
     ) -> AggregatedResults {
         var results = AggregatedResults()
@@ -121,7 +119,6 @@ final class MLResultAggregator {
         baselines: [HealthMetric: UserBaseline],
         currentAdaptiveAnomalies: [AdaptiveAnomalyDetector.AdaptiveAnomaly],
         currentMLCorrelations: [MLCorrelation],
-        currentDiscoveredPatterns: [DiscoveredPattern],
         currentTomorrowRiskPrediction: MLPrediction?,
         smoothedStates: [SmoothedHealthState],
         scoreHistory: [(date: Date, score: Int)],
@@ -135,7 +132,6 @@ final class MLResultAggregator {
             timeSeries: timeSeries,
             baselines: baselines,
             correlations: currentMLCorrelations,
-            patterns: currentDiscoveredPatterns,
             currentState: components.stateClassifier.isReady ? components.stateClassifier.currentState : nil,
             stateHistory: smoothedStates,
             prediction: currentTomorrowRiskPrediction,

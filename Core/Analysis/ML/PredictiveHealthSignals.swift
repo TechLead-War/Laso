@@ -167,39 +167,22 @@ struct PredictiveHealthSignals {
     ///   - timeSeries: Time series data keyed by health metric
     ///   - baselines: Personal baselines keyed by health metric
     ///   - trends: Trend analysis results keyed by health metric
-    ///   - healthState: Current ML-classified health state (optional)
-    ///   - prediction: Current ML prediction for bad day (optional)
     /// - Returns: A complete report with all six signal assessments
     static func analyze(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        healthState: HealthState?,
-        prediction: MLPrediction?
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> HealthSignalReport {
         let dailyMaps = buildDailyMaps(timeSeries: timeSeries)
 
         return HealthSignalReport(
-            fatigueScore: analyzeFatigue(
-                timeSeries: timeSeries, baselines: baselines,
-                trends: trends, dailyMaps: dailyMaps
-            ),
-            burnoutRisk: analyzeBurnout(
-                timeSeries: timeSeries, baselines: baselines,
-                trends: trends, dailyMaps: dailyMaps
-            ),
-            overtrainingRisk: analyzeOvertraining(
-                timeSeries: timeSeries, baselines: baselines,
-                trends: trends, dailyMaps: dailyMaps
-            ),
+            fatigueScore: analyzeFatigue(baselines: baselines, dailyMaps: dailyMaps),
+            burnoutRisk: analyzeBurnout(baselines: baselines, dailyMaps: dailyMaps),
+            overtrainingRisk: analyzeOvertraining(baselines: baselines, dailyMaps: dailyMaps),
             insomniaRisk: analyzeInsomnia(
-                timeSeries: timeSeries, baselines: baselines,
-                trends: trends, dailyMaps: dailyMaps
+                baselines: baselines, trends: trends, dailyMaps: dailyMaps
             ),
-            immuneRisk: analyzeImmune(
-                timeSeries: timeSeries, baselines: baselines,
-                dailyMaps: dailyMaps
-            ),
+            immuneRisk: analyzeImmune(baselines: baselines, dailyMaps: dailyMaps),
             inactivityAlert: analyzeInactivity(
                 timeSeries: timeSeries, baselines: baselines,
                 trends: trends, dailyMaps: dailyMaps
@@ -346,9 +329,7 @@ struct PredictiveHealthSignals {
     /// Uses exponential decay: recent days weighted via exp(-lambda * dayOffset)
     /// with lambda = 0.15.
     private static func analyzeFatigue(
-        timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         dailyMaps: [HealthMetric: [Date: Double]]
     ) -> FatigueSignal {
         let window = 14
@@ -567,9 +548,7 @@ struct PredictiveHealthSignals {
     /// Looks for sustained elevated resting HR, declining HRV trend,
     /// reduced deep sleep, and decreased activity variability.
     private static func analyzeBurnout(
-        timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         dailyMaps: [HealthMetric: [Date: Double]]
     ) -> BurnoutSignal {
         let window = 21 // 3 weeks for burnout assessment
@@ -783,9 +762,7 @@ struct PredictiveHealthSignals {
     /// Based on sports science literature: ACWR spikes, HRV suppression post-workout,
     /// elevated RHR not recovering within 48h, and decreased exercise performance.
     private static func analyzeOvertraining(
-        timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         dailyMaps: [HealthMetric: [Date: Double]]
     ) -> OvertrainingSignal {
         var factors: [ContributingFactor] = []
@@ -1005,7 +982,6 @@ struct PredictiveHealthSignals {
     /// Detects patterns that predict sleep disruption: increasing sleep fragmentation,
     /// circadian misalignment, elevated evening heart rate.
     private static func analyzeInsomnia(
-        timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         dailyMaps: [HealthMetric: [Date: Double]]
@@ -1228,7 +1204,6 @@ struct PredictiveHealthSignals {
     /// More sophisticated than IllnessEarlyWarning (which is rule-based) by using
     /// a mini logistic regression on the combined z-scores.
     private static func analyzeImmune(
-        timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
         dailyMaps: [HealthMetric: [Date: Double]]
     ) -> ImmuneSignal {

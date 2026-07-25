@@ -1428,80 +1428,14 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_health_data_query_q_am_i_at_risk",
-    "defaultValue": "Am I at risk?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_anything_unusual",
-    "defaultValue": "Anything unusual?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_compare",
-    "defaultValue": "Compare my %@",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_does_affect",
-    "defaultValue": "Does %@ affect %@?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_how_great_day",
-    "defaultValue": "How do I have a great day?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_how_improve",
-    "defaultValue": "How do I improve?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_how_is_body_doing",
-    "defaultValue": "How is my body doing?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_how_is_metric",
-    "defaultValue": "How is my %@?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_health_data_query_q_how_trending",
     "defaultValue": "How is my %@ trending?",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
-    "key": "copy_analysis_health_data_query_q_what_state_is_body",
-    "defaultValue": "What state is my body in?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_health_data_query_q_what_was_label",
     "defaultValue": "What was my %@ %@?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_what_will_be",
-    "defaultValue": "What will my %@ be?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_q_what_will_be_when",
-    "defaultValue": "What will my %@ be %@?",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2144,30 +2078,6 @@
   {
     "key": "copy_analysis_pr_worst_suffix",
     "defaultValue": "Everyone has off days. what matters is the overall trajectory.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_q_any_patterns",
-    "defaultValue": "Any patterns?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_q_any_patterns_in_data",
-    "defaultValue": "Any patterns in my data?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_q_body_clock",
-    "defaultValue": "What's my body clock like?",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_q_when_work_out",
-    "defaultValue": "When should I work out?",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },

@@ -196,7 +196,6 @@ final class CompoundInsightEngine {
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
         correlations: [MLCorrelation],
-        patterns: [DiscoveredPattern],
         currentState: HealthState?,
         stateHistory: [SmoothedHealthState],
         prediction: MLPrediction?,
@@ -213,23 +212,21 @@ final class CompoundInsightEngine {
         // 1. Trajectory synthesis
         candidates.append(contentsOf: synthesizeTrajectory(
             trends: trends, currentState: currentState, stateHistory: stateHistory,
-            scoreHistory: scoreHistory, timeSeries: timeSeries
+            scoreHistory: scoreHistory
         ))
 
         // 2. Hidden pattern synthesis
         candidates.append(contentsOf: synthesizeHiddenPatterns(
-            patterns: patterns, correlations: correlations,
+            correlations: correlations,
             weekdayProfiles: weekdayProfiles, timeSeries: timeSeries, baselines: baselines
         ))
 
         // 3. Cause-effect chains
-        candidates.append(contentsOf: synthesizeCauseEffectChains(
-            causalLinks: causalLinks, correlations: correlations, baselines: baselines
-        ))
+        candidates.append(contentsOf: synthesizeCauseEffectChains(causalLinks: causalLinks))
 
         // 4. Risk trajectory
         candidates.append(contentsOf: synthesizeRiskTrajectory(
-            prediction: prediction, trends: trends, currentState: currentState,
+            prediction: prediction, trends: trends,
             anomalies: anomalies, scoreHistory: scoreHistory
         ))
 
@@ -241,8 +238,7 @@ final class CompoundInsightEngine {
 
         // 6. Recovery synthesis
         candidates.append(contentsOf: synthesizeRecovery(
-            trends: trends, currentState: currentState, stateHistory: stateHistory,
-            baselines: baselines
+            trends: trends, stateHistory: stateHistory, baselines: baselines
         ))
 
         // 7. Score surprise scoring and deduplication
@@ -262,8 +258,7 @@ final class CompoundInsightEngine {
         trends: [MetricTrend],
         currentState: HealthState?,
         stateHistory: [SmoothedHealthState],
-        scoreHistory: [(date: Date, score: Int)],
-        timeSeries: [HealthMetric: MetricTimeSeries]
+        scoreHistory: [(date: Date, score: Int)]
     ) -> [CompoundInsight] {
         var results: [CompoundInsight] = []
 
@@ -410,7 +405,6 @@ final class CompoundInsightEngine {
     // MARK: - Hidden Pattern Synthesis
 
     private func synthesizeHiddenPatterns(
-        patterns: [DiscoveredPattern],
         correlations: [MLCorrelation],
         weekdayProfiles: [WeekdayProfile],
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -432,7 +426,7 @@ final class CompoundInsightEngine {
             // Check if there's a downstream effect: does the trough day on one metric
             // correlate with a lagged change on another?
             let weekendCount = countWeekendPatternOccurrences(
-                metric: top.metric, weekdayProfiles: weekdayProfiles, timeSeries: timeSeries
+                metric: top.metric, timeSeries: timeSeries
             )
 
             var narrative = "Your \(top.metric.displayName) swings \(formatPercent(top.peakTroughDeltaPercent)) between \(topPeakName) (peak) and \(topTroughName) (trough). "
@@ -543,9 +537,7 @@ final class CompoundInsightEngine {
     // MARK: - Cause-Effect Chain Synthesis
 
     private func synthesizeCauseEffectChains(
-        causalLinks: [CausalLink],
-        correlations: [MLCorrelation],
-        baselines: [HealthMetric: UserBaseline]
+        causalLinks: [CausalLink]
     ) -> [CompoundInsight] {
         var results: [CompoundInsight] = []
         guard causalLinks.count >= 2 else { return results }
@@ -659,7 +651,6 @@ final class CompoundInsightEngine {
     private func synthesizeRiskTrajectory(
         prediction: MLPrediction?,
         trends: [MetricTrend],
-        currentState: HealthState?,
         anomalies: [(date: Date, metric: HealthMetric, severity: String)],
         scoreHistory: [(date: Date, score: Int)]
     ) -> [CompoundInsight] {
@@ -869,7 +860,6 @@ final class CompoundInsightEngine {
 
     private func synthesizeRecovery(
         trends: [MetricTrend],
-        currentState: HealthState?,
         stateHistory: [SmoothedHealthState],
         baselines: [HealthMetric: UserBaseline]
     ) -> [CompoundInsight] {
@@ -1209,7 +1199,6 @@ final class CompoundInsightEngine {
     /// Count how many of the last 12 weekends showed a similar day-of-week pattern.
     private func countWeekendPatternOccurrences(
         metric: HealthMetric,
-        weekdayProfiles: [WeekdayProfile],
         timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> Int {
         guard let series = timeSeries[metric] else { return 0 }

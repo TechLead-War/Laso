@@ -144,19 +144,19 @@ final class HealthStateClassifier {
 
         // Label clusters and build states
         states = labelClusters(
-            means: bestMeans, data: cleanData,
+            means: bestMeans,
             assignments: bestAssignments, orderedKeys: orderedKeys
         )
 
         // Build state history and transition matrix (GMM-based)
-        buildStateHistory(vectors: vectors, data: cleanData)
+        buildStateHistory(vectors: vectors)
         buildTransitionMatrix()
 
         // Compute GMM posteriors for each observation (emission probabilities for HMM)
         let emissionPosteriors = computeEmissionPosteriors(data: cleanData)
 
         // Build HMM layer on top of GMM
-        buildHMMLayer(emissionPosteriors: emissionPosteriors)
+        buildHMMLayer()
 
         // Run Viterbi decoding for MAP state sequence
         viterbiPath = viterbiDecode(emissionPosteriors: emissionPosteriors)
@@ -207,7 +207,7 @@ final class HealthStateClassifier {
         }
 
         // Initialize with K-means++ seeding for stable starting points
-        var currentMeans = kMeansPlusPlusInit(data: data, k: k, dim: dim)
+        var currentMeans = kMeansPlusPlusInit(data: data, k: k)
         var currentVariances = [[Double]](
             repeating: [Double](repeating: 1.0, count: dim), count: k
         )
@@ -312,7 +312,7 @@ final class HealthStateClassifier {
 
     // MARK: - K-Means++ Initialization
 
-    private func kMeansPlusPlusInit(data: [[Double]], k: Int, dim: Int) -> [[Double]] {
+    private func kMeansPlusPlusInit(data: [[Double]], k: Int) -> [[Double]] {
         let n = data.count
         var centers: [[Double]] = []
 
@@ -419,7 +419,6 @@ final class HealthStateClassifier {
 
     private func labelClusters(
         means: [[Double]],
-        data: [[Double]],
         assignments: [Int],
         orderedKeys: [FeatureKey]
     ) -> [HealthState] {
@@ -461,7 +460,7 @@ final class HealthStateClassifier {
             }
 
             // Auto-generate label from dominant characteristics
-            let label = generateLabel(characteristics: characteristics, clusterIndex: clusterIdx)
+            let label = generateLabel(characteristics: characteristics)
 
             // Count days in this cluster
             let daysInState = assignments.filter { $0 == clusterIdx }.count
@@ -479,8 +478,7 @@ final class HealthStateClassifier {
     }
 
     private func generateLabel(
-        characteristics: [HealthState.StateCharacteristic],
-        clusterIndex: Int
+        characteristics: [HealthState.StateCharacteristic]
     ) -> String {
         let highHRV = characteristics.first { $0.metric == .heartRateVariability }?.level == .high
         let lowHRV = characteristics.first { $0.metric == .heartRateVariability }?.level == .low
@@ -534,7 +532,7 @@ final class HealthStateClassifier {
 
     // MARK: - State History & Transitions
 
-    private func buildStateHistory(vectors: [DailyFeatureVector], data: [[Double]]) {
+    private func buildStateHistory(vectors: [DailyFeatureVector]) {
         stateHistory = []
         for (i, vector) in vectors.enumerated() {
             guard i < assignments.count, assignments[i] < states.count else { continue }
@@ -605,8 +603,8 @@ final class HealthStateClassifier {
     // MARK: - HMM Layer
 
     /// Build HMM layer: initialize transition matrix from observed counts with Laplace smoothing,
-    /// and initial state distribution from first observation posteriors.
-    private func buildHMMLayer(emissionPosteriors: [[Double]]) {
+    /// and initial state distribution from the GMM mixing weights.
+    private func buildHMMLayer() {
         let k = numComponents
         guard k > 0, assignments.count >= 2 else { return }
 
@@ -634,7 +632,11 @@ final class HealthStateClassifier {
             }
         }
 
-        // Initial state distribution from mixing weights
+        // Initial state distribution is the mixing weights, NOT the first observation's posterior.
+        // The Baum-Welch estimate pi = gamma_0 only holds when the emission slot carries the true
+        // likelihood P(x|z). Here the emission slot carries the posterior P(z|x), which already
+        // contains both the mixing weight and the first observation, so reusing it as pi would
+        // square the day-zero evidence and pin Viterbi's opening state.
         hmmInitialDist = mixingWeights
     }
 
