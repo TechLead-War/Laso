@@ -152,13 +152,6 @@ final class HealthDataStore {
         let strain: Double
     }
 
-    struct SaveSamplesResult {
-        static let zero = SaveSamplesResult(insertedCount: 0, updatedCount: 0)
-
-        let insertedCount: Int
-        let updatedCount: Int
-    }
-
     let modelContainer: ModelContainer?
     private(set) var modelContext: ModelContext?
     private var allSeriesCache: [HealthMetric: MetricTimeSeries]?
@@ -265,13 +258,12 @@ final class HealthDataStore {
     // MARK: - Save Samples
 
     /// Upsert daily samples for a metric. Efficiently batches by loading only the relevant date range.
-    @discardableResult
-    func saveSamples(_ samples: [MetricSample], for metric: HealthMetric) -> SaveSamplesResult {
-        guard modelContext != nil, !samples.isEmpty else { return .zero }
+    func saveSamples(_ samples: [MetricSample], for metric: HealthMetric) {
+        guard modelContext != nil, !samples.isEmpty else { return }
 
         let rawValue = metric.rawValue
         let dates = samples.map(\.date)
-        guard let minDate = dates.min(), let maxDate = dates.max() else { return .zero }
+        guard let minDate = dates.min(), let maxDate = dates.max() else { return }
 
         // Load only existing samples in the new data's date range
         let predicate = #Predicate<StoredDailySample> {
@@ -288,13 +280,11 @@ final class HealthDataStore {
 
         // Upsert: update existing or insert new
         var insertedCount = 0
-        var updatedCount = 0
         for sample in samples {
             let dateKey = MetricSample.utcDayBucket(for: sample.date)
             if let existingSample = existingByDate[dateKey] {
                 if existingSample.value != sample.value {
                     existingSample.value = sample.value
-                    updatedCount += 1
                 }
             } else {
                 modelContext?.insert(StoredDailySample(
@@ -306,10 +296,9 @@ final class HealthDataStore {
             }
         }
 
-        guard saveContext("swiftdata_save_samples") else { return .zero }
+        guard saveContext("swiftdata_save_samples") else { return }
         updateSyncMetadata(for: metric, sampleDelta: insertedCount)
         updateSeriesCaches(metric: metric, incomingSamples: samples)
-        return SaveSamplesResult(insertedCount: insertedCount, updatedCount: updatedCount)
     }
 
     // MARK: - Load Samples

@@ -367,7 +367,6 @@ struct ContentView: View {
                     HealthRiskDetailView(
                         risk: risk,
                         onTapMetric: { metric in path.wrappedValue.append(metric) },
-                        lastUpdated: dashboardViewModel.lastRefresh,
                         onRefresh: { await dashboardViewModel.refresh() }
                     )
                 } else {
@@ -426,7 +425,6 @@ struct ContentView: View {
         } else if FeatureGate.canAccess(.liveTab) {
             LiveView(
                 viewModel: liveViewModel,
-                mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator,
                 deviceSourceManager: deviceSourceManager
             )
         } else {
@@ -469,7 +467,6 @@ struct ContentView: View {
                 insightsByCategory: dashboardViewModel.insights.insightsByCategory,
                 onTapMetric: { metric in navigationPath.append(metric) },
                 headlineSummary: dashboardViewModel.analysis.topCausalChain?.narrative ?? dashboardViewModel.insights.headlineInsight?.recommendation,
-                lastUpdated: dashboardViewModel.lastRefresh,
                 store: healthDataStore
             )
         case .weeklyReview:
@@ -487,7 +484,7 @@ struct ContentView: View {
                 viewModel: HealthStateTimelineViewModel(mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
             )
         case .vitalityDetail:
-            VitalityDetailView(scorer: dashboardViewModel.vitalityScorer, lastUpdated: dashboardViewModel.lastRefresh)
+            VitalityDetailView(scorer: dashboardViewModel.vitalityScorer)
         case .strainDetail:
             strainDetailDestination
         case .stressMonitor:
@@ -524,9 +521,6 @@ struct ContentView: View {
         let scorer = dashboardViewModel.strainScorer
         let coach = dashboardViewModel.strainCoach
         let target = coach.currentTarget
-        let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score
-        let workoutRecoveryBand = WorkoutRecoveryBand(score: readinessScore)
-        let cyclePhase = dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier
         let balance: StrainBalance = {
             switch coach.strainBalance {
             case .undertraining: return .under
@@ -544,10 +538,7 @@ struct ContentView: View {
             weekHistory: scorer.weeklyStrainHistory.map {
                 DailyStrainPoint(date: $0.date, strain: $0.strain, level: StrainLevel(strain: $0.strain))
             },
-            strainBalance: balance,
-            workoutRecoveryBand: workoutRecoveryBand,
-            cyclePhase: cyclePhase,
-            lastUpdated: dashboardViewModel.lastRefresh
+            strainBalance: balance
         )
     }
 
@@ -570,8 +561,7 @@ struct ContentView: View {
                 hrElevation: stress.hrElevation,
                 weeklyScores: weekScores,
                 weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
-                previousWeekAverage: prevAvg,
-                lastUpdated: dashboardViewModel.lastRefresh
+                previousWeekAverage: prevAvg
             )
         }
     }
@@ -583,8 +573,7 @@ struct ContentView: View {
                 brainScore: brain,
                 weeklyHistory: dashboardViewModel.brainHealthScorer.weeklyHistory,
                 weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
-                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend,
-                lastUpdated: dashboardViewModel.lastRefresh
+                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend
             )
         }
     }
@@ -621,7 +610,6 @@ struct ContentView: View {
                 debtHours: debt?.totalDebtHours ?? 0,
                 dailyHistory: dailyHistory,
                 consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore),
-                lastUpdated: dashboardViewModel.lastRefresh,
                 onRefresh: { await dashboardViewModel.refresh() }
             )
             .task {
@@ -758,7 +746,6 @@ struct ContentView: View {
                     CycleHistoryEntry(startDate: $0.startDate, length: $0.length)
                 },
                 nextPeriodDate: cycle.nextPeriodEstimate,
-                lastUpdated: dashboardViewModel.lastRefresh,
                 onRefresh: { await dashboardViewModel.refresh() }
             )
         }
@@ -778,7 +765,7 @@ struct ContentView: View {
                 }
             }()
             return AchievementItem(
-                id: a.id, title: a.title, description: a.description,
+                id: a.id, title: a.title,
                 icon: a.icon, requirement: a.description, category: cat,
                 unlockDate: a.unlockedDate
             )

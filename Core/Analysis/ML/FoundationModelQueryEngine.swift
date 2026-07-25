@@ -227,16 +227,14 @@ final class FoundationModelQueryEngine: HealthQueryEngine, @unchecked Sendable {
                 points.append(.init(
                     label: "Latest",
                     value: latest.value,
-                    unit: metric.unit,
-                    date: latest.date
+                    unit: metric.unit
                 ))
             }
             if let baseline = context.baselines[metric] {
                 points.append(.init(
                     label: "Baseline",
                     value: baseline.mean,
-                    unit: metric.unit,
-                    date: nil
+                    unit: metric.unit
                 ))
             }
         }
@@ -246,8 +244,7 @@ final class FoundationModelQueryEngine: HealthQueryEngine, @unchecked Sendable {
             points.append(.init(
                 label: "Health Score",
                 value: Double(context.overallScore),
-                unit: "pts",
-                date: nil
+                unit: "pts"
             ))
         }
 

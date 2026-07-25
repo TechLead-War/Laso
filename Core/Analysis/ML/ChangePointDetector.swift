@@ -24,8 +24,6 @@ final class ChangePointDetector {
         let date: Date
         let beforeMean: Double
         let afterMean: Double
-        let beforeStd: Double
-        let afterStd: Double
         let magnitude: Double           // Cohen's d
         let direction: ChangeDirection
         let confidence: Double          // 0-1
@@ -39,20 +37,15 @@ final class ChangePointDetector {
             let metric: HealthMetric
             let direction: ChangeDirection
             let magnitude: Double
-            let lagDays: Int
         }
     }
 
     // MARK: - Internal Types
 
     private struct Candidate {
-        let metric: HealthMetric
-        let index: Int
         let date: Date
         let beforeMean: Double, afterMean: Double
-        let beforeStd: Double, afterStd: Double
         let cohenD: Double
-        let welchT: Double
         let pValue: Double
     }
 
@@ -83,8 +76,8 @@ final class ChangePointDetector {
             guard samples.count >= Self.minimumDays else { continue }
 
             var candidates: [Candidate] = []
-            detectCUSUM(metric: metric, values: samples.map(\.value), dates: samples.map(\.date),
-                        globalOffset: 0, depth: 0, candidates: &candidates)
+            detectCUSUM(values: samples.map(\.value), dates: samples.map(\.date),
+                        depth: 0, candidates: &candidates)
 
             let validated = candidates.filter { $0.pValue < Self.primaryAlpha && $0.cohenD >= Self.minEffectSize }
             let merged = mergeNearbyCandidates(validated, calendar: calendar)
@@ -110,7 +103,6 @@ final class ChangePointDetector {
                 confirmed.append(ChangePoint(
                     metric: metric, date: candidate.date,
                     beforeMean: candidate.beforeMean, afterMean: candidate.afterMean,
-                    beforeStd: candidate.beforeStd, afterStd: candidate.afterStd,
                     magnitude: candidate.cohenD, direction: direction,
                     confidence: confidence, daysSinceChange: daysSince,
                     description: description, coOccurringChanges: coOccurrences
@@ -130,8 +122,8 @@ final class ChangePointDetector {
     /// Recursive CUSUM: splits the series at the point where cumulative sum exceeds threshold,
     /// then recurses on each sub-segment to find multiple changepoints.
     private func detectCUSUM(
-        metric: HealthMetric, values: [Double], dates: [Date],
-        globalOffset: Int, depth: Int, candidates: inout [Candidate]
+        values: [Double], dates: [Date],
+        depth: Int, candidates: inout [Candidate]
     ) {
         let n = values.count
         guard n >= Self.minimumDays, depth < Self.maxRecursionDepth else { return }
@@ -168,21 +160,21 @@ final class ChangePointDetector {
         let d = pooled > 0 ? abs(aMean - bMean) / pooled : 0
 
         candidates.append(Candidate(
-            metric: metric, index: globalOffset + bestIdx, date: dates[bestIdx],
-            beforeMean: bMean, afterMean: aMean, beforeStd: bStd, afterStd: aStd,
-            cohenD: d, welchT: welch.t, pValue: welch.p
+            date: dates[bestIdx],
+            beforeMean: bMean, afterMean: aMean,
+            cohenD: d, pValue: welch.p
         ))
 
         // Recurse on each sub-segment
         if bestIdx >= Self.minimumDays {
-            detectCUSUM(metric: metric, values: Array(values[0..<bestIdx]),
+            detectCUSUM(values: Array(values[0..<bestIdx]),
                         dates: Array(dates[0..<bestIdx]),
-                        globalOffset: globalOffset, depth: depth + 1, candidates: &candidates)
+                        depth: depth + 1, candidates: &candidates)
         }
         if (n - bestIdx) >= Self.minimumDays {
-            detectCUSUM(metric: metric, values: Array(values[bestIdx..<n]),
+            detectCUSUM(values: Array(values[bestIdx..<n]),
                         dates: Array(dates[bestIdx..<n]),
-                        globalOffset: globalOffset + bestIdx, depth: depth + 1, candidates: &candidates)
+                        depth: depth + 1, candidates: &candidates)
         }
     }
 
@@ -292,7 +284,7 @@ final class ChangePointDetector {
                 result.append(ChangePoint.CoOccurrence(
                     metric: metric,
                     direction: c.afterMean > c.beforeMean ? .increase : .decrease,
-                    magnitude: c.cohenD, lagDays: lag
+                    magnitude: c.cohenD
                 ))
             }
         }

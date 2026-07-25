@@ -107,8 +107,6 @@ final class ActivationSequenceManager {
 
     struct MilestoneEvent {
         let milestone: Milestone
-        let unlockedAt: Date
-        let dataPointCount: Int
     }
 
     // MARK: - Storage
@@ -155,50 +153,50 @@ final class ActivationSequenceManager {
         // Day 1: First baseline
         if hasBaselines && !state.milestonesCompleted.contains(.firstBaseline) {
             state.milestonesCompleted.insert(.firstBaseline)
-            newMilestones.append(MilestoneEvent(milestone: .firstBaseline, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstBaseline))
         }
 
         // Day 2: First comparison (need 2+ days)
         if state.currentDay >= 2 && metricsAvailable > 0 && !state.milestonesCompleted.contains(.firstComparison) {
             state.milestonesCompleted.insert(.firstComparison)
-            newMilestones.append(MilestoneEvent(milestone: .firstComparison, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstComparison))
         }
 
         // Day 3: First trend
         if state.currentDay >= 3 && hasTrends && !state.milestonesCompleted.contains(.firstTrend) {
             state.milestonesCompleted.insert(.firstTrend)
-            newMilestones.append(MilestoneEvent(milestone: .firstTrend, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstTrend))
         }
 
         // Day 4: First pattern
         if state.currentDay >= 4 && metricsAvailable >= 3 && !state.milestonesCompleted.contains(.firstPattern) {
             state.milestonesCompleted.insert(.firstPattern)
-            newMilestones.append(MilestoneEvent(milestone: .firstPattern, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstPattern))
         }
 
         // Day 5: First correlation
         if state.currentDay >= 5 && hasCorrelations && !state.milestonesCompleted.contains(.firstCorrelation) {
             state.milestonesCompleted.insert(.firstCorrelation)
-            newMilestones.append(MilestoneEvent(milestone: .firstCorrelation, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstCorrelation))
         }
 
         // Day 6: First anomaly
         if state.currentDay >= 6 && hasAnomalyDetection && !state.milestonesCompleted.contains(.firstAnomaly) {
             state.milestonesCompleted.insert(.firstAnomaly)
-            newMilestones.append(MilestoneEvent(milestone: .firstAnomaly, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstAnomaly))
         }
 
         // Day 7: First prediction
         if state.currentDay >= 7 && hasPredictions && !state.milestonesCompleted.contains(.firstPrediction) {
             state.milestonesCompleted.insert(.firstPrediction)
-            newMilestones.append(MilestoneEvent(milestone: .firstPrediction, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .firstPrediction))
         }
 
         // Day 7: Full unlock
         if state.currentDay >= 7 && !state.milestonesCompleted.contains(.fullUnlock) {
             state.milestonesCompleted.insert(.fullUnlock)
             state.milestonesCompleted.insert(.firstWeekComplete)
-            newMilestones.append(MilestoneEvent(milestone: .fullUnlock, unlockedAt: now, dataPointCount: metricsAvailable))
+            newMilestones.append(MilestoneEvent(milestone: .fullUnlock))
         }
 
         if !newMilestones.isEmpty {

@@ -114,7 +114,6 @@ final class DashboardViewModel {
 
     @Observable
     final class ScoreState {
-        fileprivate(set) var cachedScoreChangeFromLastWeek: Int?
         fileprivate(set) var cachedScoreChangeFromYesterday: Int?
         /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
         /// describes the same series as the displayed weekly score.
@@ -125,7 +124,6 @@ final class DashboardViewModel {
         fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
         fileprivate(set) var categoryScores: [HealthScore] = []
 
-        var scoreChangeFromLastWeek: Int? { cachedScoreChangeFromLastWeek }
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
         var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
 
@@ -1040,7 +1038,6 @@ final class DashboardViewModel {
         // Update score state
         scores.overallScore = analysisEngine.overallScore
         scores.categoryScores = analysisEngine.categoryScores
-        scores.cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
         scores.cachedYesterdayScore = computeYesterdayScore()
         scores.rollingAverageScore = computeRollingAverageScore()
@@ -1492,14 +1489,6 @@ final class DashboardViewModel {
         if inserted > 0 {
             invalidateScoreHistoryCache()
         }
-    }
-
-    @MainActor
-    private func computeScoreChangeFromLastWeek() -> Int? {
-        derivedStateBuilder.scoreChangeFromLastWeek(
-            currentScore: overallScore.score,
-            history: scoreHistoryCached(days: 14)
-        )
     }
 
     @MainActor

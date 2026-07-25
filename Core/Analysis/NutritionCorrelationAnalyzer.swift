@@ -233,9 +233,6 @@ struct NutritionCorrelationAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension NutritionCorrelationAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "nutritionCorrelation" }
-    static var insightCategory: InsightCategory { .nutritionCorrelation }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         let correlations = analyze(timeSeries: context.timeSeries)
         return generateInsights(from: correlations)

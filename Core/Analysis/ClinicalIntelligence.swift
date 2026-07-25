@@ -392,9 +392,6 @@ struct ClinicalIntelligence {
 // MARK: - InsightAnalyzer Conformance
 
 extension ClinicalIntelligence: InsightAnalyzer {
-    static var analyzerID: String { "clinicalIntelligence" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             timeSeries: context.timeSeries,

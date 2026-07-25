@@ -400,9 +400,6 @@ struct CorrelationAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension CorrelationAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "correlation" }
-    static var insightCategory: InsightCategory { .correlation }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(from: context.correlations)
     }

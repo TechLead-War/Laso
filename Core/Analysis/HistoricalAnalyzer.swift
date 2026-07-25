@@ -350,9 +350,6 @@ struct HistoricalAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension HistoricalAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "historical" }
-    static var insightCategory: InsightCategory { .trend }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(historicalContext: context.historicalContext, baselines: context.baselines)
     }

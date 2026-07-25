@@ -14,10 +14,6 @@ final class PredictiveScorer {
     private var learnedLowScoreThreshold: Double = 60.0
     private static let anomalyCount = 2
 
-    // Validation metrics from last training
-    private(set) var validationAUROC: Double?
-    private(set) var validationBrierScore: Double?
-
     // Platt scaling calibration parameters (fitted on validation set)
     private var plattA: Double?
     private var plattB: Double?
@@ -266,9 +262,8 @@ final class PredictiveScorer {
             }
         }
 
-        // Compute validation metrics and fit Platt scaling calibration
+        // Fit Platt scaling calibration on the validation split
         if !valX.isEmpty {
-            computeValidationMetrics(valX: valX, valY: valY)
             fitPlattCalibration(valX: valX, valY: valY)
         }
     }
@@ -300,40 +295,6 @@ final class PredictiveScorer {
             plattA = nil
             plattB = nil
         }
-    }
-
-    /// Compute AUROC and Brier score on validation set
-    private func computeValidationMetrics(valX: [[Double]], valY: [Double]) {
-        var predictions: [(prob: Double, label: Double)] = []
-        for i in 0..<valX.count {
-            var rawScore = baseScore
-            for tree in trees {
-                rawScore += learningRate * tree.predict(valX[i])
-            }
-            predictions.append((sigmoid(rawScore), valY[i]))
-        }
-
-        // Brier score: mean of (predicted - actual)^2
-        let brierSum = predictions.reduce(0.0) { $0 + ($1.prob - $1.label) * ($1.prob - $1.label) }
-        validationBrierScore = brierSum / Double(predictions.count)
-
-        // AUROC: count concordant/discordant pairs
-        let positives = predictions.filter { $0.label > 0.5 }
-        let negatives = predictions.filter { $0.label <= 0.5 }
-        guard !positives.isEmpty, !negatives.isEmpty else {
-            validationAUROC = nil
-            return
-        }
-        var concordant = 0
-        var ties = 0
-        for pos in positives {
-            for neg in negatives {
-                if pos.prob > neg.prob { concordant += 1 }
-                else if pos.prob == neg.prob { ties += 1 }
-            }
-        }
-        let totalPairs = positives.count * negatives.count
-        validationAUROC = (Double(concordant) + 0.5 * Double(ties)) / Double(totalPairs)
     }
 
     // MARK: - Tree Building (Histogram-based)
@@ -497,8 +458,7 @@ final class PredictiveScorer {
             target: "Challenging day tomorrow",
             probability: probability,
             confidence: confidence,
-            topFactors: topFactors,
-            generatedAt: Date()
+            topFactors: topFactors
         )
 
         currentPrediction = prediction
@@ -580,8 +540,7 @@ final class PredictiveScorer {
             return PredictionFactor(
                 metric: key.metric,
                 featureType: key.type,
-                contribution: signedContribution,
-                currentValue: features[item.index]
+                contribution: signedContribution
             )
         }
     }

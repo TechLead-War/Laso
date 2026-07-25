@@ -685,9 +685,6 @@ struct CausalChainEngine {
 // MARK: - InsightAnalyzer Conformance
 
 extension CausalChainEngine: InsightAnalyzer {
-    static var analyzerID: String { "causalChain" }
-    static var insightCategory: InsightCategory { .causalChain }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(from: context.causalChains)
     }

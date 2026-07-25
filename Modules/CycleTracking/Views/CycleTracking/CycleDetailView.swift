@@ -117,8 +117,6 @@ struct CycleDetailView: View {
     let phaseDuration: Int
     let cycleHistory: [CycleHistoryEntry]
     let nextPeriodDate: Date?
-    /// Freshness timestamp from the parent dashboard refresh.
-    var lastUpdated: Date? = nil
     /// Pull-to-refresh hook wired by the route destination.
     var onRefresh: (() async -> Void)? = nil
 

@@ -22,32 +22,14 @@ struct GrangerCausalityEngine {
 
     /// Complete result from a Granger causality test
     struct GrangerResult {
-        /// The putative causal metric
-        let cause: HealthMetric
-        /// The putative effect metric
-        let effect: HealthMetric
-        /// F-statistic from the Granger test
-        let fStatistic: Double
         /// p-value from the F-distribution
         let pValue: Double
-        /// Optimal lag order selected by BIC
-        let optimalLag: Int
         /// Whether the test is significant at the given significance level
         let isCausal: Bool
-        /// Sum of squared errors from the restricted (AR-only) model
-        let sseRestricted: Double
-        /// Sum of squared errors from the unrestricted (AR + exogenous) model
-        let sseUnrestricted: Double
-        /// Number of observations used in the regression
-        let nObservations: Int
-        /// Whether the input series were first-differenced for stationarity
-        let wasFirstDifferenced: Bool
         /// Cohen's f² effect size: (R²_unrestricted - R²_restricted) / (1 - R²_unrestricted)
         let effectSize: Double
-        /// The optimal lag in days (same as optimalLag, explicit for clarity)
+        /// Optimal lag in days selected by BIC
         let optimalLagDays: Int
-        /// Directionality description: "A → B", "B → A", or "bidirectional"
-        let directionality: String
     }
 
     // MARK: - Public API
@@ -60,16 +42,12 @@ struct GrangerCausalityEngine {
     /// - Parameters:
     ///   - cause: Time series of the putative cause variable (ordered chronologically)
     ///   - effect: Time series of the putative effect variable (ordered chronologically, same length)
-    ///   - causeMetric: HealthMetric identifier for the cause series
-    ///   - effectMetric: HealthMetric identifier for the effect series
     ///   - maxLag: Maximum lag order to consider (default 5)
     ///   - significanceLevel: Threshold for significance (default 0.05)
     /// - Returns: A GrangerResult, or nil if insufficient data or degenerate input
     static func test(
         cause: [Double],
         effect: [Double],
-        causeMetric: HealthMetric,
-        effectMetric: HealthMetric,
         maxLag: Int = 5,
         significanceLevel: Double = 0.05
     ) -> GrangerResult? {
@@ -83,12 +61,10 @@ struct GrangerCausalityEngine {
         // Stationarity check via simplified ADF: if AR(1) coefficient >= 1, first-difference
         var workCause = cause
         var workEffect = effect
-        var wasFirstDifferenced = false
 
         if !isStationary(workCause) || !isStationary(workEffect) {
             workCause = firstDifference(workCause)
             workEffect = firstDifference(workEffect)
-            wasFirstDifferenced = true
 
             // After differencing we lose one observation; re-check minimum
             guard workCause.count >= minObservations,
@@ -154,19 +130,10 @@ struct GrangerCausalityEngine {
         }
 
         return GrangerResult(
-            cause: causeMetric,
-            effect: effectMetric,
-            fStatistic: fStatistic,
             pValue: pValue,
-            optimalLag: optimalLag,
             isCausal: pValue < significanceLevel,
-            sseRestricted: restrictedSSE,
-            sseUnrestricted: unrestrictedSSE,
-            nObservations: n,
-            wasFirstDifferenced: wasFirstDifferenced,
             effectSize: cohensF2,
-            optimalLagDays: optimalLag,
-            directionality: "\(causeMetric.rawValue) → \(effectMetric.rawValue)"
+            optimalLagDays: optimalLag
         )
     }
 

@@ -9,9 +9,6 @@ import Foundation
 /// outputs as informational signals, not clinical measurements.
 struct CircadianHealthAnalyzer: InsightAnalyzer {
 
-    static var analyzerID: String { "circadian_health" }
-    static var insightCategory: InsightCategory { .circadian }
-
     // MARK: - Biomarker Results
 
     struct CircadianBiomarkers {

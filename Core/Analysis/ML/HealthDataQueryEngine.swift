@@ -103,7 +103,6 @@ final class HealthDataQueryEngine {
             let label: String
             let value: Double
             let unit: String
-            let date: Date?
         }
     }
 
@@ -566,9 +565,9 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
             answer: answer,
             dataPoints: [
-                .init(label: Copy.Analysis.HealthDataQuery.labelAverage, value: avg, unit: metric.unit, date: nil),
-                .init(label: Copy.Analysis.HealthDataQuery.labelChange, value: pctChange, unit: "%", date: nil),
-                .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: values.last ?? 0, unit: metric.unit, date: recent.last?.date),
+                .init(label: Copy.Analysis.HealthDataQuery.labelAverage, value: avg, unit: metric.unit),
+                .init(label: Copy.Analysis.HealthDataQuery.labelChange, value: pctChange, unit: "%"),
+                .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: values.last ?? 0, unit: metric.unit),
             ],
             confidence: min(1.0, Double(recent.count) / 14.0),
             relatedQuestions: [
@@ -609,8 +608,8 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qCompare(metric.displayName),
             answer: answer,
             dataPoints: [
-                .init(label: periodA.displayName.capitalized, value: avgA, unit: metric.unit, date: nil),
-                .init(label: periodB.displayName.capitalized, value: avgB, unit: metric.unit, date: nil),
+                .init(label: periodA.displayName.capitalized, value: avgA, unit: metric.unit),
+                .init(label: periodB.displayName.capitalized, value: avgB, unit: metric.unit),
             ],
             confidence: 0.85,
             relatedQuestions: [
@@ -647,8 +646,8 @@ final class HealthDataQueryEngine {
                 question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
                 answer: answer,
                 dataPoints: [
-                    .init(label: Copy.Analysis.HealthDataQuery.labelCorrelation, value: corr.pearsonR, unit: "r", date: nil),
-                    .init(label: Copy.Analysis.HealthDataQuery.labelStability, value: corr.stability, unit: "", date: nil),
+                    .init(label: Copy.Analysis.HealthDataQuery.labelCorrelation, value: corr.pearsonR, unit: "r"),
+                    .init(label: Copy.Analysis.HealthDataQuery.labelStability, value: corr.stability, unit: ""),
                 ],
                 confidence: corr.stability,
                 relatedQuestions: [
@@ -661,10 +660,10 @@ final class HealthDataQueryEngine {
         // Provide current values even when no correlation is found
         var dataPoints: [QueryResult.DataPoint] = []
         if let seriesA = ctx.timeSeries[metricA], let latestA = seriesA.samples.last {
-            dataPoints.append(.init(label: metricA.displayName, value: latestA.value, unit: metricA.unit, date: latestA.date))
+            dataPoints.append(.init(label: metricA.displayName, value: latestA.value, unit: metricA.unit))
         }
         if let seriesB = ctx.timeSeries[metricB], let latestB = seriesB.samples.last {
-            dataPoints.append(.init(label: metricB.displayName, value: latestB.value, unit: metricB.unit, date: latestB.date))
+            dataPoints.append(.init(label: metricB.displayName, value: latestB.value, unit: metricB.unit))
         }
         return QueryResult(
             question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
@@ -692,8 +691,8 @@ final class HealthDataQueryEngine {
                         question: Copy.Analysis.HealthDataQuery.qWhatWillBe(metric.displayName),
                         answer: Copy.Analysis.HealthDataQuery.forecastNoModel(metric: metric.displayName, avg: formatValue(avg, metric: metric), latest: formatValue(latest, metric: metric), when: when),
                         dataPoints: [
-                            .init(label: "7-day avg", value: avg, unit: metric.unit, date: nil),
-                            .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: latest, unit: metric.unit, date: recent.last?.date),
+                            .init(label: "7-day avg", value: avg, unit: metric.unit),
+                            .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: latest, unit: metric.unit),
                         ],
                         confidence: 0.4,
                         relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName)]
@@ -717,9 +716,9 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qWhatWillBeWhen(metric.displayName, when: when),
             answer: answer,
             dataPoints: [
-                .init(label: "Predicted", value: result.value, unit: metric.unit, date: nil),
-                .init(label: "Low end", value: result.ciLower, unit: metric.unit, date: nil),
-                .init(label: "High end", value: result.ciUpper, unit: metric.unit, date: nil),
+                .init(label: "Predicted", value: result.value, unit: metric.unit),
+                .init(label: "Low end", value: result.ciLower, unit: metric.unit),
+                .init(label: "High end", value: result.ciUpper, unit: metric.unit),
             ],
             confidence: max(0.3, 1.0 - result.ciWidth / max(1, result.value)),
             relatedQuestions: [
@@ -764,7 +763,7 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qAnythingUnusual,
             answer: answer,
             dataPoints: anomalies.prefix(3).map {
-                .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
             },
             confidence: 0.8,
             relatedQuestions: anomalies.prefix(2).map { "What's happening with my \($0.metric.displayName)?" }
@@ -793,7 +792,7 @@ final class HealthDataQueryEngine {
         return QueryResult(
             question: Copy.Analysis.HealthDataQuery.qWhatWasLabel(label, metric.displayName),
             answer: answer,
-            dataPoints: [.init(label: label.capitalized, value: target.value, unit: metric.unit, date: target.date)],
+            dataPoints: [.init(label: label.capitalized, value: target.value, unit: metric.unit)],
             confidence: 0.95,
             relatedQuestions: [
                 Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
@@ -837,8 +836,8 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qHowIsMetric(m.displayName),
             answer: answer,
             dataPoints: [
-                .init(label: "Current", value: latest, unit: m.unit, date: recent.last?.date),
-                .init(label: "7-day avg", value: avg, unit: m.unit, date: nil),
+                .init(label: "Current", value: latest, unit: m.unit),
+                .init(label: "7-day avg", value: avg, unit: m.unit),
             ],
             confidence: 0.85,
             relatedQuestions: [
@@ -885,7 +884,7 @@ final class HealthDataQueryEngine {
                 } else {
                     highlights.append(Copy.Analysis.HealthDataQuery.highlightDefault(label: label, value: formatValue(latest.value, metric: metric)))
                 }
-                dataPoints.append(.init(label: label, value: latest.value, unit: metric.unit, date: latest.date))
+                dataPoints.append(.init(label: label, value: latest.value, unit: metric.unit))
                 if dataPoints.count >= 4 { break }
             }
             let summary = highlights.isEmpty
@@ -918,7 +917,7 @@ final class HealthDataQueryEngine {
         let answer = Copy.Analysis.HealthDataQuery.bodyStateAnswer(conclusion: healthStateConclusion(state: state), label: state.label, traits: traitList, durationNote: durationNote)
 
         let dataPoints: [QueryResult.DataPoint] = topTraits.map {
-            .init(label: $0.metric.displayName, value: $0.zScore, unit: "z", date: nil)
+            .init(label: $0.metric.displayName, value: $0.zScore, unit: "z")
         }
 
         return QueryResult(
@@ -944,7 +943,7 @@ final class HealthDataQueryEngine {
                 return QueryResult(
                     question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
-                    dataPoints: [.init(label: "Tomorrow risk", value: risk.probability * 100, unit: "%", date: nil)],
+                    dataPoints: [.init(label: "Tomorrow risk", value: risk.probability * 100, unit: "%")],
                     confidence: risk.confidence,
                     relatedQuestions: [Copy.Analysis.HealthDataQuery.rqWhatStateIsMyBody, Copy.Analysis.HealthDataQuery.rqWhatShouldIDoToday]
                 )
@@ -965,7 +964,7 @@ final class HealthDataQueryEngine {
                     question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
                     dataPoints: warnings.prefix(3).map {
-                        .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                        .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
                     },
                     confidence: 0.5,
                     relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(top.metric.displayName), Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall]
@@ -1020,7 +1019,7 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
             answer: answer,
             dataPoints: elevated.prefix(3).map {
-                .init(label: $0.name, value: $0.score * 100, unit: "%", date: nil)
+                .init(label: $0.name, value: $0.score * 100, unit: "%")
             },
             confidence: 0.85,
             relatedQuestions: [
@@ -1060,7 +1059,7 @@ final class HealthDataQueryEngine {
                 question: Copy.Analysis.HealthDataQuery.qHowGreatDay,
                 answer: answer,
                 dataPoints: topTargets.map {
-                    .init(label: $0.metric.displayName, value: $0.targetValue, unit: $0.metric.unit, date: nil)
+                    .init(label: $0.metric.displayName, value: $0.targetValue, unit: $0.metric.unit)
                 },
                 confidence: ideal.confidence,
                 relatedQuestions: [
@@ -1079,7 +1078,7 @@ final class HealthDataQueryEngine {
             return QueryResult(
                 question: Copy.Analysis.HealthDataQuery.qHowImprove,
                 answer: Copy.Analysis.HealthDataQuery.improveBiggestImpact(levers),
-                dataPoints: top.map { .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ", date: nil) },
+                dataPoints: top.map { .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ") },
                 confidence: 0.7,
                 relatedQuestions: top.map { "How is my \($0.metric.displayName) trending?" }
             )
@@ -1104,7 +1103,7 @@ final class HealthDataQueryEngine {
                 question: Copy.Analysis.HealthDataQuery.qHowImprove,
                 answer: Copy.Analysis.HealthDataQuery.improveMostRoom(tips),
                 dataPoints: topSuggestions.map {
-                    .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                    .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
                 },
                 confidence: 0.5,
                 relatedQuestions: topSuggestions.map { "How is my \($0.metric.displayName) trending?" }
@@ -1142,7 +1141,7 @@ final class HealthDataQueryEngine {
                     question: Copy.Analysis.HealthDataQuery.qAnyPatterns,
                     answer: answer,
                     dataPoints: weaker.prefix(2).map {
-                        .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength", date: nil)
+                        .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength")
                     },
                     confidence: 0.4,
                     relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(weakTop.metric.displayName), Copy.Analysis.HealthDataQuery.rqAnythingUnusualInData]
@@ -1177,7 +1176,7 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qAnyPatternsInData,
             answer: answer,
             dataPoints: strong.prefix(3).map {
-                .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength", date: nil)
+                .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength")
             },
             confidence: Double(top.strength),
             relatedQuestions: [
@@ -1198,7 +1197,7 @@ final class HealthDataQueryEngine {
                 if !recent.isEmpty {
                     let avgSleep = recent.valueMean
                     answer += Copy.Analysis.HealthDataQuery.circadianRecentSleep(avg: formatValue(avgSleep, metric: .sleepDuration))
-                    dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs", date: nil))
+                    dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs"))
                 }
             }
             if let stepsSeries = ctx.timeSeries[.steps] {
@@ -1206,7 +1205,7 @@ final class HealthDataQueryEngine {
                 if !recent.isEmpty {
                     let avgSteps = recent.valueMean
                     answer += Copy.Analysis.HealthDataQuery.circadianAvgSteps(steps: Int(avgSteps))
-                    dataPoints.append(.init(label: "Avg steps", value: avgSteps, unit: "steps", date: nil))
+                    dataPoints.append(.init(label: "Avg steps", value: avgSteps, unit: "steps"))
                 }
             }
             if answer == Copy.Analysis.HealthDataQuery.buildingCircadianProfile {
@@ -1242,8 +1241,8 @@ final class HealthDataQueryEngine {
             question: Copy.Analysis.HealthDataQuery.qBodyClock,
             answer: answer,
             dataPoints: [
-                .init(label: "Activity peak", value: profile.activityAcrophaseHour, unit: "hr", date: nil),
-                .init(label: "HR nadir", value: profile.hrNadirHour, unit: "hr", date: nil),
+                .init(label: "Activity peak", value: profile.activityAcrophaseHour, unit: "hr"),
+                .init(label: "HR nadir", value: profile.hrNadirHour, unit: "hr"),
             ],
             confidence: profile.confidence,
             relatedQuestions: [
@@ -1295,7 +1294,7 @@ final class HealthDataQueryEngine {
                 question: "Why is my score \(score)?",
                 answer: answer,
                 dataPoints: topDrivers.map {
-                    .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ", date: nil)
+                    .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ")
                 },
                 confidence: 0.8,
                 relatedQuestions: [
@@ -1327,7 +1326,7 @@ final class HealthDataQueryEngine {
             question: "Why is my score \(score)?",
             answer: answer,
             dataPoints: noteworthy.prefix(3).map {
-                .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit)
             },
             confidence: 0.5,
             relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything]
@@ -1366,7 +1365,7 @@ final class HealthDataQueryEngine {
                 answer: answer,
                 dataPoints: topCauses.map {
                     let driver = $0.metricA == metric ? $0.metricB : $0.metricA
-                    return .init(label: driver.displayName, value: $0.grangerEffectSize, unit: "effect", date: nil)
+                    return .init(label: driver.displayName, value: $0.grangerEffectSize, unit: "effect")
                 },
                 confidence: 0.8,
                 relatedQuestions: [
@@ -1390,7 +1389,7 @@ final class HealthDataQueryEngine {
             return QueryResult(
                 question: "What causes my \(metric.displayName) to change?",
                 answer: answer,
-                dataPoints: [.init(label: other.displayName, value: top.pearsonR, unit: "r", date: nil)],
+                dataPoints: [.init(label: other.displayName, value: top.pearsonR, unit: "r")],
                 confidence: 0.6,
                 relatedQuestions: [
                     "Does \(other.displayName) affect \(metric.displayName)?",
@@ -1410,7 +1409,7 @@ final class HealthDataQueryEngine {
             return QueryResult(
                 question: "What causes my \(metric.displayName) to change?",
                 answer: answer,
-                dataPoints: avg.map { [QueryResult.DataPoint(label: "Recent avg", value: $0, unit: metric.unit, date: nil)] } ?? [],
+                dataPoints: avg.map { [QueryResult.DataPoint(label: "Recent avg", value: $0, unit: metric.unit)] } ?? [],
                 confidence: 0.4,
                 relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName), Copy.Analysis.HealthDataQuery.rqAnythingUnusualInMetric(metric.displayName)]
             )
@@ -1512,7 +1511,7 @@ final class HealthDataQueryEngine {
                 dataPoints: topInsight.involvedMetrics.prefix(3).compactMap { metric in
                     guard let series = ctx.timeSeries[metric],
                           let latest = series.samples.last else { return nil }
-                    return QueryResult.DataPoint(label: metric.displayName, value: latest.value, unit: metric.unit, date: latest.date)
+                    return QueryResult.DataPoint(label: metric.displayName, value: latest.value, unit: metric.unit)
                 },
                 confidence: topInsight.confidence,
                 relatedQuestions: [
@@ -1552,7 +1551,7 @@ final class HealthDataQueryEngine {
             return QueryResult(
                 question: question,
                 answer: answer,
-                dataPoints: [.init(label: "Change", value: top.value.weekOverWeekChange, unit: "%", date: nil)],
+                dataPoints: [.init(label: "Change", value: top.value.weekOverWeekChange, unit: "%")],
                 confidence: 0.7,
                 relatedQuestions: [
                     "How is my \(top.key.displayName) trending?",
@@ -1568,7 +1567,7 @@ final class HealthDataQueryEngine {
             return QueryResult(
                 question: question,
                 answer: "Interesting discovery: your \(topCorr.metricA.displayName) and \(topCorr.metricB.displayName) \(dir) (r=\(String(format: "%.2f", topCorr.pearsonR))). This is one of the strongest connections in your data.",
-                dataPoints: [.init(label: "Correlation", value: topCorr.pearsonR, unit: "r", date: nil)],
+                dataPoints: [.init(label: "Correlation", value: topCorr.pearsonR, unit: "r")],
                 confidence: 0.7,
                 relatedQuestions: [
                     "Does \(topCorr.metricA.displayName) affect \(topCorr.metricB.displayName)?",

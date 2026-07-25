@@ -98,7 +98,6 @@ final class TimeSeriesForecaster {
 
     /// Multi-horizon forecast result
     struct MultiHorizonForecast {
-        let metric: HealthMetric
         let horizons: [HorizonResult]
 
         struct HorizonResult {
@@ -249,7 +248,7 @@ final class TimeSeriesForecaster {
         }
         
         guard !results.isEmpty else { return nil }
-        return MultiHorizonForecast(metric: metric, horizons: results)
+        return MultiHorizonForecast(horizons: results)
     }
 
     // MARK: - Anomaly Detection

@@ -197,9 +197,6 @@ struct ScoreTrajectoryAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension ScoreTrajectoryAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "scoreTrajectory" }
-    static var insightCategory: InsightCategory { .scoreTrajectory }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(scoreHistory: context.scoreHistory, categoryScores: context.categoryScores)
     }

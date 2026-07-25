@@ -170,7 +170,6 @@ final class SessionTracker {
         let durationSec: Int
         let activeSec: Int
         let screensVisited: Int
-        let maxDepth: Int
         let coreActionsCount: Int
         let reason: String
     }
@@ -219,7 +218,6 @@ final class SessionTracker {
                 durationSec: max(Int(priorActivity.timeIntervalSince(sessionStartDate)), 0),
                 activeSec: max(Int(accumulatedActiveSec.rounded()), 0),
                 screensVisited: screensVisited.count,
-                maxDepth: maxDepth,
                 coreActionsCount: coreActionsThisSession.count,
                 reason: EndReason.idleTimeout.rawValue
             )
@@ -289,7 +287,6 @@ final class SessionTracker {
             durationSec: max(Int(last.timeIntervalSince(start)), 0),
             activeSec: max(Int((d["active"] as? Double ?? 0).rounded()), 0),
             screensVisited: d["screens"] as? Int ?? 0,
-            maxDepth: d["depth"] as? Int ?? 0,
             coreActionsCount: d["actions"] as? Int ?? 0,
             reason: reason.rawValue
         )

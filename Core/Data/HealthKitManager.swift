@@ -19,25 +19,6 @@ final class HealthKitManager: @unchecked Sendable {
     let healthStore = HKHealthStore()
 
     struct SyncProgress {
-        enum Phase: String {
-            case preparing
-            case fetching
-            case saving
-            case finalizing
-            case completed
-
-            var title: String {
-                switch self {
-                case .preparing: return "Preparing"
-                case .fetching: return "Scanning Health Data"
-                case .saving: return "Saving Data"
-                case .finalizing: return "Finalizing"
-                case .completed: return "Sync Complete"
-                }
-            }
-        }
-
-        var phase: Phase
         var metricsCompleted: Int
         var totalMetrics: Int
         var metricsWithSamples: Int
@@ -243,7 +224,6 @@ final class HealthKitManager: @unchecked Sendable {
         let previousRefresh = lastRefresh
         isLoading = true
         syncProgress = SyncProgress(
-            phase: .preparing,
             metricsCompleted: 0,
             totalMetrics: HealthMetric.allCases.count,
             metricsWithSamples: 0,
@@ -255,7 +235,6 @@ final class HealthKitManager: @unchecked Sendable {
         let isFirstSync = syncDates.isEmpty
         // Use start-of-tomorrow so daily statistics buckets always include today's partial data
         let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
-        syncProgress?.phase = .fetching
 
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
@@ -340,7 +319,6 @@ final class HealthKitManager: @unchecked Sendable {
             }
         }
 
-        syncProgress?.phase = .saving
         let persisted = persistFetchedData(
             newData: newData,
             fetchedMetrics: fetchedMetrics,
@@ -348,7 +326,6 @@ final class HealthKitManager: @unchecked Sendable {
             endDate: endDate
         )
 
-        syncProgress?.phase = .finalizing
         finalizeInMemoryTimeSeries(
             isFirstSync: isFirstSync,
             newData: newData,
@@ -366,7 +343,6 @@ final class HealthKitManager: @unchecked Sendable {
 
         lastRefresh = Date()
         isLoading = false
-        syncProgress?.phase = .completed
 
         // Track sync completion
         let totalNewSamples = persisted.totalInsertedSamples

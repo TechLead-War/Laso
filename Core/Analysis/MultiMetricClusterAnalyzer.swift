@@ -152,9 +152,6 @@ struct MultiMetricClusterAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension MultiMetricClusterAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "multiMetricCluster" }
-    static var insightCategory: InsightCategory { .multiMetricCluster }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             anomalies: context.anomalies,

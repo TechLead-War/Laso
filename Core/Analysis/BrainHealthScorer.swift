@@ -75,7 +75,6 @@ struct BrainHealthScore {
     /// REM sleep component score (0-100), normalized against personal baseline. Nil when no REM data available.
     let remSleepScore: Double?
     /// Sleep duration component score (0-100), normalized against personal baseline. Nil when no duration data available.
-    let sleepDurationScore: Double?
     /// Top contributing factors with their direction and sentiment
     let topFactors: [(label: String, impact: String, isPositive: Bool)]
     /// Concise, data-backed headline summarizing the score
@@ -404,12 +403,6 @@ final class BrainHealthScorer {
             return normalizeZScore(z) * 100.0
         }()
 
-        let sleepDurationScore: Double? = {
-            guard let dur = recentDuration, let durBase = durationBaseline else { return nil }
-            let z = zScore(current: dur, baseline: durBase)
-            return normalizeZScore(z) * 100.0
-        }()
-
         currentScore = BrainHealthScore(
             score: finalScore,
             state: state,
@@ -420,7 +413,6 @@ final class BrainHealthScorer {
             circadianAlignment: circadianAlignment,
             deepSleepScore: deepSleepScore,
             remSleepScore: remSleepScore,
-            sleepDurationScore: sleepDurationScore,
             topFactors: topFactors,
             headline: headline,
             confidence: confidence

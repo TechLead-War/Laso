@@ -194,7 +194,4 @@ struct SleepRegularityAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension SleepRegularityAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "sleepRegularity" }
-    static var insightCategory: InsightCategory { .sleepPerformance }
-}
+extension SleepRegularityAnalyzer: InsightAnalyzer {}

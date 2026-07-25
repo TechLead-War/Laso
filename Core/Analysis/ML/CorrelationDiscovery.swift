@@ -132,7 +132,6 @@ final class CorrelationDiscovery {
         let grangerCausal: Bool
         let grangerP: Double
         var partialCorr: Double?
-        var confounder: HealthMetric?
         let stability: Double
 
         var effectSize: Double = 0
@@ -142,7 +141,6 @@ final class CorrelationDiscovery {
             // 3. Granger causality (A → B) using proper OLS + F-distribution
             let grangerResult = GrangerCausalityEngine.test(
                 cause: valuesA, effect: valuesB,
-                causeMetric: metricA, effectMetric: metricB,
                 maxLag: Self.maxGrangerLag
             )
             grangerCausal = grangerResult?.isCausal ?? false
@@ -152,7 +150,7 @@ final class CorrelationDiscovery {
 
             // 4. Partial correlation (controlling for strongest confounder)
             if metricCount > 2 {
-                (partialCorr, confounder) = partialCorrelation(
+                (partialCorr, _) = partialCorrelation(
                     a: valuesA, b: valuesB,
                     metricA: metricA, metricB: metricB,
                     allDateValues: dateValues,
@@ -177,7 +175,6 @@ final class CorrelationDiscovery {
             grangerCausal: grangerCausal,
             grangerPValue: grangerP,
             partialCorrelation: partialCorr,
-            confounderMetric: confounder,
             stability: stability,
             sampleCount: valuesA.count,
             grangerEffectSize: effectSize,

@@ -1,8 +1,6 @@
 import Foundation
 
 protocol InsightAnalyzer {
-    static var analyzerID: String { get }
-    static var insightCategory: InsightCategory { get }
     static func generateInsights(context: AnalysisContext) -> [Insight]
 }
 

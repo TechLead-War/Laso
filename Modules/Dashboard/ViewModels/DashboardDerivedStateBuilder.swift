@@ -3,26 +3,6 @@ import Foundation
 struct DashboardDerivedStateBuilder {
     typealias ScoreHistoryEntry = (date: Date, score: Int)
 
-    func scoreChangeFromLastWeek(
-        currentScore: Int,
-        history: [ScoreHistoryEntry],
-        now: Date = Date(),
-        calendar: Calendar = .current
-    ) -> Int? {
-        guard history.count >= 2 else { return nil }
-
-        // Anchor the cutoff at start-of-today so the "old" snapshot picked is
-        // stable across refreshes within the same calendar day.
-        let today = calendar.startOfDay(for: now)
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: today) ?? today
-        guard let oldScore = history
-            .filter({ $0.date <= weekAgo })
-            .last?.score else { return nil }
-
-        let delta = currentScore - oldScore
-        return delta == 0 ? nil : delta
-    }
-
     func scoreChangeFromYesterday(
         currentScore: Int,
         history: [ScoreHistoryEntry],

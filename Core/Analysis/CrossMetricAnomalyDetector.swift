@@ -652,9 +652,6 @@ struct CrossMetricAnomalyDetector {
 // MARK: - InsightAnalyzer Conformance
 
 extension CrossMetricAnomalyDetector: InsightAnalyzer {
-    static var analyzerID: String { "crossMetricAnomaly" }
-    static var insightCategory: InsightCategory { .crossMetricAnomaly }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(from: context.crossMetricAnomalies)
     }

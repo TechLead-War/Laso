@@ -4,8 +4,6 @@ import SwiftUI
 struct HealthRiskDetailView: View {
     let risk: HealthRisk
     let onTapMetric: (HealthMetric) -> Void
-    /// Freshness timestamp from the parent dashboard refresh.
-    var lastUpdated: Date? = nil
     /// Pull-to-refresh hook wired by the route destination.
     var onRefresh: (() async -> Void)? = nil
 

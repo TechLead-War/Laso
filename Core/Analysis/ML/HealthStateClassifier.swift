@@ -900,10 +900,7 @@ final class HealthStateClassifier {
             result.append(SmoothedHealthState(
                 date: date,
                 assignedState: states[stateIdx],
-                statePosteriors: posteriorDict,
-                smoothedTransitionProb: transProbs,
-                isTransitionDay: isTransition,
-                daysSinceTransition: daysSinceLastTransition
+                isTransitionDay: isTransition
             ))
         }
 

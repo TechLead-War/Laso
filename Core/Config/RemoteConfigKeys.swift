@@ -212,8 +212,7 @@ enum RC {
     /// Local-hour bounds of the do-not-disturb window. Non-critical pushes
     /// scheduled to fire inside [start, end) are suppressed. Overnight window
     /// (start > end) is handled by the consumer's wrap-around comparison.
-    /// Consumer: Core/Notifications/NotificationManager.isWithinQuietHours +
-    /// Core/Analysis/ML/ReceptivityEstimator.swift.
+    /// Consumer: Core/Notifications/NotificationManager.isWithinQuietHours.
     static let notificationQuietHoursStart       = "notification_quiet_hours_start"
     static let notificationQuietHoursEnd         = "notification_quiet_hours_end"
 

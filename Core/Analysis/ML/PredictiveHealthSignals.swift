@@ -82,7 +82,6 @@ struct PredictiveHealthSignals {
         let explanation: String
         let recommendation: String
         let contributingFactors: [ContributingFactor]
-        let projectedRecoveryDays: Int?
     }
 
     struct InsomniaSignal: HealthSignal {
@@ -113,13 +112,11 @@ struct PredictiveHealthSignals {
         let explanation: String
         let recommendation: String
         let contributingFactors: [ContributingFactor]
-        let consecutiveInactiveDays: Int
     }
 
     // MARK: - Health Signal Report
 
     struct HealthSignalReport {
-        let date: Date
         let fatigueScore: FatigueSignal
         let burnoutRisk: BurnoutSignal
         let overtrainingRisk: OvertrainingSignal
@@ -183,7 +180,6 @@ struct PredictiveHealthSignals {
         let dailyMaps = buildDailyMaps(timeSeries: timeSeries)
 
         return HealthSignalReport(
-            date: Date(),
             fatigueScore: analyzeFatigue(
                 timeSeries: timeSeries, baselines: baselines,
                 trends: trends, dailyMaps: dailyMaps
@@ -922,8 +918,7 @@ struct PredictiveHealthSignals {
                 riskLevel: .low, score: 0, confidence: 0,
                 explanation: "Insufficient data to assess overtraining risk. At least 7 days of exercise and heart rate data are needed.",
                 recommendation: "Continue tracking workouts and heart rate to enable overtraining detection.",
-                contributingFactors: [],
-                projectedRecoveryDays: nil
+                contributingFactors: []
             )
         }
 
@@ -959,8 +954,7 @@ struct PredictiveHealthSignals {
             confidence: confidence,
             explanation: explanation,
             recommendation: recommendation,
-            contributingFactors: factors.sorted { $0.weight > $1.weight },
-            projectedRecoveryDays: projectedRecovery
+            contributingFactors: factors.sorted { $0.weight > $1.weight }
         )
     }
 
@@ -1588,8 +1582,7 @@ struct PredictiveHealthSignals {
                 riskLevel: .low, score: 0, confidence: 0,
                 explanation: "Insufficient data to assess inactivity risk. At least 3 days of step data are needed.",
                 recommendation: "Continue tracking your daily steps and movement.",
-                contributingFactors: [],
-                consecutiveInactiveDays: 0
+                contributingFactors: []
             )
         }
 
@@ -1620,8 +1613,7 @@ struct PredictiveHealthSignals {
             confidence: confidence,
             explanation: explanation,
             recommendation: recommendation,
-            contributingFactors: factors.sorted { $0.weight > $1.weight },
-            consecutiveInactiveDays: consecutiveInactiveDays
+            contributingFactors: factors.sorted { $0.weight > $1.weight }
         )
     }
 

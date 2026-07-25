@@ -9,9 +9,6 @@ struct SleepCoachView: View {
     let debtHours: Double
     let dailyHistory: [DayEntry]
     let consistencyScore: Int
-    /// Freshness timestamp from the parent dashboard refresh.
-    /// Drives a small "Updated …" caption at the top of the screen.
-    var lastUpdated: Date? = nil
     /// Pull-to-refresh hook wired by the route destination
     /// to `dashboardViewModel.refresh()`. Defaults to a no-op so existing
     /// previews and unit consumers continue to compile unchanged.

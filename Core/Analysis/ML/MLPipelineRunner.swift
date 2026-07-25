@@ -9,10 +9,8 @@ final class MLPipelineRunner {
         let timeSeries: [HealthMetric: MetricTimeSeries]
         let baselines: [HealthMetric: UserBaseline]
         let trends: [HealthMetric: TrendAnalyzer.TrendResult]
-        let ruleBasedAnomalies: [AnomalyDetector.AnomalyResult]
         let scoreHistory: [(date: Date, score: Int)]
         let anomalyCounts: [Date: Int]
-        let focusCategories: Set<HealthCategory>
     }
 
     struct PipelineOutput {
@@ -22,8 +20,6 @@ final class MLPipelineRunner {
         var multiHorizonForecasts: [HealthMetric: TimeSeriesForecaster.MultiHorizonForecast] = [:]
         var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
         var dataSufficiency: UncertaintyEstimator.DataSufficiency?
-        var componentReadiness: [UncertaintyEstimator.ComponentReadiness] = []
-        var personalizationStatus: PersonalizationBlender.PersonalizationStatus?
         var interactionEffects: [InteractionEffectEngine.InteractionEffect] = []
         var doseResponseCurves: [InteractionEffectEngine.DoseResponseCurve] = []
         var temporalSequences: [TemporalSequenceMiner.TemporalSequence] = []
@@ -84,7 +80,7 @@ final class MLPipelineRunner {
 
         let totalDays = vectors.count
 
-        // Assess data sufficiency and component readiness upfront
+        // Assess data sufficiency upfront
         let requiredMetrics: [HealthMetric] = [
             .heartRateVariability, .restingHeartRate, .sleepDuration,
             .steps, .activeCalories, .exerciseMinutes
@@ -92,13 +88,6 @@ final class MLPipelineRunner {
         output.dataSufficiency = UncertaintyEstimator.assessDataSufficiency(
             timeSeries: input.timeSeries,
             requiredMetrics: requiredMetrics
-        )
-        output.componentReadiness = UncertaintyEstimator.checkComponentReadiness(totalDays: totalDays)
-
-        // Personalization status
-        output.personalizationStatus = PersonalizationBlender.personalizationStatus(
-            userDataDays: totalDays,
-            metricsTracked: input.timeSeries.count
         )
 
         if await shouldStopForThermal(after: "FeatureEngine") { output.stoppedEarly = true; return output }

@@ -134,7 +134,4 @@ struct RHRTrajectoryAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension RHRTrajectoryAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "rhrTrajectory" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-}
+extension RHRTrajectoryAnalyzer: InsightAnalyzer {}

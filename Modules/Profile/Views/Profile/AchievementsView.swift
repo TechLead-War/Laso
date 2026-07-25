@@ -102,7 +102,6 @@ struct StreakInfo: Identifiable {
 struct AchievementItem: Identifiable {
     let id: String
     let title: String
-    let description: String
     let icon: String
     let requirement: String
     let category: AchievementCategory
@@ -553,16 +552,16 @@ struct AchievementsView: View {
                 StreakInfo(id: "hrv", name: "HRV", icon: "waveform.path.ecg", current: 15, best: 20)
             ],
             achievements: [
-                AchievementItem(id: "first_day", title: "First Steps", description: "Track your first day", icon: "figure.walk", requirement: "Track 1 day", category: .milestone, unlockDate: cal.date(byAdding: .day, value: -44, to: now)),
-                AchievementItem(id: "week_streak", title: "Week Warrior", description: "7-day streak", icon: "flame.fill", requirement: "7-day streak", category: .streak, unlockDate: cal.date(byAdding: .day, value: -37, to: now)),
-                AchievementItem(id: "month_tracked", title: "Dedicated", description: "30 days tracked", icon: "calendar.badge.checkmark", requirement: "Track 30 days", category: .milestone, unlockDate: cal.date(byAdding: .day, value: -14, to: now)),
-                AchievementItem(id: "all_categories", title: "Well-Rounded", description: "Data in all categories", icon: "circle.grid.3x3.fill", requirement: "All 7 categories", category: .exploration, unlockDate: cal.date(byAdding: .day, value: -10, to: now)),
-                AchievementItem(id: "night_owl", title: "Sleep Scholar", description: "14-day sleep streak", icon: "moon.stars.fill", requirement: "14-day sleep streak", category: .streak),
-                AchievementItem(id: "iron_heart", title: "Iron Heart", description: "30-day activity streak", icon: "heart.circle.fill", requirement: "30-day activity streak", category: .streak),
-                AchievementItem(id: "century", title: "Century Club", description: "100 days tracked", icon: "star.circle.fill", requirement: "Track 100 days", category: .milestone),
-                AchievementItem(id: "perfect_week", title: "Perfect Week", description: "All goals met for 7 days", icon: "checkmark.seal.fill", requirement: "7 perfect days", category: .consistency),
-                AchievementItem(id: "explorer", title: "Deep Dive", description: "View every metric detail", icon: "magnifyingglass.circle.fill", requirement: "View all metrics", category: .exploration),
-                AchievementItem(id: "steady", title: "Rock Steady", description: "Score above 70 for 14 days", icon: "chart.line.uptrend.xyaxis.circle.fill", requirement: "Score 70+ for 14 days", category: .consistency)
+                AchievementItem(id: "first_day", title: "First Steps", icon: "figure.walk", requirement: "Track 1 day", category: .milestone, unlockDate: cal.date(byAdding: .day, value: -44, to: now)),
+                AchievementItem(id: "week_streak", title: "Week Warrior", icon: "flame.fill", requirement: "7-day streak", category: .streak, unlockDate: cal.date(byAdding: .day, value: -37, to: now)),
+                AchievementItem(id: "month_tracked", title: "Dedicated", icon: "calendar.badge.checkmark", requirement: "Track 30 days", category: .milestone, unlockDate: cal.date(byAdding: .day, value: -14, to: now)),
+                AchievementItem(id: "all_categories", title: "Well-Rounded", icon: "circle.grid.3x3.fill", requirement: "All 7 categories", category: .exploration, unlockDate: cal.date(byAdding: .day, value: -10, to: now)),
+                AchievementItem(id: "night_owl", title: "Sleep Scholar", icon: "moon.stars.fill", requirement: "14-day sleep streak", category: .streak),
+                AchievementItem(id: "iron_heart", title: "Iron Heart", icon: "heart.circle.fill", requirement: "30-day activity streak", category: .streak),
+                AchievementItem(id: "century", title: "Century Club", icon: "star.circle.fill", requirement: "Track 100 days", category: .milestone),
+                AchievementItem(id: "perfect_week", title: "Perfect Week", icon: "checkmark.seal.fill", requirement: "7 perfect days", category: .consistency),
+                AchievementItem(id: "explorer", title: "Deep Dive", icon: "magnifyingglass.circle.fill", requirement: "View all metrics", category: .exploration),
+                AchievementItem(id: "steady", title: "Rock Steady", icon: "chart.line.uptrend.xyaxis.circle.fill", requirement: "Score 70+ for 14 days", category: .consistency)
             ],
             stats: AchievementsStats(
                 totalDaysTracked: 45,

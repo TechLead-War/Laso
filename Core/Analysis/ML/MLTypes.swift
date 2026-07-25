@@ -110,8 +110,6 @@ struct MLPrediction {
     let confidence: Double
     /// Top contributing features with signed contributions
     let topFactors: [PredictionFactor]
-    /// When this prediction was generated
-    let generatedAt: Date
 
     /// Human-readable risk level
     var riskLevel: String {
@@ -132,8 +130,6 @@ struct PredictionFactor {
     let featureType: FeatureType
     /// Signed contribution: positive = risk factor, negative = protective
     let contribution: Double
-    /// Current feature value
-    let currentValue: Double
 
     /// Whether this factor increases risk
     var isRiskFactor: Bool { contribution > 0 }
@@ -169,8 +165,6 @@ struct DiscoveredPattern {
     let strength: Double
     /// Human-readable description
     let description: String
-    /// When this pattern was discovered
-    let discoveredAt: Date
     /// Peak day of week (1=Sun, 7=Sat) for weekly patterns, nil otherwise
     let peakDayOfWeek: Int?
     /// Trough day of week (1=Sun, 7=Sat) for weekly patterns, nil otherwise
@@ -254,8 +248,6 @@ struct MLCorrelation {
     let grangerPValue: Double
     /// Partial correlation controlling for strongest confounder
     let partialCorrelation: Double?
-    /// Confounder metric (if partial correlation was computed)
-    let confounderMetric: HealthMetric?
     /// Stability of correlation over sliding 30-day windows (0.0 = volatile, 1.0 = stable)
     let stability: Double
     /// Number of paired observations
@@ -345,8 +337,6 @@ struct InterventionCandidate {
     let timeToBenefit: TimeToBenefit
     /// Estimated probability user will actually follow through
     let adherenceLikelihood: Double
-    /// How many times similar advice was shown recently
-    let recentExposureCount: Int
     /// Historical effectiveness of this action type for this user
     let historicalEffectiveness: Double?
 
@@ -431,30 +421,9 @@ struct PolicyDecision {
         /// Novelty factor (1.0 = fresh, decays with repeated exposure)
         let noveltyFactor: Double
         /// Generated natural language
-        let title: String
         let description: String
         let whyItMatters: String
         let expectedBenefit: String
-    }
-}
-
-// MARK: - Interaction Feature
-
-/// Cross-metric interaction term for capturing conditional relationships
-struct InteractionFeature: Hashable, Codable {
-    let metricA: HealthMetric
-    let metricB: HealthMetric
-    let interactionType: InteractionType
-
-    enum InteractionType: String, Hashable, Codable {
-        case product        // A * B (joint effect)
-        case ratio          // A / B (relative measure)
-        case conditionalHigh // A when B > 1σ
-        case conditionalLow  // A when B < -1σ
-    }
-
-    var key: String {
-        "\(metricA.rawValue)_x_\(metricB.rawValue)_\(interactionType.rawValue)"
     }
 }
 
@@ -465,14 +434,8 @@ struct SmoothedHealthState {
     let date: Date
     /// Hard state assignment from Viterbi
     let assignedState: HealthState
-    /// Soft posterior probabilities for each state
-    let statePosteriors: [String: Double]
-    /// Smoothed transition probability (from forward-backward)
-    let smoothedTransitionProb: [String: Double]
     /// Whether this is a state transition day
     let isTransitionDay: Bool
-    /// Days since last state transition
-    let daysSinceTransition: Int
 }
 
 // MARK: - Recommendation Feedback

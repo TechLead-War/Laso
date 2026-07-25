@@ -43,7 +43,6 @@
 		1411297400144370DE69A867 /* AppIntegrityGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85AE63D6C8945FC98959C13F /* AppIntegrityGuard.swift */; };
 		141F28DBB6C3817E685A3701 /* DailySummaryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12ECFEAFA40B197B07F8A055 /* DailySummaryScheduler.swift */; };
 		1433431726275DBAD5C9AA16 /* CategoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DEB568977453F4C60EFE42 /* CategoryDetailViewModel.swift */; };
-		164557C9AC2D10AB5A1CA695 /* CalibrationDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */; };
 		16BF4F8F5A8040A15D8FB396 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B511A21E5659E7FDA8E582CC /* DesignSystem.swift */; };
 		17028807F5A85FC99C9866FE /* TimeSeriesAligner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962F8FF9A3A8ACD5BA33465F /* TimeSeriesAligner.swift */; };
 		1718C92B702F70705DC43FDE /* HealthDataQueryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2599A60BD21D81A578BD3474 /* HealthDataQueryEngine.swift */; };
@@ -110,10 +109,8 @@
 		3928B5FC6358E560B1110646 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B17EA97B4819C200C955CB4A /* DiscoveryView.swift */; };
 		3A987E80E9734C1D0CD23CE6 /* InteractionEffectEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B5EF5C383DCC5FF70B00151 /* InteractionEffectEngine.swift */; };
 		3B190A5B104CB375424DE8BD /* LasoShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510C3C1F6BAAE8CBBDA152AD /* LasoShortcutsProvider.swift */; };
-		3CB60024D7F6DA82CDD504EE /* JournalCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E1418B90C1EBE51F8714C3C /* JournalCorrelationAnalyzer.swift */; };
 		3CF8781C292C53A76AB16C36 /* ConnectedDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E7B574CEA278C2E686C8AF /* ConnectedDeviceInfo.swift */; };
 		3D4BDCF241FE565FD15F9F13 /* LiveBloodPressureTempSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AAE1260BE7CC36C61419384 /* LiveBloodPressureTempSection.swift */; };
-		3D51ABE35AA6F4887135ED4D /* ExpandedJournalCategories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A790E45CD686E1B643AE487 /* ExpandedJournalCategories.swift */; };
 		3E1CFCD5745CBC35847E8DA6 /* MobilityDeclineAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A242FF2FC77C87B3D2CF8A19 /* MobilityDeclineAnalyzer.swift */; };
 		3E7ED7B88EFD84406813A1C8 /* LiveStatusFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8467FF584A1EEC996912C296 /* LiveStatusFooter.swift */; };
 		3F15AA031DC849499F54286C /* BreathworkLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A20D652FD4F81F695E1884 /* BreathworkLiveActivityManager.swift */; };
@@ -296,7 +293,6 @@
 		9E0FAF22A9F761DAB550AC80 /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 50081E54D9F52CA4651E2105 /* AmplitudeSwift */; };
 		9EB895D446BB0AE30A79101B /* AnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F4C691C2285FCA8F472C4E /* AnomalyDetector.swift */; };
 		9EFB8A7D285761A3F301C867 /* TrainingZoneColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0D5AF7D4B32933D7746F23 /* TrainingZoneColor.swift */; };
-		9F626FDFB358EE7D4C75E72D /* ReceptivityEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143A192FB5CEDAB6BA647BA1 /* ReceptivityEstimator.swift */; };
 		9F8F672D77545C9D62769E7D /* ReportTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7E098E67F2ABEB332E0C8C8 /* ReportTemplate.swift */; };
 		9FB0110E550A86F69BD68D0C /* LiveHeartRateTimelineReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F802C354021292ED8AC2D89 /* LiveHeartRateTimelineReducer.swift */; };
 		A0738DAF8216FD8F0690CF2B /* MetricChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA9C1CDDD694108B1F054DE /* MetricChartView.swift */; };
@@ -558,7 +554,6 @@
 		122379A3ADDC67E84B6C60B3 /* OnboardingV2Screens14ToDone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Screens14ToDone.swift; sourceTree = "<group>"; };
 		12CE5681E27AAA16A13E2727 /* ProFeatureOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProFeatureOverlay.swift; sourceTree = "<group>"; };
 		12ECFEAFA40B197B07F8A055 /* DailySummaryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryScheduler.swift; sourceTree = "<group>"; };
-		143A192FB5CEDAB6BA647BA1 /* ReceptivityEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptivityEstimator.swift; sourceTree = "<group>"; };
 		1493A9CEF0A694130578B6FE /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		14F163FE15C24DDC9F1E0785 /* Copy+Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Journal.swift"; sourceTree = "<group>"; };
 		1622ABEB09F735ED6A982D84 /* CrossMetricAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossMetricAnomalyDetector.swift; sourceTree = "<group>"; };
@@ -634,7 +629,6 @@
 		3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccelerateHelpers.swift; sourceTree = "<group>"; };
 		3DBF894D61F74B87706B9396 /* WakeUpTimeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeUpTimeDetector.swift; sourceTree = "<group>"; };
 		3E0FF72B5323F23F5726B0CD /* AnalysisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisEngine.swift; sourceTree = "<group>"; };
-		3E1418B90C1EBE51F8714C3C /* JournalCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalCorrelationAnalyzer.swift; sourceTree = "<group>"; };
 		3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetView.swift; sourceTree = "<group>"; };
 		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		40D2A73BAF6AE0371B4C739E /* BiologicalAgeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalAgeConfig.swift; sourceTree = "<group>"; };
@@ -659,7 +653,6 @@
 		4878091D5A17CEEDC753D7F9 /* UserProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileStore.swift; sourceTree = "<group>"; };
 		4928C669733201A0A13C9C25 /* AppKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKeys.swift; sourceTree = "<group>"; };
 		4A0C2E0CF5A4959261FCFD4C /* WindDownOutcomeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownOutcomeTracker.swift; sourceTree = "<group>"; };
-		4A790E45CD686E1B643AE487 /* ExpandedJournalCategories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedJournalCategories.swift; sourceTree = "<group>"; };
 		4AA786B48A9B4849B9C790D3 /* HealthCorrelation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthCorrelation.swift; sourceTree = "<group>"; };
 		4AB6116F31543CD4B4E1CFAC /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		4C62BC8962C09E3FE0A0037E /* LasoWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LasoWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -906,7 +899,6 @@
 		D5AF3056B11384BB1F143500 /* PredictionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionBuilder.swift; sourceTree = "<group>"; };
 		D5CA49C6E7F5AAE50F74BA43 /* MetricCue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCue.swift; sourceTree = "<group>"; };
 		D7132AD99BED8FE65100BA31 /* WatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WatchAssets.xcassets; sourceTree = "<group>"; };
-		D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationDiscovery.swift; sourceTree = "<group>"; };
 		D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendDirection.swift; sourceTree = "<group>"; };
 		D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
 		D8F6915E5718E8B9919DC3FD /* MetricDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailViewModel.swift; sourceTree = "<group>"; };
@@ -995,7 +987,6 @@
 				2A47E1CFAD202D04EBC29296 /* DailyActionStore.swift */,
 				D468B483596F9424AAABC5AE /* DataRetentionManager.swift */,
 				6B84E7B92FC24D92EDC8302A /* DeviceSourceManager.swift */,
-				4A790E45CD686E1B643AE487 /* ExpandedJournalCategories.swift */,
 				663DD161B104BF46BF127C98 /* HealthDataBatchWriter.swift */,
 				02023DC96F80A46ECBC3EDF9 /* HealthDataContainerFactory.swift */,
 				C3F236B93E290731FCD3E817 /* HealthDataStore.swift */,
@@ -1207,7 +1198,6 @@
 				8AC7461FE15AF40E60F38828 /* InsightDirective.swift */,
 				85C4DCA79B6E9E9EACDDDAE9 /* InsightFactory.swift */,
 				680F1B1CDF2C537A74C8F62F /* InsightGenerator.swift */,
-				3E1418B90C1EBE51F8714C3C /* JournalCorrelationAnalyzer.swift */,
 				2EB0ECC498E15CAE9AC31BCB /* MenstrualCycleTracker.swift */,
 				E48A81F37075D7FBB01F687D /* MetricVerdict.swift */,
 				06D3EDF028E737A253244644 /* MultiMetricClusterAnalyzer.swift */,
@@ -1353,7 +1343,6 @@
 			isa = PBXGroup;
 			children = (
 				7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */,
-				D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */,
 				51E7B574CEA278C2E686C8AF /* ConnectedDeviceInfo.swift */,
 				20626D760D24787F5E4F2168 /* DeviceMessaging.swift */,
 				89F2C7158B05F5675BBF15A9 /* Discovery.swift */,
@@ -1418,7 +1407,6 @@
 				D5689557671179E561CD73D0 /* PersonalOptimizer.swift */,
 				5B22E58759FFF233236D942C /* PredictiveHealthSignals.swift */,
 				8B1D82390A86BAC946883F55 /* PredictiveScorer.swift */,
-				143A192FB5CEDAB6BA647BA1 /* ReceptivityEstimator.swift */,
 				C32AB04FCDD2E7672174903F /* TemporalSequenceMiner.swift */,
 				646EF788673C8A770ABAA418 /* TimeSeriesForecaster.swift */,
 				45D8615B69CE4C5015B60903 /* TodayIntelligenceEngine.swift */,
@@ -2590,7 +2578,6 @@
 				568A4B9C45459F0BBC05BDE5 /* BreathworkActivityAttributes.swift in Sources */,
 				3F15AA031DC849499F54286C /* BreathworkLiveActivityManager.swift in Sources */,
 				1DF04CDBA27B5FDD2A0349F4 /* BreathworkView.swift in Sources */,
-				164557C9AC2D10AB5A1CA695 /* CalibrationDiscovery.swift in Sources */,
 				4896B12ADCAA10A33878E200 /* CardioRespiratoryAgeAnalyzer.swift in Sources */,
 				015E6C615F6CA214083038D3 /* CardioRespiratoryAgeConfig.swift in Sources */,
 				AAB847BC61393D23E6F5666B /* CategoryDetailView.swift in Sources */,
@@ -2678,7 +2665,6 @@
 				D21C631F7EDE8F1E73FED4B3 /* DriverRowView.swift in Sources */,
 				86EC8CCBC8DD203F76E5DB9E /* EncryptedStore.swift in Sources */,
 				9BD1B50C5D53BC137F465840 /* EngagementSequenceScheduler.swift in Sources */,
-				3D51ABE35AA6F4887135ED4D /* ExpandedJournalCategories.swift in Sources */,
 				8B079806005F278D357FEE59 /* ExploreCategoriesSection.swift in Sources */,
 				643DA777B822CE5EA776F9CF /* ExploreDataSummarySection.swift in Sources */,
 				9447006E48B4B43ABE1F560A /* ExploreDecliningTrendsSection.swift in Sources */,
@@ -2745,7 +2731,6 @@
 				4553DFCCCDD5E837A5297EBF /* IntentSnippetViews.swift in Sources */,
 				3A987E80E9734C1D0CD23CE6 /* InteractionEffectEngine.swift in Sources */,
 				A5CE591CFFF4EFCCDFBF3E5C /* InviteFriendsView.swift in Sources */,
-				3CB60024D7F6DA82CDD504EE /* JournalCorrelationAnalyzer.swift in Sources */,
 				998878736810978EEBD3B819 /* JournalEntryView.swift in Sources */,
 				F6E5F4022A5ACBD8B2AED443 /* JournalStore.swift in Sources */,
 				E6A753C685A967C27EC3CDDC /* LLMInsightGenerator.swift in Sources */,
@@ -2836,7 +2821,6 @@
 				1942162E0BC037328CC0AE8E /* ReadinessScorer.swift in Sources */,
 				131158A42F57B61C943D425F /* ReadinessScorerConfig.swift in Sources */,
 				C468B99F83AB0BE0E94393ED /* ReadinessStore.swift in Sources */,
-				9F626FDFB358EE7D4C75E72D /* ReceptivityEstimator.swift in Sources */,
 				8FC543D1BEBEF33E5A1F4625 /* RecommendationEvaluator.swift in Sources */,
 				E1EAA44F3A9A9EBBDA4277D1 /* RecoveryAnalyzer.swift in Sources */,
 				E8D986A0A268CD36107B1924 /* RecoveryHeroCard.swift in Sources */,
@@ -3064,7 +3048,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3083,7 +3067,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.58;
+				MARKETING_VERSION = 1.2.59;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3153,7 +3137,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3166,7 +3150,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.58;
+				MARKETING_VERSION = 1.2.59;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

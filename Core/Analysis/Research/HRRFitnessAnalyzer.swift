@@ -139,7 +139,4 @@ struct HRRFitnessAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension HRRFitnessAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "hrrFitness" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-}
+extension HRRFitnessAnalyzer: InsightAnalyzer {}

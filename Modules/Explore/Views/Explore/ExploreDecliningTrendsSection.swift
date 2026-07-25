@@ -7,7 +7,6 @@ import SwiftUI
 struct ExploreDecliningTrendsSection: View {
     let decliningHighlights: [DashboardViewModel.HistoricalHighlight]
     let causalChains: [CausalChain]
-    let correlations: [HealthCorrelation]
     let onHighlightTapped: (DashboardViewModel.HistoricalHighlight) -> Void
     let onSeeAllIntelligenceTapped: (() -> Void)?
 
@@ -16,13 +15,11 @@ struct ExploreDecliningTrendsSection: View {
     init(
         decliningHighlights: [DashboardViewModel.HistoricalHighlight],
         causalChains: [CausalChain] = [],
-        correlations: [HealthCorrelation] = [],
         onHighlightTapped: @escaping (DashboardViewModel.HistoricalHighlight) -> Void,
         onSeeAllIntelligenceTapped: (() -> Void)? = nil
     ) {
         self.decliningHighlights = decliningHighlights
         self.causalChains = causalChains
-        self.correlations = correlations
         self.onHighlightTapped = onHighlightTapped
         self.onSeeAllIntelligenceTapped = onSeeAllIntelligenceTapped
     }

@@ -275,9 +275,6 @@ struct SleepPerformanceAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension SleepPerformanceAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "sleepPerformance" }
-    static var insightCategory: InsightCategory { .sleepPerformance }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(timeSeries: context.timeSeries)
     }

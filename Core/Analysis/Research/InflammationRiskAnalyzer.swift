@@ -169,7 +169,4 @@ struct InflammationRiskAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension InflammationRiskAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "inflammationRisk" }
-    static var insightCategory: InsightCategory { .watchSignal }
-}
+extension InflammationRiskAnalyzer: InsightAnalyzer {}

@@ -8,9 +8,6 @@ struct BrainHealthDetailView: View {
     let weeklyHistory: [(date: Date, score: Int)]
     let weeklyAverage: Int?
     let trend: String
-    /// Freshness timestamp from the parent dashboard refresh.
-    /// Drives a small "Updated …" caption at the top of the screen.
-    var lastUpdated: Date? = nil
 
     @State private var showLearnMore = false
 
@@ -696,7 +693,6 @@ private struct ScoreLever: Identifiable {
                 circadianAlignment: 68,
                 deepSleepScore: 74,
                 remSleepScore: 68,
-                sleepDurationScore: 72,
                 topFactors: [
                     (label: "REM Sleep", impact: "12% above baseline", isPositive: true),
                     (label: "HRV", impact: "Trending up this week", isPositive: true),

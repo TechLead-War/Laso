@@ -187,7 +187,4 @@ struct MobilityDeclineAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension MobilityDeclineAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "mobilityDecline" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-}
+extension MobilityDeclineAnalyzer: InsightAnalyzer {}

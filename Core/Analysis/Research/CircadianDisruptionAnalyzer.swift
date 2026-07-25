@@ -181,7 +181,4 @@ struct CircadianDisruptionAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension CircadianDisruptionAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "circadianDisruption" }
-    static var insightCategory: InsightCategory { .circadian }
-}
+extension CircadianDisruptionAnalyzer: InsightAnalyzer {}

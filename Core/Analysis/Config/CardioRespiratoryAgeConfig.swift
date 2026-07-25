@@ -10,7 +10,6 @@ enum CardioRespiratoryAgeConfig {
     // MARK: - Percentile Bracket
 
     struct AgeBracket: Sendable {
-        let ageRange: String
         let p10: Double
         let p25: Double
         let p50: Double
@@ -20,14 +19,15 @@ enum CardioRespiratoryAgeConfig {
     }
 
     /// VO2max percentile brackets by age (mL/kg/min), combined sex averages.
+    /// Row order is the age order and must stay aligned with `bracketAgeMidpoints`.
     static let brackets: [AgeBracket] = [
-        AgeBracket(ageRange: "18-29", p10: 28, p25: 32, p50: 35, p75: 40, p90: 45, p95: 50),
-        AgeBracket(ageRange: "30-39", p10: 26, p25: 30, p50: 33, p75: 37, p90: 42, p95: 47),
-        AgeBracket(ageRange: "40-49", p10: 24, p25: 28, p50: 31, p75: 35, p90: 39, p95: 44),
-        AgeBracket(ageRange: "50-59", p10: 22, p25: 26, p50: 29, p75: 33, p90: 37, p95: 41),
-        AgeBracket(ageRange: "60-69", p10: 20, p25: 24, p50: 27, p75: 30, p90: 34, p95: 38),
-        AgeBracket(ageRange: "70-79", p10: 18, p25: 22, p50: 25, p75: 28, p90: 31, p95: 35),
-        AgeBracket(ageRange: "80+",   p10: 16, p25: 20, p50: 24, p75: 27, p90: 30, p95: 33)
+        AgeBracket(p10: 28, p25: 32, p50: 35, p75: 40, p90: 45, p95: 50),  // 18-29
+        AgeBracket(p10: 26, p25: 30, p50: 33, p75: 37, p90: 42, p95: 47),  // 30-39
+        AgeBracket(p10: 24, p25: 28, p50: 31, p75: 35, p90: 39, p95: 44),  // 40-49
+        AgeBracket(p10: 22, p25: 26, p50: 29, p75: 33, p90: 37, p95: 41),  // 50-59
+        AgeBracket(p10: 20, p25: 24, p50: 27, p75: 30, p90: 34, p95: 38),  // 60-69
+        AgeBracket(p10: 18, p25: 22, p50: 25, p75: 28, p90: 31, p95: 35),  // 70-79
+        AgeBracket(p10: 16, p25: 20, p50: 24, p75: 27, p90: 30, p95: 33)   // 80+
     ]
 
     /// Index of the bracket used as the percentile reference when the

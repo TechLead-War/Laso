@@ -213,7 +213,6 @@ struct ExploreView: View {
                         ExploreDecliningTrendsSection(
                             decliningHighlights: decliningHighlights,
                             causalChains: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.causalChains : [],
-                            correlations: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.topCorrelations : [],
                             onHighlightTapped: { highlight in
                                 AppAnalytics.shared.trackBlockTap(
                                     title: highlight.metric.displayName,

@@ -348,13 +348,9 @@ struct InsightGenerator {
             hasData = true
         }
 
-        // Recent values (last 7 days)
-        if let series = timeSeries[metric] {
-            let recent = series.samples(lastDays: 7)
-            if !recent.isEmpty {
-                ctx.recentValues = recent.map { (date: $0.date, value: $0.value) }
-                hasData = true
-            }
+        // Recent values (last 7 days) only flag that the metric has usable data.
+        if let series = timeSeries[metric], !series.samples(lastDays: 7).isEmpty {
+            hasData = true
         }
 
         // Confidence level based on data depth
@@ -930,9 +926,6 @@ struct InsightGenerator {
 // MARK: - InsightAnalyzer Conformance
 
 extension InsightGenerator: InsightAnalyzer {
-    static var analyzerID: String { "insightGenerator" }
-    static var insightCategory: InsightCategory { .anomaly }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generate(
             anomalies: context.anomalies,

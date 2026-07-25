@@ -187,9 +187,6 @@ struct WorkoutEffectivenessAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension WorkoutEffectivenessAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "workoutEffectiveness" }
-    static var insightCategory: InsightCategory { .workoutEffectiveness }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(timeSeries: context.timeSeries)
     }

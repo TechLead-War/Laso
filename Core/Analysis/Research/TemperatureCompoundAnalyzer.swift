@@ -206,7 +206,4 @@ struct TemperatureCompoundAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension TemperatureCompoundAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "temperatureCompound" }
-    static var insightCategory: InsightCategory { .watchSignal }
-}
+extension TemperatureCompoundAnalyzer: InsightAnalyzer {}

@@ -2,9 +2,6 @@ import SwiftUI
 
 struct VitalityDetailView: View {
     let scorer: VitalityScorer
-    /// Freshness timestamp from the parent dashboard refresh.
-    /// Drives a small "Updated …" caption at the top of the screen.
-    var lastUpdated: Date? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var orbPhase: CGFloat = 0

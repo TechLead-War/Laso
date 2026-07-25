@@ -203,9 +203,6 @@ struct RecoveryAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension RecoveryAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "recovery" }
-    static var insightCategory: InsightCategory { .recovery }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             timeSeries: context.timeSeries,

@@ -120,11 +120,6 @@ final class UserProfileStore {
         defaults.set(profile.deviceId, forKey: AppKeys.Profile.deviceId)
     }
 
-    /// Persist a device ID for quick access
-    func persistDeviceId(_ deviceId: String) {
-        defaults.set(deviceId, forKey: AppKeys.Profile.deviceId)
-    }
-
     /// Load cached profile from encrypted local store
     func loadLocal() -> UserProfile? {
         guard let data = encryptedStore.load(forKey: localKey) else { return nil }

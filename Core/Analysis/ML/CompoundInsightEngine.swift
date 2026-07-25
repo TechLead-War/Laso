@@ -51,7 +51,6 @@ final class CompoundInsightEngine {
     private struct MetricTrend {
         let metric: HealthMetric
         let direction: TrendDirection
-        let ratePerDay: Double
         let percentChange: Double
         let recentMean: Double
         let baselineMean: Double
@@ -70,8 +69,6 @@ final class CompoundInsightEngine {
     /// Day-of-week profile for a metric
     private struct WeekdayProfile {
         let metric: HealthMetric
-        let dayMeans: [Int: Double]  // weekday (1=Sun..7=Sat) -> mean value
-        let overallMean: Double
         let peakDay: Int
         let troughDay: Int
         let peakTroughDeltaPercent: Double
@@ -1108,7 +1105,6 @@ final class CompoundInsightEngine {
             guard baselineMean != 0 else { return nil }
 
             let percentChange = ((recentMean - baselineMean) / abs(baselineMean)) * 100
-            let ratePerDay = (recentMean - baselineMean) / Double(windowDays)
 
             let direction: TrendDirection
             let adjustedChange = metric.higherIsBetter ? percentChange : -percentChange
@@ -1123,7 +1119,6 @@ final class CompoundInsightEngine {
             return MetricTrend(
                 metric: metric,
                 direction: direction,
-                ratePerDay: ratePerDay,
                 percentChange: percentChange,
                 recentMean: recentMean,
                 baselineMean: baselineMean,
@@ -1179,8 +1174,6 @@ final class CompoundInsightEngine {
 
             return WeekdayProfile(
                 metric: metric,
-                dayMeans: dayMeans,
-                overallMean: overallMean,
                 peakDay: peakDay.key,
                 troughDay: troughDay.key,
                 peakTroughDeltaPercent: deltaPercent

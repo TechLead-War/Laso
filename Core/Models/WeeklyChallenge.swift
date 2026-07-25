@@ -34,12 +34,9 @@ struct ProgressiveCoachState: Codable {
 
 /// Week-specific adaptive coaching plan shown to the user.
 struct ProgressiveCoachPlan {
-    let weekStart: Date
-    let weekEnd: Date
     let currentDailyStepTarget: Int
     let nextDailyStepTarget: Int
     let adherence: CoachAdherenceStatus
-    let adherenceRatio: Double
     let currentAverageDailySteps: Int
     let coachingMessage: String
 

@@ -557,9 +557,6 @@ struct IllnessEarlyWarning {
 // MARK: - InsightAnalyzer Conformance
 
 extension IllnessEarlyWarning: InsightAnalyzer {
-    static var analyzerID: String { "illnessEarlyWarning" }
-    static var insightCategory: InsightCategory { .watchSignal }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(from: context.illnessWarnings)
     }

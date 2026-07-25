@@ -310,7 +310,4 @@ struct BiologicalAgeAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension BiologicalAgeAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "biologicalAge" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-}
+extension BiologicalAgeAnalyzer: InsightAnalyzer {}

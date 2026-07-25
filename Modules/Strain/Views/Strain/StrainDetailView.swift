@@ -64,11 +64,6 @@ struct StrainDetailView: View {
     let guidanceText: String
     let weekHistory: [DailyStrainPoint]
     let strainBalance: StrainBalance
-    let workoutRecoveryBand: WorkoutRecoveryBand
-    let cyclePhase: CyclePhaseModifier?
-    /// Freshness timestamp from the parent dashboard refresh.
-    /// Drives a small "Updated …" caption at the top of the screen.
-    var lastUpdated: Date? = nil
 
     private let maxStrain: Double = 21.0
 
@@ -674,9 +669,7 @@ struct StrainDetailView: View {
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -1, to: .now)!, strain: 18.9, level: .overreaching),
                 DailyStrainPoint(date: .now, strain: 14.2, level: .high)
             ],
-            strainBalance: .optimal,
-            workoutRecoveryBand: .green,
-            cyclePhase: .follicular
+            strainBalance: .optimal
         )
     }
 }

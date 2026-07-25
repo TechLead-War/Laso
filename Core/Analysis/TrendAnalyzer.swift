@@ -34,13 +34,10 @@ struct TrendAnalyzer {
 
     struct TrendResult {
         let direction: TrendDirection
-        let slope: Double              // Rate of change per day
         let weekOverWeekChange: Double  // Percentage change this week vs last
         let movingAverage7d: Double
         let movingAverage30d: Double
         let movingAverage90d: Double
-        let movingAverage180d: Double   // 6-month average
-        let movingAverage365d: Double   // 1-year average
         let inflection: Inflection      // Whether the trend is accelerating, decelerating, or reversing
 
         /// Rate-of-change classification: how fast is the metric changing?
@@ -120,7 +117,7 @@ struct TrendAnalyzer {
     static func analyze(series: MetricTimeSeries, higherIsBetter: Bool, days: Int?) -> TrendResult {
         let allSamples = series.sortedSamples  // already sorted chronologically
         guard !allSamples.isEmpty else {
-            return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
+            return TrendResult(direction: .stable, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, inflection: .steady)
         }
 
         let calendar = Date.cal
@@ -138,7 +135,8 @@ struct TrendAnalyzer {
         let cutoff14  = calendar.date(byAdding: .day, value: -14,  to: now) ?? now
         let cutoff30  = calendar.date(byAdding: .day, value: -30,  to: now) ?? now
         let cutoff90  = calendar.date(byAdding: .day, value: -90,  to: now) ?? now
-        let cutoff180 = calendar.date(byAdding: .day, value: -180, to: now) ?? now
+        /// Widest window the pass ever needs: the loop stops here even when a caller
+        /// asks for a longer period, so one year bounds the scan.
         let cutoff365 = calendar.date(byAdding: .day, value: -365, to: now) ?? now
 
         let cutoffHalfPeriod = calendar.date(byAdding: .day, value: -halfPeriod,  to: now) ?? now
@@ -149,8 +147,6 @@ struct TrendAnalyzer {
         var sum7   = 0.0, count7   = 0
         var sum30  = 0.0, count30  = 0
         var sum90  = 0.0, count90  = 0
-        var sum180 = 0.0, count180 = 0
-        var sum365 = 0.0, count365 = 0
 
         // Accumulators for period halves
         var sumRecentHalf = 0.0, countRecentHalf = 0
@@ -176,8 +172,6 @@ struct TrendAnalyzer {
             if date < cutoff365 { break }
 
             // Moving averages — each bucket includes all narrower ones
-            sum365 += value; count365 += 1
-            if date >= cutoff180 { sum180 += value; count180 += 1 }
             if date >= cutoff90  { sum90  += value; count90  += 1 }
             if date >= cutoff30  { sum30  += value; count30  += 1 }
             if date >= cutoff7   { sum7   += value; count7   += 1 }
@@ -210,15 +204,13 @@ struct TrendAnalyzer {
         }
 
         guard hasPeriodSample else {
-            return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
+            return TrendResult(direction: .stable, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, inflection: .steady)
         }
 
         // Compute moving averages
         let ma7   = count7   > 0 ? sum7   / Double(count7)   : 0
         let ma30  = count30  > 0 ? sum30  / Double(count30)  : 0
         let ma90  = count90  > 0 ? sum90  / Double(count90)  : 0
-        let ma180 = count180 > 0 ? sum180 / Double(count180) : 0
-        let ma365 = count365 > 0 ? sum365 / Double(count365) : 0
 
         // Compute regression slope (values were collected newest-first, reverse for chronological order)
         regressionValues.reverse()
@@ -275,13 +267,10 @@ struct TrendAnalyzer {
 
         return TrendResult(
             direction: direction,
-            slope: slope,
             weekOverWeekChange: periodChange,
             movingAverage7d: ma7,
             movingAverage30d: ma30,
             movingAverage90d: ma90,
-            movingAverage180d: ma180,
-            movingAverage365d: ma365,
             inflection: inflection
         )
     }

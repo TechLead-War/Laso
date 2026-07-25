@@ -4,7 +4,6 @@ import SwiftUI
 /// Tappable to expand tier details. Designed to be unobtrusive.
 struct DataConfidenceBadge: View {
     let daysOfData: Int
-    let metricsTracked: Int
 
     @State private var showDetail = false
 
@@ -181,10 +180,10 @@ private enum Tier: String, CaseIterable, Hashable {
 
 #Preview {
     VStack(spacing: 16) {
-        DataConfidenceBadge(daysOfData: 3, metricsTracked: 8)
-        DataConfidenceBadge(daysOfData: 14, metricsTracked: 12)
-        DataConfidenceBadge(daysOfData: 75, metricsTracked: 18)
-        DataConfidenceBadge(daysOfData: 120, metricsTracked: 20)
+        DataConfidenceBadge(daysOfData: 3)
+        DataConfidenceBadge(daysOfData: 14)
+        DataConfidenceBadge(daysOfData: 75)
+        DataConfidenceBadge(daysOfData: 120)
     }
     .padding()
     .background(Color(.systemGroupedBackground))

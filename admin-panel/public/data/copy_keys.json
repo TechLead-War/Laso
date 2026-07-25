@@ -9024,12 +9024,6 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_affects_label",
-    "defaultValue": "%@ affects %@",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_amount",
     "defaultValue": "Amount",
     "sourceFile": "Copy+Journal.swift",
@@ -9038,42 +9032,6 @@
   {
     "key": "copy_journal_amount_label",
     "defaultValue": "%@ amount",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_behavior_plural",
-    "defaultValue": "behaviors",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_behavior_singular",
-    "defaultValue": "behavior",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_correlation_mild",
-    "defaultValue": "Mild",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_correlation_moderate",
-    "defaultValue": "Moderate",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_correlation_strong",
-    "defaultValue": "Strong",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_days_text",
-    "defaultValue": "%d days",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -9102,42 +9060,6 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_insights_empty_state_description",
-    "defaultValue": "Log 14 or more days of journal entries to see how your habits affect your health. The more you log, the more patterns we can find.",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_insights_insights_unlocking",
-    "defaultValue": "Insights Unlocking...",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_insights_start_logging",
-    "defaultValue": "Start logging to see connections",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_insights_title",
-    "defaultValue": "Journal Insights",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_insights_top_discoveries",
-    "defaultValue": "Your Top Discoveries",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_insights_top_discoveries_subtitle",
-    "defaultValue": "Patterns we found in your journal entries and health data",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_log_entry",
     "defaultValue": "Log %@",
     "sourceFile": "Copy+Journal.swift",
@@ -9152,12 +9074,6 @@
   {
     "key": "copy_journal_logged",
     "defaultValue": "Logged",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_logged_count",
-    "defaultValue": "Logged %d %@",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -9182,12 +9098,6 @@
   {
     "key": "copy_journal_what_to_log",
     "defaultValue": "What would you like to log?",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_x_text",
-    "defaultValue": "%d",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -10482,12 +10392,6 @@
     "isArray": false
   },
   {
-    "key": "copy_onboarding_siri_tip",
-    "defaultValue": "Try saying \"Hey Siri, what's my health score in Laso\"",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_target7h",
     "defaultValue": "target 7h",
     "sourceFile": "Copy+Onboarding.swift",
@@ -10508,12 +10412,6 @@
   {
     "key": "copy_onboarding_x_text",
     "defaultValue": "%d",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_x_text2",
-    "defaultValue": "%@: **%@**",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },

@@ -149,9 +149,6 @@ struct BaselineDriftDetector {
 // MARK: - InsightAnalyzer Conformance
 
 extension BaselineDriftDetector: InsightAnalyzer {
-    static var analyzerID: String { "baselineDrift" }
-    static var insightCategory: InsightCategory { .baselineDrift }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             currentBaselines: context.baselines,

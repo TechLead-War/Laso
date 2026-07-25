@@ -13,7 +13,6 @@ final class MLResultAggregator {
         var currentHealthState: HealthState?
         var tomorrowRiskPrediction: MLPrediction?
         var policyDecision: PolicyDecision?
-        var compoundInsights: [CompoundInsightEngine.CompoundInsight] = []
     }
 
     func collectResults(
@@ -82,8 +81,7 @@ final class MLResultAggregator {
                     target: "bad day tomorrow",
                     probability: coldStart.riskScore,
                     confidence: coldStart.confidence,
-                    topFactors: [],
-                    generatedAt: Date()
+                    topFactors: []
                 )
             }
         }
@@ -477,7 +475,7 @@ final class MLResultAggregator {
             candidate: decision.primaryAction.candidate,
             expectedUtility: decision.primaryAction.expectedUtility,
             noveltyFactor: decision.primaryAction.noveltyFactor,
-            title: primaryLang.title, description: primaryLang.description,
+            description: primaryLang.description,
             whyItMatters: primaryLang.whyMatters, expectedBenefit: primaryLang.expectedBenefit
         )
 
@@ -490,7 +488,7 @@ final class MLResultAggregator {
             secondaryWithLang = PolicyDecision.RankedIntervention(
                 candidate: sec.candidate,
                 expectedUtility: sec.expectedUtility, noveltyFactor: sec.noveltyFactor,
-                title: secLang.title, description: secLang.description,
+                description: secLang.description,
                 whyItMatters: secLang.whyMatters, expectedBenefit: secLang.expectedBenefit
             )
         }
@@ -503,7 +501,7 @@ final class MLResultAggregator {
             return PolicyDecision.RankedIntervention(
                 candidate: ranked.candidate,
                 expectedUtility: ranked.expectedUtility, noveltyFactor: ranked.noveltyFactor,
-                title: lang.title, description: lang.description,
+                description: lang.description,
                 whyItMatters: lang.whyMatters, expectedBenefit: lang.expectedBenefit
             )
         }

@@ -220,11 +220,7 @@ struct AskYourDataCard: View {
                 installDate: Date.cal.date(byAdding: .day, value: -4, to: Date())!,
                 lastMilestoneDate: Date()
             ),
-            latestMilestone: ActivationSequenceManager.MilestoneEvent(
-                milestone: .firstCorrelation,
-                unlockedAt: Date(),
-                dataPointCount: 42
-            ),
+            latestMilestone: ActivationSequenceManager.MilestoneEvent(milestone: .firstCorrelation),
             onDismissCelebration: {}
         )
 

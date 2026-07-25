@@ -1,8 +1,7 @@
 import Foundation
 
-/// Discovers each user's personal optimal conditions. what their best and worst days
-/// look like, what combination of factors creates peak performance, ideal targets,
-/// recovery patterns, and resilience factors.
+/// Discovers each user's personal optimal conditions. what combination of factors
+/// creates peak performance, the ideal-day targets, and which metrics move the score most.
 ///
 /// All thresholds and ranges are derived from the user's own data distribution,
 /// not population averages. Requires at least 21 days of scored data.
@@ -16,41 +15,13 @@ final class PersonalOptimizer {
         let matchPercentage: Double
         let avgScoreWhenOptimal: Double
         let avgScoreWhenNot: Double
-        let description: String
 
         struct OptimalCondition {
             let metric: HealthMetric
             let optimalRange: (lower: Double, upper: Double)
-            let importance: Double
-            let currentValue: Double?
             let isCurrentlyMet: Bool
             let description: String
         }
-    }
-
-    struct DayProfile {
-        let metrics: [MetricProfile]
-        let dayType: DayType
-        let frequency: Int
-        let avgScore: Double
-        let description: String
-
-        struct MetricProfile {
-            let metric: HealthMetric
-            let mean: Double
-            let range: (lower: Double, upper: Double)
-        }
-
-        enum DayType: String {
-            case bestDays, goodDays, averageDays, poorDays, worstDays
-        }
-    }
-
-    struct RecoveryProfile {
-        let avgRecoveryDays: Double
-        let fastRecoveryConditions: [String]
-        let slowRecoveryConditions: [String]
-        let description: String
     }
 
     struct IdealDay {
@@ -62,17 +33,8 @@ final class PersonalOptimizer {
         struct DayTarget {
             let metric: HealthMetric
             let targetValue: Double
-            let importanceRank: Int
             let description: String
         }
-    }
-
-    struct ResilienceFactor {
-        let bufferMetric: HealthMetric
-        let stressorMetric: HealthMetric
-        let protectiveRange: String
-        let effectSize: Double
-        let description: String
     }
 
     struct SensitivityResult {
@@ -85,11 +47,7 @@ final class PersonalOptimizer {
     // MARK: - Public State
 
     private(set) var optimalProfile: OptimalProfile?
-    private(set) var bestDayProfile: DayProfile?
-    private(set) var worstDayProfile: DayProfile?
-    private(set) var recoveryProfile: RecoveryProfile?
     private(set) var idealDay: IdealDay?
-    private(set) var resilienceFactors: [ResilienceFactor] = []
     private(set) var sensitivities: [SensitivityResult] = []
 
     // MARK: - Internal Types
@@ -102,7 +60,6 @@ final class PersonalOptimizer {
 
     private struct LinReg {
         let slope: Double
-        let intercept: Double
         let rSquared: Double
     }
 
@@ -141,11 +98,7 @@ final class PersonalOptimizer {
         let latest = latestValues(from: sorted)
 
         optimalProfile = discoverOptimalProfile(byScore: byScore, metrics: avail, latest: latest)
-        bestDayProfile = buildDayProfile(byScore: byScore, type: .bestDays, metrics: avail)
-        worstDayProfile = buildDayProfile(byScore: byScore, type: .worstDays, metrics: avail)
         idealDay = computeIdealDay(byScore: byScore, metrics: avail)
-        recoveryProfile = analyzeRecovery(sorted: sorted, metrics: avail)
-        resilienceFactors = discoverResilience(sorted: sorted, metrics: avail)
         sensitivities = computeSensitivities(days: sorted, metrics: avail)
     }
 
@@ -175,13 +128,11 @@ final class PersonalOptimizer {
         let top = Array(hits.prefix(8))
         guard !top.isEmpty else { return nil }
 
-        let maxE = top[0].effect
         let conditions = top.map { h -> OptimalProfile.OptimalCondition in
             let cur = latest[h.metric]
             let met = cur.map { $0 >= h.lo && $0 <= h.hi } ?? false
             let u = h.metric.unit.isEmpty ? "" : " \(h.metric.unit)"
-            return .init(metric: h.metric, optimalRange: (h.lo, h.hi),
-                         importance: h.effect / maxE, currentValue: cur, isCurrentlyMet: met,
+            return .init(metric: h.metric, optimalRange: (h.lo, h.hi), isCurrentlyMet: met,
                          description: "\(h.metric.displayName) \(h.metric.formatValue(h.lo))-\(h.metric.formatValue(h.hi))\(u)")
         }
 
@@ -198,63 +149,9 @@ final class PersonalOptimizer {
         let matchPct = Double(matchN) / Double(byScore.count) * 100
         let avgOpt = optScores.isEmpty ? 0 : Double(optScores.reduce(0,+)) / Double(optScores.count)
         let avgNon = nonScores.isEmpty ? 0 : Double(nonScores.reduce(0,+)) / Double(nonScores.count)
-        let condStr = conditions.prefix(3).map(\.description).joined(separator: ", ")
 
         return OptimalProfile(conditions: conditions, matchPercentage: matchPct,
-            avgScoreWhenOptimal: avgOpt, avgScoreWhenNot: avgNon,
-            description: "Your top \(topN) days share: \(condStr). Hit this combo \(matchN) times in \(byScore.count) days.")
-    }
-
-    // MARK: - Day Profiling
-
-    private func buildDayProfile(
-        byScore: [ScoredDay], type: DayProfile.DayType, metrics: [HealthMetric]
-    ) -> DayProfile? {
-        let n = byScore.count; guard n >= Self.minimumDays else { return nil }
-        let days: [ScoredDay]
-        switch type {
-        case .bestDays:   days = Array(byScore.prefix(max(3, n / 10)))
-        case .goodDays:   days = Array(byScore.prefix(max(3, n / 4)))
-        case .averageDays: days = Array(byScore[(n/4)..<(n*3/4)])
-        case .poorDays:   days = Array(byScore.suffix(max(3, n / 4)))
-        case .worstDays:  days = Array(byScore.suffix(max(3, n / 10)))
-        }
-        guard !days.isEmpty else { return nil }
-        let avg = Double(days.reduce(0) { $0 + $1.score }) / Double(days.count)
-
-        let profiles: [DayProfile.MetricProfile] = metrics.compactMap { m in
-            let vals = days.compactMap { $0.metricValues[m] }
-            guard vals.count >= 3 else { return nil }
-            let s = vals.sorted()
-            return .init(metric: m, mean: vals.avg, range: (pctl(s, 0.10), pctl(s, 0.90)))
-        }
-
-        // Comparative description for best/worst
-        let desc: String
-        if type == .bestDays || type == .worstDays {
-            let oppDays = type == .bestDays ? Array(byScore.suffix(max(3, n/10))) : Array(byScore.prefix(max(3, n/10)))
-            let label = type == .bestDays ? "best" : "worst"
-            let oppLabel = type == .bestDays ? "worst" : "best"
-            var diffs: [(HealthMetric, Double, Double)] = [] // metric, thisMean, normalizedDiff
-            for p in profiles {
-                let opp = oppDays.compactMap { $0.metricValues[p.metric] }
-                guard !opp.isEmpty else { continue }
-                let allR = (byScore.compactMap { $0.metricValues[p.metric] }.max() ?? 1)
-                    - (byScore.compactMap { $0.metricValues[p.metric] }.min() ?? 0)
-                let nd = allR > 0 ? abs(p.mean - opp.avg) / allR : 0
-                diffs.append((p.metric, p.mean - opp.avg, nd))
-            }
-            diffs.sort { $0.2 > $1.2 }
-            let parts = diffs.prefix(3).map { m, diff, _ -> String in
-                let dir = diff > 0 ? "more" : "fewer"
-                let u = m.unit.isEmpty ? "" : " \(m.unit)"
-                return "\(m.formatValue(abs(diff)))\(u) \(dir) \(m.displayName)"
-            }
-            desc = "Your \(label) days (avg score \(String(format: "%.0f", avg))) have \(parts.joined(separator: ", ")) than your \(oppLabel)"
-        } else {
-            desc = "\(type.rawValue): avg score \(String(format: "%.0f", avg)) across \(days.count) days"
-        }
-        return DayProfile(metrics: profiles, dayType: type, frequency: days.count, avgScore: avg, description: desc)
+            avgScoreWhenOptimal: avgOpt, avgScoreWhenNot: avgNon)
     }
 
     // MARK: - Ideal Day Computation
@@ -276,12 +173,12 @@ final class PersonalOptimizer {
         let ranked = metrics.filter { sens[$0] != nil }.sorted { (sens[$0] ?? 0) > (sens[$1] ?? 0) }
 
         var targets: [IdealDay.DayTarget] = []
-        for (i, m) in ranked.prefix(8).enumerated() {
+        for m in ranked.prefix(8) {
             let vals = topDays.compactMap { $0.metricValues[m] }
             guard !vals.isEmpty else { continue }
             let med = pctl(vals.sorted(), 0.50)
             let u = m.unit.isEmpty ? "" : " \(m.unit)"
-            targets.append(.init(metric: m, targetValue: med, importanceRank: i + 1,
+            targets.append(.init(metric: m, targetValue: med,
                                  description: "Aim for ~\(m.formatValue(med))\(u) \(m.displayName)"))
         }
         guard !targets.isEmpty else { return nil }
@@ -292,123 +189,6 @@ final class PersonalOptimizer {
 
         return IdealDay(targets: targets, predictedScore: avgTop, confidence: conf,
             description: "Your ideal tomorrow: \(tStr) -> predicted score \(String(format: "%.0f", avgTop)) (\(String(format: "%.0f", conf * 100))% confidence)")
-    }
-
-    // MARK: - Recovery Analysis
-
-    private func analyzeRecovery(sorted: [ScoredDay], metrics: [HealthMetric]) -> RecoveryProfile? {
-        let scores = sorted.map { Double($0.score) }
-        let mean = scores.avg, sd = scores.std
-        guard sd > 0 else { return nil }
-        let threshold = mean - sd
-        let cal = Date.cal
-
-        struct Dip { let endIdx: Int; var recovDays: Int?; var recovMetrics: [HealthMetric: Double] }
-        var dips = [Dip]()
-        var i = 0
-        while i < sorted.count {
-            if Double(sorted[i].score) < threshold {
-                while i < sorted.count && Double(sorted[i].score) < threshold { i += 1 }
-                let end = i - 1
-                var rd: Int?; var rm: [HealthMetric: [Double]] = [:]
-                for j in (end+1)..<sorted.count {
-                    let gap = cal.dateComponents([.day], from: sorted[end].date, to: sorted[j].date).day ?? 0
-                    if gap > 14 { break }
-                    for m in metrics { if let v = sorted[j].metricValues[m] { rm[m, default: []].append(v) } }
-                    if Double(sorted[j].score) >= mean { rd = gap; break }
-                }
-                dips.append(Dip(endIdx: end, recovDays: rd, recovMetrics: rm.mapValues { $0.avg }))
-            } else { i += 1 }
-        }
-        let resolved = dips.filter { $0.recovDays != nil }
-        guard resolved.count >= 2 else { return nil }
-
-        let rdays = resolved.compactMap(\.recovDays)
-        let avgR = Double(rdays.reduce(0,+)) / Double(rdays.count)
-        let medR = Double(rdays.sorted()[rdays.count / 2])
-        let fast = resolved.filter { Double($0.recovDays!) <= medR }
-        let slow = resolved.filter { Double($0.recovDays!) > medR }
-
-        var fastCond = [String](), slowCond = [String]()
-        for m in metrics {
-            let fv = fast.compactMap { $0.recovMetrics[m] }, sv = slow.compactMap { $0.recovMetrics[m] }
-            guard fv.count >= 2, sv.count >= 2 else { continue }
-            let pooled = (fv.std + sv.std) / 2; guard pooled > 0 else { continue }
-            let d = (fv.avg - sv.avg) / pooled; guard abs(d) > 0.5 else { continue }
-            let u = m.unit.isEmpty ? "" : " \(m.unit)"
-            if (m.higherIsBetter && d > 0) || (!m.higherIsBetter && d < 0) {
-                fastCond.append(">\(m.formatValue(fv.avg))\(u) \(m.displayName)")
-            } else {
-                slowCond.append("<\(m.formatValue(sv.avg))\(u) \(m.displayName)")
-            }
-        }
-
-        let fAvg = fast.isEmpty ? avgR : Double(fast.compactMap(\.recovDays).reduce(0,+)) / Double(fast.count)
-        let sAvg = slow.isEmpty ? avgR : Double(slow.compactMap(\.recovDays).reduce(0,+)) / Double(slow.count)
-        var desc = "After a bad stretch, you recover in \(String(format: "%.1f", fAvg)) days"
-        if let c = fastCond.first { desc += " with \(c) vs \(String(format: "%.1f", sAvg)) days without" }
-
-        return RecoveryProfile(avgRecoveryDays: avgR, fastRecoveryConditions: fastCond,
-                               slowRecoveryConditions: slowCond, description: desc)
-    }
-
-    // MARK: - Resilience Factor Discovery
-
-    private func discoverResilience(sorted: [ScoredDay], metrics: [HealthMetric]) -> [ResilienceFactor] {
-        guard sorted.count >= 30 else { return [] }
-        let stressors: [HealthMetric] = [.sleepDuration, .sleepDeep, .sleepREM, .heartRateVariability, .restingHeartRate].filter { metrics.contains($0) }
-        let buffers: [HealthMetric] = [.exerciseMinutes, .steps, .activeCalories, .sleepDuration, .sleepDeep, .mindfulMinutes, .heartRateVariability].filter { metrics.contains($0) }
-        let cal = Date.cal
-        var factors = [ResilienceFactor]()
-
-        for stressor in stressors {
-            let sVals = sorted.compactMap { $0.metricValues[stressor] }
-            guard sVals.count >= 10 else { continue }
-            let sMean = sVals.avg, sStd = sVals.std; guard sStd > 0 else { continue }
-            let badThresh = stressor.higherIsBetter ? sMean - sStd : sMean + sStd
-
-            let stressDayIdx: [Int] = sorted.enumerated().compactMap { idx, day in
-                guard let v = day.metricValues[stressor] else { return nil }
-                return (stressor.higherIsBetter ? v < badThresh : v > badThresh) ? idx : nil
-            }
-            guard stressDayIdx.count >= 5 else { continue }
-
-            for buffer in buffers where buffer != stressor {
-                let bVals = sorted.compactMap { $0.metricValues[buffer] }
-                guard bVals.count >= 10 else { continue }
-                let bMedian = bVals.sorted()[bVals.count / 2]
-                var hiDeltas = [Double](), loDeltas = [Double]()
-
-                for idx in stressDayIdx {
-                    var window = [Double]()
-                    for lb in 1...7 {
-                        let pi = idx - lb; guard pi >= 0 else { break }
-                        let gap = cal.dateComponents([.day], from: sorted[pi].date, to: sorted[idx].date).day ?? 0
-                        guard gap <= 10 else { break }
-                        if let v = sorted[pi].metricValues[buffer] { window.append(v) }
-                    }
-                    guard window.count >= 3, idx + 1 < sorted.count else { continue }
-                    let bAvg = window.avg
-                    let delta = Double(sorted[idx + 1].score - sorted[idx].score)
-                    if bAvg >= bMedian { hiDeltas.append(delta) } else { loDeltas.append(delta) }
-                }
-                guard hiDeltas.count >= 3, loDeltas.count >= 3 else { continue }
-                let diff = hiDeltas.avg - loDeltas.avg; guard diff > 2.0 else { continue }
-                let ps = sqrt((hiDeltas.vari + loDeltas.vari) / 2)
-                let es = ps > 0 ? diff / ps : 0; guard es > 0.3 else { continue }
-
-                let hbv = bVals.filter { $0 >= bMedian }.sorted()
-                let lo = pctl(hbv, 0.25), hi = pctl(hbv, 0.75)
-                let u = buffer.unit.isEmpty ? "" : " \(buffer.unit)"
-                let range = "\(buffer.formatValue(lo))-\(buffer.formatValue(hi))\(u)/day"
-                let desc = "When your weekly \(buffer.displayName) is \(range), poor \(stressor.displayName) only changes score by \(String(format: "%.0f", abs(hiDeltas.avg))) pts vs \(String(format: "%.0f", abs(loDeltas.avg))) pts when low"
-                factors.append(ResilienceFactor(bufferMetric: buffer, stressorMetric: stressor, protectiveRange: range, effectSize: es, description: desc))
-            }
-        }
-        factors.sort { $0.effectSize > $1.effectSize }
-        var seen = Set<String>(); var unique = [ResilienceFactor]()
-        for f in factors { let k = f.stressorMetric.rawValue; if seen.insert(k).inserted { unique.append(f) } }
-        return Array(unique.prefix(5))
     }
 
     // MARK: - Sensitivity Analysis
@@ -432,14 +212,14 @@ final class PersonalOptimizer {
     // MARK: - Statistical Helpers
 
     private func linReg(x: [Double], y: [Double]) -> LinReg {
-        let n = Double(x.count); guard n >= 3 else { return LinReg(slope: 0, intercept: 0, rSquared: 0) }
+        let n = Double(x.count); guard n >= 3 else { return LinReg(slope: 0, rSquared: 0) }
         let xm = x.avg, ym = y.avg
         var sxy = 0.0, sxx = 0.0, sst = 0.0
         for i in 0..<x.count { let dx = x[i]-xm, dy = y[i]-ym; sxy += dx*dy; sxx += dx*dx; sst += dy*dy }
-        guard sxx > 0, sst > 0 else { return LinReg(slope: 0, intercept: ym, rSquared: 0) }
+        guard sxx > 0, sst > 0 else { return LinReg(slope: 0, rSquared: 0) }
         let sl = sxy / sxx, ic = ym - sl * xm
         var ssr = 0.0; for i in 0..<x.count { let r = y[i] - (sl*x[i]+ic); ssr += r*r }
-        return LinReg(slope: sl, intercept: ic, rSquared: max(0, 1 - ssr/sst))
+        return LinReg(slope: sl, rSquared: max(0, 1 - ssr/sst))
     }
 
     /// Mann-Whitney U test. Returns true if p < 0.05 (two-tailed, normal approximation).
@@ -517,10 +297,5 @@ private extension Array where Element == Double {
         guard count > 1 else { return 0 }
         let m = avg; var s = 0.0; for v in self { let d = v - m; s += d * d }
         return sqrt(s / Double(count))
-    }
-    var vari: Double {
-        guard count > 1 else { return 0 }
-        let m = avg; var s = 0.0; for v in self { let d = v - m; s += d * d }
-        return s / Double(count)
     }
 }

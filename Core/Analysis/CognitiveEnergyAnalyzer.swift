@@ -586,9 +586,6 @@ struct CognitiveEnergyAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension CognitiveEnergyAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "cognitiveEnergy" }
-    static var insightCategory: InsightCategory { .cognitiveEnergy }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             timeSeries: context.timeSeries,

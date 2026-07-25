@@ -3,7 +3,6 @@ import SwiftUI
 /// Real-time health dashboard. live vitals, heart rate zones, activity rings, readiness
 struct LiveView: View {
     let viewModel: LiveViewModel
-    let mlOrchestrator: MLOrchestrator?
     let deviceSourceManager: DeviceSourceManager
     @Environment(\.scenePhase) private var scenePhase
 
@@ -189,7 +188,6 @@ struct LiveView: View {
 #Preview {
     LiveView(
         viewModel: LiveViewModel(healthKitManager: HealthKitManager()),
-        mlOrchestrator: nil,
         deviceSourceManager: DeviceSourceManager(healthStore: .init())
     )
 }

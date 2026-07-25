@@ -227,7 +227,6 @@ final class DecisionPolicyEngine {
                 candidate: item.candidate,
                 expectedUtility: item.utility,
                 noveltyFactor: item.novelty,
-                title: "",
                 description: "",
                 whyItMatters: "",
                 expectedBenefit: ""
@@ -244,7 +243,6 @@ final class DecisionPolicyEngine {
             candidate: primary.candidate,
             expectedUtility: primary.utility,
             noveltyFactor: primary.novelty,
-            title: "",
             description: "",
             whyItMatters: "",
             expectedBenefit: ""
@@ -256,7 +254,6 @@ final class DecisionPolicyEngine {
                 candidate: sec.candidate,
                 expectedUtility: sec.utility,
                 noveltyFactor: sec.novelty,
-                title: "",
                 description: "",
                 whyItMatters: "",
                 expectedBenefit: ""
@@ -906,7 +903,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: metric, trend: nil, source: .predictiveModel)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "pred_\(metric.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -918,7 +914,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: metric, deltaFraction: 0.3),
                 timeToBenefit: .nextDay,
                 adherenceLikelihood: adherenceLikelihood(for: metric),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -957,7 +952,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: upstream, trend: trends[upstream], source: .causalDiscovery)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "causal_\(upstream.rawValue)_\(corr.metricB.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -969,7 +963,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: upstream, deltaFraction: 0.25),
                 timeToBenefit: .twoDays,
                 adherenceLikelihood: adherenceLikelihood(for: upstream),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -1009,7 +1002,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: char.metric, trend: nil, source: .stateTransition)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "state_\(char.metric.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -1021,7 +1013,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: char.metric, deltaFraction: 0.3),
                 timeToBenefit: .twoDays,
                 adherenceLikelihood: adherenceLikelihood(for: char.metric),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -1069,7 +1060,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: anomaly.metric, trend: nil, source: .anomalyResponse)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "anomaly_\(anomaly.metric.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -1081,7 +1071,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: anomaly.metric, deltaFraction: 0.2),
                 timeToBenefit: .nextDay,
                 adherenceLikelihood: adherenceLikelihood(for: anomaly.metric),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -1132,7 +1121,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: metric, trend: result, source: .trendReversal)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "trend_\(metric.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -1144,7 +1132,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: metric, deltaFraction: 0.2),
                 timeToBenefit: .threeDays,
                 adherenceLikelihood: adherenceLikelihood(for: metric),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -1188,7 +1175,6 @@ final class DecisionPolicyEngine {
 
             let uplift = min(1.0, rec.confidence * 0.6)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "circadian_\(rec.activity.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -1200,7 +1186,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: metric, deltaFraction: 0.15),
                 timeToBenefit: .immediate,
                 adherenceLikelihood: adherenceLikelihood(for: metric) * 1.1, // timing-aware boost
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,
@@ -1247,7 +1232,6 @@ final class DecisionPolicyEngine {
 
             let actionType = bestActionType(for: metric, trend: trends[metric], source: .baselineRecovery)
             let effectiveness = categoryEffectiveness[actionType.rawValue]
-            let exposure = recentExposureCount(for: actionType)
 
             return InterventionCandidate(
                 id: "baseline_\(metric.rawValue)_\(UUID().uuidString.prefix(8))",
@@ -1259,7 +1243,6 @@ final class DecisionPolicyEngine {
                 effortCost: effortCost(for: metric, deltaFraction: abs(deviation) / 100.0),
                 timeToBenefit: .threeDays,
                 adherenceLikelihood: adherenceLikelihood(for: metric),
-                recentExposureCount: exposure,
                 historicalEffectiveness: effectiveness,
                 evidence: InterventionEvidence(
                     historicalResponseMean: nil,

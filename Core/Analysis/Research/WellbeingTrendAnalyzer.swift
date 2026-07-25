@@ -271,7 +271,4 @@ struct WellbeingTrendAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension WellbeingTrendAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "wellbeingTrend" }
-    static var insightCategory: InsightCategory { .cognitiveEnergy }
-}
+extension WellbeingTrendAnalyzer: InsightAnalyzer {}

@@ -184,7 +184,4 @@ struct CardioRespiratoryAgeAnalyzer {
 
 // MARK: - InsightAnalyzer Conformance
 
-extension CardioRespiratoryAgeAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "cardioRespiratoryAge" }
-    static var insightCategory: InsightCategory { .clinicalTrajectory }
-}
+extension CardioRespiratoryAgeAnalyzer: InsightAnalyzer {}

@@ -7,8 +7,6 @@ import Foundation
 ///   raw, roc, vol7, lag1, lag3, lag7, devBaseline (original)
 ///   acceleration, entropy, periodicityStr, vol14, vol28, lag14, lag28, lag60,
 ///   weekdayOffset, weekendOffset, missingness (extended)
-///
-/// Also computes cross-metric interaction features for key health metric pairs.
 final class FeatureEngine {
     /// Minimum days of data required before producing feature vectors
     static let minimumDays = 7
@@ -25,34 +23,11 @@ final class FeatureEngine {
     /// Ordered feature keys for deterministic array output
     private(set) var orderedKeys: [FeatureKey] = []
 
-    /// Interaction features computed during the last `buildFeatureVectors` call, keyed by date.
-    private(set) var interactionsByDate: [Date: [InteractionFeature: Double]] = [:]
-
-    /// The set of interaction pairs computed during the last build.
-    private(set) var interactionPairs: [InteractionFeature] = []
-
     /// Cached feature vectors from previous builds. Only the most recent `rebuildWindowDays`
     /// are recomputed each call; older days reuse cached vectors.
     private var cachedVectors: [Date: DailyFeatureVector] = [:]
-    private var cachedInteractionsByDate: [Date: [InteractionFeature: Double]] = [:]
     /// Days within this window are always recomputed (handles late-arriving data).
     private static let rebuildWindowDays = 3
-
-    // MARK: - Key Interaction Metric Pairs
-
-    /// Curated cross-metric pairs that capture physiologically meaningful interactions.
-    private static let keyInteractionPairs: [(HealthMetric, HealthMetric)] = [
-        (.heartRateVariability, .sleepDuration),
-        (.heartRateVariability, .restingHeartRate),
-        (.restingHeartRate, .exerciseMinutes),
-        (.sleepDuration, .steps),
-        (.sleepDeep, .heartRateVariability),
-        (.activeCalories, .sleepDuration),
-        (.exerciseMinutes, .restingHeartRate),
-        (.steps, .restingHeartRate),
-        (.vo2Max, .exerciseMinutes),
-        (.sleepDuration, .exerciseMinutes),
-    ]
 
     // MARK: - Shannon Entropy Constants
 
@@ -106,9 +81,6 @@ final class FeatureEngine {
 
     /// Build daily feature vectors from raw time series data.
     /// Returns vectors sorted by date (oldest first).
-    ///
-    /// After this call, `interactionsByDate` contains cross-metric interaction features keyed
-    /// by date, and `interactionPairs` lists the interaction keys in deterministic order.
     func buildFeatureVectors(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
@@ -210,7 +182,6 @@ final class FeatureEngine {
 
         // Build vectors for each day
         var vectors: [DailyFeatureVector] = []
-        var interactionsAccumulator: [Date: [InteractionFeature: Double]] = [:]
 
         for dayOffset in 0..<allDays.count {
             let day = allDays[dayOffset]
@@ -220,14 +191,8 @@ final class FeatureEngine {
             if dayOffset >= Self.rebuildWindowDays,
                let cached = cachedVectors[day] {
                 vectors.append(cached)
-                if let cachedInt = cachedInteractionsByDate[day] {
-                    interactionsAccumulator[day] = cachedInt
-                }
                 continue
             }
-
-            let dow = calendar.component(.weekday, from: day) // 1=Sun, 7=Sat
-            let isWeekendDay = (dow == 1 || dow == 7)
 
             var features: [FeatureKey: Double] = [:]
             var hasAnyData = false
@@ -396,28 +361,11 @@ final class FeatureEngine {
 
             let context = ContextFeatures.from(date: day)
             vectors.append(DailyFeatureVector(date: day, features: features, context: context))
-
-            // --- Interaction features for this day ---
-            let dayInteractions = computeInteractions(
-                features: features,
-                metricsAvailable: Set(sortedMetrics),
-                isWeekend: isWeekendDay
-            )
-            if !dayInteractions.isEmpty {
-                interactionsAccumulator[day] = dayInteractions
-            }
         }
-
-        // Finalize interaction outputs
-        interactionsByDate = interactionsAccumulator
-        interactionPairs = buildOrderedInteractionKeys(metricsAvailable: Set(sortedMetrics))
 
         // Update cache with freshly computed vectors
         for vector in vectors {
             cachedVectors[vector.date] = vector
-        }
-        for (date, ints) in interactionsAccumulator {
-            cachedInteractionsByDate[date] = ints
         }
 
         return vectors.sorted { $0.date < $1.date }
@@ -490,71 +438,4 @@ final class FeatureEngine {
         return maxEntropy > 0 ? entropy / maxEntropy : 0
     }
 
-    /// Compute interaction features for a single day given the per-metric feature dictionary.
-    private func computeInteractions(
-        features: [FeatureKey: Double],
-        metricsAvailable: Set<HealthMetric>,
-        isWeekend: Bool
-    ) -> [InteractionFeature: Double] {
-        var result: [InteractionFeature: Double] = [:]
-
-        for (metricA, metricB) in Self.keyInteractionPairs {
-            guard metricsAvailable.contains(metricA),
-                  metricsAvailable.contains(metricB) else { continue }
-
-            let keyA = FeatureKey(metric: metricA, type: .raw)
-            let keyB = FeatureKey(metric: metricB, type: .raw)
-
-            guard let zA = features[keyA], zA != FeatureKey.missingSentinel,
-                  let zB = features[keyB], zB != FeatureKey.missingSentinel else { continue }
-
-            // Product interaction: A * B (captures joint effect)
-            let productKey = InteractionFeature(
-                metricA: metricA, metricB: metricB, interactionType: .product
-            )
-            result[productKey] = zA * zB
-
-            // Ratio interaction: A / B (relative measure, guard division by near-zero)
-            let ratioKey = InteractionFeature(
-                metricA: metricA, metricB: metricB, interactionType: .ratio
-            )
-            if abs(zB) > 0.01 {
-                result[ratioKey] = zA / zB
-            } else {
-                result[ratioKey] = FeatureKey.missingSentinel
-            }
-
-            // Conditional high: A when B > 1 sigma
-            let condHighKey = InteractionFeature(
-                metricA: metricA, metricB: metricB, interactionType: .conditionalHigh
-            )
-            result[condHighKey] = zB > 1.0 ? zA : FeatureKey.missingSentinel
-
-            // Conditional low: A when B < -1 sigma
-            let condLowKey = InteractionFeature(
-                metricA: metricA, metricB: metricB, interactionType: .conditionalLow
-            )
-            result[condLowKey] = zB < -1.0 ? zA : FeatureKey.missingSentinel
-        }
-
-        return result
-    }
-
-    /// Build a deterministic ordered list of all interaction feature keys based on available metrics.
-    private func buildOrderedInteractionKeys(metricsAvailable: Set<HealthMetric>) -> [InteractionFeature] {
-        var keys: [InteractionFeature] = []
-        let interactionTypes: [InteractionFeature.InteractionType] = [
-            .product, .ratio, .conditionalHigh, .conditionalLow,
-        ]
-        for (metricA, metricB) in Self.keyInteractionPairs {
-            guard metricsAvailable.contains(metricA),
-                  metricsAvailable.contains(metricB) else { continue }
-            for iType in interactionTypes {
-                keys.append(InteractionFeature(
-                    metricA: metricA, metricB: metricB, interactionType: iType
-                ))
-            }
-        }
-        return keys
-    }
 }

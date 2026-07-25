@@ -139,11 +139,6 @@ extension Copy {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_improvement_body", default: "Your %@ got better this week. Keep it going."), metric), max: bodyMax)
         }
 
-        /// Optional richer body when the exact percent is available.
-        static func improvementBody(metric: String, percent: String) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_improvement_body", default: "Your %@ is up %@%% this week. Keep it going."), metric, percent), max: bodyMax)
-        }
-
         // MARK: - Daily Summary
 
         /// One-glance score line for the notification subtitle slot, e.g.

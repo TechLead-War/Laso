@@ -40,7 +40,6 @@ final class AdaptiveAnomalyDetector {
 
     private struct IsolationTree {
         let root: IsolationNode
-        let maxDepth: Int
     }
 
     /// Trained forest
@@ -86,8 +85,6 @@ final class AdaptiveAnomalyDetector {
 
     /// Per-bucket statistics for each feature
     private struct BucketStats {
-        let bucketLabel: String
-        let peerCount: Int
         /// Per-feature mean and std for this bucket (indexed by trainedKeys position)
         let featureMeans: [Double]
         let featureStds: [Double]
@@ -98,7 +95,7 @@ final class AdaptiveAnomalyDetector {
     /// Context for each training vector (parallel array)
     private var trainingContexts: [DayContext] = []
 
-    // MARK: - Persistence Tracking
+    // MARK: - Learned Thresholds
 
     /// Learned severity thresholds from training score distribution
     /// These replace the hardcoded 0.8/0.65/0.5 thresholds
@@ -108,11 +105,6 @@ final class AdaptiveAnomalyDetector {
 
     /// Learned feature attribution threshold (replaces hardcoded 1.5σ)
     private var featureAttributionThreshold: Double = 1.5
-
-    /// Tracks consecutive anomaly days per metric for persistence gating
-    private var consecutiveAnomalyDays: [HealthMetric: Int] = [:]
-    /// Last anomaly date per metric for streak tracking
-    private var lastAnomalyDate: [HealthMetric: Date] = [:]
 
     /// Cached isolation scores keyed by date. Isolation forest scoring is deterministic
     /// (same features → same score), so we cache results and invalidate on retrain.
@@ -142,7 +134,7 @@ final class AdaptiveAnomalyDetector {
         forest = (0..<Self.numTrees).map { _ in
             let subsample = randomSubsample(dataArrays, size: Self.subSampleSize)
             let root = buildTree(data: subsample, depth: 0, maxDepth: maxDepth)
-            return IsolationTree(root: root, maxDepth: maxDepth)
+            return IsolationTree(root: root)
         }
 
         // Compute context for all training vectors
@@ -193,9 +185,7 @@ final class AdaptiveAnomalyDetector {
         let peerVar = peerDistances.reduce(0.0) { $0 + ($1 - cachedPeerDistanceMean) * ($1 - cachedPeerDistanceMean) } / Double(max(peerDistances.count, 1))
         cachedPeerDistanceStd = peerVar.squareRoot()
 
-        // Reset persistence tracking and score cache on retrain
-        consecutiveAnomalyDays = [:]
-        lastAnomalyDate = [:]
+        // Reset the score cache on retrain
         isolationScoreCache = [:]
 
         lastRetrainDate = Date()
@@ -285,15 +275,7 @@ final class AdaptiveAnomalyDetector {
     /// Anomaly result from the adaptive detector
     struct AdaptiveAnomaly {
         let date: Date
-        let globalScore: Double              // Isolation forest score (0-1, higher = more anomalous)
-        let contextualZScore: Double         // Z-score vs same-context peers
         let severity: AnomalySeverity        // Classified severity level
-        let contextBucket: String            // e.g. "weekday_normal", "weekend_intense"
-        let persistenceDays: Int             // Consecutive anomaly days for this anomaly's metrics
-        let crossSignalConfirmation: Bool    // Whether correlated metrics also deviate
-        let confirmingMetrics: [HealthMetric] // Which correlated metrics confirm the anomaly
-        let shouldSurface: Bool              // Passes persistence gate
-        let isAnomaly: Bool                  // Kept for backward compatibility
         let anomalousFeatures: [(key: FeatureKey, contribution: Double)]
     }
 
@@ -329,51 +311,24 @@ final class AdaptiveAnomalyDetector {
         // Feature attribution
         let anomalousFeatures = findAnomalousFeatures(features: features)
 
-        // Cross-signal confirmation
-        let (crossConfirmed, confirmingMetrics) = checkCrossSignalConfirmation(
+        // Cross-signal confirmation boosts severity when correlated metrics also deviate
+        let (crossConfirmed, _) = checkCrossSignalConfirmation(
             vector: vector,
             anomalousFeatures: anomalousFeatures
         )
-
-        // Boost severity if cross-confirmed
         if crossConfirmed {
             severity = boostSeverity(severity)
         }
 
-        // Update persistence tracking for anomalous metrics
-        let persistenceDays = updatePersistenceTracking(
-            date: vector.date,
-            severity: severity,
-            anomalousFeatures: anomalousFeatures
-        )
-
-        // Persistence gating: determine whether to surface
-        let shouldSurface = passesPersistenceGate(severity: severity, persistenceDays: persistenceDays)
-
-        // Backward-compatible isAnomaly
-        let isAnomaly = severity >= .warning
-
         return AdaptiveAnomaly(
             date: vector.date,
-            globalScore: globalScore,
-            contextualZScore: contextualZ,
             severity: severity,
-            contextBucket: context.bucketLabel,
-            persistenceDays: persistenceDays,
-            crossSignalConfirmation: crossConfirmed,
-            confirmingMetrics: confirmingMetrics,
-            shouldSurface: shouldSurface,
-            isAnomaly: isAnomaly,
             anomalousFeatures: anomalousFeatures
         )
     }
 
     /// Score multiple vectors (recent days)
     func scoreRecent(vectors: [DailyFeatureVector], days: Int = 7) -> [AdaptiveAnomaly] {
-        // Reset persistence tracking before scoring a batch so we compute streaks correctly
-        consecutiveAnomalyDays = [:]
-        lastAnomalyDate = [:]
-
         let recent = vectors.suffix(days)
         return recent.map { score(vector: $0, allVectors: vectors) }
     }
@@ -507,8 +462,6 @@ final class AdaptiveAnomalyDetector {
             }
 
             bucketStatsCache[label] = BucketStats(
-                bucketLabel: label,
-                peerCount: indices.count,
                 featureMeans: means,
                 featureStds: stds
             )
@@ -601,63 +554,6 @@ final class AdaptiveAnomalyDetector {
         let sd = cachedTrainingStds[keyIndex]
         guard sd > 0 else { return 0 }
         return (value - cachedTrainingMeans[keyIndex]) / sd
-    }
-
-    // MARK: - Persistence Gating
-
-    /// Update consecutive anomaly day tracking and return the max streak across anomalous metrics
-    private func updatePersistenceTracking(
-        date: Date,
-        severity: AnomalySeverity,
-        anomalousFeatures: [(key: FeatureKey, contribution: Double)]
-    ) -> Int {
-        guard severity >= .info else {
-            // No anomaly. reset streaks for metrics not flagged
-            return 0
-        }
-
-        let calendar = Date.cal
-        let anomalousMetrics = Set(anomalousFeatures.map(\.key.metric))
-        var maxStreak = 0
-
-        for metric in anomalousMetrics {
-            if let lastDate = lastAnomalyDate[metric] {
-                // Check if this is the next consecutive day
-                let daysBetween = calendar.dateComponents([.day], from: lastDate, to: date).day ?? 0
-                if daysBetween == 1 {
-                    consecutiveAnomalyDays[metric, default: 0] += 1
-                } else if daysBetween == 0 {
-                    // Same day. no change
-                } else {
-                    // Gap. reset streak
-                    consecutiveAnomalyDays[metric] = 1
-                }
-            } else {
-                // First anomaly for this metric
-                consecutiveAnomalyDays[metric] = 1
-            }
-            lastAnomalyDate[metric] = date
-            maxStreak = max(maxStreak, consecutiveAnomalyDays[metric, default: 1])
-        }
-
-        return maxStreak
-    }
-
-    /// Determine whether an anomaly should be surfaced based on persistence rules.
-    /// - Single day: Only surface if severity >= critical (global > 0.8 AND contextual > 2.5)
-    /// - 2+ consecutive anomaly days: Surface at warning level
-    /// - 3+ consecutive: Surface at any level (info+)
-    private func passesPersistenceGate(severity: AnomalySeverity, persistenceDays: Int) -> Bool {
-        switch severity {
-        case .none:
-            return false
-        case .info:
-            return persistenceDays >= 3
-        case .warning:
-            return persistenceDays >= 2
-        case .critical:
-            return true // Always surface critical
-        }
     }
 
     // MARK: - Isolation Forest Internals

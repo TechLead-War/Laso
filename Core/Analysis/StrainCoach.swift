@@ -47,7 +47,6 @@ final class StrainCoach {
     }
 
     struct StrainTarget: Sendable {
-        let targetStrain: Double
         let minStrain: Double
         let maxStrain: Double
         let zone: TrainingZone
@@ -109,7 +108,6 @@ final class StrainCoach {
         )
 
         let result = StrainTarget(
-            targetStrain: target,
             minStrain: min,
             maxStrain: max,
             zone: zone,

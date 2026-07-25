@@ -268,9 +268,6 @@ struct PersonalRecordAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension PersonalRecordAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "personalRecord" }
-    static var insightCategory: InsightCategory { .personalRecord }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(timeSeries: context.timeSeries)
     }

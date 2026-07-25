@@ -15,10 +15,6 @@ extension Copy {
 
         // MARK: - Mirror Moment (Screen 5)
 
-        // MARK: - Siri tip
-
-        static var siriTip: String { RemoteConfigManager.shared.copyString("copy_onboarding_siri_tip", default: "Try saying \"Hey Siri, what's my health score in Laso\"") }
-
         // MARK: - Referral Code Step
 
         enum ReferralCode {
@@ -50,6 +46,5 @@ extension Copy {
         static func hMText(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_onboarding_h_m_text", default: "%dh %dm"), p0, p1) }
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_onboarding_x_text", default: "%d"), p0) }
         static func progressStepText(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_onboarding_progress_step_text", default: "%d / %d"), p0, p1) }
-        static func xText2(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_onboarding_x_text2", default: "%@: **%@**"), p0, p1) }
     }
 }

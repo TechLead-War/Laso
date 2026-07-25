@@ -20,13 +20,11 @@ final class TemporalSequenceMiner {
         let isCurrentlyActive: Bool
         let currentStepIndex: Int?
         let predictedOutcome: String?
-        let discoveredAt: Date
 
         struct SequenceStep {
             let metric: HealthMetric
             let condition: StepCondition
             let dayOffset: Int
-            let avgValue: Double
             let threshold: Double
         }
 
@@ -49,26 +47,10 @@ final class TemporalSequenceMiner {
         let isCurrentlyTriggered: Bool
     }
 
-    /// A recovery sequence tracking how metrics bounce back after a bad event
-    struct RecoveryProfile {
-        let triggerEvent: String
-        let metricRecoveries: [MetricRecovery]
-        let avgTotalRecoveryDays: Int
-        let accelerators: [String]
-        let description: String
-
-        struct MetricRecovery {
-            let metric: HealthMetric
-            let avgRecoveryDays: Int
-            let avgDepthOfDip: Double
-        }
-    }
-
     // MARK: - Public Properties
 
     private(set) var sequences: [TemporalSequence] = []
     private(set) var precursorPatterns: [PrecursorPattern] = []
-    private(set) var recoveryProfiles: [RecoveryProfile] = []
 
     var isReady: Bool { !sequences.isEmpty || !precursorPatterns.isEmpty }
 
@@ -153,16 +135,6 @@ final class TemporalSequenceMiner {
             sortedDates: sortedDates,
             baselines: baselines,
             stateHistory: stateHistory
-        )
-
-        // Bail out if device reaches critical thermal state between steps
-        guard ProcessInfo.processInfo.thermalState != .critical else { return }
-
-        // 4. Detect recovery sequences
-        recoveryProfiles = detectRecoverySequences(
-            dailyValues: dailyValues,
-            sortedDates: sortedDates,
-            baselines: baselines
         )
     }
 
@@ -288,10 +260,8 @@ final class TemporalSequenceMiner {
     /// An event: a day where a metric deviates significantly from baseline
     private struct MetricEvent {
         let date: Date
-        let metric: HealthMetric
         let value: Double
         let deviation: Double        // signed: positive = above baseline, negative = below
-        let deviationSigma: Double   // in units of standard deviations
         let direction: EventDirection
     }
 
@@ -333,13 +303,11 @@ final class TemporalSequenceMiner {
 
                 if sigma > 1.0 {
                     metricEvents.append(MetricEvent(
-                        date: date, metric: metric, value: value,
-                        deviation: deviation, deviationSigma: sigma, direction: .high
+                        date: date, value: value, deviation: deviation, direction: .high
                     ))
                 } else if sigma < -1.0 {
                     metricEvents.append(MetricEvent(
-                        date: date, metric: metric, value: value,
-                        deviation: deviation, deviationSigma: sigma, direction: .low
+                        date: date, value: value, deviation: deviation, direction: .low
                     ))
                 }
             }
@@ -411,8 +379,6 @@ final class TemporalSequenceMiner {
         // Compute average lag and consequence magnitude
         let avgLag = hits.map(\.lag).mean(of: { Double($0) })
         let avgEffectMagnitude = hits.map { abs($0.effectEvent.deviation) }.mean
-        let avgCauseValue = hits.map(\.causeEvent.value).mean
-        let avgEffectValue = hits.map(\.effectEvent.value).mean
 
         // Determine condition types from direction
         let causeCondition = dominantCondition(events: hits.map(\.causeEvent))
@@ -474,14 +440,12 @@ final class TemporalSequenceMiner {
                     metric: causeMetric,
                     condition: causeCondition,
                     dayOffset: 0,
-                    avgValue: avgCauseValue,
                     threshold: causeThreshold
                 ),
                 TemporalSequence.SequenceStep(
                     metric: effectMetric,
                     condition: effectCondition,
                     dayOffset: roundedLag,
-                    avgValue: avgEffectValue,
                     threshold: effectThreshold
                 )
             ],
@@ -491,8 +455,7 @@ final class TemporalSequenceMiner {
             description: description,
             isCurrentlyActive: isActive,
             currentStepIndex: currentStep,
-            predictedOutcome: predictedOutcome,
-            discoveredAt: Date()
+            predictedOutcome: predictedOutcome
         )
     }
 
@@ -548,7 +511,6 @@ final class TemporalSequenceMiner {
         guard pValue < 0.05 else { return nil }
 
         let avgLag3 = hits.map(\.lag).mean(of: { Double($0) })
-        let avgThirdValue = hits.map(\.thirdEvent.value).mean
         let avgThirdMagnitude = hits.map { abs($0.thirdEvent.deviation) }.mean
         let thirdCondition = dominantCondition(events: hits.map(\.thirdEvent))
         let thirdThreshold = thresholdForCondition(
@@ -591,7 +553,6 @@ final class TemporalSequenceMiner {
                     metric: thirdMetric,
                     condition: thirdCondition,
                     dayOffset: totalLag,
-                    avgValue: avgThirdValue,
                     threshold: thirdThreshold
                 )
             ],
@@ -601,8 +562,7 @@ final class TemporalSequenceMiner {
             description: description,
             isCurrentlyActive: isActive,
             currentStepIndex: currentStep,
-            predictedOutcome: predictedOutcome,
-            discoveredAt: Date()
+            predictedOutcome: predictedOutcome
         )
     }
 
@@ -831,155 +791,6 @@ final class TemporalSequenceMiner {
             threshold: threshold,
             avgPrecursorValue: preBadMean
         )
-    }
-
-    // MARK: - Recovery Sequence Detection
-
-    /// Track how metrics recover after bad events and what accelerates recovery.
-    private func detectRecoverySequences(
-        dailyValues: [Date: [HealthMetric: Double]],
-        sortedDates: [Date],
-        baselines: [HealthMetric: UserBaseline]
-    ) -> [RecoveryProfile] {
-        let badEventDates = identifyBadEvents(
-            dailyValues: dailyValues,
-            sortedDates: sortedDates,
-            baselines: baselines,
-            stateHistory: []
-        )
-        guard badEventDates.count >= minSupport else { return [] }
-
-        let recoveryMetrics: [HealthMetric] = [
-            .heartRateVariability, .restingHeartRate, .sleepDuration, .sleepDeep
-        ]
-
-        var metricRecoveries: [RecoveryProfile.MetricRecovery] = []
-        var allRecoveryDays: [Int] = []
-
-        for metric in recoveryMetrics {
-            guard let baseline = baselines[metric], baseline.standardDeviation > 0 else { continue }
-
-            var recoveryTimes: [Int] = []
-            var dipDepths: [Double] = []
-
-            for badDate in badEventDates {
-                guard let badValue = dailyValues[badDate]?[metric] else { continue }
-                let dip = abs(badValue - baseline.mean) / baseline.standardDeviation
-
-                // Track how many days until metric returns to within 0.5 sigma of baseline
-                var recoveredDay = 0
-                for offset in 1...14 {
-                    guard let futureDate = calendar.date(byAdding: .day, value: offset, to: badDate) else { break }
-                    let futureDay = calendar.startOfDay(for: futureDate)
-                    if let futureValue = dailyValues[futureDay]?[metric] {
-                        let deviation = abs(futureValue - baseline.mean) / baseline.standardDeviation
-                        if deviation < 0.5 {
-                            recoveredDay = offset
-                            break
-                        }
-                    }
-                }
-
-                if recoveredDay > 0 {
-                    recoveryTimes.append(recoveredDay)
-                    dipDepths.append(dip)
-                }
-            }
-
-            guard recoveryTimes.count >= 2 else { continue }
-
-            let avgRecovery = Int(recoveryTimes.map { Double($0) }.mean.rounded())
-            let avgDip = dipDepths.mean
-
-            metricRecoveries.append(RecoveryProfile.MetricRecovery(
-                metric: metric,
-                avgRecoveryDays: avgRecovery,
-                avgDepthOfDip: avgDip
-            ))
-            allRecoveryDays.append(contentsOf: recoveryTimes)
-        }
-
-        guard !metricRecoveries.isEmpty else { return [] }
-
-        // Detect accelerators: check if rest days (low active cal) speed recovery
-        let accelerators = detectRecoveryAccelerators(
-            badEventDates: badEventDates,
-            dailyValues: dailyValues,
-            baselines: baselines,
-            sortedDates: sortedDates
-        )
-
-        let avgTotal = allRecoveryDays.isEmpty ? 0 : Int(allRecoveryDays.map { Double($0) }.mean.rounded())
-
-        let recoveryDesc = metricRecoveries.map { recovery in
-            "\(recovery.metric.displayName): ~\(recovery.avgRecoveryDays) days"
-        }.joined(separator: ", ")
-
-        let description = "After health dips, average recovery: \(recoveryDesc). Total recovery ~\(avgTotal) days." + (accelerators.isEmpty ? "" : " Recovery is faster when: \(accelerators.joined(separator: "; "))")
-
-        return [RecoveryProfile(
-            triggerEvent: "health dip (HRV drop or RHR spike)",
-            metricRecoveries: metricRecoveries,
-            avgTotalRecoveryDays: avgTotal,
-            accelerators: accelerators,
-            description: description
-        )]
-    }
-
-    /// Check what behaviors accelerate recovery after bad events.
-    private func detectRecoveryAccelerators(
-        badEventDates: [Date],
-        dailyValues: [Date: [HealthMetric: Double]],
-        baselines: [HealthMetric: UserBaseline],
-        sortedDates: [Date]
-    ) -> [String] {
-        var accelerators: [String] = []
-
-        // Check if lower activity the day after a bad event speeds HRV recovery
-        guard let hrvBaseline = baselines[.heartRateVariability],
-              let calBaseline = baselines[.activeCalories] else { return [] }
-
-        var restRecoveryDays: [Int] = []
-        var activeRecoveryDays: [Int] = []
-
-        for badDate in badEventDates {
-            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: badDate) else { continue }
-            let nextDayStart = calendar.startOfDay(for: nextDay)
-            guard let nextDayCal = dailyValues[nextDayStart]?[.activeCalories] else { continue }
-
-            let isRestDay = nextDayCal < calBaseline.mean - 0.5 * calBaseline.standardDeviation
-
-            // Measure how fast HRV recovers
-            var recoveredDay = 14 // default to max if no recovery
-            for offset in 2...14 {
-                guard let futureDate = calendar.date(byAdding: .day, value: offset, to: badDate) else { break }
-                let futureDay = calendar.startOfDay(for: futureDate)
-                if let hrvValue = dailyValues[futureDay]?[.heartRateVariability] {
-                    if abs(hrvValue - hrvBaseline.mean) < 0.5 * hrvBaseline.standardDeviation {
-                        recoveredDay = offset
-                        break
-                    }
-                }
-            }
-
-            if isRestDay {
-                restRecoveryDays.append(recoveredDay)
-            } else {
-                activeRecoveryDays.append(recoveredDay)
-            }
-        }
-
-        if restRecoveryDays.count >= 2 && activeRecoveryDays.count >= 2 {
-            let restAvg = restRecoveryDays.map { Double($0) }.mean
-            let activeAvg = activeRecoveryDays.map { Double($0) }.mean
-            let diff = activeAvg - restAvg
-
-            if diff >= 1.0 {
-                accelerators.append("taking a rest day speeds recovery by ~\(Int(diff.rounded())) day\(diff >= 1.5 ? "s" : "")")
-            }
-        }
-
-        return accelerators
     }
 
     // MARK: - Active Pattern Matching

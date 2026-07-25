@@ -623,18 +623,12 @@ struct CyclePhaseAnalyzer {
 // MARK: - InsightAnalyzer Conformance
 
 extension WeeklyPatternAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "weeklyPattern" }
-    static var insightCategory: InsightCategory { .weeklyPattern }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(timeSeries: context.timeSeries)
     }
 }
 
 extension CyclePhaseAnalyzer: InsightAnalyzer {
-    static var analyzerID: String { "cyclePhase" }
-    static var insightCategory: InsightCategory { .cyclePhase }
-
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             timeSeries: context.timeSeries,

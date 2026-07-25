@@ -141,7 +141,6 @@ struct InsightContext {
     var rootCauseMetric: HealthMetric?
     var rootCauseDeviation: Double?
     var comparisonToLastWeek: Double?
-    var recentValues: [(date: Date, value: Double)]?
     var confidenceLevel: Double?
     var dataPointCount: Int?
 
@@ -155,7 +154,6 @@ struct InsightContext {
         rootCauseMetric: HealthMetric? = nil,
         rootCauseDeviation: Double? = nil,
         comparisonToLastWeek: Double? = nil,
-        recentValues: [(date: Date, value: Double)]? = nil,
         confidenceLevel: Double? = nil,
         dataPointCount: Int? = nil
     ) {
@@ -168,7 +166,6 @@ struct InsightContext {
         self.rootCauseMetric = rootCauseMetric
         self.rootCauseDeviation = rootCauseDeviation
         self.comparisonToLastWeek = comparisonToLastWeek
-        self.recentValues = recentValues
         self.confidenceLevel = confidenceLevel
         self.dataPointCount = dataPointCount
     }

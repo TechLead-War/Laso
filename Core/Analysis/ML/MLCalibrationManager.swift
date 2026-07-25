@@ -37,8 +37,7 @@ final class MLCalibrationManager {
             target: prediction.target,
             probability: calibratedProb,
             confidence: prediction.confidence,
-            topFactors: prediction.topFactors,
-            generatedAt: Date()
+            topFactors: prediction.topFactors
         )
 
         // Record evaluation event for this prediction

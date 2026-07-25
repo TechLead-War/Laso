@@ -19,7 +19,6 @@ final class InteractionEffectEngine {
         let confidence: Double        // statistical confidence
         let sampleCount: Int
         let condition: String?
-        let discoveredAt: Date
 
         enum EffectType: String {
             case doseResponse, conditionalPositive, conditionalNegative
@@ -31,7 +30,6 @@ final class InteractionEffectEngine {
         let cause: HealthMetric
         let effect: HealthMetric
         let bins: [DoseResponseBin]
-        let optimalRange: (lower: Double, upper: Double)?
         let description: String
 
         struct DoseResponseBin {
@@ -44,9 +42,7 @@ final class InteractionEffectEngine {
 
     // MARK: - State
 
-    private(set) var effects: [InteractionEffect] = []
     private(set) var doseResponseCurves: [DoseResponseCurve] = []
-    private(set) var conditionalEffects: [InteractionEffect] = []
 
     // MARK: - Constants
 
@@ -110,7 +106,6 @@ final class InteractionEffectEngine {
 
         var allEffects: [InteractionEffect] = []
         var allCurves: [DoseResponseCurve] = []
-        var allConditional: [InteractionEffect] = []
 
         for (idx, (cause, effect)) in pairs.enumerated() {
             // Bail out mid-loop if device reaches critical thermal state
@@ -127,7 +122,6 @@ final class InteractionEffectEngine {
             let (cv2, ev2, dates) = alignedWithDates(cause, effect, dateValues, calendar)
             if cv2.count >= Self.minimumDays {
                 let ce = analyzeConditional(cause: cause, effect: effect, cv: cv2, ev: ev2, dates: dates, baselines: baselines, cal: calendar)
-                allConditional.append(contentsOf: ce)
                 allEffects.append(contentsOf: ce)
             }
 
@@ -138,9 +132,7 @@ final class InteractionEffectEngine {
         }
 
         allEffects.sort { $0.strength > $1.strength }
-        effects = allEffects
         doseResponseCurves = allCurves
-        conditionalEffects = allConditional
         return allEffects
     }
 
@@ -183,8 +175,7 @@ final class InteractionEffectEngine {
         let optimal = findOptimalRange(bins, effect)
         let desc = describeCurve(cause, effect, bins, shape, optimal, baselines)
 
-        return DoseResponseCurve(cause: cause, effect: effect, bins: bins,
-                                  optimalRange: optimal, description: desc)
+        return DoseResponseCurve(cause: cause, effect: effect, bins: bins, description: desc)
     }
 
     // MARK: - Shape Detection
@@ -271,7 +262,7 @@ final class InteractionEffectEngine {
         let conf = Swift.min(1.0, Double(n) / 120.0) * binConsistency(bins)
         return InteractionEffect(cause: curve.cause, effect: curve.effect, effectType: eType,
                                   description: curve.description, strength: eff, confidence: conf,
-                                  sampleCount: n, condition: cond, discoveredAt: Date())
+                                  sampleCount: n, condition: cond)
     }
 
     // MARK: - Conditional Effect Analysis
@@ -304,7 +295,7 @@ final class InteractionEffectEngine {
                     effectType: sR > 0 ? .conditionalPositive : .conditionalNegative,
                     description: "\(cause.displayName) \(verb) your \(effect.displayName) on \(strong) (r=\(f2(sR))) but has little effect on \(weak) (r=\(f2(wR)))",
                     strength: Swift.min(abs(rWd - rWe), 1.0), confidence: 1.0 - z.p,
-                    sampleCount: n, condition: "on \(strong) only", discoveredAt: Date()
+                    sampleCount: n, condition: "on \(strong) only"
                 ))
             }
         }
@@ -329,8 +320,7 @@ final class InteractionEffectEngine {
                         effectType: sR > 0 ? .conditionalPositive : .conditionalNegative,
                         description: "\(cause.displayName) \(verb) your \(effect.displayName) mostly when \(grp) your baseline of \(bv) \(cause.unit) (r=\(f2(sR)) vs r=\(f2(wR)))",
                         strength: Swift.min(abs(rA - rB), 1.0), confidence: 1.0 - z.p,
-                        sampleCount: n, condition: "when \(cause.displayName) is \(grp) \(bv) \(cause.unit)",
-                        discoveredAt: Date()
+                        sampleCount: n, condition: "when \(cause.displayName) is \(grp) \(bv) \(cause.unit)"
                     ))
                 }
             }
@@ -376,8 +366,7 @@ final class InteractionEffectEngine {
                 cause: cause, effect: effect, effectType: .moderation,
                 description: "\(cause.displayName) \(verb) your \(effect.displayName) more when your \(mod.displayName) is \(grp) (r=\(f2(sR)) vs r=\(f2(wR)), split at \(mod.formatValue(median)) \(mod.unit))",
                 strength: Swift.min(diff, 1.0), confidence: 1.0 - z.p,
-                sampleCount: common.count, condition: "moderated by \(mod.displayName)",
-                discoveredAt: Date()
+                sampleCount: common.count, condition: "moderated by \(mod.displayName)"
             ))
         }
         return results

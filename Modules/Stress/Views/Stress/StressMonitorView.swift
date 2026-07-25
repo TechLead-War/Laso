@@ -10,9 +10,6 @@ struct StressMonitorView: View {
     let weeklyScores: [DailyStressPoint]
     let weeklyAverage: Double
     let previousWeekAverage: Double
-    /// Freshness timestamp from the parent dashboard refresh.
-    /// Drives a small "Updated …" caption at the top of the screen.
-    var lastUpdated: Date? = nil
 
     /// True only when we actually have signal: drivers above zero, OR a non-
     /// trivial gauge reading, OR any meaningful weekly history. All-zero across

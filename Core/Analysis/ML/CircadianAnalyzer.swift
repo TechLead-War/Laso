@@ -45,8 +45,6 @@ final class CircadianAnalyzer {
     }
 
     struct CosinorResult {
-        let mesor: Double      // Rhythm-adjusted mean (M)
-        let amplitude: Double  // Half the peak-to-trough range (A)
         let acrophase: Double  // Time of peak in hours (φ)
         let rSquared: Double   // Goodness of fit
     }
@@ -194,7 +192,7 @@ final class CircadianAnalyzer {
               + a13 * (a21 * a32 - a22 * a31)
 
         guard abs(det) > 1e-6 else {
-            return CosinorResult(mesor: sumY / nD, amplitude: 0, acrophase: 0, rSquared: 0)
+            return CosinorResult(acrophase: 0, rSquared: 0)
         }
 
         let detM = b1 * (a22 * a33 - a23 * a32)
@@ -214,10 +212,8 @@ final class CircadianAnalyzer {
         let gamma = detGamma / det
 
         guard mesor.isFinite, beta.isFinite, gamma.isFinite else {
-            return CosinorResult(mesor: sumY / nD, amplitude: 0, acrophase: 0, rSquared: 0)
+            return CosinorResult(acrophase: 0, rSquared: 0)
         }
-
-        let amplitude = sqrt(beta * beta + gamma * gamma)
 
         // Acrophase in hours: atan2(γ, β) / ω
         var acrophaseRad = atan2(gamma, beta)
@@ -235,7 +231,7 @@ final class CircadianAnalyzer {
         }
 
         let rSquared = ssTotal > 0 ? 1.0 - (ssResidual / ssTotal) : 0
-        return CosinorResult(mesor: mesor, amplitude: amplitude, acrophase: acrophaseHour, rSquared: max(0, rSquared))
+        return CosinorResult(acrophase: acrophaseHour, rSquared: max(0, rSquared))
     }
 
     // MARK: - Derivations

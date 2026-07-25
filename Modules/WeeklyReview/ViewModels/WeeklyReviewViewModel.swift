@@ -76,7 +76,6 @@ final class WeeklyReviewViewModel {
         guard let stepSeries = dashboardViewModel.healthKitManager.timeSeries[.steps] else { return nil }
 
         let weekStart = startOfWeek(for: Date())
-        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
         let today = Date()
         let elapsedDays = max(1, daysBetween(weekStart, today) + 1)
 
@@ -134,9 +133,6 @@ final class WeeklyReviewViewModel {
             isCurrentWeek: true
         )
         let nextDailyTarget = adjustedDailyTarget(from: state.dailyStepTarget, adherence: currentAdherence)
-        let adherenceRatio = state.dailyStepTarget > 0
-            ? currentAverage / Double(state.dailyStepTarget)
-            : 0
 
         let message = coachingMessage(
             adherence: currentAdherence,
@@ -148,12 +144,9 @@ final class WeeklyReviewViewModel {
         persistence.saveProgressiveCoachState(state)
 
         return ProgressiveCoachPlan(
-            weekStart: weekStart,
-            weekEnd: weekEnd,
             currentDailyStepTarget: state.dailyStepTarget,
             nextDailyStepTarget: nextDailyTarget,
             adherence: currentAdherence,
-            adherenceRatio: adherenceRatio,
             currentAverageDailySteps: Int(currentAverage.rounded()),
             coachingMessage: message
         )

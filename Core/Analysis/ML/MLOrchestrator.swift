@@ -24,7 +24,6 @@ final class MLOrchestrator {
     let decisionPolicyEngine = DecisionPolicyEngine()
     let mlEvaluator = MLEvaluator()
     let conformalCalibrator = ConformalCalibrator()
-    let receptivityEstimator = ReceptivityEstimator()
     let healthDataQueryEngine = HealthDataQueryEngine()
 
     // MARK: - ML Components (Intelligence Layer)
@@ -75,12 +74,8 @@ final class MLOrchestrator {
     var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
     /// Policy-based recommendation decision. single source of truth for daily action
     var policyDecision: PolicyDecision?
-    /// Personalization status for the user
-    var personalizationStatus: PersonalizationBlender.PersonalizationStatus?
     /// Data sufficiency assessment
     var dataSufficiency: UncertaintyEstimator.DataSufficiency?
-    /// Component readiness
-    var componentReadiness: [UncertaintyEstimator.ComponentReadiness] = []
     /// HMM-smoothed state history
     var smoothedStates: [SmoothedHealthState] = []
     /// Multi-horizon forecasts (1d, 3d, 7d) per metric
@@ -207,10 +202,8 @@ final class MLOrchestrator {
             timeSeries: timeSeries,
             baselines: baselines,
             trends: trends,
-            ruleBasedAnomalies: ruleBasedAnomalies,
             scoreHistory: scoreHistory,
-            anomalyCounts: anomalyCounts,
-            focusCategories: focusCategories
+            anomalyCounts: anomalyCounts
         )
 
         let components = makeComponents()
@@ -351,8 +344,6 @@ final class MLOrchestrator {
 
     private func applyPipelineOutput(_ output: MLPipelineRunner.PipelineOutput) {
         dataSufficiency = output.dataSufficiency
-        componentReadiness = output.componentReadiness
-        personalizationStatus = output.personalizationStatus
         smoothedStates = output.smoothedStates
         multiHorizonForecasts = output.multiHorizonForecasts
         healthSignalReport = output.healthSignalReport

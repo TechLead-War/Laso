@@ -16,8 +16,8 @@ import FirebaseAuth
 ///    is *linked* (UID preserved, all local + Firestore data intact). If link
 ///    fails because the Apple ID is already linked to a different Firebase user,
 ///    falls back to a clean `signIn` so the user gets their existing account.
-/// 5. Updates `UserProfileStore` with the email + display name when Apple
-///    returns them (Apple only returns full name on FIRST sign-in, never again).
+/// 5. Returns the display name when Apple provides it (Apple only returns the
+///    full name on FIRST sign-in, never again) so the caller can store it.
 @MainActor
 public final class AppleAuthService: NSObject {
 
@@ -36,9 +36,7 @@ public final class AppleAuthService: NSObject {
     private var continuation: CheckedContinuation<AppleSignInResult, Error>?
 
     public struct AppleSignInResult {
-        public let email: String?
         public let fullName: PersonNameComponents?
-        public let isNewUser: Bool
     }
 
     /// Begins the Sign In with Apple flow. Returns the Firebase user info on success.
@@ -73,12 +71,8 @@ public final class AppleAuthService: NSObject {
         // stays attached to the same Firebase UID.
         if let currentUser = Auth.auth().currentUser, currentUser.isAnonymous {
             do {
-                let result = try await currentUser.link(with: credential)
-                return .success(.init(
-                    email: result.user.email,
-                    fullName: fullName,
-                    isNewUser: result.additionalUserInfo?.isNewUser ?? true
-                ))
+                _ = try await currentUser.link(with: credential)
+                return .success(.init(fullName: fullName))
             } catch let nsError as NSError {
                 // If Apple ID is already linked to a different Firebase user,
                 // fall back to a clean sign-in (existing account takes over).
@@ -101,12 +95,8 @@ public final class AppleAuthService: NSObject {
     #if canImport(FirebaseAuth)
     private func firebaseSignIn(credential: AuthCredential, fullName: PersonNameComponents?) async -> Result<AppleSignInResult, AppleAuthError> {
         do {
-            let result = try await Auth.auth().signIn(with: credential)
-            return .success(.init(
-                email: result.user.email,
-                fullName: fullName,
-                isNewUser: result.additionalUserInfo?.isNewUser ?? false
-            ))
+            _ = try await Auth.auth().signIn(with: credential)
+            return .success(.init(fullName: fullName))
         } catch {
             return .failure(.firebaseSignInFailed(error))
         }

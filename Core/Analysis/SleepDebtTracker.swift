@@ -10,29 +10,6 @@ final class SleepDebtTracker {
 
     // MARK: - Types
 
-    enum DebtLevel: Int, CaseIterable, Comparable {
-        case none
-        case mild
-        case moderate
-        case significant
-        case severe
-
-        static func < (lhs: DebtLevel, rhs: DebtLevel) -> Bool {
-            lhs.rawValue < rhs.rawValue
-        }
-
-        init(hours: Double) {
-            switch hours {
-            case ..<1:    self = .none
-            case 1..<3:   self = .mild
-            case 3..<6:   self = .moderate
-            case 6..<10:  self = .significant
-            default:      self = .severe
-            }
-        }
-
-    }
-
     enum DebtTrend: String {
         case increasing
         case stable
@@ -41,7 +18,6 @@ final class SleepDebtTracker {
 
     struct SleepDebtInfo {
         let totalDebtHours: Double
-        let debtLevel: DebtLevel
         let dailyDeficits: [(date: Date, deficit: Double)]
         let personalBaseline: Double
     }
@@ -122,7 +98,6 @@ final class SleepDebtTracker {
 
         currentDebt = SleepDebtInfo(
             totalDebtHours: cumulativeDebt,
-            debtLevel: DebtLevel(hours: cumulativeDebt),
             dailyDeficits: dailyDeficits,
             personalBaseline: personalBaseline
         )
