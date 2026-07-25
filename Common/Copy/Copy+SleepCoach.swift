@@ -28,7 +28,11 @@ extension Copy {
 
         static var sleepDebt: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_sleep_debt", default: "Sleep Balance") }
         static var currentDebt: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_current_debt", default: "Current Balance") }
-        static func daysToPayOff(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_days_to_pay_off", default: "%d days to recover"), days) }
+        static func daysToPayOff(_ days: Int) -> String {
+            days == 1
+                ? RemoteConfigManager.shared.copyString("copy_sleep_coach_days_to_pay_off_singular", default: "1 day to recover")
+                : String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_days_to_pay_off", default: "%d days to recover"), days)
+        }
 
         // Debt levels
         static var debtClear: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_debt_clear", default: "Clear") }
@@ -68,7 +72,9 @@ extension Copy {
         static var tipAddSleepTitle: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tip_add_sleep_title", default: "Add 30-60 min per night") }
         static var tipAddSleepDetail: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tip_add_sleep_detail", default: "Going to bed a bit earlier works better than sleeping in late.") }
         static func tipBePatientDetail(days: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_sleep_coach_tip_be_patient_detail", default: "Pay off debt gradually over %d days. Avoid marathon sleep sessions."), days)
+            days == 1
+                ? RemoteConfigManager.shared.copyString("copy_sleep_coach_sleep_coach_tip_be_patient_detail_singular", default: "Pay off debt gradually over 1 day. Avoid marathon sleep sessions.")
+                : String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_sleep_coach_tip_be_patient_detail", default: "Pay off debt gradually over %d days. Avoid marathon sleep sessions."), days)
         }
         static var tipBePatientTitle: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tip_be_patient_title", default: "Be patient") }
         static var tipCutCaffeineTitle: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tip_cut_caffeine_title", default: "Caffeine timing") }

@@ -233,13 +233,17 @@ struct WeeklyReviewView: View {
                 color: DS.scoreColor(review.currentScore)
             )
 
-            weeklyStatDivider
+            // With no previous week there is nothing to compare against, so the
+            // column is dropped instead of reporting a trend that was never measured.
+            if review.previousScore != nil {
+                weeklyStatDivider
 
-            weeklyStatColumn(
-                label: "Trend",
-                value: trend == .improving ? "Up" : trend == .declining ? "Down" : "Stable",
-                color: trend == .improving ? AppColour.success : trend == .declining ? AppColour.danger : AppColour.textSecondary
-            )
+                weeklyStatColumn(
+                    label: "Trend",
+                    value: trend == .improving ? "Up" : trend == .declining ? "Down" : "Stable",
+                    color: trend == .improving ? AppColour.success : trend == .declining ? AppColour.danger : AppColour.textSecondary
+                )
+            }
 
             weeklyStatDivider
 
@@ -331,7 +335,7 @@ struct WeeklyReviewView: View {
                 .minimumScaleFactor(0.75)
 
             HStack(spacing: DS.space1) {
-                Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                Image(systemName: changeArrow(change))
                     .font(DS.Typography.captionSemibold)
                 Text(String(format: "%.1f%%", abs(change)))
                     .font(DS.Typography.calloutSemibold.monospacedDigit())
@@ -381,7 +385,7 @@ struct WeeklyReviewView: View {
             Spacer()
 
             HStack(spacing: DS.space1) {
-                Image(systemName: "arrow.up.right")
+                Image(systemName: changeArrow(change.changePercent))
                     .font(DS.Typography.captionSemibold)
                 Text(String(format: "%.1f%%", abs(change.changePercent)))
                     .font(DS.Typography.calloutSemibold.monospacedDigit())
@@ -475,7 +479,7 @@ struct WeeklyReviewView: View {
                 Spacer()
 
                 HStack(spacing: DS.space1) {
-                    Image(systemName: "arrow.down.right")
+                    Image(systemName: changeArrow(change.changePercent))
                         .font(DS.Typography.captionSemibold)
                     Text(String(format: "%.1f%%", abs(change.changePercent)))
                         .font(DS.Typography.footnoteMedium.monospacedDigit())
@@ -628,6 +632,14 @@ struct WeeklyReviewView: View {
     }
 
     // MARK: - Helpers
+
+    /// `changePercent` keeps the real sign of the movement, and whether that
+    /// movement is good is already decided by `HealthMetric.higherIsBetter`
+    /// upstream. The arrow follows the sign so a metric like resting heart rate
+    /// never points up in one section and down in another for the same number.
+    private func changeArrow(_ changePercent: Double) -> String {
+        changePercent >= 0 ? "arrow.up.right" : "arrow.down.right"
+    }
 
     private func adherenceColor(for status: CoachAdherenceStatus) -> Color {
         switch status {

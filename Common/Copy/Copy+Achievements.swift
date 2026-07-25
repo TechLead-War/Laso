@@ -80,8 +80,16 @@ extension Copy {
 
         // MARK: - Lifted interpolated view literals
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_x_text", default: "%d%%"), p0) }
-        static func daysTrackedText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_days_tracked_text", default: "%d days tracked"), p0) }
-        static func daysToText(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_days_to_text", default: "%d days to %@"), p0, p1) }
+        static func daysTrackedText(_ p0: Int) -> String {
+            p0 == 1
+                ? RemoteConfigManager.shared.copyString("copy_achievements_days_tracked_text_singular", default: "1 day tracked")
+                : String(format: RemoteConfigManager.shared.copyString("copy_achievements_days_tracked_text", default: "%d days tracked"), p0)
+        }
+        static func daysToText(_ p0: Int, _ p1: String) -> String {
+            p0 == 1
+                ? String(format: RemoteConfigManager.shared.copyString("copy_achievements_days_to_text_singular", default: "1 day to %@"), p1)
+                : String(format: RemoteConfigManager.shared.copyString("copy_achievements_days_to_text", default: "%d days to %@"), p0, p1)
+        }
         static func xText2(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_x_text2", default: "%d"), p0) }
         static func xText3(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_x_text3", default: "%d"), p0) }
         static func countOfText(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_achievements_count_of_text", default: "%d of %d"), p0, p1) }

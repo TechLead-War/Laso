@@ -336,8 +336,20 @@
     "isArray": false
   },
   {
+    "key": "copy_achievements_days_to_text_singular",
+    "defaultValue": "1 day to %@",
+    "sourceFile": "Copy+Achievements.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_achievements_days_tracked_text",
     "defaultValue": "%d days tracked",
+    "sourceFile": "Copy+Achievements.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_achievements_days_tracked_text_singular",
+    "defaultValue": "1 day tracked",
     "sourceFile": "Copy+Achievements.swift",
     "isArray": false
   },
@@ -2011,7 +2023,7 @@
   },
   {
     "key": "copy_analysis_nutrition_correlation_monitor_to_optimize",
-    "defaultValue": "Watch your %@ intake to improve %@.",
+    "defaultValue": "Watch your %@ to improve %@.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3576,6 +3588,18 @@
     "isArray": false
   },
   {
+    "key": "copy_brain_health_brain_health_empty_state_message",
+    "defaultValue": "We need a few nights of sleep and heart data from your Apple Watch before this score can appear. Wear your watch to bed and check back.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_brain_health_empty_state_title",
+    "defaultValue": "Building your brain health profile",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_brain_health_brain_health_factor_deep_sleep",
     "defaultValue": "Deep Sleep",
     "sourceFile": "Copy+BrainHealth.swift",
@@ -4998,6 +5022,12 @@
     "isArray": false
   },
   {
+    "key": "copy_common_risk_data_unavailable_title",
+    "defaultValue": "Risk data unavailable",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_risk_type_and_grade_label",
     "defaultValue": "%@, %@",
     "sourceFile": "Copy+Common.swift",
@@ -5442,6 +5472,18 @@
     "isArray": false
   },
   {
+    "key": "copy_cycle_tracking_cycle_tracking_empty_state_message",
+    "defaultValue": "Log your period in the Health app or on your Apple Watch. Once we can see one full cycle, your phase and next period estimate will show up here.",
+    "sourceFile": "Copy+CycleTracking.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_cycle_tracking_cycle_tracking_empty_state_title",
+    "defaultValue": "No cycle data yet",
+    "sourceFile": "Copy+CycleTracking.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_cycle_tracking_cycle_tracking_energy_and_performance",
     "defaultValue": "Energy & Performance",
     "sourceFile": "Copy+CycleTracking.swift",
@@ -5510,6 +5552,12 @@
   {
     "key": "copy_cycle_tracking_cycle_tracking_in_about_days",
     "defaultValue": "In about %d days",
+    "sourceFile": "Copy+CycleTracking.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_cycle_tracking_cycle_tracking_in_about_days_singular",
+    "defaultValue": "In about 1 day",
     "sourceFile": "Copy+CycleTracking.swift",
     "isArray": false
   },
@@ -6613,7 +6661,7 @@
   },
   {
     "key": "copy_health_state_health_state_timeline_empty_title",
-    "defaultValue": "Health states are still loading",
+    "defaultValue": "Not enough data yet",
     "sourceFile": "Copy+HealthState.swift",
     "isArray": false
   },
@@ -6746,6 +6794,30 @@
   {
     "key": "copy_home_action_proof_tracking_window",
     "defaultValue": "Based on your data from the last %d days",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activation_fully_calibrated",
+    "defaultValue": "Fully calibrated",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activation_milestone_in_days",
+    "defaultValue": "Day %1$d of 7. %2$@ in %3$d days",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activation_milestone_soon",
+    "defaultValue": "Almost there. %@ unlocking soon",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activation_milestone_tomorrow",
+    "defaultValue": "Day %1$d of 7. %2$@ in 1 day",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7320,6 +7392,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_next_up_remind_tomorrow",
+    "defaultValue": "Remind tomorrow %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_up_reminder_set",
     "defaultValue": "Reminder set",
     "sourceFile": "Copy+Home.swift",
@@ -7340,6 +7418,12 @@
   {
     "key": "copy_home_of_metrics_text",
     "defaultValue": "%d of %d metrics",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_open_journal_entry_button",
+    "defaultValue": "Open Journal",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8227,7 +8311,7 @@
   },
   {
     "key": "copy_home_x_text",
-    "defaultValue": "%d",
+    "defaultValue": "%d%%",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -11556,6 +11640,12 @@
     "isArray": false
   },
   {
+    "key": "copy_sleep_coach_days_to_pay_off_singular",
+    "defaultValue": "1 day to recover",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_sleep_coach_debt_clear",
     "defaultValue": "Clear",
     "sourceFile": "Copy+SleepCoach.swift",
@@ -11648,6 +11738,12 @@
   {
     "key": "copy_sleep_coach_sleep_coach_tip_be_patient_detail",
     "defaultValue": "Pay off debt gradually over %d days. Avoid marathon sleep sessions.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_tip_be_patient_detail_singular",
+    "defaultValue": "Pay off debt gradually over 1 day. Avoid marathon sleep sessions.",
     "sourceFile": "Copy+SleepCoach.swift",
     "isArray": false
   },

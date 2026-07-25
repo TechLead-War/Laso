@@ -11,7 +11,7 @@ extension Copy {
 
         // MARK: - Empty State
 
-        static var emptyTitle: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_empty_title", default: "Health states are still loading") }
+        static var emptyTitle: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_empty_title", default: "Not enough data yet") }
         static var emptyBody: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_empty_body", default: "We need a few days of data to learn your patterns. Open the app over the next week and your health states will start showing up here.") }
 
         // MARK: - Classifier State Labels

@@ -7,6 +7,11 @@ extension Copy {
 
         static var title: String { RemoteConfigManager.shared.copyString("copy_brain_health_brain_health_title", default: "Brain Health") }
 
+        // MARK: - Empty State
+
+        static var emptyStateTitle: String { RemoteConfigManager.shared.copyString("copy_brain_health_brain_health_empty_state_title", default: "Building your brain health profile") }
+        static var emptyStateMessage: String { RemoteConfigManager.shared.copyString("copy_brain_health_brain_health_empty_state_message", default: "We need a few nights of sleep and heart data from your Apple Watch before this score can appear. Wear your watch to bed and check back.") }
+
         // MARK: - Factor Labels
 
         static var factorHRV: String { RemoteConfigManager.shared.copyString("copy_brain_health_brain_health_factor_hrv", default: "HRV") }

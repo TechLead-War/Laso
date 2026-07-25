@@ -42,6 +42,7 @@ extension Copy {
         static var waterLogged: String { RemoteConfigManager.shared.copyString("copy_common_water_logged", default: "Water Logged") }
         static var savedToAppleHealth: String { RemoteConfigManager.shared.copyString("copy_common_saved_to_apple_health", default: "Saved to Apple Health") }
         static var savedToAppleHealth2: String { RemoteConfigManager.shared.copyString("copy_common_saved_to_apple_health2", default: "Saved to Apple Health") }
+        static var riskDataUnavailableTitle: String { RemoteConfigManager.shared.copyString("copy_common_risk_data_unavailable_title", default: "Risk data unavailable") }
         static var thisHealthRiskAssessmentIsNo: String { RemoteConfigManager.shared.copyString("copy_common_this_health_risk_assessment_is_no", default: "This health risk assessment is no longer available. Pull to refresh your data.") }
         static var buildingYourSleepProfile: String { RemoteConfigManager.shared.copyString("copy_common_building_your_sleep_profile", default: "Building your sleep profile") }
         static var weNeedAFewNightsOf: String { RemoteConfigManager.shared.copyString("copy_common_we_need_a_few_nights_of", default: "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.") }

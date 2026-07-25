@@ -215,17 +215,27 @@ final class ActivationSequenceManager {
 
     /// Get progress description for current day
     static func progressDescription(state: ActivationState) -> String {
-        guard !state.isComplete else { return "Fully calibrated" }
+        guard !state.isComplete else { return Copy.Home.activationFullyCalibrated }
+
+        // Every milestone unlocked before the week is up, so nothing is pending.
+        guard let next = nextMilestone(state: state) else {
+            return Copy.Home.activationFullyCalibrated
+        }
 
         let day = min(state.currentDay, 7)
-        let nextMilestone = nextMilestone(state: state)
-        let milestoneName = nextMilestone?.title ?? "Full calibration"
-        let daysLeft = max(0, 7 - state.currentDay)
+        // The sentence names the next milestone, so the countdown has to measure
+        // that milestone's own day, not the end of the week. A milestone whose day
+        // already passed is waiting on data, so it reads as unlocking soon.
+        let daysLeft = max(0, next.day - state.currentDay)
 
-        if daysLeft == 0 {
-            return "Almost there. \(milestoneName) unlocking soon"
+        switch daysLeft {
+        case 0:
+            return Copy.Home.activationMilestoneSoon(next.title)
+        case 1:
+            return Copy.Home.activationMilestoneTomorrow(day: day, milestone: next.title)
+        default:
+            return Copy.Home.activationMilestoneInDays(day: day, milestone: next.title, days: daysLeft)
         }
-        return "Day \(day) of 7. \(milestoneName) in \(daysLeft) day\(daysLeft == 1 ? "" : "s")"
     }
 
     // MARK: - Private Helpers

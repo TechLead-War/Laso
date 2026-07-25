@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import AppIntents
 #if canImport(FirebaseAuth)
+import FirebaseCore
 import FirebaseAuth
 #endif
 
@@ -460,7 +461,11 @@ struct SettingsView: View {
     /// Returns nil for anonymous Firebase Auth users.
     private var signedInIdentity: String? {
         #if canImport(FirebaseAuth)
-        guard let user = Auth.auth().currentUser, !user.isAnonymous else { return nil }
+        // `Auth.auth()` traps when Firebase was never configured, which is the
+        // case on any launch that skips `configureOnLaunch`, including screenshot
+        // runs. Reading the app handle first turns a crash into no row.
+        guard FirebaseApp.app() != nil,
+              let user = Auth.auth().currentUser, !user.isAnonymous else { return nil }
         return user.displayName?.isEmpty == false ? user.displayName : user.email
         #else
         return nil

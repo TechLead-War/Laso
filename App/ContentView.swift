@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var showNotificationReprompt = false
     @State private var showHealthKitReprompt = false
     @State private var showPMFSurvey = false
+    @State private var showJournalEntry = false
     @State private var navigationPath = NavigationPath()
     @State private var homePath = NavigationPath()
     @State private var explorePath = NavigationPath()
@@ -70,6 +71,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showPMFSurvey) {
             PMFSurveySheet()
+        }
+        .sheet(isPresented: $showJournalEntry) {
+            JournalEntryView()
         }
         .task(id: appStateStore.onboardingCompleted) {
             guard appStateStore.onboardingCompleted else { return }
@@ -371,7 +375,7 @@ struct ContentView: View {
                     )
                 } else {
                     ContentUnavailableView(
-                        "Risk Data Unavailable",
+                        Copy.Common.riskDataUnavailableTitle,
                         systemImage: "heart.text.clipboard",
                         description: Text(Copy.Common.thisHealthRiskAssessmentIsNo)
                     )
@@ -498,6 +502,8 @@ struct ContentView: View {
         case .achievements:
             achievementsDestination
         case .journalEntry:
+            // `navigate(to:)` diverts this route to a sheet before it can reach a
+            // path, so this branch only exists to keep the switch exhaustive.
             JournalEntryView()
         case .todaysAction:
             let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score
@@ -563,6 +569,13 @@ struct ContentView: View {
                 weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
                 previousWeekAverage: prevAvg
             )
+        } else {
+            ContentUnavailableView(
+                Copy.StressMonitor.buildingBaselineTitle,
+                systemImage: "waveform.path.ecg",
+                description: Text(Copy.StressMonitor.needHRVData)
+            )
+            .navigationTitle(Copy.StressMonitor.title)
         }
     }
 
@@ -575,6 +588,13 @@ struct ContentView: View {
                 weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
                 trend: dashboardViewModel.brainHealthScorer.brainHealthTrend
             )
+        } else {
+            ContentUnavailableView(
+                Copy.BrainHealth.emptyStateTitle,
+                systemImage: "brain",
+                description: Text(Copy.BrainHealth.emptyStateMessage)
+            )
+            .navigationTitle(Copy.BrainHealth.title)
         }
     }
 
@@ -748,6 +768,13 @@ struct ContentView: View {
                 nextPeriodDate: cycle.nextPeriodEstimate,
                 onRefresh: { await dashboardViewModel.refresh() }
             )
+        } else {
+            ContentUnavailableView(
+                Copy.CycleTracking.emptyStateTitle,
+                systemImage: "drop.fill",
+                description: Text(Copy.CycleTracking.emptyStateMessage)
+            )
+            .navigationTitle(Copy.CycleTracking.title)
         }
     }
 
@@ -795,6 +822,13 @@ struct ContentView: View {
     /// matching the per-tab NavigationStack bindings (home/explore have their
     /// own paths; live/settings share `navigationPath`).
     private func navigate(to route: Route) {
+        // JournalEntryView owns its own NavigationStack. Pushing it into the tab
+        // stack nests two stacks, which SwiftUI treats as undefined behavior and
+        // pops straight back to the tab root, so present it modally instead.
+        guard route != .journalEntry else {
+            showJournalEntry = true
+            return
+        }
         switch selectedTab {
         case .home: homePath.append(route)
         case .explore: explorePath.append(route)

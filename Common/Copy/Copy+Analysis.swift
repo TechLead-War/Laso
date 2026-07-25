@@ -1006,7 +1006,9 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_nutrition_correlation_affects", default: "%@ Affects %@"), nutrition, outcome)
             }
             static func monitorToOptimize(nutrition: String, outcome: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_nutrition_correlation_monitor_to_optimize", default: "Watch your %@ intake to improve %@."), nutrition, outcome)
+                // `nutrition` is a metric display name ("Water Intake", "Calories (Diet)"),
+                // so the template must not add a noun of its own.
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_nutrition_correlation_monitor_to_optimize", default: "Watch your %@ to improve %@."), nutrition, outcome)
             }
         }
 

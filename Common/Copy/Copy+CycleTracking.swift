@@ -7,6 +7,11 @@ extension Copy {
 
         static var title: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_title", default: "Cycle Tracking") }
 
+        // MARK: - Empty State
+
+        static var emptyStateTitle: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_empty_state_title", default: "No cycle data yet") }
+        static var emptyStateMessage: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_empty_state_message", default: "Log your period in the Health app or on your Apple Watch. Once we can see one full cycle, your phase and next period estimate will show up here.") }
+
         // MARK: - Phase Names
 
         static var menstrualPhase: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_menstrual_phase", default: "Menstrual Phase") }
@@ -81,7 +86,11 @@ extension Copy {
         static var days: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_days", default: "days") }
         static var daysToPeriod: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_days_to_period", default: "days to\nperiod") }
         static func basedOnCycleLength(_ length: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_based_on_cycle_length", default: "Based on your %d-day average cycle"), length) }
-        static func inAboutDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_in_about_days", default: "In about %d days"), days) }
+        static func inAboutDays(_ days: Int) -> String {
+            days == 1
+                ? RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_in_about_days_singular", default: "In about 1 day")
+                : String(format: RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_in_about_days", default: "In about %d days"), days)
+        }
 
         // MARK: - Cycle Wheel
 

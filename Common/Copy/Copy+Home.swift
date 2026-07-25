@@ -44,7 +44,18 @@ extension Copy {
         static var nextUpMarkedDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_marked_done", default: "Done") }
         /// Remind button on the action card. %@ is the reminder clock time, e.g. "9:30 PM".
         static func nextUpRemind(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind", default: "Remind %@"), time) }
+        /// Same button once today's reminder time has gone by, so the reminder lands tomorrow. %@ is the clock time.
+        static func nextUpRemindTomorrow(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind_tomorrow", default: "Remind tomorrow %@"), time) }
         static var nextUpReminderSet: String { RemoteConfigManager.shared.copyString("copy_home_next_up_reminder_set", default: "Reminder set") }
+
+        // Activation banner: first week calibration progress line.
+        static var activationFullyCalibrated: String { RemoteConfigManager.shared.copyString("copy_home_activation_fully_calibrated", default: "Fully calibrated") }
+        /// %@ is the next milestone name, e.g. "Trend Detected".
+        static func activationMilestoneSoon(_ milestone: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_activation_milestone_soon", default: "Almost there. %@ unlocking soon"), milestone) }
+        /// %1$d is today's day number, %2$@ the next milestone name.
+        static func activationMilestoneTomorrow(day: Int, milestone: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_activation_milestone_tomorrow", default: "Day %1$d of 7. %2$@ in 1 day"), day, milestone) }
+        /// %1$d is today's day number, %2$@ the next milestone name, %3$d the days until it unlocks.
+        static func activationMilestoneInDays(day: Int, milestone: String, days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_activation_milestone_in_days", default: "Day %1$d of 7. %2$@ in %3$d days"), day, milestone, days) }
 
         // Score card (redesigned): one word state + a plain summary + the Why list.
         static var scoreReadyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_ready_label", default: "Ready") }
@@ -459,6 +470,7 @@ extension Copy {
         static var opensTheFullInsightHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_the_full_insight_hint", default: "Opens the full insight") }
         static var opensDetailedMetricViewHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_detailed_metric_view_hint", default: "Opens detailed metric view") }
         static var openScoreGuideButton: String { RemoteConfigManager.shared.copyString("copy_home_open_score_guide_button", default: "Open Score Guide") }
+        static var openJournalEntryButton: String { RemoteConfigManager.shared.copyString("copy_home_open_journal_entry_button", default: "Open Journal") }
         static var retryLoadingHealthDataHint: String { RemoteConfigManager.shared.copyString("copy_home_retry_loading_health_data_hint", default: "Retry loading health data") }
         static var opensScoreBreakdownHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_score_breakdown_hint", default: "Opens score breakdown") }
         static var dismissMorningCheckInLabel: String { RemoteConfigManager.shared.copyString("copy_home_dismiss_morning_check_in_label", default: "Dismiss morning check-in") }
@@ -480,7 +492,7 @@ extension Copy {
 
         // MARK: - Lifted interpolated view literals
         static func xLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_label", default: "%@: %@"), p0, p1) }
-        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_text", default: "%d"), p0) }
+        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_x_text", default: "%d%%"), p0) }
         static func baselineWithUnitText(_ p0: String, _ p1: String, _ p2: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_baseline_with_unit_text", default: "%@ %@ %@"), p0, p1, p2) }
         static func forecastLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_forecast_label", default: "%@ forecast"), p0) }
         static func confidencePercentValue(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_confidence_percent_value", default: "%@, confidence %d percent"), p0, p1) }

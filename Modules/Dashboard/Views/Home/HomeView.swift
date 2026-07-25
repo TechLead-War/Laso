@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var readinessRefreshTimer = RepeatTimer()
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
+    @State private var showJournalEntry = false
     @State private var showRecoveryInfo = false
     @State private var actionDoneToday = false
     @State private var actionReminderSet = false
@@ -72,6 +73,9 @@ struct HomeView: View {
                 weakestCategoryName: weakestCategoryName,
                 appStateStore: appStateStore
             )
+        }
+        .sheet(isPresented: $showJournalEntry) {
+            JournalEntryView()
         }
         .sheet(isPresented: $showSoftLockPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared, source: "soft_lock_home")
@@ -739,6 +743,15 @@ struct HomeView: View {
         .accessibilityIdentifier("home.action.markDone")
     }
 
+    /// Label for the remind pill. Past the reminder time the scheduler rolls to
+    /// tomorrow, so the pill must not offer a time that has already gone by.
+    private var actionRemindLabel: String {
+        let time = ActionReminderScheduler.timeLabel()
+        return ActionReminderScheduler.firesTomorrow()
+            ? Copy.Home.nextUpRemindTomorrow(time)
+            : Copy.Home.nextUpRemind(time)
+    }
+
     /// Ghost "Remind 9:30" pill. Schedules a one-off reminder for the action.
     private func actionRemindButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
@@ -753,7 +766,7 @@ struct HomeView: View {
             HStack(spacing: 7) {
                 Image(systemName: actionReminderSet ? "bell.fill" : "clock")
                     .font(DS.Typography.captionSemibold)
-                Text(actionReminderSet ? Copy.Home.nextUpReminderSet : Copy.Home.nextUpRemind(ActionReminderScheduler.timeLabel()))
+                Text(actionReminderSet ? Copy.Home.nextUpReminderSet : actionRemindLabel)
                     .font(DS.Typography.subheadlineSemibold)
             }
             .foregroundStyle(AppColour.textSecondary)
@@ -864,7 +877,7 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 Button(Copy.Home.openScoreGuideButton) { showScoreGuide = true }
                     .accessibilityIdentifier("uitest.openScoreGuide")
-                NavigationLink("Open Journal", value: Route.journalEntry)
+                Button(Copy.Home.openJournalEntryButton) { showJournalEntry = true }
                     .accessibilityIdentifier("uitest.openJournalEntry")
             }
             .opacity(0.001)
