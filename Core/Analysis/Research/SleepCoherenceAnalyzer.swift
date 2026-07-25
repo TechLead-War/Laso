@@ -7,30 +7,6 @@ import Foundation
 /// stage-appropriate patterns during each sleep phase. Flags incoherence.
 struct SleepCoherenceAnalyzer {
 
-    // MARK: - Expected Ranges per Sleep Stage (from literature)
-
-    /// Expected physiological ranges during deep sleep vs REM vs core.
-    /// Deep sleep: lowest HR, highest HRV, lowest respiratory rate.
-    /// REM sleep: elevated HR, reduced HRV, variable respiratory rate (dream activity).
-    /// Core (N1/N2): intermediate values.
-    private struct StageExpectation {
-        let hrDropFromResting: ClosedRange<Double>   // % below resting HR
-        let hrvBoostFromBaseline: ClosedRange<Double> // % above baseline HRV
-        let rrDropFromBaseline: ClosedRange<Double>   // % below baseline respiratory rate
-    }
-
-    private static let deepExpectation = StageExpectation(
-        hrDropFromResting: 10...30,     // HR should be 10-30% below resting
-        hrvBoostFromBaseline: 10...80,  // HRV should be 10-80% above baseline
-        rrDropFromBaseline: 5...20      // Respiratory rate 5-20% below baseline
-    )
-
-    private static let remExpectation = StageExpectation(
-        hrDropFromResting: 0...15,      // HR closer to resting during REM
-        hrvBoostFromBaseline: -20...20, // HRV can be near or below baseline in REM
-        rrDropFromBaseline: -10...10    // Respiratory rate variable in REM
-    )
-
     // MARK: - Analysis
 
     static func generateInsights(context: AnalysisContext) -> [Insight] {

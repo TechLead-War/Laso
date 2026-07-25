@@ -3,10 +3,6 @@ import Foundation
 /// Identifies day-of-week patterns, best/worst days, and weekday vs weekend gaps
 struct WeeklyPatternAnalyzer {
 
-    private static let keyMetrics: [HealthMetric] = [
-        .steps, .activeCalories, .exerciseMinutes, .sleepDuration, .restingHeartRate, .heartRateVariability
-    ]
-
     private static let weekdaySymbols: [String] = DateFormatter().weekdaySymbols
 
     /// Analyze weekly patterns and generate insights

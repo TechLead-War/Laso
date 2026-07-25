@@ -36,7 +36,6 @@ public final class AppleAuthService: NSObject {
     private var continuation: CheckedContinuation<AppleSignInResult, Error>?
 
     public struct AppleSignInResult {
-        public let firebaseUid: String
         public let email: String?
         public let fullName: PersonNameComponents?
         public let isNewUser: Bool
@@ -76,7 +75,6 @@ public final class AppleAuthService: NSObject {
             do {
                 let result = try await currentUser.link(with: credential)
                 return .success(.init(
-                    firebaseUid: result.user.uid,
                     email: result.user.email,
                     fullName: fullName,
                     isNewUser: result.additionalUserInfo?.isNewUser ?? true
@@ -105,7 +103,6 @@ public final class AppleAuthService: NSObject {
         do {
             let result = try await Auth.auth().signIn(with: credential)
             return .success(.init(
-                firebaseUid: result.user.uid,
                 email: result.user.email,
                 fullName: fullName,
                 isNewUser: result.additionalUserInfo?.isNewUser ?? false

@@ -3,10 +3,6 @@ import Foundation
 extension Copy {
     enum HealthStateTimeline {
 
-        // MARK: - Navigation
-
-        static var navigationTitle: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_navigation_title", default: "Health States") }
-
         // MARK: - Sections
 
         static var distributionHeader: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_distribution_header", default: "Distribution") }
@@ -32,10 +28,6 @@ extension Copy {
         static var stateStrained: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_state_strained", default: "Strained") }
         static var stateLowEnergy: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_state_low_energy", default: "Low Energy") }
         static var stateRestful: String { RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_state_restful", default: "Restful") }
-
-        static func transitionNotObserved(from: String, to: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_health_state_health_state_timeline_transition_not_observed", default: "Transition from %@ to %@ not observed."), from, to)
-        }
 
         /// `days` arrives preformatted ("%.0f") so the caller's rounding stays unchanged.
         static func transitionPrediction(to state: String, days: String) -> String {

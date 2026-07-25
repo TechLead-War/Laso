@@ -387,11 +387,6 @@ final class DeviceSourceManager {
         connectedDevices.filter { !$0.isActive }
     }
 
-    /// The primary wearable device (most active, most metrics)
-    var primaryDevice: SupportedDevice {
-        connectedDevices.first?.device ?? .appleWatch
-    }
-
     /// Total unique metrics being tracked across all devices
     var totalTrackedMetrics: Int {
         var allMetrics = Set<HealthMetric>()

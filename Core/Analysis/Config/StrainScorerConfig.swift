@@ -34,6 +34,4 @@ enum StrainScorerConfig {
     /// maps to ~20-21 on the 0-21 strain scale.
     static var maxExpectedLoad: Double            { rc.strainMaxExpectedLoad }
     static var minimumDaysForBaseline: Int        { rc.strainMinDaysForBaseline }
-    static var fallbackTodayCaloriesUpperCap: Double { rc.strainFallbackTodayCalorieCap }
-    static var defaultRestingHeartRate: Double    { rc.strainDefaultRestingHeartRate }
 }

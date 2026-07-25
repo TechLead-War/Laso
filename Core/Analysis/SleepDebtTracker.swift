@@ -31,45 +31,6 @@ final class SleepDebtTracker {
             }
         }
 
-        var displayName: String {
-            switch self {
-            case .none:        Copy.SleepCoach.trackerDebtNone
-            case .mild:        Copy.SleepCoach.trackerDebtMild
-            case .moderate:    Copy.SleepCoach.trackerDebtModerate
-            case .significant: Copy.SleepCoach.trackerDebtSignificant
-            case .severe:      Copy.SleepCoach.trackerDebtSevere
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .none:        .green
-            case .mild:        .yellow
-            case .moderate:    .orange
-            case .significant: .red
-            case .severe:      .purple
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .none:        "moon.stars.fill"
-            case .mild:        "moon.haze.fill"
-            case .moderate:    "moon.dust.fill"
-            case .significant: "exclamationmark.triangle.fill"
-            case .severe:      "bolt.trianglebadge.exclamationmark.fill"
-            }
-        }
-
-        var description: String {
-            switch self {
-            case .none:        Copy.SleepCoach.trackerDescNone
-            case .mild:        Copy.SleepCoach.trackerDescMild
-            case .moderate:    Copy.SleepCoach.trackerDescModerate
-            case .significant: Copy.SleepCoach.trackerDescSignificant
-            case .severe:      Copy.SleepCoach.trackerDescSevere
-            }
-        }
     }
 
     enum DebtTrend: String {
@@ -82,9 +43,7 @@ final class SleepDebtTracker {
         let totalDebtHours: Double
         let debtLevel: DebtLevel
         let dailyDeficits: [(date: Date, deficit: Double)]
-        let averageSleepDuration: Double
         let personalBaseline: Double
-        let daysToPayOff: Int
     }
 
     // MARK: - Properties
@@ -92,23 +51,6 @@ final class SleepDebtTracker {
     private(set) var currentDebt: SleepDebtInfo?
     private(set) var isReady: Bool = false
     private(set) var debtTrend: DebtTrend = .stable
-
-    /// Formatted debt string, e.g. "3h 30m"
-    var formattedDebt: String {
-        guard let debt = currentDebt else { return Copy.SleepCoach.durationPlaceholder }
-        let hours = debt.totalDebtHours
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
-        if h == 0 && m == 0 { return Copy.SleepCoach.durationZero }
-        if h == 0 { return Copy.SleepCoach.durationMinutes(m) }
-        if m == 0 { return Copy.SleepCoach.durationHours(h) }
-        return Copy.SleepCoach.durationHoursMinutes(h, m)
-    }
-
-    /// Color corresponding to the current debt level
-    var debtColor: Color {
-        currentDebt?.debtLevel.color ?? .green
-    }
 
     // MARK: - Computation
 
@@ -178,28 +120,11 @@ final class SleepDebtTracker {
             }
         }
 
-        // Average sleep duration over the 14-day window
-        let averageSleep = last14.valueMean
-
-        // Estimate days to pay off at 25% payoff per night
-        // Each night you can recoup ~25% of the deficit (sleeping 25% extra beyond baseline)
-        let payoffPerNight = personalBaseline * 0.25
-        let daysToPayOff: Int
-        if cumulativeDebt <= 0 || payoffPerNight <= 0 {
-            daysToPayOff = 0
-        } else {
-            daysToPayOff = Int(ceil(cumulativeDebt / payoffPerNight))
-        }
-
-        let debtLevel = DebtLevel(hours: cumulativeDebt)
-
         currentDebt = SleepDebtInfo(
             totalDebtHours: cumulativeDebt,
-            debtLevel: debtLevel,
+            debtLevel: DebtLevel(hours: cumulativeDebt),
             dailyDeficits: dailyDeficits,
-            averageSleepDuration: averageSleep,
-            personalBaseline: personalBaseline,
-            daysToPayOff: daysToPayOff
+            personalBaseline: personalBaseline
         )
 
         // Determine trend: compare average deficit of last 3 days vs prior 3 days

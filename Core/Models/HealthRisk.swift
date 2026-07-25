@@ -8,7 +8,6 @@ struct HealthRisk: Identifiable {
     let level: Int // 0-100 (0 = no risk, 100 = maximum risk)
     let factors: [RiskFactor]
     let focusAreas: [FocusArea]
-    let generatedAt: Date
 
     var riskGrade: RiskGrade {
         switch level {
@@ -25,17 +24,11 @@ struct HealthRisk: Identifiable {
         factors.filter { $0.status != .unmeasured }
     }
 
-    /// Factors that need attention (borderline or worse)
-    var concerningFactors: [RiskFactor] {
-        factors.filter { $0.status == .concerning || $0.status == .critical }
-    }
-
-    init(riskType: HealthRiskType, level: Int, factors: [RiskFactor], focusAreas: [FocusArea], generatedAt: Date = Date()) {
+    init(riskType: HealthRiskType, level: Int, factors: [RiskFactor], focusAreas: [FocusArea]) {
         self.riskType = riskType
         self.level = max(0, min(100, level))
         self.factors = factors
         self.focusAreas = focusAreas
-        self.generatedAt = generatedAt
     }
 }
 

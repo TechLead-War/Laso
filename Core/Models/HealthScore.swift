@@ -14,28 +14,6 @@ enum HealthScoreBand: Int, CaseIterable {
     case good           // 70..<85
     case excellent      // 85...100
 
-    /// Lower bound (inclusive) of this band on the 0-100 scale.
-    var lowerBound: Int {
-        switch self {
-        case .critical: return 0
-        case .needsAttention: return 40
-        case .fair: return 55
-        case .good: return 70
-        case .excellent: return 85
-        }
-    }
-
-    /// Upper bound (inclusive) of this band on the 0-100 scale.
-    var upperBound: Int {
-        switch self {
-        case .critical: return 39
-        case .needsAttention: return 54
-        case .fair: return 69
-        case .good: return 84
-        case .excellent: return 100
-        }
-    }
-
     /// True for bands the UI should call out to the user.
     var requiresAttention: Bool {
         switch self {
@@ -60,13 +38,8 @@ struct HealthScore: Identifiable {
     let id = UUID()
     let category: HealthCategory?  // nil for overall score
     let score: Int
-    let maxScore: Int = 100
     let breakdown: [ScoreComponent]
     let generatedAt: Date
-
-    var percentage: Double {
-        Double(score) / Double(maxScore)
-    }
 
     var grade: String {
         Self.grade(for: score)
@@ -93,10 +66,6 @@ struct HealthScore: Identifiable {
         case 60..<70: return "C"
         default: return "D"
         }
-    }
-
-    var label: String {
-        category?.displayName ?? "Overall"
     }
 
     init(category: HealthCategory? = nil, score: Int, breakdown: [ScoreComponent] = [], generatedAt: Date = Date()) {

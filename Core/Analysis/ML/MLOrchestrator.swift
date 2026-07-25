@@ -17,7 +17,6 @@ final class MLOrchestrator {
     let correlationDiscovery = CorrelationDiscovery()
     let stateClassifier = HealthStateClassifier()
     let predictiveScorer = PredictiveScorer()
-    let adherenceTracker = AdherenceTracker()
     let circadianAnalyzer = CircadianAnalyzer()
 
     // MARK: - ML Components (New)
@@ -86,12 +85,8 @@ final class MLOrchestrator {
     var smoothedStates: [SmoothedHealthState] = []
     /// Multi-horizon forecasts (1d, 3d, 7d) per metric
     var multiHorizonForecasts: [HealthMetric: TimeSeriesForecaster.MultiHorizonForecast] = [:]
-    /// Multivariate regression results (omitted-variable-reduced causality)
-    var multivariateResults: [MultivariateRegressionResult] = []
     /// Latest evaluation summary per component
     var evaluationSummaries: [String: ComponentEvaluation] = [:]
-    /// Model drift alerts
-    var driftAlerts: [DriftReport] = []
     /// Interaction effects (dose-response, conditional, moderation)
     var interactionEffects: [InteractionEffectEngine.InteractionEffect] = []
     /// Dose-response curves
@@ -100,12 +95,8 @@ final class MLOrchestrator {
     var temporalSequences: [TemporalSequenceMiner.TemporalSequence] = []
     /// Precursor warning patterns
     var precursorPatterns: [TemporalSequenceMiner.PrecursorPattern] = []
-    /// Compounding effects
-    var compoundingEffects: [TemporalSequenceMiner.CompoundingEffect] = []
     /// Detected changepoints (regime shifts)
     var changePoints: [ChangePointDetector.ChangePoint] = []
-    /// Regime comparisons per metric
-    var regimeComparisons: [ChangePointDetector.RegimeComparison] = []
     /// Personal optimal profile
     var optimalProfile: PersonalOptimizer.OptimalProfile?
     /// Ideal day targets
@@ -123,9 +114,6 @@ final class MLOrchestrator {
         get { vectorLock.withLock { _cachedVectors } }
         set { vectorLock.withLock { _cachedVectors = newValue } }
     }
-
-    /// Latest feature vector (for simulation engine)
-    var latestVector: DailyFeatureVector? { cachedVectors.last }
 
     /// Full state history from classifier (for Health State Timeline)
     var stateHistory: [(date: Date, label: String)] {
@@ -243,13 +231,6 @@ final class MLOrchestrator {
         // Apply pipeline output to observable state
         applyPipelineOutput(pipelineOutput)
 
-        // Clear bulky intermediates and dead results to reduce memory pressure.
-        // These properties are computed but never consumed by any ViewModel or View:
-        multivariateResults = []  // Granger multivariate: O(N³) results, no consumer
-        driftAlerts = []          // Welch's t-test drift: no consumer
-        regimeComparisons = []    // ChangePoint regimes: no consumer
-        compoundingEffects = []   // TemporalMiner compounding: intentionally disabled
-
         if !pipelineOutput.stoppedEarly {
             // Step 13: CompoundInsightEngine (uses current self.* state from previous run)
             compoundInsights = resultAggregator.synthesizeCompoundInsights(
@@ -309,15 +290,6 @@ final class MLOrchestrator {
     var needsFullRetrain: Bool {
         guard let lastRetrain = lastFullRetrain else { return hasRunOnce }
         return Date().timeIntervalSince(lastRetrain) > 30 * 24 * 3600
-    }
-
-    func markFullRetrainComplete() {
-        lastFullRetrain = Date()
-    }
-
-    /// Invalidate pipeline TTL so the next run proceeds regardless
-    func invalidatePipelineTTL() {
-        lastPipelineCompletion = nil
     }
 
     // MARK: - Circadian Analysis (separate pipeline, runs weekly)
@@ -383,17 +355,13 @@ final class MLOrchestrator {
         personalizationStatus = output.personalizationStatus
         smoothedStates = output.smoothedStates
         multiHorizonForecasts = output.multiHorizonForecasts
-        multivariateResults = output.multivariateResults
         healthSignalReport = output.healthSignalReport
-        driftAlerts = output.driftAlerts
         evaluationSummaries = output.evaluationSummaries
         interactionEffects = output.interactionEffects
         doseResponseCurves = output.doseResponseCurves
         temporalSequences = output.temporalSequences
         precursorPatterns = output.precursorPatterns
-        compoundingEffects = output.compoundingEffects
         changePoints = output.changePoints
-        regimeComparisons = output.regimeComparisons
         optimalProfile = output.optimalProfile
         idealDay = output.idealDay
         scoreSensitivities = output.scoreSensitivities

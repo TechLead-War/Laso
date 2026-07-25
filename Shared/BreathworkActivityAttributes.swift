@@ -154,7 +154,6 @@ enum BreathworkCopy {
     static let completeCompact = "OK"
 
     static let timerAccessibilityLabel = "Time remaining"
-    static let breathingOrbAccessibilityLabel = "Breathing pace"
 }
 
 struct BreathworkActivityAttributes: ActivityAttributes {

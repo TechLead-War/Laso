@@ -91,7 +91,6 @@ final class PersonalOptimizer {
     private(set) var idealDay: IdealDay?
     private(set) var resilienceFactors: [ResilienceFactor] = []
     private(set) var sensitivities: [SensitivityResult] = []
-    var isReady: Bool { optimalProfile != nil }
 
     // MARK: - Internal Types
 

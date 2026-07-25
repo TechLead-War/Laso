@@ -151,22 +151,12 @@ struct RulesConfiguration {
     /// Trend significance: minimum absolute slope to be considered non-stable
     static var trendSlopeThreshold: Double { RemoteConfigManager.shared.analysisTrendSlopeThreshold }
 
-    /// Score deductions
-    static let anomalyWarningDeduction: Int = -20
-    static let anomalyCriticalDeduction: Int = -40
-    static let decliningTrendDeduction: Int = -10
-    static let strongDecliningTrendDeduction: Int = -20
+    /// Score deduction applied when a value falls outside the population normal range.
     static let outsideNormalRangeDeduction: Int = -15
-    static let improvingTrendBonus: Int = 5
 
     /// Recommendation templates. base version (no context)
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection) -> String {
         recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil, context: nil)
-    }
-
-    /// Enhanced recommendation with actual values
-    static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?) -> String {
-        recommendation(for: metric, severity: severity, trend: trend, currentValue: currentValue, deviationPercent: deviationPercent, context: nil)
     }
 
     // MARK: - Context-Aware Helpers

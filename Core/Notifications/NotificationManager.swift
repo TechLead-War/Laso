@@ -35,13 +35,6 @@ final class NotificationManager {
 
     private init() {}
 
-    /// `true` while non-critical notifications are suppressed because the
-    /// user has dismissed-without-opening recent ones. Critical and daily
-    /// summary notifications continue to schedule.
-    var isInFatigueSuppressionWindow: Bool {
-        fatigueTracker.isInFatigueSuppressionWindow
-    }
-
     /// Hook for AppDelegate / scene lifecycle to signal an app open.
     /// Resets the dismiss-without-open streak if the open falls inside
     /// the response window after a non-critical notification fire.
@@ -414,11 +407,6 @@ final class NotificationManager {
     /// Cancel a specific notification
     func cancelNotification(identifier: String) {
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
-    }
-
-    /// Cancel all pending notifications
-    func cancelAllNotifications() {
-        center.removeAllPendingNotificationRequests()
     }
 
     /// Get pending notification count

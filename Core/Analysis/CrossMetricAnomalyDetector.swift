@@ -9,12 +9,10 @@ struct CrossMetricAnomalyDetector {
 
     struct CrossMetricAnomaly: Identifiable {
         let id = UUID()
-        let date: Date
         let severity: Severity
         let anomalyScore: Double  // 0-100
         let involvedMetrics: [MetricDeviation]
         let brokenCorrelations: [BrokenCorrelation]
-        let historicalOccurrences: Int  // how many similar days in history
         let narrative: String
     }
 
@@ -382,12 +380,10 @@ struct CrossMetricAnomalyDetector {
         )
 
         return CrossMetricAnomaly(
-            date: day.date,
             severity: severity,
             anomalyScore: anomalyScore,
             involvedMetrics: deviations,
             brokenCorrelations: brokenCorrelations,
-            historicalOccurrences: similarDays,
             narrative: narrative
         )
     }

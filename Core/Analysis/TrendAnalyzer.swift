@@ -12,9 +12,6 @@ struct TrendAnalyzer {
     static let moderateWoWPercent: Double = 8
     /// Above this WoW % change (and below `moderateWoWPercent`), the trend is `.gradual`.
     static let gradualWoWPercent: Double = 2
-    /// % difference between 30d and 365d moving averages above which the long-term trend tips improving/declining.
-    static let longTermTrendPercent: Double = 3
-
     /// Bound applied to every period-over-period % change this analyzer reports.
     ///
     /// Metrics whose usual value sits near zero (walking asymmetry, double-support %,
@@ -53,15 +50,6 @@ struct TrendAnalyzer {
             if absWoW > TrendAnalyzer.moderateWoWPercent { return .moderate }
             if absWoW > TrendAnalyzer.gradualWoWPercent { return .gradual }
             return .negligible
-        }
-
-        /// Whether the current value is above or below the long-term (1-year) average
-        var longTermTrend: TrendDirection {
-            guard movingAverage365d > 0 else { return .stable }
-            let diff = (movingAverage30d - movingAverage365d) / movingAverage365d * 100
-            if diff > TrendAnalyzer.longTermTrendPercent { return .improving }
-            if diff < -TrendAnalyzer.longTermTrendPercent { return .declining }
-            return .stable
         }
     }
 

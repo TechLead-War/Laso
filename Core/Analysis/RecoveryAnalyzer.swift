@@ -3,14 +3,6 @@ import Foundation
 /// Tracks post-workout HRV/RHR recovery, rest deficits, and overtraining signals
 struct RecoveryAnalyzer {
 
-    struct RecoveryProfile {
-        let averageRecoveryDays: Double
-        let recommendedRestDays: Int
-        let actualRestDays: Int
-        let restDeficit: Int
-        let isOvertraining: Bool
-    }
-
     /// Analyze recovery patterns and generate insights
     static func generateInsights(
         timeSeries: [HealthMetric: MetricTimeSeries],

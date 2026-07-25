@@ -9,7 +9,6 @@ extension Copy {
 
         // MARK: - Hero
 
-        static var of21: String { RemoteConfigManager.shared.copyString("copy_strain_strain_of21", default: "of 21") }
         static var heroExplainer: String { RemoteConfigManager.shared.copyString("copy_strain_strain_hero_explainer", default: "How much physical effort your body handled today") }
         static var contextLow: String { RemoteConfigManager.shared.copyString("copy_strain_strain_context_low", default: "Light day for your body. Safe to add some activity if you feel up to it.") }
         static var contextLight: String { RemoteConfigManager.shared.copyString("copy_strain_strain_context_light", default: "Easy effort so far. You have room to push a bit more today.") }
@@ -20,7 +19,6 @@ extension Copy {
 
         // MARK: - Balance
 
-        static var strainBalance: String { RemoteConfigManager.shared.copyString("copy_strain_strain_strain_balance", default: "Strain Balance") }
         static var underTraining: String { RemoteConfigManager.shared.copyString("copy_strain_strain_under_training", default: "Under-Training") }
         static var optimal: String { RemoteConfigManager.shared.copyString("copy_strain_strain_optimal", default: "Best") }
         static var overreaching: String { RemoteConfigManager.shared.copyString("copy_strain_strain_overreaching", default: "Peak") }
@@ -35,12 +33,6 @@ extension Copy {
         static var zoneMaintaining: String { RemoteConfigManager.shared.copyString("copy_strain_strain_zone_maintaining", default: "Maintain Fitness") }
         static var zoneBuilding: String { RemoteConfigManager.shared.copyString("copy_strain_strain_zone_building", default: "Progressive Overload") }
         static var zoneOverreaching: String { RemoteConfigManager.shared.copyString("copy_strain_strain_zone_overreaching", default: "Functional Overreach") }
-
-        // MARK: - Strain Balance Display Names (Coach)
-
-        static var balanceUnderTraining: String { RemoteConfigManager.shared.copyString("copy_strain_strain_balance_under_training", default: "Under-Training") }
-        static var balanceOptimal: String { RemoteConfigManager.shared.copyString("copy_strain_strain_balance_optimal", default: "Optimal Load") }
-        static var balanceOverreaching: String { RemoteConfigManager.shared.copyString("copy_strain_strain_balance_overreaching", default: "Over-Reaching") }
 
         // MARK: - Coach Guidance
 
@@ -64,12 +56,6 @@ extension Copy {
         }
         static var coachOverreaching: String { RemoteConfigManager.shared.copyString("copy_strain_coach_overreaching", default: "Functional overreach zone. Push to your limit today, then plan recovery tomorrow.") }
 
-        // MARK: - Coach
-
-        static var strainCoach: String { RemoteConfigManager.shared.copyString("copy_strain_strain_coach", default: "Strain Coach") }
-        static var targetStrain: String { RemoteConfigManager.shared.copyString("copy_strain_target_strain", default: "Target Strain") }
-        static var recommendedZone: String { RemoteConfigManager.shared.copyString("copy_strain_recommended_zone", default: "Recommended Zone") }
-
         // MARK: - HR Zones
 
         static var heartRateZones: String { RemoteConfigManager.shared.copyString("copy_strain_heart_rate_zones", default: "Heart Rate Zones") }
@@ -79,7 +65,6 @@ extension Copy {
         static var threshold: String { RemoteConfigManager.shared.copyString("copy_strain_threshold", default: "Threshold") }
         static var anaerobic: String { RemoteConfigManager.shared.copyString("copy_strain_anaerobic", default: "Anaerobic") }
         static func zoneDefault(_ zone: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_strain_zone_default", default: "Zone %d"), zone) }
-        static func percentOfTotal(_ pct: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_strain_percent_of_total", default: "%d%% of total time"), pct) }
 
         // MARK: - Scale
 
@@ -101,7 +86,6 @@ extension Copy {
         static var belowTarget: String { RemoteConfigManager.shared.copyString("copy_strain_below_target", default: "Below Target") }
         static var aboveTarget: String { RemoteConfigManager.shared.copyString("copy_strain_above_target", default: "Above Target") }
         static func targetRange(_ low: String, _ high: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_strain_target_range", default: "Aim for %@ to %@"), low, high) }
-        static func currentStrainVsTarget(_ current: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_strain_current_strain_vs_target", default: "You are at %@ right now"), current) }
         static var learnMore: String { RemoteConfigManager.shared.copyString("copy_strain_learn_more", default: "Learn More") }
         static var learnMoreHint: String { RemoteConfigManager.shared.copyString("copy_strain_learn_more_hint", default: "See your heart rate zones and detailed coaching.") }
 

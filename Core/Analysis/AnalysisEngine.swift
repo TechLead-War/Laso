@@ -159,13 +159,7 @@ final class AnalysisEngine {
 
     // MARK: - ML Integration
     let mlOrchestrator = MLOrchestrator()
-    var tomorrowRiskPrediction: MLPrediction? { mlOrchestrator.tomorrowRiskPrediction }
     var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
-    var discoveredPatterns: [DiscoveredPattern] { mlOrchestrator.discoveredPatterns }
-    var healthSignalReport: PredictiveHealthSignals.HealthSignalReport? { mlOrchestrator.healthSignalReport }
-    var personalizationStatus: PersonalizationBlender.PersonalizationStatus? { mlOrchestrator.personalizationStatus }
-    var dataSufficiency: UncertaintyEstimator.DataSufficiency? { mlOrchestrator.dataSufficiency }
-    var componentReadiness: [UncertaintyEstimator.ComponentReadiness] { mlOrchestrator.componentReadiness }
 
     init() {
         baselines = persistence.loadBaselines()
@@ -176,16 +170,6 @@ final class AnalysisEngine {
         if let model = persistence.loadForecasterModel() {
             mlOrchestrator.forecaster.restore(model)
         }
-    }
-
-    func runFullAnalysis(
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = [],
-        focusCategories: Set<HealthCategory> = []
-    ) {
-        runCoreAnalysis(timeSeries: timeSeries, focusCategories: focusCategories)
-        runDeferredEssentials(timeSeries: timeSeries, cycleFlowSamples: cycleFlowSamples)
-        runDeferredHeavy(timeSeries: timeSeries)
     }
 
     // MARK: - Phase 1: Core Analysis (required before UI renders)
@@ -221,8 +205,7 @@ final class AnalysisEngine {
                     currentValue: mlAnomaly.currentValue,
                     baselineValue: mlAnomaly.predictedValue,
                     isAboveBaseline: mlAnomaly.residual > 0,
-                    outsideNormalRange: mlAnomaly.normalizedResidual > 2.0,
-                    allTimePercentile: timeSeries[mlAnomaly.metric]?.percentile(of: mlAnomaly.currentValue) ?? 50
+                    outsideNormalRange: mlAnomaly.normalizedResidual > 2.0
                 ))
             }
         }
@@ -399,10 +382,6 @@ final class AnalysisEngine {
         }
     }
 
-    func topInsights(_ count: Int = 3) -> [Insight] {
-        Array(insights.prefix(count))
-    }
-
     func score(for category: HealthCategory) -> HealthScore? {
         categoryScores.first { $0.category == category }
     }
@@ -464,19 +443,7 @@ final class AnalysisEngine {
             guard !recent.isEmpty,
                   let baseline = newBaselines[metric] else { continue }
             let currentValue = recent.map(\.value).mean
-            var anomaly = AnomalyDetector.detect(metric: metric, currentValue: currentValue, baseline: baseline)
-            anomaly = AnomalyDetector.AnomalyResult(
-                metric: anomaly.metric,
-                severity: anomaly.severity,
-                deviationPercent: anomaly.deviationPercent,
-                zScore: anomaly.zScore,
-                currentValue: anomaly.currentValue,
-                baselineValue: anomaly.baselineValue,
-                isAboveBaseline: anomaly.isAboveBaseline,
-                outsideNormalRange: anomaly.outsideNormalRange,
-                allTimePercentile: sliced.percentile(of: currentValue)
-            )
-            newAnomalies.append(anomaly)
+            newAnomalies.append(AnomalyDetector.detect(metric: metric, currentValue: currentValue, baseline: baseline))
         }
 
         var metricScoresByCategory: [HealthCategory: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]] = [:]

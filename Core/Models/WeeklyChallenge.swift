@@ -43,7 +43,5 @@ struct ProgressiveCoachPlan {
     let currentAverageDailySteps: Int
     let coachingMessage: String
 
-    var currentWeeklyStepTarget: Int { currentDailyStepTarget * 7 }
-    var nextWeeklyStepTarget: Int { nextDailyStepTarget * 7 }
     var weeklyDelta: Int { nextDailyStepTarget - currentDailyStepTarget }
 }

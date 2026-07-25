@@ -3,44 +3,6 @@ import Foundation
 extension Copy {
     enum Journal {
 
-        // MARK: - Correlation Narratives
-
-        enum Correlation {
-            static func caffeineSleep(cups: String, metric: String, percent: String, days: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_caffeine_sleep", default: "When you have %@+ cups of coffee, your %@ drops %@%%. Based on %d days of your data."), cups, metric, percent, days)
-            }
-            static func caffeineGeneric(cups: String, percent: String, direction: String, metric: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_caffeine_generic", default: "Days with %@+ cups of caffeine show %@%% %@ %@ the next day."), cups, percent, direction, metric)
-            }
-            static func alcoholSleep(drinks: String, metric: String, percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_alcohol_sleep", default: "Nights with %@+ drinks reduce your %@ by %@%%. Your body needs alcohol-free evenings for quality sleep."), drinks, metric, percent)
-            }
-            static func alcoholGeneric(drinks: String, metric: String, percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_alcohol_generic", default: "%@+ drinks impact your next-day %@ by %@%%."), drinks, metric, percent)
-            }
-            static func stressImpact(level: String, metric: String, percent: String, direction: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_stress_impact", default: "When your stress is %@+ out of 10, your %@ is %@%% %@. Stress management directly impacts your recovery."), level, metric, percent, direction)
-            }
-            static func meditationImpact(mins: String, metric: String, percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_meditation_impact", default: "%@+ minutes of meditation boosts your %@ by %@%%. Consistency matters more than duration."), mins, metric, percent)
-            }
-            static func screenTimeImpact(hrs: String, percent: String, direction: String, metric: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_screen_time_impact", default: "Days with %@+ hrs of screen time show %@%% %@ %@. Consider a screen curfew before bed."), hrs, percent, direction, metric)
-            }
-            static func mealTimingImpact(hrs: String, metric: String, percent: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_meal_timing_impact", default: "Eating %@+ hrs before bed improves your %@ by %@%%. Earlier dinners support better sleep."), hrs, metric, percent)
-            }
-            static func waterImpact(glasses: String, percent: String, direction: String, metric: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_water_impact", default: "Drinking %@+ glasses of water leads to %@%% %@ %@ the next day."), glasses, percent, direction, metric)
-            }
-            static func moodImpact(rating: String, metric: String, percent: String, direction: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_mood_impact", default: "On days when your mood is %@+, your %@ averages %@%% %@."), rating, metric, percent, direction)
-            }
-            static func supplementsImpact(percent: String, direction: String, metric: String, observations: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_journal_journal_correlation_supplements_impact", default: "Days with supplements show %@%% %@ next-day %@. Based on %d observations."), percent, direction, metric, observations)
-            }
-        }
-
         // MARK: - Journal Insights
 
         enum Insights {

@@ -68,26 +68,4 @@ struct WeeklySummaryScheduler {
             maxPerDay: preferences.maxNotificationsPerDay
         )
     }
-
-    /// Legacy entry point
-    static func schedule(
-        score: Int,
-        scoreChange: Int,
-        topTrends: [(metric: String, direction: String)],
-        preferences: NotificationPreferences
-    ) {
-        schedule(
-            score: score,
-            scoreChange: scoreChange,
-            improvedCount: 0,
-            declinedCount: 0,
-            topTrends: topTrends.map { ($0.metric, $0.direction, 0.0) },
-            preferences: preferences
-        )
-    }
-
-    /// Cancel the weekly summary
-    static func cancel() {
-        NotificationManager.shared.cancelNotification(identifier: identifier)
-    }
 }

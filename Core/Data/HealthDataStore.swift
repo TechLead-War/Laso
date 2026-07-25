@@ -150,8 +150,6 @@ final class HealthDataStore {
     struct DailyStrainRecord {
         let date: Date
         let strain: Double
-        let level: String
-        let hrZoneMinutes: [Double]
     }
 
     struct SaveSamplesResult {
@@ -159,9 +157,6 @@ final class HealthDataStore {
 
         let insertedCount: Int
         let updatedCount: Int
-
-        var hasChanges: Bool { insertedCount > 0 || updatedCount > 0 }
-        var changedSampleCount: Int { insertedCount + updatedCount }
     }
 
     let modelContainer: ModelContainer?
@@ -378,14 +373,6 @@ final class HealthDataStore {
 
     // MARK: - Sync Metadata
 
-    /// Get the last sync date for a metric (nil if never synced)
-    func lastSyncDate(for metric: HealthMetric) -> Date? {
-        let rawValue = metric.rawValue
-        let predicate = #Predicate<StoredSyncMetadata> { $0.metricRawValue == rawValue }
-        let descriptor = FetchDescriptor(predicate: predicate)
-        return try? modelContext?.fetch(descriptor).first?.lastSyncDate
-    }
-
     /// Get all sync dates at once (more efficient than per-metric queries)
     func allSyncDates() -> [HealthMetric: Date] {
         let descriptor = FetchDescriptor<StoredSyncMetadata>()
@@ -556,18 +543,6 @@ final class HealthDataStore {
         return snapshots.map { ($0.date, $0.overallScore) }
     }
 
-    /// Load baseline evolution over time for a single metric
-    func loadBaselineHistory(for metric: HealthMetric) -> [(date: Date, baseline: UserBaseline)] {
-        let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
-        let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
-
-        return snapshots.compactMap { snapshot in
-            guard let dict = Self.decodeJSON([String: UserBaseline].self, from: snapshot.baselinesJSON),
-                  let baseline = dict[metric.rawValue] else { return nil }
-            return (snapshot.date, baseline)
-        }
-    }
-
     /// Load baseline history for ALL metrics in a single pass (avoids N separate full-table fetches + JSON decodes)
     func loadAllBaselineHistory(forMetrics metrics: Set<HealthMetric>, minCount: Int = 30) -> [HealthMetric: [(date: Date, baseline: UserBaseline)]] {
         let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
@@ -656,9 +631,7 @@ final class HealthDataStore {
             let bucketDate = Date(timeIntervalSince1970: Double(dayBucket) * 86400.0)
             dedupedByDay[dayBucket] = DailyStrainRecord(
                 date: bucketDate,
-                strain: record.strain,
-                level: record.level,
-                hrZoneMinutes: Self.decodeJSON([Double].self, from: record.hrZoneMinutesJSON) ?? []
+                strain: record.strain
             )
         }
 
@@ -688,21 +661,6 @@ final class HealthDataStore {
             ))
         }
         saveContext("swiftdata_save_ml_state")
-    }
-
-    /// Load an ML component's learned parameters
-    func loadMLModelState(componentName: String) -> MLModelState? {
-        let predicate = #Predicate<StoredMLModelState> { $0.componentName == componentName }
-        let descriptor = FetchDescriptor(predicate: predicate)
-
-        guard let stored = try? modelContext?.fetch(descriptor).first else { return nil }
-        return MLModelState(
-            componentName: stored.componentName,
-            version: stored.version,
-            parametersJSON: stored.parametersJSON,
-            dataPointsUsed: stored.dataPointsUsed,
-            lastTrainedDate: stored.lastTrainedDate
-        )
     }
 
     /// Load all ML model states
@@ -789,28 +747,6 @@ final class HealthDataStore {
             shownDate: Date()
         ))
         saveContext("swiftdata_save_recommendation")
-    }
-
-    /// Batch save recommendations. inserts all then saves once (avoids N separate save() calls)
-    func batchSaveRecommendations(_ insights: [Insight]) {
-        guard let modelContext else { return }
-        for insight in insights {
-            let idString = insight.id.uuidString
-            let predicate = #Predicate<StoredRecommendation> { $0.insightId == idString }
-            let descriptor = FetchDescriptor(predicate: predicate)
-            guard (try? modelContext.fetch(descriptor))?.isEmpty ?? true else { continue }
-
-            modelContext.insert(StoredRecommendation(
-                insightId: idString,
-                metricRawValue: insight.metric.rawValue,
-                recommendation: String(insight.actionSummary.prefix(500)),
-                severityRawValue: insight.severity.rawValue,
-                categoryRawValue: insight.category.rawValue,
-                baselineValue: insight.baselineValue,
-                shownDate: Date()
-            ))
-        }
-        saveContext("swiftdata_batch_save_recommendations")
     }
 
     /// Record that the user tapped on an insight recommendation
@@ -926,24 +862,6 @@ final class HealthDataStore {
         return (try? modelContext?.fetch(descriptor)) ?? []
     }
 
-    /// Load delivery-confirmed notification events from the last N days. Exposed for the
-    /// optimizer/fatigue math so open-rate denominators count only delivered notifications.
-    func loadDeliveredNotificationEvents(days: Int) -> [StoredNotificationEvent] {
-        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff && $0.deliveredConfirmed }
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
-        return (try? modelContext?.fetch(descriptor)) ?? []
-    }
-
-    /// Load foreground-presented notification events from the last N days. Exposed for the
-    /// optimizer/fatigue math; not consumed this batch.
-    func loadPresentedNotificationEvents(days: Int) -> [StoredNotificationEvent] {
-        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff && $0.presentedDate != nil }
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
-        return (try? modelContext?.fetch(descriptor)) ?? []
-    }
-
     /// Delete notification events older than 90 days
     func pruneOldNotificationEvents() {
         let cutoff = Date.cal.date(byAdding: .day, value: -90, to: Date()) ?? Date()
@@ -952,54 +870,6 @@ final class HealthDataStore {
         guard let old = try? modelContext?.fetch(descriptor) else { return }
         for event in old { modelContext?.delete(event) }
         saveContext("swiftdata_prune_notifications")
-    }
-
-    // MARK: - Adherence Records
-
-    /// Save new adherence records
-    func saveAdherenceRecords(_ records: [StoredAdherenceRecord]) {
-        guard let ctx = modelContext else { return }
-        for record in records { ctx.insert(record) }
-        saveContext("swiftdata_save_adherence")
-    }
-
-    /// Load pending (unevaluated) adherence records
-    func loadPendingAdherenceRecords() -> [StoredAdherenceRecord] {
-        let descriptor = FetchDescriptor<StoredAdherenceRecord>(
-            sortBy: [SortDescriptor(\.givenDate, order: .reverse)]
-        )
-        let all = (try? modelContext?.fetch(descriptor)) ?? []
-        return all.filter { !$0.isEvaluated }
-    }
-
-    /// Load evaluated adherence records
-    func loadEvaluatedAdherenceRecords() -> [StoredAdherenceRecord] {
-        let descriptor = FetchDescriptor<StoredAdherenceRecord>(
-            sortBy: [SortDescriptor(\.givenDate, order: .reverse)]
-        )
-        let all = (try? modelContext?.fetch(descriptor)) ?? []
-        return all.filter { $0.isEvaluated }
-    }
-
-    /// Save updated adherence records (after outcome measurement)
-    func updateAdherenceOutcomes() {
-        saveContext("swiftdata_update_adherence")
-    }
-
-    // MARK: - ECG Features
-
-    /// Save ECG feature extraction results
-    func saveECGFeatures(_ features: StoredECGFeatures) {
-        modelContext?.insert(features)
-        saveContext("swiftdata_save_ecg_features")
-    }
-
-    /// Load all stored ECG features sorted by date
-    func loadECGFeatures() -> [StoredECGFeatures] {
-        let descriptor = FetchDescriptor<StoredECGFeatures>(
-            sortBy: [SortDescriptor(\.ecgDate, order: .reverse)]
-        )
-        return (try? modelContext?.fetch(descriptor)) ?? []
     }
 
     // MARK: - Delete All Data

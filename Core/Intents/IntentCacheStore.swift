@@ -30,18 +30,4 @@ final class IntentCacheStore {
             summary: userDefaults.string(forKey: AppKeys.Intent.summary) ?? ""
         )
     }
-
-    func loadTrendsSummary() -> String? {
-        guard let summary = userDefaults.string(forKey: AppKeys.Intent.summary),
-              !summary.isEmpty else {
-            return nil
-        }
-        return summary
-    }
-
-    func clear() {
-        userDefaults.removeObject(forKey: AppKeys.Intent.score)
-        userDefaults.removeObject(forKey: AppKeys.Intent.grade)
-        userDefaults.removeObject(forKey: AppKeys.Intent.summary)
-    }
 }

@@ -71,11 +71,6 @@ final class CloudBackupManager {
         await performBackup(store: store, persistence: persistence)
     }
 
-    /// Force an immediate backup (no throttle)
-    func forceBackup(store: HealthDataStore, persistence: PersistenceManager) async {
-        await performBackup(store: store, persistence: persistence)
-    }
-
     private func performBackup(store: HealthDataStore, persistence: PersistenceManager) async {
         guard await isAvailable, let container else {
             backupStatus = .disabled

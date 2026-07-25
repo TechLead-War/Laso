@@ -2,7 +2,6 @@ import Foundation
 
 struct ReadinessCacheSnapshot: Equatable {
     let score: Int
-    let timestamp: Date?
 }
 
 /// Typed cache for the latest readiness score used during cold launch and background refresh.
@@ -16,24 +15,15 @@ final class ReadinessStore {
     func loadCachedSnapshot() -> ReadinessCacheSnapshot? {
         let score = userDefaults.integer(forKey: AppKeys.Readiness.cachedScore)
         guard score > 0 else { return nil }
-
-        let timestampInterval = userDefaults.double(forKey: AppKeys.Readiness.cachedTimestamp)
-        let timestamp = timestampInterval > 0 ? Date(timeIntervalSince1970: timestampInterval) : nil
-        return ReadinessCacheSnapshot(score: score, timestamp: timestamp)
+        return ReadinessCacheSnapshot(score: score)
     }
 
     func loadCachedScore() -> Int? {
         loadCachedSnapshot()?.score
     }
 
-    func saveCachedScore(_ score: Int, at timestamp: Date = Date()) {
+    func saveCachedScore(_ score: Int) {
         userDefaults.set(score, forKey: AppKeys.Readiness.cachedScore)
-        userDefaults.set(timestamp.timeIntervalSince1970, forKey: AppKeys.Readiness.cachedTimestamp)
-    }
-
-    func clear() {
-        userDefaults.removeObject(forKey: AppKeys.Readiness.cachedScore)
-        userDefaults.removeObject(forKey: AppKeys.Readiness.cachedTimestamp)
     }
 
     // MARK: - Per-Day Morning Lock
@@ -79,21 +69,5 @@ final class ReadinessStore {
     func saveMorningLockConfidence(_ confidence: Int, for date: Date) {
         let key = AppKeys.Readiness.morningLockConfidencePrefix + dateKeySuffix(for: date)
         userDefaults.set(confidence, forKey: key)
-    }
-
-    /// Wipes every score/date/confidence prefix entry. Use during sign-out or
-    /// "Reset App Data" so a fresh user account does not inherit yesterday's
-    /// morning lock.
-    func clearMorningLock() {
-        let prefixes = [
-            AppKeys.Readiness.morningLockScorePrefix,
-            AppKeys.Readiness.morningLockDatePrefix,
-            AppKeys.Readiness.morningLockConfidencePrefix
-        ]
-        for (key, _) in userDefaults.dictionaryRepresentation() {
-            if prefixes.contains(where: { key.hasPrefix($0) }) {
-                userDefaults.removeObject(forKey: key)
-            }
-        }
     }
 }

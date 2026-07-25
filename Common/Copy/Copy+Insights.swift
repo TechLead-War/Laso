@@ -109,30 +109,6 @@ extension Copy {
         static var dashReversing: String { RemoteConfigManager.shared.copyString("copy_insights_dash_reversing", default: " (Turning Around)") }
         static var andGainingMomentum: String { RemoteConfigManager.shared.copyString("copy_insights_and_gaining_momentum", default: " & Gaining Momentum") }
 
-        // MARK: - Title Patterns
-
-        static func criticallyLow(_ metric: String, suffix: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_critically_low", default: "%@ Running Low%@"), metric, suffix)
-        }
-        static func needsAttention(_ metric: String, prefix: String, suffix: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_needs_attention", default: "%@ %@Worth a Look%@"), metric, prefix, suffix)
-        }
-        static func declining(_ metric: String, prefix: String, suffix: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_declining", default: "%@ %@Dropping%@"), metric, prefix, suffix)
-        }
-        static func improving(_ metric: String, prefix: String, momentum: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_improving", default: "%@ %@Improving%@"), metric, prefix, momentum)
-        }
-        static func outsideSafeRange(_ metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_outside_safe_range", default: "%@ Outside Your Usual Range"), metric)
-        }
-        static func elevated(_ metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_elevated", default: "%@ Higher Than Usual"), metric)
-        }
-        static func stable(_ metric: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_stable", default: "%@ Steady"), metric)
-        }
-
         // MARK: - Follow-Up Sentences
 
         static var recheckIn48Hours: String { RemoteConfigManager.shared.copyString("copy_insights_recheck_in48_hours", default: "Follow up: Check again in 48 hours to make sure this is steadying before it reaches warning range.") }
@@ -149,24 +125,6 @@ extension Copy {
         static var evidenceHigh: String { RemoteConfigManager.shared.copyString("copy_insights_evidence_high", default: "high") }
         static var evidenceMedium: String { RemoteConfigManager.shared.copyString("copy_insights_evidence_medium", default: "medium") }
         static var evidenceEarly: String { RemoteConfigManager.shared.copyString("copy_insights_evidence_early", default: "early") }
-
-        // MARK: - Projection
-
-        static func projectedWarning(days: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_projected_warning", default: " At this rate, this could reach warning level in about %d days."), days)
-        }
-
-        // MARK: - Historical Context
-
-        static func yoyChange(direction: String, percent: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_yoy_change", default: "%@ %@%% vs this time last year"), direction, percent)
-        }
-        static func percentileLabel(label: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_percentile_label", default: "in the %@ of your history"), label)
-        }
-        static func seasonalDeviation(direction: String, month: String, percent: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_seasonal_deviation", default: "%@ your usual %@ by %@%%"), direction, month, percent)
-        }
 
         // MARK: - Causal Hints
         //

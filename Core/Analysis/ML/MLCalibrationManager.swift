@@ -1,9 +1,6 @@
 import Foundation
-import os
 
 final class MLCalibrationManager {
-
-    private let logger = Logger(subsystem: "com.healthpulse.ml", category: "MLCalibrationManager")
 
     func calibratePrediction(
         prediction: MLPrediction,

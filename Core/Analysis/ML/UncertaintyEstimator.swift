@@ -2,110 +2,8 @@ import Foundation
 
 /// Uncertainty estimation and confidence gating for ML predictions.
 /// Prevents overconfident predictions from reaching users by combining
-/// conformal prediction intervals, ensemble disagreement, data sufficiency,
-/// and evaluation-aware confidence gates.
+/// data sufficiency, confidence gating, and per-component readiness.
 enum UncertaintyEstimator {
-
-    // MARK: - Conformal Prediction Intervals
-
-    /// A prediction interval with guaranteed coverage (given exchangeability).
-    struct PredictionInterval {
-        let lower: Double
-        let upper: Double
-        let coverage: Double               // e.g., 0.90 for 90% interval
-        let width: Double                  // upper - lower
-    }
-
-    /// Compute a conformal prediction interval using split conformal prediction.
-    ///
-    /// Given a set of calibration residuals (|actual - predicted| from a held-out calibration set),
-    /// the interval is formed by taking the quantile at level ceil((n+1) * coverage) / n
-    /// of the sorted absolute residuals.
-    ///
-    /// - Parameters:
-    ///   - calibrationResiduals: Absolute residuals |actual - predicted| from calibration data.
-    ///   - pointPrediction: The model's point prediction for the new input.
-    ///   - coverageLevel: Desired coverage probability (e.g., 0.90 for 90%). Clamped to [0.5, 0.99].
-    /// - Returns: A `PredictionInterval` centered on the point prediction.
-    static func conformalInterval(
-        calibrationResiduals: [Double],
-        pointPrediction: Double,
-        coverageLevel: Double = 0.90
-    ) -> PredictionInterval {
-        let coverage = Swift.max(0.5, Swift.min(coverageLevel, 0.99))
-
-        guard !calibrationResiduals.isEmpty else {
-            // No calibration data. return a degenerate interval
-            return PredictionInterval(
-                lower: pointPrediction,
-                upper: pointPrediction,
-                coverage: coverage,
-                width: 0
-            )
-        }
-
-        let sorted = calibrationResiduals.map { abs($0) }.sorted()
-        let n = sorted.count
-
-        // Quantile index: ceil((n+1) * coverage) - 1, clamped to [0, n-1]
-        let quantileIndex = Swift.min(
-            Int(ceil(Double(n + 1) * coverage)) - 1,
-            n - 1
-        )
-        let safeIndex = Swift.max(0, quantileIndex)
-        let radius = sorted[safeIndex]
-
-        return PredictionInterval(
-            lower: pointPrediction - radius,
-            upper: pointPrediction + radius,
-            coverage: coverage,
-            width: 2.0 * radius
-        )
-    }
-
-    // MARK: - Ensemble Disagreement
-
-    /// Disagreement statistics from an ensemble of model predictions.
-    struct EnsembleUncertainty {
-        let meanPrediction: Double
-        let stdDeviation: Double
-        let coefficientOfVariation: Double  // stdDev / |mean|, or 0 if mean is near zero
-        let isHighUncertainty: Bool         // CV > threshold
-    }
-
-    /// Measure ensemble disagreement across multiple predictions from model variants.
-    ///
-    /// For the PredictiveScorer, this could use bootstrap subsets of the weight vector.
-    /// For the TimeSeriesForecaster, this could use multiple parameter configurations from the grid search.
-    ///
-    /// - Parameters:
-    ///   - predictions: Predictions from N model variants (at least 2).
-    ///   - cvThreshold: Coefficient of variation above which uncertainty is considered "high". Default 0.3.
-    /// - Returns: An `EnsembleUncertainty` summary, or nil if fewer than 2 predictions.
-    static func ensembleDisagreement(
-        predictions: [Double],
-        cvThreshold: Double = 0.3
-    ) -> EnsembleUncertainty? {
-        guard predictions.count >= 2 else { return nil }
-
-        let mean = AccelerateML.mean(predictions)
-        let (_, variance) = AccelerateML.welfordVariance(predictions)
-        let stdDev = variance.squareRoot()
-
-        let cv: Double
-        if abs(mean) > 1e-9 {
-            cv = stdDev / abs(mean)
-        } else {
-            cv = stdDev > 1e-9 ? 1.0 : 0.0
-        }
-
-        return EnsembleUncertainty(
-            meanPrediction: mean,
-            stdDeviation: stdDev,
-            coefficientOfVariation: cv,
-            isHighUncertainty: cv > cvThreshold
-        )
-    }
 
     // MARK: - Data Sufficiency
 
@@ -255,19 +153,14 @@ enum UncertaintyEstimator {
     /// 1. Sufficient data (overallScore >= 0.3)
     /// 2. Model confidence (adjusted by evaluation quality) >= minimumConfidence
     ///
-    /// If evaluation metrics are available, accuracy degrades the effective confidence
-    /// to prevent showing outputs from poorly performing models.
-    ///
     /// - Parameters:
     ///   - modelConfidence: Raw confidence from the ML component (0-1).
     ///   - dataSufficiency: Data sufficiency assessment.
-    ///   - evaluationMetrics: Optional classification metrics from model evaluation.
     ///   - minimumConfidence: Minimum effective confidence to pass the gate. Default 0.4.
     /// - Returns: A `ConfidenceGate` decision.
     static func gate(
         modelConfidence: Double,
         dataSufficiency: DataSufficiency,
-        evaluationMetrics: ModelEvaluationEngine.ClassificationMetrics?,
         minimumConfidence: Double = 0.4
     ) -> ConfidenceGate {
         // Gate 1: Data sufficiency
@@ -283,19 +176,6 @@ enum UncertaintyEstimator {
 
         // Compute effective confidence
         var effectiveConfidence = modelConfidence
-
-        // If we have evaluation metrics, adjust confidence by model accuracy
-        if let eval = evaluationMetrics {
-            // Softened accuracy penalty: pow(accuracy, 0.3)
-            // 60% accuracy only reduces confidence by ~15%; 90% barely reduces it.
-            let accuracyMultiplier = pow(eval.accuracy, 0.3)
-            effectiveConfidence *= accuracyMultiplier
-
-            // Further penalize badly calibrated models
-            // ECE of 0 is perfect; ECE of 0.2+ is poor calibration
-            let calibrationPenalty = Swift.max(0, 1.0 - eval.calibrationError * 2.5)
-            effectiveConfidence *= calibrationPenalty
-        }
 
         // Clamp
         effectiveConfidence = Swift.max(0, Swift.min(1.0, effectiveConfidence))
@@ -324,101 +204,6 @@ enum UncertaintyEstimator {
             confidenceScore: effectiveConfidence,
             reason: tier == .suggestive ? "Suggestive. based on limited data." : nil,
             tier: tier
-        )
-    }
-
-    // MARK: - Personalization Blend Weight
-
-    /// Compute how much to trust the personalized model vs a base/rule-based model.
-    ///
-    /// Uses a sigmoid ramp: w = sigmoid((days - rampUpDays/2) / (rampUpDays/6))
-    /// - At 0 days: w ~ 0 (all base model)
-    /// - At rampUpDays/2: w = 0.5
-    /// - At rampUpDays: w ~ 1.0 (all personalized)
-    ///
-    /// If model accuracy is known and poor, the weight is reduced proportionally.
-    ///
-    /// - Parameters:
-    ///   - userDataDays: Number of days of user data available.
-    ///   - modelAccuracy: Optional accuracy from evaluation (0-1). If nil, only time-based ramp is used.
-    ///   - rampUpDays: Days to reach near-full personalization. Default 60.
-    /// - Returns: Personalization weight in [0, 1].
-    static func personalizationWeight(
-        userDataDays: Int,
-        modelAccuracy: Double?,
-        rampUpDays: Int = 60
-    ) -> Double {
-        let ramp = Double(rampUpDays)
-        guard ramp > 0 else { return 1.0 }
-
-        // Sigmoid ramp: sigmoid((days - rampUpDays/2) / (rampUpDays/6))
-        let midpoint = ramp / 2.0
-        let steepness = ramp / 6.0
-        guard steepness > 0 else { return Double(userDataDays) >= midpoint ? 1.0 : 0.0 }
-
-        let x = (Double(userDataDays) - midpoint) / steepness
-        let sigmoidValue = AccelerateML.sigmoid(x)
-
-        // Clamp to [0, 1]
-        var weight = Swift.max(0, Swift.min(1.0, sigmoidValue))
-
-        // If accuracy is known and poor, reduce personalization weight
-        if let accuracy = modelAccuracy {
-            // Below 0.5 accuracy, prefer base model entirely
-            // Above 0.7 accuracy, full personalization weight
-            let accuracyFactor = Swift.max(0, Swift.min(1.0, (accuracy - 0.5) / 0.2))
-            weight *= accuracyFactor
-        }
-
-        return weight
-    }
-
-    // MARK: - Bootstrap Confidence Interval
-
-    /// Compute a bootstrap confidence interval for a statistic (e.g., mean, median).
-    /// Useful for estimating uncertainty in baseline calculations.
-    ///
-    /// - Parameters:
-    ///   - values: The original sample.
-    ///   - statistic: Function to compute the statistic of interest on a bootstrap sample.
-    ///   - bootstrapCount: Number of bootstrap resamples. Default 200.
-    ///   - confidenceLevel: Coverage level for the interval. Default 0.95.
-    /// - Returns: A `PredictionInterval` for the statistic.
-    static func bootstrapInterval(
-        values: [Double],
-        statistic: ([Double]) -> Double,
-        bootstrapCount: Int = 200,
-        confidenceLevel: Double = 0.95
-    ) -> PredictionInterval? {
-        guard values.count >= 5 else { return nil }
-
-        let n = values.count
-        var bootstrapStats = [Double]()
-        bootstrapStats.reserveCapacity(bootstrapCount)
-
-        for _ in 0..<bootstrapCount {
-            var resample = [Double]()
-            resample.reserveCapacity(n)
-            for _ in 0..<n {
-                resample.append(values[Int.random(in: 0..<n)])
-            }
-            bootstrapStats.append(statistic(resample))
-        }
-
-        bootstrapStats.sort()
-
-        let alpha = 1.0 - confidenceLevel
-        let lowerIndex = Swift.max(0, Int(floor(alpha / 2.0 * Double(bootstrapCount))))
-        let upperIndex = Swift.min(bootstrapCount - 1, Int(ceil((1.0 - alpha / 2.0) * Double(bootstrapCount))) - 1)
-
-        let lower = bootstrapStats[lowerIndex]
-        let upper = bootstrapStats[upperIndex]
-
-        return PredictionInterval(
-            lower: lower,
-            upper: upper,
-            coverage: confidenceLevel,
-            width: upper - lower
         )
     }
 

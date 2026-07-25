@@ -10,11 +10,6 @@ struct DailyFeatureVector {
     /// Contextual features (day-of-week, month, weekend)
     var context: ContextFeatures
 
-    /// Number of metrics with data on this day
-    var metricCount: Int {
-        Set(features.keys.map(\.metric)).count
-    }
-
     /// Get all feature values as a sorted array (deterministic order for ML algorithms)
     func toArray(orderedKeys: [FeatureKey]) -> [Double] {
         orderedKeys.map { features[$0] ?? FeatureKey.missingSentinel }
@@ -158,28 +153,6 @@ struct MLModelState: Codable {
     let dataPointsUsed: Int
     /// When the model was last trained
     let lastTrainedDate: Date
-
-    /// Decode parameters as a specific type
-    func decodeParameters<T: Decodable>(_ type: T.Type) -> T? {
-        try? JSONDecoder().decode(type, from: parametersJSON)
-    }
-
-    /// Create a model state with encodable parameters
-    static func create<T: Encodable>(
-        componentName: String,
-        version: Int,
-        parameters: T,
-        dataPointsUsed: Int
-    ) -> MLModelState? {
-        guard let json = try? JSONEncoder().encode(parameters) else { return nil }
-        return MLModelState(
-            componentName: componentName,
-            version: version,
-            parametersJSON: json,
-            dataPointsUsed: dataPointsUsed,
-            lastTrainedDate: Date()
-        )
-    }
 }
 
 // MARK: - Discovered Pattern
@@ -315,11 +288,6 @@ struct ModelVersion: Codable, Equatable {
     let calibrationVersion: Int
     let trainedAt: Date
     let dataPointsUsed: Int
-
-    /// Whether this version is compatible with a given feature schema
-    func isCompatible(with featureSchema: Int) -> Bool {
-        featureSchemaVersion == featureSchema
-    }
 }
 
 // MARK: - Evaluation Event
@@ -530,35 +498,5 @@ struct RecommendationFeedback: Codable {
     var estimatedUplift: Double? {
         guard let adherence = adherenceScore, let delta = metricDelta else { return nil }
         return adherence * delta
-    }
-}
-
-// MARK: - Multivariate Regression Result
-
-/// Result from multivariate lagged regression (extends pairwise Granger)
-struct MultivariateRegressionResult {
-    let targetMetric: HealthMetric
-    let predictorMetrics: [HealthMetric]
-    let optimalLag: Int
-    let coefficients: [HealthMetric: Double]
-    let standardErrors: [HealthMetric: Double]
-    let tStatistics: [HealthMetric: Double]
-    let pValues: [HealthMetric: Double]
-    let rSquared: Double
-    let adjustedRSquared: Double
-    let fStatistic: Double
-    let fPValue: Double
-    let residualStdError: Double
-    let observationCount: Int
-    let bicScore: Double
-
-    /// Significant predictors at the given alpha level
-    func significantPredictors(alpha: Double = 0.05) -> [HealthMetric] {
-        pValues.filter { $0.value < alpha }.map(\.key)
-    }
-
-    /// Effect size for a predictor (standardized coefficient)
-    func effectSize(for metric: HealthMetric) -> Double? {
-        coefficients[metric]
     }
 }

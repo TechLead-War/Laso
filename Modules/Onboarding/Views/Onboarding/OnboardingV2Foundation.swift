@@ -98,11 +98,9 @@ enum OnbV2 {
 
     // Colors (hex from design handoff)
     static let bg       = Color(red: 0,    green: 0,    blue: 0)
-    static let bg1      = Color(red: 0.039, green: 0.039, blue: 0.047)
     static let bg2      = Color(red: 0.075, green: 0.075, blue: 0.090)
     static let bg3      = Color(red: 0.110, green: 0.110, blue: 0.133)
     static let line     = Color.white.opacity(0.08)
-    static let line2    = Color.white.opacity(0.14)
     static let fg       = Color.white
     static let fg2      = Color.white.opacity(0.72)
     static let fg3      = Color.white.opacity(0.48)
@@ -118,14 +116,10 @@ enum OnbV2 {
     static let teal     = Color(red: 0.361, green: 0.878, blue: 0.847)  // #5CE0D8
 
     // Radii
-    static let rSm: CGFloat   = 10
     static let rMd: CGFloat   = 16
-    static let rLg: CGFloat   = 22
-    static let rPill: CGFloat = 999
 
     // Spacing
     static let bodyPadH: CGFloat = 24
-    static let cardPad: CGFloat  = 16
 
     // Animation
     static let entryEase = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.7)

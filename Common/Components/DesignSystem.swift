@@ -12,7 +12,6 @@ enum DS {
     // MARK: - Radius Scale
 
     enum Radius {
-        static let none: CGFloat = 0
         static let xs: CGFloat = 4     // chips, small badges
         static let sm: CGFloat = 8     // inputs, small buttons
         static let md: CGFloat = 12    // cards (metric tiles, nav rows)
@@ -26,8 +25,6 @@ enum DS {
     static let cardRadius: CGFloat = Radius.xxl    // 24
     /// Icon background corner radius.
     static let iconRadius: CGFloat = Radius.md     // 12
-    /// Accent bar corner radius (narrow strip inside accent-bar cards).
-    static let accentRadius: CGFloat = 3
 
     // MARK: - Spacing Scale (4pt grid)
 
@@ -53,12 +50,6 @@ enum DS {
 
     /// Standard card interior padding.
     static let cardPadding: CGFloat = space4      // 16 (was 16.8)
-    /// Accent bar card: leading content padding.
-    static let accentLeading: CGFloat = space3    // 12
-    /// Accent bar card: trailing content padding.
-    static let accentTrailing: CGFloat = space4   // 16 (was 16.8)
-    /// Accent bar card: vertical content padding.
-    static let accentVertical: CGFloat = space3   // 12 (was 14.4)
 
     /// Between sections on scrollable pages.
     static let sectionSpacing: CGFloat = space6   // 24
@@ -136,14 +127,11 @@ enum DS {
 
     enum Elevation {
         struct Shadow {
-            let color: Color
             let radius: CGFloat
             let y: CGFloat
             let opacity: Double
         }
-        static let shadowLow    = Shadow(color: .black, radius: 2,  y: 1, opacity: 0.12)
-        static let shadowMedium = Shadow(color: .black, radius: 8,  y: 4, opacity: 0.16)
-        static let shadowHigh   = Shadow(color: .black, radius: 16, y: 8, opacity: 0.20)
+        static let shadowLow = Shadow(radius: 2, y: 1, opacity: 0.12)
     }
 
     // MARK: - Motion
@@ -152,14 +140,6 @@ enum DS {
         // Interaction — user taps, drags.
         static let pressIn:  Animation = .easeIn(duration: 0.08)
         static let pressOut: Animation = .spring(response: 0.3, dampingFraction: 0.7)
-
-        // UI — navigation, transitions, sheets.
-        static let transition: Animation = .spring(response: 0.5, dampingFraction: 0.85)
-        static let sheet:      Animation = .spring(response: 0.55, dampingFraction: 0.825)
-
-        // Reveal — big data moments (score ring fill, hero card appear).
-        static let reveal:  Animation = .spring(response: 0.9, dampingFraction: 0.75)
-        static let counter: Animation = .easeOut(duration: 0.7)
 
         // Ambient — toasts, chips, subtle state changes.
         static let toast: Animation = .easeInOut(duration: 0.25)
@@ -215,19 +195,6 @@ enum DS {
     }
 }
 
-// MARK: - Safe Text (no ellipsis ghost)
-
-extension View {
-    /// Text that shrinks to fit its container before showing an ellipsis.
-    /// Default lineLimit = 1, scale floor = 0.75.
-    func dsFit(_ lineLimit: Int = 1, minScale: CGFloat = 0.75) -> some View {
-        self
-            .lineLimit(lineLimit)
-            .minimumScaleFactor(minScale)
-            .truncationMode(.tail)
-    }
-}
-
 // MARK: - Unified Card Background
 
 extension View {
@@ -260,16 +227,6 @@ extension View {
             self.glassEffect(.regular, in: shape)
         } else {
             self.background(.ultraThinMaterial, in: shape)
-        }
-    }
-
-    /// Edge-to-edge Liquid Glass for system bars (tab bar, top bars).
-    @ViewBuilder
-    func glassChromeBar() -> some View {
-        if #available(iOS 26.0, *) {
-            self.glassEffect(.regular, in: Rectangle())
-        } else {
-            self.background(.ultraThinMaterial)
         }
     }
 

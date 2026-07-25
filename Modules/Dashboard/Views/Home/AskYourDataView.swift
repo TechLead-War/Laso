@@ -10,7 +10,6 @@ struct AskYourDataView: View {
     @State private var result: HealthDataQueryEngine.QueryResult?
     @State private var isSearching = false
     @State private var activeQueryID = UUID()
-    @Environment(\.dismiss) private var dismiss
 
     private let suggestedQuestions = Copy.Home.AskYourData.suggestedQuestions
 

@@ -36,27 +36,6 @@ extension Copy {
         static var debtModerate: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_debt_moderate", default: "Moderate") }
         static var debtHigh: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_debt_high", default: "High") }
 
-        // Tracker debt level display names (longer form used by analyzer)
-        static var trackerDebtNone: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_debt_none", default: "No debt") }
-        static var trackerDebtMild: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_debt_mild", default: "Mild debt") }
-        static var trackerDebtModerate: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_debt_moderate", default: "Moderate debt") }
-        static var trackerDebtSignificant: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_debt_significant", default: "Significant debt") }
-        static var trackerDebtSevere: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_debt_severe", default: "Severe debt") }
-
-        // Tracker debt level descriptions
-        static var trackerDescNone: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_desc_none", default: "You are well-rested. Your sleep is meeting your personal needs.") }
-        static var trackerDescMild: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_desc_mild", default: "A small sleep deficit is building. An extra 30 minutes tonight can help.") }
-        static var trackerDescModerate: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_desc_moderate", default: "Noticeable sleep debt is accumulating. You may experience reduced focus and slower reaction times.") }
-        static var trackerDescSignificant: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_desc_significant", default: "Substantial sleep debt is affecting your recovery and cognitive performance. Prioritize sleep this week.") }
-        static var trackerDescSevere: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracker_desc_severe", default: "Critical sleep debt. Expect impaired judgment, weakened immunity, and poor recovery. Extended catch-up sleep is needed.") }
-
-        // Duration formatter pieces
-        static var durationPlaceholder: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_duration_placeholder", default: "—") }
-        static var durationZero: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_duration_zero", default: "0h") }
-        static func durationMinutes(_ m: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_duration_minutes", default: "%dm"), m) }
-        static func durationHours(_ h: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_duration_hours", default: "%dh"), h) }
-        static func durationHoursMinutes(_ h: Int, _ m: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_duration_hours_minutes", default: "%dh %dm"), h, m) }
-
         // Debt trends
         static var tracking: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_tracking", default: "Tracking") }
         static var payingOff: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_paying_off", default: "Paying off") }

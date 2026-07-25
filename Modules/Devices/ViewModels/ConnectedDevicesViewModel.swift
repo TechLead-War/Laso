@@ -94,13 +94,6 @@ final class ConnectedDevicesViewModel {
         return "\(activeCount) active sources"
     }
 
-    var primarySourceSummaryText: String {
-        if let info = primaryDeviceInfo {
-            return info.sourceName
-        }
-        return healthKitManager.isAuthorized ? "Apple Health" : "Not connected"
-    }
-
     var lastSyncSummaryText: String {
         primaryDeviceInfo?.lastSyncText ?? "Pending first sync"
     }

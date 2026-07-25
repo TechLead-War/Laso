@@ -298,26 +298,6 @@ final class HealthDataQueryEngine {
         }
     }
 
-    /// Backward-compatible entry point.
-    func query(
-        question: String,
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        correlations: [MLCorrelation],
-        forecasts: [HealthMetric: TimeSeriesForecaster.MultiHorizonForecast]
-    ) -> QueryResult {
-        let ctx = QueryContext(
-            timeSeries: timeSeries, baselines: baselines, trends: trends,
-            correlations: correlations, forecasts: forecasts,
-            healthSignalReport: nil, currentHealthState: nil, discoveredPatterns: [],
-            circadianProfile: nil, timingRecommendations: [], optimalProfile: nil,
-            idealDay: nil, scoreSensitivities: [], tomorrowRiskPrediction: nil,
-            compoundInsights: [], temporalSequences: [], overallScore: 0
-        )
-        return query(question: question, context: ctx)
-    }
-
     // MARK: - Intent Parsing
 
     private func parseIntent(_ question: String, context: QueryContext, matchingMode: MatchingMode) -> QueryIntent {
@@ -1626,33 +1606,11 @@ final class HealthDataQueryEngine {
 
     private enum Sentiment { case positive, neutral, negative }
 
-    private func openingPhrase(_ sentiment: Sentiment) -> String {
-        let options: [String]
-        switch sentiment {
-        case .positive:
-            options = ["Good news. ", "Things are looking good. ", "Here's something encouraging: ", ""]
-        case .neutral:
-            options = ["Here's what I see: ", "Looking at your data. ", "", ""]
-        case .negative:
-            options = ["Something to note. ", "Worth paying attention: ", "Heads up. ", ""]
-        }
-        return options[abs(Date().hashValue) % options.count]
-    }
-
     private func conclusion(_ sentiment: Sentiment) -> String {
         switch sentiment {
         case .positive: return "Keep doing what you're doing."
         case .neutral: return "Keep an eye on this over the next few days."
         case .negative: return "Small adjustments now can make a real difference."
-        }
-    }
-
-    private func trendInterpretation(metric: HealthMetric, pctChange: Double, sentiment: Sentiment) -> String {
-        if abs(pctChange) < 2 { return "Consistency is a strength. your body likes this routine." }
-        switch sentiment {
-        case .positive: return "Your body is responding well to whatever you've been doing."
-        case .neutral: return "Keep tracking to see if this shift continues or levels off."
-        case .negative: return "This might be worth investigating if it continues."
         }
     }
 

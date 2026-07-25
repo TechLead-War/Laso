@@ -9,14 +9,10 @@ extension Copy {
 
         // MARK: - Section Headers
 
-        static var connectedDevices: String { RemoteConfigManager.shared.copyString("copy_settings_settings_connected_devices", default: "Connected Devices") }
         static var dailySummary: String { RemoteConfigManager.shared.copyString("copy_settings_settings_daily_summary", default: "Daily Summary") }
         static var weeklySummary: String { RemoteConfigManager.shared.copyString("copy_settings_settings_weekly_summary", default: "Weekly Summary") }
         static var heartRateAlerts: String { RemoteConfigManager.shared.copyString("copy_settings_settings_heart_rate_alerts", default: "Heart Rate Alerts") }
         static var appleWatch: String { RemoteConfigManager.shared.copyString("copy_settings_settings_apple_watch", default: "Apple Watch") }
-        static var alerts: String { RemoteConfigManager.shared.copyString("copy_settings_settings_alerts", default: "Alerts") }
-        static var metricAlerts: String { RemoteConfigManager.shared.copyString("copy_settings_settings_metric_alerts", default: "Metric Alerts") }
-        static var dataExport: String { RemoteConfigManager.shared.copyString("copy_settings_settings_data_export", default: "Data Export") }
         static var onDeviceData: String { RemoteConfigManager.shared.copyString("copy_settings_settings_on_device_data", default: "On Device Data") }
         static var siriAndShortcuts: String { RemoteConfigManager.shared.copyString("copy_settings_settings_siri_and_shortcuts", default: "Siri & Shortcuts") }
         static var about: String { RemoteConfigManager.shared.copyString("copy_settings_settings_about", default: "About") }
@@ -33,9 +29,6 @@ extension Copy {
         static var whichMetrics: String { RemoteConfigManager.shared.copyString("copy_settings_settings_which_metrics", default: "Choose Metrics") }
         static var notificationsHint: String { RemoteConfigManager.shared.copyString("copy_settings_settings_notifications_hint", default: "All alerts are optional. You choose what reaches you.") }
         static var dailySummaryDescription: String { RemoteConfigManager.shared.copyString("copy_settings_settings_daily_summary_description", default: "A short morning briefing with your score and key numbers.") }
-        static var weeklySummaryDescription: String { RemoteConfigManager.shared.copyString("copy_settings_settings_weekly_summary_description", default: "A weekly recap delivered every Monday morning.") }
-        static var connectDataSource: String { RemoteConfigManager.shared.copyString("copy_settings_settings_connect_data_source", default: "Connect a Data Source") }
-        static var connectDataSourceHint: String { RemoteConfigManager.shared.copyString("copy_settings_settings_connect_data_source_hint", default: "Laso reads from Apple Health. Connect a watch or other app to start.") }
         static var waitingForData: String { RemoteConfigManager.shared.copyString("copy_settings_settings_waiting_for_data", default: "Waiting for Health Data") }
         static var waitingForDataHint: String { RemoteConfigManager.shared.copyString("copy_settings_settings_waiting_for_data_hint", default: "Make sure your watch or health app is sharing with Apple Health.") }
 
@@ -63,7 +56,6 @@ extension Copy {
 
         static var proMember: String { RemoteConfigManager.shared.copyString("copy_settings_pro_member", default: "Pro Member") }
         static var freePlan: String { RemoteConfigManager.shared.copyString("copy_settings_free_plan", default: "Free Plan") }
-        static var trialActive: String { RemoteConfigManager.shared.copyString("copy_settings_trial_active", default: "Trial Active") }
 
         static func freeUntil(_ date: Date) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_settings_free_until", default: "Free until %@"),
@@ -79,11 +71,6 @@ extension Copy {
         static var manageSubscription: String { RemoteConfigManager.shared.copyString("copy_settings_manage_subscription", default: "Manage Subscription") }
         static var manageSubscriptionSubtitle: String { RemoteConfigManager.shared.copyString("copy_settings_manage_subscription_subtitle", default: "Pause or cancel anytime") }
 
-        // MARK: - Section Icons & Labels
-
-        static var devices: String { RemoteConfigManager.shared.copyString("copy_settings_devices", default: "Devices") }
-        static var aboutAndLegal: String { RemoteConfigManager.shared.copyString("copy_settings_about_and_legal", default: "About & Legal") }
-
         // MARK: - Device Management
 
         static var manageDevices: String { RemoteConfigManager.shared.copyString("copy_settings_manage_devices", default: "Manage Devices") }
@@ -94,9 +81,7 @@ extension Copy {
 
         // MARK: - Notifications
 
-        static var enableDailySummary: String { RemoteConfigManager.shared.copyString("copy_settings_enable_daily_summary", default: "Enable Daily Summary") }
         static var summaryTime: String { RemoteConfigManager.shared.copyString("copy_settings_summary_time", default: "Summary Time") }
-        static var enableWeeklyReport: String { RemoteConfigManager.shared.copyString("copy_settings_enable_weekly_report", default: "Enable Weekly Report") }
 
         // MARK: - Heart Rate
 
@@ -122,24 +107,16 @@ extension Copy {
 
         // MARK: - Metric Alerts
 
-        static var warningAlertMetrics: String { RemoteConfigManager.shared.copyString("copy_settings_warning_alert_metrics", default: "Warning Alert Metrics") }
         static func selectedCount(_ count: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_settings_selected_count", default: "%d selected"), count) }
-        static var metricAlertsFooter: String { RemoteConfigManager.shared.copyString("copy_settings_metric_alerts_footer", default: "Choose which health numbers send you a warning when they change from your usual.") }
 
         // MARK: - Export
 
         static var generateWebReport: String { RemoteConfigManager.shared.copyString("copy_settings_generate_web_report", default: "Generate Web Report") }
-        static var generatingReport: String { RemoteConfigManager.shared.copyString("copy_settings_generating_report", default: "Generating report...") }
-        static var exportHealthReport: String { RemoteConfigManager.shared.copyString("copy_settings_export_health_report", default: "Export Health Report") }
 
         // MARK: - Data Storage
 
-        static var storedSamples: String { RemoteConfigManager.shared.copyString("copy_settings_stored_samples", default: "Stored Samples") }
-        static var dataHistory: String { RemoteConfigManager.shared.copyString("copy_settings_data_history", default: "Data History") }
-        static var metricsTracked: String { RemoteConfigManager.shared.copyString("copy_settings_metrics_tracked", default: "Metrics Tracked") }
         static var dataStorageFooter: String { RemoteConfigManager.shared.copyString("copy_settings_data_storage_footer", default: "All your health data is stored safely on this phone. The longer you use the app, the better your insights get.") }
         static var samples: String { RemoteConfigManager.shared.copyString("copy_settings_samples", default: "Samples") }
-        static var history: String { RemoteConfigManager.shared.copyString("copy_settings_history", default: "History") }
         static var metrics: String { RemoteConfigManager.shared.copyString("copy_settings_metrics", default: "Metrics") }
 
         // MARK: - Siri
@@ -148,7 +125,6 @@ extension Copy {
 
         // MARK: - About
 
-        static var dataPrivacy: String { RemoteConfigManager.shared.copyString("copy_settings_data_privacy", default: "Data Privacy") }
         static var acknowledgements: String { RemoteConfigManager.shared.copyString("copy_settings_acknowledgements", default: "Acknowledgements") }
         static var acknowledgementsSubtitle: String { RemoteConfigManager.shared.copyString("copy_settings_acknowledgements_subtitle", default: "Open source libraries used in Laso") }
         static var acknowledgementsFooter: String { RemoteConfigManager.shared.copyString("copy_settings_acknowledgements_footer", default: "Laso is built with the help of these open source projects. Tap any item to view its source repository and license.") }
@@ -156,7 +132,6 @@ extension Copy {
 
         // MARK: - Help & Support
 
-        static var helpAndSupport: String { RemoteConfigManager.shared.copyString("copy_settings_help_and_support", default: "Help & Support") }
         static var rateOnAppStore: String { RemoteConfigManager.shared.copyString("copy_settings_rate_on_app_store", default: "Rate on App Store") }
         static var rateOnAppStoreSubtitle: String { RemoteConfigManager.shared.copyString("copy_settings_rate_on_app_store_subtitle", default: "Enjoying Laso? A rating helps us a lot.") }
         static var reportABug: String { RemoteConfigManager.shared.copyString("copy_settings_report_a_bug", default: "Report a Bug") }
@@ -184,7 +159,6 @@ extension Copy {
 
         // MARK: - Data Management
 
-        static var dataManagement: String { RemoteConfigManager.shared.copyString("copy_settings_data_management", default: "Data Management") }
         static var deleteAllMyData: String { RemoteConfigManager.shared.copyString("copy_settings_delete_all_my_data", default: "Delete Account and All Data") }
         static var deleteAllDataQuestion: String { RemoteConfigManager.shared.copyString("copy_settings_delete_all_data_question", default: "Delete All Data?") }
         static var deleteEverything: String { RemoteConfigManager.shared.copyString("copy_settings_delete_everything", default: "Delete Everything") }

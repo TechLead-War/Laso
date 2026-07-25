@@ -25,24 +25,6 @@ final class StrainCoach {
             }
         }
 
-        var icon: String {
-            switch self {
-            case .restoring: "bed.double.fill"
-            case .maintaining: "figure.walk"
-            case .building: "figure.run"
-            case .overreaching: "flame.fill"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .restoring: .blue
-            case .maintaining: .yellow
-            case .building: .green
-            case .overreaching: .orange
-            }
-        }
-
         /// Strain ranges per recovery state.
         func strainRange(for recovery: DashboardViewModel.RecoveryState) -> ClosedRange<Double> {
             switch (self, recovery) {
@@ -70,51 +52,18 @@ final class StrainCoach {
         let maxStrain: Double
         let zone: TrainingZone
         let guidance: String
-        let icon: String
-
-        /// Fraction of the normalised strain scale that the target represents.
-        var targetFraction: Double {
-            targetStrain / StrainCoachConfig.maxStrain
-        }
     }
 
     enum StrainBalance: String, CaseIterable, Sendable {
         case undertraining
         case optimal
         case overreaching
-
-        var displayName: String {
-            switch self {
-            case .undertraining: Copy.Strain.balanceUnderTraining
-            case .optimal: Copy.Strain.balanceOptimal
-            case .overreaching: Copy.Strain.balanceOverreaching
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .undertraining: .blue
-            case .optimal: .green
-            case .overreaching: .red
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .undertraining: "arrow.down.circle"
-            case .optimal: "checkmark.circle.fill"
-            case .overreaching: "exclamationmark.triangle.fill"
-            }
-        }
     }
 
     // MARK: - State
 
     /// The current recommended strain target, nil until computed
     private(set) var currentTarget: StrainTarget?
-
-    /// Whether the coach has enough data to produce a recommendation
-    var isReady: Bool { currentTarget != nil }
 
     /// 7-day strain balance relative to the recommended target zone
     private(set) var strainBalance: StrainBalance = .optimal
@@ -164,21 +113,13 @@ final class StrainCoach {
             minStrain: min,
             maxStrain: max,
             zone: zone,
-            guidance: guidance,
-            icon: zone.icon
+            guidance: guidance
         )
 
         currentTarget = result
         updateStrainBalance(recentHistory: recentStrainHistory, target: target)
 
         return result
-    }
-
-    /// Progress toward today's strain target as a fraction (0.0 to 1.0+).
-    /// Values above 1.0 indicate the target has been exceeded.
-    func progressTowardTarget(currentStrain: Double) -> Double {
-        guard let target = currentTarget, target.targetStrain > 0 else { return 0 }
-        return currentStrain / target.targetStrain
     }
 
     // MARK: - Private Helpers

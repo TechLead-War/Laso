@@ -56,12 +56,6 @@ final class HealthStateClassifier {
     /// Forward-backward posterior probabilities per time step: T x K
     private var smoothedPosteriors: [[Double]] = []
 
-    /// Previous centroids for state versioning across retrains
-    private var previousCentroids: [[Double]] = []
-    /// Previous labels corresponding to previousCentroids
-    private var previousLabels: [String] = []
-    /// Mapping from old state labels to new state labels after retrain
-    private var oldToNewStateMap: [String: String] = [:]
     /// Schema version counter, incremented each retrain
     private var stateSchemaVersion: Int = 0
 
@@ -142,12 +136,6 @@ final class HealthStateClassifier {
 
         guard !bestMeans.isEmpty else { return }
 
-        // Save previous centroids and labels for state versioning
-        if !states.isEmpty {
-            previousCentroids = states.map(\.centroid)
-            previousLabels = states.map(\.label)
-        }
-
         means = bestMeans
         variances = bestVariances
         mixingWeights = bestWeights
@@ -159,9 +147,6 @@ final class HealthStateClassifier {
             means: bestMeans, data: cleanData,
             assignments: bestAssignments, orderedKeys: orderedKeys
         )
-
-        // Build old-to-new state mapping based on centroid proximity
-        buildOldToNewStateMap()
 
         // Build state history and transition matrix (GMM-based)
         buildStateHistory(vectors: vectors, data: cleanData)
@@ -867,44 +852,6 @@ final class HealthStateClassifier {
         }
     }
 
-    // MARK: - State Versioning
-
-    /// Build mapping from old state labels to new state labels based on centroid proximity
-    private func buildOldToNewStateMap() {
-        oldToNewStateMap = [:]
-        guard !previousCentroids.isEmpty, !states.isEmpty else { return }
-
-        for (oldIdx, oldCentroid) in previousCentroids.enumerated() {
-            guard oldIdx < previousLabels.count else { continue }
-            let oldLabel = previousLabels[oldIdx]
-
-            // Find the new state whose centroid is closest to the old centroid
-            var bestDist = Double.infinity
-            var bestNewLabel = ""
-
-            for newState in states {
-                let dim = min(oldCentroid.count, newState.centroid.count)
-                guard dim > 0 else { continue }
-                let oldTrunc = Array(oldCentroid.prefix(dim))
-                let newTrunc = Array(newState.centroid.prefix(dim))
-                let dist = AccelerateML.squaredDistance(oldTrunc, newTrunc)
-                if dist < bestDist {
-                    bestDist = dist
-                    bestNewLabel = newState.label
-                }
-            }
-
-            if !bestNewLabel.isEmpty {
-                oldToNewStateMap[oldLabel] = bestNewLabel
-            }
-        }
-    }
-
-    /// Map an old state label to the corresponding new state label after retrain
-    func mapOldStateToNew(oldLabel: String) -> String? {
-        oldToNewStateMap[oldLabel]
-    }
-
     // MARK: - Smoothed State History & Classification
 
     /// Return the full Viterbi-decoded + forward-backward-smoothed state history
@@ -963,181 +910,9 @@ final class HealthStateClassifier {
         return result
     }
 
-    /// Classify the latest day with HMM-smoothed temporal coherence
-    func classifySmoothed(vectors: [DailyFeatureVector], dates: [Date]) -> SmoothedHealthState? {
-        guard vectors.count >= Self.minimumDays, !means.isEmpty, numComponents > 0 else {
-            return nil
-        }
-
-        let dim = trainedKeys.count
-        let data = vectors.map { $0.toArray(orderedKeys: trainedKeys) }
-        let featureMedians = computeFeatureMedians(data: data, dim: dim)
-        let cleanData = data.map { row in
-            row.enumerated().map { idx, val in
-                val == FeatureKey.missingSentinel ? featureMedians[idx] : val
-            }
-        }
-
-        // Compute emission posteriors for the full sequence
-        let emissions = computeEmissionPosteriors(data: cleanData)
-
-        // Run Viterbi on the full sequence
-        let path = viterbiDecode(emissionPosteriors: emissions)
-
-        // Run forward-backward for posteriors
-        let (posteriors, _, _) = forwardBackward(emissionPosteriors: emissions)
-
-        guard let lastIdx = path.last, lastIdx < states.count,
-              let lastPosterior = posteriors.last else {
-            return nil
-        }
-
-        let k = numComponents
-
-        // Build posterior dict
-        var posteriorDict: [String: Double] = [:]
-        for j in 0..<k {
-            guard j < states.count else { continue }
-            posteriorDict[states[j].label] = lastPosterior[j]
-        }
-
-        // Transition probs from last state
-        var transProbs: [String: Double] = [:]
-        if lastIdx < hmmTransitionMatrix.count {
-            for j in 0..<k {
-                guard j < states.count else { continue }
-                transProbs[states[j].label] = hmmTransitionMatrix[lastIdx][j]
-            }
-        }
-
-        // Determine transition info from path
-        let T = path.count
-        var daysSince = 0
-        var isTransition = false
-        if T >= 2 {
-            isTransition = (path[T - 1] != path[T - 2])
-            if isTransition {
-                daysSince = 0
-            } else {
-                // Count backwards
-                var d = 0
-                for t in stride(from: T - 2, through: 0, by: -1) {
-                    if path[t] == path[T - 1] {
-                        d += 1
-                    } else {
-                        break
-                    }
-                }
-                daysSince = d
-            }
-        }
-
-        let date = dates.count == vectors.count ? dates[T - 1] : vectors[T - 1].date
-        return SmoothedHealthState(
-            date: date,
-            assignedState: states[lastIdx],
-            statePosteriors: posteriorDict,
-            smoothedTransitionProb: transProbs,
-            isTransitionDay: isTransition,
-            daysSinceTransition: daysSince
-        )
-    }
-
-    // MARK: - Transition Pattern Explanations
-
-    /// Generate a human-readable description of the transition pattern between two states
-    func describeTransitionPattern(from fromLabel: String, to toLabel: String) -> String {
-        // Look up transition probability
-        let prob = transitionMatrix[fromLabel]?[toLabel]
-
-        // Gather characteristics for both states
-        let fromState = states.first { $0.label == fromLabel }
-        let toState = states.first { $0.label == toLabel }
-
-        guard let fromState, let toState else {
-            return Copy.HealthStateTimeline.transitionNotObserved(from: fromLabel, to: toLabel)
-        }
-
-        // Compute average duration in destination state from history
-        var durations: [Int] = []
-        var currentRun = 0
-        var inTarget = false
-        for entry in stateHistory {
-            if entry.label == toLabel {
-                if !inTarget {
-                    // Check if previous was fromLabel
-                    inTarget = true
-                    currentRun = 1
-                } else {
-                    currentRun += 1
-                }
-            } else {
-                if inTarget && currentRun > 0 {
-                    durations.append(currentRun)
-                }
-                inTarget = false
-                currentRun = 0
-            }
-        }
-        if inTarget && currentRun > 0 {
-            durations.append(currentRun)
-        }
-        let avgDuration = durations.isEmpty ? 0 : durations.reduce(0, +) / durations.count
-
-        // Dominant characteristics of each state
-        let fromTraits = fromState.characteristics
-            .filter { $0.level != .normal }
-            .prefix(2)
-            .map { trait -> String in
-                let levelStr = trait.level == .high ? "High" : "Low"
-                return "\(levelStr) \(trait.metric.displayName)"
-            }
-
-        let toTraits = toState.characteristics
-            .filter { $0.level != .normal }
-            .prefix(2)
-            .map { trait -> String in
-                let levelStr = trait.level == .high ? "High" : "Low"
-                return "\(levelStr) \(trait.metric.displayName)"
-            }
-
-        let fromDesc = fromTraits.isEmpty ? fromLabel : fromTraits.joined(separator: " + ")
-        let toDesc = toTraits.isEmpty ? toLabel : toTraits.joined(separator: " + ")
-
-        var description = "You typically move from \(fromDesc) into"
-
-        if avgDuration > 1 {
-            description += " a \(avgDuration)-day \(toLabel.lowercased()) state"
-        } else {
-            description += " \(toLabel.lowercased())"
-        }
-
-        if let prob, prob > 0 {
-            let pct = Int(prob * 100)
-            description += " (\(pct)% of the time)"
-        }
-
-        description += "."
-
-        // Add dominant trait shift
-        if !toTraits.isEmpty {
-            description += " Key shift: \(toDesc)."
-        }
-
-        return description
-    }
-
     // MARK: - State
 
     var isReady: Bool { !means.isEmpty && numComponents > 0 }
-
-    /// Most likely next state based on transition probabilities
-    func predictNextState() -> (label: String, probability: Double)? {
-        guard let current = currentState,
-              let transitions = transitionMatrix[current.label] else { return nil }
-
-        return transitions.max { $0.value < $1.value }.map { ($0.key, $0.value) }
-    }
 
     // MARK: - Input Hashing
 

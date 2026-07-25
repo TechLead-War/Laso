@@ -433,37 +433,6 @@ final class FeatureEngine {
         runningStats[metric]?.update(value: newValue)
     }
 
-    /// Get current running statistics for persistence
-    func getRunningStats() -> [HealthMetric: WelfordState] {
-        runningStats
-    }
-
-    /// Restore running statistics from persisted state
-    func restoreRunningStats(_ stats: [HealthMetric: WelfordState]) {
-        runningStats = stats
-    }
-
-    /// Whether the engine has enough data to produce useful features
-    var isReady: Bool {
-        runningStats.values.contains { $0.count >= Self.minimumDays }
-    }
-
-    // MARK: - Interaction Feature Retrieval
-
-    /// Retrieve interaction features for a specific date.
-    /// Returns an empty dictionary if no interactions were computed for that date.
-    func interactions(for date: Date) -> [InteractionFeature: Double] {
-        let calendar = Date.cal
-        let day = calendar.startOfDay(for: date)
-        return interactionsByDate[day] ?? [:]
-    }
-
-    /// Get all interaction values for a date as a sorted array matching `interactionPairs` order.
-    func interactionArray(for date: Date) -> [Double] {
-        let dict = interactions(for: date)
-        return interactionPairs.map { dict[$0] ?? FeatureKey.missingSentinel }
-    }
-
     // MARK: - Private Helpers
 
     /// Collect z-scored values using pre-built date array (zero Calendar calls).

@@ -140,23 +140,9 @@ final class CategoryDetailViewModel {
         self.analysisEngine = analysisEngine
     }
 
-    /// Get time series for a metric
-    func timeSeries(for metric: HealthMetric) -> MetricTimeSeries? {
-        healthKitManager.timeSeries[metric]
-    }
-
     /// Get trend for a metric (period-aware)
     func trend(for metric: HealthMetric) -> TrendDirection? {
         trendResult(for: metric)?.direction
-    }
-
-    /// Get latest value for a metric
-    func latestValue(for metric: HealthMetric) -> String {
-        guard let series = healthKitManager.timeSeries[metric],
-              let value = series.latestValue else {
-            return "--"
-        }
-        return metric.formatValue(value)
     }
 
     /// Get anomaly severity for a metric (if any)

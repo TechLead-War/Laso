@@ -31,16 +31,6 @@ extension LiveViewModel {
             }
         }
 
-        var index: Int {
-            switch self {
-            case .rest: return 0
-            case .warmUp: return 1
-            case .fatBurn: return 2
-            case .cardio: return 3
-            case .peak: return 4
-            case .extreme: return 5
-            }
-        }
     }
 
     enum VitalStatus: Equatable {
@@ -163,12 +153,6 @@ extension LiveViewModel {
 
         var isStale: Bool { hasAnyData && !hasRecentData }
         var isAging: Bool { hasAnyData && !hasFreshData && hasRecentData }
-
-        var mostRecentTimestamp: Date? {
-            [heartRateTimestamp, bloodOxygenTimestamp, respiratoryRateTimestamp]
-                .compactMap { $0 }
-                .max()
-        }
     }
 
     /// Last night's sleep data
@@ -256,22 +240,8 @@ extension LiveViewModel {
             }
         }
 
-        var isReadinessDataFresh: Bool {
-            let fortyEightHours: TimeInterval = 48 * 3600
-            return LiveViewModel.isFresh(latestRestingHeartRateTimestamp, threshold: fortyEightHours)
-                || LiveViewModel.isFresh(latestHRVTimestamp, threshold: fortyEightHours)
-        }
-
         var stressLevel: Int? {
             ReadinessScorer.stressLevel(hrv: latestHRV, restingHeartRate: latestRestingHeartRate)
-        }
-
-        var stressLabel: String {
-            ReadinessScorer.stressLabel(for: stressLevel)
-        }
-
-        var stressColor: String {
-            ReadinessScorer.stressColorName(for: stressLevel)
         }
     }
 
@@ -309,21 +279,4 @@ extension HKWorkoutActivityType {
         }
     }
 
-    var systemImageName: String {
-        switch self {
-        case .running: return "figure.run"
-        case .cycling: return "figure.outdoor.cycle"
-        case .walking: return "figure.walk"
-        case .swimming: return "figure.pool.swim"
-        case .hiking: return "figure.hiking"
-        case .yoga: return "figure.yoga"
-        case .functionalStrengthTraining, .traditionalStrengthTraining: return "dumbbell.fill"
-        case .highIntensityIntervalTraining: return "bolt.heart.fill"
-        case .elliptical: return "figure.elliptical"
-        case .rowing: return "figure.rower"
-        case .dance: return "figure.dance"
-        case .stairClimbing: return "figure.stairs"
-        default: return "figure.mixed.cardio"
-        }
-    }
 }

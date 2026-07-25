@@ -12,13 +12,6 @@ extension Copy {
         static var champion: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_champion", default: "Champion") }
         static var legend: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_legend", default: "Legend") }
 
-        static var newcomerDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_newcomer_description", default: "Just getting started. Build the habit.") }
-        static var explorerDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_explorer_description", default: "First week done. Exploring your data.") }
-        static var committedDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_committed_description", default: "A full month of tracking. You are committed.") }
-        static var dedicatedDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_dedicated_description", default: "Three months strong. Dedicated to your health.") }
-        static var championDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_champion_description", default: "Half a year. You are a health champion.") }
-        static var legendDescription: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_legend_description", default: "A full year and beyond. Legendary consistency.") }
-
         // MARK: - Milestone Achievements
 
         static var firstGreenDayTitle: String { RemoteConfigManager.shared.copyString("copy_achievements_achievements_first_green_day_title", default: "First Green Day") }

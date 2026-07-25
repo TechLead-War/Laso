@@ -9,8 +9,6 @@ struct HistoricalAnalyzer {
 
     /// Rich historical context for a single metric
     struct HistoricalContext {
-        let metric: HealthMetric
-
         // Year-over-Year
         let yearOverYearChange: Double?        // % change vs same month last year
         let yearOverYearValue: Double?          // same month last year's average
@@ -153,7 +151,6 @@ struct HistoricalAnalyzer {
         }
 
         return HistoricalContext(
-            metric: metric,
             yearOverYearChange: yearOverYearChange,
             yearOverYearValue: yearOverYearValue,
             allTimePercentile: allTimePercentile,

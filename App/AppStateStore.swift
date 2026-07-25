@@ -22,7 +22,6 @@ final class AppStateStore {
         static let hasSeenDiscovery = AppKeys.App.hasSeenDiscovery
         static let pendingCalibrationHydration = AppKeys.App.pendingCalibrationHydration
         static let hasSeenScoreGuide = AppKeys.App.hasSeenScoreGuide
-        static let cycleTrackingEnabled = AppKeys.Cycle.trackingEnabled
         static let disclaimerAcknowledged = AppKeys.App.disclaimerAcknowledged
         static let paywallDeclined = AppKeys.App.paywallDeclined
     }
@@ -31,7 +30,6 @@ final class AppStateStore {
     private(set) var hasSeenDiscovery: Bool
     private(set) var pendingCalibrationHydration: Bool
     private(set) var hasSeenScoreGuide: Bool
-    private(set) var cycleTrackingEnabled: Bool
     private(set) var disclaimerAcknowledged: Bool
     private(set) var paywallDeclined: Bool
 
@@ -55,7 +53,6 @@ final class AppStateStore {
         hasSeenDiscovery = userDefaults.bool(forKey: Key.hasSeenDiscovery)
         pendingCalibrationHydration = userDefaults.bool(forKey: Key.pendingCalibrationHydration)
         hasSeenScoreGuide = userDefaults.bool(forKey: Key.hasSeenScoreGuide)
-        cycleTrackingEnabled = userDefaults.bool(forKey: Key.cycleTrackingEnabled)
         disclaimerAcknowledged = userDefaults.bool(forKey: Key.disclaimerAcknowledged)
         paywallDeclined = userDefaults.bool(forKey: Key.paywallDeclined)
     }
@@ -96,11 +93,6 @@ final class AppStateStore {
     func markScoreGuideSeen() {
         hasSeenScoreGuide = true
         persist(true, forKey: Key.hasSeenScoreGuide)
-    }
-
-    func setCycleTrackingEnabled(_ enabled: Bool) {
-        cycleTrackingEnabled = enabled
-        persist(enabled, forKey: Key.cycleTrackingEnabled)
     }
 
     func markDisclaimerAcknowledged() {

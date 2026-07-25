@@ -4,29 +4,6 @@ import Accelerate
 /// High-performance vectorized operations using Apple's Accelerate framework (vDSP + BLAS)
 enum AccelerateML {
 
-    // MARK: - Normalization
-
-    /// Z-score normalize an array: (x - mean) / stdDev. Returns normalized values plus (mean, stdDev).
-    static func zScoreNormalize(_ values: [Double]) -> (normalized: [Double], mean: Double, stdDev: Double) {
-        guard values.count > 1 else {
-            return (values, values.first ?? 0, 0)
-        }
-
-        var mean: Double = 0
-        var stdDev: Double = 0
-        var result = [Double](repeating: 0, count: values.count)
-
-        // vDSP_normalizeD computes (x - mean) / stdDev in one pass
-        vDSP_normalizeD(values, 1, &result, 1, &mean, &stdDev, vDSP_Length(values.count))
-
-        // vDSP returns 0 stdDev if all values are the same
-        if stdDev == 0 {
-            return (Array(repeating: 0, count: values.count), mean, 0)
-        }
-
-        return (result, mean, stdDev)
-    }
-
     // MARK: - Basic Vector Operations
 
     /// Dot product of two vectors
@@ -35,14 +12,6 @@ enum AccelerateML {
         guard n > 0 else { return 0 }
         var result: Double = 0
         vDSP_dotprD(a, 1, b, 1, &result, vDSP_Length(n))
-        return result
-    }
-
-    /// Element-wise multiply: result[i] = a[i] * b[i]
-    static func multiply(_ a: [Double], _ b: [Double]) -> [Double] {
-        let n = Swift.min(a.count, b.count)
-        var result = [Double](repeating: 0, count: n)
-        vDSP_vmulD(a, 1, b, 1, &result, 1, vDSP_Length(n))
         return result
     }
 
@@ -76,22 +45,6 @@ enum AccelerateML {
         guard !values.isEmpty else { return 0 }
         var result: Double = 0
         vDSP_meanvD(values, 1, &result, vDSP_Length(values.count))
-        return result
-    }
-
-    /// Scalar multiply: result[i] = a[i] * scalar
-    static func scalarMultiply(_ a: [Double], _ scalar: Double) -> [Double] {
-        var s = scalar
-        var result = [Double](repeating: 0, count: a.count)
-        vDSP_vsmulD(a, 1, &s, &result, 1, vDSP_Length(a.count))
-        return result
-    }
-
-    /// Scalar add: result[i] = a[i] + scalar
-    static func scalarAdd(_ a: [Double], _ scalar: Double) -> [Double] {
-        var s = scalar
-        var result = [Double](repeating: 0, count: a.count)
-        vDSP_vsaddD(a, 1, &s, &result, 1, vDSP_Length(a.count))
         return result
     }
 
@@ -165,57 +118,12 @@ enum AccelerateML {
 
     // MARK: - Sigmoid
 
-    /// Sigmoid function: 1 / (1 + exp(-x)) applied element-wise
-    static func sigmoid(_ values: [Double]) -> [Double] {
-        let n = values.count
-        guard n > 0 else { return [] }
-
-        // In-place processing to avoid multiple memory allocations
-        var result = [Double](repeating: 0, count: n)
-        var minusOne = -1.0
-        
-        // 1. Negate: result = -x
-        vDSP_vsmulD(values, 1, &minusOne, &result, 1, vDSP_Length(n))
-        // 2. Exp: result = exp(-x)
-        vForce.exp(result, result: &result)
-        // 3. Add 1: result = 1 + exp(-x)
-        var one = 1.0
-        vDSP_vsaddD(result, 1, &one, &result, 1, vDSP_Length(n))
-        // 4. Reciprocal: result = 1 / (1 + exp(-x))
-        vForce.reciprocal(result, result: &result)
-
-        return result
-    }
-
     /// Single value sigmoid
     static func sigmoid(_ x: Double) -> Double {
         1.0 / (1.0 + exp(-x))
     }
 
-    // MARK: - Matrix-Vector Multiply
-
-    /// Matrix-vector multiply: result = A * x, where A is (rows x cols) stored row-major
-    static func matVecMultiply(matrix: [Double], vector: [Double], rows: Int, cols: Int) -> [Double] {
-        guard matrix.count >= rows * cols, vector.count >= cols else { return [] }
-        var result = [Double](repeating: 0, count: rows)
-        // Manual row-major matrix-vector multiply using vDSP
-        for r in 0..<rows {
-            let rowStart = r * cols
-            let row = Array(matrix[rowStart..<(rowStart + cols)])
-            var dot: Double = 0
-            vDSP_dotprD(row, 1, vector, 1, &dot, vDSP_Length(cols))
-            result[r] = dot
-        }
-        return result
-    }
-
     // MARK: - Distance & Similarity
-
-    /// Euclidean distance between two vectors
-    static func euclideanDistance(_ a: [Double], _ b: [Double]) -> Double {
-        let diff = subtract(a, b)
-        return sumOfSquares(diff).squareRoot()
-    }
 
     /// Squared Euclidean distance (avoids sqrt for clustering)
     static func squaredDistance(_ a: [Double], _ b: [Double]) -> Double {
@@ -261,17 +169,6 @@ enum AccelerateML {
 
         guard denominator > 0 else { return 0 }
         return numerator / denominator
-    }
-
-    // MARK: - Matrix Multiply (BLAS)
-
-    /// Matrix multiplication using vDSP: C = A * B
-    /// A is (rows x cols), B is (cols x n), result C is (rows x n). All row-major.
-    static func matrixMultiply(A: [Double], B: [Double], rows: Int, cols: Int, n: Int) -> [Double] {
-        guard A.count >= rows * cols, B.count >= cols * n else { return [] }
-        var C = [Double](repeating: 0, count: rows * n)
-        vDSP_mmulD(A, 1, B, 1, &C, 1, vDSP_Length(rows), vDSP_Length(n), vDSP_Length(cols))
-        return C
     }
 
     // MARK: - Softmax
@@ -330,20 +227,7 @@ enum AccelerateML {
         return maxVal + log(total)
     }
 
-    // MARK: - Cumulative Sum
-
-    /// Cumulative sum using vDSP_vrsumD
-    static func cumulativeSum(_ values: [Double]) -> [Double] {
-        let n = values.count
-        guard n > 0 else { return [] }
-        var result = [Double](repeating: 0, count: n)
-        var one = 1.0
-        // vDSP_vrsumD computes running sum; input is multiplied by scalar
-        vDSP_vrsumD(values, 1, &one, &result, 1, vDSP_Length(n))
-        return result
-    }
-
-    // MARK: - Argmax / Argmin
+    // MARK: - Argmax
 
     /// Index of maximum value via vDSP_maxviD
     static func argmax(_ values: [Double]) -> Int {
@@ -352,15 +236,6 @@ enum AccelerateML {
         var maxIdx: vDSP_Length = 0
         vDSP_maxviD(values, 1, &maxVal, &maxIdx, vDSP_Length(values.count))
         return Int(maxIdx)
-    }
-
-    /// Index of minimum value via vDSP_minviD
-    static func argmin(_ values: [Double]) -> Int {
-        guard !values.isEmpty else { return 0 }
-        var minVal: Double = 0
-        var minIdx: vDSP_Length = 0
-        vDSP_minviD(values, 1, &minVal, &minIdx, vDSP_Length(values.count))
-        return Int(minIdx)
     }
 
     // MARK: - Multivariate Normal (Diagonal Covariance)
@@ -417,25 +292,6 @@ enum AccelerateML {
         return dotResult / weightSum
     }
 
-    // MARK: - Outer Product
-
-    /// Outer product: result[i*b.count + j] = a[i] * b[j]. Returns flat row-major matrix.
-    static func outerProduct(_ a: [Double], _ b: [Double]) -> [Double] {
-        let m = a.count
-        let n = b.count
-        guard m > 0, n > 0 else { return [] }
-
-        // result[i*n + j] = a[i] * b[j]
-        var result = [Double](repeating: 0, count: m * n)
-        result.withUnsafeMutableBufferPointer { buf in
-            for i in 0..<m {
-                var scalar = a[i]
-                vDSP_vsmulD(b, 1, &scalar, buf.baseAddress! + i * n, 1, vDSP_Length(n))
-            }
-        }
-        return result
-    }
-
     // MARK: - Linear System Solver (LAPACK)
 
     /// Solve Ax = b for x using LAPACK's LU factorization with partial pivoting
@@ -483,66 +339,5 @@ enum AccelerateML {
 
         guard info == 0 else { return nil }       // info > 0 => not positive definite
         return rhs
-    }
-
-    /// Invert an n x n matrix (row-major) with a single LU factorization (dgesv,
-    /// identity RHS) — O(n^3), versus n separate solves. Returns row-major inverse,
-    /// or nil if singular.
-    static func inverse(_ A: [Double], n: Int) -> [Double]? {
-        guard A.count >= n * n, n > 0 else { return nil }
-        var a = [Double](repeating: 0, count: n * n)
-        for i in 0..<n { for j in 0..<n { a[j * n + i] = A[i * n + j] } }   // column-major
-        var b = [Double](repeating: 0, count: n * n)                        // identity RHS
-        for i in 0..<n { b[i * n + i] = 1.0 }
-        var nDim = __CLPK_integer(n)
-        var nrhs = __CLPK_integer(n)
-        var lda = nDim
-        var ldb = nDim
-        var ipiv = [__CLPK_integer](repeating: 0, count: n)
-        var info = __CLPK_integer(0)
-
-        dgesv_(&nDim, &nrhs, &a, &lda, &ipiv, &b, &ldb, &info)
-
-        guard info == 0 else { return nil }
-        var inv = [Double](repeating: 0, count: n * n)
-        for i in 0..<n { for j in 0..<n { inv[i * n + j] = b[j * n + i] } }  // back to row-major
-        return inv
-    }
-
-    // MARK: - Pearson Correlation
-
-    /// Pearson correlation coefficient between x and y using vDSP.
-    static func pearsonCorrelation(_ x: [Double], _ y: [Double]) -> Double {
-        let n = Swift.min(x.count, y.count)
-        guard n > 1 else { return 0 }
-
-        // Means
-        var meanX: Double = 0
-        var meanY: Double = 0
-        vDSP_meanvD(x, 1, &meanX, vDSP_Length(n))
-        vDSP_meanvD(y, 1, &meanY, vDSP_Length(n))
-
-        // Center: xc = x - meanX, yc = y - meanY
-        var negMeanX = -meanX
-        var negMeanY = -meanY
-        var xc = [Double](repeating: 0, count: n)
-        var yc = [Double](repeating: 0, count: n)
-        vDSP_vsaddD(x, 1, &negMeanX, &xc, 1, vDSP_Length(n))
-        vDSP_vsaddD(y, 1, &negMeanY, &yc, 1, vDSP_Length(n))
-
-        // Dot product of centered vectors
-        var numerator: Double = 0
-        vDSP_dotprD(xc, 1, yc, 1, &numerator, vDSP_Length(n))
-
-        // Sum of squares
-        var ssX: Double = 0
-        var ssY: Double = 0
-        vDSP_svesqD(xc, 1, &ssX, vDSP_Length(n))
-        vDSP_svesqD(yc, 1, &ssY, vDSP_Length(n))
-
-        let denominator = (ssX * ssY).squareRoot()
-        guard denominator > 0 else { return 0 }
-
-        return numerator / denominator
     }
 }

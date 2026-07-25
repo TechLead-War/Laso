@@ -312,10 +312,4 @@ final class WatchMonitor {
         preferencesLoadedAt = Date()
         return prefs
     }
-
-    /// Invalidate cached preferences (call when user changes settings)
-    func invalidatePreferencesCache() {
-        cachedPreferences = nil
-        preferencesLoadedAt = nil
-    }
 }

@@ -47,34 +47,9 @@ extension Date {
         }
     }
 
-    private static var mediumDateFormatter: DateFormatter {
-        FormatterCache.formatter(key: "Laso.Date.medium") { formatter in
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-        }
-    }
-
-    private static var shortTimeFormatter: DateFormatter {
-        FormatterCache.formatter(key: "Laso.Date.time.short") { formatter in
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-        }
-    }
-
-    private static var weekdayNameFormatter: DateFormatter {
-        FormatterCache.formatter(key: "Laso.Date.weekdayName") { formatter in
-            formatter.dateFormat = "EEEE"
-        }
-    }
-
     /// Start of the current day
     var startOfDay: Date {
         Self.cal.startOfDay(for: self)
-    }
-
-    /// End of the current day
-    var endOfDay: Date {
-        Self.cal.date(byAdding: DateComponents(day: 1, second: -1), to: startOfDay) ?? self
     }
 
     /// Date N days ago from this date
@@ -82,35 +57,9 @@ extension Date {
         Self.cal.date(byAdding: .day, value: -days, to: self) ?? self
     }
 
-    /// Date N weeks ago from this date
-    func weeksAgo(_ weeks: Int) -> Date {
-        Self.cal.date(byAdding: .weekOfYear, value: -weeks, to: self) ?? self
-    }
-
-    /// Start of week containing this date
-    var startOfWeek: Date {
-        let components = Self.cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
-        return Self.cal.date(from: components) ?? self
-    }
-
     /// Formatted string for display
     var shortDateString: String {
         Self.shortDateFormatter.string(from: self)
-    }
-
-    var mediumDateString: String {
-        Self.mediumDateFormatter.string(from: self)
-    }
-
-    var timeString: String {
-        Self.shortTimeFormatter.string(from: self)
-    }
-
-    /// Date range from N days ago to now
-    static func rangeFromNow(days: Int) -> (start: Date, end: Date) {
-        let end = Date()
-        let start = end.daysAgo(days)
-        return (start, end)
     }
 
     /// Number of days between two dates
@@ -122,10 +71,5 @@ extension Date {
     /// Day of week as Int (1 = Sunday, 2 = Monday, ... 7 = Saturday)
     var dayOfWeek: Int {
         Self.cal.component(.weekday, from: self)
-    }
-
-    /// Day of week as localized name (e.g. "Monday")
-    var dayOfWeekName: String {
-        Self.weekdayNameFormatter.string(from: self)
     }
 }

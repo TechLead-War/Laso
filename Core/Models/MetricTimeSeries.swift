@@ -81,15 +81,6 @@ struct MetricTimeSeries: Identifiable {
         return (sumOfSquares / Double(n)).squareRoot()
     }
 
-    var min: Double? { samples.min(by: { $0.value < $1.value })?.value }
-
-    var max: Double? { samples.max(by: { $0.value < $1.value })?.value }
-
-    var range: Double {
-        guard let lo = min, let hi = max else { return 0 }
-        return hi - lo
-    }
-
     /// Check if the latest data is older than the given number of days.
     func isStale(thresholdDays: Int = 2) -> Bool {
         guard let lastDate = samples.last?.date else { return true }

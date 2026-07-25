@@ -81,12 +81,6 @@ extension Copy {
         static var improveBodyComp: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_body_comp", default: "Focus on eating well and staying active. Small steady changes make the biggest difference over time.") }
         static var improveDefault: String { RemoteConfigManager.shared.copyString("copy_vitality_improve_default", default: "Keep tracking this and look for patterns in your data.") }
 
-        // MARK: - Pace Labels (VitalityScorer)
-
-        static var paceImproving: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_improving", default: "Improving") }
-        static var paceStable: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_stable", default: "Stable") }
-        static var paceDeclining: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_declining", default: "Declining") }
-
         // MARK: - Chart Accessibility (VitalityTrendSection)
 
         static func chartPointAccessibilityValue(age: Int) -> String {

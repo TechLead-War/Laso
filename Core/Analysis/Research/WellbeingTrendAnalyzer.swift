@@ -12,13 +12,10 @@ struct WellbeingTrendAnalyzer {
     // MARK: - Signal Weights
 
     private struct WellbeingSignal {
-        let name: String
         let score: Double // -1 (concerning) to +1 (positive)
         let weight: Double
         let detail: String
     }
-
-    private static let minDaysRequired = 14
 
     // MARK: - Analysis
 
@@ -151,7 +148,7 @@ struct WellbeingTrendAnalyzer {
             detail = Copy.Analysis.Research.WellbeingTrend.sleepHighlyIrregular
         }
 
-        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.sleepRegularitySignal, score: score, weight: 0.30, detail: detail)
+        return WellbeingSignal(score: score, weight: 0.30, detail: detail)
     }
 
     private static func evaluateActivityTrend(context: AnalysisContext) -> WellbeingSignal? {
@@ -186,7 +183,7 @@ struct WellbeingTrendAnalyzer {
             detail = Copy.Analysis.Research.WellbeingTrend.activityDropped(percent: String(format: "%.0f", abs(change) * 100))
         }
 
-        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.activityLevelSignal, score: score, weight: 0.25, detail: detail)
+        return WellbeingSignal(score: score, weight: 0.25, detail: detail)
     }
 
     private static func evaluateDaylightExposure(context: AnalysisContext) -> WellbeingSignal? {
@@ -214,7 +211,7 @@ struct WellbeingTrendAnalyzer {
             detail = Copy.Analysis.Research.WellbeingTrend.veryLowDaylight
         }
 
-        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.daylightSignal, score: score, weight: 0.20, detail: detail)
+        return WellbeingSignal(score: score, weight: 0.20, detail: detail)
     }
 
     private static func evaluateMindfulness(context: AnalysisContext) -> WellbeingSignal? {
@@ -239,7 +236,7 @@ struct WellbeingTrendAnalyzer {
             detail = Copy.Analysis.Research.WellbeingTrend.mindfulnessMinimal
         }
 
-        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.mindfulnessSignal, score: score, weight: 0.10, detail: detail)
+        return WellbeingSignal(score: score, weight: 0.10, detail: detail)
     }
 
     private static func evaluateHRVTrend(context: AnalysisContext) -> WellbeingSignal? {
@@ -268,7 +265,7 @@ struct WellbeingTrendAnalyzer {
             detail = Copy.Analysis.Research.WellbeingTrend.autonomicSuppressed
         }
 
-        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.autonomicToneSignal, score: score, weight: 0.15, detail: detail)
+        return WellbeingSignal(score: score, weight: 0.15, detail: detail)
     }
 }
 

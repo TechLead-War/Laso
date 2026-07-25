@@ -27,27 +27,15 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         let socialJetLag: Double
         /// Composite circadian alignment score: 0-100
         let circadianAlignmentScore: Int
-        /// Individual component scores for breakdown display
-        let componentScores: ComponentScores
         /// Days of data used
         let daysAnalyzed: Int
 
-        struct ComponentScores {
-            let amplitudeScore: Double   // 0-100
-            let stabilityScore: Double   // 0-100
-            let fragmentationScore: Double // 0-100
-            let regularityScore: Double  // 0-100
-            let jetLagScore: Double      // 0-100
-        }
-
-        var isHealthy: Bool { circadianAlignmentScore >= 70 }
         var isDisrupted: Bool { circadianAlignmentScore < 50 }
     }
 
     // MARK: - Configuration
 
     private static let minimumDays = 7
-    private static let idealDays = 14
 
     // MARK: - InsightAnalyzer Conformance
 
@@ -232,14 +220,6 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         let regularityScore = sri
         let jetLagScore = min(100, max(0, (3.0 - socialJetLag) / 3.0 * 100))  // 0h = 100, 3h = 0
 
-        let componentScores = CircadianBiomarkers.ComponentScores(
-            amplitudeScore: amplitudeScore,
-            stabilityScore: stabilityScore,
-            fragmentationScore: fragmentationScore,
-            regularityScore: regularityScore,
-            jetLagScore: jetLagScore
-        )
-
         // Weighted composite: regularity and jet lag are strongest predictors
         let composite = Int(
             amplitudeScore * 0.15 +
@@ -256,7 +236,6 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
             sleepRegularityIndex: sri,
             socialJetLag: socialJetLag,
             circadianAlignmentScore: min(100, max(0, composite)),
-            componentScores: componentScores,
             daysAnalyzed: daysAnalyzed
         )
     }

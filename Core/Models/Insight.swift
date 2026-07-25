@@ -144,7 +144,6 @@ struct InsightContext {
     var recentValues: [(date: Date, value: Double)]?
     var confidenceLevel: Double?
     var dataPointCount: Int?
-    var categoryDrivers: [(category: HealthCategory, change: Double)]?
 
     init(
         slope: Double? = nil,
@@ -158,8 +157,7 @@ struct InsightContext {
         comparisonToLastWeek: Double? = nil,
         recentValues: [(date: Date, value: Double)]? = nil,
         confidenceLevel: Double? = nil,
-        dataPointCount: Int? = nil,
-        categoryDrivers: [(category: HealthCategory, change: Double)]? = nil
+        dataPointCount: Int? = nil
     ) {
         self.slope = slope
         self.projectedDaysToThreshold = projectedDaysToThreshold
@@ -173,7 +171,6 @@ struct InsightContext {
         self.recentValues = recentValues
         self.confidenceLevel = confidenceLevel
         self.dataPointCount = dataPointCount
-        self.categoryDrivers = categoryDrivers
     }
 }
 

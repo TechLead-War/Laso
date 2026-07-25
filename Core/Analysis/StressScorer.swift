@@ -53,30 +53,6 @@ enum StressLevel: String, CaseIterable, Codable {
     }
 }
 
-// MARK: - Stress Trend
-
-enum StressTrend: String, CaseIterable {
-    case decreasing
-    case stable
-    case increasing
-
-    var displayName: String {
-        switch self {
-        case .decreasing: return Copy.StressMonitor.trendDecreasing
-        case .stable: return Copy.StressMonitor.trendStable
-        case .increasing: return Copy.StressMonitor.trendIncreasing
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .decreasing: return "arrow.down.right"
-        case .stable: return "arrow.right"
-        case .increasing: return "arrow.up.right"
-        }
-    }
-}
-
 // MARK: - Stress Score
 
 struct StressScore {
@@ -88,8 +64,6 @@ struct StressScore {
     let hrvDeviation: Double
     /// Percentage above personal resting HR baseline (0.0 = at baseline, 1.0 = 100% above)
     let hrElevation: Double
-    /// Confidence in the score based on data availability and freshness (0.0-1.0)
-    let confidence: Double
 }
 
 // MARK: - Stress Scorer
@@ -117,12 +91,6 @@ final class StressScorer {
     private static let weeklyAverageWindowDays = 7
     /// Minimum samples required before `weeklyAverage` is reported.
     private static let weeklyAverageMinSamples = 3
-    /// Minimum daily stress samples required before `stressTrend` is computed.
-    private static let trendMinSamples = 7
-    /// Half-window score delta (0-3 scale) above which `stressTrend` reports "increasing".
-    private static let trendIncreasingDelta: Double = 0.2
-    /// Half-window score delta (0-3 scale) below which `stressTrend` reports "decreasing".
-    private static let trendDecreasingDelta: Double = -0.2
     /// Stress-score scaling factor that maps a 0-100% deviation onto the 0-3 stress scale.
     private static let stressScoreScale: Double = 3.0
     /// Maximum value the final stress score is clamped to.
@@ -131,22 +99,6 @@ final class StressScorer {
     private static let minSamplesForBaseline = 5
     /// Look-back window (days) used when picking the most recent daily mean.
     private static let mostRecentLookbackDays = 2
-    /// HRV deviation fraction above which the `mild` description mentions HRV explicitly.
-    private static let mildHRVMentionThreshold: Double = 0.1
-    /// HRV deviation fraction above which the `moderate` description mentions HRV explicitly.
-    private static let moderateHRVMentionThreshold: Double = 0.15
-    /// HR elevation fraction above which the `moderate` description mentions HR explicitly.
-    private static let moderateHRMentionThreshold: Double = 0.1
-    /// Confidence contribution from having HRV data.
-    private static let confidenceHRVContribution: Double = 0.6
-    /// Confidence contribution from having HR data.
-    private static let confidenceHRContribution: Double = 0.25
-    /// Maximum confidence bonus from HRV baseline stability.
-    private static let confidenceStabilityBonus: Double = 0.15
-    /// Coefficient of variation at which the stability bonus reaches full strength.
-    private static let stabilityFullStrengthCV: Double = 0.1
-    /// Coefficient of variation span over which the stability bonus decays to zero.
-    private static let stabilityCVRange: Double = 0.3
 
     // MARK: - Outputs
 
@@ -164,62 +116,6 @@ final class StressScorer {
         let last7 = dailyStressHistory.suffix(Self.weeklyAverageWindowDays)
         guard last7.count >= Self.weeklyAverageMinSamples else { return nil }
         return last7.map(\.score).reduce(0, +) / Double(last7.count)
-    }
-
-    /// Trend direction of stress over the recent history
-    var stressTrend: StressTrend {
-        guard dailyStressHistory.count >= Self.trendMinSamples else { return .stable }
-
-        let count = dailyStressHistory.count
-        let halfPoint = count / 2
-        let firstHalf = dailyStressHistory.prefix(halfPoint)
-        let secondHalf = dailyStressHistory.suffix(halfPoint)
-
-        guard !firstHalf.isEmpty, !secondHalf.isEmpty else { return .stable }
-
-        let firstAvg = firstHalf.map(\.score).reduce(0, +) / Double(firstHalf.count)
-        let secondAvg = secondHalf.map(\.score).reduce(0, +) / Double(secondHalf.count)
-
-        let delta = secondAvg - firstAvg
-        if delta > Self.trendIncreasingDelta { return .increasing }
-        if delta < Self.trendDecreasingDelta { return .decreasing }
-        return .stable
-    }
-
-    /// Human-readable description of current stress state with actionable advice
-    var stressDescription: String {
-        guard let stress = currentStress else {
-            return Copy.StressMonitor.descriptionNoData
-        }
-
-        let scoreText = String(format: "%.1f", stress.score)
-
-        switch stress.level {
-        case .low:
-            return Copy.StressMonitor.descriptionLow(score: scoreText)
-
-        case .mild:
-            return Copy.StressMonitor.descriptionMildPrefix(score: scoreText)
-                + (stress.hrvDeviation > Self.mildHRVMentionThreshold
-                    ? Copy.StressMonitor.descriptionHRVMention(percent: Int(stress.hrvDeviation * 100))
-                    : "")
-                + Copy.StressMonitor.descriptionMildSuffix
-
-        case .moderate:
-            return Copy.StressMonitor.descriptionModeratePrefix(score: scoreText)
-                + (stress.hrvDeviation > Self.moderateHRVMentionThreshold
-                    ? Copy.StressMonitor.descriptionHRVMention(percent: Int(stress.hrvDeviation * 100))
-                    : "")
-                + (stress.hrElevation > Self.moderateHRMentionThreshold
-                    ? Copy.StressMonitor.descriptionHRMention(percent: Int(stress.hrElevation * 100))
-                    : "")
-                + Copy.StressMonitor.descriptionModerateSuffix
-
-        case .high:
-            return Copy.StressMonitor.descriptionHighPrefix(score: scoreText)
-                + Copy.StressMonitor.descriptionHighHRVAndHRTyped(hrvPercent: Int(stress.hrvDeviation * 100), hrPercent: Int(stress.hrElevation * 100))
-                + Copy.StressMonitor.descriptionHighSuffix
-        }
     }
 
     // MARK: - Compute
@@ -384,52 +280,12 @@ final class StressScorer {
 
         let clampedScore = min(Self.stressScoreCeiling, max(0.0, rawScore))
 
-        // Confidence based on data availability and freshness
-        let confidence = computeConfidence(
-            hasHRV: true,
-            hasHR: hasHR,
-            hrvBaseline: hrvBaseline
-        )
-
         return StressScore(
             score: clampedScore,
             level: StressLevel(score: clampedScore),
             hrvDeviation: hrvDeviation,
-            hrElevation: hrElevation,
-            confidence: confidence
+            hrElevation: hrElevation
         )
-    }
-
-    /// Compute confidence based on data freshness and sample count
-    private func computeConfidence(
-        hasHRV: Bool,
-        hasHR: Bool,
-        hrvBaseline: (mean: Double, sd: Double)
-    ) -> Double {
-        var confidence = 0.0
-
-        // HRV data presence is the foundation
-        if hasHRV {
-            confidence += Self.confidenceHRVContribution
-        }
-
-        // HR data adds confidence
-        if hasHR {
-            confidence += Self.confidenceHRContribution
-        }
-
-        // Baseline stability: lower coefficient of variation = more stable baseline = higher confidence
-        if hrvBaseline.mean > 0 {
-            let cv = hrvBaseline.sd / hrvBaseline.mean
-            // Full bonus at low CV; decays linearly to zero across stabilityCVRange
-            let stabilityBonus = max(0, min(
-                Self.confidenceStabilityBonus,
-                Self.confidenceStabilityBonus * (1.0 - (cv - Self.stabilityFullStrengthCV) / Self.stabilityCVRange)
-            ))
-            confidence += stabilityBonus
-        }
-
-        return min(1.0, confidence)
     }
 
     /// Build the last 30 days of daily stress history

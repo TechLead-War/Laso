@@ -3,7 +3,6 @@ import SwiftUI
 struct CalibrationDiscovery {
     var oldestDataDate: Date?
     var metricsWithData: Int = 0
-    var totalDataPoints: Int = 0
     var highlights: [MetricHighlight] = []
 
     struct MetricHighlight: Identifiable {
@@ -40,7 +39,6 @@ struct CalibrationDiscovery {
 
         let populatedSeries = timeSeries.filter { !$0.value.samples.isEmpty }
         discovery.metricsWithData = populatedSeries.count
-        discovery.totalDataPoints = populatedSeries.values.reduce(0) { $0 + $1.totalDataPoints }
 
         // Find oldest data date
         let allFirstDates = populatedSeries.values.compactMap { $0.samples.first?.date }

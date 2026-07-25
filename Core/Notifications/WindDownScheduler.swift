@@ -88,11 +88,6 @@ struct WindDownScheduler {
         )
     }
 
-    /// Cancel any pending wind-down notification.
-    static func cancel() {
-        NotificationManager.shared.cancelNotification(identifier: identifier)
-    }
-
     // Bedtime is shown inside a user-visible notification body, so
     // it must follow the user's clock preference (12h vs 24h, AM/PM symbols
     // localized). `.formatted(.dateTime.hour().minute())` resolves both from

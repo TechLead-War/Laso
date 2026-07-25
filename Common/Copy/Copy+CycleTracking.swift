@@ -123,15 +123,5 @@ extension Copy {
         static var trackerFollicularNutrition: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_follicular_nutrition", default: "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. A good window for complex carbs around workouts.") }
         static var trackerOvulationNutrition: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_ovulation_nutrition", default: "Maintain balanced macros with emphasis on antioxidants and fiber. Hydration is important as energy expenditure peaks.") }
         static var trackerLutealNutrition: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_luteal_nutrition", default: "Cravings for carbs and fats are common due to increased caloric needs (~100-300 kcal/day more). Choose whole grains, magnesium-rich foods, and healthy fats.") }
-
-        // MARK: - Tracker Recovery Impact
-
-        static var trackerNoCycleData: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_no_cycle_data", default: "No cycle data available to assess recovery impact.") }
-        static var trackerMenstrualRecoveryImpact: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_menstrual_recovery_impact", default: "Recovery is slower during menstruation. Allow extra rest between intense sessions and monitor HRV for readiness.") }
-        static var trackerFollicularRecoveryImpact: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_follicular_recovery_impact", default: "Recovery is at its fastest. The body adapts well to training stimulus. shorter rest periods are feasible.") }
-        static var trackerOvulationRecoveryImpact: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_ovulation_recovery_impact", default: "Recovery remains strong but joint laxity may increase injury risk. Warm up thoroughly and prioritize form.") }
-        static var trackerLutealRecoveryImpact: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_luteal_recovery_impact", default: "Recovery slows as progesterone rises and core temperature climbs. Expect longer HRV recovery and higher resting heart rate.") }
-
-        static var trackerNoCycleExerciseFallback: String { RemoteConfigManager.shared.copyString("copy_cycle_tracking_cycle_tracking_tracker_no_cycle_exercise_fallback", default: "Track at least one menstrual period to receive phase-specific training advice.") }
     }
 }

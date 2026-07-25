@@ -37,17 +37,11 @@ extension Copy {
 
         // MARK: - Accessibility
 
-        static func planAccessibilityLabel(_ label: String, _ detail: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_paywall_paywall_plan_accessibility_label", default: "%@ plan, %@"), label, detail) }
-
         static func unlockMoreInsights(hiddenCount: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_paywall_paywall_unlock_more_insights", default: "Unlock %d more insights with Pro"), hiddenCount)
         }
 
         static var upgradeToPro: String { RemoteConfigManager.shared.copyString("copy_paywall_upgrade_to_pro", default: "Upgrade to Pro") }
-        static func planAccessibilityHint(_ planLabel: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_paywall_plan_accessibility_hint", default: "Selects the %@ subscription plan"), planLabel) }
-        static var trialCTAHint: String { RemoteConfigManager.shared.copyString("copy_paywall_trial_cta_hint", default: "Starts your free trial and subscribes after") }
-        static var subscribeCTAHint: String { RemoteConfigManager.shared.copyString("copy_paywall_subscribe_cta_hint", default: "Subscribes you to the selected plan") }
-        static var restoreHint: String { RemoteConfigManager.shared.copyString("copy_paywall_restore_hint", default: "Restores any prior subscription tied to your Apple ID") }
 
         // MARK: - Lifted view literals
         static var restoresAnyPriorSubscriptionTiedToHint: String { RemoteConfigManager.shared.copyString("copy_paywall_restores_any_prior_subscription_tied_to_hint", default: "Restores any prior subscription tied to your Apple ID") }

@@ -52,19 +52,6 @@ enum HealthScorerConfig {
     static var focusBoost: Double                 { rc.healthFocusBoost }
     static var categoryWeightFloor: Double        { rc.healthCategoryWeightFloor }
 
-    // MARK: - Adaptive Metric Weights
-
-    static var noBaselineWeight: Double           { rc.healthNoBaselineWeight }
-    static var freshnessFreshDayCutoff: Int       { rc.healthFreshnessFreshDayCutoff }
-    static var freshnessFreshScore: Double        { rc.healthFreshnessFreshScore }
-    static var freshnessRecentDayCutoff: Int      { rc.healthFreshnessRecentDayCutoff }
-    static var freshnessRecentDecayPerDay: Double { rc.healthFreshnessRecentDecayPerDay }
-    static var freshnessLongTermBase: Double      { rc.healthFreshnessLongTermBase }
-    static var freshnessLongTermDecayPerDay: Double { rc.healthFreshnessLongTermDecayPerDay }
-    static var freshnessFloor: Double             { rc.healthFreshnessFloor }
-    static var metricWeightAbsoluteFloor: Double  { rc.healthMetricWeightAbsoluteFloor }
-    static var metricWeightEqualShareDivisor: Double { rc.healthMetricWeightEqualShareDivisor }
-
     // MARK: - Coverage-Based Shrinkage
 
     static var coverageFullWeightMetrics: Double  { rc.healthCoverageFullWeightMetrics }

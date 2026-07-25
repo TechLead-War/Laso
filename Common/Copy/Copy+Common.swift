@@ -30,24 +30,12 @@ extension Copy {
 
         // MARK: - Shared Accessibility Labels
 
-        static var sendingFeedbackContinueAnyway: String { RemoteConfigManager.shared.copyString("copy_common_common_continue_anyway", default: "Continue anyway") }
         static var sendingFeedback: String { RemoteConfigManager.shared.copyString("copy_common_common_sending_feedback", default: "Sending feedback") }
         static var quickQuestion: String { RemoteConfigManager.shared.copyString("copy_common_common_quick_question", default: "Quick question") }
         static var shareHealthCard: String { RemoteConfigManager.shared.copyString("copy_common_common_share_health_card", default: "Share health card") }
 
         static func dataConfidence(tier: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_common_common_data_confidence", default: "Data confidence: %@ tier"), tier)
-        }
-
-        /// Caption shown above detail screens — "Updated 2 minutes ago" style.
-        /// Returns nil when the data is less than 60 seconds old, so callers can
-        /// hide the caption entirely instead of showing "Updated 0 sec ago" noise
-        /// on a fresh snapshot.
-        static func relativeUpdated(_ date: Date) -> String? {
-            guard Date().timeIntervalSince(date) >= 60 else { return nil }
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            return "Updated \(formatter.localizedString(for: date, relativeTo: Date()))"
         }
 
         // MARK: - Lifted view literals

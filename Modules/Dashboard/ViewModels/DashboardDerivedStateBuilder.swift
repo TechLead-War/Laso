@@ -1,12 +1,6 @@
 import Foundation
 
 struct DashboardDerivedStateBuilder {
-    struct TrendSnapshot {
-        let metric: HealthMetric
-        let direction: TrendDirection
-        let weekOverWeekChange: Double
-    }
-
     typealias ScoreHistoryEntry = (date: Date, score: Int)
 
     func scoreChangeFromLastWeek(
@@ -47,51 +41,6 @@ struct DashboardDerivedStateBuilder {
 
         let delta = currentScore - yesterdayScore
         return delta == 0 ? nil : delta
-    }
-
-    func trendsSummary(
-        trends: [TrendSnapshot],
-        focusCategories: Set<HealthCategory>,
-        limit: Int = 5
-    ) -> DashboardViewModel.TrendsSummary {
-        var improving = 0
-        var stable = 0
-        var declining = 0
-        var movers: [DashboardViewModel.MetricMover] = []
-
-        for trend in trends {
-            switch trend.direction {
-            case .improving: improving += 1
-            case .stable: stable += 1
-            case .declining: declining += 1
-            }
-
-            if abs(trend.weekOverWeekChange) > 3 {
-                movers.append(
-                    DashboardViewModel.MetricMover(
-                        metric: trend.metric,
-                        changePercent: trend.weekOverWeekChange,
-                        improving: trend.direction == .improving
-                    )
-                )
-            }
-        }
-
-        movers.sort { a, b in
-            if !focusCategories.isEmpty {
-                let aFocused = focusCategories.contains(a.metric.category)
-                let bFocused = focusCategories.contains(b.metric.category)
-                if aFocused != bFocused { return aFocused }
-            }
-            return abs(a.changePercent) > abs(b.changePercent)
-        }
-
-        return DashboardViewModel.TrendsSummary(
-            improving: improving,
-            stable: stable,
-            declining: declining,
-            topMovers: Array(movers.prefix(limit))
-        )
     }
 
     func topCorrelations(

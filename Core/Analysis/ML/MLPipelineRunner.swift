@@ -20,7 +20,6 @@ final class MLPipelineRunner {
         var vectors: [DailyFeatureVector] = []
         var smoothedStates: [SmoothedHealthState] = []
         var multiHorizonForecasts: [HealthMetric: TimeSeriesForecaster.MultiHorizonForecast] = [:]
-        var multivariateResults: [MultivariateRegressionResult] = []
         var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
         var dataSufficiency: UncertaintyEstimator.DataSufficiency?
         var componentReadiness: [UncertaintyEstimator.ComponentReadiness] = []
@@ -29,13 +28,10 @@ final class MLPipelineRunner {
         var doseResponseCurves: [InteractionEffectEngine.DoseResponseCurve] = []
         var temporalSequences: [TemporalSequenceMiner.TemporalSequence] = []
         var precursorPatterns: [TemporalSequenceMiner.PrecursorPattern] = []
-        var compoundingEffects: [TemporalSequenceMiner.CompoundingEffect] = []
         var changePoints: [ChangePointDetector.ChangePoint] = []
-        var regimeComparisons: [ChangePointDetector.RegimeComparison] = []
         var optimalProfile: PersonalOptimizer.OptimalProfile?
         var idealDay: PersonalOptimizer.IdealDay?
         var scoreSensitivities: [PersonalOptimizer.SensitivityResult] = []
-        var driftAlerts: [DriftReport] = []
         var evaluationSummaries: [String: ComponentEvaluation] = [:]
         var stoppedEarly: Bool = false
     }
@@ -221,10 +217,6 @@ final class MLPipelineRunner {
             }
         }
 
-        // --- 6c. Multivariate Granger skipped — multivariateResults stored on MLOrchestrator
-        // but never read by any ViewModel, View, or downstream system. Removing this
-        // eliminates O(N³) OLS regression per target metric of wasted CPU.
-
         if await shouldStopForThermal(after: "PipelineStep6") { output.stoppedEarly = true; return output }
 
         // --- 7. Predictive Health Signals (3+ days for fatigue, more for others) ---
@@ -243,9 +235,6 @@ final class MLPipelineRunner {
         logger.debug("Resolving evaluation events")
         let scoreMap: [(date: Date, score: Double)] = input.scoreHistory.map { (date: $0.date, score: Double($0.score)) }
         components.mlEvaluator.resolveExpiredEvents(timeSeries: input.timeSeries, scores: scoreMap)
-
-        // Drift detection skipped — driftAlerts stored on MLOrchestrator but never read
-        // by any ViewModel, View, or notification system. Welch's t-test runs for nothing.
 
         for component in ["PredictiveScorer", "TimeSeriesForecaster", "HealthStateClassifier"] {
             if let eval = components.mlEvaluator.evaluateComponent(name: component, horizon: .nextDay) {
@@ -274,7 +263,6 @@ final class MLPipelineRunner {
             )
             output.temporalSequences = components.temporalMiner.sequences
             output.precursorPatterns = components.temporalMiner.precursorPatterns
-            output.compoundingEffects = components.temporalMiner.compoundingEffects
         }
 
         if await shouldStopForThermal(after: "TemporalSequenceMiner") { output.stoppedEarly = true; return output }
@@ -284,7 +272,6 @@ final class MLPipelineRunner {
             logger.debug("Running ChangePointDetector")
             components.changePointDetector.detect(timeSeries: input.timeSeries, baselines: input.baselines)
             output.changePoints = components.changePointDetector.changePoints
-            output.regimeComparisons = components.changePointDetector.regimeComparisons
         }
 
         if await shouldStopForThermal(after: "ChangePointDetector") { output.stoppedEarly = true; return output }
@@ -356,36 +343,5 @@ final class MLPipelineRunner {
                 wasBadDay: wasBadDay
             )
         }
-    }
-
-    static func runMultivariateGranger(
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        correlations: [MLCorrelation]
-    ) -> [MultivariateRegressionResult] {
-        var results: [MultivariateRegressionResult] = []
-        let significantCorrelations = correlations.filter { $0.grangerCausal && $0.grangerPValue < 0.1 }
-
-        var candidatesByTarget: [HealthMetric: [HealthMetric]] = [:]
-        for corr in significantCorrelations {
-            candidatesByTarget[corr.metricB, default: []].append(corr.metricA)
-        }
-
-        var seriesValues: [HealthMetric: [Double]] = [:]
-        for (metric, series) in timeSeries {
-            seriesValues[metric] = series.sortedSamples.map(\.value)
-        }
-
-        for (target, predictors) in candidatesByTarget where predictors.count >= 3 {
-            if let result = GrangerCausalityEngine.multivariateGrangerTest(
-                target: target,
-                predictors: Array(Set(predictors).prefix(8)),
-                timeSeries: seriesValues,
-                maxLag: 3
-            ) {
-                results.append(result)
-            }
-        }
-
-        return results
     }
 }

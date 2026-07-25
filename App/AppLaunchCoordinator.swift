@@ -7,9 +7,6 @@ final class AppLaunchCoordinator {
     private let remoteConfigManager: RemoteConfigManager
     private let analyticsManager: AnalyticsProvider
 
-    /// Retained so we can deregister on teardown (currently lifetime = app lifetime).
-    private var authStateHandle: AuthStateDidChangeListenerHandle?
-
     init(
         remoteConfigManager: RemoteConfigManager = .shared,
         analyticsManager: AnalyticsProvider = AnalyticsBackend.provider
@@ -73,7 +70,9 @@ final class AppLaunchCoordinator {
                 "auth_provider": Auth.auth().currentUser?.isAnonymous == true ? "anonymous" : "apple"
             ])
         }
-        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+        // The listener stays registered for the app's lifetime, so the returned
+        // handle is discarded rather than stored for a removal that never happens.
+        _ = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self, let user else { return }
             self.analyticsManager.identify(userId: user.uid, properties: [
                 "auth_provider": user.isAnonymous ? "anonymous" : "apple"

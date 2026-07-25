@@ -148,7 +148,6 @@ struct VitalityComponent: Identifiable {
     let id = UUID()
     let metric: String
     let metricAge: Int
-    let weight: Double
     let currentValue: Double
     let unit: String
     let populationMedian: Double
@@ -361,7 +360,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.vo2Max)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.vo2Max)
             components.append(VitalityComponent(
-                metric: "VO2 Max", metricAge: age, weight: w,
+                metric: "VO2 Max", metricAge: age,
                 currentValue: avg, unit: "mL/kg/min",
                 populationMedian: median, healthMetric: .vo2Max
             ))
@@ -377,7 +376,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.restingHeartRate)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.restingHeartRate)
             components.append(VitalityComponent(
-                metric: "Resting HR", metricAge: age, weight: w,
+                metric: "Resting HR", metricAge: age,
                 currentValue: avg, unit: "bpm",
                 populationMedian: median, healthMetric: .restingHeartRate
             ))
@@ -393,7 +392,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.hrv)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.hrv)
             components.append(VitalityComponent(
-                metric: "HRV", metricAge: age, weight: w,
+                metric: "HRV", metricAge: age,
                 currentValue: avg, unit: "ms",
                 populationMedian: median, healthMetric: .heartRateVariability
             ))
@@ -417,7 +416,7 @@ final class VitalityScorer {
                     let w = Self.weightFor(.sleepEfficiency)
                     let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.sleepEfficiency)
                     components.append(VitalityComponent(
-                        metric: "Sleep Efficiency", metricAge: age, weight: w,
+                        metric: "Sleep Efficiency", metricAge: age,
                         currentValue: efficiency, unit: "%",
                         populationMedian: median, healthMetric: .sleepDuration
                     ))
@@ -442,7 +441,7 @@ final class VitalityScorer {
                     let w = Self.weightFor(.deepSleepPercent)
                     let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.deepSleepPercent)
                     components.append(VitalityComponent(
-                        metric: "Deep Sleep", metricAge: age, weight: w,
+                        metric: "Deep Sleep", metricAge: age,
                         currentValue: deepPct, unit: "%",
                         populationMedian: median, healthMetric: .sleepDeep
                     ))
@@ -460,7 +459,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.walkingSpeed)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.walkingSpeed)
             components.append(VitalityComponent(
-                metric: "Walking Speed", metricAge: age, weight: w,
+                metric: "Walking Speed", metricAge: age,
                 currentValue: avg, unit: "km/h",
                 populationMedian: median, healthMetric: .walkingSpeed
             ))
@@ -476,7 +475,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.steps)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.steps)
             components.append(VitalityComponent(
-                metric: "Daily Steps", metricAge: age, weight: w,
+                metric: "Daily Steps", metricAge: age,
                 currentValue: avg, unit: "steps",
                 populationMedian: median, healthMetric: .steps
             ))
@@ -492,7 +491,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.exerciseMinutes)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.exerciseMinutes)
             components.append(VitalityComponent(
-                metric: "Exercise", metricAge: age, weight: w,
+                metric: "Exercise", metricAge: age,
                 currentValue: avg, unit: "min/day",
                 populationMedian: median, healthMetric: .exerciseMinutes
             ))
@@ -508,7 +507,7 @@ final class VitalityScorer {
             let w = Self.weightFor(.bodyComposition)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.bodyFatPercent)
             components.append(VitalityComponent(
-                metric: "Body Fat", metricAge: age, weight: w,
+                metric: "Body Fat", metricAge: age,
                 currentValue: avg, unit: "%",
                 populationMedian: median, healthMetric: .bodyFatPercentage
             ))
@@ -525,7 +524,7 @@ final class VitalityScorer {
             let bmiAge = max(18, min(95, Int(Double(chronologicalAge) + ageOffset)))
             let w = Self.weightFor(.bodyComposition)
             components.append(VitalityComponent(
-                metric: "BMI", metricAge: bmiAge, weight: w,
+                metric: "BMI", metricAge: bmiAge,
                 currentValue: avg, unit: "",
                 populationMedian: VitalityNorms.bmiOptimal, healthMetric: .bmi
             ))
@@ -582,9 +581,6 @@ final class VitalityScorer {
         if paceOfAging <= 1.15 { return "Stable" }
         return "Declining"
     }
-
-    /// Whether the pace trend is positive (aging slower than calendar)
-    var paceIsPositive: Bool { paceOfAging < 1.0 }
 
     // MARK: - Private Helpers
 

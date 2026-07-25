@@ -34,20 +34,6 @@ enum InsightConfig {
         static let requireMajorityWeeksConsistency = true
     }
 
-    // MARK: - Correlation claims (journal-health pairs)
-
-    enum Correlation {
-        /// Minimum paired (journal day, health outcome) observations before a
-        /// correlation may be reported at all.
-        static let minPairedDays = 14
-        /// critical r at df=12 (n=14), p<0.05
-        static let confirmR = 0.53
-        /// Median-split effect floor: the high vs low behavior groups must
-        /// differ by at least this percent for the correlation to matter in
-        /// practice, not just statistically.
-        static let medianSplitFloorPercent = 5.0
-    }
-
     // MARK: - Refutation (evidence of absence, both claim types)
 
     enum Refutation {

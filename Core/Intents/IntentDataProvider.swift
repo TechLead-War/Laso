@@ -192,13 +192,6 @@ enum IntentDataProvider {
         }
     }
 
-    // MARK: - Trends Summary
-
-    /// Returns a brief trends summary from the cached intent data.
-    static func fetchTrendsSummary() async -> String? {
-        IntentCacheStore().loadTrendsSummary()
-    }
-
     // MARK: - Helpers
 
     private static func fetchLatestQuantity(

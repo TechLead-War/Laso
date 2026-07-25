@@ -29,7 +29,7 @@ struct WindDownLiveActivityWidget: Widget {
                     WindDownModePill()
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    WindDownStampLabel(state: context.state)
+                    WindDownStampLabel()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     WindDownExpandedBody(state: context.state)
@@ -139,10 +139,8 @@ private struct WindDownModePill: View {
 }
 
 /// HTML `stamp` — small tertiary "time until bedtime" label sitting opposite the
-/// mode pill. Driven by `Text(timerInterval:)` so it stays live without a push.
+/// mode pill.
 private struct WindDownStampLabel: View {
-    let state: WindDownActivityAttributes.ContentState
-
     var body: some View {
         Text(WindDownCopy.toBed)
             .font(.system(size: 12, weight: .medium))

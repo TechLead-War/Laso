@@ -91,8 +91,6 @@ struct SafetyTriageAssessment {
     let level: SafetyTriageLevel
     let reason: String
     let action: String
-    let currentValue: Double
-    let baselineValue: Double?
 
     var summaryNote: String? {
         guard level != .normal else { return nil }
@@ -143,8 +141,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Resting heart rate is \(formattedValue(currentValue, metric: metric)), which is severely elevated.",
                     action: "Consider contacting a healthcare provider. If you experience chest pain, shortness of breath, or faintness, please get checked promptly."
                 )
@@ -155,8 +151,6 @@ struct SafetyTriageEngine {
                     return make(
                         metric: metric,
                         level: .seekCare,
-                        currentValue: currentValue,
-                        baselineValue: baseline,
                         reason: "Resting heart rate jumped \(String(format: "%.0f", rise))% above your usual baseline.",
                         action: "Repeat the reading at rest. If it stays elevated, consider speaking with a healthcare provider."
                     )
@@ -165,8 +159,6 @@ struct SafetyTriageEngine {
                     return make(
                         metric: metric,
                         level: .monitor,
-                        currentValue: currentValue,
-                        baselineValue: baseline,
                         reason: "Resting heart rate is \(String(format: "%.0f", rise))% above your baseline.",
                         action: "Recheck after 10-15 minutes of rest. If it persists, you may want to speak with a healthcare provider."
                     )
@@ -176,8 +168,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Resting heart rate is \(formattedValue(currentValue, metric: metric)), above the typical resting range.",
                     action: "Repeat the reading while fully at rest. If it stays elevated, consider speaking with a healthcare provider."
                 )
@@ -188,8 +178,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Heart rate is \(formattedValue(currentValue, metric: metric)), a high-risk value when not exercising.",
                     action: "Consider contacting a healthcare provider. If you have symptoms, please get checked promptly."
                 )
@@ -198,8 +186,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Heart rate is \(formattedValue(currentValue, metric: metric)), outside your usual safe zone.",
                     action: "Recheck after resting. If this persists or you develop symptoms, consider speaking with a healthcare provider."
                 )
@@ -210,8 +196,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Blood oxygen is \(formattedValue(currentValue, metric: metric)), below the 90% critical threshold.",
                     action: "Consider contacting a healthcare provider. If you experience shortness of breath, confusion, or chest pain, please get checked promptly."
                 )
@@ -220,8 +204,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Blood oxygen is \(formattedValue(currentValue, metric: metric)), below normal range.",
                     action: "Repeat the reading and monitor closely. If readings stay low, consider speaking with a healthcare provider."
                 )
@@ -232,8 +214,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Respiratory rate is \(formattedValue(currentValue, metric: metric)), which can indicate acute distress.",
                     action: "If breathing feels difficult, consider contacting a healthcare provider promptly."
                 )
@@ -242,8 +222,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Respiratory rate is \(formattedValue(currentValue, metric: metric)), outside normal resting range.",
                     action: "Recheck in 15 minutes while resting. If this persists, consider speaking with a healthcare provider."
                 )
@@ -254,8 +232,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Systolic blood pressure is \(formattedValue(currentValue, metric: metric)), in crisis range.",
                     action: "If you have symptoms, consider contacting a healthcare provider promptly."
                 )
@@ -264,8 +240,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Systolic blood pressure is \(formattedValue(currentValue, metric: metric)), above normal.",
                     action: "Recheck after resting for 5 minutes. If repeated values stay high, consider speaking with a healthcare provider."
                 )
@@ -276,8 +250,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Diastolic blood pressure is \(formattedValue(currentValue, metric: metric)), in crisis range.",
                     action: "If you have symptoms, consider contacting a healthcare provider promptly."
                 )
@@ -286,8 +258,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Diastolic blood pressure is \(formattedValue(currentValue, metric: metric)), above normal.",
                     action: "Recheck after resting for 5 minutes. If repeated values stay high, consider speaking with a healthcare provider."
                 )
@@ -298,8 +268,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Body temperature is \(formattedValue(currentValue, metric: metric)), a high-risk reading.",
                     action: "Consider contacting a healthcare provider. If you have severe symptoms, please get checked promptly."
                 )
@@ -308,8 +276,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "Body temperature is \(formattedValue(currentValue, metric: metric)), outside your expected range.",
                     action: "Hydrate, rest, and recheck in 1-2 hours. If this persists, consider speaking with a healthcare provider."
                 )
@@ -320,8 +286,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .seekCare,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "AFib burden is \(formattedValue(currentValue, metric: metric)), a high-risk level.",
                     action: "Consider contacting your cardiologist to discuss these readings."
                 )
@@ -330,8 +294,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "AFib burden is \(formattedValue(currentValue, metric: metric)), above normal target.",
                     action: "Track repeat readings. If this continues, consider sharing the data with your cardiologist."
                 )
@@ -347,8 +309,6 @@ struct SafetyTriageEngine {
                 return make(
                     metric: metric,
                     level: .monitor,
-                    currentValue: currentValue,
-                    baselineValue: baseline,
                     reason: "\(metric.displayName) moved \(String(format: "%.0f", deviation))% away from your baseline.",
                     action: "Recheck this metric soon. If values remain far from baseline or you feel unwell, consider speaking with a healthcare provider."
                 )
@@ -358,8 +318,6 @@ struct SafetyTriageEngine {
         return make(
             metric: metric,
             level: .normal,
-            currentValue: currentValue,
-            baselineValue: baseline,
             reason: "\(metric.displayName) is within expected range.",
             action: "Continue regular tracking."
         )
@@ -368,8 +326,6 @@ struct SafetyTriageEngine {
     private static func make(
         metric: HealthMetric,
         level: SafetyTriageLevel,
-        currentValue: Double,
-        baselineValue: Double?,
         reason: String,
         action: String
     ) -> SafetyTriageAssessment {
@@ -377,9 +333,7 @@ struct SafetyTriageEngine {
             metric: metric,
             level: level,
             reason: reason,
-            action: action,
-            currentValue: currentValue,
-            baselineValue: baselineValue
+            action: action
         )
     }
 

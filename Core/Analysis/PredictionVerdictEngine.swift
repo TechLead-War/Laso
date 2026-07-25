@@ -74,10 +74,6 @@ struct SideDiscovery: Equatable {
     let metric: PredictionMetric
     /// Calendar weekday convention, 1 = Sunday ... 7 = Saturday.
     let weekday: Int
-    let magnitude: VerdictMagnitude
-    /// Always true. Carried on the type so every consumer is forced to see
-    /// this is not the prediction's answer and must label it separately.
-    let sideDiscovery = true
 }
 
 struct PredictionVerdict {
@@ -135,8 +131,8 @@ struct PredictionVerdictEngine {
                 )
                 guard result.zone == .confirmed,
                       let weekday = result.weekday,
-                      let magnitude = result.magnitude else { return nil }
-                return SideDiscovery(metric: metric, weekday: weekday, magnitude: magnitude)
+                      result.magnitude != nil else { return nil }
+                return SideDiscovery(metric: metric, weekday: weekday)
             }
 
         return PredictionVerdict(

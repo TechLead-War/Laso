@@ -107,7 +107,6 @@ final class MenstrualCycleTracker {
 
     var currentCycle: CycleInfo?
     var cycleHistory: [(startDate: Date, length: Int)] = []
-    var isReady: Bool { currentCycle != nil }
     var isApplicable: Bool = true
 
     // MARK: - Snapshot Persistence
@@ -176,25 +175,6 @@ final class MenstrualCycleTracker {
         if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
         }
-    }
-
-    /// How the current phase affects recovery expectations.
-    var phaseImpactOnRecovery: String {
-        guard let phase = currentCycle?.currentPhase else {
-            return Copy.CycleTracking.trackerNoCycleData
-        }
-        switch phase {
-        case .menstrual:  return Copy.CycleTracking.trackerMenstrualRecoveryImpact
-        case .follicular: return Copy.CycleTracking.trackerFollicularRecoveryImpact
-        case .ovulation:  return Copy.CycleTracking.trackerOvulationRecoveryImpact
-        case .luteal:     return Copy.CycleTracking.trackerLutealRecoveryImpact
-        }
-    }
-
-    /// Phase-specific training guidance.
-    var phaseExerciseGuidance: String {
-        currentCycle?.currentPhase.exerciseRecommendation
-            ?? Copy.CycleTracking.trackerNoCycleExerciseFallback
     }
 
     // MARK: - Compute
@@ -270,18 +250,6 @@ final class MenstrualCycleTracker {
             phaseProgress: progress
         )
         saveSnapshot()
-    }
-
-    // MARK: - Visibility
-
-    /// Whether menstrual cycle UI should be shown for this user.
-    /// Returns true only for female users, or when gender is unknown (nil)
-    /// so users who skipped gender during onboarding still see the UI.
-    /// Mirrors DashboardViewModel's stricter `isApplicable` rule
-    /// (gender == .female) instead of the looser "non-male" check.
-    func shouldShow(gender: String?) -> Bool {
-        guard let gender = gender?.lowercased() else { return true }
-        return gender == "female"
     }
 
     // MARK: - Helpers

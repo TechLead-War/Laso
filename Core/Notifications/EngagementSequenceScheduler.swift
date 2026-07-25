@@ -179,23 +179,6 @@ enum EngagementSequenceScheduler {
         }
     }
 
-    /// Cancel all pending engagement notifications.
-    static func cancelAll() {
-        let identifiers = activeDays.map { AppConstants.NotificationID.engagementPrefix + "day\($0)" }
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: identifiers)
-    }
-
-    /// Reset the engagement sequence (for testing or re onboarding).
-    static func reset() {
-        cancelAll()
-        defaults.removeObject(forKey: AppKeys.Engagement.lastScheduledDay)
-        defaults.removeObject(forKey: AppKeys.Engagement.sequenceCompleted)
-        defaults.removeObject(forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
-        defaults.removeObject(forKey: AppKeys.Engagement.secondRecoveryScoreSeen)
-        defaults.removeObject(forKey: AppKeys.Engagement.sequencePaused)
-    }
-
     // MARK: - State
 
     static var isSequenceCompleted: Bool {

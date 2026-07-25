@@ -51,12 +51,6 @@ enum AnswerReadyScheduler {
         }
     }
 
-    /// Cancel the answer-ready push (e.g. if the user opens the app and sees the
-    /// verdict before the push lands).
-    static func cancel() {
-        NotificationManager.shared.cancelNotification(identifier: AppConstants.NotificationID.answerReady)
-    }
-
     /// Build the engine's `[PredictionMetric: [MetricSample]]` history from the
     /// live store. Only the predicted metric and the two side-discovery metrics
     /// are loaded, matching what `evaluate` reads.

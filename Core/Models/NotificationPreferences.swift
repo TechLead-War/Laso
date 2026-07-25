@@ -57,15 +57,6 @@ struct NotificationPreferences: Codable, Equatable {
     ]
 
     static let `default` = NotificationPreferences()
-
-    /// All metrics that can be toggled for warning alerts, grouped by category
-    static var alertableMetrics: [HealthCategory: [HealthMetric]] {
-        var grouped: [HealthCategory: [HealthMetric]] = [:]
-        for category in HealthCategory.allCases {
-            grouped[category] = category.metrics
-        }
-        return grouped
-    }
 }
 
 extension NotificationPreferences {

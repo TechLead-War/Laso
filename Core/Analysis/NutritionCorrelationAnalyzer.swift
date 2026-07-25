@@ -11,17 +11,8 @@ struct NutritionCorrelationAnalyzer {
         let nutritionMetric: HealthMetric
         let outcomeMetric: HealthMetric
         let correlation: Double          // Pearson r
-        let timingEffect: TimingEffect?  // For timing-sensitive pairs
-        let thresholdValue: Double?      // Threshold where impact becomes pronounced
         let actionableInsight: String
         let sampleCount: Int
-    }
-
-    struct TimingEffect {
-        let cutoffHour: Int              // e.g., 14 for 2pm
-        let beforeCutoffCorrelation: Double
-        let afterCutoffCorrelation: Double
-        let isTimingSensitive: Bool
     }
 
     // MARK: - Curated Pairs
@@ -30,43 +21,41 @@ struct NutritionCorrelationAnalyzer {
         let nutrition: HealthMetric
         let outcome: HealthMetric
         let dayOffset: Int                // 0 = same day, 1 = next day
-        let timingSensitive: Bool
-        let cutoffHour: Int?              // For timing-sensitive pairs
     }
 
     private static let curatedPairs: [CuratedPair] = [
         // Caffeine → sleep (timing-sensitive, cutoff 2pm)
-        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepDuration, dayOffset: 0, timingSensitive: true, cutoffHour: 14),
-        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepDeep, dayOffset: 0, timingSensitive: true, cutoffHour: 14),
-        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepREM, dayOffset: 0, timingSensitive: true, cutoffHour: 14),
-        CuratedPair(nutrition: .caffeineIntake, outcome: .restingHeartRate, dayOffset: 0, timingSensitive: false, cutoffHour: nil),
-        CuratedPair(nutrition: .caffeineIntake, outcome: .heartRateVariability, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepDuration, dayOffset: 0),
+        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepDeep, dayOffset: 0),
+        CuratedPair(nutrition: .caffeineIntake, outcome: .sleepREM, dayOffset: 0),
+        CuratedPair(nutrition: .caffeineIntake, outcome: .restingHeartRate, dayOffset: 0),
+        CuratedPair(nutrition: .caffeineIntake, outcome: .heartRateVariability, dayOffset: 1),
 
         // Hydration → outcomes
-        CuratedPair(nutrition: .waterIntake, outcome: .heartRateVariability, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
-        CuratedPair(nutrition: .waterIntake, outcome: .restingHeartRate, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .waterIntake, outcome: .heartRateVariability, dayOffset: 1),
+        CuratedPair(nutrition: .waterIntake, outcome: .restingHeartRate, dayOffset: 1),
 
         // Protein → recovery
-        CuratedPair(nutrition: .proteinIntake, outcome: .heartRateVariability, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .proteinIntake, outcome: .heartRateVariability, dayOffset: 1),
 
         // Sugar → sleep (timing-sensitive, cutoff 6pm)
-        CuratedPair(nutrition: .sugarIntake, outcome: .sleepDeep, dayOffset: 0, timingSensitive: true, cutoffHour: 18),
-        CuratedPair(nutrition: .sugarIntake, outcome: .heartRateVariability, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .sugarIntake, outcome: .sleepDeep, dayOffset: 0),
+        CuratedPair(nutrition: .sugarIntake, outcome: .heartRateVariability, dayOffset: 1),
 
         // Sodium → BP
-        CuratedPair(nutrition: .sodiumIntake, outcome: .bloodPressureSystolic, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .sodiumIntake, outcome: .bloodPressureSystolic, dayOffset: 1),
 
         // Fiber → glucose stability
-        CuratedPair(nutrition: .fiberIntake, outcome: .bloodGlucose, dayOffset: 0, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .fiberIntake, outcome: .bloodGlucose, dayOffset: 0),
 
         // Total calories → activity
-        CuratedPair(nutrition: .totalCaloriesIntake, outcome: .activeCalories, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .totalCaloriesIntake, outcome: .activeCalories, dayOffset: 1),
 
         // Fat → sleep
-        CuratedPair(nutrition: .fatIntake, outcome: .sleepDeep, dayOffset: 0, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .fatIntake, outcome: .sleepDeep, dayOffset: 0),
 
         // Carbs → activity
-        CuratedPair(nutrition: .carbohydrateIntake, outcome: .exerciseMinutes, dayOffset: 1, timingSensitive: false, cutoffHour: nil),
+        CuratedPair(nutrition: .carbohydrateIntake, outcome: .exerciseMinutes, dayOffset: 1),
     ]
 
     // MARK: - Analysis
@@ -128,8 +117,6 @@ struct NutritionCorrelationAnalyzer {
                 nutritionMetric: pair.nutrition,
                 outcomeMetric: pair.outcome,
                 correlation: r,
-                timingEffect: nil,  // Simplified: full timing analysis needs sub-daily data
-                thresholdValue: threshold?.value,
                 actionableInsight: insight,
                 sampleCount: nutritionValues.count
             ))

@@ -480,19 +480,4 @@ enum JournalBehavior: String, CaseIterable, Identifiable, Codable {
     static func behaviors(in group: JournalBehaviorGroup) -> [JournalBehavior] {
         allCases.filter { $0.group == group }
     }
-
-    /// Create a `JournalBehavior` from a legacy `JournalCategory`, if one exists
-    static func from(legacy category: JournalCategory) -> JournalBehavior? {
-        switch category {
-        case .caffeine:    return .caffeine
-        case .alcohol:     return .alcohol
-        case .stress:      return .stress
-        case .supplements: return nil // legacy "supplements" is generic; no single expanded equivalent
-        case .meditation:  return .meditation
-        case .screenTime:  return .screenTime
-        case .mealTiming:  return .mealTiming
-        case .water:       return .water
-        case .mood:        return .mood
-        }
-    }
 }

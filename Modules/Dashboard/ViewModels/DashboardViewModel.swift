@@ -52,7 +52,6 @@ final class DashboardViewModel {
 
     /// Tracks last full analysis to avoid redundant re-runs when no new data arrives
     private var lastAnalysisDate: Date?
-    private static let analysisMinInterval: TimeInterval = 300  // 5 minutes
     private static let syncRetryMinInterval: TimeInterval = 600  // 10 minutes
     private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
     private static let foregroundRefreshMinInterval: TimeInterval = 30  // 30 seconds
@@ -142,10 +141,6 @@ final class DashboardViewModel {
             RecoveryState(score: overallScore.score)
         }
 
-        var dayClassification: String {
-            recoveryState.dayType
-        }
-
         /// Score explanation for transparency
         fileprivate(set) var scoreExplanation: HealthScorer.ScoreExplanation?
 
@@ -156,18 +151,8 @@ final class DashboardViewModel {
 
     @Observable
     final class TrendState {
-        fileprivate(set) var cachedTrendsSummary: TrendsSummary?
         /// Pre-computed trend metrics keyed by timeframe (7, 30, 90 days)
         fileprivate(set) var cachedTrendMetricsByTimeframe: [Int: [TrendMetricItem]] = [:]
-
-        var trendsSummary: TrendsSummary {
-            cachedTrendsSummary ?? TrendsSummary(improving: 0, stable: 0, declining: 0, topMovers: [])
-        }
-
-        /// Trends summary for Today section (alias)
-        var todayTrendsSummary: TrendsSummary {
-            trendsSummary
-        }
 
         /// Returns pre-computed trend metrics for the given timeframe
         func trendMetrics(for days: Int) -> [TrendMetricItem] {
@@ -186,7 +171,6 @@ final class DashboardViewModel {
         var focusedInsights: [Insight] { cachedFocusedInsights }
 
         var headlineInsight: Insight? { focusedInsights.first }
-        var topInsights: [Insight] { Array(focusedInsights.prefix(3)) }
         var allInsights: [Insight] { focusedInsights }
 
         /// Insights grouped by InsightCategory, filtered by focus areas, excluding empty categories
@@ -244,22 +228,6 @@ final class DashboardViewModel {
             else { self = .red }
         }
 
-        var label: String {
-            switch self {
-            case .green: Copy.Home.fullyRecovered
-            case .yellow: Copy.Home.moderateRecovery
-            case .red: Copy.Home.lowRecovery
-            }
-        }
-
-        var dayType: String {
-            switch self {
-            case .green: Copy.Home.greenDayPushHard
-            case .yellow: Copy.Home.yellowDayMaintain
-            case .red: Copy.Home.redDayRecover
-            }
-        }
-
         /// Single source of truth for the recovery state colour. Mirrors the
         /// 3-band model (green/yellow/red), so the home recovery card's title,
         /// pill, and ring all paint from the same threshold table.
@@ -270,14 +238,6 @@ final class DashboardViewModel {
             case .red: AppColour.scorePoor
             }
         }
-
-        var strainGuidance: String {
-            switch self {
-            case .green: Copy.Home.greenStrainGuidance
-            case .yellow: Copy.Home.yellowStrainGuidance
-            case .red: Copy.Home.redStrainGuidance
-            }
-        }
     }
 
     // MARK: - Convenience accessors (kept for backward compat with internal methods)
@@ -285,141 +245,8 @@ final class DashboardViewModel {
     var overallScore: HealthScore { scores.overallScore }
     var recoveryState: RecoveryState { scores.recoveryState }
 
-    var strainGuidance: String {
-        let trend = recentActivityTrendDirection
-
-        switch recoveryState {
-        case .green:
-            switch trend {
-            case .improving:
-                return Copy.Home.greenImproving
-            case .declining:
-                return Copy.Home.greenDeclining
-            case .stable:
-                return Copy.Home.greenStable
-            case .none:
-                return Copy.Home.greenNone
-            }
-        case .yellow:
-            switch trend {
-            case .improving:
-                return Copy.Home.yellowImproving
-            case .declining:
-                return Copy.Home.yellowDeclining
-            case .stable:
-                return Copy.Home.yellowStable
-            case .none:
-                return Copy.Home.yellowNone
-            }
-        case .red:
-            switch trend {
-            case .improving:
-                return Copy.Home.redImproving
-            case .declining:
-                return Copy.Home.redDeclining
-            case .stable:
-                return Copy.Home.redStable
-            case .none:
-                return Copy.Home.redNone
-            }
-        }
-    }
-
-    /// Top 3 actionable insights for the compact card display, filtered by selected period
-    var topActionableInsights: [Insight] {
-        topActionableInsights(for: ui.selectedPeriod)
-    }
-
-    /// Period-aware insights: only include metrics that have data in the selected period, filtered by focus areas
-    func topActionableInsights(for period: TimePeriod) -> [Insight] {
-        let days = period.days
-        let categories = insights.focusCategories
-        let metricsWithData = Set(
-            healthKitManager.timeSeries
-                .filter { !$0.value.samples(lastDays: days).isEmpty }
-                .map(\.key)
-        )
-
-        let filtered = analysisEngine.insights.filter { insight in
-            metricsWithData.contains(insight.metric) &&
-            insight.severity >= .warning &&
-            (categories.isEmpty || categories.contains(insight.metric.category))
-        }
-        let sorted = filtered.sorted { a, b in
-            if a.severity != b.severity {
-                return a.severity > b.severity
-            }
-            return a.priorityScore > b.priorityScore
-        }
-        return Array(sorted.prefix(2))
-    }
-
     var lastRefresh: Date? {
         healthKitManager.lastRefresh
-    }
-
-    // MARK: - Key Metrics Snapshots
-
-    /// Featured metrics shown as visual number cards on the home screen
-    static let featuredMetrics: [HealthMetric] = [
-        .steps, .sleepDuration, .restingHeartRate, .activeCalories, .exerciseMinutes, .bloodOxygen
-    ]
-
-    struct MetricSnapshot: Identifiable {
-        var id: String { metric.rawValue }
-        let metric: HealthMetric
-        let currentValue: Double
-        let trend: TrendDirection
-        let changePercent: Double
-    }
-
-    var keyMetricSnapshots: [MetricSnapshot] {
-        keyMetricSnapshots(for: ui.selectedPeriod)
-    }
-
-    /// Period-aware key metric snapshots: shows period average and period-over-period change
-    func keyMetricSnapshots(for period: TimePeriod) -> [MetricSnapshot] {
-        let days = period.days
-        return Self.featuredMetrics.compactMap { metric in
-            guard let series = healthKitManager.timeSeries[metric] else { return nil }
-
-            // Use period average instead of just latest value
-            let periodSamples = series.samples(lastDays: days)
-            guard !periodSamples.isEmpty else { return nil }
-            let periodAvg = periodSamples.map(\.value).mean
-
-            // Compare with previous equivalent period. Same day-shifted boundary as
-            // samples(lastDays:), via O(log n) binary search rather than a per-sample
-            // calendar diff over full history.
-            let prevEnd = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-            let prevStart = Date.cal.date(byAdding: .day, value: -days * 2, to: Date()) ?? Date()
-            let previousSamples = series.samples(from: prevStart, until: prevEnd)
-            let previousAvg = previousSamples.isEmpty ? 0.0 : previousSamples.map(\.value).mean
-            let changePercent: Double
-            if previousAvg != 0 {
-                changePercent = ((periodAvg - previousAvg) / previousAvg) * 100
-            } else {
-                changePercent = 0
-            }
-
-            // Determine trend direction for this period
-            let trend: TrendDirection
-            let effectiveChange = metric.higherIsBetter ? changePercent : -changePercent
-            if effectiveChange > 2 {
-                trend = .improving
-            } else if effectiveChange < -2 {
-                trend = .declining
-            } else {
-                trend = .stable
-            }
-
-            return MetricSnapshot(
-                metric: metric,
-                currentValue: periodAvg,
-                trend: trend,
-                changePercent: changePercent
-            )
-        }
     }
 
     // MARK: - Period Summaries
@@ -444,26 +271,12 @@ final class DashboardViewModel {
             case .allTime: return 3650
             }
         }
-
-        var displayName: String {
-            switch self {
-            case .sevenDays: return "Last 7 Days"
-            case .thirtyDays: return "Last 30 Days"
-            case .threeMonths: return "Last 3 Months"
-            case .sixMonths: return "Last 6 Months"
-            case .oneYear: return "Last Year"
-            case .allTime: return "All Time"
-            }
-        }
     }
 
     struct MetricChange: Identifiable {
         var id: String { metric.rawValue }
         let metric: HealthMetric
-        let periodAvg: Double
-        let previousPeriodAvg: Double
         let changePercent: Double
-        let improved: Bool
     }
 
     struct PeriodSummary {
@@ -473,7 +286,6 @@ final class DashboardViewModel {
 
         var improvedCount: Int { topImproved.count }
         var declinedCount: Int { topDeclined.count }
-        var stableCount: Int { stableMetrics.count }
     }
 
     /// Period summary filtered to only metrics matching user's health focuses
@@ -516,13 +328,7 @@ final class DashboardViewModel {
             let isImproved = metric.higherIsBetter ? change > 2 : change < -2
             let isDeclined = metric.higherIsBetter ? change < -2 : change > 2
 
-            let mc = MetricChange(
-                metric: metric,
-                periodAvg: currentAvg,
-                previousPeriodAvg: previousAvg,
-                changePercent: change,
-                improved: isImproved
-            )
+            let mc = MetricChange(metric: metric, changePercent: change)
 
             if isImproved {
                 improved.append(mc)
@@ -1274,7 +1080,6 @@ final class DashboardViewModel {
         lastExpensiveCacheHash = expensiveHash
 
         // Update trend state
-        trends.cachedTrendsSummary = computeTrendsSummary()
         if (expensiveInputsChanged || trends.cachedTrendMetricsByTimeframe.isEmpty),
            !(ThermalManager.shared.shouldThrottle && !trends.cachedTrendMetricsByTimeframe.isEmpty) {
             trends.cachedTrendMetricsByTimeframe = [
@@ -1794,19 +1599,6 @@ final class DashboardViewModel {
         return count
     }
 
-    private func computeTrendsSummary() -> TrendsSummary {
-        derivedStateBuilder.trendsSummary(
-            trends: analysisEngine.trends.map { metric, trend in
-                DashboardDerivedStateBuilder.TrendSnapshot(
-                    metric: metric,
-                    direction: trend.direction,
-                    weekOverWeekChange: trend.weekOverWeekChange
-                )
-            },
-            focusCategories: insights.focusCategories
-        )
-    }
-
     private func computeTrendMetrics(days: Int) -> [TrendMetricItem] {
         var items: [TrendMetricItem] = []
         for (metric, series) in healthKitManager.timeSeries {
@@ -1889,21 +1681,6 @@ final class DashboardViewModel {
 
 
     // MARK: - Struct Definitions (kept at DashboardViewModel level for external type references)
-
-    /// Global trends summary across all tracked metrics
-    struct TrendsSummary {
-        let improving: Int
-        let stable: Int
-        let declining: Int
-        let topMovers: [MetricMover]
-    }
-
-    struct MetricMover: Identifiable {
-        var id: String { metric.rawValue }
-        let metric: HealthMetric
-        let changePercent: Double
-        let improving: Bool
-    }
 
     /// Historical highlights computed from deep analysis context
     struct HistoricalHighlight: Identifiable {
@@ -1990,7 +1767,6 @@ final class DashboardViewModel {
             source: recommendation.source,
             rationale: recommendation.rationale,
             supportingInsights: Array(sortedInsights.prefix(2)),
-            proofLine: proofSummary.cardProofLine,
             proofSummary: proofSummary
         )
 
@@ -2030,25 +1806,6 @@ final class DashboardViewModel {
             exerciseMinutes: 0,
             exerciseGoal: 30,
             readinessScore: nil
-        )
-    }
-
-    /// Regenerate the intelligence briefing with live data from LiveViewModel.
-    @MainActor
-    func refreshIntelligenceBriefing(liveVM: LiveViewModel) {
-        guard analysisEngine.mlOrchestrator.hasRunOnce else { return }
-        intelligenceBriefing = todayIntelligenceEngine.generateBriefing(
-            orchestrator: analysisEngine.mlOrchestrator,
-            baselines: analysisEngine.baselines,
-            trends: analysisEngine.trends,
-            timeSeries: healthKitManager.timeSeries,
-            liveHRV: liveVM.recovery.latestHRV,
-            liveRestingHR: liveVM.recovery.latestRestingHeartRate,
-            sleepHours: liveVM.sleep.lastNightSleepDuration / 3600,
-            deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
-            exerciseMinutes: liveVM.activity.todayExerciseMinutes,
-            exerciseGoal: liveVM.activity.exerciseGoal,
-            readinessScore: liveVM.recovery.readinessScore
         )
     }
 
@@ -2244,8 +2001,6 @@ final class DashboardViewModel {
         var source: String = "context_rules"
         var rationale: String = ""
         var supportingInsights: [Insight] = []
-        /// Historical proof line shown on the home card (e.g. "The last 5 times you followed this advice, things went well")
-        var proofLine: String?
         /// Full proof summary for the detail view
         var proofSummary: RecommendationEvaluator.ActionProofSummary?
     }
@@ -2400,24 +2155,6 @@ final class DashboardViewModel {
         )
     }
 
-    private var recentActivityTrendDirection: TrendDirection? {
-        let metrics: [HealthMetric] = [
-            .exerciseMinutes, .activeCalories, .steps, .workoutDuration, .workoutCount, .distanceWalkingRunning
-        ]
-        let trends = metrics.compactMap { analysisEngine.trends[$0] }
-        guard !trends.isEmpty else { return nil }
-
-        let improvingCount = trends.filter { $0.direction == .improving }.count
-        let decliningCount = trends.filter { $0.direction == .declining }.count
-        if improvingCount > decliningCount { return .improving }
-        if decliningCount > improvingCount { return .declining }
-
-        let averageChange = trends.map(\.weekOverWeekChange).mean
-        if averageChange > 2 { return .improving }
-        if averageChange < -2 { return .declining }
-        return .stable
-    }
-
     // MARK: - Research-Backed Features
 
     /// Refresh personal health forecasts from MLOrchestrator multi-horizon output (Paper 3)
@@ -2476,14 +2213,6 @@ final class DashboardViewModel {
     func applyMorningCheckIn(_ checkIn: MorningCheckIn) {
         MorningCheckInManager.record(checkIn)
         subjectiveReadinessAdjustment = checkIn.readinessAdjustment
-    }
-
-    /// Adjusted readiness score incorporating subjective data (Paper 10)
-    /// Falls back to overall score if no readiness is available.
-    @MainActor
-    var adjustedReadinessScore: Int {
-        let base = scores.overallScore.score
-        return max(0, min(100, base + subjectiveReadinessAdjustment))
     }
 
     struct HealthDataQueryRequest {
@@ -2574,11 +2303,6 @@ final class DashboardViewModel {
         return HealthDataQueryRequest(engine: engine, context: context)
     }
 
-    /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
-    func queryHealthData(_ question: String) async -> HealthDataQueryEngine.QueryResult {
-        await makeHealthDataQueryRequest().execute(question: question)
-    }
-
     /// Execute a health data query with thermal-aware priority
     nonisolated func executeHealthQuery(_ question: String) async -> HealthDataQueryEngine.QueryResult {
         let request = await makeHealthDataQueryRequest()
@@ -2586,14 +2310,5 @@ final class DashboardViewModel {
         return await Task.detached(priority: priority) {
             await request.execute(question: question)
         }.value
-    }
-
-    /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)
-    func assessReceptivity(liveVM: LiveViewModel) -> ReceptivityEstimator.ReceptivityAssessment {
-        analysisEngine.mlOrchestrator.receptivityEstimator.assess(
-            currentHRV: liveVM.recovery.latestHRV,
-            recentStressLevel: liveVM.recovery.stressLevel.map { Double($0) / 100.0 },
-            lastAppOpenDate: Date()
-        )
     }
 }

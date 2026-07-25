@@ -65,15 +65,6 @@ extension Copy {
         static var sourceBaseline: String { RemoteConfigManager.shared.copyString("copy_policy_policy_source_baseline", default: "compared to your usual") }
         static var sourceCounterfactual: String { RemoteConfigManager.shared.copyString("copy_policy_policy_source_counterfactual", default: "what-if check") }
 
-        // MARK: - Time to Benefit
-
-        static var benefitImmediate: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_immediate", default: "the same day") }
-        static var benefitNextDay: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_next_day", default: "tomorrow") }
-        static var benefitTwoDays: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_two_days", default: "2 days") }
-        static var benefitThreeDays: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_three_days", default: "3 days") }
-        static var benefitOneWeek: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_one_week", default: "about a week") }
-        static var benefitTwoWeeks: String { RemoteConfigManager.shared.copyString("copy_policy_policy_benefit_two_weeks", default: "about 2 weeks") }
-
         // MARK: - Timeframe Labels (for generateExpectedBenefit)
 
         static var timeframeToday: String { RemoteConfigManager.shared.copyString("copy_policy_policy_timeframe_today", default: "today") }

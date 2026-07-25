@@ -81,7 +81,6 @@ final class CompoundInsightEngine {
 
     private(set) var insights: [CompoundInsight] = []
     var isReady: Bool { !insights.isEmpty }
-    var topInsights: [CompoundInsight] { Array(insights.prefix(Self.topInsightsLimit)) }
 
     private let calendar = Date.cal
 
@@ -92,8 +91,6 @@ final class CompoundInsightEngine {
 
     /// Maximum number of compound insights returned to the UI after final ranking.
     private static let maxRankedInsights = 10
-    /// Maximum count returned by `topInsights`.
-    private static let topInsightsLimit = 5
     /// Minimum percent change for a metric trend to be considered notable in trajectory synthesis.
     private static let notableTrendPercent: Double = 5
     /// Minimum count of coordinated improving/declining trends needed to surface a coordinated-trend insight.
@@ -158,8 +155,6 @@ final class CompoundInsightEngine {
     private static let variabilityContrastRatio: Double = 1.5
     /// Best-day-formula percent diff threshold above which a metric is included.
     private static let bestDayDiffPercent: Double = 5
-    /// Cross-metric trend percent diff above which a 7-day window counts as a historical match.
-    private static let historicalMatchPercent: Double = 5
     /// Direction (per metric) score adjustment used to flag a trend as improving/declining.
     private static let metricDirectionAdjustedPercent: Double = 3
     /// Trailing window (days) used by the recent-trend computation per metric.
@@ -172,12 +167,6 @@ final class CompoundInsightEngine {
     private static let weekdayProfileMinDays: Int = 5
     /// Minimum samples per weekday before that weekday contributes to the profile.
     private static let weekdayProfilePerDayMin: Int = 3
-    /// Minimum sample count required for the historical-trajectory match scan.
-    private static let historicalMatchMinSamples: Int = 60
-    /// Lookahead window (days) used when measuring trajectory continuation in the historical match.
-    private static let historicalMatchLookaheadDays: Int = 14
-    /// Strides (days) used when scanning history for trajectory matches.
-    private static let historicalMatchStride: Int = 7
     /// Minimum baseline sample count required for a metric to enter the variability-contrast comparison.
     private static let variabilityMinBaselineSamples: Int = 30
     /// Minimum number of metrics with baselines required to surface the variability-contrast insight.
@@ -1201,59 +1190,6 @@ final class CompoundInsightEngine {
 
     // MARK: - Utility Helpers
 
-    /// Find a historical trajectory match: how long until peak/trough after similar multi-metric trend.
-    private func findHistoricalTrajectoryMatch(
-        metrics: [HealthMetric],
-        direction: TrendDirection,
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> Int? {
-        // Look for periods in history where these same metrics moved in the same direction
-        guard let firstMetric = metrics.first,
-              let series = timeSeries[firstMetric] else { return nil }
-
-        let samples = series.sortedSamples
-        guard samples.count >= Self.historicalMatchMinSamples else { return nil }
-
-        // Simplified: look at 7-day windows in history, find ones with similar direction
-        let windowSize = Self.trendWindowDays
-        var matchDurations: [Int] = []
-
-        for i in stride(from: windowSize, to: samples.count - windowSize - Self.historicalMatchLookaheadDays, by: Self.historicalMatchStride) {
-            let windowValues = samples[i..<(i + windowSize)].map(\.value)
-            let priorValues = samples[(i - windowSize)..<i].map(\.value)
-
-            let windowMean = windowValues.reduce(0, +) / Double(windowValues.count)
-            let priorMean = priorValues.reduce(0, +) / Double(priorValues.count)
-            let change = ((windowMean - priorMean) / abs(priorMean)) * 100
-
-            let isMatch = (direction == .improving && change > Self.historicalMatchPercent) ||
-                          (direction == .declining && change < -Self.historicalMatchPercent)
-
-            if isMatch {
-                // Find how many more days the trend continued
-                var continuation = 0
-                for j in (i + windowSize)..<min(samples.count, i + windowSize + Self.historicalMatchLookaheadDays) {
-                    let extendedMean = samples[i..<(j + 1)].map(\.value).reduce(0, +) / Double(j + 1 - i)
-                    let extendedChange = ((extendedMean - priorMean) / abs(priorMean)) * 100
-                    let stillMoving = (direction == .improving && extendedChange > change * 0.5) ||
-                                      (direction == .declining && extendedChange < change * 0.5)
-                    if stillMoving {
-                        continuation += 1
-                    } else {
-                        break
-                    }
-                }
-                if continuation > 0 {
-                    matchDurations.append(continuation)
-                }
-            }
-        }
-
-        guard !matchDurations.isEmpty else { return nil }
-        let avg = matchDurations.reduce(0, +) / matchDurations.count
-        return max(1, avg)
-    }
-
     /// Find the previous state before the current one from state history.
     private func findPreviousState(stateHistory: [SmoothedHealthState]) -> HealthState? {
         guard stateHistory.count >= 2 else { return nil }
@@ -1329,25 +1265,6 @@ final class CompoundInsightEngine {
         }
 
         return weekendDeviationCount
-    }
-
-    /// Find past score dips (drops exceeding threshold) in score history.
-    private func findPastScoreDips(
-        scoreHistory: [(date: Date, score: Int)],
-        threshold: Int
-    ) -> Int {
-        guard scoreHistory.count >= 14 else { return 0 }
-
-        var dipCount = 0
-        for i in 7..<scoreHistory.count {
-            let current = scoreHistory[i].score
-            let prior = scoreHistory[i - 7].score
-            if current - prior <= threshold {
-                dipCount += 1
-            }
-        }
-        // Normalize: count distinct dip episodes (at least 5 days apart)
-        return min(dipCount, scoreHistory.count / 14)
     }
 
     /// Estimate typical recovery duration from state history.

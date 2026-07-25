@@ -37,17 +37,6 @@ enum WidgetStyle {
         }
     }
 
-    static func debtColor(_ trend: String) -> Color {
-        switch trend {
-        case "worsening":
-            return AppColour.danger
-        case "improving":
-            return AppColour.success
-        default:
-            return AppColour.info
-        }
-    }
-
     static func timeString(from date: Date) -> String {
         date.formatted(.dateTime.hour().minute())
     }

@@ -165,11 +165,6 @@ final class RemoteConfigManager {
         return tiers.contains(tier)
     }
 
-    /// All feature keys that are enabled for a given tier.
-    func enabledFeatures(for tier: String) -> Set<FeatureKey> {
-        Set(FeatureKey.allCases.filter { isFeatureEnabled($0, for: tier) })
-    }
-
     // MARK: - Limits
 
     var freeMetrics: [String] {

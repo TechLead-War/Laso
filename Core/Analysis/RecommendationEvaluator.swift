@@ -70,40 +70,13 @@ enum RecommendationEvaluator {
         return .stable
     }
 
-    /// Win rate: % of fully evaluated recommendations that improved (needs >= 5)
-    @MainActor
-    static func computeWinRate(store: HealthDataStore) -> Double? {
-        let evaluated = store.loadEvaluatedRecommendations(days: 90)
-        guard evaluated.count >= 5 else { return nil }
-        let improved = evaluated.filter { $0.outcomeRawValue == Outcome.improved.rawValue }.count
-        return Double(improved) / Double(evaluated.count)
-    }
-
-    /// Confidence tier for a generated proof. The view layer can use this to
-    /// adjust copy emphasis or to hide proof that is still too thin to trust.
-    enum ConfidenceTier: String {
-        case high
-        case medium
-        case exploratory
-    }
-
     /// Summary of "proof" copy shown on home action cards and their detail view.
     /// `hasProof` gates whether the view renders the grounded summary or falls
     /// back to the "still learning" copy.
     struct ActionProofSummary {
         var hasProof: Bool = false
-        var cardProofLine: String? = nil
         var detailProofLine: String? = nil
         var timeframeLine: String = ""
-        var confidence: ConfidenceTier = .exploratory
-        /// The metric the proof is anchored to (if any). Useful for deep links
-        /// from the card into the metric detail view.
-        var anchorMetric: HealthMetric? = nil
-        /// Raw counts the copy is derived from, surfaced for analytics and
-        /// debug overlays so we never display numbers we cannot trace back.
-        var improvedCount: Int = 0
-        var totalCount: Int = 0
-        var observationWindowDays: Int = 0
     }
 
     /// Minimum evaluated recommendations required before we show any proof.
@@ -134,14 +107,8 @@ enum RecommendationEvaluator {
         guard evaluated.count >= minimumSampleSize else {
             return ActionProofSummary(
                 hasProof: false,
-                cardProofLine: nil,
                 detailProofLine: nil,
-                timeframeLine: "",
-                confidence: .exploratory,
-                anchorMetric: nil,
-                improvedCount: 0,
-                totalCount: evaluated.count,
-                observationWindowDays: observationWindowDays
+                timeframeLine: ""
             )
         }
 
@@ -167,30 +134,12 @@ enum RecommendationEvaluator {
         }
 
         guard let anchor = ranked.first else {
-            return ActionProofSummary(
-                hasProof: false,
-                confidence: .exploratory,
-                totalCount: evaluated.count,
-                observationWindowDays: observationWindowDays
-            )
+            return ActionProofSummary(hasProof: false)
         }
 
         let improved = improvedByMetric[anchor, default: 0]
         let total = totalByMetric[anchor, default: 0]
         let metricName = anchor.displayName
-
-        // Confidence tiers: we need at least 3 measured improvements on the
-        // same metric before we call the proof "medium" confidence, and a
-        // meaningful win rate plus enough samples to call it "high".
-        let winRate = total > 0 ? Double(improved) / Double(total) : 0
-        let confidence: ConfidenceTier
-        if improved >= 5 && winRate >= 0.6 && total >= 7 {
-            confidence = .high
-        } else if improved >= 3 && winRate >= 0.5 {
-            confidence = .medium
-        } else {
-            confidence = .exploratory
-        }
 
         // If the anchor metric has fewer than 3 improvements we don't have
         // enough grounded evidence to make a specific claim. Fall back to a
@@ -198,21 +147,11 @@ enum RecommendationEvaluator {
         guard improved >= 3 else {
             return ActionProofSummary(
                 hasProof: false,
-                cardProofLine: nil,
                 detailProofLine: nil,
-                timeframeLine: Copy.Home.ActionProof.trackingWindow(days: observationWindowDays),
-                confidence: .exploratory,
-                anchorMetric: anchor,
-                improvedCount: improved,
-                totalCount: total,
-                observationWindowDays: observationWindowDays
+                timeframeLine: Copy.Home.ActionProof.trackingWindow(days: observationWindowDays)
             )
         }
 
-        let cardLine = Copy.Home.ActionProof.followedAdviceImproved(
-            count: improved,
-            metric: metricName
-        )
         let detailLine = Copy.Home.ActionProof.pastOutcomeSummary(
             improved: improved,
             total: total,
@@ -222,14 +161,8 @@ enum RecommendationEvaluator {
 
         return ActionProofSummary(
             hasProof: true,
-            cardProofLine: cardLine,
             detailProofLine: detailLine,
-            timeframeLine: timeframe,
-            confidence: confidence,
-            anchorMetric: anchor,
-            improvedCount: improved,
-            totalCount: total,
-            observationWindowDays: observationWindowDays
+            timeframeLine: timeframe
         )
     }
 }

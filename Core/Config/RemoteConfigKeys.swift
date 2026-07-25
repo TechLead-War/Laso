@@ -47,10 +47,6 @@ enum RC {
     /// Consumer: Core/Notifications/AlertEvaluator.swift
     static let killAnomalyAlerts = "kill_anomaly_alerts"
 
-    /// Affirmative flag for the iOS 26 on-device Foundation Models narrative.
-    /// Disable to silence the "For You Today" card without an app update.
-    /// Consumer: Modules/Dashboard/Views/Home/DailyNarrativeCard.swift
-    static let aiNarrativeEnabled = "ai_narrative_enabled"
 
     /// Force-skips onboarding directly to the paywall step when a screen
     /// crashes mid-flow. Unblocks new installs without a release.
@@ -77,16 +73,6 @@ enum RC {
     static let healthAnomalyFactorSlope          = "scoring_health_anomaly_factor_slope"
     static let healthFocusBoost                  = "scoring_health_focus_boost"
     static let healthCategoryWeightFloor         = "scoring_health_category_weight_floor"
-    static let healthNoBaselineWeight            = "scoring_health_no_baseline_weight"
-    static let healthFreshnessFreshDayCutoff     = "scoring_health_freshness_fresh_day_cutoff"
-    static let healthFreshnessFreshScore         = "scoring_health_freshness_fresh_score"
-    static let healthFreshnessRecentDayCutoff    = "scoring_health_freshness_recent_day_cutoff"
-    static let healthFreshnessRecentDecayPerDay  = "scoring_health_freshness_recent_decay_per_day"
-    static let healthFreshnessLongTermBase       = "scoring_health_freshness_long_term_base"
-    static let healthFreshnessLongTermDecayPerDay = "scoring_health_freshness_long_term_decay_per_day"
-    static let healthFreshnessFloor              = "scoring_health_freshness_floor"
-    static let healthMetricWeightAbsoluteFloor   = "scoring_health_metric_weight_absolute_floor"
-    static let healthMetricWeightEqualShareDivisor = "scoring_health_metric_weight_equal_share_divisor"
     static let healthCoverageFullWeightMetrics   = "scoring_health_coverage_full_weight_metrics"
     static let healthCoveragePower               = "scoring_health_coverage_power"
     static let healthNeutralScore                = "scoring_health_neutral_score"
@@ -161,8 +147,6 @@ enum RC {
     static let strainZoneMultiplier5             = "scoring_strain_zone_multiplier_5"
     static let strainMaxExpectedLoad             = "scoring_strain_max_expected_load"
     static let strainMinDaysForBaseline          = "scoring_strain_min_days_for_baseline"
-    static let strainFallbackTodayCalorieCap     = "scoring_strain_fallback_today_calorie_cap"
-    static let strainDefaultRestingHeartRate     = "scoring_strain_default_resting_heart_rate"
 
     // MARK: Scoring — WorkoutBands
     static let workoutGreenBandFloor             = "scoring_workout_green_band_floor"
@@ -211,12 +195,8 @@ enum RC {
 
     // MARK: Onboarding
     static let onboardingSkipScreensCsv          = "onboarding_skip_screens"
-    static let onboardingFastTrackEnabled        = "onboarding_fast_track_enabled"
-    static let onboardingVariant                 = "onboarding_variant"
 
     // MARK: Paywall
-    static let paywallVariant                    = "paywall_variant"
-    static let paywallShowYearlyDefault          = "paywall_show_yearly_default"
 
     /// Max rows in the onboarding paywall's personalised watch list.
     /// Consumer: Modules/Onboarding/Views/Onboarding/OnboardingV2Screens14ToDone.swift
@@ -228,11 +208,6 @@ enum RC {
     static let referralProgramEnabled            = "referral_program_enabled"
 
     // MARK: Notification timing
-    static let notificationMorningStartHour      = "notification_morning_start_hour"
-    static let notificationMorningEndHour        = "notification_morning_end_hour"
-    static let notificationEveningStartHour      = "notification_evening_start_hour"
-    static let notificationEveningEndHour        = "notification_evening_end_hour"
-    static let notificationHookStyle             = "notification_hook_style"
 
     /// Local-hour bounds of the do-not-disturb window. Non-critical pushes
     /// scheduled to fire inside [start, end) are suppressed. Overnight window
@@ -252,9 +227,6 @@ enum RC {
     /// Consumer: Core/Notifications/WeeklySummaryScheduler.swift.
     static let weeklySummaryFireHour             = "weekly_summary_fire_hour"
     static let weeklySummaryFireMinute           = "weekly_summary_fire_minute"
-
-    // MARK: A/B experiments
-    static let experimentRecoveryCardStyle       = "experiment_recovery_card_style"
 
     // MARK: Recovery → Live Energy
     //

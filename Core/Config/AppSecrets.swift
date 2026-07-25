@@ -12,17 +12,9 @@ enum AppSecrets {
         static let appStoreID = "6762501313"
     }
 
-    // MARK: - Firebase
-
-    enum Firebase {
-        static let projectID = "laso-health-v1"
-        static let analyticsPropertyID = "525486766"
-    }
-
     // MARK: - CloudKit
 
     enum CloudKit {
-        static let containerID = "iCloud.com.lasohealth.fit"
         static let recordType = "HealthBackup"
         static let recordID = "HealthBackup-v1"
     }
@@ -53,7 +45,6 @@ enum AppSecrets {
         static let termsOfUse = "https://lasohealth.fit/terms"
         static let privacyPolicy = "https://lasohealth.fit/privacy"
         static let manageSubscriptions = "https://apps.apple.com/account/subscriptions"
-        static let supportEmail = "support@lasohealth.fit"
 
         /// Direct App Store review write link. Empty string if App Store ID is not set yet.
         static var appStoreReview: String {
@@ -75,11 +66,5 @@ enum AppSecrets {
         static let apiKey = ""
         /// Data residency, "EU" or "US". Must match the Amplitude project's region.
         static let region = "US"
-    }
-
-    // MARK: - External Dependencies
-
-    enum CDN {
-        static let chartJS = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"
     }
 }

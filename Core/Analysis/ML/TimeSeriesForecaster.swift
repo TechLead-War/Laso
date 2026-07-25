@@ -155,13 +155,6 @@ final class TimeSeriesForecaster {
         }
     }
 
-    /// Fit a single metric
-    func fit(metric: HealthMetric, values: [Double]) {
-        guard values.count >= Self.minimumDays else { return }
-        let useDoubleSeasonal = values.count >= Self.monthlyMinimumDays
-        states[metric] = gridSearchFit(values: values, doubleSeasonal: useDoubleSeasonal)
-    }
-
     /// Incremental update with one new observation
     func update(metric: HealthMetric, newValue: Double, dayOfWeek: Int) {
         guard var state = states[metric] else { return }

@@ -43,15 +43,14 @@ struct IllnessEarlyWarning {
     private struct SignalConfig {
         let metric: HealthMetric
         let unfavorableDirection: UnfavorableDirection
-        let isSleepDuration: Bool       // special handling: only counts if other signals present
     }
 
     private static let signalMetrics: [SignalConfig] = [
-        SignalConfig(metric: .restingHeartRate, unfavorableDirection: .above, isSleepDuration: false),
-        SignalConfig(metric: .heartRateVariability, unfavorableDirection: .below, isSleepDuration: false),
-        SignalConfig(metric: .sleepDuration, unfavorableDirection: .below, isSleepDuration: true),
-        SignalConfig(metric: .steps, unfavorableDirection: .below, isSleepDuration: false),
-        SignalConfig(metric: .respiratoryRate, unfavorableDirection: .above, isSleepDuration: false),
+        SignalConfig(metric: .restingHeartRate, unfavorableDirection: .above),
+        SignalConfig(metric: .heartRateVariability, unfavorableDirection: .below),
+        SignalConfig(metric: .sleepDuration, unfavorableDirection: .below),
+        SignalConfig(metric: .steps, unfavorableDirection: .below),
+        SignalConfig(metric: .respiratoryRate, unfavorableDirection: .above),
     ]
 
     /// Minimum standard deviations from baseline to count as a signal

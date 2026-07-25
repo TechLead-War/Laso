@@ -2776,12 +2776,6 @@ final class AppAnalytics {
         trackFeatureUsed(.loggedJournal)
     }
 
-    func trackJournalEntryDeleted(category: String) {
-        logEvent("journal_entry_deleted", parameters: [
-            "category": category
-        ])
-    }
-
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 21. Empty State & Friction Signals
     // ══════════════════════════════════════════════════════════════════════

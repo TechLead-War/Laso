@@ -89,12 +89,6 @@ final class ReferralManager {
         return freeUntil > Date()
     }
 
-    /// Days remaining on referral-based free Pro access.
-    var referralDaysRemaining: Int? {
-        guard let freeUntil = referralFreeUntil, freeUntil > Date() else { return nil }
-        return Date.cal.dateComponents([.day], from: Date(), to: freeUntil).day
-    }
-
     // MARK: - Own Code
 
     /// Returns the user's invite code, asking the server to mint one on first

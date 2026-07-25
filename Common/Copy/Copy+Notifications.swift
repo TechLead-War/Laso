@@ -146,21 +146,6 @@ extension Copy {
 
         // MARK: - Daily Summary
 
-        static func dailySummaryTitle(score: Int, grade: String, suffix: String) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_daily_summary_title", default: "Your health score: %d out of 100 (%@)%@"), score, grade, suffix), max: titleMax)
-        }
-        static func anomalyCallout(metric: String, direction: String, percent: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_notifications_anomaly_callout", default: "%@ %@ %@%%."), metric, direction, percent)
-        }
-        static func metricsNeedAttention(_ count: Int) -> String {
-            let unit = count == 1
-                ? RemoteConfigManager.shared.copyString("copy_notifications_metric_singular", default: "thing")
-                : RemoteConfigManager.shared.copyString("copy_notifications_metric_plural", default: "things")
-            return String(format: RemoteConfigManager.shared.copyString("copy_notifications_metrics_need_attention", default: "%d %@ worth a quick look."), count, unit)
-        }
-        static var allMetricsHealthy: String { RemoteConfigManager.shared.copyString("copy_notifications_all_metrics_healthy", default: "Everything looks healthy today.") }
-        static func streakDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_streak_days", default: "%d day streak"), days) }
-
         /// One-glance score line for the notification subtitle slot, e.g.
         /// "Recovery 82 (+5)". The title carries the hook, the subtitle the number.
         static func summaryScoreSubtitle(score: Int, delta: Int?) -> String {
@@ -331,10 +316,9 @@ extension Copy {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_evening_summary_title", default: "Today's recap: a %@ day"), strainLevel), max: titleMax)
         }
 
-        /// `chronotypeBedtime` is the user's recent median bedtime, computed
-        /// upstream by `BedtimeChronotype`. Optional so existing callers that
-        /// have not been wired through still compile and fall back to the
-        /// "10:45 PM" default inside `bedtimeAnchor`.
+        /// `chronotypeBedtime` is the user's recent median bedtime. Optional so
+        /// callers that have not been wired through still compile and fall back
+        /// to the "10:45 PM" default inside `bedtimeAnchor`.
         static func eveningSummaryBody(strainLevel: String, score: Int, chronotypeBedtime: String? = nil) -> String {
             let anchor = bedtimeAnchor(strainLevel: strainLevel, chronotypeBedtime: chronotypeBedtime)
             return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_evening_summary_body", default: "Your %@ day ended at %d out of 100. %@"), strainLevel.lowercased(), score, anchor), max: bodyMax)
@@ -420,34 +404,9 @@ extension Copy {
         static func declinedCount(_ count: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_declined_count", default: "%d declined"), count) }
         static var topMovers: String { RemoteConfigManager.shared.copyString("copy_notifications_top_movers", default: "Biggest changes: ") }
 
-        /// Rich one-liner highlighting top improver + top decliner with percentages.
-        /// Caller passes already-formatted percent strings (e.g. "+12%" / "-8%").
-        static func weeklyTopMoversHighlight(
-            improver: (metric: String, changeText: String)?,
-            decliner: (metric: String, changeText: String)?
-        ) -> String? {
-            switch (improver, decliner) {
-            case let (imp?, dec?):
-                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_both", default: "%@ went up to %@, and %@ slipped to %@."), imp.metric, imp.changeText, dec.metric, dec.changeText), max: bodyMax)
-            case let (imp?, nil):
-                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_improver", default: "%@ improved the most, up to %@."), imp.metric, imp.changeText), max: bodyMax)
-            case let (nil, dec?):
-                return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_weekly_movers_decliner", default: "%@ slipped the most, down %@. See what changed."), dec.metric, dec.changeText), max: bodyMax)
-            default:
-                return nil
-            }
-        }
-
         // MARK: - Reengagement
 
         static var healthSnapshot: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_health_snapshot", default: "Your health update is waiting"), max: titleMax) }
-        static func lastScoreBody(score: Int) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_last_score_body", default: "Your last score was %d out of 100. A few days on, your numbers have changed. See what is new."), score), max: bodyMax)
-        }
-        /// Richer reengagement body when a trend direction is known.
-        static func lastScoreBody(score: Int, trendingMetric: String, direction: String) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_last_score_body", default: "Your last score was %d out of 100. Your %@ was %@. See what is new."), score, trendingMetric.lowercased(), direction.lowercased()), max: bodyMax)
-        }
         static var insightsReady: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_insights_ready", default: "Your health insights are ready"), max: titleMax) }
         static var insightsReadyBody: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_insights_ready_body", default: "It has been a few days. See what your body did while you were away."), max: bodyMax) }
 
@@ -618,16 +577,6 @@ extension Copy {
         static func triageRecommendationDecorated(level: String, action: String, recommendation: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_notifications_triage_recommendation_decorated", default: "%@. %@ %@"), level, action, recommendation)
         }
-
-        // MARK: - Permission Rationale
-        //
-        // Proposed soft-ask copy. Currently unconsumed — onboarding uses the
-        // iOS system prompt directly (mirrors HealthKit). Defined now so a
-        // future pre-permission screen has on-brand strings without baking
-        // competing literals into a view.
-
-        static var permissionRationaleTitle: String { RemoteConfigManager.shared.copyString("copy_notifications_permission_rationale_title", default: "Turn on notifications") }
-        static var permissionRationaleBody: String { RemoteConfigManager.shared.copyString("copy_notifications_permission_rationale_body", default: "Get a heads up on heart rate, sleep, and weekly progress so you never miss a real change.") }
 
         // MARK: - Onboarding Abandonment (Journey 1)
         //

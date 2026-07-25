@@ -27,28 +27,6 @@ enum UserLevel: Int, CaseIterable, Comparable {
         }
     }
 
-    var color: Color {
-        switch self {
-        case .newcomer:  AppColour.achievementBronze
-        case .explorer:  AppColour.achievementSilver
-        case .committed: AppColour.achievementGold
-        case .dedicated: AppColour.achievementPlatinum
-        case .champion:  AppColour.achievementDiamond
-        case .legend:    AppColour.achievementLegend
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .newcomer:  "leaf.fill"
-        case .explorer:  "binoculars.fill"
-        case .committed: "flame.fill"
-        case .dedicated: "star.fill"
-        case .champion:  "diamond.fill"
-        case .legend:    "crown.fill"
-        }
-    }
-
     var minDays: Int {
         switch self {
         case .newcomer:  0
@@ -57,23 +35,6 @@ enum UserLevel: Int, CaseIterable, Comparable {
         case .dedicated: 90
         case .champion:  180
         case .legend:    365
-        }
-    }
-
-    /// Days required to reach the next level, or nil if already at max.
-    var nextLevelDays: Int? {
-        guard let next = Self.allCases.first(where: { $0.rawValue == rawValue + 1 }) else { return nil }
-        return next.minDays
-    }
-
-    var description: String {
-        switch self {
-        case .newcomer:  Copy.Achievements.newcomerDescription
-        case .explorer:  Copy.Achievements.explorerDescription
-        case .committed: Copy.Achievements.committedDescription
-        case .dedicated: Copy.Achievements.dedicatedDescription
-        case .champion:  Copy.Achievements.championDescription
-        case .legend:    Copy.Achievements.legendDescription
         }
     }
 
@@ -121,11 +82,6 @@ struct ActiveStreaks {
     var longestRecoveryStreak: Int = 0
     var longestCheckInStreak: Int = 0
     var longestMasterStreak: Int = 0
-
-    /// The single best active streak across all categories.
-    var bestCurrent: Int {
-        max(activityStreak, sleepStreak, recoveryStreak, checkInStreak, masterStreak)
-    }
 }
 
 // MARK: - GamificationEngine
@@ -141,21 +97,6 @@ final class GamificationEngine {
     private(set) var streaks: ActiveStreaks = ActiveStreaks()
     private(set) var achievements: [Achievement] = []
     private(set) var totalDaysTracked: Int = 0
-
-    /// Achievements unlocked within the last 7 days.
-    var recentlyUnlocked: [Achievement] {
-        let cutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        return achievements.filter { $0.isUnlocked && ($0.unlockedDate ?? .distantPast) >= cutoff }
-    }
-
-    /// Progress toward the next level (0.0 – 1.0). Returns 1.0 if already at max level.
-    var progressToNextLevel: Double {
-        guard let nextDays = currentLevel.nextLevelDays else { return 1.0 }
-        let currentMin = currentLevel.minDays
-        let range = nextDays - currentMin
-        guard range > 0 else { return 1.0 }
-        return min(1.0, max(0.0, Double(totalDaysTracked - currentMin) / Double(range)))
-    }
 
     // MARK: - Compute
 

@@ -664,15 +664,4 @@ struct HealthKitMetricRegistry {
             preconditionFailure("miscConfig called with non-misc metric: \(metric)")
         }
     }
-
-    /// All HKSampleTypes needed for HealthKit authorization
-    static var allSampleTypes: Set<HKSampleType> {
-        var types = Set<HKSampleType>()
-        for metric in HealthMetric.allCases {
-            if let sampleType = config(for: metric).sampleType {
-                types.insert(sampleType)
-            }
-        }
-        return types
-    }
 }

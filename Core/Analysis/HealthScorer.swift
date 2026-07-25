@@ -12,7 +12,6 @@ struct HealthScorer {
 
     /// Explains how the overall score was computed, including per-category weights and top factors
     struct ScoreExplanation {
-        let totalScore: Int
         let categoryContributions: [CategoryContribution]
         let topFactors: [ScoreFactor]  // top 3 factors affecting score
     }
@@ -21,7 +20,6 @@ struct HealthScorer {
     struct CategoryContribution {
         let category: HealthCategory
         let score: Int
-        let weight: Double  // 0-1
         let weightedContribution: Double  // score * weight
     }
 
@@ -153,11 +151,6 @@ struct HealthScorer {
 
     // MARK: - Overall Score
 
-    /// Compute overall score from category scores (backward compatible. equal weighting)
-    static func overallScore(categoryScores: [HealthScore]) -> HealthScore {
-        return overallScore(categoryScores: categoryScores, weights: nil)
-    }
-
     /// Compute overall score from category scores with optional adaptive weights.
     /// When weights is nil, falls back to equal weighting (backward compatible).
     static func overallScore(
@@ -253,50 +246,6 @@ struct HealthScorer {
         return normalizeWeights(rawWeights, minimumWeight: Cfg.categoryWeightFloor)
     }
 
-    // MARK: - Adaptive Metric Weights Within Category
-
-    /// Compute per-metric weights within a category based on coefficient of variation
-    /// and data freshness. More variable and fresher metrics carry more weight.
-    static func adaptiveMetricWeights(
-        for metrics: [HealthMetric],
-        baselines: [HealthMetric: UserBaseline]
-    ) -> [HealthMetric: Double] {
-        guard !metrics.isEmpty else { return [:] }
-
-        let now = Date()
-        var rawWeights: [HealthMetric: Double] = [:]
-
-        for metric in metrics {
-            guard let baseline = baselines[metric] else {
-                rawWeights[metric] = Cfg.noBaselineWeight
-                continue
-            }
-
-            let cv: Double
-            if baseline.mean != 0 {
-                cv = baseline.standardDeviation / abs(baseline.mean)
-            } else {
-                cv = 0.0
-            }
-            let variabilityFactor = min(Cfg.volatilityFactorCap, Cfg.volatilityFactorBase + cv * Cfg.volatilityFactorSlope)
-
-            let daysSinceUpdate = Date.cal.dateComponents([.day], from: baseline.lastUpdated, to: now).day ?? 0
-            let freshnessFactor: Double
-            if daysSinceUpdate <= Cfg.freshnessFreshDayCutoff {
-                freshnessFactor = Cfg.freshnessFreshScore
-            } else if daysSinceUpdate <= Cfg.freshnessRecentDayCutoff {
-                freshnessFactor = Cfg.freshnessFreshScore - Double(daysSinceUpdate - Cfg.freshnessFreshDayCutoff) * Cfg.freshnessRecentDecayPerDay
-            } else {
-                freshnessFactor = max(Cfg.freshnessFloor, Cfg.freshnessLongTermBase - Double(daysSinceUpdate - Cfg.freshnessRecentDayCutoff) * Cfg.freshnessLongTermDecayPerDay)
-            }
-
-            rawWeights[metric] = variabilityFactor * freshnessFactor
-        }
-
-        let minWeight = 1.0 / (Double(metrics.count) * Cfg.metricWeightEqualShareDivisor)
-        return normalizeWeights(rawWeights, minimumWeight: max(Cfg.metricWeightAbsoluteFloor, minWeight))
-    }
-
     // MARK: - Score Explanation
 
     /// Produce a transparent explanation of how the overall score was computed,
@@ -309,26 +258,16 @@ struct HealthScorer {
     ) -> ScoreExplanation {
         // Build category contributions
         var contributions: [CategoryContribution] = []
-        var totalWeightedScore = 0.0
-        var totalWeight = 0.0
 
         for cs in categoryScores {
             guard let cat = cs.category else { continue }
             let w = weights[cat] ?? (1.0 / Double(categoryScores.count))
-            let weighted = Double(cs.score) * w
             contributions.append(CategoryContribution(
                 category: cat,
                 score: cs.score,
-                weight: w,
-                weightedContribution: weighted
+                weightedContribution: Double(cs.score) * w
             ))
-            totalWeightedScore += weighted
-            totalWeight += w
         }
-
-        let totalScore = totalWeight > 0
-            ? Int((totalWeightedScore / totalWeight).rounded())
-            : Cfg.perfectScore
 
         contributions.sort { $0.weightedContribution > $1.weightedContribution }
 
@@ -400,7 +339,6 @@ struct HealthScorer {
         )
 
         return ScoreExplanation(
-            totalScore: totalScore,
             categoryContributions: contributions,
             topFactors: topFactors
         )

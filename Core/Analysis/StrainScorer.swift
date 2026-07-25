@@ -82,9 +82,6 @@ final class StrainScorer {
     /// Rolling 7-day strain history for trend visualization
     private(set) var weeklyStrainHistory: [(date: Date, strain: Double)] = []
 
-    /// Color representing the current strain level
-    var strainColor: Color { strainLevel.color }
-
     /// Human-readable label for the current strain
     var strainLabel: String { strainLevel.displayName }
 

@@ -10,9 +10,6 @@ struct RHRTrajectoryAnalyzer {
 
     // MARK: - Constants
 
-    /// Minimum days of data to compute meaningful trajectory
-    private static let minDaysRequired = 90
-
     /// Rising RHR threshold: >1 bpm increase per 6 months while activity is stable
     private static let risingSlopeThreshold = 1.0 / 180.0 // bpm per day
 

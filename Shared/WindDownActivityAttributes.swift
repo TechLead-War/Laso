@@ -65,9 +65,6 @@ enum WindDownCopy {
 
     static let compactCountdownAccessibilityLabel = "Time until bedtime"
     static let breatheButtonAccessibilityLabel = "Start a two minute wind down breath"
-
-    /// `%@` is the styled relative countdown to bedtime.
-    static let countdownAccessibilityLabel = "Bedtime in %@"
 }
 
 #if canImport(ActivityKit)

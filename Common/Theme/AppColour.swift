@@ -10,7 +10,7 @@ import SwiftUI
 ///   4. Score tiers        optimal / good / fair / poor / resting
 ///   5. Health categories  heart / sleep / activity / stress / vitality / brain
 ///   6. Feature-specific   achievement, vitality pace, health state, premium,
-///                         shareable card gradients, live activity, launch
+///                         shareable card gradients, live activity
 ///
 /// Swatch-pickable: every entry uses `#colorLiteral(...)` so Xcode shows an
 /// inline colour well you can edit visually.
@@ -55,9 +55,6 @@ enum AppColour {
     static let textTertiary    = Color(uiColor: .tertiaryLabel)
     /// Disabled / placeholder text — ~18% white on dark.
     static let textQuaternary  = Color(uiColor: .quaternaryLabel)
-
-    /// Hairline separator — platform-native opaque separator.
-    static let separator       = Color(uiColor: .separator)
 
     /// Low-alpha border (Linear / Vercel pattern — 6% white on dark). For flat cards.
     static let borderLow       = Color.white.opacity(0.06)
@@ -210,8 +207,4 @@ enum AppColour {
     // MARK: - 6f. Live Activity
     // Source: LasoWidgets/WindDownLiveActivityWidget.swift:208
     static let windDownTint = Color(uiColor: #colorLiteral(red: 0.51, green: 0.55, blue: 0.97, alpha: 1.00)) // calm soft indigo
-
-    // MARK: - 6g. Launch Screen
-    // Source: Assets.xcassets/LaunchBackground.colorset
-    static let launchBackground = Color(uiColor: #colorLiteral(red: 0.00, green: 0.00, blue: 0.00, alpha: 1.00))
 }

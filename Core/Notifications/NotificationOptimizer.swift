@@ -3,36 +3,6 @@ import Foundation
 /// Optimizes notification timing, priority, and frequency based on user engagement data
 enum NotificationOptimizer {
 
-
-    /// Find the hour with the best open rate (min 3 samples per hour, min 14 total events)
-    static func optimalHour(events: [StoredNotificationEvent], defaultHour: Int = 8) -> Int {
-        guard events.count >= 14 else { return defaultHour }
-
-        var sentByHour: [Int: Int] = [:]
-        var openedByHour: [Int: Int] = [:]
-
-        for event in events {
-            sentByHour[event.hourSent, default: 0] += 1
-            if event.openedDate != nil {
-                openedByHour[event.hourSent, default: 0] += 1
-            }
-        }
-
-        var bestHour = defaultHour
-        var bestRate: Double = -1
-
-        for (hour, sentCount) in sentByHour where sentCount >= 3 {
-            let openedCount = openedByHour[hour, default: 0]
-            let rate = Double(openedCount) / Double(sentCount)
-            if rate > bestRate {
-                bestRate = rate
-                bestHour = hour
-            }
-        }
-
-        return bestHour
-    }
-
     /// Compute a priority score (0-100) for a notification
     static func priorityScore(
         severity: Severity,
@@ -79,14 +49,5 @@ enum NotificationOptimizer {
             return max(1, baseBudget - 1)
         }
         return max(1, baseBudget)
-    }
-
-    /// Aggregate open rate for analytics
-    static func openRate(events: [StoredNotificationEvent], days: Int) -> Double? {
-        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let recent = events.filter { $0.sentDate >= cutoff }
-        guard !recent.isEmpty else { return nil }
-        let opened = recent.filter { $0.openedDate != nil }.count
-        return Double(opened) / Double(recent.count)
     }
 }

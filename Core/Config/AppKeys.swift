@@ -101,8 +101,6 @@ enum AppKeys {
 
     enum Feedback {
         static let entries       = "laso.feedback.entries"
-        static let lastNPSDate   = "laso.feedback.last_nps_date"
-        static let lastNPSScore  = "laso.feedback.last_nps_score"
     }
 
     // MARK: - Watch Monitor
@@ -141,7 +139,6 @@ enum AppKeys {
 
     enum Readiness {
         static let cachedScore     = "laso.readiness.cached_score"
-        static let cachedTimestamp = "laso.readiness.cached_timestamp"
 
         // Per-day morning lock. Score and confidence are stamped once each
         // morning when last-night sleep + overnight HRV/RHR vs the 60-day
@@ -254,50 +251,10 @@ enum AppKeys {
         static let deviceId         = "laso.profile.device_id"
     }
 
-    // MARK: - Strain
-
-    enum Strain {
-        static let lastStrainDate = "laso.strain.last_date"
-        static let todayStrain    = "laso.strain.today"
-    }
-
-    // MARK: - Sleep Coach
-
-    enum SleepCoach {
-        static let targetWakeTime   = "laso.sleep_coach.target_wake_time"
-        static let performanceLevel = "laso.sleep_coach.performance_level"
-        static let sleepDebt        = "laso.sleep_coach.debt"
-    }
-
-    // MARK: - Stress
-
-    enum Stress {
-        static let lastStressUpdate = "laso.stress.last_update"
-    }
-
-    // MARK: - Weekly Plan
-
-    enum Plan {
-        static let activeGoal    = "laso.plan.active_goal"
-        static let planStartDate = "laso.plan.start_date"
-        static let planData      = "laso.plan.data"
-    }
-
-    // MARK: - Gamification
-
-    enum Gamification {
-        static let unlockedAchievements   = "laso.gamification.unlocked"
-        static let longestActivityStreak  = "laso.gamification.longest_activity_streak"
-        static let longestSleepStreak     = "laso.gamification.longest_sleep_streak"
-        static let longestRecoveryStreak  = "laso.gamification.longest_recovery_streak"
-        static let longestMasterStreak    = "laso.gamification.longest_master_streak"
-    }
-
     // MARK: - Cycle Tracking
 
     enum Cycle {
         static let trackingEnabled   = "laso.cycle.tracking_enabled"
-        static let lastCycleComputed = "laso.cycle.last_computed"
     }
 
     // MARK: - Widget (App Group UserDefaults)
@@ -315,19 +272,6 @@ enum AppKeys {
 
     enum Retention {
         static let lastPruneDate = "laso.retention.last_prune_date"
-    }
-
-    // MARK: - Morning Check-In
-
-    enum CheckIn {
-        static let history    = "laso.morning_checkin.history"
-        static let lastDate   = "laso.morning_checkin.last_date"
-    }
-
-    // MARK: - Activation Sequence
-
-    enum Activation {
-        static let state = "laso.activation.state"
     }
 
     // MARK: - Onboarding Prediction (cliffhanger payoff + re-permission hook)
@@ -350,12 +294,5 @@ enum AppKeys {
         /// Set once the re-permission conversion event has fired, so a user who
         /// grants Health access after the re-permission push is counted once.
         static let repermissionConverted = "laso.prediction.repermission_converted"
-    }
-
-    // MARK: - Circadian Health
-
-    enum Circadian {
-        static let lastScore      = "laso.circadian.last_score"
-        static let lastComputeDate = "laso.circadian.last_compute_date"
     }
 }

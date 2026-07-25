@@ -1,0 +1,11 @@
+project: Laso.xcodeproj
+schemes:
+  - Laso
+targets:
+  - Laso
+  - LasoWidgets
+retain_public: false
+retain_objc_accessible: true
+retain_swift_ui_previews: true
+retain_codable_properties: true
+disable_update_check: true

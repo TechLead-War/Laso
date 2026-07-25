@@ -49,22 +49,6 @@ extension Copy {
 
         static var reduceStress: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_reduce_stress", default: "Reduce Stress") }
         static var startBreathingExercise: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_start_breathing_exercise", default: "Start Breathing Exercise") }
-        static var primaryTip: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_primary_tip", default: "Try This First") }
-        static var moreTips: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_more_tips", default: "More Ideas") }
-        static var moreTipsHint: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_more_tips_hint", default: "Other ways to help your body settle.") }
-
-        // MARK: - Week Delta
-
-        static func weekDeltaImproved(_ thisWeek: String, _ lastWeek: String, _ percent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_week_delta_improved", default: "Your stress eased %d%% this week. You are at %@, down from %@ last week."), percent, thisWeek, lastWeek)
-        }
-        static func weekDeltaIncreased(_ thisWeek: String, _ lastWeek: String, _ percent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_week_delta_increased", default: "Your stress rose %d%% this week. You are at %@, up from %@ last week."), percent, thisWeek, lastWeek)
-        }
-        static func weekDeltaSteady(_ thisWeek: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_week_delta_steady", default: "Your stress is steady at %@ this week, close to last week."), thisWeek)
-        }
-        static var weekSummaryTitle: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_week_summary_title", default: "This Week") }
 
         // MARK: - Tips
 
@@ -105,41 +89,6 @@ extension Copy {
         static var stressLevelMild: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_level_mild", default: "Mild Stress") }
         static var stressLevelModerate: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_level_moderate", default: "Moderate Stress") }
         static var stressLevelHigh: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_level_high", default: "High Stress") }
-
-        // MARK: - Stress Trend Display Names (Scorer)
-
-        static var trendDecreasing: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_trend_decreasing", default: "Decreasing") }
-        static var trendStable: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_trend_stable", default: "Stable") }
-        static var trendIncreasing: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_trend_increasing", default: "Increasing") }
-
-        // MARK: - Stress Descriptions (Scorer)
-
-        static var descriptionNoData: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_description_no_data", default: "Not enough data to assess stress yet. Keep heart rate and HRV data syncing to establish your personal baseline.") }
-
-        static func descriptionLow(score: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_low", default: "Your stress level is low (%@/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. Your body is recovering well."), score)
-        }
-        static func descriptionMildPrefix(score: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_mild_prefix", default: "Your stress level is mildly elevated (%@/3.0). "), score)
-        }
-        static func descriptionModeratePrefix(score: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_moderate_prefix", default: "Your stress level is moderate (%@/3.0). "), score)
-        }
-        static func descriptionHighPrefix(score: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_high_prefix", default: "Your stress level is high (%@/3.0). "), score)
-        }
-        static func descriptionHRVMention(percent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_hrv_mention", default: "Your HRV is %d%% below your baseline. "), percent)
-        }
-        static func descriptionHRMention(percent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_hr_mention", default: "Your heart rate is %d%% above your resting average. "), percent)
-        }
-        static var descriptionMildSuffix: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_description_mild_suffix", default: "Consider lighter exercise today and prioritize sleep tonight.") }
-        static var descriptionModerateSuffix: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_description_moderate_suffix", default: "Focus on recovery: deep breathing, gentle movement, and adequate hydration.") }
-        static var descriptionHighSuffix: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_description_high_suffix", default: "Prioritize rest and recovery. Avoid intense exercise, reduce caffeine, and consider mindfulness or breathing exercises.") }
-        static func descriptionHighHRVAndHRTyped(hrvPercent: Int, hrPercent: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_description_high_hrv_and_hr_typed", default: "Your HRV is %d%% below baseline and heart rate is %d%% elevated. "), hrvPercent, hrPercent)
-        }
 
         // MARK: - Lifted view literals
         static var breathworkNavTitle: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_breathwork_nav_title", default: "Breathwork") }

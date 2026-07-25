@@ -107,7 +107,6 @@ struct MetricForecast: Identifiable {
     let lowerBound: Double
     let upperBound: Double
     let currentValue: Double
-    let horizon: Int  // days ahead
     let confidence: Double  // 0-1
 
     /// Percentage confidence for display
@@ -214,7 +213,6 @@ enum ForecastBuilder {
                 lowerBound: horizon7.ciLower,
                 upperBound: horizon7.ciUpper,
                 currentValue: currentValue,
-                horizon: horizon7.horizon,
                 confidence: confidence
             ))
 
@@ -233,7 +231,6 @@ enum ForecastBuilder {
             lowerBound: 42,
             upperBound: 62,
             currentValue: 48,
-            horizon: 7,
             confidence: 0.85
         ),
         MetricForecast(
@@ -242,7 +239,6 @@ enum ForecastBuilder {
             lowerBound: 24000,
             upperBound: 30000,
             currentValue: 25200,
-            horizon: 7,
             confidence: 0.78
         ),
         MetricForecast(
@@ -251,7 +247,6 @@ enum ForecastBuilder {
             lowerBound: 55,
             upperBound: 61,
             currentValue: 60,
-            horizon: 7,
             confidence: 0.82
         ),
     ]

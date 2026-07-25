@@ -129,17 +129,6 @@ final class AlertEvaluator {
         }
     }
 
-    /// Legacy entry point for backward compatibility
-    func evaluate(
-        anomalies: [AnomalyDetector.AnomalyResult],
-        preferences: NotificationPreferences
-    ) {
-        // Refresh the mute flag so this path honors the kill switch and never
-        // reuses a stale value from a previous full evaluation.
-        suppressNonCritical = RemoteConfigManager.shared.killAnomalyAlerts
-        evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: 1)
-    }
-
     // MARK: - Static convenience (preserves existing call sites)
 
     static func evaluate(
@@ -150,13 +139,6 @@ final class AlertEvaluator {
         preferences: NotificationPreferences
     ) {
         shared.evaluate(anomalies: anomalies, trends: trends, timeSeries: timeSeries, previousTrends: previousTrends, preferences: preferences)
-    }
-
-    static func evaluate(
-        anomalies: [AnomalyDetector.AnomalyResult],
-        preferences: NotificationPreferences
-    ) {
-        shared.evaluate(anomalies: anomalies, preferences: preferences)
     }
 
     // MARK: - Anomaly Alerts

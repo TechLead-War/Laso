@@ -10,7 +10,6 @@ struct ChainLink {
     let lagDays: Int                 // 0 = same day, 1+ = cause precedes effect
     let causeDeviation: Double       // % deviation from baseline (signed)
     let effectDeviation: Double      // % deviation from baseline (signed)
-    let explanation: String          // e.g. "Your deep sleep dropped 25%"
 }
 
 /// A validated chain of cause-effect links culminating in a problematic metric
@@ -273,7 +272,7 @@ struct CausalChainEngine {
         baselines: [HealthMetric: UserBaseline]
     ) -> ChainLink? {
 
-        guard let causeBaseline = baselines[causeMetric],
+        guard baselines[causeMetric] != nil,
               baselines[effectMetric] != nil else { return nil }
 
         let lag = correlation.dayOffset
@@ -316,20 +315,13 @@ struct CausalChainEngine {
 
         guard deviationsAligned else { return nil }
 
-        let explanation = buildLinkExplanation(
-            causeMetric: causeMetric,
-            causeDeviation: causeDevPct,
-            causeBaseline: causeBaseline
-        )
-
         return ChainLink(
             causeMetric: causeMetric,
             effectMetric: effectMetric,
             correlation: correlation.correlation,
             lagDays: lag,
             causeDeviation: causeDevPct,
-            effectDeviation: effectDevPct,
-            explanation: explanation
+            effectDeviation: effectDevPct
         )
     }
 
@@ -682,20 +674,6 @@ struct CausalChainEngine {
         } else {
             return String(format: "%.1f%%", abs)
         }
-    }
-
-    /// Build a natural-language explanation for a single cause link
-    private static func buildLinkExplanation(
-        causeMetric: HealthMetric,
-        causeDeviation: Double,
-        causeBaseline: UserBaseline
-    ) -> String {
-        let name = causeMetric.displayName.lowercased()
-        let dev = formatDeviation(causeDeviation)
-        let direction = causeDeviation > 0 ? "increased" : "dropped"
-        let baselineFormatted = causeMetric.formatValue(causeBaseline.mean)
-
-        return "Your \(name) \(direction) \(dev) from your baseline of \(baselineFormatted) \(causeMetric.unit)"
     }
 
     /// Check if a metric pair is trivially correlated (just math, not insight)

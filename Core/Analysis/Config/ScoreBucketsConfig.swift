@@ -16,11 +16,4 @@ enum ScoreBucketsConfig {
     static let engagementModerateFloor = 55
     /// Lower bound (inclusive) of the "needs attention" engagement band.
     static let engagementNeedsAttentionFloor = 40
-
-    // MARK: - Health Status Tag (analytics)
-
-    /// Lower bound (inclusive) of the "healthy" tag.
-    static let healthyTagFloor = 75
-    /// Lower bound (inclusive) of the "watching" tag (also upper-exclusive for "at risk").
-    static let watchingTagFloor = 50
 }

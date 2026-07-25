@@ -27,14 +27,8 @@ final class DecisionPolicyEngine {
     /// Rolling 7-day exposure tracker: actionType rawValue -> list of shown dates
     private var exposureLog: [String: [Date]] = [:]
 
-    /// EMA smoothing factor for effectiveness updates
-    private static let effectivenessAlpha: Double = 0.15
-
     /// Maximum recent decisions retained for exposure tracking
     private static let maxRecentDecisions = 50
-
-    /// Maximum feedback entries retained
-    private static let maxFeedbackHistory = 200
 
 
     /// Cached decimal NumberFormatter — `formatted(_:)` is called
@@ -339,144 +333,6 @@ final class DecisionPolicyEngine {
         }
         return top3.reduce(0.0) { $0 + $1.candidate.upliftConfidence }
             / max(1.0, Double(top3.count))
-    }
-
-    /// Full pipeline: generate candidates, score, decide, and attach natural language.
-    func recommend(
-        currentState: HealthState?,
-        tomorrowRisk: MLPrediction?,
-        causalDiscoveries: [MLCorrelation],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        baselines: [HealthMetric: UserBaseline],
-        anomalies: [AnomalyDetector.AnomalyResult],
-        circadianRecommendations: [CircadianAnalyzer.TimingRecommendation],
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        currentVector: DailyFeatureVector?,
-        scorer: PredictiveScorer?
-    ) -> PolicyDecision? {
-        let candidates = generateCandidates(
-            currentState: currentState,
-            tomorrowRisk: tomorrowRisk,
-            causalDiscoveries: causalDiscoveries,
-            trends: trends,
-            baselines: baselines,
-            anomalies: anomalies,
-            circadianRecommendations: circadianRecommendations,
-            timeSeries: timeSeries
-        )
-
-        guard var decision = decide(candidates: candidates) else { return nil }
-
-        // Attach natural language to primary and secondary
-        let primaryLang = generateLanguage(
-            for: decision.primaryAction.candidate,
-            baselines: baselines,
-            trends: trends,
-            timeSeries: timeSeries
-        )
-        let primaryWithLang = PolicyDecision.RankedIntervention(
-            candidate: decision.primaryAction.candidate,
-            expectedUtility: decision.primaryAction.expectedUtility,
-            noveltyFactor: decision.primaryAction.noveltyFactor,
-            title: primaryLang.title,
-            description: primaryLang.description,
-            whyItMatters: primaryLang.whyMatters,
-            expectedBenefit: primaryLang.expectedBenefit
-        )
-
-        var secondaryWithLang: PolicyDecision.RankedIntervention?
-        if let sec = decision.secondaryAction {
-            let secLang = generateLanguage(
-                for: sec.candidate,
-                baselines: baselines,
-                trends: trends,
-                timeSeries: timeSeries
-            )
-            secondaryWithLang = PolicyDecision.RankedIntervention(
-                candidate: sec.candidate,
-                expectedUtility: sec.expectedUtility,
-                noveltyFactor: sec.noveltyFactor,
-                title: secLang.title,
-                description: secLang.description,
-                whyItMatters: secLang.whyMatters,
-                expectedBenefit: secLang.expectedBenefit
-            )
-        }
-
-        // Re-generate all ranked with language
-        let allWithLang: [PolicyDecision.RankedIntervention] = decision.allCandidates.map { ranked in
-            let lang = generateLanguage(for: ranked.candidate, baselines: baselines, trends: trends, timeSeries: timeSeries)
-            return PolicyDecision.RankedIntervention(
-                candidate: ranked.candidate,
-                expectedUtility: ranked.expectedUtility,
-                noveltyFactor: ranked.noveltyFactor,
-                title: lang.title,
-                description: lang.description,
-                whyItMatters: lang.whyMatters,
-                expectedBenefit: lang.expectedBenefit
-            )
-        }
-
-        // Generate prescriptive language with full context
-        let headline = generatePrescriptiveHeadline(
-            primaryCandidate: decision.primaryAction.candidate,
-            baselines: baselines,
-            timeSeries: timeSeries
-        )
-        let sleepTime = computeTargetSleepTime(baselines: baselines, timeSeries: timeSeries)
-        let strain = computeStrainBudget(baselines: baselines, timeSeries: timeSeries)
-
-        decision = PolicyDecision(
-            primaryAction: primaryWithLang,
-            secondaryAction: secondaryWithLang,
-            allCandidates: allWithLang,
-            rationale: decision.rationale,
-            decisionConfidence: decision.decisionConfidence,
-            decidedAt: decision.decidedAt,
-            prescriptiveHeadline: headline,
-            targetSleepTime: sleepTime,
-            strainBudget: strain
-        )
-
-        // Update stored decision
-        if !recentDecisions.isEmpty {
-            recentDecisions[recentDecisions.count - 1] = decision
-        }
-
-        return decision
-    }
-
-    // MARK: - Feedback Integration
-
-    /// Record user feedback (inferred from metric movement post-recommendation).
-    func recordFeedback(_ feedback: RecommendationFeedback) {
-        feedbackHistory.append(feedback)
-        if feedbackHistory.count > Self.maxFeedbackHistory {
-            feedbackHistory.removeFirst(feedbackHistory.count - Self.maxFeedbackHistory)
-        }
-        updateEffectiveness()
-    }
-
-    /// Update per-actionType effectiveness via exponential moving average.
-    ///
-    /// For each feedback entry with a resolved uplift, blend into the running
-    /// effectiveness estimate: `eff = (1 - alpha) * eff + alpha * normalizedUplift`
-    func updateEffectiveness() {
-        let alpha = Self.effectivenessAlpha
-
-        for feedback in feedbackHistory {
-            guard let uplift = feedback.estimatedUplift else { continue }
-            let key = feedback.actionType
-
-            // Normalize uplift to 0-1 range (clamp actual uplift)
-            let normalizedUplift = min(1.0, max(0.0, (uplift + 1.0) / 2.0))
-
-            if let current = categoryEffectiveness[key] {
-                categoryEffectiveness[key] = (1.0 - alpha) * current + alpha * normalizedUplift
-            } else {
-                categoryEffectiveness[key] = normalizedUplift
-            }
-        }
     }
 
     // MARK: - Natural Language Generation
@@ -1720,17 +1576,6 @@ final class DecisionPolicyEngine {
         case .trendReversal: return Copy.Policy.sourceTrend
         case .baselineRecovery: return Copy.Policy.sourceBaseline
         case .counterfactual: return Copy.Policy.sourceCounterfactual
-        }
-    }
-
-    private func timeBenefitDescription(_ time: InterventionCandidate.TimeToBenefit) -> String {
-        switch time {
-        case .immediate: return Copy.Policy.benefitImmediate
-        case .nextDay: return Copy.Policy.benefitNextDay
-        case .twoDays: return Copy.Policy.benefitTwoDays
-        case .threeDays: return Copy.Policy.benefitThreeDays
-        case .oneWeek: return Copy.Policy.benefitOneWeek
-        case .twoWeeks: return Copy.Policy.benefitTwoWeeks
         }
     }
 

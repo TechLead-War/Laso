@@ -39,22 +39,6 @@ final class TemporalSequenceMiner {
         }
     }
 
-    /// A compounding effect where consecutive days of a condition worsen a consequence metric
-    struct CompoundingEffect {
-        let metric: HealthMetric
-        let condition: String
-        let compoundingRate: Double
-        let maxObservedStreak: Int
-        let avgConsequence: [ConsequenceMetric]
-        let description: String
-
-        struct ConsequenceMetric {
-            let metric: HealthMetric
-            let avgDeltaPerDay: Double
-            let peakImpactDay: Int
-        }
-    }
-
     /// A precursor warning pattern that reliably precedes bad health events
     struct PrecursorPattern {
         let warningSignals: [(metric: HealthMetric, direction: String, leadDays: Int)]
@@ -83,11 +67,10 @@ final class TemporalSequenceMiner {
     // MARK: - Public Properties
 
     private(set) var sequences: [TemporalSequence] = []
-    private(set) var compoundingEffects: [CompoundingEffect] = []
     private(set) var precursorPatterns: [PrecursorPattern] = []
     private(set) var recoveryProfiles: [RecoveryProfile] = []
 
-    var isReady: Bool { !sequences.isEmpty || !compoundingEffects.isEmpty || !precursorPatterns.isEmpty }
+    var isReady: Bool { !sequences.isEmpty || !precursorPatterns.isEmpty }
 
     /// Hash of input data from last run. Skip recomputation if unchanged.
     private var lastInputHash: Int = 0
@@ -163,10 +146,6 @@ final class TemporalSequenceMiner {
 
         // Bail out if device reaches critical thermal state between steps
         guard ProcessInfo.processInfo.thermalState != .critical else { return }
-
-        // 2. Compounding effects skipped — compoundingEffects stored on MLOrchestrator
-        // but never read by any ViewModel, View, or downstream system.
-        compoundingEffects = []
 
         // 3. Detect precursor patterns
         precursorPatterns = detectPrecursorPatterns(
@@ -624,200 +603,6 @@ final class TemporalSequenceMiner {
             currentStepIndex: currentStep,
             predictedOutcome: predictedOutcome,
             discoveredAt: Date()
-        )
-    }
-
-    // MARK: - Compounding Effect Detection
-
-    /// Detect how consecutive days of a condition worsen consequence metrics.
-    private func detectCompoundingEffects(
-        dailyValues: [Date: [HealthMetric: Double]],
-        sortedDates: [Date],
-        baselines: [HealthMetric: UserBaseline],
-        available: [HealthMetric: MetricTimeSeries]
-    ) -> [CompoundingEffect] {
-        var effects: [CompoundingEffect] = []
-
-        // Metrics that can compound: sleep, activity, exercise
-        let compoundableMetrics: [HealthMetric] = [
-            .sleepDuration, .steps, .exerciseMinutes, .activeCalories
-        ].filter { available[$0] != nil }
-
-        // Consequence metrics to measure impact on
-        let consequenceMetrics: [HealthMetric] = [
-            .heartRateVariability, .restingHeartRate, .sleepDuration,
-            .sleepDeep, .activeCalories, .steps
-        ].filter { available[$0] != nil }
-
-        for compoundMetric in compoundableMetrics {
-            guard let baseline = baselines[compoundMetric] ?? computeBaseline(for: compoundMetric, from: available) else { continue }
-            guard baseline.standardDeviation > 0 else { continue }
-
-            // Determine the "bad" direction: below baseline for higherIsBetter, above for lowerIsBetter
-            let isBelowBad = compoundMetric.higherIsBetter
-            let threshold = isBelowBad
-                ? baseline.mean - baseline.standardDeviation
-                : baseline.mean + baseline.standardDeviation
-
-            // Find streaks of consecutive days where metric is on the bad side
-            let streaks = findConsecutiveStreaks(
-                metric: compoundMetric,
-                threshold: threshold,
-                isBelowBad: isBelowBad,
-                sortedDates: sortedDates,
-                dailyValues: dailyValues
-            )
-
-            guard !streaks.isEmpty else { continue }
-
-            // For each consequence metric, measure how it changes with streak length
-            var consequences: [CompoundingEffect.ConsequenceMetric] = []
-
-            for consequenceMetric in consequenceMetrics where consequenceMetric != compoundMetric {
-                guard let cBaseline = baselines[consequenceMetric] ?? computeBaseline(for: consequenceMetric, from: available) else { continue }
-
-                if let consequence = measureCompounding(
-                    streaks: streaks,
-                    consequenceMetric: consequenceMetric,
-                    consequenceBaseline: cBaseline,
-                    dailyValues: dailyValues
-                ) {
-                    consequences.append(consequence)
-                }
-            }
-
-            guard !consequences.isEmpty else { continue }
-
-            let maxStreak = streaks.map(\.count).max() ?? 0
-            let bestConsequence = consequences.max(by: { abs($0.avgDeltaPerDay) < abs($1.avgDeltaPerDay) })
-            let rate = bestConsequence?.avgDeltaPerDay ?? 0
-
-            let conditionDesc = formatThreshold(
-                metric: compoundMetric,
-                threshold: threshold,
-                isBelowBad: isBelowBad
-            )
-
-            let description = generateCompoundingDescription(
-                metric: compoundMetric,
-                conditionDesc: conditionDesc,
-                consequences: consequences,
-                maxStreak: maxStreak,
-                baselines: baselines
-            )
-
-            effects.append(CompoundingEffect(
-                metric: compoundMetric,
-                condition: conditionDesc,
-                compoundingRate: rate,
-                maxObservedStreak: maxStreak,
-                avgConsequence: consequences,
-                description: description
-            ))
-        }
-
-        return effects.sorted { abs($0.compoundingRate) > abs($1.compoundingRate) }
-    }
-
-    /// Find consecutive-day streaks where a metric is on the "bad" side of its threshold.
-    private func findConsecutiveStreaks(
-        metric: HealthMetric,
-        threshold: Double,
-        isBelowBad: Bool,
-        sortedDates: [Date],
-        dailyValues: [Date: [HealthMetric: Double]]
-    ) -> [[Date]] {
-        var streaks: [[Date]] = []
-        var currentStreak: [Date] = []
-
-        for i in 0..<sortedDates.count {
-            let date = sortedDates[i]
-            guard let value = dailyValues[date]?[metric] else {
-                if currentStreak.count >= 2 { streaks.append(currentStreak) }
-                currentStreak = []
-                continue
-            }
-
-            let isBad = isBelowBad ? value < threshold : value > threshold
-
-            if isBad {
-                // Check consecutive: if there's a gap > 1 day, start new streak
-                if let lastDate = currentStreak.last {
-                    let gap = calendar.dateComponents([.day], from: lastDate, to: date).day ?? 0
-                    if gap > 1 {
-                        if currentStreak.count >= 2 { streaks.append(currentStreak) }
-                        currentStreak = [date]
-                    } else {
-                        currentStreak.append(date)
-                    }
-                } else {
-                    currentStreak = [date]
-                }
-            } else {
-                if currentStreak.count >= 2 { streaks.append(currentStreak) }
-                currentStreak = []
-            }
-        }
-        if currentStreak.count >= 2 { streaks.append(currentStreak) }
-
-        return streaks
-    }
-
-    /// Measure how a consequence metric changes with streak length using linear regression.
-    private func measureCompounding(
-        streaks: [[Date]],
-        consequenceMetric: HealthMetric,
-        consequenceBaseline: UserBaseline,
-        dailyValues: [Date: [HealthMetric: Double]]
-    ) -> CompoundingEffect.ConsequenceMetric? {
-        guard consequenceBaseline.standardDeviation > 0 else { return nil }
-
-        // Collect (streakDay, consequenceDeviation) pairs
-        var streakDayValues: [Int: [Double]] = [:] // streakDay -> [deviations]
-
-        for streak in streaks {
-            for (dayIndex, date) in streak.enumerated() {
-                let streakDay = dayIndex + 1
-                // Look at consequence metric on this day and the next day
-                if let nextDate = calendar.date(byAdding: .day, value: 1, to: date),
-                   let value = dailyValues[calendar.startOfDay(for: nextDate)]?[consequenceMetric] {
-                    let deviation = value - consequenceBaseline.mean
-                    streakDayValues[streakDay, default: []].append(deviation)
-                }
-            }
-        }
-
-        // Need at least 2 different streak lengths to fit regression
-        let validDays = streakDayValues.filter { $0.value.count >= 2 }
-        guard validDays.count >= 2 else { return nil }
-
-        // Build regression: y = consequence_deviation, x = streak_day
-        var xValues: [Double] = []
-        var yValues: [Double] = []
-        for (day, deviations) in validDays {
-            let avgDev = deviations.mean
-            xValues.append(Double(day))
-            yValues.append(avgDev)
-        }
-
-        let regression = linearRegressionFit(x: xValues, y: yValues)
-
-        // Check significance: slope must be meaningfully large relative to baseline
-        let slopeAsPercent = abs(regression.slope) / consequenceBaseline.mean * 100
-        guard slopeAsPercent > 1.0 else { return nil } // At least 1% change per day
-
-        // Find peak impact day
-        let peakDay: Int
-        if let maxEntry = validDays.max(by: { abs($0.value.mean) < abs($1.value.mean) }) {
-            peakDay = maxEntry.key
-        } else {
-            peakDay = validDays.keys.max() ?? 1
-        }
-
-        return CompoundingEffect.ConsequenceMetric(
-            metric: consequenceMetric,
-            avgDeltaPerDay: regression.slope,
-            peakImpactDay: peakDay
         )
     }
 
@@ -1333,11 +1118,6 @@ final class TemporalSequenceMiner {
         return max(0, min(1, survival))
     }
 
-    /// Simple linear regression: y = slope * x + intercept
-    private func linearRegressionFit(x: [Double], y: [Double]) -> (slope: Double, intercept: Double) {
-        Array<Double>.linearRegression(x: x, y: y)
-    }
-
     // MARK: - Condition Helpers
 
     /// Determine dominant condition from a set of events.
@@ -1380,22 +1160,6 @@ final class TemporalSequenceMiner {
         }
     }
 
-    /// Compute a baseline from the time series when no UserBaseline exists.
-    private func computeBaseline(
-        for metric: HealthMetric,
-        from available: [HealthMetric: MetricTimeSeries]
-    ) -> UserBaseline? {
-        guard let series = available[metric], series.sortedSamples.count >= 7 else { return nil }
-        let values = series.values
-        return UserBaseline(
-            metric: metric,
-            mean: values.mean,
-            standardDeviation: values.standardDeviation,
-            median: values.median,
-            sampleCount: values.count
-        )
-    }
-
     /// Expand a list of dates by a radius (include surrounding days).
     private func expandDates(_ dates: [Date], radius: Int) -> Set<Date> {
         var expanded = Set<Date>()
@@ -1418,17 +1182,6 @@ final class TemporalSequenceMiner {
         case .spiking: return "surges"
         case .sustained: return "stays off"
         }
-    }
-
-    /// Format a threshold as a human-readable condition string.
-    private func formatThreshold(
-        metric: HealthMetric,
-        threshold: Double,
-        isBelowBad: Bool
-    ) -> String {
-        let formattedValue = metric.formatValue(threshold)
-        let direction = isBelowBad ? "below" : "above"
-        return "\(direction) \(formattedValue)\(metric.unit)"
     }
 
     // MARK: - Natural Language Generation
@@ -1483,59 +1236,6 @@ final class TemporalSequenceMiner {
         }
 
         return "Your \(effectMetric.displayName) may \(verb) by \(effectMetric.formatValue(avgEffectMagnitude)) \(effectMetric.unit) within \(avgLag) day\(avgLag == 1 ? "" : "s")"
-    }
-
-    /// Generate a specific description for a compounding effect.
-    private func generateCompoundingDescription(
-        metric: HealthMetric,
-        conditionDesc: String,
-        consequences: [CompoundingEffect.ConsequenceMetric],
-        maxStreak: Int,
-        baselines: [HealthMetric: UserBaseline]
-    ) -> String {
-        guard let strongest = consequences.max(by: { abs($0.avgDeltaPerDay) < abs($1.avgDeltaPerDay) }) else {
-            return "Consecutive days of \(metric.displayName) \(conditionDesc) have compounding effects"
-        }
-
-        let directionWord = strongest.avgDeltaPerDay > 0 ? "increases" : "decreases"
-
-        // Express rate relative to baseline
-        let rateDesc: String
-        if let baseline = baselines[strongest.metric], baseline.mean > 0 {
-            let pctPerDay = abs(strongest.avgDeltaPerDay / baseline.mean) * 100
-            rateDesc = "\(String(format: "%.1f", pctPerDay))% per consecutive day"
-        } else {
-            rateDesc = "\(strongest.metric.formatValue(abs(strongest.avgDeltaPerDay)))\(strongest.metric.unit) per consecutive day"
-        }
-
-        return "Each consecutive day of \(metric.displayName) \(conditionDesc) \(directionWord) your \(strongest.metric.displayName) by \(rateDesc) (peak impact on day \(strongest.peakImpactDay), max observed streak: \(maxStreak) days)"
-    }
-
-    // MARK: - Query API
-
-    /// Get sequences that are currently active (pattern in progress).
-    var activeSequences: [TemporalSequence] {
-        sequences.filter(\.isCurrentlyActive)
-    }
-
-    /// Get precursor patterns that are currently triggered.
-    var activeWarnings: [PrecursorPattern] {
-        precursorPatterns.filter(\.isCurrentlyTriggered)
-    }
-
-    /// Get the top N most confident sequences.
-    func topSequences(_ count: Int = 5) -> [TemporalSequence] {
-        Array(sequences.prefix(count))
-    }
-
-    /// Get sequences involving a specific metric (as cause or effect).
-    func sequences(involving metric: HealthMetric) -> [TemporalSequence] {
-        sequences.filter { seq in seq.steps.contains { $0.metric == metric } }
-    }
-
-    /// Get compounding effects for a specific metric.
-    func compoundingEffects(for metric: HealthMetric) -> [CompoundingEffect] {
-        compoundingEffects.filter { $0.metric == metric }
     }
 
     /// Lightweight hash of input data to skip recomputation when unchanged.

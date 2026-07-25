@@ -110,41 +110,6 @@ struct DailySummaryScheduler {
         )
     }
 
-    /// Legacy entry point for backward compatibility
-    static func schedule(
-        score: Int,
-        topInsight: String,
-        preferences: NotificationPreferences
-    ) {
-        let insight = Insight(
-            metric: .steps,
-            title: "",
-            summary: "",
-            recommendation: topInsight,
-            severity: .info,
-            trend: .stable,
-            currentValue: 0,
-            baselineValue: 0,
-            deviationPercent: 0
-        )
-        schedule(
-            score: score,
-            anomalyCount: 0,
-            topInsights: [insight],
-            categoryBreakdown: "",
-            preferences: preferences
-        )
-    }
-
-    /// Cancel the daily summary
-    static func cancel() {
-        NotificationManager.shared.cancelNotification(identifier: identifier)
-    }
-
-    static func cancelEvening() {
-        NotificationManager.shared.cancelNotification(identifier: eveningIdentifier)
-    }
-
     private static func firstSentence(_ text: String) -> String {
         if let dotIndex = text.firstIndex(of: ".") {
             return String(text[text.startIndex...dotIndex])

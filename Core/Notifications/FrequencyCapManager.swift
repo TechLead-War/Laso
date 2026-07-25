@@ -49,16 +49,6 @@ final class FrequencyCapManager {
         saveLog(log)
     }
 
-    /// Number of notifications reserved for today
-    func notificationsSentToday() -> Int {
-        prunedLog().filter { Date.cal.isDateInToday($0) }.count
-    }
-
-    /// Reset the daily counter (called at midnight)
-    func resetDailyCount() {
-        saveLog([])
-    }
-
     /// The stored fire timestamps with past days dropped. Future-dated
     /// entries are kept: they hold slots for the days pending notifications
     /// will fire on.

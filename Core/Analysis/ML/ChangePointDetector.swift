@@ -43,21 +43,6 @@ final class ChangePointDetector {
         }
     }
 
-    struct RegimeComparison {
-        let metric: HealthMetric
-        let regimes: [Regime]
-        let description: String
-
-        struct Regime {
-            let startDate: Date
-            let endDate: Date?
-            let mean: Double
-            let std: Double
-            let dayCount: Int
-            let label: String
-        }
-    }
-
     // MARK: - Internal Types
 
     private struct Candidate {
@@ -74,7 +59,6 @@ final class ChangePointDetector {
     // MARK: - Public API
 
     private(set) var changePoints: [ChangePoint] = []
-    private(set) var regimeComparisons: [RegimeComparison] = []
     var isReady: Bool { !changePoints.isEmpty }
 
     /// Hash of input data from last run. Skip recomputation if unchanged.
@@ -90,7 +74,6 @@ final class ChangePointDetector {
         lastInputHash = inputHash
 
         changePoints = []
-        regimeComparisons = []
         let calendar = Date.cal
 
         // Phase 1: CUSUM detection + validation per metric
@@ -140,10 +123,6 @@ final class ChangePointDetector {
                 ? $0.daysSinceChange < $1.daysSinceChange
                 : $0.magnitude > $1.magnitude
         }
-
-        // Phase 3: Regime segmentation skipped — regimeComparisons stored on MLOrchestrator
-        // but never read by any ViewModel, View, or downstream system.
-        regimeComparisons = []
     }
 
     // MARK: - CUSUM Changepoint Detection
@@ -351,62 +330,6 @@ final class ChangePointDetector {
         return (pComp * dComp).squareRoot()
     }
 
-    // MARK: - Regime Segmentation
-
-    private func buildRegimeComparisons(
-        allCandidates: [HealthMetric: [Candidate]],
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> [RegimeComparison] {
-        var comparisons: [RegimeComparison] = []
-        for (metric, candidates) in allCandidates {
-            guard let series = timeSeries[metric] else { continue }
-            let samples = series.sortedSamples
-            guard samples.count >= Self.minimumDays else { continue }
-
-            let validated = candidates
-                .filter { $0.pValue < Self.primaryAlpha && $0.cohenD >= Self.minEffectSize }
-                .sorted { $0.date < $1.date }
-            guard !validated.isEmpty else { continue }
-
-            var regimes: [RegimeComparison.Regime] = []
-            var start = 0
-
-            for (cpIdx, cp) in validated.enumerated() {
-                let cpSampleIdx = samples.firstIndex { $0.date >= cp.date } ?? samples.count
-                guard cpSampleIdx > start else { continue }
-                let seg = Array(samples[start..<cpSampleIdx])
-                let vals = seg.map(\.value)
-                guard !vals.isEmpty, let segStart = seg.first?.date else { continue }
-
-                regimes.append(RegimeComparison.Regime(
-                    startDate: segStart, endDate: seg.last?.date,
-                    mean: vals.mean, std: vals.standardDeviation,
-                    dayCount: vals.count,
-                    label: cpIdx == 0 && start == 0 ? "Initial regime" : "Regime \(cpIdx + 1)"
-                ))
-                start = cpSampleIdx
-            }
-
-            if start < samples.count {
-                let seg = Array(samples[start...])
-                let vals = seg.map(\.value)
-                guard !vals.isEmpty, let segStart = seg.first?.date else { continue }
-                regimes.append(RegimeComparison.Regime(
-                    startDate: segStart, endDate: nil,
-                    mean: vals.mean, std: vals.standardDeviation,
-                    dayCount: vals.count, label: "Current regime"
-                ))
-            }
-            guard regimes.count >= 2 else { continue }
-
-            comparisons.append(RegimeComparison(
-                metric: metric, regimes: regimes,
-                description: regimeDescription(metric: metric, regimes: regimes)
-            ))
-        }
-        return comparisons.sorted { $0.regimes.count > $1.regimes.count }
-    }
-
     // MARK: - Natural Language Generation
 
     private func generateDescription(
@@ -467,21 +390,6 @@ final class ChangePointDetector {
         return "Worth keeping an eye on to see if this trend continues."
     }
 
-    private func regimeDescription(metric: HealthMetric, regimes: [RegimeComparison.Regime]) -> String {
-        guard regimes.count >= 2, let cur = regimes.last else { return "" }
-        let prev = regimes[regimes.count - 2]
-        let u = metric.unit.isEmpty ? "" : " \(metric.unit)"
-        var desc = "Your \(metric.displayName) current regime: " +
-            "\(metric.formatValue(cur.mean)) \u{00B1} \(metric.formatValue(cur.std))\(u) " +
-            "(\(cur.dayCount) days) vs previous: " +
-            "\(metric.formatValue(prev.mean)) \u{00B1} \(metric.formatValue(prev.std))\(u) " +
-            "(\(prev.dayCount) days)."
-        if regimes.count > 2 {
-            desc += " \(regimes.count) distinct regimes detected in your history."
-        }
-        return desc
-    }
-
     /// Cached short-date formatter. avoids per-call allocation
     /// when describing change points across many metrics.
     private static let shortDateFormatter: DateFormatter = {
@@ -493,26 +401,6 @@ final class ChangePointDetector {
 
     private func fmtDate(_ date: Date) -> String {
         Self.shortDateFormatter.string(from: date)
-    }
-
-    // MARK: - Query API
-
-    func changePoints(for metric: HealthMetric) -> [ChangePoint] {
-        changePoints.filter { $0.metric == metric }
-    }
-
-    var mostRecentChangePoint: ChangePoint? { changePoints.first }
-
-    var highConfidenceChangePoints: [ChangePoint] {
-        changePoints.filter { $0.confidence > 0.7 }
-    }
-
-    func recentChangePoints(withinDays days: Int) -> [ChangePoint] {
-        changePoints.filter { $0.daysSinceChange <= days }
-    }
-
-    func regimeComparison(for metric: HealthMetric) -> RegimeComparison? {
-        regimeComparisons.first { $0.metric == metric }
     }
 
     /// Lightweight hash of input data to skip recomputation when unchanged.

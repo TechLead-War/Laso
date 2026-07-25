@@ -33,7 +33,6 @@ extension RemoteConfigManager {
         RC.killReadinessScorer:           false as NSNumber,
         RC.killHomeLiveReadiness:         false as NSNumber,
         RC.killAnomalyAlerts:             false as NSNumber,
-        RC.aiNarrativeEnabled:            true  as NSNumber,
         RC.onboardingForceSkipToPaywall:  false as NSNumber,
 
         // Scoring — HealthScorer (mirrors HealthScorerConfig values).
@@ -56,16 +55,6 @@ extension RemoteConfigManager {
         RC.healthAnomalyFactorSlope:          1.5  as NSNumber,
         RC.healthFocusBoost:                  1.2  as NSNumber,
         RC.healthCategoryWeightFloor:         0.05 as NSNumber,
-        RC.healthNoBaselineWeight:            0.1  as NSNumber,
-        RC.healthFreshnessFreshDayCutoff:     1    as NSNumber,
-        RC.healthFreshnessFreshScore:         1.0  as NSNumber,
-        RC.healthFreshnessRecentDayCutoff:    7    as NSNumber,
-        RC.healthFreshnessRecentDecayPerDay:  0.05 as NSNumber,
-        RC.healthFreshnessLongTermBase:       0.7  as NSNumber,
-        RC.healthFreshnessLongTermDecayPerDay: 0.017 as NSNumber,
-        RC.healthFreshnessFloor:              0.3  as NSNumber,
-        RC.healthMetricWeightAbsoluteFloor:   0.02 as NSNumber,
-        RC.healthMetricWeightEqualShareDivisor: 5.0 as NSNumber,
         RC.healthCoverageFullWeightMetrics:   2.0  as NSNumber,
         RC.healthCoveragePower:               0.6  as NSNumber,
         RC.healthNeutralScore:                75.0 as NSNumber,
@@ -140,8 +129,6 @@ extension RemoteConfigManager {
         RC.strainZoneMultiplier5:             14.0 as NSNumber,
         RC.strainMaxExpectedLoad:             800.0 as NSNumber,
         RC.strainMinDaysForBaseline:          7    as NSNumber,
-        RC.strainFallbackTodayCalorieCap:     400.0 as NSNumber,
-        RC.strainDefaultRestingHeartRate:     65.0 as NSNumber,
 
         // Scoring — WorkoutBands (mirrors WorkoutBandsConfig values).
         RC.workoutGreenBandFloor:             75   as NSNumber,
@@ -186,23 +173,12 @@ extension RemoteConfigManager {
 
         // Onboarding flow shape.
         RC.onboardingSkipScreensCsv:          "" as NSString,
-        RC.onboardingFastTrackEnabled:        false as NSNumber,
-        RC.onboardingVariant:                 "control" as NSString,
 
         // Paywall.
-        RC.paywallVariant:                    "control" as NSString,
-        RC.paywallShowYearlyDefault:          true as NSNumber,
         RC.paywallWatchRowsMax:               4 as NSNumber,
 
         // Referral program master switch.
         RC.referralProgramEnabled:            true as NSNumber,
-
-        // Notification timing — local hours, 0-23.
-        RC.notificationMorningStartHour:      5  as NSNumber,
-        RC.notificationMorningEndHour:        11 as NSNumber,
-        RC.notificationEveningStartHour:      20 as NSNumber,
-        RC.notificationEveningEndHour:        23 as NSNumber,
-        RC.notificationHookStyle:             "rotate" as NSString,
 
         // Quiet hours — SOURCE: common DND default (10 PM–7 AM). Overnight
         // window (start > end) handled by the consumer wrap-around comparison.
@@ -213,9 +189,6 @@ extension RemoteConfigManager {
         // Weekly summary fire time — 10:00 to avoid the wake-time morning daily.
         RC.weeklySummaryFireHour:             10 as NSNumber,
         RC.weeklySummaryFireMinute:           0  as NSNumber,
-
-        // Experiments.
-        RC.experimentRecoveryCardStyle:       "control" as NSString,
 
         // Recovery → Live Energy.
         RC.energyOnWristMaxAgeSeconds:                 600    as NSNumber,
@@ -249,7 +222,6 @@ extension RemoteConfigManager {
 
     /// Affirmative gate for the iOS 26 daily narrative card. Defaults true so
     /// the card is on; flip OFF to silence without rebuilding.
-    var aiNarrativeEnabled: Bool { bool(forKey: RC.aiNarrativeEnabled) }
 
     /// True → onboarding jumps Welcome → Paywall, bypassing every middle
     /// screen. Use when a screen crashes mid-flow and you need new installs
@@ -277,16 +249,6 @@ extension RemoteConfigManager {
     var healthAnomalyFactorSlope: Double       { double(forKey: RC.healthAnomalyFactorSlope) }
     var healthFocusBoost: Double               { double(forKey: RC.healthFocusBoost) }
     var healthCategoryWeightFloor: Double      { double(forKey: RC.healthCategoryWeightFloor) }
-    var healthNoBaselineWeight: Double         { double(forKey: RC.healthNoBaselineWeight) }
-    var healthFreshnessFreshDayCutoff: Int     { int(forKey: RC.healthFreshnessFreshDayCutoff) }
-    var healthFreshnessFreshScore: Double      { double(forKey: RC.healthFreshnessFreshScore) }
-    var healthFreshnessRecentDayCutoff: Int    { int(forKey: RC.healthFreshnessRecentDayCutoff) }
-    var healthFreshnessRecentDecayPerDay: Double { double(forKey: RC.healthFreshnessRecentDecayPerDay) }
-    var healthFreshnessLongTermBase: Double    { double(forKey: RC.healthFreshnessLongTermBase) }
-    var healthFreshnessLongTermDecayPerDay: Double { double(forKey: RC.healthFreshnessLongTermDecayPerDay) }
-    var healthFreshnessFloor: Double           { double(forKey: RC.healthFreshnessFloor) }
-    var healthMetricWeightAbsoluteFloor: Double { double(forKey: RC.healthMetricWeightAbsoluteFloor) }
-    var healthMetricWeightEqualShareDivisor: Double { double(forKey: RC.healthMetricWeightEqualShareDivisor) }
     var healthCoverageFullWeightMetrics: Double { double(forKey: RC.healthCoverageFullWeightMetrics) }
     var healthCoveragePower: Double            { double(forKey: RC.healthCoveragePower) }
     var healthNeutralScore: Double             { double(forKey: RC.healthNeutralScore) }
@@ -370,8 +332,6 @@ extension RemoteConfigManager {
     }
     var strainMaxExpectedLoad: Double          { double(forKey: RC.strainMaxExpectedLoad) }
     var strainMinDaysForBaseline: Int          { int(forKey: RC.strainMinDaysForBaseline) }
-    var strainFallbackTodayCalorieCap: Double  { double(forKey: RC.strainFallbackTodayCalorieCap) }
-    var strainDefaultRestingHeartRate: Double  { double(forKey: RC.strainDefaultRestingHeartRate) }
 
     // MARK: Scoring — WorkoutBands
 
@@ -407,25 +367,11 @@ extension RemoteConfigManager {
         return Set(csv.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty })
     }
 
-    var onboardingFastTrackEnabled: Bool       { bool(forKey: RC.onboardingFastTrackEnabled) }
-    var onboardingVariant: String              { string(forKey: RC.onboardingVariant) ?? "control" }
-
-    // MARK: Paywall
-
-    var paywallVariant: String                 { string(forKey: RC.paywallVariant) ?? "control" }
-    var paywallShowYearlyDefault: Bool         { bool(forKey: RC.paywallShowYearlyDefault) }
-
     // MARK: Referral
 
     var referralProgramEnabled: Bool           { bool(forKey: RC.referralProgramEnabled) }
 
     // MARK: Notification timing
-
-    var notificationMorningStartHour: Int      { int(forKey: RC.notificationMorningStartHour) }
-    var notificationMorningEndHour: Int        { int(forKey: RC.notificationMorningEndHour) }
-    var notificationEveningStartHour: Int      { int(forKey: RC.notificationEveningStartHour) }
-    var notificationEveningEndHour: Int        { int(forKey: RC.notificationEveningEndHour) }
-    var notificationHookStyle: String          { string(forKey: RC.notificationHookStyle) ?? "rotate" }
 
     /// Start/end of the non-critical notification do-not-disturb window
     /// (local hour 0-23). Overnight (start > end) is handled by the consumer.
@@ -438,10 +384,6 @@ extension RemoteConfigManager {
     /// Local hour/minute the weekly summary fires (default 10:00).
     var weeklySummaryFireHour: Int             { int(forKey: RC.weeklySummaryFireHour) }
     var weeklySummaryFireMinute: Int           { int(forKey: RC.weeklySummaryFireMinute) }
-
-    // MARK: Experiments
-
-    var experimentRecoveryCardStyle: String    { string(forKey: RC.experimentRecoveryCardStyle) ?? "control" }
 
     // MARK: Recovery → Live Energy
 

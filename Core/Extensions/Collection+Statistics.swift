@@ -21,12 +21,6 @@ extension Array where Element == Double {
         return (sumOfSquares / Double(count)).squareRoot()
     }
 
-    /// Variance (population)
-    var variance: Double {
-        let sd = standardDeviation
-        return sd * sd
-    }
-
     /// Median value
     var median: Double {
         guard !isEmpty else { return 0 }
@@ -176,29 +170,6 @@ extension Array where Element == Double {
         guard xDenom > 0, yDenom > 0 else { return nil }
         return numerator / (xDenom.squareRoot() * yDenom.squareRoot())
     }
-}
-
-extension Array where Element == Int {
-    /// Median value (returns nil for empty arrays). For even counts the
-    /// integer mean of the two middle elements is returned (rounded down).
-    var median: Int? {
-        guard !isEmpty else { return nil }
-        let sorted = self.sorted()
-        let mid = count / 2
-        if count.isMultiple(of: 2) {
-            return (sorted[mid - 1] + sorted[mid]) / 2
-        } else {
-            return sorted[mid]
-        }
-    }
-}
-
-/// Z-score of a value against a baseline mean and standard deviation.
-/// Returns 0 when `stdDev` is 0 (no variance baseline → no signal).
-@inlinable
-func zScore(value: Double, baselineMean: Double, baselineStdDev: Double) -> Double {
-    guard baselineStdDev > 0 else { return 0 }
-    return (value - baselineMean) / baselineStdDev
 }
 
 extension Sequence {

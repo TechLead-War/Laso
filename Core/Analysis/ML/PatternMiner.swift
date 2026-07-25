@@ -270,14 +270,4 @@ final class PatternMiner {
     // MARK: - State
 
     var isReady: Bool { !patterns.isEmpty }
-
-    /// Get patterns for a specific metric
-    func patterns(for metric: HealthMetric) -> [DiscoveredPattern] {
-        patterns.filter { $0.metric == metric }
-    }
-
-    /// Get the strongest patterns across all metrics
-    func topPatterns(_ count: Int = 5) -> [DiscoveredPattern] {
-        Array(patterns.prefix(count))
-    }
 }

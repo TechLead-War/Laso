@@ -200,7 +200,6 @@ struct ShareRingsSheet: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var photo: UIImage?
     @State private var showCamera = false
-    @Environment(\.dismiss) private var dismiss
 
     /// Referral invite line attached as text next to the image. The card image
     /// itself stays clean; message apps show this under the photo.

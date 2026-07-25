@@ -82,13 +82,6 @@ final class AdaptiveAnomalyDetector {
             if !hadIntenseExercise && !hasSleepDebt { parts.append("normal") }
             return parts.joined(separator: "_")
         }
-
-        /// Whether two contexts belong to the same bucket
-        func matches(_ other: DayContext) -> Bool {
-            isWeekend == other.isWeekend &&
-            hadIntenseExercise == other.hadIntenseExercise &&
-            hasSleepDebt == other.hasSleepDebt
-        }
     }
 
     /// Per-bucket statistics for each feature

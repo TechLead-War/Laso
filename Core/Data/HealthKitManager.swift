@@ -38,13 +38,11 @@ final class HealthKitManager: @unchecked Sendable {
         }
 
         var phase: Phase
-        var startedAt: Date
         var metricsCompleted: Int
         var totalMetrics: Int
         var metricsWithSamples: Int
         var samplesDiscovered: Int
         var oldestSampleDate: Date?
-        var latestMetric: HealthMetric?
     }
 
     var isAuthorized = false
@@ -99,7 +97,6 @@ final class HealthKitManager: @unchecked Sendable {
     /// Result of a loadAndSync call. tells callers what changed
     struct SyncResult {
         let metricsWithNewData: Set<HealthMetric>
-        let totalNewSamples: Int
         let isFirstSync: Bool
 
         var hasNewData: Bool { !metricsWithNewData.isEmpty }
@@ -113,7 +110,6 @@ final class HealthKitManager: @unchecked Sendable {
 
     struct MenstrualFlowSample: Sendable {
         let startDate: Date
-        let endDate: Date
         let flowValueRaw: Int
 
         var day: Date { startDate.startOfDay }
@@ -211,31 +207,6 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
-    func fetchAllMetrics(days: Int = 3650) async {
-        isLoading = true
-        defer { isLoading = false }
-
-        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
-        let startDate = Date().daysAgo(days)
-
-        await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
-            for metric in HealthMetric.allCases {
-                group.addTask { [self] in
-                    let series = await self.fetchMetric(metric, from: startDate, to: endDate)
-                    return (metric, series)
-                }
-            }
-
-            for await (metric, series) in group {
-                if let series {
-                    timeSeries[metric] = series
-                }
-            }
-        }
-
-        lastRefresh = Date()
-    }
-
     /// Emits `health_permission_result` at most once per install. HealthKit never
     /// reports which READ permissions were granted, so callers pass the best real
     /// signal available: data availability after the first fetch, or a hard 0 when
@@ -265,7 +236,7 @@ final class HealthKitManager: @unchecked Sendable {
         // the next unlock/foreground trigger syncs instead.
         #if os(iOS)
         guard UIApplication.shared.isProtectedDataAvailable else {
-            return SyncResult(metricsWithNewData: [], totalNewSamples: 0, isFirstSync: false)
+            return SyncResult(metricsWithNewData: [], isFirstSync: false)
         }
         #endif
         let syncStartTime = Date()
@@ -273,13 +244,11 @@ final class HealthKitManager: @unchecked Sendable {
         isLoading = true
         syncProgress = SyncProgress(
             phase: .preparing,
-            startedAt: syncStartTime,
             metricsCompleted: 0,
             totalMetrics: HealthMetric.allCases.count,
             metricsWithSamples: 0,
             samplesDiscovered: 0,
-            oldestSampleDate: nil,
-            latestMetric: nil
+            oldestSampleDate: nil
         )
 
         let syncDates = store.allSyncDates()
@@ -355,7 +324,6 @@ final class HealthKitManager: @unchecked Sendable {
 
             for await (metric, series) in group {
                 syncProgress?.metricsCompleted += 1
-                syncProgress?.latestMetric = metric
                 guard let series else { continue }
                 fetchedMetrics.insert(metric)
                 guard !series.samples.isEmpty else { continue }
@@ -432,7 +400,6 @@ final class HealthKitManager: @unchecked Sendable {
 
         return SyncResult(
             metricsWithNewData: persisted.metricsWithChanges,
-            totalNewSamples: totalNewSamples,
             isFirstSync: isFirstSync
         )
     }
@@ -563,7 +530,6 @@ final class HealthKitManager: @unchecked Sendable {
                 let samples = results.map { sample in
                     MenstrualFlowSample(
                         startDate: sample.startDate,
-                        endDate: sample.endDate,
                         flowValueRaw: sample.value
                     )
                 }
@@ -633,67 +599,6 @@ final class HealthKitManager: @unchecked Sendable {
 
             healthStore.execute(query)
         }
-    }
-
-    struct CyclePhaseDay {
-        let date: Date
-        let phase: CyclePhase
-    }
-
-    enum CyclePhase: String, Codable {
-        case menstrual
-        case follicular
-        case ovulatory
-        case luteal
-    }
-
-    func fetchMenstrualCycleData(days: Int = 365) async -> [CyclePhaseDay]? {
-        let flowSamples = await fetchMenstrualFlowSamples(days: days)
-        guard flowSamples.count >= 2 else { return nil }
-
-        // Find bleeding periods (menstrual phase markers)
-        let bleedingDays = flowSamples.filter { $0.isBleedingDay }.map { $0.day }
-        guard bleedingDays.count >= 2 else { return nil }
-
-        // Group bleeding days into cycles (gap > 20 days = new cycle)
-        var cycles: [[Date]] = []
-        var currentCycle: [Date] = []
-        for day in bleedingDays.sorted() {
-            if let last = currentCycle.last,
-               Date.cal.dateComponents([.day], from: last, to: day).day ?? 0 > 20 {
-                if !currentCycle.isEmpty { cycles.append(currentCycle) }
-                currentCycle = [day]
-            } else {
-                currentCycle.append(day)
-            }
-        }
-        if !currentCycle.isEmpty { cycles.append(currentCycle) }
-        guard cycles.count >= 2 else { return nil }
-
-        // Estimate cycle length from consecutive cycle starts
-        var phaseDays: [CyclePhaseDay] = []
-        let calendar = Date.cal
-
-        for i in 0..<(cycles.count - 1) {
-            guard let cycleStart = cycles[i].first,
-                  let nextCycleStart = cycles[i + 1].first else { continue }
-            let cycleLength = calendar.dateComponents([.day], from: cycleStart, to: nextCycleStart).day ?? 28
-
-            // Assign phases: menstrual (days 1-5), follicular (6-13), ovulatory (14-16), luteal (17-end)
-            for dayOffset in 0..<cycleLength {
-                guard let date = calendar.date(byAdding: .day, value: dayOffset, to: cycleStart) else { continue }
-                let phase: CyclePhase
-                switch dayOffset {
-                case 0..<5: phase = .menstrual
-                case 5..<13: phase = .follicular
-                case 13..<16: phase = .ovulatory
-                default: phase = .luteal
-                }
-                phaseDays.append(CyclePhaseDay(date: date, phase: phase))
-            }
-        }
-
-        return phaseDays.isEmpty ? nil : phaseDays
     }
 
     // MARK: - Raw Intra-Day Heart Rate (for Strain Zone Classification)

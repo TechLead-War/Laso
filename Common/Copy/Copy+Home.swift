@@ -42,7 +42,6 @@ extension Copy {
         static var nextUpMarkDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_mark_done", default: "Mark done") }
         /// Short confirm label shown on the button after it is marked done.
         static var nextUpMarkedDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_marked_done", default: "Done") }
-        static var nextUpDone: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done", default: "Done. We check the result in tomorrow morning's score.") }
         /// Remind button on the action card. %@ is the reminder clock time, e.g. "9:30 PM".
         static func nextUpRemind(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind", default: "Remind %@"), time) }
         static var nextUpReminderSet: String { RemoteConfigManager.shared.copyString("copy_home_next_up_reminder_set", default: "Reminder set") }
@@ -104,42 +103,12 @@ extension Copy {
         static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
         static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
 
-        // MARK: - Empty State
-
-        static var connectHealthData: String { RemoteConfigManager.shared.copyString("copy_home_connect_health_data", default: "Connect Your Health Data") }
-        static var connectHealthDescription: String { RemoteConfigManager.shared.copyString("copy_home_connect_health_description", default: "Laso reads from Apple Health. Most other wearables need their apps to share data with Apple Health.") }
-        static var worksWith: String { RemoteConfigManager.shared.copyString("copy_home_works_with", default: "Works with") }
-        static var syncsAutomatically: String { RemoteConfigManager.shared.copyString("copy_home_syncs_automatically", default: "Syncs automatically") }
-        static func viaApp(_ name: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_via_app", default: "Via %@ app"), name) }
-        static var howToConnect: String { RemoteConfigManager.shared.copyString("copy_home_how_to_connect", default: "How to connect") }
-        static var connectStep1: String { RemoteConfigManager.shared.copyString("copy_home_connect_step1", default: "Open the Settings app on your iPhone") }
-        static var connectStep2: String { RemoteConfigManager.shared.copyString("copy_home_connect_step2", default: "Tap Health \u{2192} Data Access & Devices") }
-        static var connectStep3: String { RemoteConfigManager.shared.copyString("copy_home_connect_step3", default: "Enable your wearable's companion app") }
-        static var connectStep4: String { RemoteConfigManager.shared.copyString("copy_home_connect_step4", default: "Come back here. Data appears automatically.") }
-        static var manageDevices: String { RemoteConfigManager.shared.copyString("copy_home_manage_devices", default: "Manage Devices") }
-        static var refresh: String { RemoteConfigManager.shared.copyString("copy_home_refresh", default: "Refresh") }
-
         // MARK: - Connection Status (Home empty state)
 
         enum ConnectionStatus {
             // Titles
-            static var titleWaiting: String { RemoteConfigManager.shared.copyString("copy_home_connection_status_title_waiting", default: "Waiting for your first watch data") }
             static func titleReceiving(_ deviceName: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_connection_status_title_receiving", default: "%@ is sending data"), deviceName) }
             static var titleStale: String { RemoteConfigManager.shared.copyString("copy_home_connection_status_title_stale", default: "Your watch has not synced recently") }
-
-            // Descriptions
-            static var descriptionWaiting: String { RemoteConfigManager.shared.copyString("copy_home_connection_status_description_waiting", default: "Apple Health is connected. No wearable has shared data yet. If you use a watch, open its app and turn on Apple Health sharing.") }
-            static func descriptionReceiving(deviceName: String, sourceName: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_connection_status_description_receiving", default: "%@ is syncing through %@. Your dashboard will update as new data comes in."), deviceName, sourceName)
-            }
-            static func descriptionStale(deviceName: String, lastSync: String, sourceName: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_connection_status_description_stale", default: "%@ last shared data %@. Open %@ and run a sync so Laso can catch up."), deviceName, lastSync, sourceName)
-            }
-
-            // Badge labels
-            static var badgeWaiting: String { RemoteConfigManager.shared.copyString("copy_home_badge_waiting", default: "Waiting") }
-            static var badgeConnected: String { RemoteConfigManager.shared.copyString("copy_home_badge_connected", default: "Connected") }
-            static var badgeStale: String { RemoteConfigManager.shared.copyString("copy_home_badge_stale", default: "Stale") }
         }
 
         // MARK: - Error
@@ -168,54 +137,11 @@ extension Copy {
         static var severityModerate: String { RemoteConfigManager.shared.copyString("copy_home_severity_moderate", default: "Moderate") }
         static var severityLow: String { RemoteConfigManager.shared.copyString("copy_home_severity_low", default: "Low") }
 
-        // MARK: - Health Risks
-
-        static var healthRisks: String { RemoteConfigManager.shared.copyString("copy_home_health_risks", default: "Areas to Watch") }
-
         // MARK: - Section & Card Labels
 
         static var whyThisToday: String { RemoteConfigManager.shared.copyString("copy_home_why_this_today", default: "Why this, today") }
         static var nextWeekTarget: String { RemoteConfigManager.shared.copyString("copy_home_next_week_target", default: "Next week target") }
-        static var askYourData: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data", default: "Ask your data") }
         static var wearAppleWatchForRecovery: String { RemoteConfigManager.shared.copyString("copy_home_wear_apple_watch_for_recovery", default: "Wear your Apple Watch to see your live energy") }
-        static var tapToUnderstandScore: String { RemoteConfigManager.shared.copyString("copy_home_tap_to_understand_score", default: "Tap to understand your score") }
-
-        // MARK: - Recovery Labels
-
-        static var fullyRecovered: String { RemoteConfigManager.shared.copyString("copy_home_fully_recovered", default: "Fully Recovered") }
-        static var wellRecovered: String { RemoteConfigManager.shared.copyString("copy_home_well_recovered", default: "Well Recovered") }
-        static var moderate: String { RemoteConfigManager.shared.copyString("copy_home_moderate", default: "Moderate") }
-        static var fatigued: String { RemoteConfigManager.shared.copyString("copy_home_fatigued", default: "Fatigued") }
-        static var strained: String { RemoteConfigManager.shared.copyString("copy_home_strained", default: "Strained") }
-
-        // MARK: - Recovery State (DashboardViewModel)
-
-        static var moderateRecovery: String { RemoteConfigManager.shared.copyString("copy_home_moderate_recovery", default: "Moderate Recovery") }
-        static var lowRecovery: String { RemoteConfigManager.shared.copyString("copy_home_low_recovery", default: "Low Recovery") }
-
-        // Day type labels
-        static var greenDayPushHard: String { RemoteConfigManager.shared.copyString("copy_home_green_day_push_hard", default: "Green Day. Push Hard.") }
-        static var yellowDayMaintain: String { RemoteConfigManager.shared.copyString("copy_home_yellow_day_maintain", default: "Yellow Day. Maintain.") }
-        static var redDayRecover: String { RemoteConfigManager.shared.copyString("copy_home_red_day_recover", default: "Red Day. Recover.") }
-
-        // Simple strain guidance
-        static var greenStrainGuidance: String { RemoteConfigManager.shared.copyString("copy_home_green_strain_guidance", default: "High effort training is a great pick. Your body is ready for a challenge.") }
-        static var yellowStrainGuidance: String { RemoteConfigManager.shared.copyString("copy_home_yellow_strain_guidance", default: "Moderate activity is best. Focus on form over intensity.") }
-        static var redStrainGuidance: String { RemoteConfigManager.shared.copyString("copy_home_red_strain_guidance", default: "Focus on rest and gentle movement. Your body needs recovery time.") }
-
-        // Contextual strain guidance (recovery state × activity trend)
-        static var greenImproving: String { RemoteConfigManager.shared.copyString("copy_home_green_improving", default: "Recovery is high and activity is already trending up. Push hard, but avoid a big jump in strain.") }
-        static var greenDeclining: String { RemoteConfigManager.shared.copyString("copy_home_green_declining", default: "Recovery is high while recent activity has trended down. Add a hard session to rebuild strain.") }
-        static var greenStable: String { RemoteConfigManager.shared.copyString("copy_home_green_stable", default: "Recovery is high. Push hard today with a challenging workout.") }
-        static var greenNone: String { RemoteConfigManager.shared.copyString("copy_home_green_none", default: "Recovery is high. Push hard today.") }
-        static var yellowImproving: String { RemoteConfigManager.shared.copyString("copy_home_yellow_improving", default: "Recovery is moderate and activity is trending up. Keep strain steady and intensity in check.") }
-        static var yellowDeclining: String { RemoteConfigManager.shared.copyString("copy_home_yellow_declining", default: "Recovery is moderate with activity easing off. Stick with a steady, moderate session.") }
-        static var yellowStable: String { RemoteConfigManager.shared.copyString("copy_home_yellow_stable", default: "Recovery is moderate. Keep your usual training load today.") }
-        static var yellowNone: String { RemoteConfigManager.shared.copyString("copy_home_yellow_none", default: "Recovery is moderate. Aim for a moderate strain today.") }
-        static var redImproving: String { RemoteConfigManager.shared.copyString("copy_home_red_improving", default: "Recovery is low after rising activity. Take a recovery day with light movement only.") }
-        static var redDeclining: String { RemoteConfigManager.shared.copyString("copy_home_red_declining", default: "Recovery is low. Keep strain very low and focus on sleep, water, and easy movement.") }
-        static var redStable: String { RemoteConfigManager.shared.copyString("copy_home_red_stable", default: "Recovery is low. Recover today with easy walking or stretching only.") }
-        static var redNone: String { RemoteConfigManager.shared.copyString("copy_home_red_none", default: "Recovery is low. Focus on recovery and avoid hard training.") }
 
         // MARK: - Score Guide
 
@@ -291,31 +217,8 @@ extension Copy {
         // MARK: - Action Proof
 
         enum ActionProof {
-            /// Card proof line shown on the home card below the subtitle
-            static func followedAdviceImproved(count: Int, metric: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_action_proof_followed_advice_improved", default: "The last %d times you followed this advice, your %@ got better"), count, metric)
-            }
-
-            /// Proof line for recovery staying green after pushing hard
-            static func recoveryStayedGreen(goodCount: Int, totalCount: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_action_proof_recovery_stayed_green", default: "When you were in this state before and pushed hard, recovery stayed green %d out of %d times"), goodCount, totalCount)
-            }
-
-            /// General proof line referencing personal history timeframe
-            static func basedOnHistory(days: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_action_proof_based_on_history", default: "Based on your personal history over %d days"), days)
-            }
-
-            /// Short proof line for the home card when we have a win rate
-            static func thingsWentWell(count: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_action_proof_things_went_well", default: "The last %d times you were in this state and followed this advice, things went well"), count)
-            }
-
             /// Detail view section title
             static var whatHappenedBefore: String { RemoteConfigManager.shared.copyString("copy_home_what_happened_before", default: "What happened before") }
-
-            /// Detail: no history yet
-            static var notEnoughHistory: String { RemoteConfigManager.shared.copyString("copy_home_not_enough_history", default: "We are still learning your patterns. After a few more days of data, this section will show how past tips worked out for you.") }
 
             /// Detail: summary of positive outcomes
             static func pastOutcomeSummary(improved: Int, total: Int, metric: String) -> String {
@@ -328,38 +231,6 @@ extension Copy {
             }
         }
 
-        // MARK: - Recovery Hero Why Lines
-
-        enum RecoveryHero {
-            static func whyLineGreen(topFactor: String, secondFactor: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_recovery_hero_why_line_green", default: "%@ and %@"), topFactor, secondFactor)
-            }
-            static func whyLineYellow(topFactor: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_recovery_hero_why_line_yellow", default: "%@, keeping recovery moderate"), topFactor)
-            }
-            static func whyLineRed(topFactor: String, secondFactor: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_home_recovery_hero_why_line_red", default: "%@ and %@"), topFactor, secondFactor)
-            }
-
-            // Factor descriptions (positive)
-            static var hrvBounced: String { RemoteConfigManager.shared.copyString("copy_home_hrv_bounced", default: "heart calm signal bounced back") }
-            static var hrvHigh: String { RemoteConfigManager.shared.copyString("copy_home_hrv_high", default: "heart calm signal is above your usual") }
-            static var rhrLow: String { RemoteConfigManager.shared.copyString("copy_home_rhr_low", default: "resting heart rate is low") }
-            static var rhrDropped: String { RemoteConfigManager.shared.copyString("copy_home_rhr_dropped", default: "resting heart rate dropped back down") }
-            static var sleepSolid: String { RemoteConfigManager.shared.copyString("copy_home_sleep_solid", default: "solid night of sleep") }
-            static var sleepGreat: String { RemoteConfigManager.shared.copyString("copy_home_sleep_great", default: "sleep was long and restful") }
-            static var sleepGood: String { RemoteConfigManager.shared.copyString("copy_home_sleep_good", default: "a decent amount of sleep") }
-
-            // Factor descriptions (negative)
-            static var hrvLow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_low", default: "heart calm signal has not come back yet") }
-            static var hrvBelow: String { RemoteConfigManager.shared.copyString("copy_home_hrv_below", default: "heart calm signal is below your usual") }
-            static var rhrElevated: String { RemoteConfigManager.shared.copyString("copy_home_rhr_elevated", default: "resting heart rate is higher than usual") }
-            static var rhrHigh: String { RemoteConfigManager.shared.copyString("copy_home_rhr_high", default: "resting heart rate is still high") }
-            static var sleepShort: String { RemoteConfigManager.shared.copyString("copy_home_sleep_short", default: "sleep was short") }
-            static var sleepPoor: String { RemoteConfigManager.shared.copyString("copy_home_sleep_poor", default: "sleep quality was low") }
-            static var recentHardWorkout: String { RemoteConfigManager.shared.copyString("copy_home_recent_hard_workout", default: "still recovering from a hard workout") }
-        }
-
         // MARK: - Greeting
 
         enum Greeting {
@@ -367,29 +238,6 @@ extension Copy {
             static var goodAfternoon: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_afternoon", default: "Afternoon") }
             static var goodEvening: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_evening", default: "Evening") }
             static var goodNight: String { RemoteConfigManager.shared.copyString("copy_home_greeting_good_night", default: "Night") }
-
-            static func streakBadge(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_greeting_streak_badge", default: "%d days"), days) }
-            static func streakMilestone(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_greeting_streak_milestone", default: "%d day streak!"), days) }
-
-            // Morning
-            static var morningGreen: String { RemoteConfigManager.shared.copyString("copy_home_greeting_morning_green", default: "Your body is recovered and ready. Great day to push hard.") }
-            static var morningYellow: String { RemoteConfigManager.shared.copyString("copy_home_greeting_morning_yellow", default: "Recovery is moderate. Steady effort today, nothing extreme.") }
-            static var morningRed: String { RemoteConfigManager.shared.copyString("copy_home_greeting_morning_red", default: "Your body needs rest. Take it easy and try to get a good night's sleep tonight.") }
-
-            // Afternoon
-            static var afternoonGreen: String { RemoteConfigManager.shared.copyString("copy_home_greeting_afternoon_green", default: "Still looking strong. Good time for a workout if you have not done one yet.") }
-            static var afternoonYellow: String { RemoteConfigManager.shared.copyString("copy_home_greeting_afternoon_yellow", default: "Holding steady. Keep the pace moderate this afternoon.") }
-            static var afternoonRed: String { RemoteConfigManager.shared.copyString("copy_home_greeting_afternoon_red", default: "Recovery is still low. Light movement and water are your best bet.") }
-
-            // Evening
-            static var eveningGreen: String { RemoteConfigManager.shared.copyString("copy_home_greeting_evening_green", default: "Solid day. Wind down and protect your sleep tonight.") }
-            static var eveningYellow: String { RemoteConfigManager.shared.copyString("copy_home_greeting_evening_yellow", default: "Decent day overall. An early bedtime would help recovery.") }
-            static var eveningRed: String { RemoteConfigManager.shared.copyString("copy_home_greeting_evening_red", default: "Tough day for your body. Get to bed early tonight.") }
-
-            // Night
-            static var nightGreen: String { RemoteConfigManager.shared.copyString("copy_home_greeting_night_green", default: "Good day. Rest well tonight and you will wake up strong.") }
-            static var nightYellow: String { RemoteConfigManager.shared.copyString("copy_home_greeting_night_yellow", default: "Your body could use a solid night. Try to get to sleep soon.") }
-            static var nightRed: String { RemoteConfigManager.shared.copyString("copy_home_greeting_night_red", default: "Your body is running low. Sleep is the most important thing right now.") }
         }
 
         // MARK: - Morning Check-In
@@ -469,20 +317,10 @@ extension Copy {
             static var whenItUpdatesBody: String { RemoteConfigManager.shared.copyString("copy_home_when_it_updates_body", default: "Your Recovery is set once each morning from last night's signals and stays as the day's anchor. The number on Home then drains live as you burn energy. If you take the watch off, the morning Recovery stays put. If you do not have a morning reading yet and the watch is off, the score is hidden until your next overnight wear.") }
         }
 
-        // MARK: - Recovery Trend (7-day HRV caption)
-
-        enum RecoveryTrend {
-            static var improving: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_improving", default: "heart calm signal trending up this week") }
-            static var stable: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_stable", default: "heart calm signal steady this week") }
-            static var declining: String { RemoteConfigManager.shared.copyString("copy_home_recovery_trend_declining", default: "heart calm signal trending down this week") }
-        }
-
         // MARK: - Cards
 
         enum Cards {
             // Daily narrative
-            static var forYouToday: String { RemoteConfigManager.shared.copyString("copy_home_cards_for_you_today", default: "FOR YOU TODAY") }
-            static var readingTodaysSignals: String { RemoteConfigManager.shared.copyString("copy_home_cards_reading_todays_signals", default: "Reading today's signals…") }
 
             // Personal health forecast
             static var yourForecast: String { RemoteConfigManager.shared.copyString("copy_home_cards_your_forecast", default: "YOUR FORECAST") }
@@ -600,9 +438,6 @@ extension Copy {
 
         enum WeeklyReviewSections {
             static var navigationTitle: String { RemoteConfigManager.shared.copyString("copy_home_weekly_review_sections_navigation_title", default: "Weekly Review") }
-            static var progressiveCoach: String { RemoteConfigManager.shared.copyString("copy_home_weekly_review_sections_progressive_coach", default: "Progressive Coach") }
-            static var nextWeek: String { RemoteConfigManager.shared.copyString("copy_home_weekly_review_sections_next_week", default: "Next Week") }
-            static var keyDiscovery: String { RemoteConfigManager.shared.copyString("copy_home_weekly_review_sections_key_discovery", default: "Key Discovery") }
         }
 
         // MARK: - HealthKit Reprompt

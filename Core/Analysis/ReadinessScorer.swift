@@ -5,7 +5,6 @@ struct ReadinessScorer {
         let mean: Double
         let median: Double
         let standardDeviation: Double
-        let iqr: Double
         let sampleCount: Int
     }
 
@@ -160,7 +159,6 @@ struct ReadinessScorer {
             mean: mean,
             median: median,
             standardDeviation: standardDeviation,
-            iqr: iqr,
             sampleCount: usable.count
         )
     }
@@ -187,17 +185,6 @@ struct ReadinessScorer {
         case 40..<60: return "Moderate"
         case 60..<80: return "High"
         default: return "Very High"
-        }
-    }
-
-    static func stressColorName(for level: Int?) -> String {
-        guard let level else { return "gray" }
-        switch level {
-        case 0..<20: return "green"
-        case 20..<40: return "green"
-        case 40..<60: return "yellow"
-        case 60..<80: return "orange"
-        default: return "red"
         }
     }
 

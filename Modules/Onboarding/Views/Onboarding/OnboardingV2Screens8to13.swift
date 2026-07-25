@@ -1187,8 +1187,6 @@ struct OnbV2ScreenVerdict: View {
     @State private var worstBarPulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let dayLetters = ["M", "T", "W", "T", "F", "S", "S"]
-
     /// Confirmed-only: the driver weekday mapped from Calendar (1=Sun..7=Sat)
     /// into the chart's Mon..Sun index (0..6), matching the HRV screen's map.
     private var highlightLetterIndex: Int? {

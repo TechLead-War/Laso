@@ -37,12 +37,4 @@ enum OnboardingPredictionStore {
         guard let data = try? jsonEncoder.encode(answers) else { return }
         UserDefaults.standard.set(data, forKey: AppKeys.Prediction.capturedAnswers)
     }
-
-    static func loadAnswers() -> CapturedAnswers? {
-        guard let data = UserDefaults.standard.data(forKey: AppKeys.Prediction.capturedAnswers),
-              let answers = try? jsonDecoder.decode(CapturedAnswers.self, from: data) else {
-            return nil
-        }
-        return answers
-    }
 }

@@ -5,19 +5,6 @@ extension Copy {
 
         // MARK: - Wear Prompts
 
-        static func wearOvernight(deviceName: String, deviceType: DeviceType) -> String {
-            let template: String
-            switch deviceType {
-            case .ring:
-                template = RemoteConfigManager.shared.copyString("copy_devices_wear_overnight_ring", default: "Wear your %@ to bed to update your readiness score.")
-            case .sleepTracker:
-                template = RemoteConfigManager.shared.copyString("copy_devices_wear_overnight_sleep_tracker", default: "Sleep on your %@ to update your readiness score.")
-            case .watch, .other:
-                template = RemoteConfigManager.shared.copyString("copy_devices_wear_overnight_watch", default: "Wear your %@ overnight to update your readiness score.")
-            }
-            return String(format: template, deviceName)
-        }
-
         static func wearToTrack(deviceName: String, deviceType: DeviceType) -> String {
             let template: String
             switch deviceType {
@@ -31,10 +18,6 @@ extension Copy {
             return String(format: template, deviceName)
         }
 
-        static func staleVitals(wearToTrackMessage: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_devices_stale_vitals", default: "Your latest readings are old. %@"), wearToTrackMessage)
-        }
-
         static func wearPromptTitle(deviceName: String, deviceType: DeviceType) -> String {
             switch deviceType {
             case .ring:
@@ -44,31 +27,6 @@ extension Copy {
             case .watch, .other:
                 return String(format: RemoteConfigManager.shared.copyString("copy_devices_wear_prompt_title_watch", default: "Wear Your %@"), deviceName)
             }
-        }
-
-        // MARK: - Pairing
-
-        static func ensurePairedAppleWatch() -> String {
-            RemoteConfigManager.shared.copyString("copy_devices_ensure_paired_apple_watch", default: "Make sure your Apple Watch is paired and worn. Heart rate and other readings will show up here on their own.")
-        }
-
-        static func ensurePairedRing(deviceName: String, companionApp: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_devices_ensure_paired_ring", default: "Make sure your %@ is connected through %@. Readings sync when your ring is nearby."), deviceName, companionApp)
-        }
-
-        static func ensurePairedGeneric(deviceName: String, companionApp: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_devices_ensure_paired_generic", default: "Make sure your %@ is syncing through %@. Readings will show up here after the next sync."), deviceName, companionApp)
-        }
-
-        // MARK: - Notifications
-
-        static func notWornBody(deviceName: String, hours: Int, minutes: Int, wearToTrack: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_devices_not_worn_body", default: "Your %@ has not recorded data for %dh %dm. %@"),
-                   deviceName, hours, max(0, minutes), wearToTrack)
-        }
-
-        static func notWornBodyRecent(deviceName: String, wearToTrack: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_devices_not_worn_body_recent", default: "Your %@ has not recorded data recently. %@"), deviceName, wearToTrack)
         }
 
         /// Device classification for string selection
@@ -112,7 +70,6 @@ extension Copy {
             static var stepOne: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_one", default: "Press and hold your watch face") }
             static var stepTwo: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_two", default: "Tap Edit, then swipe to Complications") }
             static var stepThree: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_three", default: "Tap a slot and choose Laso") }
-            static var dismiss: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_dismiss", default: "Not now") }
             static var dismissLabel: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_dismiss_label", default: "Hide this tip") }
             static var added: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_added", default: "Laso is on your watch face.") }
         }

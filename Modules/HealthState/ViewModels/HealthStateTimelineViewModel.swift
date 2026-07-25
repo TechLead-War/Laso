@@ -129,12 +129,6 @@ final class HealthStateTimelineViewModel {
         return Double(durations.reduce(0, +)) / Double(durations.count)
     }
 
-    /// Current streak: how many consecutive days in the current state
-    var currentStreak: (state: String, days: Int)? {
-        guard let current = currentState else { return nil }
-        return (state: current.label, days: current.daysInState)
-    }
-
     /// Unique state labels in order of frequency (most common first)
     var uniqueStateLabels: [String] {
         var counts: [String: Int] = [:]
@@ -179,7 +173,7 @@ final class HealthStateTimelineViewModel {
 
         // Leading empty days
         for _ in 0..<offset {
-            days.append(CalendarDay(date: nil, dayNumber: 0, stateLabel: nil))
+            days.append(CalendarDay(dayNumber: 0, stateLabel: nil))
         }
 
         // Actual days
@@ -187,7 +181,6 @@ final class HealthStateTimelineViewModel {
             guard let date = calendar.date(bySetting: .day, value: day, of: monthStart) else { continue }
             let dateStart = calendar.startOfDay(for: date)
             days.append(CalendarDay(
-                date: dateStart,
                 dayNumber: day,
                 stateLabel: stateLookup[dateStart]
             ))
@@ -206,7 +199,7 @@ final class HealthStateTimelineViewModel {
         if !currentWeek.isEmpty {
             // Pad trailing
             while currentWeek.count < 7 {
-                currentWeek.append(CalendarDay(date: nil, dayNumber: 0, stateLabel: nil))
+                currentWeek.append(CalendarDay(dayNumber: 0, stateLabel: nil))
             }
             weeks.append(currentWeek)
         }
@@ -216,7 +209,6 @@ final class HealthStateTimelineViewModel {
 
     struct CalendarDay: Identifiable {
         let id = UUID()
-        let date: Date?
         let dayNumber: Int
         let stateLabel: String?
     }

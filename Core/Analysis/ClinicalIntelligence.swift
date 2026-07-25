@@ -115,10 +115,6 @@ struct ClinicalIntelligence {
         (120, "Elevated"), (130, "Above Range"), (140, "High"), (180, "Very High")
     ]
 
-    private static let diastolicThresholds: [(threshold: Double, label: String)] = [
-        (80, "Above Range"), (90, "High"), (120, "Very High")
-    ]
-
     private static let glucoseThresholds: [(threshold: Double, label: String)] = [
         (100, "Above Range"), (126, "High")
     ]
@@ -391,7 +387,6 @@ struct ClinicalIntelligence {
         return nil
     }
 
-    private static let medicalDisclaimer = Copy.Analysis.Clinical.medicalDisclaimer
 }
 
 // MARK: - InsightAnalyzer Conformance

@@ -92,8 +92,7 @@ final class MLResultAggregator {
         if let prediction = results.tomorrowRiskPrediction, let sufficiency = dataSufficiency {
             let gate = UncertaintyEstimator.gate(
                 modelConfidence: prediction.confidence,
-                dataSufficiency: sufficiency,
-                evaluationMetrics: nil
+                dataSufficiency: sufficiency
             )
             if !gate.shouldShow {
                 logger.debug("Prediction gated: \(gate.reason ?? "low confidence")")

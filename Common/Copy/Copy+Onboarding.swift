@@ -27,31 +27,6 @@ extension Copy {
         static var aboutGenderError: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_about_gender_error", default: "Select a gender to continue.") }
         static var aboutContinue: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_about_continue", default: "Continue") }
 
-        // MARK: - Connect Apple Health (Screen 3)
-
-        static var connectTitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_title", default: "Your numbers, made simple.") }
-        static var connectSubtitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_subtitle", default: "Laso turns your Apple Health history into the story of your body.") }
-        static var connectPrivacyNote: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_privacy_note", default: "Stays on your iPhone.") }
-        static var connectAllow: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_allow", default: "Connect Apple Health") }
-        static var connectUnavailable: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_unavailable", default: "Apple Health is not available on this device.") }
-        static var connectContinueAnyway: String { RemoteConfigManager.shared.copyString("copy_onboarding_onboarding_connect_continue_anyway", default: "Continue without Apple Health") }
-
-        static func personalizedConnectNote(age: Int?) -> String? {
-            guard let age else { return nil }
-            switch age {
-            case ..<25:
-                return "Starting early means a lifetime of knowing what is normal for your body."
-            case 25..<35:
-                return "At your age, heart and recovery patterns say a lot about how you are doing."
-            case 35..<45:
-                return "At your age, watching heart health and recovery really pays off."
-            case 45..<55:
-                return "At your age, tracking heart, sleep, and mobility shows you important changes."
-            default:
-                return "Your data will be compared to what is typical for your age."
-            }
-        }
-
         // MARK: - Priority (Screen 4)
 
         static var priorityTitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_priority_title", default: "What should Laso look at first?") }
@@ -119,13 +94,6 @@ extension Copy {
         static var promiseDisclaimerFooter: String { RemoteConfigManager.shared.copyString("copy_onboarding_promise_disclaimer_footer", default: "Not a medical device. Laso is for information, not diagnosis.") }
         static var promiseDisclaimerLearnMore: String { RemoteConfigManager.shared.copyString("copy_onboarding_promise_disclaimer_learn_more", default: "Full disclaimer") }
 
-        // MARK: - Trial (Screen 7)
-
-        static var trialTitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_trial_title", default: "Start your 7-day free trial") }
-        static var trialSubtitle: String { RemoteConfigManager.shared.copyString("copy_onboarding_trial_subtitle", default: "Full access to insights, alerts, and trends. Cancel any time in Settings before day 7.") }
-        static var trialCTA: String { RemoteConfigManager.shared.copyString("copy_onboarding_trial_cta", default: "Start 7-day Free Trial") }
-        static var trialFooterNote: String { RemoteConfigManager.shared.copyString("copy_onboarding_trial_footer_note", default: "No charge today. Apple will remind you before your trial ends.") }
-
         // MARK: - Siri tip
 
         static var worksWithSiri: String { RemoteConfigManager.shared.copyString("copy_onboarding_works_with_siri", default: "Works with Siri") }
@@ -158,7 +126,6 @@ extension Copy {
         static var h: String { RemoteConfigManager.shared.copyString("copy_onboarding_h", default: "h") }
         static var m: String { RemoteConfigManager.shared.copyString("copy_onboarding_m", default: "m") }
         static var ms: String { RemoteConfigManager.shared.copyString("copy_onboarding_ms", default: "ms") }
-        static var pct: String { RemoteConfigManager.shared.copyString("copy_onboarding_pct", default: "%") }
         static var x2: String { RemoteConfigManager.shared.copyString("copy_onboarding_x2", default: "—") }
         static var target7h: String { RemoteConfigManager.shared.copyString("copy_onboarding_target7h", default: "target 7h") }
         static var noDataYet2: String { RemoteConfigManager.shared.copyString("copy_onboarding_no_data_yet2", default: "no data yet") }

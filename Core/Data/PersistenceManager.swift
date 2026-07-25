@@ -92,14 +92,6 @@ final class PersistenceManager {
         }
     }
 
-    /// Write non-sensitive value to UserDefaults + iCloud if applicable
-    private func save(_ value: Any, forKey key: String) {
-        defaults.set(value, forKey: key)
-        if Self.syncKeys.contains(key) {
-            cloud.set(value, forKey: key)
-        }
-    }
-
     /// Write sensitive Data. encrypts before storing, never syncs to iCloud
     private func saveEncrypted(_ data: Data, forKey key: String) {
         encrypted.save(data, forKey: key)

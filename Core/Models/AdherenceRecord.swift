@@ -63,10 +63,6 @@ final class StoredAdherenceRecord {
         TargetDirection(rawValue: targetDirectionRaw)
     }
 
-    var severity: Severity? {
-        Severity(rawValue: severityRaw)
-    }
-
     /// Whether this record has been evaluated
     var isEvaluated: Bool {
         adherenceScore != nil && outcomeScore != nil

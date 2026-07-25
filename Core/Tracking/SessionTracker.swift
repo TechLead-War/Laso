@@ -342,10 +342,6 @@ final class SessionTracker {
 
     // MARK: - Streak
 
-    var isLongestStreak: Bool {
-        streakDays >= defaults.integer(forKey: Key.longestStreak)
-    }
-
     var longestStreak: Int {
         defaults.integer(forKey: Key.longestStreak)
     }

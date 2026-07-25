@@ -5,9 +5,7 @@ struct LiveHeaderSection: View {
     let hasFreshData: Bool
     let isAging: Bool
     let isStale: Bool
-    let hasAnyVitalData: Bool
     let primaryDevice: SupportedDevice?
-    let currentHeartRate: Double?
     var headerTracker: SectionTracker
 
     var body: some View {

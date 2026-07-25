@@ -7,22 +7,6 @@ enum PerformanceLevel: String, CaseIterable, Sendable {
     case perform
     case getBy
 
-    var displayName: String {
-        switch self {
-        case .peak: "Peak"
-        case .perform: "Perform"
-        case .getBy: "Get By"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .peak: "Maximize next-day cognitive and physical performance"
-        case .perform: "Solid performance with good energy throughout the day"
-        case .getBy: "Minimum viable sleep to function adequately"
-        }
-    }
-
     /// Base sleep need per level (replaces the old multiplier approach)
     var baseHours: Double {
         switch self {
@@ -37,12 +21,8 @@ enum PerformanceLevel: String, CaseIterable, Sendable {
 
 struct SleepNeed {
     let totalHoursNeeded: Double
-    let baselineNeed: Double
-    let strainAdjustment: Double
-    let debtAdjustment: Double
     let recommendedBedtime: Date?
     let recommendedWakeTime: Date?
-    let performanceLevel: PerformanceLevel
 }
 
 // MARK: - Sleep Need Calculator
@@ -140,35 +120,12 @@ final class SleepNeedCalculator {
 
         let need = SleepNeed(
             totalHoursNeeded: totalHoursNeeded,
-            baselineNeed: base,
-            strainAdjustment: strainAdjustment,
-            debtAdjustment: debtAdjustment,
             recommendedBedtime: recommendedBedtime,
-            recommendedWakeTime: wakeTime,
-            performanceLevel: performanceLevel
+            recommendedWakeTime: wakeTime
         )
 
         currentNeed = need
         return need
-    }
-
-    // MARK: - Formatted Output
-
-    var formattedBedtime: String? {
-        guard let bedtime = currentNeed?.recommendedBedtime else { return nil }
-        // Locale-aware. Picks 24h vs 12h from `Locale.current`.
-        return bedtime.formatted(.dateTime.hour().minute())
-    }
-
-    var formattedNeed: String {
-        let hours = currentNeed?.totalHoursNeeded ?? 7.5
-        let (h, m) = hoursToHoursMinutes(hours)
-        return "\(h)h \(m)m"
-    }
-
-    func hoursToHoursMinutes(_ hours: Double) -> (hours: Int, minutes: Int) {
-        let totalMinutes = Int((hours * 60).rounded())
-        return (hours: totalMinutes / 60, minutes: totalMinutes % 60)
     }
 
     // MARK: - Private Helpers
@@ -265,12 +222,8 @@ final class SleepNeedCalculator {
     private func fallbackNeed(performanceLevel: PerformanceLevel) -> SleepNeed {
         SleepNeed(
             totalHoursNeeded: performanceLevel.baseHours,
-            baselineNeed: performanceLevel.baseHours,
-            strainAdjustment: 0,
-            debtAdjustment: 0,
             recommendedBedtime: nil,
-            recommendedWakeTime: nil,
-            performanceLevel: performanceLevel
+            recommendedWakeTime: nil
         )
     }
 }

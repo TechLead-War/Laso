@@ -125,14 +125,6 @@ struct AchievementItem: Identifiable {
             }
         }
 
-        var icon: String {
-            switch self {
-            case .streak: return "flame.fill"
-            case .milestone: return "flag.fill"
-            case .consistency: return "checkmark.seal.fill"
-            case .exploration: return "safari.fill"
-            }
-        }
     }
 }
 

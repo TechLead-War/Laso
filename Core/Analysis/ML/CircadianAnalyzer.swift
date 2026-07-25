@@ -446,30 +446,4 @@ final class CircadianAnalyzer {
             return "Your energy peaks later in the day. If possible, shift important meetings and workouts to the afternoon. Protect your sleep by maintaining a consistent late schedule."
         }
     }
-
-    // MARK: - Persistence
-
-    struct Parameters: Codable {
-        let profile: CircadianProfile?
-        let lastAnalysisDate: Date?
-    }
-
-    func getParameters() -> MLModelState? {
-        let params = Parameters(
-            profile: profile,
-            lastAnalysisDate: lastAnalysisDate
-        )
-        return MLModelState.create(
-            componentName: "CircadianAnalyzer",
-            version: 1,
-            parameters: params,
-            dataPointsUsed: cosinorResults.count * 14
-        )
-    }
-
-    func restoreParameters(from state: MLModelState) {
-        guard let params = state.decodeParameters(Parameters.self) else { return }
-        profile = params.profile
-        lastAnalysisDate = params.lastAnalysisDate
-    }
 }

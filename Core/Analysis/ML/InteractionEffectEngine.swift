@@ -48,8 +48,6 @@ final class InteractionEffectEngine {
     private(set) var doseResponseCurves: [DoseResponseCurve] = []
     private(set) var conditionalEffects: [InteractionEffect] = []
 
-    var isReady: Bool { !effects.isEmpty }
-
     // MARK: - Constants
 
     private static let minCorrelation = 0.15
@@ -524,13 +522,4 @@ final class InteractionEffectEngine {
     }
 
     private func f2(_ v: Double) -> String { String(format: "%.2f", v) }
-
-    // MARK: - Public Accessors
-
-    func effects(for cause: HealthMetric) -> [InteractionEffect] { effects.filter { $0.cause == cause } }
-    func effectsOn(_ effect: HealthMetric) -> [InteractionEffect] { effects.filter { $0.effect == effect } }
-    func topEffects(_ count: Int = 10) -> [InteractionEffect] { Array(effects.prefix(count)) }
-    func doseResponse(cause: HealthMetric, effect: HealthMetric) -> DoseResponseCurve? {
-        doseResponseCurves.first { $0.cause == cause && $0.effect == effect }
-    }
 }

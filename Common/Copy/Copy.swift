@@ -63,14 +63,11 @@ enum Copy {
         static var done: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_done", default: "Done") }
         static var cancel: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_cancel", default: "Cancel") }
         static var continueButton: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_continue_button", default: "Continue") }
-        static var getStarted: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_get_started", default: "Get Started") }
         static var skipForNow: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_skip_for_now", default: "Skip for now") }
-        static var notNow: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_not_now", default: "Not now") }
         static var close: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_close", default: "Close") }
         static var retry: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_retry", default: "Retry") }
         static var subscribe: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_subscribe", default: "Subscribe") }
         static var restorePurchases: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_restore_purchases", default: "Restore Purchases") }
-        static var enable: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_enable", default: "Enable") }
     }
 
     // MARK: - Common Labels
@@ -84,7 +81,6 @@ enum Copy {
     // MARK: - Privacy
 
     enum Privacy {
-        static var healthDataOnDevice: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_health_data_on_device", default: "Health Data On-Device") }
         static var privacyPolicy: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_privacy_policy", default: "Privacy Policy") }
         static var termsOfUse: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_terms_of_use", default: "Terms of Use") }
     }

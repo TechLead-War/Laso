@@ -51,20 +51,10 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_discovery_consistent_day_detail", default: "Your weekly pattern is consistent. %@s tend to be your strongest day for %@."), topDayName, metric)
         }
 
-        // MARK: - Opening Page
-
-        static var openingTitle: String { RemoteConfigManager.shared.copyString("copy_discovery_opening_title", default: "We looked at your health history") }
-        static var openingHere: String { RemoteConfigManager.shared.copyString("copy_discovery_opening_here", default: "Here is what we found.") }
-        static var openingSwipeHint: String { RemoteConfigManager.shared.copyString("copy_discovery_opening_swipe_hint", default: "Swipe to explore") }
-        static var labelOfHealthData: String { RemoteConfigManager.shared.copyString("copy_discovery_label_of_health_data", default: "of health data") }
-        static var labelDataPoints: String { RemoteConfigManager.shared.copyString("copy_discovery_label_data_points", default: "data points") }
-        static var labelHealthMetrics: String { RemoteConfigManager.shared.copyString("copy_discovery_label_health_metrics", default: "health metrics") }
-
         // MARK: - CTA Page
 
         static var ctaTitle: String { RemoteConfigManager.shared.copyString("copy_discovery_cta_title", default: "Your Dashboard is Ready") }
         static var ctaSubtitle: String { RemoteConfigManager.shared.copyString("copy_discovery_cta_subtitle", default: "Track these patterns and more. Updated every time you open the app.") }
-        static var ctaContinue: String { RemoteConfigManager.shared.copyString("copy_discovery_cta_continue", default: "Continue") }
 
         // MARK: - Accessibility
 
@@ -75,7 +65,6 @@ extension Copy {
         static var analyzedHistory: String { RemoteConfigManager.shared.copyString("copy_discovery_analyzed_history", default: "We analyzed your health history") }
         static var hereWhatWeFound: String { RemoteConfigManager.shared.copyString("copy_discovery_here_what_we_found", default: "Here is what we found") }
         static var swipeToExplore: String { RemoteConfigManager.shared.copyString("copy_discovery_swipe_to_explore", default: "Swipe to explore") }
-        static var trackPatterns: String { RemoteConfigManager.shared.copyString("copy_discovery_track_patterns", default: "Track these patterns and more...") }
 
         // MARK: - Lifted view literals
         static var closesDiscoveryAndOpensYourDashboardHint: String { RemoteConfigManager.shared.copyString("copy_discovery_closes_discovery_and_opens_your_dashboard_hint", default: "Closes discovery and opens your dashboard") }

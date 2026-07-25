@@ -10,13 +10,6 @@ extension Copy {
         static var waterIntakeHeader: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_water_intake_header", default: "Water Intake") }
         static var sessionDurationHeader: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_session_duration_header", default: "Session Duration") }
 
-        // MARK: - Discard Confirmation
-
-        static var discardChangesTitle: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_discard_changes_title", default: "Discard changes?") }
-        static var discardButton: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_discard_button", default: "Discard") }
-        static var keepEditingButton: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_keep_editing_button", default: "Keep editing") }
-        static var unsavedEntryMessage: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_unsaved_entry_message", default: "Your unsaved entry will be lost.") }
-
         // MARK: - Toolbar
 
         static var cancel: String { RemoteConfigManager.shared.copyString("copy_metric_detail_metric_detail_cancel", default: "Cancel") }

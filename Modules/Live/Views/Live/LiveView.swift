@@ -52,9 +52,7 @@ struct LiveView: View {
                     hasFreshData: viewModel.vitals.hasFreshData,
                     isAging: viewModel.vitals.isAging,
                     isStale: viewModel.vitals.isStale,
-                    hasAnyVitalData: viewModel.vitals.hasAnyData,
                     primaryDevice: primaryLiveDevice,
-                    currentHeartRate: viewModel.vitals.currentHeartRate,
                     headerTracker: headerTracker
                 )
 

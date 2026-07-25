@@ -98,12 +98,4 @@ final class MorningCheckInManager {
     static func todaysCheckIn() -> MorningCheckIn? {
         return loadHistory().first { Date.cal.isDateInToday($0.date) }
     }
-
-    /// Get average composite score over last N days
-    static func recentAverageScore(days: Int = 7) -> Double? {
-        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
-        let recent = loadHistory().filter { $0.date > cutoff }
-        guard !recent.isEmpty else { return nil }
-        return recent.map(\.compositeScore).reduce(0, +) / Double(recent.count)
-    }
 }

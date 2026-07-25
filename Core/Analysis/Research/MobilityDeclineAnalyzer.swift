@@ -33,7 +33,6 @@ struct MobilityDeclineAnalyzer {
         .init(metric: .walkingSteadiness, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.steadinessLabel)
     ]
 
-    private static let minMonthsRequired = 3
     private static let minSamplesPerMetric = 15
     private static let significantChangeThreshold = 0.08 // 8% change
 

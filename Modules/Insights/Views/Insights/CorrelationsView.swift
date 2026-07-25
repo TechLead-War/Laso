@@ -13,7 +13,6 @@ struct CorrelationsView: View {
     private var isGated: Bool { !FeatureGate.canAccess(.advancedAnalytics) }
 
     @State private var showAllConnections = false
-    @State private var filtersTracker = SectionTracker(section: .correlationsFilters, tab: .correlations)
     @State private var listTracker = SectionTracker(section: .correlationsList, tab: .correlations)
 
     private var hasIntelligence: Bool {

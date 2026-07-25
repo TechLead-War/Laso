@@ -22,11 +22,6 @@ final class ThermalManager {
         currentState == .serious || currentState == .critical
     }
 
-    /// True when thermal state is `.critical`. pause all heavy background work immediately.
-    var shouldPauseHeavyWork: Bool {
-        currentState == .critical
-    }
-
     /// Prefer static or reduced visual effects when the device is already warming up.
     var shouldReduceVisualEffects: Bool {
         currentState == .fair || shouldThrottle
@@ -113,18 +108,6 @@ final class ThermalManager {
     }
 
     // MARK: - Graduated Compute Budget
-
-    /// Fraction of full ML pipeline components that should run (0.0–1.0).
-    /// Nominal: all components. Fair: skip exploratory. Serious: essentials only.
-    var mlComponentBudget: Double {
-        switch currentState {
-        case .nominal:  return 1.0
-        case .fair:     return 0.7   // skip interaction effects, temporal mining
-        case .serious:  return 0.3   // only forecaster + scorer + anomaly
-        case .critical: return 0.0
-        @unknown default: return 0.7
-        }
-    }
 
     /// Whether a specific ML component tier should run at current thermal state.
     /// Tiers: 0 = essential (features, forecaster, scorer), 1 = important (correlations, classifier, anomaly),

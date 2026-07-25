@@ -51,12 +51,6 @@ final class SubscriptionManager {
         return false
     }
 
-    var trialText: String? {
-        guard case .trial(let expiration) = status else { return nil }
-        let days = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
-        return days == 1 ? "1 day left in trial" : "\(days) days left in trial"
-    }
-
     var billingGraceDays: Int? {
         if case .billingGrace(let days) = status { return days }
         return nil

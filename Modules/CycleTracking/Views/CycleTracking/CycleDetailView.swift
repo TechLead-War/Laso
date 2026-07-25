@@ -92,19 +92,6 @@ enum CyclePhase: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Typical phase duration for a standard cycle, used for display.
-    func typicalDays(cycleLength: Int) -> Int {
-        switch self {
-        case .menstrual:  return 5
-        case .follicular:
-            let ovStart = max(6, cycleLength - 15)
-            return max(1, ovStart - 5)
-        case .ovulatory:  return 3
-        case .luteal:
-            let ovEnd = min(cycleLength, max(8, cycleLength - 14) + 1)
-            return max(1, cycleLength - ovEnd)
-        }
-    }
 }
 
 // MARK: - Cycle History Entry
@@ -134,8 +121,6 @@ struct CycleDetailView: View {
     var lastUpdated: Date? = nil
     /// Pull-to-refresh hook wired by the route destination.
     var onRefresh: (() async -> Void)? = nil
-
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {

@@ -97,16 +97,4 @@ enum HealthCategoryAppEnum: String, AppEnum {
             .mobility: "Mobility"
         ]
     }
-
-    var healthCategory: HealthCategory {
-        switch self {
-        case .heart: return .heart
-        case .sleep: return .sleep
-        case .activity: return .activity
-        case .body: return .body
-        case .respiratory: return .respiratory
-        case .mindfulness: return .mindfulness
-        case .mobility: return .mobility
-        }
-    }
 }

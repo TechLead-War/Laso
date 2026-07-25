@@ -7,11 +7,6 @@ import Foundation
 /// a specific peer-reviewed dataset. Treat outputs as coaching suggestions.
 enum StrainCoachConfig {
 
-    // MARK: - Strain Scale
-
-    /// Maximum strain on the 0-21 normalised scale.
-    static let maxStrain: Double = 21.0
-
     // MARK: - History Gates
 
     /// Minimum history days required before pattern-aware adjustments kick in.

@@ -95,8 +95,6 @@ enum AppSection: String {
 /// Tracks section-level visibility duration. Hold as @State in views (class, not struct).
 @MainActor
 final class SectionTracker {
-    static let stuckThresholdMs = 20_000
-
     let section: AppSection
     let tab: AppFeature
     private var appearDate: Date?

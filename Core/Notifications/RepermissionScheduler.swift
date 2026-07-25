@@ -48,9 +48,4 @@ enum RepermissionScheduler {
             }
         }
     }
-
-    /// Cancel the re-permission push.
-    static func cancel() {
-        NotificationManager.shared.cancelNotification(identifier: AppConstants.NotificationID.repermission)
-    }
 }

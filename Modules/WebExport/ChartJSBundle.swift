@@ -3,9 +3,6 @@ import Foundation
 /// Embedded Chart.js library for self-contained HTML reports
 /// Using a minimal CDN reference since embedding 200KB+ inline is impractical
 struct ChartJSBundle {
-    /// Chart.js CDN URL (fallback: inline minimal charting)
-    static let cdnURL = AppSecrets.CDN.chartJS
-
     /// Minimal inline chart implementation for truly offline reports
     static let inlineChartJS: String = """
     // Minimal chart renderer using Canvas API (no external dependencies)

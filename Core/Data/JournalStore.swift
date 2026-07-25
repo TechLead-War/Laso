@@ -112,17 +112,12 @@ final class StoredJournalEntry {
         self.value = value
         self.notes = notes
     }
-
-    var category: JournalCategory? {
-        JournalCategory(rawValue: categoryRawValue)
-    }
 }
 
 // MARK: - Journal Store
 
-/// Query helpers for journal entries, following HealthDataStore patterns
+/// Write helper for journal entries, following HealthDataStore patterns
 struct JournalStore {
-
 
     private let modelContext: ModelContext?
 
@@ -150,106 +145,6 @@ struct JournalStore {
                 value: value,
                 hasNotes: hasNotes
             )
-        }
-    }
-
-    // MARK: - Query: Entries for Date
-
-    /// Load all journal entries for a specific day
-    func entries(for date: Date) -> [StoredJournalEntry] {
-        let calendar = Date.cal
-        let start = calendar.startOfDay(for: date)
-        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return [] }
-
-        let predicate = #Predicate<StoredJournalEntry> { $0.date >= start && $0.date < end }
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.date)])
-        return (try? modelContext?.fetch(descriptor)) ?? []
-    }
-
-    // MARK: - Query: Entries for Category in Date Range
-
-    /// Load entries for a specific category within a date range
-    func entries(for category: JournalCategory, from startDate: Date, to endDate: Date) -> [StoredJournalEntry] {
-        let rawValue = category.rawValue
-        let start = Date.cal.startOfDay(for: startDate)
-        let end = Date.cal.startOfDay(for: endDate)
-
-        let predicate = #Predicate<StoredJournalEntry> {
-            $0.categoryRawValue == rawValue && $0.date >= start && $0.date <= end
-        }
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.date)])
-        return (try? modelContext?.fetch(descriptor)) ?? []
-    }
-
-    // MARK: - Query: All Entries in Date Range
-
-    /// Load all journal entries within a date range
-    func allEntries(from startDate: Date, to endDate: Date) -> [StoredJournalEntry] {
-        let start = Date.cal.startOfDay(for: startDate)
-        let end = Date.cal.startOfDay(for: endDate)
-
-        let predicate = #Predicate<StoredJournalEntry> { $0.date >= start && $0.date <= end }
-        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.date)])
-        return (try? modelContext?.fetch(descriptor)) ?? []
-    }
-
-    // MARK: - Query: Daily Summary
-
-    /// Summary of all categories logged on a given date
-    func dailySummary(for date: Date) -> [JournalCategory: Double] {
-        let dayEntries = entries(for: date)
-        var summary: [JournalCategory: Double] = [:]
-        for entry in dayEntries {
-            guard let cat = entry.category else { continue }
-            summary[cat, default: 0] += entry.value
-        }
-        return summary
-    }
-
-    // MARK: - Query: Date-indexed values for a category
-
-    /// Build a date-to-value lookup for a category (used by correlation analysis)
-    func dateIndexedValues(for category: JournalCategory, days: Int) -> [Date: Double] {
-        let calendar = Date.cal
-        let end = calendar.startOfDay(for: Date())
-        guard let start = calendar.date(byAdding: .day, value: -days, to: end) else { return [:] }
-
-        let entries = entries(for: category, from: start, to: end)
-        var lookup: [Date: Double] = [:]
-        for entry in entries {
-            let day = calendar.startOfDay(for: entry.date)
-            lookup[day, default: 0] += entry.value
-        }
-        return lookup
-    }
-
-    // MARK: - Stats
-
-    /// Total number of journal entries stored
-    var totalEntries: Int {
-        (try? modelContext?.fetchCount(FetchDescriptor<StoredJournalEntry>())) ?? 0
-    }
-
-    /// Number of unique days with at least one journal entry
-    func daysLogged(since startDate: Date) -> Int {
-        let predicate = #Predicate<StoredJournalEntry> { $0.date >= startDate }
-        let descriptor = FetchDescriptor(predicate: predicate)
-        guard let entries = try? modelContext?.fetch(descriptor) else { return 0 }
-
-        let calendar = Date.cal
-        let uniqueDays = Set(entries.map { calendar.startOfDay(for: $0.date) })
-        return uniqueDays.count
-    }
-
-    // MARK: - Delete
-
-    /// Delete a specific journal entry
-    func delete(_ entry: StoredJournalEntry) {
-        let category = entry.category?.rawValue ?? "unknown"
-        modelContext?.delete(entry)
-        try? modelContext?.save()
-        Task { @MainActor in
-            AppAnalytics.shared.trackJournalEntryDeleted(category: category)
         }
     }
 }

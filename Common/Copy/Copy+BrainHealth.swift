@@ -33,7 +33,6 @@ extension Copy {
 
         static var brainHealthLabel: String { RemoteConfigManager.shared.copyString("copy_brain_health_brain_health_label", default: "BRAIN HEALTH") }
         static var heroExplainer: String { RemoteConfigManager.shared.copyString("copy_brain_health_hero_explainer", default: "How sharp and focused your mind is likely to feel today") }
-        static var learningPatterns: String { RemoteConfigManager.shared.copyString("copy_brain_health_learning_patterns", default: "Learning your patterns") }
         static var scaleAndDirection: String { RemoteConfigManager.shared.copyString("copy_brain_health_scale_and_direction", default: "out of 100  ·  Higher is sharper") }
         static var scaleSuffix: String { RemoteConfigManager.shared.copyString("copy_brain_health_scale_suffix", default: "/ 100") }
 
@@ -61,7 +60,6 @@ extension Copy {
         static var heartRecovery: String { RemoteConfigManager.shared.copyString("copy_brain_health_heart_recovery", default: "Heart Recovery") }
         static var deepSleep: String { RemoteConfigManager.shared.copyString("copy_brain_health_deep_sleep", default: "Deep Sleep") }
         static var remSleep: String { RemoteConfigManager.shared.copyString("copy_brain_health_rem_sleep", default: "REM Sleep") }
-        static var sleepDuration: String { RemoteConfigManager.shared.copyString("copy_brain_health_sleep_duration", default: "Sleep Duration") }
         static var estimated: String { RemoteConfigManager.shared.copyString("copy_brain_health_estimated", default: "Estimated") }
 
         // MARK: - Sleep and Memory

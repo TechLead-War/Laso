@@ -66,11 +66,6 @@ final class CopyOverridesStore {
         }
     }
 
-    func stop() {
-        listener?.remove()
-        listener = nil
-    }
-
     // MARK: - Reads
 
     /// Returns the override string for `key`, or nil when no override is set.
@@ -101,48 +96,4 @@ final class CopyOverridesStore {
         return nil
     }
 
-    /// Snapshot of every key currently overridden, sorted alphabetically.
-    /// Used by the admin dashboard to show the live set.
-    func allOverrides() -> [(key: String, value: String)] {
-        _ = lastUpdated
-        var out: [(key: String, value: String)] = []
-        for (key, raw) in overrides {
-            if let s = raw as? String {
-                out.append((key, s))
-            } else if let arr = raw as? [String] {
-                out.append((key, arr.joined(separator: " | ")))
-            }
-        }
-        return out.sorted { $0.key < $1.key }
-    }
-
-    // MARK: - Writes (admin only — gated server-side by Firestore rules)
-
-    /// Write a single string override. Resolves on success or surfaces the
-    /// Firestore error. Non-admin callers will be rejected server-side by the
-    /// security rules even if the client UI is bypassed.
-    func setString(_ value: String, forKey key: String) async throws {
-        guard hasFirebase else { throw OverrideError.firebaseUnavailable }
-        let ref = Firestore.firestore().collection("copy_overrides").document("strings")
-        try await ref.setData([key: value], merge: true)
-    }
-
-    /// Clear an override so the key falls back to the RC value / baked-in
-    /// default. Firestore deletes the field via `FieldValue.delete()`.
-    func clearString(forKey key: String) async throws {
-        guard hasFirebase else { throw OverrideError.firebaseUnavailable }
-        let ref = Firestore.firestore().collection("copy_overrides").document("strings")
-        try await ref.updateData([key: FieldValue.delete()])
-    }
-
-    enum OverrideError: Error, LocalizedError {
-        case firebaseUnavailable
-
-        var errorDescription: String? {
-            switch self {
-            case .firebaseUnavailable:
-                return "Firebase is not configured in this build."
-            }
-        }
-    }
 }
