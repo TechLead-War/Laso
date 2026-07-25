@@ -176,7 +176,7 @@ struct StressMonitorView: View {
     }
 
     private var scoreFraction: Double {
-        min(max(stressScore / 3.0, 0), 1.0)
+        StressScale.position(for: stressScore)
     }
 
     private var normalizedLevel: String {
@@ -248,7 +248,7 @@ struct StressMonitorView: View {
             } else {
                 WeeklyBarChart(
                     points: weeklyScores,
-                    value: { min(max($0.score / 3.0, 0), 1.0) },
+                    value: { StressScale.barFill(for: $0.score) },
                     color: { barColor(for: $0.score) },
                     label: { $0.dayLabel },
                     tooltipLines: { point in

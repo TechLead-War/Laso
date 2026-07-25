@@ -407,7 +407,10 @@ final class StrainScorer {
             persistedByDate[calendar.startOfDay(for: entry.date)] = entry.strain
         }
 
-        for dayOffset in (0...lookbackDays).reversed() {
+        // Half-open: offsets 0 through lookbackDays - 1 cover today plus the six
+        // days before it. An inclusive range here yields eight columns in a
+        // seven day chart.
+        for dayOffset in (0..<lookbackDays).reversed() {
             guard let targetDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
                 continue
             }

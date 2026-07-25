@@ -13,25 +13,41 @@ extension Copy {
         static func actualAge(_ age: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_actual_age", default: "Actual age %d"), age) }
         static func ninetyDayPace(_ label: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_ninety_day_pace", default: "90d %@"), label) }
         static var buildingProfile: String { RemoteConfigManager.shared.copyString("copy_vitality_vitality_building_profile", default: "Building your profile") }
-        static func yearsYounger(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_years_younger", default: "%d years younger"), years) }
-        static func yearsOlder(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_years_older", default: "%d years older"), years) }
+        static func yearsYounger(_ years: Int) -> String {
+            Copy.plural(years,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_year_younger_one", default: "%d year younger"),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_years_younger", default: "%d years younger"))
+        }
+        static func yearsOlder(_ years: Int) -> String {
+            Copy.plural(years,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_year_older_one", default: "%d year older"),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_years_older", default: "%d years older"))
+        }
         static var onTrack: String { RemoteConfigManager.shared.copyString("copy_vitality_vitality_on_track", default: "On track") }
 
         // MARK: - Narratives
 
         static var buildingProfileNarrative: String { RemoteConfigManager.shared.copyString("copy_vitality_vitality_building_profile_narrative", default: "We are building your profile. For now, your vitality age matches your real age.") }
         static func earlyYoungerNarrative(delta: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_younger_narrative", default: "Early estimate: your body looks about %d years younger. This gets more accurate with more data."), delta)
+            Copy.plural(delta,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_younger_narrative_one", default: "Early estimate: your body looks about %d year younger. This gets more accurate with more data."),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_younger_narrative", default: "Early estimate: your body looks about %d years younger. This gets more accurate with more data."))
         }
         static func earlyOlderNarrative(delta: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_older_narrative", default: "Early estimate: your body looks about %d years older. This gets more accurate with more data."), delta)
+            Copy.plural(delta,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_older_narrative_one", default: "Early estimate: your body looks about %d year older. This gets more accurate with more data."),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_early_older_narrative", default: "Early estimate: your body looks about %d years older. This gets more accurate with more data."))
         }
         static var earlyAlignedNarrative: String { RemoteConfigManager.shared.copyString("copy_vitality_early_aligned_narrative", default: "Early estimate: your vitality age matches your real age.") }
         static func personalYoungerNarrative(delta: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_younger_narrative", default: "Your body is performing about %d years younger than your actual age."), delta)
+            Copy.plural(delta,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_younger_narrative_one", default: "Your body is performing about %d year younger than your actual age."),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_younger_narrative", default: "Your body is performing about %d years younger than your actual age."))
         }
         static func personalOlderNarrative(delta: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_older_narrative", default: "Your numbers suggest about %d years above your actual age. The tips below can help close the gap."), delta)
+            Copy.plural(delta,
+                   one: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_older_narrative_one", default: "Your numbers suggest about %d year above your actual age. The tips below can help close the gap."),
+                   many: RemoteConfigManager.shared.copyString("copy_vitality_vitality_personal_older_narrative", default: "Your numbers suggest about %d years above your actual age. The tips below can help close the gap."))
         }
         static var personalAlignedNarrative: String { RemoteConfigManager.shared.copyString("copy_vitality_personal_aligned_narrative", default: "Your vitality age matches your real age. Keep doing what you are doing to stay on track.") }
 
@@ -45,6 +61,9 @@ extension Copy {
 
         static func metricYounger(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_metric_younger", default: "%dy younger"), years) }
         static func metricOlder(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_metric_older", default: "+%dy older"), years) }
+        /// Shown when the value beats the youngest row in the reference table.
+        /// We cannot say how many years younger, so we do not print a number.
+        static var metricTopOfRange: String { RemoteConfigManager.shared.copyString("copy_vitality_metric_top_of_range", default: "Top of range") }
 
         // MARK: - Sections
 

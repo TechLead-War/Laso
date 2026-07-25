@@ -44,6 +44,17 @@ import Foundation
 /// and confirming every site is `LocalizedStringKey`-tolerant.
 enum Copy {
 
+    // MARK: - Plurals
+
+    /// Remote Config holds plain strings with no plural rules, so singular and
+    /// plural are separate keys and the count picks one. Without this a count of
+    /// one prints "1 years" or "1 days".
+    /// Callers resolve both keys inline so Scripts/dump_copy_registry.py, which
+    /// scrapes literal copyString calls, still sees every key.
+    static func plural(_ count: Int, one: String, many: String) -> String {
+        String(format: count == 1 ? one : many, count)
+    }
+
     // MARK: - Medical Disclaimer
 
     static var medicalDisclaimer: String { RemoteConfigManager.shared.copyString("copy_copy_medical_disclaimer", default: "Laso is not a medical device. It shares health information, not medical advice. Always talk to a qualified professional before making health decisions.") }

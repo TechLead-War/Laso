@@ -77,7 +77,23 @@ extension Copy {
         // MARK: - History
 
         static var sevenDayHistory: String { RemoteConfigManager.shared.copyString("copy_strain_seven_day_history", default: "7-Day History") }
-        static var sevenDayAverage: String { RemoteConfigManager.shared.copyString("copy_strain_seven_day_average", default: "7-Day Average:") }
+        static func averageOfDaysWithData(_ days: Int) -> String {
+            Copy.plural(days,
+                        one: RemoteConfigManager.shared.copyString("copy_strain_average_days_with_data_one", default: "Average of %d day with data:"),
+                        many: RemoteConfigManager.shared.copyString("copy_strain_average_days_with_data", default: "Average of %d days with data:"))
+        }
+        static var noDataDay: String { RemoteConfigManager.shared.copyString("copy_strain_no_data_day", default: "No data") }
+        static var missingDaysNote: String { RemoteConfigManager.shared.copyString("copy_strain_missing_days_note", default: "Shaded days have no data recorded.") }
+        static var noHistoryAvailable: String { RemoteConfigManager.shared.copyString("copy_strain_no_history_available", default: "No history available") }
+        static func strainValueAndLevel(_ value: String, _ level: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_strain_value_and_level", default: "Strain %@, %@"), value, level)
+        }
+        static func latestStrainAndAverage(_ latest: String, _ average: String, _ days: Int) -> String {
+            let template = days == 1
+                ? RemoteConfigManager.shared.copyString("copy_strain_latest_and_average_one", default: "Latest strain %@, average %@ over %d day with data")
+                : RemoteConfigManager.shared.copyString("copy_strain_latest_and_average", default: "Latest strain %@, average %@ over %d days with data")
+            return String(format: template, latest, average, days)
+        }
 
         // MARK: - Simplified Drivers
 

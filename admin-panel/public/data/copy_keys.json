@@ -3684,6 +3684,12 @@
     "isArray": false
   },
   {
+    "key": "copy_brain_health_chart_today",
+    "defaultValue": "Today",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_brain_health_deep_sleep",
     "defaultValue": "Deep Sleep",
     "sourceFile": "Copy+BrainHealth.swift",
@@ -11958,6 +11964,18 @@
     "isArray": false
   },
   {
+    "key": "copy_strain_average_days_with_data",
+    "defaultValue": "Average of %d days with data:",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_average_days_with_data_one",
+    "defaultValue": "Average of %d day with data:",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_below_target",
     "defaultValue": "Below Target",
     "sourceFile": "Copy+Strain.swift",
@@ -12042,6 +12060,18 @@
     "isArray": false
   },
   {
+    "key": "copy_strain_latest_and_average",
+    "defaultValue": "Latest strain %@, average %@ over %d days with data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_latest_and_average_one",
+    "defaultValue": "Latest strain %@, average %@ over %d day with data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_learn_more",
     "defaultValue": "Learn More",
     "sourceFile": "Copy+Strain.swift",
@@ -12078,6 +12108,24 @@
     "isArray": false
   },
   {
+    "key": "copy_strain_missing_days_note",
+    "defaultValue": "Shaded days have no data recorded.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_no_data_day",
+    "defaultValue": "No data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_no_history_available",
+    "defaultValue": "No history available",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_no_workout_data",
     "defaultValue": "No workout data yet",
     "sourceFile": "Copy+Strain.swift",
@@ -12098,12 +12146,6 @@
   {
     "key": "copy_strain_scale_suffix",
     "defaultValue": "/ 21",
-    "sourceFile": "Copy+Strain.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_strain_seven_day_average",
-    "defaultValue": "7-Day Average:",
     "sourceFile": "Copy+Strain.swift",
     "isArray": false
   },
@@ -12356,6 +12398,12 @@
   {
     "key": "copy_strain_todays_workout",
     "defaultValue": "Today's Workout",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_value_and_level",
+    "defaultValue": "Strain %@, %@",
     "sourceFile": "Copy+Strain.swift",
     "isArray": false
   },
@@ -12780,6 +12828,12 @@
     "isArray": false
   },
   {
+    "key": "copy_vitality_metric_top_of_range",
+    "defaultValue": "Top of range",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_vitality_metric_younger",
     "defaultValue": "%dy younger",
     "sourceFile": "Copy+Vitality.swift",
@@ -12864,8 +12918,20 @@
     "isArray": false
   },
   {
+    "key": "copy_vitality_vitality_early_older_narrative_one",
+    "defaultValue": "Early estimate: your body looks about %d year older. This gets more accurate with more data.",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_vitality_vitality_early_younger_narrative",
     "defaultValue": "Early estimate: your body looks about %d years younger. This gets more accurate with more data.",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_vitality_early_younger_narrative_one",
+    "defaultValue": "Early estimate: your body looks about %d year younger. This gets more accurate with more data.",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -12888,8 +12954,20 @@
     "isArray": false
   },
   {
+    "key": "copy_vitality_vitality_personal_older_narrative_one",
+    "defaultValue": "Your numbers suggest about %d year above your actual age. The tips below can help close the gap.",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_vitality_vitality_personal_younger_narrative",
     "defaultValue": "Your body is performing about %d years younger than your actual age.",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_vitality_personal_younger_narrative_one",
+    "defaultValue": "Your body is performing about %d year younger than your actual age.",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -12902,6 +12980,18 @@
   {
     "key": "copy_vitality_vitality_vitality_age_label",
     "defaultValue": "VITALITY AGE",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_vitality_year_older_one",
+    "defaultValue": "%d year older",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_vitality_year_younger_one",
+    "defaultValue": "%d year younger",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },

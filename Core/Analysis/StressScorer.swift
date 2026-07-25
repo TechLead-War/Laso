@@ -53,6 +53,31 @@ enum StressLevel: String, CaseIterable, Codable {
     }
 }
 
+// MARK: - Stress Scale
+
+/// The stress score range and how it is drawn. Kept next to the scorer so a
+/// chart or gauge can never draw against a range the scorer does not produce.
+enum StressScale {
+    /// Scores run 0 (calm) to 3 (high stress). The screen labels this "out of 3".
+    static let maxScore: Double = 3.0
+
+    /// Smallest fill drawn for a score above zero. Day to day scores sit far
+    /// below the ceiling, so without a floor a real low reading draws as a
+    /// hairline and the chart reads as empty or broken.
+    static let minVisibleFraction: Double = 0.12
+
+    /// True 0 to 1 position of a score in the range, for the gauge needle.
+    static func position(for score: Double) -> Double {
+        min(max(score / maxScore, 0), 1.0)
+    }
+
+    /// Bar fill for a score, floored so any score above zero stays visible.
+    static func barFill(for score: Double) -> Double {
+        guard score > 0 else { return 0 }
+        return max(position(for: score), minVisibleFraction)
+    }
+}
+
 // MARK: - Stress Score
 
 struct StressScore {
@@ -93,8 +118,6 @@ final class StressScorer {
     private static let weeklyAverageMinSamples = 3
     /// Stress-score scaling factor that maps a 0-100% deviation onto the 0-3 stress scale.
     private static let stressScoreScale: Double = 3.0
-    /// Maximum value the final stress score is clamped to.
-    private static let stressScoreCeiling: Double = 3.0
     /// Minimum samples required to compute a per-window baseline (mean, sd).
     private static let minSamplesForBaseline = 5
     /// Look-back window (days) used when picking the most recent daily mean.
@@ -277,7 +300,7 @@ final class StressScorer {
             rawScore = hrvComponent
         }
 
-        let clampedScore = min(Self.stressScoreCeiling, max(0.0, rawScore))
+        let clampedScore = min(StressScale.maxScore, max(0.0, rawScore))
 
         return StressScore(
             score: clampedScore,
@@ -331,7 +354,15 @@ final class StressScorer {
                 }
             }
 
-            history.append((date: dayStart, score: min(Self.stressScoreCeiling, max(0.0, score))))
+            history.append((date: dayStart, score: min(StressScale.maxScore, max(0.0, score))))
+        }
+
+        // Today has no HRV reading of its own until the watch syncs, and the loop
+        // above drops any day it cannot score. The gauge still shows a value for
+        // today from the recent daily mean, so carry that same value into the
+        // history, otherwise the chart ends yesterday and disagrees with the gauge.
+        if history.last?.date != today, let current = currentStress {
+            history.append((date: today, score: current.score))
         }
 
         dailyStressHistory = history

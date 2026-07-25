@@ -46,6 +46,12 @@ struct BrainHealthDetailView: View {
         let hasConfidence = brainScore.confidence >= 0.7
 
         return VStack(spacing: DS.itemSpacing) {
+            // Heading sits above the number it names, so the number reads as Brain Health.
+            Text(Copy.BrainHealth.brainHealthLabel)
+                .font(DS.Typography.captionSemibold)
+                .tracking(2)
+                .foregroundStyle(AppColour.textSecondary)
+
             Text(hasConfidence ? "\(brainScore.score)" : "—")
                 .font(DS.Typography.displayXL.monospacedDigit())
                 .foregroundStyle(AppColour.textPrimary)
@@ -54,11 +60,6 @@ struct BrainHealthDetailView: View {
             Text(Copy.BrainHealth.scaleAndDirection)
                 .font(DS.Typography.caption2Medium)
                 .foregroundStyle(AppColour.textTertiary)
-
-            Text(Copy.BrainHealth.brainHealthLabel)
-                .font(DS.Typography.captionSemibold)
-                .tracking(2)
-                .foregroundStyle(AppColour.textSecondary)
 
             // Static explainer. teaches the user what this screen is about
             Text(Copy.BrainHealth.heroExplainer)
@@ -121,17 +122,16 @@ struct BrainHealthDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
             } else {
-                let visibleHistory = Array(weeklyHistory.suffix(7)).map { BrainWeeklyPoint(date: $0.date, score: $0.score) }
                 WeeklyBarChart(
-                    points: visibleHistory,
-                    value: { Double($0.score) / 100.0 },
+                    points: lastSevenDayPoints,
+                    value: { Double($0.score ?? 0) / 100.0 },
                     color: { chartBarColor(for: $0.score) },
-                    label: { abbreviatedDay($0.date) },
-                    topLabel: { "\($0.score)" },
+                    label: { $0.isToday ? Copy.BrainHealth.chartToday : abbreviatedDay($0.date) },
+                    topLabel: { $0.score.map { "\($0)" } ?? "—" },
                     tooltipLines: { point in
                         [
                             point.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
-                            "\(point.score) \(Copy.BrainHealth.scaleSuffix)"
+                            point.score.map { "\($0) \(Copy.BrainHealth.scaleSuffix)" } ?? Copy.Common.notEnoughData
                         ]
                     },
                     tooltipColor: { chartBarColor(for: $0.score) }
@@ -392,7 +392,25 @@ struct BrainHealthDetailView: View {
 
     // MARK: - Chart Helpers
 
-    private func chartBarColor(for score: Int) -> Color {
+    /// The seven calendar days ending today, so today always has a column even on days
+    /// the scorer could not produce a score. Scoring gaps show an empty bar instead of
+    /// silently sliding the window back to older days.
+    private var lastSevenDayPoints: [BrainWeeklyPoint] {
+        let calendar = Date.cal
+        let today = calendar.startOfDay(for: Date())
+        let scoreByDay = Dictionary(
+            weeklyHistory.map { (calendar.startOfDay(for: $0.date), $0.score) },
+            uniquingKeysWith: { _, newest in newest }
+        )
+
+        return (0..<7).reversed().compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return BrainWeeklyPoint(date: day, score: scoreByDay[day], isToday: offset == 0)
+        }
+    }
+
+    private func chartBarColor(for score: Int?) -> Color {
+        guard let score else { return AppColour.textTertiary.opacity(0.35) }
         if score >= 80 { return AppColour.success }
         if score >= 65 { return AppColour.info }
         if score >= 45 { return AppColour.textTertiary }
@@ -655,9 +673,11 @@ struct BrainHealthDetailView: View {
 }
 
 private struct BrainWeeklyPoint: Identifiable {
-    let id = UUID()
+    // The day is the identity, so bar selection survives a re-render.
+    var id: Date { date }
     let date: Date
-    let score: Int
+    let score: Int?
+    let isToday: Bool
 }
 
 private struct ScoreLever: Identifiable {

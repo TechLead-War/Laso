@@ -87,13 +87,22 @@ private enum VitalityNorms {
     ///   - value: The user's current metric value.
     ///   - table: Age-value reference table, sorted by age ascending.
     ///   - higherIsBetter: If true, higher values map to younger ages.
-    /// - Returns: Interpolated metric age (clamped to 18...95).
+    /// - Returns: Interpolated metric age (clamped to 18...95) and whether the
+    ///   value is better than the youngest row in the table.
+    ///
+    /// Values better than the youngest row are clamped to that row's age. We do
+    /// not extrapolate past it: there is no reference data below age 20, so any
+    /// number we produced there would be invented. The flag lets the UI say the
+    /// value is top of range instead of printing a year gap we cannot support.
+    /// The old end is left clamped and unflagged on purpose. Stopping at the
+    /// oldest row understates how far off the value is, which errs against the
+    /// user's favour, while an unflagged young clamp would overstate a benefit.
     static func metricAge(
         value: Double,
         table: [(age: Int, value: Double)],
         higherIsBetter: Bool
-    ) -> Int {
-        guard table.count >= 2 else { return 50 }
+    ) -> (age: Int, isBeyondYoungestReference: Bool) {
+        guard table.count >= 2 else { return (50, false) }
 
         // For "higher is better" metrics, the table values decrease with age.
         // For "lower is better" metrics, the table values increase with age.
@@ -109,14 +118,16 @@ private enum VitalityNorms {
             sortedTable = table
         }
 
-        guard let firstEntry = sortedTable.first, let lastEntry = sortedTable.last else { return 50 }
+        guard let firstEntry = sortedTable.first, let lastEntry = sortedTable.last else { return (50, false) }
 
-        // If value is below the minimum or above the maximum, clamp
+        // If value is below the minimum or above the maximum, clamp.
+        // After the sort above, the youngest reference row sits at the end for
+        // higher-is-better metrics and at the start for lower-is-better ones.
         if value <= firstEntry.value {
-            return firstEntry.age
+            return (firstEntry.age, !higherIsBetter && value < firstEntry.value)
         }
         if value >= lastEntry.value {
-            return lastEntry.age
+            return (lastEntry.age, higherIsBetter && value > lastEntry.value)
         }
 
         // Find the bracketing pair and interpolate
@@ -133,11 +144,11 @@ private enum VitalityNorms {
                     fraction = (value - lower.value) / valueDelta
                 }
                 let interpolatedAge = Double(lower.age) + fraction * Double(upper.age - lower.age)
-                return max(18, min(95, Int(interpolatedAge.rounded())))
+                return (max(18, min(95, Int(interpolatedAge.rounded()))), false)
             }
         }
 
-        return 50 // Fallback
+        return (50, false) // Fallback
     }
 }
 
@@ -151,6 +162,10 @@ struct VitalityComponent: Identifiable {
     let currentValue: Double
     let unit: String
     let populationMedian: Double
+    /// True when the value beats the youngest row of the reference table, so
+    /// `metricAge` is a floor rather than a reading. The UI shows "top of
+    /// range" for these instead of a year gap that has no data behind it.
+    let isBeyondYoungestReference: Bool
     let healthMetric: HealthMetric?
 
     /// How many years this component adds (positive) or subtracts (negative) vs chronological age
@@ -356,15 +371,17 @@ final class VitalityScorer {
         if let series = allSeries[.vo2Max],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 30) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.vo2Max, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.vo2Max, higherIsBetter: true)
             let w = Self.weightFor(.vo2Max)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.vo2Max)
             components.append(VitalityComponent(
-                metric: "VO2 Max", metricAge: age,
+                metric: "VO2 Max", metricAge: norm.age,
                 currentValue: avg, unit: "mL/kg/min",
-                populationMedian: median, healthMetric: .vo2Max
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .vo2Max
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -372,15 +389,17 @@ final class VitalityScorer {
         if let series = allSeries[.restingHeartRate],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.restingHeartRate, higherIsBetter: false)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.restingHeartRate, higherIsBetter: false)
             let w = Self.weightFor(.restingHeartRate)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.restingHeartRate)
             components.append(VitalityComponent(
-                metric: "Resting HR", metricAge: age,
+                metric: "Resting HR", metricAge: norm.age,
                 currentValue: avg, unit: "bpm",
-                populationMedian: median, healthMetric: .restingHeartRate
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .restingHeartRate
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -388,15 +407,17 @@ final class VitalityScorer {
         if let series = allSeries[.heartRateVariability],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.hrv, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.hrv, higherIsBetter: true)
             let w = Self.weightFor(.hrv)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.hrv)
             components.append(VitalityComponent(
-                metric: "HRV", metricAge: age,
+                metric: "HRV", metricAge: norm.age,
                 currentValue: avg, unit: "ms",
-                populationMedian: median, healthMetric: .heartRateVariability
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .heartRateVariability
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -412,15 +433,17 @@ final class VitalityScorer {
                 let totalInBed = avgSleep + avgAwake
                 if totalInBed > 0 {
                     let efficiency = (avgSleep / totalInBed) * 100.0
-                    let age = VitalityNorms.metricAge(value: efficiency, table: VitalityNorms.sleepEfficiency, higherIsBetter: true)
+                    let norm = VitalityNorms.metricAge(value: efficiency, table: VitalityNorms.sleepEfficiency, higherIsBetter: true)
                     let w = Self.weightFor(.sleepEfficiency)
                     let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.sleepEfficiency)
                     components.append(VitalityComponent(
-                        metric: "Sleep Efficiency", metricAge: age,
+                        metric: "Sleep Efficiency", metricAge: norm.age,
                         currentValue: efficiency, unit: "%",
-                        populationMedian: median, healthMetric: .sleepDuration
+                        populationMedian: median,
+                        isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                        healthMetric: .sleepDuration
                     ))
-                    weightedAgeSum += Double(age) * w
+                    weightedAgeSum += Double(norm.age) * w
                     totalWeight += w
                 }
             }
@@ -437,15 +460,17 @@ final class VitalityScorer {
                 let avgTotal = recentSleep.mean(of: \.value)
                 if avgTotal > 0 {
                     let deepPct = (avgDeep / avgTotal) * 100.0
-                    let age = VitalityNorms.metricAge(value: deepPct, table: VitalityNorms.deepSleepPercent, higherIsBetter: true)
+                    let norm = VitalityNorms.metricAge(value: deepPct, table: VitalityNorms.deepSleepPercent, higherIsBetter: true)
                     let w = Self.weightFor(.deepSleepPercent)
                     let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.deepSleepPercent)
                     components.append(VitalityComponent(
-                        metric: "Deep Sleep", metricAge: age,
+                        metric: "Deep Sleep", metricAge: norm.age,
                         currentValue: deepPct, unit: "%",
-                        populationMedian: median, healthMetric: .sleepDeep
+                        populationMedian: median,
+                        isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                        healthMetric: .sleepDeep
                     ))
-                    weightedAgeSum += Double(age) * w
+                    weightedAgeSum += Double(norm.age) * w
                     totalWeight += w
                 }
             }
@@ -455,15 +480,17 @@ final class VitalityScorer {
         if let series = allSeries[.walkingSpeed],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 30) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.walkingSpeed, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.walkingSpeed, higherIsBetter: true)
             let w = Self.weightFor(.walkingSpeed)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.walkingSpeed)
             components.append(VitalityComponent(
-                metric: "Walking Speed", metricAge: age,
+                metric: "Walking Speed", metricAge: norm.age,
                 currentValue: avg, unit: "km/h",
-                populationMedian: median, healthMetric: .walkingSpeed
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .walkingSpeed
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -471,15 +498,17 @@ final class VitalityScorer {
         if let series = allSeries[.steps],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.steps, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.steps, higherIsBetter: true)
             let w = Self.weightFor(.steps)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.steps)
             components.append(VitalityComponent(
-                metric: "Daily Steps", metricAge: age,
+                metric: "Daily Steps", metricAge: norm.age,
                 currentValue: avg, unit: "steps",
-                populationMedian: median, healthMetric: .steps
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .steps
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -487,15 +516,17 @@ final class VitalityScorer {
         if let series = allSeries[.exerciseMinutes],
            !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.exerciseMinutes, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.exerciseMinutes, higherIsBetter: true)
             let w = Self.weightFor(.exerciseMinutes)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.exerciseMinutes)
             components.append(VitalityComponent(
-                metric: "Exercise", metricAge: age,
+                metric: "Exercise", metricAge: norm.age,
                 currentValue: avg, unit: "min/day",
-                populationMedian: median, healthMetric: .exerciseMinutes
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .exerciseMinutes
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         }
 
@@ -503,15 +534,17 @@ final class VitalityScorer {
         if let bfSeries = allSeries[.bodyFatPercentage],
            !bfSeries.isStale(thresholdDays: 30), // Body comp doesn't change fast
            let avg = recentAverage(bfSeries, days: 30) {
-            let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.bodyFatPercent, higherIsBetter: false)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.bodyFatPercent, higherIsBetter: false)
             let w = Self.weightFor(.bodyComposition)
             let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.bodyFatPercent)
             components.append(VitalityComponent(
-                metric: "Body Fat", metricAge: age,
+                metric: "Body Fat", metricAge: norm.age,
                 currentValue: avg, unit: "%",
-                populationMedian: median, healthMetric: .bodyFatPercentage
+                populationMedian: median,
+                isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                healthMetric: .bodyFatPercentage
             ))
-            weightedAgeSum += Double(age) * w
+            weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         } else if let bmiSeries = allSeries[.bmi],
                   !bmiSeries.isStale(thresholdDays: 30),
@@ -526,7 +559,11 @@ final class VitalityScorer {
             components.append(VitalityComponent(
                 metric: "BMI", metricAge: bmiAge,
                 currentValue: avg, unit: "",
-                populationMedian: VitalityNorms.bmiOptimal, healthMetric: .bmi
+                populationMedian: VitalityNorms.bmiOptimal,
+                // BMI age comes from distance to the optimal point, not a norm
+                // table, so there is no youngest reference row to clamp at.
+                isBeyondYoungestReference: false,
+                healthMetric: .bmi
             ))
             weightedAgeSum += Double(bmiAge) * w
             totalWeight += w
@@ -694,13 +731,13 @@ final class VitalityScorer {
                  table: [(age: Int, value: Double)], higherIsBetter: Bool,
                  key: VitalityMetricKey, goodness: (Double) -> Double) {
             guard let v = value, v > 0 else { return }
-            let age = VitalityNorms.metricAge(value: v, table: table, higherIsBetter: higherIsBetter)
+            let norm = VitalityNorms.metricAge(value: v, table: table, higherIsBetter: higherIsBetter)
             let w = weightFor(key)
-            weightedSum += Double(age) * w
+            weightedSum += Double(norm.age) * w
             totalWeight += w
             out.append(OnboardingMetric(name: name, valueLabel: label(v),
                                         goodness: min(1, max(0, goodness(v))),
-                                        delta: age - chronologicalAge))
+                                        delta: norm.age - chronologicalAge))
         }
 
         add(restingHR, name: "RESTING HR", label: { "\(Int($0.rounded())) bpm" },

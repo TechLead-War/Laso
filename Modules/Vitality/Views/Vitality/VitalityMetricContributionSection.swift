@@ -24,7 +24,11 @@ struct VitalityMetricContributionSection: View {
 
     private func metricRow(_ component: VitalityComponent) -> some View {
         let metricDelta = component.delta(chronologicalAge: scorer.chronologicalAge)
-        let tint = vitalityDeltaColor(for: metricDelta)
+        // Beating the youngest reference row is a good result even for a user
+        // below that age, where the clamped delta still reads positive.
+        let tint = component.isBeyondYoungestReference
+            ? vitalityWhoopGreen
+            : vitalityDeltaColor(for: metricDelta)
 
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
@@ -53,7 +57,7 @@ struct VitalityMetricContributionSection: View {
                         .foregroundStyle(tint)
                         .postHogMask()
 
-                    Text(vitalityMetricDeltaLabel(metricDelta))
+                    Text(vitalityMetricDeltaLabel(component, chronologicalAge: scorer.chronologicalAge))
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(tint.opacity(0.85))
                         .postHogMask()

@@ -48,6 +48,11 @@ struct DailyStrainPoint: Identifiable {
     let date: Date
     let strain: Double
     let level: StrainLevel
+
+    /// A strain of exactly zero means nothing was recorded that day. The score
+    /// rises above zero for any calories, steps, distance, or active minutes,
+    /// so a day the device was actually worn never lands on a flat zero.
+    var hasRecordedData: Bool { strain > 0 }
 }
 
 // MARK: - Strain Detail View
@@ -259,15 +264,29 @@ struct StrainDetailView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Chart {
                     ForEach(weekHistory) { point in
-                        BarMark(
-                            x: .value("Day", point.date, unit: .day),
-                            y: .value("Strain", point.strain)
-                        )
-                        .foregroundStyle(point.level.color.gradient)
-                        .cornerRadius(4)
-                        // Per-bar VoiceOver readout for the 7-day strain history.
-                        .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
-                        .accessibilityValue(Text("Strain \(String(format: "%.1f", point.strain)), \(point.level.displayName)"))
+                        if point.hasRecordedData {
+                            BarMark(
+                                x: .value("Day", point.date, unit: .day),
+                                y: .value("Strain", point.strain)
+                            )
+                            .foregroundStyle(point.level.color.gradient)
+                            .cornerRadius(4)
+                            // Per-bar VoiceOver readout for the 7-day strain history.
+                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
+                            .accessibilityValue(Text(Copy.Strain.strainValueAndLevel(String(format: "%.1f", point.strain), point.level.displayName)))
+                        } else {
+                            // Full height shaded column so a day with no data reads as a
+                            // gap, not as a real zero effort day.
+                            BarMark(
+                                x: .value("Day", point.date, unit: .day),
+                                yStart: .value("Strain", 0.0),
+                                yEnd: .value("Strain", maxStrain)
+                            )
+                            .foregroundStyle(.secondary.opacity(0.12))
+                            .cornerRadius(4)
+                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
+                            .accessibilityValue(Text(Copy.Strain.noDataDay))
+                        }
                     }
 
                     RuleMark(y: .value("Target Low", targetStrainRange.lowerBound))
@@ -280,22 +299,24 @@ struct StrainDetailView: View {
 
                     if let selected = selectedHistoryPoint {
                         RuleMark(x: .value("Selected Day", selected.date, unit: .day))
-                            .foregroundStyle(selected.level.color.opacity(0.35))
+                            .foregroundStyle(selected.hasRecordedData ? selected.level.color.opacity(0.35) : Color.secondary.opacity(0.35))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
 
-                        PointMark(
-                            x: .value("Selected Day", selected.date, unit: .day),
-                            y: .value("Strain", selected.strain)
-                        )
-                        .foregroundStyle(.white)
-                        .symbolSize(60)
+                        if selected.hasRecordedData {
+                            PointMark(
+                                x: .value("Selected Day", selected.date, unit: .day),
+                                y: .value("Strain", selected.strain)
+                            )
+                            .foregroundStyle(.white)
+                            .symbolSize(60)
 
-                        PointMark(
-                            x: .value("Selected Day", selected.date, unit: .day),
-                            y: .value("Strain", selected.strain)
-                        )
-                        .foregroundStyle(selected.level.color)
-                        .symbolSize(24)
+                            PointMark(
+                                x: .value("Selected Day", selected.date, unit: .day),
+                                y: .value("Strain", selected.strain)
+                            )
+                            .foregroundStyle(selected.level.color)
+                            .symbolSize(24)
+                        }
                     }
                 }
                 .chartXSelection(value: $selectedHistoryDate)
@@ -358,17 +379,23 @@ struct StrainDetailView: View {
                             Text(selected.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                Text(String(format: "%.1f", selected.strain))
-                                    .font(.callout.weight(.bold).monospacedDigit())
+                            if selected.hasRecordedData {
+                                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                    Text(String(format: "%.1f", selected.strain))
+                                        .font(.callout.weight(.bold).monospacedDigit())
+                                        .foregroundStyle(selected.level.color)
+                                    Text(Copy.Strain.scaleSuffix)
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Text(selected.level.displayName)
+                                    .font(.caption2.weight(.semibold))
                                     .foregroundStyle(selected.level.color)
-                                Text(Copy.Strain.scaleSuffix)
-                                    .font(.caption.weight(.medium))
+                            } else {
+                                Text(Copy.Strain.noDataDay)
+                                    .font(.callout.weight(.bold))
                                     .foregroundStyle(.secondary)
                             }
-                            Text(selected.level.displayName)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(selected.level.color)
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -379,24 +406,32 @@ struct StrainDetailView: View {
                 }
                 .sensoryFeedback(.selection, trigger: selectedHistoryPoint?.id)
 
-                let avgStrain = weekHistory.map(\.strain).reduce(0, +) / max(Double(weekHistory.count), 1)
-                HStack(spacing: 6) {
-                    Text(Copy.Strain.sevenDayAverage)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
-                    HStack(spacing: 2) {
-                        Text(String(format: "%.1f", avgStrain))
-                            .font(DS.Typography.captionSemibold.monospacedDigit())
-                        Text(Copy.Strain.scaleSuffix)
-                            .font(DS.Typography.caption2Medium.monospacedDigit())
+                if !recordedDays.isEmpty {
+                    let avgStrain = averageStrain
+                    HStack(spacing: 6) {
+                        Text(Copy.Strain.averageOfDaysWithData(recordedDays.count))
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
+                        HStack(spacing: 2) {
+                            Text(String(format: "%.1f", avgStrain))
+                                .font(DS.Typography.captionSemibold.monospacedDigit())
+                            Text(Copy.Strain.scaleSuffix)
+                                .font(DS.Typography.caption2Medium.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(StrainLevel(strain: avgStrain).displayName)
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(StrainLevel(strain: avgStrain).color)
+                            .padding(.horizontal, DS.badgeH)
+                            .padding(.vertical, DS.badgeV)
+                            .background(StrainLevel(strain: avgStrain).color.opacity(DS.badgeBg), in: Capsule())
                     }
-                    Text(StrainLevel(strain: avgStrain).displayName)
-                        .font(DS.Typography.caption2Semibold)
-                        .foregroundStyle(StrainLevel(strain: avgStrain).color)
-                        .padding(.horizontal, DS.badgeH)
-                        .padding(.vertical, DS.badgeV)
-                        .background(StrainLevel(strain: avgStrain).color.opacity(DS.badgeBg), in: Capsule())
+                }
+
+                if recordedDays.count < weekHistory.count {
+                    Text(Copy.Strain.missingDaysNote)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
             .padding(DS.cardPadding)
@@ -446,11 +481,25 @@ struct StrainDetailView: View {
         }
     }
 
+    /// Days that actually recorded activity. Days with no data are excluded from
+    /// every average so an unworn watch does not read as an easy day.
+    private var recordedDays: [DailyStrainPoint] {
+        weekHistory.filter(\.hasRecordedData)
+    }
+
+    private var averageStrain: Double {
+        guard !recordedDays.isEmpty else { return 0 }
+        return recordedDays.map(\.strain).reduce(0, +) / Double(recordedDays.count)
+    }
+
     private var strainChartAccessibilityValue: String {
-        guard !weekHistory.isEmpty else { return "No history available" }
-        let avg = weekHistory.map(\.strain).reduce(0, +) / Double(weekHistory.count)
-        let latest = weekHistory.last?.strain ?? 0
-        return "Latest strain \(String(format: "%.1f", latest)), 7-day average \(String(format: "%.1f", avg))"
+        guard !recordedDays.isEmpty else { return Copy.Strain.noHistoryAvailable }
+        let latest = recordedDays.last?.strain ?? 0
+        return Copy.Strain.latestStrainAndAverage(
+            String(format: "%.1f", latest),
+            String(format: "%.1f", averageStrain),
+            recordedDays.count
+        )
     }
 
     private var targetStatusTitle: String {
@@ -664,7 +713,9 @@ struct StrainDetailView: View {
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -6, to: .now)!, strain: 8.5, level: .moderate),
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -5, to: .now)!, strain: 12.3, level: .moderate),
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -4, to: .now)!, strain: 15.8, level: .high),
-                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -3, to: .now)!, strain: 5.2, level: .low),
+                // Zero strain day: previews the shaded no data column and confirms
+                // it is left out of the average.
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -3, to: .now)!, strain: 0, level: .low),
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -2, to: .now)!, strain: 11.0, level: .moderate),
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -1, to: .now)!, strain: 18.9, level: .overreaching),
                 DailyStrainPoint(date: .now, strain: 14.2, level: .high)

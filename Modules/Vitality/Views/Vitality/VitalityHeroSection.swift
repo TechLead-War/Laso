@@ -80,30 +80,37 @@ struct VitalityHeroSection: View {
             }
             .aspectRatio(0.92, contentMode: .fit)
 
-            HStack(spacing: 8) {
-                if scorer.chronologicalAge > 0 {
-                    badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
+            // Two rows, not one. Three pills of this copy do not fit the card
+            // width on the smallest phones, and the pace state pill was the one
+            // that truncated.
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    if scorer.chronologicalAge > 0 {
+                        badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
+                    }
+
+                    if scorer.personalizationStatus == .personalized {
+                        badge(
+                            text: Copy.Vitality.ninetyDayPace(scorer.paceLabel),
+                            tint: paceTint.opacity(0.26),
+                            foreground: paceTint,
+                            icon: vitalityPaceIcon(for: scorer)
+                        )
+                    } else {
+                        badge(
+                            text: scorer.personalizationStatus.rawValue,
+                            tint: vitalityPersonalizationTint(for: scorer).opacity(0.24),
+                            foreground: vitalityPersonalizationTint(for: scorer),
+                            icon: vitalityPersonalizationIcon(for: scorer)
+                        )
+                    }
                 }
 
                 if scorer.personalizationStatus == .personalized {
                     badge(
-                        text: Copy.Vitality.ninetyDayPace(scorer.paceLabel),
-                        tint: paceTint.opacity(0.26),
-                        foreground: paceTint,
-                        icon: vitalityPaceIcon(for: scorer)
-                    )
-
-                    badge(
                         text: vitalityPaceStateText(for: scorer),
                         tint: paceTint.opacity(0.26),
                         foreground: paceTint
-                    )
-                } else {
-                    badge(
-                        text: scorer.personalizationStatus.rawValue,
-                        tint: vitalityPersonalizationTint(for: scorer).opacity(0.24),
-                        foreground: vitalityPersonalizationTint(for: scorer),
-                        icon: vitalityPersonalizationIcon(for: scorer)
                     )
                 }
             }
@@ -240,6 +247,8 @@ struct OrbMetricChip: View {
                     .font(DS.Typography.caption2.weight(.bold))
                     .foregroundStyle(deltaTint)
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .postHogMask()
             }
 
@@ -292,12 +301,13 @@ struct OrbMetricChip: View {
     }
 
     private var deltaText: String {
-        if metricDelta < 0 { return "\(abs(metricDelta))y" }
-        if metricDelta > 0 { return "+\(metricDelta)y" }
-        return "0y"
+        vitalityMetricDeltaLabel(component, chronologicalAge: chronologicalAge)
     }
 
     private var deltaTint: Color {
+        // Beating the youngest reference row is a good result even for a user
+        // below that age, where the clamped delta still reads positive.
+        if component.isBeyondYoungestReference { return healthyTint }
         if metricDelta <= 0 { return healthyTint }
         if metricDelta <= 2 { return cautionTint }
         return riskTint

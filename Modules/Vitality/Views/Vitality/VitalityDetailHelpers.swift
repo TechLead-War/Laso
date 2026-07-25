@@ -76,7 +76,12 @@ func vitalityPersonalizationTint(for scorer: VitalityScorer) -> Color {
     }
 }
 
-func vitalityMetricDeltaLabel(_ delta: Int) -> String {
+func vitalityMetricDeltaLabel(_ component: VitalityComponent, chronologicalAge: Int) -> String {
+    // The metric age is clamped at the youngest reference row here, so the year
+    // gap is a floor and not a reading. Say top of range instead of a number.
+    if component.isBeyondYoungestReference { return Copy.Vitality.metricTopOfRange }
+
+    let delta = component.delta(chronologicalAge: chronologicalAge)
     if delta < 0 { return Copy.Vitality.metricYounger(abs(delta)) }
     if delta > 0 { return Copy.Vitality.metricOlder(delta) }
     return Copy.Vitality.onTrack

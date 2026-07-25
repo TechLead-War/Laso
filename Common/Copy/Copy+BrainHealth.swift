@@ -90,6 +90,7 @@ extension Copy {
         // MARK: - Chart
 
         static var lastSevenDays: String { RemoteConfigManager.shared.copyString("copy_brain_health_last_seven_days", default: "Last 7 Days") }
+        static var chartToday: String { RemoteConfigManager.shared.copyString("copy_brain_health_chart_today", default: "Today") }
 
         // MARK: - Key Factors
 
