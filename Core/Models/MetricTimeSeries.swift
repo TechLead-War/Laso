@@ -35,6 +35,21 @@ struct MetricTimeSeries: Identifiable {
             }
         }
         
+        // A dropped sample is a day the user silently loses. The commonest cause now is
+        // two sources writing the same night, which lands above the sleep ceiling once a
+        // whole night counts on one day, so it is reported rather than swallowed.
+        let droppedCount = sortedSamples.count - validSamples.count
+        if droppedCount > 0 {
+            AnalyticsBackend.provider.captureError(
+                "sample outside the plausible range for this metric was dropped",
+                context: "metric_time_series_outlier_dropped",
+                metadata: [
+                    "metric": metric.rawValue,
+                    "dropped": droppedCount
+                ]
+            )
+        }
+
         self.metric = metric
         self.samples = validSamples
 

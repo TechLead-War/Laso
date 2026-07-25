@@ -786,6 +786,10 @@ struct SettingsView: View {
         }
         UserDefaults.standard.synchronize()
 
+        // The App Group sits outside the app's own defaults domain, so the wipe
+        // above misses it and the widget keeps rendering the deleted data.
+        WidgetDataStore.shared.clearAll()
+
         // Sign out of Firebase + reset analytics identity. Server-side Firestore
         // wipe (user_profiles/{uid}, subscriptions/{uid}) needs a Cloud Function
         // (TODO follow-up: deleteAccountData callable). For now, the local

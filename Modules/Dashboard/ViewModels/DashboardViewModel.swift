@@ -1811,7 +1811,10 @@ final class DashboardViewModel {
         let readiness = WidgetReadinessSnapshot(
             score: widgetScore,
             grade: grade,
-            dayType: strainCoach.currentTarget?.zone.displayName ?? "Maintain",
+            // Empty when the strain coach has no target yet. The widget and the
+            // wrist both skip an empty day type, which is honest; a stand-in
+            // label reads as a call the app never made.
+            dayType: strainCoach.currentTarget?.zone.displayName ?? "",
             updatedAt: Date()
         )
 

@@ -29,6 +29,18 @@ final class FeatureEngine {
     /// Days within this window are always recomputed (handles late-arriving data).
     private static let rebuildWindowDays = 3
 
+    // MARK: - History Horizon
+
+    /// Newest days that get a feature vector. A first sync can hand back a decade of HealthKit
+    /// samples, and building every one of those days costs minutes of CPU, which trips the
+    /// pipeline's own thermal guard before any insight is produced. Two years still leaves far
+    /// more training rows than any downstream component asks for (the largest need is 14 days).
+    private static let maxHistoryDays = 730
+
+    /// Extra older days kept in the day lookup array beyond the build horizon, so the oldest
+    /// built day can still read its lag features. The deepest lookup into that array is lag60.
+    private static let maxLookbackDays = 60
+
     // MARK: - Shannon Entropy Constants
 
     /// Adaptive bin count: uses Sturges' rule k = ceil(1 + log2(n)) with floor of 5
@@ -45,6 +57,30 @@ final class FeatureEngine {
 
     /// Lags (in days) at which autocorrelation is evaluated for periodicity strength.
     private static let periodicityLags = [7, 14, 28]
+    /// Observations in the trailing window used for periodicity. Long enough to cover three
+    /// cycles at the longest lag (28 days) without reaching deep into the past.
+    private static let periodicityWindowSamples = 90
+    /// Observations up to and including the day being built before periodicity is reported.
+    private static let periodicityMinSamples = 14
+
+    // MARK: - Weekday / Weekend Offsets
+
+    /// Weekday observations required before the weekday offset is reported.
+    private static let minWeekdaySamples = 3
+    /// Weekend observations required before the weekend offset is reported.
+    private static let minWeekendSamples = 2
+
+    // MARK: - Hoisted Per-Day Constants
+
+    /// Every feature type except missingness. Hoisted because the per-day loop would otherwise
+    /// rebuild `FeatureType.allCases` for every metric on every day.
+    private static let nonMissingnessTypes = FeatureType.allCases.filter { $0 != .missingness }
+
+    /// Lag features and the day offset each one reads.
+    private static let lagConfigs: [(days: Int, type: FeatureType)] = [
+        (1, .lag1), (3, .lag3), (7, .lag7),
+        (14, .lag14), (28, .lag28), (60, .lag60),
+    ]
 
     // MARK: - Welford's Online Statistics
 
@@ -146,44 +182,57 @@ final class FeatureEngine {
             FeatureType.allCases.map { FeatureKey(metric: metric, type: $0) }
         }
 
-        // Pre-compute z-score time series per metric for autocorrelation / entropy.
-        // Keyed by metric, values sorted oldest-first by date.
-        var zSeriesByMetric: [HealthMetric: [(date: Date, z: Double)]] = [:]
+        // Pre-compute the z-score series per metric (oldest first) plus a date -> index lookup,
+        // so each day can take a trailing autocorrelation window that ends on that day.
+        var zValuesByMetric: [HealthMetric: [Double]] = [:]
+        var zDateIndex: [HealthMetric: [Date: Int]] = [:]
         for metric in sortedMetrics {
             guard let dateMap = metricByDate[metric],
                   let stats = runningStats[metric],
                   stats.count >= Self.minimumDays else { continue }
-            var pairs: [(Date, Double)] = []
-            for (date, value) in dateMap {
-                pairs.append((date, stats.zScore(for: value)))
+            let sortedDates = dateMap.keys.sorted()
+            var values: [Double] = []
+            values.reserveCapacity(sortedDates.count)
+            var index: [Date: Int] = [:]
+            index.reserveCapacity(sortedDates.count)
+            for (i, date) in sortedDates.enumerated() {
+                values.append(stats.zScore(for: dateMap[date]!))
+                index[date] = i
             }
-            pairs.sort { $0.0 < $1.0 }
-            zSeriesByMetric[metric] = pairs
+            zValuesByMetric[metric] = values
+            zDateIndex[metric] = index
         }
 
-        // Build a quick lookup: metric -> date -> index in zSeries (for autocorrelation window slicing)
-        var zDateIndex: [HealthMetric: [Date: Int]] = [:]
-        for (metric, series) in zSeriesByMetric {
-            var idx: [Date: Int] = [:]
-            for (i, pair) in series.enumerated() {
-                idx[pair.date] = i
+        // Weekday and weekend offsets depend only on the running stats, never on the day being
+        // built, so they are computed once per metric instead of once per metric per day.
+        var weekdayOffsetByMetric: [HealthMetric: Double] = [:]
+        var weekendOffsetByMetric: [HealthMetric: Double] = [:]
+        for metric in sortedMetrics {
+            guard let stats = runningStats[metric], stats.stdDev > 0 else { continue }
+            if let wdStats = weekdayStats[metric], wdStats.count >= Self.minWeekdaySamples {
+                weekdayOffsetByMetric[metric] = (wdStats.mean - stats.mean) / stats.stdDev
             }
-            zDateIndex[metric] = idx
+            if let weStats = weekendStats[metric], weStats.count >= Self.minWeekendSamples {
+                weekendOffsetByMetric[metric] = (weStats.mean - stats.mean) / stats.stdDev
+            }
         }
 
-        // Pre-build the complete date array ONCE to eliminate ~300K Calendar.date(byAdding:)
-        // calls from the inner loops. allDays[0] = today, allDays[1] = yesterday, etc.
+        // Pre-build the date array ONCE to keep Calendar.date(byAdding:) out of the inner loops.
+        // allDays[0] = today, allDays[1] = yesterday, and so on. It runs one lookback window past
+        // the build horizon so the oldest built day can still read its lag features.
+        let lookupDays = min(totalDays, Self.maxHistoryDays + Self.maxLookbackDays)
         var allDays: [Date] = []
-        allDays.reserveCapacity(totalDays)
-        for offset in 0..<totalDays {
+        allDays.reserveCapacity(lookupDays)
+        for offset in 0..<lookupDays {
             guard let d = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
             allDays.append(calendar.startOfDay(for: d))
         }
 
-        // Build vectors for each day
+        // Build vectors for each day inside the horizon (newest first)
         var vectors: [DailyFeatureVector] = []
+        let buildDays = min(allDays.count, Self.maxHistoryDays)
 
-        for dayOffset in 0..<allDays.count {
+        for dayOffset in 0..<buildDays {
             let day = allDays[dayOffset]
 
             // Reuse cached vector for days outside the rebuild window.
@@ -208,7 +257,7 @@ final class FeatureEngine {
                 if rawValue == nil {
                     features[FeatureKey(metric: metric, type: .missingness)] = 1.0
                     // Mark all other features as missing for this metric on this day
-                    for ft in FeatureType.allCases where ft != .missingness {
+                    for ft in Self.nonMissingnessTypes {
                         features[FeatureKey(metric: metric, type: ft)] = FeatureKey.missingSentinel
                     }
                     continue
@@ -288,11 +337,7 @@ final class FeatureEngine {
                 }
 
                 // --- Lag features --- uses allDays index instead of Calendar
-                let lagConfigs: [(Int, FeatureType)] = [
-                    (1, .lag1), (3, .lag3), (7, .lag7),
-                    (14, .lag14), (28, .lag28), (60, .lag60),
-                ]
-                for (lagDays, lagType) in lagConfigs {
+                for (lagDays, lagType) in Self.lagConfigs {
                     let lagIdx = dayOffset + lagDays
                     if lagIdx < allDays.count,
                        let lagValue = dateMap[allDays[lagIdx]] {
@@ -318,43 +363,30 @@ final class FeatureEngine {
                     features[FeatureKey(metric: metric, type: .entropy)] = FeatureKey.missingSentinel
                 }
 
-                // --- Periodicity strength (autocorrelation at dominant period) ---
-                if stats.count >= 14, let zSeries = zSeriesByMetric[metric] {
-                    let zValues = zSeries.map(\.z)
-                    if zValues.count >= 14 {
-                        // Use AccelerateML.autocorrelation at lags [7, 14, 28], return max |r|
-                        var maxAbsR = 0.0
-                        for lag in Self.periodicityLags {
-                            guard lag < zValues.count else { continue }
-                            let r = AccelerateML.autocorrelation(zValues, lag: lag)
-                            let absR = abs(r)
-                            if absR > maxAbsR { maxAbsR = absR }
-                        }
-                        features[FeatureKey(metric: metric, type: .periodicityStr)] = maxAbsR
-                    } else {
-                        features[FeatureKey(metric: metric, type: .periodicityStr)] = FeatureKey.missingSentinel
+                // --- Periodicity strength (max |autocorrelation| over a trailing window) ---
+                // The window has to end on the day being built. Running it over the whole series
+                // folds later days into a past day's feature, which biases every model that
+                // trains on these vectors, and it also made the value identical on every day.
+                if let zValues = zValuesByMetric[metric],
+                   let endIndex = zDateIndex[metric]?[day],
+                   endIndex + 1 >= Self.periodicityMinSamples {
+                    let startIndex = max(0, endIndex + 1 - Self.periodicityWindowSamples)
+                    let window = Array(zValues[startIndex...endIndex])
+                    var maxAbsR = 0.0
+                    for lag in Self.periodicityLags where lag < window.count {
+                        let absR = abs(AccelerateML.autocorrelation(window, lag: lag))
+                        if absR > maxAbsR { maxAbsR = absR }
                     }
+                    features[FeatureKey(metric: metric, type: .periodicityStr)] = maxAbsR
                 } else {
                     features[FeatureKey(metric: metric, type: .periodicityStr)] = FeatureKey.missingSentinel
                 }
 
-                // --- Weekday offset: deviation of weekday mean from overall mean ---
-                if let wdStats = weekdayStats[metric], wdStats.count >= 3,
-                   stats.stdDev > 0 {
-                    features[FeatureKey(metric: metric, type: .weekdayOffset)] =
-                        (wdStats.mean - stats.mean) / stats.stdDev
-                } else {
-                    features[FeatureKey(metric: metric, type: .weekdayOffset)] = FeatureKey.missingSentinel
-                }
-
-                // --- Weekend offset: deviation of weekend mean from overall mean ---
-                if let weStats = weekendStats[metric], weStats.count >= 2,
-                   stats.stdDev > 0 {
-                    features[FeatureKey(metric: metric, type: .weekendOffset)] =
-                        (weStats.mean - stats.mean) / stats.stdDev
-                } else {
-                    features[FeatureKey(metric: metric, type: .weekendOffset)] = FeatureKey.missingSentinel
-                }
+                // --- Weekday / weekend offsets (precomputed once per metric above) ---
+                features[FeatureKey(metric: metric, type: .weekdayOffset)] =
+                    weekdayOffsetByMetric[metric] ?? FeatureKey.missingSentinel
+                features[FeatureKey(metric: metric, type: .weekendOffset)] =
+                    weekendOffsetByMetric[metric] ?? FeatureKey.missingSentinel
             }
 
             guard hasAnyData else { continue }

@@ -162,7 +162,9 @@ extension Copy {
         static var deleteAllMyData: String { RemoteConfigManager.shared.copyString("copy_settings_delete_all_my_data", default: "Delete Account and All Data") }
         static var deleteAllDataQuestion: String { RemoteConfigManager.shared.copyString("copy_settings_delete_all_data_question", default: "Delete All Data?") }
         static var deleteEverything: String { RemoteConfigManager.shared.copyString("copy_settings_delete_everything", default: "Delete Everything") }
-        static var deleteDataWarning: String { RemoteConfigManager.shared.copyString("copy_settings_delete_data_warning", default: "This will permanently erase all your data from this device, including your profile, preferences, and saved health data. This cannot be undone. The app will close so changes take full effect.") }
+        /// Key bumped to v2 because the live Remote Config value still carries the
+        /// old "the app will close" line, which the app never did.
+        static var deleteDataWarning: String { RemoteConfigManager.shared.copyString("copy_settings_delete_data_warning_v2", default: "This will permanently erase all your data from this device, including your profile, preferences, saved health data, and your widgets. This cannot be undone.") }
         static var deleteDataFooter: String { RemoteConfigManager.shared.copyString("copy_settings_delete_data_footer", default: "Permanently removes all local data including your profile, preferences, saved health data, and encrypted storage. This cannot be undone.") }
 
         // MARK: - Lifted view literals

@@ -11190,8 +11190,8 @@
     "isArray": false
   },
   {
-    "key": "copy_settings_delete_data_warning",
-    "defaultValue": "This will permanently erase all your data from this device, including your profile, preferences, and saved health data. This cannot be undone. The app will close so changes take full effect.",
+    "key": "copy_settings_delete_data_warning_v2",
+    "defaultValue": "This will permanently erase all your data from this device, including your profile, preferences, saved health data, and your widgets. This cannot be undone.",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },

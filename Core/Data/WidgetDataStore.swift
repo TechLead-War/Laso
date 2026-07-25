@@ -78,10 +78,12 @@ private extension WidgetRecoveryDebtSnapshot {
 final class WidgetDataStore {
     static let shared = WidgetDataStore()
 
+    private let suiteName: String
     private let userDefaults: UserDefaults?
 
-    init(userDefaults: UserDefaults? = UserDefaults(suiteName: "group.com.lasohealth.fit")) {
-        self.userDefaults = userDefaults
+    init(suiteName: String = "group.com.lasohealth.fit") {
+        self.suiteName = suiteName
+        self.userDefaults = UserDefaults(suiteName: suiteName)
     }
 
     // MARK: - Write (Main App)
@@ -153,6 +155,25 @@ final class WidgetDataStore {
 
     func markLastUpdate() {
         userDefaults?.set(Date().timeIntervalSince1970, forKey: AppKeys.Widget.lastUpdate)
+    }
+
+    // MARK: - Account Wipe
+
+    /// Erase the whole App Group after the user deletes their data.
+    /// The widget runs in its own process and renders straight from this suite,
+    /// so keys left behind keep a deleted user's score, sleep and coaching line
+    /// on the home and lock screen until something writes again. Clearing the
+    /// domain rather than named keys also drops the pending coach action that
+    /// CoachActionBridge writes into the same suite.
+    func clearAll() {
+        guard let userDefaults else {
+            // Nil only when the App Group entitlement is missing. Nothing could
+            // have been written either, but a wipe must never fail quietly.
+            assertionFailure("App Group \(suiteName) unavailable during account wipe")
+            return
+        }
+        userDefaults.removePersistentDomain(forName: suiteName)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Read (Widget Extension)

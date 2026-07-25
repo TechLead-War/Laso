@@ -54,7 +54,7 @@ struct DailySummaryScheduler {
             dayOfWeek: dayOfWeek
         )
 
-        // Use detected wake-up time, fall back to user preference
+        // Detected wake-up time, already clamped to a sane morning band.
         let wakeTime = WakeUpTimeDetector.persistedWakeTime
         var dateComponents = DateComponents()
         dateComponents.hour = wakeTime.hour

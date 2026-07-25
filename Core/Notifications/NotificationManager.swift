@@ -218,10 +218,11 @@ final class NotificationManager {
         // deliberately bedtime-aware (wind-down) opt out entirely via
         // `respectsQuietHours: false`. Applies to bypassCap notifications
         // too — bypassCap exempts only the frequency cap, so a watch alert
-        // armed at bedtime cannot wake the user at 3 a.m. Daily summaries
-        // are exempt: they repeat at the user's wake time, which can sit
-        // inside the quiet window.
-        if severity != .critical && respectsQuietHours && !isDailySummary && isWithinQuietHours(fireDate) {
+        // armed at bedtime cannot wake the user at 3 a.m. A summary keeps a
+        // bounded exemption (see `summaryMayBreakQuietHours`) because its time
+        // is deliberate, not incidental.
+        if severity != .critical && respectsQuietHours && isWithinQuietHours(fireDate)
+            && !summaryMayBreakQuietHours(identifier: identifier, fireDate: fireDate) {
             if trigger?.repeats == true {
                 Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "quiet_hours") }
                 return false
@@ -441,6 +442,30 @@ final class NotificationManager {
         guard let sameDayEnd = Date.cal.date(from: comps) else { return date }
         if sameDayEnd > date { return sameDayEnd }
         return Date.cal.date(byAdding: .day, value: 1, to: sameDayEnd) ?? date
+    }
+
+    /// Whether a summary may fire inside quiet hours. The exemption is bounded
+    /// by the band each summary belongs in: the morning summary only in the
+    /// morning tail of the window (a real wake time can be 06:00 while the
+    /// window ends at 07:00), the evening summary only in the evening stretch
+    /// the user picked itself. A summary landing anywhere else in the night is
+    /// a scheduling bug, not a preference, so it loses the exemption and is
+    /// dropped and reported like any other night-time push. An unbounded
+    /// exemption is what let a 23:40 "good morning" push through.
+    private func summaryMayBreakQuietHours(identifier: String, fireDate: Date) -> Bool {
+        let hour = Date.cal.component(.hour, from: fireDate)
+        switch identifier {
+        case AppConstants.NotificationID.dailySummary:
+            return hour >= WakeUpTimeDetector.earliestWakeHour
+                && hour <= WakeUpTimeDetector.latestWakeHour
+        case AppConstants.NotificationID.eveningSummary:
+            // Evening side of an overnight window only, never the hours after
+            // midnight.
+            let start = RemoteConfigManager.shared.quietHoursStartHour
+            return start > RemoteConfigManager.shared.quietHoursEndHour && hour >= start
+        default:
+            return false
+        }
     }
 
     /// Whether `date`'s local hour falls inside the do-not-disturb window from

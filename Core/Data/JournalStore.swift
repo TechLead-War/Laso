@@ -142,7 +142,6 @@ struct JournalStore {
         Task { @MainActor in
             AppAnalytics.shared.trackJournalEntryCreated(
                 category: categoryRaw,
-                value: value,
                 hasNotes: hasNotes
             )
         }

@@ -193,16 +193,21 @@ enum UITestMode {
         defaults.set(true, forKey: AppKeys.Dismissals.siriTip)
 
         // Seed a prior-day marked-done action so the loop-closer card can be
-        // driven deterministically. Value = the score recorded on the done day;
-        // today's override-overall-score minus this is the shown delta.
+        // driven deterministically. Value = the morning lock recorded on the done
+        // day; today's override-overall-score minus this is the shown delta.
         if let seededScore = intValue(for: seedDailyResultPrefix),
            let dayAgo = Calendar.current.date(byAdding: .hour, value: -26, to: Date()),
            let data = try? JSONEncoder().encode(
                DailyActionResultStore.Record(doneDate: dayAgo,
                                              actionTitle: "10-minute brisk walk",
                                              actionIcon: "figure.walk",
-                                             scoreOnDoneDay: seededScore)) {
+                                             morningLockOnDoneDay: seededScore)) {
             defaults.set(data, forKey: AppKeys.Data.dailyActionResult)
+            // The card compares morning locks on both ends, so today needs a real
+            // lock as well or it stays hidden.
+            if let todayScore = overrideOverallScore {
+                ReadinessStore().saveMorningLock(todayScore, for: Date())
+            }
         }
     }
 }

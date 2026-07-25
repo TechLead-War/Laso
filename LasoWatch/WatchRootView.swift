@@ -22,6 +22,9 @@ struct WatchRootView: View {
                         if payload.isStale() {
                             hint(WatchStrings.Home.stale)
                         }
+                        if let rejection = store.rejection {
+                            hint(WatchStrings.Write.message(for: rejection))
+                        }
                         action(payload)
                         if payload.checkInAvailable {
                             Button(WatchStrings.CheckIn.greeting) { showCheckIn = true }
@@ -83,13 +86,13 @@ struct WatchRootView: View {
                     store.markActionDone()
                 } label: {
                     Label(
-                        payload.actionDone ? WatchStrings.Home.markedDone : WatchStrings.Home.markDone,
-                        systemImage: payload.actionDone ? "checkmark.circle.fill" : "checkmark"
+                        store.isActionDoneToday ? WatchStrings.Home.markedDone : WatchStrings.Home.markDone,
+                        systemImage: store.isActionDoneToday ? "checkmark.circle.fill" : "checkmark"
                     )
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(payload.actionDone || !store.pendingCommands.isEmpty)
+                .disabled(store.isActionDoneToday || !store.pendingCommands.isEmpty)
             }
         } else {
             hint(WatchStrings.Home.noAction)

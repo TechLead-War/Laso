@@ -97,12 +97,13 @@ final class BackgroundRefreshCoordinator {
             if let score = liveViewModel.recovery.readinessScore {
                 // Background refresh updates score/grade only. The day-type comes
                 // from the strain coach, which this lightweight LiveViewModel does
-                // not run, so keep the last foreground-computed value instead of
-                // blanking the widget label.
+                // not run, so keep the last foreground-computed value. Empty when
+                // there is none: the widget drops an empty day type rather than
+                // showing a call the app never made.
                 let snapshot = WidgetReadinessSnapshot(
                     score: score,
                     grade: HealthScore.gradeWithPlus(for: score),
-                    dayType: WidgetDataStore.shared.loadReadiness()?.dayType ?? "Maintain",
+                    dayType: WidgetDataStore.shared.loadReadiness()?.dayType ?? "",
                     updatedAt: Date()
                 )
                 if WidgetDataStore.shared.saveReadinessIfChanged(snapshot) {

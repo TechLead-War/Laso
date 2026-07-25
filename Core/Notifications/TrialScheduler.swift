@@ -164,15 +164,13 @@ enum TrialScheduler {
     }
 
     /// Fire trial nudges at the user's detected wake time so they land in the
-    /// morning, not at a random hour. Falls back to 9 AM when no wake time is
-    /// stored, matching the engagement drip default.
+    /// morning, not at a random hour. Reads through `persistedWakeTime` rather
+    /// than the raw defaults so the sane-band clamp applies here too.
     private static func morningComponents(for date: Date) -> DateComponents {
-        let defaults = UserDefaults.standard
-        let hour = defaults.object(forKey: AppKeys.Engagement.detectedWakeHour) as? Int ?? 9
-        let minute = defaults.object(forKey: AppKeys.Engagement.detectedWakeMinute) as? Int ?? 0
+        let wakeTime = WakeUpTimeDetector.persistedWakeTime
         var comps = Date.cal.dateComponents([.year, .month, .day], from: date)
-        comps.hour = hour
-        comps.minute = minute
+        comps.hour = wakeTime.hour
+        comps.minute = wakeTime.minute
         comps.calendar = Date.cal
         return comps
     }

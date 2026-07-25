@@ -58,14 +58,22 @@ struct HealthDataBatchWriter {
         )
     }
 
-    private struct UpsertResult {
+    /// Slack added past the newest sample's local midnight so the lookup always covers the
+    /// whole of that day. Two days is deliberate: it clears the longest daylight saving day
+    /// without a calendar call, and the extra rows only sit unused in the lookup.
+    private static let dayWindowPadding: TimeInterval = 2 * 86400
+
+    struct UpsertResult {
         let insertedCount: Int
         let updatedCount: Int
         var hasChanges: Bool { insertedCount > 0 || updatedCount > 0 }
         var changedSampleCount: Int { insertedCount + updatedCount }
     }
 
-    private static func upsertSamples(
+    /// Shared by the batch path and `HealthDataStore.saveSamples`. One copy only: the
+    /// day-key and lookup-window rules below decide whether a day gets a second row,
+    /// and two copies drifting apart is what produced duplicate rows in the first place.
+    static func upsertSamples(
         _ samples: [MetricSample],
         for metric: HealthMetric,
         context: ModelContext
@@ -78,32 +86,60 @@ struct HealthDataBatchWriter {
             return UpsertResult(insertedCount: 0, updatedCount: 0)
         }
 
+        // Widen to whole local days. A row already stored for the same day as a boundary
+        // sample often sits just outside the raw min/max window (a later wake time, for
+        // example), and missing it makes this insert a second row for that day.
+        let rangeStart = minDate.startOfDay
+        let rangeEnd = maxDate.startOfDay.addingTimeInterval(dayWindowPadding)
+
         let predicate = #Predicate<StoredDailySample> {
-            $0.metricRawValue == rawValue && $0.date >= minDate && $0.date <= maxDate
+            $0.metricRawValue == rawValue && $0.date >= rangeStart && $0.date < rangeEnd
         }
         let descriptor = FetchDescriptor(predicate: predicate)
         let existing = (try? context.fetch(descriptor)) ?? []
 
         var existingByDate: [Int64: StoredDailySample] = [:]
+        var duplicateDayRows = 0
         for sample in existing {
-            existingByDate[MetricSample.utcDayBucket(for: sample.date)] = sample
+            let dateKey = MetricSample.localDayBucket(for: sample.date)
+            if existingByDate[dateKey] != nil {
+                duplicateDayRows += 1
+            }
+            existingByDate[dateKey] = sample
+        }
+
+        // Rows written before the day key was fixed can leave two rows on one local day,
+        // which double counts in the baseline. Report it rather than let it pass quietly.
+        if duplicateDayRows > 0 {
+            AnalyticsBackend.provider.captureError(
+                "more than one stored row for a single local day",
+                context: "batch_writer_duplicate_day",
+                metadata: [
+                    "metric": rawValue,
+                    "duplicate_rows": duplicateDayRows
+                ]
+            )
         }
 
         var insertedCount = 0
         var updatedCount = 0
         for sample in samples {
-            let dateKey = MetricSample.utcDayBucket(for: sample.date)
+            let dateKey = MetricSample.localDayBucket(for: sample.date)
             if let existingSample = existingByDate[dateKey] {
                 if existingSample.value != sample.value {
                     existingSample.value = sample.value
                     updatedCount += 1
                 }
             } else {
-                context.insert(StoredDailySample(
+                let insertedSample = StoredDailySample(
                     metricRawValue: rawValue,
                     date: sample.date,
                     value: sample.value
-                ))
+                )
+                context.insert(insertedSample)
+                // A later sample on the same local day has to update this row, not add a
+                // second one, so it joins the lookup right away.
+                existingByDate[dateKey] = insertedSample
                 insertedCount += 1
             }
         }

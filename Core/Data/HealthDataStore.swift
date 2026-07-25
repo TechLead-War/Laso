@@ -197,7 +197,7 @@ final class HealthDataStore {
         if let existingMetricSeries = metricSeriesCache[metric] {
             metricSeriesCache[metric] = MetricTimeSeries(
                 metric: metric,
-                samples: MetricSample.mergedByUTCDay(existing: existingMetricSeries.samples, incoming: incomingSamples)
+                samples: MetricSample.mergedByLocalDay(existing: existingMetricSeries.samples, incoming: incomingSamples)
             )
         }
 
@@ -205,7 +205,7 @@ final class HealthDataStore {
             let existing = allCache[metric]?.samples ?? []
             let merged = MetricTimeSeries(
                 metric: metric,
-                samples: MetricSample.mergedByUTCDay(existing: existing, incoming: incomingSamples)
+                samples: MetricSample.mergedByLocalDay(existing: existing, incoming: incomingSamples)
             )
             allCache[metric] = merged
             allSeriesCache = allCache
@@ -259,45 +259,12 @@ final class HealthDataStore {
 
     /// Upsert daily samples for a metric. Efficiently batches by loading only the relevant date range.
     func saveSamples(_ samples: [MetricSample], for metric: HealthMetric) {
-        guard modelContext != nil, !samples.isEmpty else { return }
+        guard let modelContext, !samples.isEmpty else { return }
 
-        let rawValue = metric.rawValue
-        let dates = samples.map(\.date)
-        guard let minDate = dates.min(), let maxDate = dates.max() else { return }
-
-        // Load only existing samples in the new data's date range
-        let predicate = #Predicate<StoredDailySample> {
-            $0.metricRawValue == rawValue && $0.date >= minDate && $0.date <= maxDate
-        }
-        let descriptor = FetchDescriptor(predicate: predicate)
-        let existing = (try? modelContext?.fetch(descriptor)) ?? []
-
-        // Build lookup by normalized UTC day for O(1) dedup.
-        var existingByDate: [Int64: StoredDailySample] = [:]
-        for sample in existing {
-            existingByDate[MetricSample.utcDayBucket(for: sample.date)] = sample
-        }
-
-        // Upsert: update existing or insert new
-        var insertedCount = 0
-        for sample in samples {
-            let dateKey = MetricSample.utcDayBucket(for: sample.date)
-            if let existingSample = existingByDate[dateKey] {
-                if existingSample.value != sample.value {
-                    existingSample.value = sample.value
-                }
-            } else {
-                modelContext?.insert(StoredDailySample(
-                    metricRawValue: rawValue,
-                    date: sample.date,
-                    value: sample.value
-                ))
-                insertedCount += 1
-            }
-        }
+        let result = HealthDataBatchWriter.upsertSamples(samples, for: metric, context: modelContext)
 
         guard saveContext("swiftdata_save_samples") else { return }
-        updateSyncMetadata(for: metric, sampleDelta: insertedCount)
+        updateSyncMetadata(for: metric, sampleDelta: result.insertedCount)
         updateSeriesCaches(metric: metric, incomingSamples: samples)
     }
 
@@ -613,13 +580,13 @@ final class HealthDataStore {
         let records = (try? modelContext?.fetch(descriptor)) ?? []
         if records.isEmpty { return [] }
 
-        // Dedup by normalized UTC day so historical charts remain stable even if old duplicates exist.
+        // Dedup by local day so historical charts stay stable even if old duplicates exist.
+        // The date comes from `startOfDay`, not from the bucket: the bucket is a wall clock
+        // day index, so multiplying it back into a Date would land it off by the zone offset.
         var dedupedByDay: [Int64: DailyStrainRecord] = [:]
         for record in records {
-            let dayBucket = MetricSample.utcDayBucket(for: record.date)
-            let bucketDate = Date(timeIntervalSince1970: Double(dayBucket) * 86400.0)
-            dedupedByDay[dayBucket] = DailyStrainRecord(
-                date: bucketDate,
+            dedupedByDay[MetricSample.localDayBucket(for: record.date)] = DailyStrainRecord(
+                date: record.date.startOfDay,
                 strain: record.strain
             )
         }

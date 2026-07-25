@@ -569,8 +569,10 @@ final class AppAnalytics {
 
     /// Fired when the onboarding Vitality Age reveal (screen 12) settles on its
     /// result, so the computed outcome — not just the screen transition — is in
-    /// Amplitude (how many users land younger vs older, the spread, and how often
-    /// we had no health data to compute from).
+    /// Amplitude (how many users land younger vs older, and how often we had no
+    /// health data to compute from). The vitality age and the exact year gap are
+    /// computed health results, so only the coarse band and the verdict are
+    /// sent; the numbers stay on the phone.
     func trackOnboardingVitalityRevealed(vitalityAge: Int, realAge: Int, metricCount: Int, hasHealthData: Bool) {
         let diff = realAge - vitalityAge   // + younger, - older
         let band: String
@@ -578,9 +580,7 @@ final class AppAnalytics {
         else if diff >= -3 { band = "slightly_older" }
         else { band = "much_older" }
         logEvent("onboarding_vitality_revealed", parameters: [
-            "vitality_age": vitalityAge,
             "real_age": realAge,
-            "years_diff": diff,
             "verdict": diff > 0 ? "younger" : (diff < 0 ? "older" : "even"),
             "band": band,
             "metric_count": metricCount,
@@ -618,9 +618,11 @@ final class AppAnalytics {
 
     /// Heart screen (11): the resting-HR reveal outcome, so empty-state vs
     /// has-data drop-off is measurable like the vitality reveal.
-    func trackOnboardingHeartRevealed(restingHR: Int?, hasData: Bool, monthsCovered: Int?) {
+    /// The resting heart rate itself is never sent. `has_data` is the whole
+    /// funnel question, and events are joined to a signed-in user id, so a raw
+    /// vital here would be identified health data leaving the phone.
+    func trackOnboardingHeartRevealed(hasData: Bool, monthsCovered: Int?) {
         var params: [String: Any] = ["has_data": hasData]
-        if let restingHR { params["resting_hr"] = restingHR }
         if let monthsCovered { params["months_covered"] = monthsCovered }
         logEvent("onboarding_heart_revealed", parameters: params)
     }
@@ -1968,17 +1970,17 @@ final class AppAnalytics {
 
     // Recommendation outcome
     func trackRecommendationOutcome(category: String, metric: String, severity: String, lift24h: Double?, lift7d: Double?, wasTapped: Bool, outcome: String) {
-        // Always send lift_24h / lift_7d so PostHog can chart them as continuous series.
-        // The `_known` flags let analysts exclude rows where the value is a placeholder.
+        // lift_24h / lift_7d are percent changes measured on the user's own
+        // metric series, so the raw numbers are health data and are not sent.
+        // `outcome` is the classified 7-day result and the `_known` flags keep
+        // evaluation coverage measurable.
         logEvent("recommendation_outcome", parameters: [
             "category": category,
             "metric": metric,
             "severity": severity,
             "was_tapped": wasTapped,
             "outcome": outcome,
-            "lift_24h": lift24h ?? 0.0,
             "lift_24h_known": lift24h == nil ? 0 : 1,
-            "lift_7d": lift7d ?? 0.0,
             "lift_7d_known": lift7d == nil ? 0 : 1
         ])
     }
@@ -2640,6 +2642,9 @@ final class AppAnalytics {
     /// Emitted the morning after a Wind-Down Live Activity was shown, once HealthKit
     /// has recorded sleep onset. `deltaMinutes` is (sleep onset - target bedtime) in
     /// minutes; negative means the user fell asleep before the target.
+    /// The onset timestamp and the exact minute gap both come from HealthKit sleep
+    /// samples, so neither is sent. `onset_band` is the bucketed distance from the
+    /// target bedtime, which is all the wind-down funnel needs.
     func trackLiveActivitySleepOutcome(
         kind: String,
         bedtimeEpoch: Int,
@@ -2647,14 +2652,21 @@ final class AppAnalytics {
         deltaMinutes: Int?,
         sleepDetected: Bool
     ) {
+        let onsetBand: String
+        switch deltaMinutes {
+        case .none:              onsetBand = "unknown"
+        case .some(..<(-30)):    onsetBand = "early"
+        case .some(-30..<15):    onsetBand = "on_time"
+        case .some(15..<60):     onsetBand = "late"
+        default:                 onsetBand = "very_late"
+        }
+
         logEvent("live_activity_sleep_outcome", parameters: [
             "activity_kind": kind,
             "bedtime_epoch": bedtimeEpoch,
             "sleep_detected": sleepDetected ? 1 : 0,
-            "sleep_onset_epoch": sleepOnsetEpoch ?? 0,
             "sleep_onset_known": sleepOnsetEpoch == nil ? 0 : 1,
-            "delta_minutes": deltaMinutes ?? 0,
-            "delta_minutes_known": deltaMinutes == nil ? 0 : 1
+            "onset_band": onsetBand
         ])
     }
 
@@ -2765,10 +2777,12 @@ final class AppAnalytics {
     // MARK: - 20f. Journal Lifecycle Events
     // ══════════════════════════════════════════════════════════════════════
 
-    func trackJournalEntryCreated(category: String, value: Double, hasNotes: Bool) {
+    /// The logged amount is the user's own health entry (drinks, stress level,
+    /// mood), so it is not taken and not sent. Only the fact that a category was
+    /// logged is sent, which is what the feature-usage funnel needs.
+    func trackJournalEntryCreated(category: String, hasNotes: Bool) {
         logEvent("journal_entry_created", parameters: [
             "category": category,
-            "value": value,
             "has_notes": hasNotes ? 1 : 0
         ])
 

@@ -14,6 +14,9 @@ enum WatchBridge {
     /// Message dictionary key carrying an encoded `WatchCommand`.
     static let commandKey = "laso.watch.command"
 
+    /// Message dictionary key carrying an encoded `WatchCommandResult`.
+    static let resultKey = "laso.watch.result"
+
     /// App Group shared by the watch app and the watch complication. The iPhone's
     /// group is a separate container that watchOS cannot reach, so it can never be
     /// used as the phone-to-watch transport.
@@ -82,12 +85,18 @@ struct WatchPayload: Codable, Equatable {
 // MARK: - Watch to Phone
 
 /// A user write made on the wrist. Every case carries an id so the phone can drop
-/// redeliveries, and the phone's day key so a command queued before midnight is
-/// never applied to the wrong day.
+/// redeliveries, and the moment the tap happened so the phone can store the write on
+/// the day it belongs to.
+///
+/// The instant travels, not a day key. A day key would have to be copied out of the
+/// last payload the phone sent, and on any morning before the phone has synced that
+/// key still names yesterday, so every write made that morning would be filed on the
+/// wrong day or thrown away. The phone still turns the instant into a day with its
+/// own calendar, so the two devices never disagree about where a day starts.
 enum WatchCommand: Codable, Equatable {
-    case markActionDone(id: UUID, dayKey: String)
-    case checkIn(id: UUID, dayKey: String, sleepQuality: Int, energyLevel: Int, soreness: Int)
-    case journalTag(id: UUID, dayKey: String, category: String, value: Double)
+    case markActionDone(id: UUID, createdAt: Date)
+    case checkIn(id: UUID, createdAt: Date, sleepQuality: Int, energyLevel: Int, soreness: Int)
+    case journalTag(id: UUID, createdAt: Date, category: String, value: Double)
 
     var id: UUID {
         switch self {
@@ -97,13 +106,39 @@ enum WatchCommand: Codable, Equatable {
         }
     }
 
-    var dayKey: String {
+    var createdAt: Date {
         switch self {
-        case let .markActionDone(_, dayKey): return dayKey
-        case let .checkIn(_, dayKey, _, _, _): return dayKey
-        case let .journalTag(_, dayKey, _, _): return dayKey
+        case let .markActionDone(_, createdAt): return createdAt
+        case let .checkIn(_, createdAt, _, _, _): return createdAt
+        case let .journalTag(_, createdAt, _, _): return createdAt
         }
     }
+}
+
+/// What the phone did with one wrist write.
+///
+/// Sent as its own queued transfer rather than folded into the payload: an outcome is
+/// a one time fact about one command, while the application context only ever holds
+/// the newest state, so a burst of wrist taps would lose every outcome but the last.
+struct WatchCommandResult: Codable, Equatable {
+    let commandId: UUID
+
+    /// Why the phone refused the write. Nil when it was stored.
+    let rejection: WatchCommandRejection?
+}
+
+/// Why a wrist write was not stored. The wrist says so instead of quietly showing the
+/// write as saved, which is what it used to do.
+enum WatchCommandRejection: String, Codable, CaseIterable {
+
+    /// The tap happened on an earlier day and that write only makes sense for today.
+    case earlierDay
+
+    /// The phone could not store it, so nothing was written.
+    case notStored
+
+    /// The write never reached the phone.
+    case notDelivered
 }
 
 // MARK: - Watch Payload Cache

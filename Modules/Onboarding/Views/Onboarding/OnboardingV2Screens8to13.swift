@@ -581,7 +581,7 @@ struct OnbV2Screen11Heart: View {
             guard !revealTracked else { return }
             revealTracked = true
             AppAnalytics.shared.trackOnboardingHeartRevealed(
-                restingHR: snapshot.restingHR, hasData: hasData, monthsCovered: snapshot.restingHRMonthsCovered)
+                hasData: hasData, monthsCovered: snapshot.restingHRMonthsCovered)
         }
     }
 

@@ -1,15 +1,24 @@
 import Foundation
 import WidgetKit
 
+/// One rendered state of the analysis widget.
+///
+/// Every snapshot is optional because the widget can be on the home screen before
+/// the first sync, or right after the user deletes their data. Nothing here is
+/// ever filled in with sample values: an empty field means the app has written
+/// nothing real, and the view says so instead of showing a number.
 struct AnalysisWidgetEntry: TimelineEntry {
     let date: Date
-    let readiness: WidgetReadinessSnapshot
-    let sleep: WidgetSleepSnapshot
-    let action: WidgetActionSnapshot
-    let intelligence: WidgetIntelligenceSnapshot
-    let recoveryDebt: WidgetRecoveryDebtSnapshot
-    let lastUpdate: Date
+    let readiness: WidgetReadinessSnapshot?
+    let sleep: WidgetSleepSnapshot?
+    let action: WidgetActionSnapshot?
+    let intelligence: WidgetIntelligenceSnapshot?
+    let recoveryDebt: WidgetRecoveryDebtSnapshot?
+    let lastUpdate: Date?
 
+    /// Sample data for the widget gallery only. `AnalysisWidgetProvider` returns
+    /// it from `placeholder(in:)` and from a preview snapshot, and never from a
+    /// timeline entry, so these numbers can never be read as the user's own.
     static let placeholder = AnalysisWidgetEntry(
         date: Date(),
         readiness: WidgetReadinessSnapshot(

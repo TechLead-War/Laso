@@ -12,23 +12,36 @@ struct MetricSample: Identifiable, Codable {
         self.value = value
     }
 
-    /// Normalized UTC day bucket for stable day-level deduplication.
-    /// Math-based division is ~100x faster than Calendar.startOfDay(for:) in Swift.
-    static func utcDayBucket(for date: Date) -> Int64 {
-        return Int64(floor(date.timeIntervalSince1970 / 86400.0))
+    /// Read once from the app-wide calendar. `Date.cal` is a snapshot of
+    /// `Calendar.current` taken at launch, so every bucket stays stable for the whole
+    /// run even if the device changes time zone mid session.
+    private static let zone = Date.cal.timeZone
+
+    private static let secondsPerDay: Double = 86400
+
+    /// Local calendar day index, used as the day-level dedupe key.
+    /// It has to be the local day: sleep samples are dated at local wake time, so a UTC
+    /// bucket merges two different nights anywhere the UTC boundary is not local midnight,
+    /// which is India, most of Europe and Japan.
+    /// Adding the zone offset first turns the value into a wall clock reading, so dividing
+    /// by one day lands on exactly the boundary `Calendar.startOfDay` would, daylight
+    /// saving included, without paying for date component decomposition on every sample.
+    static func localDayBucket(for date: Date) -> Int64 {
+        let wallClockSeconds = date.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: date))
+        return Int64(floor(wallClockSeconds / secondsPerDay))
     }
 
-    static func mergedByUTCDay(existing: [MetricSample], incoming: [MetricSample]) -> [MetricSample] {
+    static func mergedByLocalDay(existing: [MetricSample], incoming: [MetricSample]) -> [MetricSample] {
         guard !incoming.isEmpty else { return existing }
 
         var samplesByDay: [Int64: MetricSample] = [:]
         samplesByDay.reserveCapacity(existing.count + incoming.count)
 
         for sample in existing {
-            samplesByDay[utcDayBucket(for: sample.date)] = sample
+            samplesByDay[localDayBucket(for: sample.date)] = sample
         }
         for sample in incoming {
-            samplesByDay[utcDayBucket(for: sample.date)] = sample
+            samplesByDay[localDayBucket(for: sample.date)] = sample
         }
 
         return samplesByDay.values.sorted { $0.date < $1.date }

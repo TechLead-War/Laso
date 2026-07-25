@@ -236,6 +236,14 @@ final class HealthKitManager: @unchecked Sendable {
         // Use start-of-tomorrow so daily statistics buckets always include today's partial data
         let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
 
+        // Sleep now counts on the day the user woke up. Stored days written under
+        // the old rule split one night across two dates, so every sleep day is
+        // read back from HealthKit once. Without this pass the older half of a
+        // sleep baseline reads lower than the newer half.
+        let sleepStageMetrics: Set<HealthMetric> = [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake]
+        let sleepBackfillKey = "Laso.HealthKitManager.sleepWakeDayBackfill"
+        let needsSleepBackfill = !isFirstSync && !UserDefaults.standard.bool(forKey: sleepBackfillKey)
+
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
 
@@ -259,11 +267,13 @@ final class HealthKitManager: @unchecked Sendable {
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
                 let lastSync = syncDates[metric]
+                let rewriteSleepHistory = needsSleepBackfill && sleepStageMetrics.contains(metric)
 
                 // Skip stale metrics: if the metric was synced within the last day AND
                 // its most recent data is older than 7 days, skip it -- unless it's a
                 // core metric or every 7th sync (to catch newly-appearing data).
                 if !isFirstSync,
+                   !rewriteSleepHistory,
                    !coreMetrics.contains(metric),
                    syncCount % 7 != 0,
                    let lastSync,
@@ -289,11 +299,12 @@ final class HealthKitManager: @unchecked Sendable {
 
                 group.addTask { [self] in
                     let startDate: Date
-                    if let lastSync {
+                    if let lastSync, !rewriteSleepHistory {
                         startDate = Date.cal.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
                         // Fetch all available HealthKit history (up to 10 years) so the
-                        // Explore "days" counter reflects the user's full data span.
+                        // Explore "days" counter reflects the user's full data span, and
+                        // so the one time sleep rewrite covers every stored day.
                         startDate = Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
@@ -324,6 +335,13 @@ final class HealthKitManager: @unchecked Sendable {
             fetchedMetrics: fetchedMetrics,
             store: store
         )
+
+        // Marked only after the rewritten days are on disk, so a sync that is
+        // killed part way runs the pass again instead of leaving half the
+        // history on the old rule.
+        if needsSleepBackfill, sleepStageMetrics.isSubset(of: fetchedMetrics) {
+            UserDefaults.standard.set(true, forKey: sleepBackfillKey)
+        }
 
         finalizeInMemoryTimeSeries(
             isFirstSync: isFirstSync,
@@ -451,7 +469,7 @@ final class HealthKitManager: @unchecked Sendable {
 
         return MetricTimeSeries(
             metric: metric,
-            samples: MetricSample.mergedByUTCDay(existing: existing.samples, incoming: incoming)
+            samples: MetricSample.mergedByLocalDay(existing: existing.samples, incoming: incoming)
         )
     }
 
@@ -717,16 +735,88 @@ final class HealthKitManager: @unchecked Sendable {
         napSessionBoundaries.merge(result.naps) { _, new in new }
     }
 
+    // MARK: - Sleep Sessions
+
+    /// Sleep stage values that count as actually asleep.
+    private static let asleepStageValues: Set<Int> = [
+        HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+        HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+        HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+        HKCategoryValueSleepAnalysis.asleepREM.rawValue
+    ]
+
+    /// A gap this long between asleep segments starts a new sleep session.
+    /// 90 minutes matches how Whoop and Oura split sessions: a brief 6:17 wake
+    /// followed by falling back asleep at 6:35 is still one night, not two.
+    private static let sleepSessionGapThreshold: TimeInterval = 90 * 60
+
+    /// Contiguous asleep segments that make up one sleep, plus the awake and
+    /// in-bed samples that sit inside or right beside that window.
+    /// `start` and `end` come from the asleep segments only, so bedtime and
+    /// wake time stay the moments the user actually fell asleep and woke up.
+    private struct SleepSession {
+        var start: Date
+        var end: Date
+        var samples: [HKCategorySample]
+    }
+
+    /// Groups sleep analysis samples into sleep sessions. Samples that belong to
+    /// no session (an awake stretch in the middle of the day) come back in
+    /// `unassigned` so nothing is thrown away.
+    private static func groupSleepSessions(
+        _ results: [HKCategorySample]
+    ) -> (sessions: [SleepSession], unassigned: [HKCategorySample]) {
+        let asleep = results
+            .filter { asleepStageValues.contains($0.value) }
+            .sorted { $0.startDate < $1.startDate }
+
+        var sessions: [SleepSession] = []
+        for sample in asleep {
+            if var last = sessions.last,
+               sample.startDate.timeIntervalSince(last.end) <= sleepSessionGapThreshold {
+                if sample.endDate > last.end { last.end = sample.endDate }
+                last.samples.append(sample)
+                sessions[sessions.count - 1] = last
+            } else {
+                sessions.append(SleepSession(start: sample.startDate, end: sample.endDate, samples: [sample]))
+            }
+        }
+
+        // Awake time recorded just before falling asleep or just after waking
+        // rides along with that session, otherwise a 23:00 awake stretch would
+        // land on a different day than the sleep it belongs to.
+        var unassigned: [HKCategorySample] = []
+        for sample in results where !asleepStageValues.contains(sample.value) {
+            let index = sessions.firstIndex {
+                sample.endDate >= $0.start.addingTimeInterval(-sleepSessionGapThreshold)
+                    && sample.startDate <= $0.end.addingTimeInterval(sleepSessionGapThreshold)
+            }
+            if let index {
+                sessions[index].samples.append(sample)
+            } else {
+                unassigned.append(sample)
+            }
+        }
+        return (sessions, unassigned)
+    }
+
+    /// The day a sleep session counts towards: the day the user woke up, which
+    /// is what a person means by "last night's sleep". A night that starts at
+    /// 23:20 and ends at 06:40 lands whole on the second day instead of being
+    /// split across both. A night shift sleep that runs 09:00 to 17:00 lands on
+    /// the day it ended, so it is never dropped either.
+    /// ponytail: a sleep still running before midnight counts towards the day it
+    /// started until the clock passes midnight, then it moves to the right day on
+    /// the next sync. Only a live "is this sleep finished" check would remove that
+    /// short overlap, and HealthKit does not offer one.
+    private static func sleepDay(for session: SleepSession) -> Date {
+        session.end.startOfDay
+    }
+
     private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> (overnight: [Date: SleepSessionBoundary], naps: [Date: [SleepSessionBoundary]]) {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-            let asleepStageValues: Set<Int> = [
-                HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
-                HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-                HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
-                HKCategoryValueSleepAnalysis.asleepREM.rawValue
-            ]
 
             let query = HKSampleQuery(
                 sampleType: HKCategoryType(.sleepAnalysis),
@@ -739,35 +829,7 @@ final class HealthKitManager: @unchecked Sendable {
                     return
                 }
 
-                // Keep only asleep segments and sort by start.
-                let asleep = results
-                    .filter { asleepStageValues.contains($0.value) }
-                    .sorted { $0.startDate < $1.startDate }
-
-                // Group contiguous asleep segments into sessions, retaining the
-                // raw samples per session so we can later attribute time to each
-                // stage. A gap > 60 min between asleep samples splits sessions —
-                // brief wakeups stay inside the same session, preserving bedtime.
-                struct SleepSession {
-                    var start: Date
-                    var end: Date
-                    var samples: [HKCategorySample]
-                }
-                var sessions: [SleepSession] = []
-                // 90 min gap matches industry practice (Whoop / Oura) for
-                // "wake-within-sleep" — a brief 6:17 wake followed by a fall
-                // back to sleep at 6:35 should stay one session, not split.
-                let gapThreshold: TimeInterval = 90 * 60
-                for sample in asleep {
-                    if var last = sessions.last,
-                       sample.startDate.timeIntervalSince(last.end) <= gapThreshold {
-                        if sample.endDate > last.end { last.end = sample.endDate }
-                        last.samples.append(sample)
-                        sessions[sessions.count - 1] = last
-                    } else {
-                        sessions.append(SleepSession(start: sample.startDate, end: sample.endDate, samples: [sample]))
-                    }
-                }
+                let sessions = HealthKitManager.groupSleepSessions(results).sessions
 
                 /// Builds a SleepSessionBoundary by attributing each stage sample's
                 /// duration to its category, then deriving awake time from the rest
@@ -816,7 +878,7 @@ final class HealthKitManager: @unchecked Sendable {
                     let isOvernight = endHour >= 4 && endHour < 12 && durationHours >= 2
                     let candidate = buildBoundary(for: session)
                     if isOvernight {
-                        let day = session.end.startOfDay
+                        let day = HealthKitManager.sleepDay(for: session)
                         if let existing = overnight[day] {
                             let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
                             let newDur = session.end.timeIntervalSince(session.start)
@@ -849,8 +911,9 @@ final class HealthKitManager: @unchecked Sendable {
     }
 
     /// Run one HKSampleQuery over .sleepAnalysis and bucket every stage in a single
-    /// pass — reproducing the per-metric daily-duration + wake-time logic for each
-    /// sleep metric at once.
+    /// pass. Stages are grouped into sleep sessions first, so one night counts on
+    /// one day even when it starts before midnight, and each day's sample carries
+    /// that day's wake time as its date.
     private func fetchAllSleepStages(from startDate: Date, to endDate: Date) async -> [HealthMetric: MetricTimeSeries] {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
@@ -872,57 +935,55 @@ final class HealthKitManager: @unchecked Sendable {
 
                 let sleepMetrics: [HealthMetric] = [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake]
                 var durations: [HealthMetric: [Date: Double]] = [:]
-                var wakeTimes: [HealthMetric: [Date: Date]] = [:]
-                for m in sleepMetrics { durations[m] = [:]; wakeTimes[m] = [:] }
+                for m in sleepMetrics { durations[m] = [:] }
 
-                let asleepStageValues: Set<Int> = [
-                    HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
-                    HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-                    HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
-                    HKCategoryValueSleepAnalysis.asleepREM.rawValue
-                ]
-
-                // Add one sample's duration to a metric's daily bucket and track its
-                // wake time from overnight sleep only (ends 4 AM–noon); skips naps.
-                func route(_ m: HealthMetric, day: Date, duration: Double, end: Date, endHour: Int) {
-                    durations[m]?[day, default: 0] += duration
-                    if endHour >= 4 && endHour < 12 {
-                        if let existing = wakeTimes[m]?[day] {
-                            if end > existing { wakeTimes[m]?[day] = end }
-                        } else {
-                            wakeTimes[m]?[day] = end
-                        }
-                    }
-                }
-
-                for sample in results {
-                    let day = sample.endDate.startOfDay
-                    let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
-                    let endHour = Date.cal.component(.hour, from: sample.endDate)
-
-                    if asleepStageValues.contains(sample.value) {
-                        route(.sleepDuration, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                // Add one sample's time to the day its sleep session counts towards.
+                func route(_ sample: HKCategorySample, to day: Date) {
+                    let hours = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0
+                    if HealthKitManager.asleepStageValues.contains(sample.value) {
+                        durations[.sleepDuration]?[day, default: 0] += hours
                     }
                     switch sample.value {
                     case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                        route(.sleepREM, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                        durations[.sleepREM]?[day, default: 0] += hours
                     case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                        route(.sleepDeep, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                        durations[.sleepDeep]?[day, default: 0] += hours
                     case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-                        route(.sleepCore, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                        durations[.sleepCore]?[day, default: 0] += hours
                     case HKCategoryValueSleepAnalysis.awake.rawValue:
-                        route(.sleepAwake, day: day, duration: duration, end: sample.endDate, endHour: endHour)
+                        durations[.sleepAwake]?[day, default: 0] += hours
                     default:
                         break
                     }
                 }
 
-                // Use actual wake time as the sample date so downstream consumers
-                // (e.g. SleepNeedCalculator) can infer when the user woke up.
+                // The end of each day's longest session, used as the sample date so
+                // callers can read the wake time straight off the series.
+                var wakeTimes: [Date: Date] = [:]
+                var longestSessionLength: [Date: TimeInterval] = [:]
+
+                let grouped = HealthKitManager.groupSleepSessions(results)
+                for session in grouped.sessions {
+                    // A whole night belongs to one day, the day the user woke up,
+                    // so a sleep that starts before midnight is not cut in two.
+                    // Naps and night shift sleep follow the same rule and stay on
+                    // the day they ended. A session that runs past a second night
+                    // still counts once, on the morning it finally ended.
+                    let day = HealthKitManager.sleepDay(for: session)
+                    let length = session.end.timeIntervalSince(session.start)
+                    if length > (longestSessionLength[day] ?? -1) {
+                        longestSessionLength[day] = length
+                        wakeTimes[day] = session.end
+                    }
+                    for sample in session.samples { route(sample, to: day) }
+                }
+                // Awake time recorded away from any sleep still counts on its own day.
+                for sample in grouped.unassigned { route(sample, to: sample.endDate.startOfDay) }
+
                 var out: [HealthMetric: MetricTimeSeries] = [:]
                 for m in sleepMetrics {
                     let samples = (durations[m] ?? [:]).map { entry in
-                        MetricSample(date: wakeTimes[m]?[entry.key] ?? entry.key, value: entry.value)
+                        MetricSample(date: wakeTimes[entry.key] ?? entry.key, value: entry.value)
                     }.sorted { $0.date < $1.date }
                     out[m] = MetricTimeSeries(metric: m, samples: samples)
                 }

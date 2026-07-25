@@ -118,8 +118,8 @@ struct HomeView: View {
             AppAnalytics.shared.trackFeatureOpen(.home)
         }
         .onChange(of: liveReadinessScore) { _, _ in
-            // The morning score can land after first appear; compute the loop
-            // closer once a real score exists.
+            // The morning lock is written in the same pass that produces this
+            // score, so a change here is the signal that it may now exist.
             refreshDailyResult()
         }
         .onDisappear {
@@ -186,12 +186,12 @@ struct HomeView: View {
         liveViewModel.recovery.readinessScore != nil
     }
 
-    /// Compute the loop-closer card once a real morning score exists. Guarded on
+    /// Compute the loop-closer card once today's morning lock exists. Guarded on
     /// `dailyResult == nil` so it resolves once per morning and the shown event
     /// fires a single time despite the 30-minute score refresh.
     private func refreshDailyResult() {
         guard dailyResult == nil,
-              let result = DailyActionResultStore.resultToShow(todayScore: liveReadinessScore) else { return }
+              let result = DailyActionResultStore.resultToShow() else { return }
         dailyResult = result
         let direction: String
         switch result.direction {
@@ -718,7 +718,6 @@ struct HomeView: View {
             DailyActionCompletion.markDone(
                 actionTitle: action.title,
                 actionIcon: action.icon,
-                score: liveReadinessScore,
                 source: "next_up_mark_done"
             )
             actionDoneToday = true

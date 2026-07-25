@@ -36,6 +36,21 @@ enum WatchStrings {
         static let saved = "Logged"
     }
 
+    /// What the wrist says when a write did not land. Every refusal has a line here:
+    /// a write the phone threw away must never look the same as one it stored.
+    enum Write {
+        static func message(for rejection: WatchCommandRejection) -> String {
+            switch rejection {
+            case .earlierDay:
+                return "That was for an earlier day, so it was not saved. Tap again for today."
+            case .notStored:
+                return "Your iPhone could not save that. Open Laso on your iPhone."
+            case .notDelivered:
+                return "That did not reach your iPhone. Try again."
+            }
+        }
+    }
+
     enum Complication {
         static let name = "Readiness"
         static let description = "Your readiness score at a glance."

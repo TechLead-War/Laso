@@ -48,18 +48,34 @@ struct WatchBridgeCheck {
         let encoded = try! JSONEncoder().encode(fresh)
         check("payload round trips", try! JSONDecoder().decode(WatchPayload.self, from: encoded) == fresh)
 
-        // Every command survives the wire and keeps its id and day
+        // Every command survives the wire and keeps its id and the moment it was made
+        let tappedAt = ref
         let commands: [WatchCommand] = [
-            .markActionDone(id: UUID(), dayKey: key),
-            .checkIn(id: UUID(), dayKey: key, sleepQuality: 4, energyLevel: 3, soreness: 5),
-            .journalTag(id: UUID(), dayKey: key, category: "caffeine", value: 1)
+            .markActionDone(id: UUID(), createdAt: tappedAt),
+            .checkIn(id: UUID(), createdAt: tappedAt, sleepQuality: 4, energyLevel: 3, soreness: 5),
+            .journalTag(id: UUID(), createdAt: tappedAt, category: "caffeine", value: 1)
         ]
         for command in commands {
             let data = try! JSONEncoder().encode(command)
             let back = try! JSONDecoder().decode(WatchCommand.self, from: data)
             check("command round trips", back == command)
             check("command keeps id", back.id == command.id)
-            check("command keeps day", back.dayKey == key)
+            check("command keeps the moment it was made", back.createdAt == tappedAt)
+            // The day a write lands on comes from the tap, never from the payload the
+            // wrist happened to be showing, which on an unsynced morning is yesterday.
+            check("command names the day it was made", WatchBridge.dayKey(for: back.createdAt) == key)
+        }
+
+        // Outcomes survive the wire, including the reason a write was refused
+        for rejection in [nil] + WatchCommandRejection.allCases.map(Optional.init) {
+            let result = WatchCommandResult(commandId: UUID(), rejection: rejection)
+            let data = try! JSONEncoder().encode(result)
+            check("result round trips", try! JSONDecoder().decode(WatchCommandResult.self, from: data) == result)
+        }
+
+        // Every refusal has something to say on the wrist
+        for rejection in WatchCommandRejection.allCases {
+            check("refusal has a message", !WatchStrings.Write.message(for: rejection).isEmpty)
         }
 
         // Dedupe ledger: a redelivered command is applied once
