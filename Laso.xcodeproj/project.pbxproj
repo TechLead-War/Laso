@@ -276,6 +276,7 @@
 		8DEF96442347A39F27ACDCB8 /* HealthKitRepromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E739780C8B13C8A2E5E14 /* HealthKitRepromptManager.swift */; };
 		8E6E8E50EA4B0656A21FC892 /* HealthCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69C581D6B56BDCD5B63C7CCD /* HealthCategory.swift */; };
 		8EB62B1DFE5E7CF14F1BC370 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9912F154DD8358499156979C /* MetricDetailView.swift */; };
+		8F1EF2199389DE091815DA17 /* WatchComplicationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */; };
 		8F26AA23CC5A53B23766F767 /* WindDownActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */; };
 		8F43945763740FFBBF92907E /* Copy+Referral.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77AF23C7F3838851A71205F9 /* Copy+Referral.swift */; };
 		8F4D8209F967F2B1F0A6F463 /* SleepCoachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FAD00E49F534D56B4D1ACE /* SleepCoachView.swift */; };
@@ -394,6 +395,7 @@
 		C94766D6233A9386A1F911BF /* WeeklySummaryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F0EEEF2E628CA7442A145B /* WeeklySummaryScheduler.swift */; };
 		C964C1310CB0D96F5B119C40 /* ShowTrendsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66A4092EF304A681D9F1C82 /* ShowTrendsIntent.swift */; };
 		C965B162B278B13C36D027FF /* FoundationModelQueryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7901D4D2355FF56E578ED1E /* FoundationModelQueryEngine.swift */; };
+		CA020233DB2343F7195A9C14 /* WatchComplicationSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5915EA6DF7CFFB17243357 /* WatchComplicationSteps.swift */; };
 		CB9AA1D29F656DB971133E5F /* HTMLReportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EBA5AC0F025FC3F0497A9A /* HTMLReportGenerator.swift */; };
 		CC79F682E728654C5D2921D3 /* ROIRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17DC17084EE2545DDF26472 /* ROIRanker.swift */; };
 		CD9138E6FFBB96392C95F92F /* Copy+HealthState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D0B6CCAF0E1D7D023AFC59 /* Copy+HealthState.swift */; };
@@ -787,6 +789,7 @@
 		78D0A7A8A5CE97B2C4468D86 /* RulesConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesConfiguration.swift; sourceTree = "<group>"; };
 		794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		7990C45DA6F7185654AD64B6 /* WatchJournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchJournalView.swift; sourceTree = "<group>"; };
+		7A5915EA6DF7CFFB17243357 /* WatchComplicationSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchComplicationSteps.swift; sourceTree = "<group>"; };
 		7B11F3A73FDF345E243B48CC /* VitalityTrendSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityTrendSection.swift; sourceTree = "<group>"; };
 		7C331C42101235409295B307 /* NLEmbeddingAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLEmbeddingAnalyzer.swift; sourceTree = "<group>"; };
 		7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceRecord.swift; sourceTree = "<group>"; };
@@ -970,6 +973,7 @@
 		D901E75F4ECF2BFD747AD3F9 /* ExploreScoreHeroSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreScoreHeroSection.swift; sourceTree = "<group>"; };
 		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
+		DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchComplicationCard.swift; sourceTree = "<group>"; };
 		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DD5FB10DF230EF3F82639ED0 /* RemoteConfigTemplate.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RemoteConfigTemplate.md; sourceTree = "<group>"; };
@@ -1695,6 +1699,7 @@
 				6C84630810398937B2D0431D /* TimeRangeSelector.swift */,
 				8B0D5AF7D4B32933D7746F23 /* TrainingZoneColor.swift */,
 				F146D4D2C2479583F8A44699 /* TrendBadge.swift */,
+				7A5915EA6DF7CFFB17243357 /* WatchComplicationSteps.swift */,
 				B77CE5FA8601EAC1B9F63D8E /* WeeklyBarChart.swift */,
 			);
 			path = Components;
@@ -1977,6 +1982,7 @@
 				2630646758E72C032CFF3399 /* TodayBriefingView.swift */,
 				282D3653E910175FDBD29EF1 /* TodaysActionDetailView.swift */,
 				2F0CCC8241D97C67CD28F38C /* VitalityCard.swift */,
+				DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */,
 				EA3EC72063A5D64B85AC6C0D /* WeeklyReviewView.swift */,
 			);
 			path = Home;
@@ -3039,6 +3045,8 @@
 				A64ADEE58C78DFB87E8F0101 /* VitalityTrendSection.swift in Sources */,
 				EB96044F0C7FB5DA7FD04D4A /* WakeUpTimeDetector.swift in Sources */,
 				9B6B6F6AA6A56B6CFBFD30DE /* WatchBridge.swift in Sources */,
+				8F1EF2199389DE091815DA17 /* WatchComplicationCard.swift in Sources */,
+				CA020233DB2343F7195A9C14 /* WatchComplicationSteps.swift in Sources */,
 				D46DA3E71BEC6288BAFAD011 /* WatchMonitor.swift in Sources */,
 				7550C3B504ADF8D5322BF255 /* WatchStrings.swift in Sources */,
 				63468BB32A6196DAB7DBD87D /* WebExportViewModel.swift in Sources */,
@@ -3180,7 +3188,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 63;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3199,7 +3207,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.54;
+				MARKETING_VERSION = 1.2.55;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3269,7 +3277,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 63;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3282,7 +3290,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.54;
+				MARKETING_VERSION = 1.2.55;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

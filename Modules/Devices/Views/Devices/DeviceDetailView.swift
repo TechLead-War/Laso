@@ -11,6 +11,12 @@ struct DeviceDetailView: View {
                 // Device Header
                 deviceHeader
 
+                // Watch face complication. Permanent home for the steps, since the
+                // Home card is dismissible and shows at most once.
+                if device == .appleWatch {
+                    watchComplicationSection
+                }
+
                 if let info = deviceInfo {
                     // Connected device. show metrics
                     connectedContent(info)
@@ -35,6 +41,31 @@ struct DeviceDetailView: View {
                 "device": displayTitle
             ])
         }
+    }
+
+    private var watchComplicationSection: some View {
+        VStack(alignment: .leading, spacing: DS.space3) {
+            Text(Copy.Devices.WatchComplication.title)
+                .font(DS.Typography.subheadlineSemibold)
+
+            if PhoneWatchSession.shared.linkState.isComplicationEnabled {
+                Text(Copy.Devices.WatchComplication.added)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text(Copy.Devices.WatchComplication.subtitle)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                WatchComplicationSteps()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .padding(.horizontal)
     }
 
     private var deviceHeader: some View {

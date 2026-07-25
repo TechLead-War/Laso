@@ -416,6 +416,10 @@ struct HomeView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
+                    // 1d. Watch face complication nudge. Only when a watch is paired
+                    // with the app installed and the complication is not on the face.
+                    WatchComplicationCard(linkState: PhoneWatchSession.shared.linkState)
+
                     // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
                     // Proactive one-paragraph story of today, grounded in real signals.
                     DailyNarrativeCard(signals: buildDailyNarrativeSignals())

@@ -111,6 +111,9 @@ enum AppKeys {
         static let lastWatchDataTime        = "healthpulse.watchMonitor.lastWatchDataTime"
         static let lastObserverProcessing   = "healthpulse.watchMonitor.lastObserverProcessing"
         static let lastScheduleRefresh      = "healthpulse.watchMonitor.lastScheduleRefresh"
+        /// Set when the user dismisses the "add the complication" card. Permanent:
+        /// the same steps stay available on the Apple Watch device screen.
+        static let complicationPromptDismissed = "laso.watch.complicationPromptDismissed"
     }
 
     // MARK: - UI Dismissals

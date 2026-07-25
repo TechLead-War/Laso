@@ -101,5 +101,21 @@ extension Copy {
         static func appText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_devices_app_text", default: "App: %@"), p0) }
         static func bundleText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_devices_bundle_text", default: "Bundle: %@"), p0) }
         static func metricsAndLastSyncText(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_devices_metrics_last_sync_text", default: "%d metrics · Last sync %@"), p0, p1) }
+
+        // MARK: - Watch Complication
+
+        /// Steps for putting the readiness complication on the watch face. Shown on
+        /// Home once, and kept permanently on the Apple Watch device screen.
+        enum WatchComplication {
+            static var title: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_title", default: "Put your score on your watch face") }
+            static var subtitle: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_subtitle", default: "See your readiness by raising your wrist, without opening the app.") }
+            static var stepOne: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_one", default: "Press and hold your watch face") }
+            static var stepTwo: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_two", default: "Tap Edit, then swipe to Complications") }
+            static var stepThree: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_three", default: "Tap a slot and choose Laso") }
+            static var dismiss: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_dismiss", default: "Not now") }
+            static var dismissLabel: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_dismiss_label", default: "Hide this tip") }
+            static var added: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_added", default: "Laso is on your watch face.") }
+        }
+
     }
 }

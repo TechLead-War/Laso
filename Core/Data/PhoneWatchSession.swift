@@ -1,5 +1,25 @@
 import Foundation
+import Observation
 import WatchConnectivity
+
+/// What the phone currently knows about the paired watch.
+///
+/// Read by the Home card that teaches people to add the complication, which must
+/// disappear the moment they actually add it.
+@Observable
+@MainActor
+final class WatchLinkState {
+
+    private(set) var isPaired = false
+    private(set) var isWatchAppInstalled = false
+    private(set) var isComplicationEnabled = false
+
+    fileprivate func update(from session: WCSession) {
+        isPaired = session.isPaired
+        isWatchAppInstalled = session.isWatchAppInstalled
+        isComplicationEnabled = session.isComplicationEnabled
+    }
+}
 
 /// The iPhone half of the phone-to-watch link.
 ///
@@ -33,6 +53,9 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     @MainActor private var lastComplicationScore: Int?
 
     @MainActor private let ledger = AppliedCommandLedger()
+
+    /// Live view of the paired watch, for UI that has to react to it.
+    @MainActor let linkState = WatchLinkState()
 
     private struct CoreState {
         let readinessScore: Int
@@ -199,7 +222,10 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
             return
         }
         guard activationState == .activated else { return }
-        Task { @MainActor in self.resend() }
+        Task { @MainActor in
+            self.linkState.update(from: session)
+            self.resend()
+        }
     }
 
     /// Required on iOS. The session goes inactive when the user switches watches.
@@ -210,9 +236,13 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
         WCSession.default.activate()
     }
 
-    /// A watch was paired, unpaired, or the watch app was installed or removed.
+    /// A watch was paired, unpaired, the watch app was installed or removed, or a
+    /// complication was added to or taken off the face.
     @objc func sessionWatchStateDidChange(_ session: WCSession) {
-        Task { @MainActor in self.resend() }
+        Task { @MainActor in
+            self.linkState.update(from: session)
+            self.resend()
+        }
     }
 
     @objc func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
