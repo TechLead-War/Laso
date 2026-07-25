@@ -16,19 +16,12 @@ extension Copy {
 
         // MARK: - Daily Check-in
 
-        static var dailyCheckInTitle: String { RemoteConfigManager.shared.copyString("copy_journal_daily_check_in_title", default: "Daily Check-in") }
         static var logEntryTitle: String { RemoteConfigManager.shared.copyString("copy_journal_log_entry_title", default: "Log Entry") }
         static var whatToLog: String { RemoteConfigManager.shared.copyString("copy_journal_what_to_log", default: "What would you like to log?") }
         static var amount: String { RemoteConfigManager.shared.copyString("copy_journal_amount", default: "Amount") }
         static var notes: String { RemoteConfigManager.shared.copyString("copy_journal_notes", default: "Notes") }
         static var notesPlaceholder: String { RemoteConfigManager.shared.copyString("copy_journal_notes_placeholder", default: "Optional notes...") }
         static var logged: String { RemoteConfigManager.shared.copyString("copy_journal_logged", default: "Logged") }
-        static func logCount(_ count: Int) -> String {
-            let unit = count == 1
-                ? RemoteConfigManager.shared.copyString("copy_journal_behavior_singular_caps", default: "Behavior")
-                : RemoteConfigManager.shared.copyString("copy_journal_behavior_plural_caps", default: "Behaviors")
-            return String(format: RemoteConfigManager.shared.copyString("copy_journal_log_count", default: "Log %d %@"), count, unit)
-        }
         static func loggedCount(_ count: Int) -> String {
             let unit = count == 1
                 ? RemoteConfigManager.shared.copyString("copy_journal_behavior_singular", default: "behavior")
@@ -46,22 +39,15 @@ extension Copy {
         static var correlationMild: String { RemoteConfigManager.shared.copyString("copy_journal_correlation_mild", default: "Mild") }
 
         // MARK: - Lifted view literals
-        static var savesTheSelectedBehaviorsAndDismissesHint: String { RemoteConfigManager.shared.copyString("copy_journal_saves_the_selected_behaviors_and_dismisses_hint", default: "Saves the selected behaviors and dismisses this sheet") }
         static var adjustTheAmountYouLoggedHint: String { RemoteConfigManager.shared.copyString("copy_journal_adjust_the_amount_you_logged_hint", default: "Adjust the amount you logged") }
 
         // MARK: - Lifted interpolated view literals
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_x_text", default: "%d"), p0) }
         static func valueWithUnitText(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_value_with_unit_text", default: "%@ %@"), p0, p1) }
-        static func toggleToLogOrUnlogHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_toggle_to_log_or_unlog_hint", default: "Toggle to log or unlog %@ today"), p0) }
         static func decreaseLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_decrease_label", default: "Decrease %@"), p0) }
-        static func decreasesTheLoggedAmountByHint(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_decreases_the_logged_amount_by_hint", default: "Decreases the logged amount by %@ %@"), p0, p1) }
         static func increaseLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_increase_label", default: "Increase %@"), p0) }
-        static func increasesTheLoggedAmountByHint(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_increases_the_logged_amount_by_hint", default: "Increases the logged amount by %@ %@"), p0, p1) }
-        static func ratingOfLabel(_ p0: String, _ p1: Int, _ p2: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_rating_of_label", default: "%@ rating %d of %d"), p0, p1, p2) }
-        static func selectsRatingOutOfHint(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_selects_rating_out_of_hint", default: "Selects rating %d out of %d"), p0, p1) }
         static func daysText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_days_text", default: "%d days"), p0) }
         static func affectsLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_affects_label", default: "%@ affects %@"), p0, p1) }
-        static func correlationDaysOfDataValue(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_correlation_days_of_data_value", default: "%@ correlation, %d days of data"), p0, p1) }
         static func decreasesTheValueByHint(_ p0: Double, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_decreases_the_value_by_hint", default: "Decreases the value by %g %@"), p0, p1) }
         static func increasesTheValueByHint(_ p0: Double, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_increases_the_value_by_hint", default: "Increases the value by %g %@"), p0, p1) }
         static func amountLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_journal_amount_label", default: "%@ amount"), p0) }

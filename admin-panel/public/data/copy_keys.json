@@ -9048,26 +9048,8 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_behavior_plural_caps",
-    "defaultValue": "Behaviors",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_behavior_singular",
     "defaultValue": "behavior",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_behavior_singular_caps",
-    "defaultValue": "Behavior",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_correlation_days_of_data_value",
-    "defaultValue": "%@ correlation, %d days of data",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -9090,12 +9072,6 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_daily_check_in_title",
-    "defaultValue": "Daily Check-in",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_days_text",
     "defaultValue": "%d days",
     "sourceFile": "Copy+Journal.swift",
@@ -9108,12 +9084,6 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_decreases_the_logged_amount_by_hint",
-    "defaultValue": "Decreases the logged amount by %@ %@",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_decreases_the_value_by_hint",
     "defaultValue": "Decreases the value by %g %@",
     "sourceFile": "Copy+Journal.swift",
@@ -9122,12 +9092,6 @@
   {
     "key": "copy_journal_increase_label",
     "defaultValue": "Increase %@",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_increases_the_logged_amount_by_hint",
-    "defaultValue": "Increases the logged amount by %@ %@",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -9174,12 +9138,6 @@
     "isArray": false
   },
   {
-    "key": "copy_journal_log_count",
-    "defaultValue": "Log %d %@",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_journal_log_entry",
     "defaultValue": "Log %@",
     "sourceFile": "Copy+Journal.swift",
@@ -9212,30 +9170,6 @@
   {
     "key": "copy_journal_notes_placeholder",
     "defaultValue": "Optional notes...",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_rating_of_label",
-    "defaultValue": "%@ rating %d of %d",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_saves_the_selected_behaviors_and_dismisses_hint",
-    "defaultValue": "Saves the selected behaviors and dismisses this sheet",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_selects_rating_out_of_hint",
-    "defaultValue": "Selects rating %d out of %d",
-    "sourceFile": "Copy+Journal.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_journal_toggle_to_log_or_unlog_hint",
-    "defaultValue": "Toggle to log or unlog %@ today",
     "sourceFile": "Copy+Journal.swift",
     "isArray": false
   },
@@ -10410,30 +10344,6 @@
     "isArray": true
   },
   {
-    "key": "copy_onboarding_calibration_reassurance",
-    "defaultValue": "(array)",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": true
-  },
-  {
-    "key": "copy_onboarding_choose_your_gender_for_personalized_analysis_hint",
-    "defaultValue": "Choose your gender for personalized analysis",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_data_points_found_text",
-    "defaultValue": "%@ data points found",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_gender_label",
-    "defaultValue": "Gender",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_h",
     "defaultValue": "h",
     "sourceFile": "Copy+Onboarding.swift",
@@ -10452,96 +10362,6 @@
     "isArray": false
   },
   {
-    "key": "copy_onboarding_mirror_calibrating_message",
-    "defaultValue": "Laso is building your personal baseline from Apple Health. This only happens once.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_calibrating_title",
-    "defaultValue": "Reading your signal",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_complete_subtitle",
-    "defaultValue": "%@ of your health, understood.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_complete_title",
-    "defaultValue": "Here is what I found",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_continue",
-    "defaultValue": "Show me more",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_incomplete",
-    "defaultValue": "Still syncing",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_no_data_message",
-    "defaultValue": "No data yet. Laso will build your baseline as data comes in.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_observation_body",
-    "defaultValue": "Body measurements will anchor the trends you see over time.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_observation_default",
-    "defaultValue": "Your baseline is in. Laso can start finding patterns.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_observation_fitness",
-    "defaultValue": "Activity patterns are in. Laso can see how your body handles effort.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_observation_heart",
-    "defaultValue": "Heart and recovery signals are in. Laso can start finding your rhythms.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_observation_sleep",
-    "defaultValue": "Your sleep history gives Laso a strong signal to work with.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_retry",
-    "defaultValue": "Try again",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_skip",
-    "defaultValue": "Skip for now",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_mirror_starting_calibration",
-    "defaultValue": "Starting calibration\\u{2026}",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_ms",
     "defaultValue": "ms",
     "sourceFile": "Copy+Onboarding.swift",
@@ -10556,60 +10376,6 @@
   {
     "key": "copy_onboarding_no_data_yet2",
     "defaultValue": "no data yet",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_of_metrics_synced_text",
-    "defaultValue": "%d of %d metrics synced",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_age_error",
-    "defaultValue": "Enter a valid age between 13 and 120.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_age_label",
-    "defaultValue": "Age",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_age_placeholder",
-    "defaultValue": "e.g. 28",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_continue",
-    "defaultValue": "Continue",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_gender_error",
-    "defaultValue": "Select a gender to continue.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_gender_prompt",
-    "defaultValue": "Select gender",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_subtitle",
-    "defaultValue": "Heart, sleep, and recovery change at every life stage. Yours are yours alone.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_about_title",
-    "defaultValue": "Start with you",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
@@ -10638,128 +10404,14 @@
     "isArray": false
   },
   {
-    "key": "copy_onboarding_onboarding_pulse_begin",
-    "defaultValue": "Begin",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_onboarding_pulse_headline",
-    "defaultValue": "See what your body has been telling you.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_onboarding_resting_hr_label",
     "defaultValue": "Resting HR",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
   {
-    "key": "copy_onboarding_priority_card_subtitle_fitness",
-    "defaultValue": "Movement, workouts, and effort",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_card_subtitle_heart_health",
-    "defaultValue": "Resting rate, HRV, cardio fitness",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_card_subtitle_recovery",
-    "defaultValue": "How ready your body is each day",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_card_subtitle_sleep",
-    "defaultValue": "Overnight recovery and patterns",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_card_subtitle_weight_body",
-    "defaultValue": "Trends in body shape and vitals",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_continue",
-    "defaultValue": "Continue",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_subtitle",
-    "defaultValue": "Your pick shapes the insights you see.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_priority_title",
-    "defaultValue": "What should Laso look at first?",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_progress_step_text",
     "defaultValue": "%d / %d",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_body_no_span",
-    "defaultValue": "Laso will surface %d %@ from your health data.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_body_with_span",
-    "defaultValue": "Laso will surface %d %@ from your %@ of history.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_disclaimer_footer",
-    "defaultValue": "Not a medical device. Laso is for information, not diagnosis.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_disclaimer_learn_more",
-    "defaultValue": "Full disclaimer",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_fallback",
-    "defaultValue": "Laso will start building your baseline as data comes in.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_pattern_plural",
-    "defaultValue": "patterns",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_pattern_singular",
-    "defaultValue": "pattern",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_sign_in_helper",
-    "defaultValue": "We use Apple Sign In so your subscription stays with you across devices.",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_promise_title",
-    "defaultValue": "Your first 7 days",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
@@ -10830,44 +10482,14 @@
     "isArray": false
   },
   {
-    "key": "copy_onboarding_saves_your_age_and_gender_and_hint",
-    "defaultValue": "Saves your age and gender and continues onboarding",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_saves_your_selected_focus_areas_and_hint",
-    "defaultValue": "Saves your selected focus areas and continues onboarding",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_siri_tip",
     "defaultValue": "Try saying \"Hey Siri, what's my health score in Laso\"",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
   {
-    "key": "copy_onboarding_starts_the_onboarding_flow_hint",
-    "defaultValue": "Starts the onboarding flow",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_onboarding_target7h",
     "defaultValue": "target 7h",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_toggles_as_a_focus_area_hint",
-    "defaultValue": "Toggles %@ as a focus area",
-    "sourceFile": "Copy+Onboarding.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_onboarding_works_with_siri",
-    "defaultValue": "Works with Siri",
     "sourceFile": "Copy+Onboarding.swift",
     "isArray": false
   },
