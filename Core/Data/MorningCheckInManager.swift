@@ -46,7 +46,29 @@ final class MorningCheckInManager {
         UserDefaults.standard.set(dateStr, forKey: dismissedDateKey)
     }
 
-    /// Save a completed check-in
+    /// Record a completed check-in from any surface, phone or wrist.
+    ///
+    /// Both entry points go through here so the first-check-in event can never fire
+    /// twice and the history file has a single writer.
+    @MainActor
+    static func record(_ checkIn: MorningCheckIn) {
+        save(checkIn)
+        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+
+        // First-ever check-in is the denied branch's value moment; fire once via
+        // a one-shot flag so history pruning can never replay it.
+        if !UserDefaults.standard.bool(forKey: AppKeys.Prediction.firstCheckInLogged) {
+            UserDefaults.standard.set(true, forKey: AppKeys.Prediction.firstCheckInLogged)
+            AppAnalytics.shared.trackFirstCheckInDone()
+        }
+    }
+
+    /// Save a completed check-in.
+    ///
+    /// Main actor bound because the save is a read, append, write over a shared
+    /// array using shared mutable formatters: two concurrent writers would lose an
+    /// entry or corrupt the stored history.
+    @MainActor
     static func save(_ checkIn: MorningCheckIn) {
         var history = loadHistory()
         history.append(checkIn)

@@ -1970,6 +1970,10 @@ final class DashboardViewModel {
         _cachedDailyAction = action
         _cachedDailyActionDate = today
         saveActionKey(recommendation.title)
+        // Persist it too: `refresh` clears the in-memory cache immediately before
+        // writing widget snapshots, so the widget and the watch would otherwise get
+        // nothing. Surfaces outside this view model read the stored copy.
+        DailyActionStore.save(title: action.title, subtitle: action.subtitle, icon: action.icon)
 
         return action
     }
@@ -2053,9 +2057,9 @@ final class DashboardViewModel {
             updatedAt: Date()
         )
 
-        // Action. from daily action cache
-        let actionText = _cachedDailyAction
-        let action = actionText.map {
+        // Action. from the stored copy, because `refresh` clears the in-memory
+        // cache on the line before this method is called.
+        let action = DailyActionStore.today().map {
             WidgetActionSnapshot(
                 headline: $0.title,
                 detail: $0.subtitle,
@@ -2081,6 +2085,16 @@ final class DashboardViewModel {
             trend: debtHours < 1 ? "stable" : debtHours > 3 ? "worsening" : "improving",
             detail: debtHours < 0.5 ? "Fully recovered" : String(format: "%.1fh deficit", debtHours),
             updatedAt: Date()
+        )
+
+        // Watch: send the number the Home hero card shows, not the widget's morning
+        // lock. Someone who glances at their wrist and then opens the app has to see
+        // the same value. `loadCachedScore` is the live score LiveViewModel mirrors
+        // for exactly this cross-surface use.
+        PhoneWatchSession.shared.push(
+            readinessScore: readinessStore.loadCachedScore() ?? overallScore.score,
+            grade: grade,
+            dayType: readiness.dayType
         )
 
         let snapshotsWritten = WidgetDataStore.shared.writeAllSnapshots(
@@ -2411,16 +2425,8 @@ final class DashboardViewModel {
     /// Apply morning check-in to readiness scoring (Paper 10)
     @MainActor
     func applyMorningCheckIn(_ checkIn: MorningCheckIn) {
-        MorningCheckInManager.save(checkIn)
+        MorningCheckInManager.record(checkIn)
         subjectiveReadinessAdjustment = checkIn.readinessAdjustment
-        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
-
-        // First-ever check-in is the denied branch's value moment; fire once via
-        // a one-shot flag so history pruning can never replay it.
-        if !UserDefaults.standard.bool(forKey: AppKeys.Prediction.firstCheckInLogged) {
-            UserDefaults.standard.set(true, forKey: AppKeys.Prediction.firstCheckInLogged)
-            AppAnalytics.shared.trackFirstCheckInDone()
-        }
     }
 
     /// Adjusted readiness score incorporating subjective data (Paper 10)

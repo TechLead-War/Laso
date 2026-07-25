@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0004909582AA930451459F3B /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E020657065005DF616545BF6 /* Date+Extensions.swift */; };
 		003F39E7F76235D19074136B /* HealthKitRepromptBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B9091C60DB3AF85FB82B44 /* HealthKitRepromptBanner.swift */; };
 		0127CC461CC7B5B5E7DE93A5 /* OnboardingPredictionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285FDE9BD8011B4DC47703DF /* OnboardingPredictionStore.swift */; };
 		015E6C615F6CA214083038D3 /* CardioRespiratoryAgeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F884979A6CD42372836D0A4 /* CardioRespiratoryAgeConfig.swift */; };
@@ -50,6 +51,7 @@
 		17028807F5A85FC99C9866FE /* TimeSeriesAligner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962F8FF9A3A8ACD5BA33465F /* TimeSeriesAligner.swift */; };
 		1718C92B702F70705DC43FDE /* HealthDataQueryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2599A60BD21D81A578BD3474 /* HealthDataQueryEngine.swift */; };
 		17ADEC43B30D4EDF0BDD9198 /* FeatureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2E429C36E9675CE2142019B /* FeatureEngine.swift */; };
+		18F310E0E1440F0EAF9F793A /* PhoneWatchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D38B60DE1D30E3BBB5E3857 /* PhoneWatchSession.swift */; };
 		1942162E0BC037328CC0AE8E /* ReadinessScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA12FE108924D92F34FCEA1 /* ReadinessScorer.swift */; };
 		1950AF944ADD8EF215AD4FD4 /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31985DC9984558EDF16D01E /* AppSecrets.swift */; };
 		1955D9EA60382BB34F811D18 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */; };
@@ -75,6 +77,7 @@
 		24C57C91594478F097ADEEB9 /* BiologicalAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F306262364B569E960A18DA5 /* BiologicalAgeAnalyzer.swift */; };
 		25B9C4D143D9219F0DF6D78A /* NotificationRepromptBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9135AB9785666485017DA2D /* NotificationRepromptBanner.swift */; };
 		268F02E787681E98625C517F /* ScoreGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E191C477794DD8ED3B5F34F /* ScoreGuideSheet.swift */; };
+		26CDE9DD7326658BD23E2745 /* LasoWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */; };
 		26FDBB5C7AE73A57D3DCE5A9 /* CorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C4AE03A03A13268A85D92D /* CorrelationAnalyzer.swift */; };
 		271536854FB840172CF9792F /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293038B6FEEBC9FF3E61CB7F /* WidgetDataStore.swift */; };
 		276352971A8FC51DB1887C90 /* CrossMetricAnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1622ABEB09F735ED6A982D84 /* CrossMetricAnomalyDetector.swift */; };
@@ -96,6 +99,7 @@
 		2F19483F01ACDB937C5ACC3B /* MLCalibrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957C6C8214A079EB29F5754E /* MLCalibrationManager.swift */; };
 		2FA97BD414E1C68FF9177EBF /* AppLaunchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42DD4F97763CFD162113D17E /* AppLaunchCoordinator.swift */; };
 		301599C98009F193A2418AED /* PredictiveHealthSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B22E58759FFF233236D942C /* PredictiveHealthSignals.swift */; };
+		30277AB3F8885AC215CE5BF2 /* DailyActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A47E1CFAD202D04EBC29296 /* DailyActionStore.swift */; };
 		3045F084B4C7EACD9B06DED3 /* NotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3A683298AFEEA85B728A9D /* NotificationPreferences.swift */; };
 		306A84E4FBE1ABFFCE25AE46 /* SleepDebtTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361995D08D2DE1BCBED85066 /* SleepDebtTracker.swift */; };
 		30E89B8C13018E6FD2C6B077 /* ReferralCodeStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBFCF182494EC1EC5F29C4B /* ReferralCodeStep.swift */; };
@@ -106,6 +110,7 @@
 		3238E98E3FD589B4E260579F /* Array+BinarySearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5202EC3433BEA8393B9F0CE7 /* Array+BinarySearch.swift */; };
 		325359855D9AB1480233E9A7 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A942B3D08CF538442683E1 /* AppTab.swift */; };
 		352E4DAF1E3A2EBB11A84C18 /* PredictionVerdictEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A065E46C9925CCA2364C4A /* PredictionVerdictEngine.swift */; };
+		37935F4C2D5FBE7692148F6D /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */; };
 		380C01F2C34367B460AE05CC /* HealthRisk.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3CD31C134826D06EC4CA7 /* HealthRisk.swift */; };
 		3928B5FC6358E560B1110646 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B17EA97B4819C200C955CB4A /* DiscoveryView.swift */; };
 		3A987E80E9734C1D0CD23CE6 /* InteractionEffectEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B5EF5C383DCC5FF70B00151 /* InteractionEffectEngine.swift */; };
@@ -143,6 +148,7 @@
 		4C30D582082F9E66CB5E66E1 /* ClinicalIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */; };
 		4C658C9F88E4526E0592E3A0 /* FocusAreasSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD7112CCADE9F6965BC922D /* FocusAreasSection.swift */; };
 		4DC1BEE6A23D830F01B45179 /* Copy+StressMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E41714304771021F932CA6C /* Copy+StressMonitor.swift */; };
+		4E27E107C793A5F4E7DFB0DF /* WatchCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */; };
 		4EBC16B1DE144526BA2D2102 /* Copy+CategoryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B03925296E89BF5307979F /* Copy+CategoryDetail.swift */; };
 		4F1910555B2509036B668261 /* HistoricalAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 243C7B2ECF998FB422E7F395 /* HistoricalAnalyzer.swift */; };
 		5008BAC53698186FDF80372B /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293038B6FEEBC9FF3E61CB7F /* WidgetDataStore.swift */; };
@@ -172,6 +178,7 @@
 		5D81B87741ACEF75AC67CD37 /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A8A3088F2101388D860F91 /* SectionHeaderView.swift */; };
 		5DBFFC5B061AC05B7F312957 /* firebase-adminsdk.sample.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A9321F60C6920DD677054E1 /* firebase-adminsdk.sample.json */; };
 		5F992E56DD6D5A41A178983E /* WorkoutBandsConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA8072A158088DA331EF152 /* WorkoutBandsConfig.swift */; };
+		5FB5E25AC4B5307BCDCBE784 /* LasoWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 4C62BC8962C09E3FE0A0037E /* LasoWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		60961D5F02CE25196A84D3F9 /* ActionReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 833482126C9C0F5DD5EB9A0D /* ActionReminderScheduler.swift */; };
 		60FD08BF033EBBA1B891748B /* OnboardingV2Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4BDAD46D0D3C7D9F3E0483 /* OnboardingV2Motion.swift */; };
 		6140D0BBF1B6DFA867E712A6 /* FeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293C3B219088D8EE986FD287 /* FeedbackSheet.swift */; };
@@ -201,12 +208,14 @@
 		6CD7EBD49DD562307EAB1568 /* CircadianAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7100A86FE84DF728F2303E /* CircadianAnalyzer.swift */; };
 		6D8D2592F69941A1BB2FF413 /* BreathworkLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB550DF613A646C3C15C54C /* BreathworkLiveActivityWidget.swift */; };
 		6D9CD996A3B57D79314F8F64 /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3EC72063A5D64B85AC6C0D /* WeeklyReviewView.swift */; };
+		6E63B59C60A97718C53697EE /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E020657065005DF616545BF6 /* Date+Extensions.swift */; };
 		6E93988179D1D89856260348 /* VitalityDetailHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E47DE01E1D1CB69D73728CB /* VitalityDetailHelpers.swift */; };
 		6F360E3091B28350486DC8FF /* WorkoutProgrammer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C331C892F45619F1CB08A11D /* WorkoutProgrammer.swift */; };
 		6FE2E7F84C0D3AFCE7B6EEDB /* Copy+Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F02F815419870D1E521D8DE /* Copy+Onboarding.swift */; };
 		700A0D89CE0021F628DC7EAF /* TodayScoreLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC848012439448B750C74C9 /* TodayScoreLiveActivityWidget.swift */; };
 		70320E7F02D87ADCE2DFB0B2 /* AppStoreVersionChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC22C4577F4B4A65A3838A1 /* AppStoreVersionChecker.swift */; };
 		70821C46FC2BEEDA42CCC54B /* DeviceSetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC87DF4B1B4F6D124F5FBC /* DeviceSetupGuideView.swift */; };
+		70CE8A4825B420049A6EE5CC /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33C2476641DDAE4ABF21CC /* WatchRootView.swift */; };
 		71E0D0FF2B2B16765F2D6D62 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C2BDC454A62ECE1B1805CD /* ServiceProtocols.swift */; };
 		72426925480375A196AE733B /* VitalityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F0CCC8241D97C67CD28F38C /* VitalityCard.swift */; };
 		725586241A48C4F4342D37BB /* MorningCheckInManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6F6EFE6BF9A2189C67F2F6 /* MorningCheckInManager.swift */; };
@@ -216,6 +225,7 @@
 		744A95257B656B7CAA27776B /* WindDownLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7F502393E0B19FFB298346 /* WindDownLiveActivityManager.swift */; };
 		744E56CF81DF7073739F6E92 /* WindDownScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48703BB544B9EE1E818D4E6B /* WindDownScheduler.swift */; };
 		74D787E8E31CF282658A6330 /* HealthRiskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B5B7E2026395B715A0CB9F /* HealthRiskEngine.swift */; };
+		7550C3B504ADF8D5322BF255 /* WatchStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7048C434E7D85D2195A68E /* WatchStrings.swift */; };
 		75C412DE26AA32E6303EAED6 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47115FCDE9548FC56A98AB3F /* HomeView.swift */; };
 		76446683BEF24BD450F61351 /* NLEmbeddingAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C331C42101235409295B307 /* NLEmbeddingAnalyzer.swift */; };
 		775BF78290BA7A95FB61E1CF /* WorkoutTypeAppEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A6DC3D694ECACF9CDEA619 /* WorkoutTypeAppEnum.swift */; };
@@ -227,11 +237,15 @@
 		79D04EB027B902BD5FD18A4B /* OnboardingV2Screens14ToDone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122379A3ADDC67E84B6C60B3 /* OnboardingV2Screens14ToDone.swift */; };
 		79E4109CAA2F097E87953733 /* BrainHealthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69FBB34BCF63810A70E57500 /* BrainHealthCard.swift */; };
 		7A51132C40FC657213FDAE3F /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CADCA0D3141F5EB53F7056 /* AchievementsView.swift */; };
+		7AC3CB0422058ECC20E5013E /* WatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D7132AD99BED8FE65100BA31 /* WatchAssets.xcassets */; };
 		7B9AE2E27259473E6B65A151 /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD254B169AC9BC98F1E1D195 /* InsightCard.swift */; };
+		7BA3A75D7C37A7407036FBC5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */; };
 		7DC1B74F4A5D692F80A0EE81 /* TrendDirection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */; };
 		7DD43ABC8706204EFFE810EA /* Copy+Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0F7C779FB01DC2B695AE5F /* Copy+Analysis.swift */; };
+		7DD74221A83E90B417D4D45A /* WatchStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7048C434E7D85D2195A68E /* WatchStrings.swift */; };
 		7F2CBA30F251CFDEC4AA3CA8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 68F87CBA1450FC8A2A904FB3 /* GoogleService-Info.plist */; };
 		7F9CD5A35B0AFBEEA5BA5589 /* HRRFitnessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F504A261844112700CFB346 /* HRRFitnessAnalyzer.swift */; };
+		800C993E73C9074BE84C5407 /* DailyActionCompletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553F78943B1983C82095EF37 /* DailyActionCompletion.swift */; };
 		80AC1861A726D03C86D25A1C /* WorkoutEffectivenessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5D8C4A6668F3E76A40E24D /* WorkoutEffectivenessAnalyzer.swift */; };
 		80B81BC858D25B492715C3B3 /* DashboardDerivedStateBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE4A6C05580F7D63CAD0327 /* DashboardDerivedStateBuilder.swift */; };
 		81579F1C0C73A4B9CEE0C509 /* FoundationModelTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = B196E886F79A91323B2778F8 /* FoundationModelTools.swift */; };
@@ -283,9 +297,11 @@
 		9ABD1828F6DD3F93BA70AB61 /* BreathworkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507233E471636899246378 /* BreathworkActivityAttributes.swift */; };
 		9AE94E3A0CF2EB8CFC36D2EE /* LiveWorkoutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2334583F2BBAC5225CBE88F2 /* LiveWorkoutSection.swift */; };
 		9B59184BF23ADD2FEF80FDBD /* PersonalOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5689557671179E561CD73D0 /* PersonalOptimizer.swift */; };
+		9B6B6F6AA6A56B6CFBFD30DE /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */; };
 		9BAF316F4124DB2082E2EF10 /* TodayScoreLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */; };
 		9BD1B50C5D53BC137F465840 /* EngagementSequenceScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86FF3D33B2154ACB498EE0DD /* EngagementSequenceScheduler.swift */; };
 		9BF82D92464366C63B6BDE7C /* TodayWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC12905F26E546B850B843B /* TodayWorkoutView.swift */; };
+		9BF926DE244CA54BBE547898 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5DA07B12970B0A639D17AA4 /* WatchStore.swift */; };
 		9C103FBF9A80F879D1D6056C /* NutritionCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0DF92F32206A9FE3B6D7DC /* NutritionCorrelationAnalyzer.swift */; };
 		9C9C96923FA67B2919F2E2B8 /* CoachGreetingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E803B0AB14E3419329BA3FC7 /* CoachGreetingView.swift */; };
 		9CBF62DC542F7C0B2CFEC340 /* Copy+Vitality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E70023F46DBF3C93DD395AF /* Copy+Vitality.swift */; };
@@ -316,12 +332,14 @@
 		A8B21F709306DAA6FA0667D5 /* ChangePointDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631DC3E7D86ED955D4B00A05 /* ChangePointDetector.swift */; };
 		A8DD9DAC1A25259DB2BF5BAB /* PersonalizationBlender.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF065426A8A49B41B1B9F36B /* PersonalizationBlender.swift */; };
 		AAB847BC61393D23E6F5666B /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051915634C05C7737FC46E23 /* CategoryDetailView.swift */; };
+		ABF21DB20A3F524D0560968C /* LasoWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AC0C2D59AC31DBD1448C3123 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67B7592107380119651070ED /* ThermalManager.swift */; };
 		ADCC8276E83BA45210FA72F2 /* Collection+Statistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8E7B5211CE219A0C9E48C7 /* Collection+Statistics.swift */; };
 		AE6E38759529A4B54E74627F /* ModelEvaluationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4C5F89FF047DDEFCF3CF8 /* ModelEvaluationStore.swift */; };
 		AE71ECA5DEB6241031B112FA /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6023E6422F4DC43D3171E1 /* WeeklyReviewViewModel.swift */; };
 		AF4ADADB410F4AD08CAD7A4F /* AdherenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB176B907DB584496194E70 /* AdherenceTracker.swift */; };
 		AF832D43060E793A960082FF /* SectionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B261CA79AE5F8EE731B0B35 /* SectionTracker.swift */; };
+		B049E2023B2502581B1C9A0B /* WatchJournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7990C45DA6F7185654AD64B6 /* WatchJournalView.swift */; };
 		B0FDB7774EBF898406B7FB4D /* LiveActivitySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00013E913654C8217CCD3B78 /* LiveActivitySection.swift */; };
 		B1334D78B13E776FB6F5AAF3 /* Copy+OnboardingV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87D7C1C0DFF1794E7BC9768 /* Copy+OnboardingV2.swift */; };
 		B18CDA68DFDA9CADEA3F661C /* Copy+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F163FE15C24DDC9F1E0785 /* Copy+Journal.swift */; };
@@ -339,6 +357,7 @@
 		B6172F227AD14636CF23DD5E /* NotificationFatigueTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABADFB768D9AA25EA2D32F26 /* NotificationFatigueTracker.swift */; };
 		B652E91652E939493B10E9EC /* AppleAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9645432EC22E5B7F4837C5 /* AppleAuthService.swift */; };
 		B692F89E6CB4040A978A9BCB /* ActivationSequenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447D1C8FA6AD4D5646AD81DB /* ActivationSequenceManager.swift */; };
+		B6B6401D132004FD6AE6D1ED /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */; };
 		B7240B0E0CE65CFF18CF7F6A /* VitalityDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F32EE073AE1676490C87CF /* VitalityDetailView.swift */; };
 		B731ADAC48DF67906D1B4AD8 /* AnalysisWidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712C0A489AB878CB31002FE7 /* AnalysisWidgetEntry.swift */; };
 		B84951F0C7842811DFC930EA /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */; };
@@ -370,6 +389,7 @@
 		C86B3F008099763930CA1616 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8057ABB26B05E77B38085142 /* PushNotificationManager.swift */; };
 		C87ABF2F45B508364BC8CF90 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */; };
 		C8A559E9EBA2B8273B040AE1 /* HealthRiskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F2F5F8278612F9522DBE27 /* HealthRiskDetailView.swift */; };
+		C8A943BF5FF12C7F30EF79ED /* ReadinessComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B42DC72327B5FEEF57CD5B /* ReadinessComplication.swift */; };
 		C8CA6E38054858675455E643 /* WindDownLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCBAAA6D9AC18AE4C15F65A /* WindDownLiveActivityWidget.swift */; };
 		C94766D6233A9386A1F911BF /* WeeklySummaryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F0EEEF2E628CA7442A145B /* WeeklySummaryScheduler.swift */; };
 		C964C1310CB0D96F5B119C40 /* ShowTrendsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66A4092EF304A681D9F1C82 /* ShowTrendsIntent.swift */; };
@@ -398,6 +418,7 @@
 		D8036AB67AA0AC0D34E543AC /* HealthScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97775C40E61B1F730B33BE0 /* HealthScorer.swift */; };
 		D82461D0E561C8E398C707C9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */; };
 		D90EF9449A1AEE381B9D76DB /* GamificationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C26B901CE5943C0FAB49B3F /* GamificationEngine.swift */; };
+		D9BAC84D95D7B021323F136B /* LasoWatchWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87265F0F32A45A18AFE6E6B /* LasoWatchWidgetsBundle.swift */; };
 		DBBDD4A8400537CA537D1C3B /* SimulationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27369D353E6DFA9CA67FB111 /* SimulationTypes.swift */; };
 		DDE8252144F3179CC3950AC3 /* WeeklyBarChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77CE5FA8601EAC1B9F63D8E /* WeeklyBarChart.swift */; };
 		DE338F2D3474162C64A66233 /* IntelligenceAlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84946F896C3C96E80C9C236A /* IntelligenceAlertEvaluator.swift */; };
@@ -438,6 +459,7 @@
 		F0E669E7CEA290C532C2CA8C /* TodayBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2630646758E72C032CFF3399 /* TodayBriefingView.swift */; };
 		F103F39A09D6DC89E6DFF702 /* Copy+Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5621DF431F6BE1049533CFAC /* Copy+Paywall.swift */; };
 		F3288DC8A42ACEA5D85519F4 /* InsightDirective.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC7461FE15AF40E60F38828 /* InsightDirective.swift */; };
+		F33550D85B1A55AF1F9C7D61 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */; };
 		F397D6344C78022D6D074206 /* BackgroundRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 368FC2819DDF1775D1DCEF84 /* BackgroundRefreshCoordinator.swift */; };
 		F432793D80995EC175950DCE /* InflammationRiskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4491582C6F04866AB7955DFF /* InflammationRiskAnalyzer.swift */; };
 		F4A13442C79E91FB21541A98 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E020657065005DF616545BF6 /* Date+Extensions.swift */; };
@@ -463,6 +485,7 @@
 		FE8AA9A0126970FDBC3341AB /* StrainScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F410D268F7101BADD9A7A /* StrainScorer.swift */; };
 		FF8A7E32BEBF689047E48C5D /* OnboardingV2Foundation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB16F524F28FEB59FDDE3039 /* OnboardingV2Foundation.swift */; };
 		FFA039F7AECC76DAB3660B6C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAEA2D55EB2FBC71714A653 /* ContentView.swift */; };
+		FFE01E513561527219E35E33 /* WatchStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7048C434E7D85D2195A68E /* WatchStrings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -480,9 +503,34 @@
 			remoteGlobalIDString = 08AD24A007F4503B8999A065;
 			remoteInfo = Laso;
 		};
+		B003BBF229C8AE8BE7C45D86 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 352EFC7934409A0E2B4A5ACE;
+			remoteInfo = LasoWatchWidgets;
+		};
+		EB141E03233D6B5F00887D22 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1B53013A9579B763C5987AD2;
+			remoteInfo = LasoWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		129ED5D3D32208EA78465ADC /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				5FB5E25AC4B5307BCDCBE784 /* LasoWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5F55F1AC50887E87AC280A06 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -490,6 +538,17 @@
 			dstSubfolderSpec = 13;
 			files = (
 				E3D2EE55593B7B387FE1B8A1 /* LasoWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BF884043F23620EBC6E9FA5B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				ABF21DB20A3F524D0560968C /* LasoWatchWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -511,6 +570,7 @@
 		076BF1861B9106B431D075CA /* DriverRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriverRowView.swift; sourceTree = "<group>"; };
 		0804946317C40FBB20D6EE8C /* HealthMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetric.swift; sourceTree = "<group>"; };
 		08470FD4FE34B97792ECE163 /* CorrelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationsView.swift; sourceTree = "<group>"; };
+		09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCheckInView.swift; sourceTree = "<group>"; };
 		0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
 		0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		0B7F734F2F4F73A01B994CC6 /* MLPipelineRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLPipelineRunner.swift; sourceTree = "<group>"; };
@@ -518,6 +578,7 @@
 		0CD135A2AA4F4C748A239A19 /* HealthKitMetricRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitMetricRegistry.swift; sourceTree = "<group>"; };
 		0CF2953DA61C9CCDB421C60C /* IntentDonationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentDonationManager.swift; sourceTree = "<group>"; };
 		0CFF25C948BA03E6AB0505B9 /* UITestMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestMode.swift; sourceTree = "<group>"; };
+		0D38B60DE1D30E3BBB5E3857 /* PhoneWatchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchSession.swift; sourceTree = "<group>"; };
 		0DD7112CCADE9F6965BC922D /* FocusAreasSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusAreasSection.swift; sourceTree = "<group>"; };
 		0E47DE01E1D1CB69D73728CB /* VitalityDetailHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityDetailHelpers.swift; sourceTree = "<group>"; };
 		0E503FF45AC5FA46CF0FC82B /* CloudBackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupManager.swift; sourceTree = "<group>"; };
@@ -536,6 +597,7 @@
 		16C8F3969F7703B5346324B8 /* AskYourDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskYourDataView.swift; sourceTree = "<group>"; };
 		195061E2F205074C77C3219E /* ExploreNeedsAttentionSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreNeedsAttentionSection.swift; sourceTree = "<group>"; };
 		19CDDC345B114B7CB4D67DBC /* RecoveryHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryHeroCard.swift; sourceTree = "<group>"; };
+		1A33C2476641DDAE4ABF21CC /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
 		1B5EF5C383DCC5FF70B00151 /* InteractionEffectEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionEffectEngine.swift; sourceTree = "<group>"; };
 		1C3A683298AFEEA85B728A9D /* NotificationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferences.swift; sourceTree = "<group>"; };
 		1DBFCF182494EC1EC5F29C4B /* ReferralCodeStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralCodeStep.swift; sourceTree = "<group>"; };
@@ -569,6 +631,7 @@
 		2891C24C4BA8381331A31889 /* SleepNeedConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepNeedConfig.swift; sourceTree = "<group>"; };
 		293038B6FEEBC9FF3E61CB7F /* WidgetDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataStore.swift; sourceTree = "<group>"; };
 		293C3B219088D8EE986FD287 /* FeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackSheet.swift; sourceTree = "<group>"; };
+		2A47E1CFAD202D04EBC29296 /* DailyActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionStore.swift; sourceTree = "<group>"; };
 		2A8AA6C651893546E9CD0AC1 /* TemperatureCompoundAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureCompoundAnalyzer.swift; sourceTree = "<group>"; };
 		2A9321F60C6920DD677054E1 /* firebase-adminsdk.sample.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "firebase-adminsdk.sample.json"; sourceTree = "<group>"; };
 		2AAE1260BE7CC36C61419384 /* LiveBloodPressureTempSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBloodPressureTempSection.swift; sourceTree = "<group>"; };
@@ -593,6 +656,7 @@
 		326BB0C270274DBF4670B65F /* DataSourceBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSourceBadge.swift; sourceTree = "<group>"; };
 		32A942B3D08CF538442683E1 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		335D16B937F6B0A1ED4F53EB /* MaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceView.swift; sourceTree = "<group>"; };
+		33F2345DC861C97C348313BF /* LasoWatchWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LasoWatchWidgets.entitlements; sourceTree = "<group>"; };
 		35E67E929F4357F117C9DD82 /* AnalyticsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsProvider.swift; sourceTree = "<group>"; };
 		3604B31F36F6A68F693CC8F3 /* ProfileCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCaptureView.swift; sourceTree = "<group>"; };
 		3611EA7F38DF789E99949407 /* PersonalRecordAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalRecordAnalyzer.swift; sourceTree = "<group>"; };
@@ -639,9 +703,12 @@
 		4A790E45CD686E1B643AE487 /* ExpandedJournalCategories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedJournalCategories.swift; sourceTree = "<group>"; };
 		4AA786B48A9B4849B9C790D3 /* HealthCorrelation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthCorrelation.swift; sourceTree = "<group>"; };
 		4AB6116F31543CD4B4E1CFAC /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		4C62BC8962C09E3FE0A0037E /* LasoWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LasoWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D9645432EC22E5B7F4837C5 /* AppleAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleAuthService.swift; sourceTree = "<group>"; };
 		4F0ADF675FBAD032C37D2E17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4F7048C434E7D85D2195A68E /* WatchStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStrings.swift; sourceTree = "<group>"; };
 		4FC920152F8808345BE3999F /* InsightsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsDetailView.swift; sourceTree = "<group>"; };
+		50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		50FAD00E49F534D56B4D1ACE /* SleepCoachView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoachView.swift; sourceTree = "<group>"; };
 		510C3C1F6BAAE8CBBDA152AD /* LasoShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoShortcutsProvider.swift; sourceTree = "<group>"; };
 		514E739780C8B13C8A2E5E14 /* HealthKitRepromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitRepromptManager.swift; sourceTree = "<group>"; };
@@ -652,6 +719,7 @@
 		52422C73145A1AC416551E3D /* StrainScorerConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrainScorerConfig.swift; sourceTree = "<group>"; };
 		5359ACAE4300CE1A64B27A07 /* VitalityOrganicOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityOrganicOrb.swift; sourceTree = "<group>"; };
 		5529175400AEF0828DDE520E /* OnboardingV2Screens8to13.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Screens8to13.swift; sourceTree = "<group>"; };
+		553F78943B1983C82095EF37 /* DailyActionCompletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionCompletion.swift; sourceTree = "<group>"; };
 		55A95945AF21EDEE44F85BC7 /* ExploreDataSummarySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreDataSummarySection.swift; sourceTree = "<group>"; };
 		55E898C955E16C060B9DA460 /* SleepNeedCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepNeedCalculator.swift; sourceTree = "<group>"; };
 		5621DF431F6BE1049533CFAC /* Copy+Paywall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Paywall.swift"; sourceTree = "<group>"; };
@@ -672,6 +740,7 @@
 		60A38DC63EDF5882A08302CF /* SampleDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataProvider.swift; sourceTree = "<group>"; };
 		60EEBCBC7F8B24E469CA038E /* ExploreHealthStateLinkSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreHealthStateLinkSection.swift; sourceTree = "<group>"; };
 		6129398803D9F5EB1C5F30B0 /* HealthScorerConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorerConfig.swift; sourceTree = "<group>"; };
+		62B42DC72327B5FEEF57CD5B /* ReadinessComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessComplication.swift; sourceTree = "<group>"; };
 		631DC3E7D86ED955D4B00A05 /* ChangePointDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePointDetector.swift; sourceTree = "<group>"; };
 		632C894749F24040044533EB /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		633B2EFC90D8AB04B94FB59B /* CompoundInsightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompoundInsightEngine.swift; sourceTree = "<group>"; };
@@ -716,6 +785,8 @@
 		7819843EFAB7EAF1A1CE4C25 /* PatternCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternCard.swift; sourceTree = "<group>"; };
 		782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnbV2VitalityReveal.swift; sourceTree = "<group>"; };
 		78D0A7A8A5CE97B2C4468D86 /* RulesConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesConfiguration.swift; sourceTree = "<group>"; };
+		794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
+		7990C45DA6F7185654AD64B6 /* WatchJournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchJournalView.swift; sourceTree = "<group>"; };
 		7B11F3A73FDF345E243B48CC /* VitalityTrendSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityTrendSection.swift; sourceTree = "<group>"; };
 		7C331C42101235409295B307 /* NLEmbeddingAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLEmbeddingAnalyzer.swift; sourceTree = "<group>"; };
 		7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceRecord.swift; sourceTree = "<group>"; };
@@ -836,6 +907,7 @@
 		B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
 		B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownActivityAttributes.swift; sourceTree = "<group>"; };
 		B511A21E5659E7FDA8E582CC /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		B5DA07B12970B0A639D17AA4 /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
 		B66A4092EF304A681D9F1C82 /* ShowTrendsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTrendsIntent.swift; sourceTree = "<group>"; };
 		B67747F3BBA28DC8946D1F66 /* NotificationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRouter.swift; sourceTree = "<group>"; };
 		B6B9091C60DB3AF85FB82B44 /* HealthKitRepromptBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitRepromptBanner.swift; sourceTree = "<group>"; };
@@ -843,10 +915,12 @@
 		B727ED1031D4D01216F07B67 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
 		B77CE5FA8601EAC1B9F63D8E /* WeeklyBarChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyBarChart.swift; sourceTree = "<group>"; };
 		B7E646742080159DE9D68D10 /* EncryptedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedStore.swift; sourceTree = "<group>"; };
+		B87265F0F32A45A18AFE6E6B /* LasoWatchWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoWatchWidgetsBundle.swift; sourceTree = "<group>"; };
 		B87D7C1C0DFF1794E7BC9768 /* Copy+OnboardingV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+OnboardingV2.swift"; sourceTree = "<group>"; };
 		B8B93DC233848DE7E3BBB185 /* LiveHeaderSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeaderSection.swift; sourceTree = "<group>"; };
 		B9918769144FC023D22876D2 /* DashboardSmartActionAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSmartActionAdvisor.swift; sourceTree = "<group>"; };
 		B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalIntelligence.swift; sourceTree = "<group>"; };
+		B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScoreLiveActivityManager.swift; sourceTree = "<group>"; };
 		BD254B169AC9BC98F1E1D195 /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
 		BE3BD36EFDDFEC821C64F97A /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
@@ -856,11 +930,14 @@
 		C027DE82C4954ED68043D255 /* SleepCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCard.swift; sourceTree = "<group>"; };
 		C0D3CD31C134826D06EC4CA7 /* HealthRisk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRisk.swift; sourceTree = "<group>"; };
 		C10E5F64725035FBB8ABBC78 /* ExpandedJournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedJournalView.swift; sourceTree = "<group>"; };
+		C1AEC2AF73AD9B3739033C85 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C22377E64ABD3F3590B33625 /* Copy+Explore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Explore.swift"; sourceTree = "<group>"; };
 		C2C7BCB77296C0CC52749362 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		C32AB04FCDD2E7672174903F /* TemporalSequenceMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporalSequenceMiner.swift; sourceTree = "<group>"; };
 		C331C892F45619F1CB08A11D /* WorkoutProgrammer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutProgrammer.swift; sourceTree = "<group>"; };
 		C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationProgressBanner.swift; sourceTree = "<group>"; };
+		C374B09C3F0ACBBEB5293079 /* LasoWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LasoWatch.entitlements; sourceTree = "<group>"; };
+		C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoWatchApp.swift; sourceTree = "<group>"; };
 		C3C2BDC454A62ECE1B1805CD /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
 		C3F236B93E290731FCD3E817 /* HealthDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDataStore.swift; sourceTree = "<group>"; };
 		C48447290A52C839F7E6DCFA /* SupportedDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedDevice.swift; sourceTree = "<group>"; };
@@ -869,6 +946,7 @@
 		C6CADCA0D3141F5EB53F7056 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		C7E098E67F2ABEB332E0C8C8 /* ReportTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTemplate.swift; sourceTree = "<group>"; };
 		C8900223B925BD1A13688FE1 /* LLMInsightGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMInsightGenerator.swift; sourceTree = "<group>"; };
+		CA4667535F5D829DFAACB854 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CA4D4342ADADDD79F4F52A79 /* AlertEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertEvaluator.swift; sourceTree = "<group>"; };
 		CA8E7B5211CE219A0C9E48C7 /* Collection+Statistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Statistics.swift"; sourceTree = "<group>"; };
 		CCD9B994459360428746ABED /* Copy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Copy.swift; sourceTree = "<group>"; };
@@ -884,6 +962,7 @@
 		D5689557671179E561CD73D0 /* PersonalOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalOptimizer.swift; sourceTree = "<group>"; };
 		D5AF3056B11384BB1F143500 /* PredictionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionBuilder.swift; sourceTree = "<group>"; };
 		D5CA49C6E7F5AAE50F74BA43 /* MetricCue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCue.swift; sourceTree = "<group>"; };
+		D7132AD99BED8FE65100BA31 /* WatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WatchAssets.xcassets; sourceTree = "<group>"; };
 		D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationDiscovery.swift; sourceTree = "<group>"; };
 		D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendDirection.swift; sourceTree = "<group>"; };
 		D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
@@ -895,6 +974,7 @@
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DD5FB10DF230EF3F82639ED0 /* RemoteConfigTemplate.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RemoteConfigTemplate.md; sourceTree = "<group>"; };
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
+		DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
 		DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
@@ -968,7 +1048,9 @@
 			children = (
 				A2B10E5E5FD564979CFF8932 /* BackupPayload.swift */,
 				0E503FF45AC5FA46CF0FC82B /* CloudBackupManager.swift */,
+				553F78943B1983C82095EF37 /* DailyActionCompletion.swift */,
 				9B65BB412118954AC2AAE5B1 /* DailyActionResultStore.swift */,
+				2A47E1CFAD202D04EBC29296 /* DailyActionStore.swift */,
 				D468B483596F9424AAABC5AE /* DataRetentionManager.swift */,
 				6B84E7B92FC24D92EDC8302A /* DeviceSourceManager.swift */,
 				A42C027F872EDA4345BB2533 /* ECGDataManager.swift */,
@@ -984,6 +1066,7 @@
 				7D6F6EFE6BF9A2189C67F2F6 /* MorningCheckInManager.swift */,
 				285FDE9BD8011B4DC47703DF /* OnboardingPredictionStore.swift */,
 				061E761938B2C28A7973AE8C /* PersistenceManager.swift */,
+				0D38B60DE1D30E3BBB5E3857 /* PhoneWatchSession.swift */,
 				8E1844D157779B2A88AC7F84 /* PremiumShowcaseDataProvider.swift */,
 				60A38DC63EDF5882A08302CF /* SampleDataProvider.swift */,
 				4878091D5A17CEEDC753D7F9 /* UserProfileStore.swift */,
@@ -1037,12 +1120,37 @@
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
+		0F193B27229451D5075546FB /* WatchShared */ = {
+			isa = PBXGroup;
+			children = (
+				794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */,
+				4F7048C434E7D85D2195A68E /* WatchStrings.swift */,
+			);
+			path = WatchShared;
+			sourceTree = "<group>";
+		};
 		0FBA80065D66CD82E801C536 /* LasoUITests */ = {
 			isa = PBXGroup;
 			children = (
 				2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */,
 			);
 			path = LasoUITests;
+			sourceTree = "<group>";
+		};
+		1378C2BDE03C2BBE4D993A19 /* LasoWatch */ = {
+			isa = PBXGroup;
+			children = (
+				C1AEC2AF73AD9B3739033C85 /* Info.plist */,
+				C374B09C3F0ACBBEB5293079 /* LasoWatch.entitlements */,
+				C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */,
+				DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */,
+				D7132AD99BED8FE65100BA31 /* WatchAssets.xcassets */,
+				09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */,
+				7990C45DA6F7185654AD64B6 /* WatchJournalView.swift */,
+				1A33C2476641DDAE4ABF21CC /* WatchRootView.swift */,
+				B5DA07B12970B0A639D17AA4 /* WatchStore.swift */,
+			);
+			path = LasoWatch;
 			sourceTree = "<group>";
 		};
 		13C1A81ECD102E50F8824876 /* ViewModels */ = {
@@ -1493,6 +1601,18 @@
 			path = Live;
 			sourceTree = "<group>";
 		};
+		45C06879F59FECF3BC0B45E3 /* LasoWatchWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				CA4667535F5D829DFAACB854 /* Info.plist */,
+				33F2345DC861C97C348313BF /* LasoWatchWidgets.entitlements */,
+				B87265F0F32A45A18AFE6E6B /* LasoWatchWidgetsBundle.swift */,
+				B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */,
+				62B42DC72327B5FEEF57CD5B /* ReadinessComplication.swift */,
+			);
+			path = LasoWatchWidgets;
+			sourceTree = "<group>";
+		};
 		53CCE31CF6A15F16DA081F2E /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -1764,6 +1884,8 @@
 			children = (
 				2E6A79C6A57A85AF78D95A7B /* Laso.app */,
 				DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */,
+				4C62BC8962C09E3FE0A0037E /* LasoWatch.app */,
+				50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */,
 				DC1489C7446344221C0AA886 /* LasoWidgets.appex */,
 			);
 			name = Products;
@@ -2196,9 +2318,12 @@
 				A8E5CFB21D057A5EF7F1E794 /* Core */,
 				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				0FBA80065D66CD82E801C536 /* LasoUITests */,
+				1378C2BDE03C2BBE4D993A19 /* LasoWatch */,
+				45C06879F59FECF3BC0B45E3 /* LasoWatchWidgets */,
 				08ACFB443AD621527464CB1D /* LasoWidgets */,
 				39C809F6F509B49421DA1671 /* Modules */,
 				8449F3E35F7EFCCA08D74F29 /* Shared */,
+				0F193B27229451D5075546FB /* WatchShared */,
 				85D693CEA74B6AE4E9169174 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -2256,12 +2381,14 @@
 				F17573EB4D460F74E82BE8E7 /* Resources */,
 				211EC6BD17FF0C89A1C90A61 /* Frameworks */,
 				5F55F1AC50887E87AC280A06 /* Embed Foundation Extensions */,
+				129ED5D3D32208EA78465ADC /* Embed Watch Content */,
 				DA680256409929BBFCF01982 /* Generate dSYMs for Embedded Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				583DB73450A6198AB37888AA /* PBXTargetDependency */,
+				CFBBAB9A1FBC3AEE01AC94A7 /* PBXTargetDependency */,
 			);
 			name = Laso;
 			packageProductDependencies = (
@@ -2298,6 +2425,26 @@
 			productReference = DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		1B53013A9579B763C5987AD2 /* LasoWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5B4FE24D89D52C267887814E /* Build configuration list for PBXNativeTarget "LasoWatch" */;
+			buildPhases = (
+				BD13FBA6B1460688514645C0 /* Sources */,
+				5F82C2A34B754F7C4F7E3FC7 /* Resources */,
+				BF884043F23620EBC6E9FA5B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				00D8DF7AE89070BC9B79EC6B /* PBXTargetDependency */,
+			);
+			name = LasoWatch;
+			packageProductDependencies = (
+			);
+			productName = LasoWatch;
+			productReference = 4C62BC8962C09E3FE0A0037E /* LasoWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		2131E0565430F53E4EC2F615 /* LasoWidgets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5167C896B93CD4487CA329FC /* Build configuration list for PBXNativeTarget "LasoWidgets" */;
@@ -2314,6 +2461,24 @@
 			);
 			productName = LasoWidgets;
 			productReference = DC1489C7446344221C0AA886 /* LasoWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		352EFC7934409A0E2B4A5ACE /* LasoWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8E2CF531DEE0EC11332118C /* Build configuration list for PBXNativeTarget "LasoWatchWidgets" */;
+			buildPhases = (
+				670C738A4AD94249A2324027 /* Sources */,
+				C48A5F6E567B71368591CD5B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LasoWatchWidgets;
+			packageProductDependencies = (
+			);
+			productName = LasoWatchWidgets;
+			productReference = 50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -2342,11 +2507,29 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
+					1B53013A9579B763C5987AD2 = {
+						DevelopmentTeam = S2MAH8X8JM;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.watchos = {
+								enabled = YES;
+							};
+						};
+					};
 					2131E0565430F53E4EC2F615 = {
 						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
+								enabled = YES;
+							};
+						};
+					};
+					352EFC7934409A0E2B4A5ACE = {
+						DevelopmentTeam = S2MAH8X8JM;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.watchos = {
 								enabled = YES;
 							};
 						};
@@ -2375,17 +2558,36 @@
 			targets = (
 				08AD24A007F4503B8999A065 /* Laso */,
 				1029A915F9487DD209F51551 /* LasoUITests */,
+				1B53013A9579B763C5987AD2 /* LasoWatch */,
+				352EFC7934409A0E2B4A5ACE /* LasoWatchWidgets */,
 				2131E0565430F53E4EC2F615 /* LasoWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		5F82C2A34B754F7C4F7E3FC7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F33550D85B1A55AF1F9C7D61 /* PrivacyInfo.xcprivacy in Resources */,
+				7AC3CB0422058ECC20E5013E /* WatchAssets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C25C9B8885D8B5ADA9062FC5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				D82461D0E561C8E398C707C9 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C48A5F6E567B71368591CD5B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7BA3A75D7C37A7407036FBC5 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2546,8 +2748,10 @@
 				5CB2EA9F4CD25B8E5068C1C3 /* DSEmptyState.swift in Sources */,
 				870FFC74D41246C23EC8F55D /* DSSkeleton.swift in Sources */,
 				BD1C8FC8698FAA57929D09F4 /* DSToast.swift in Sources */,
+				800C993E73C9074BE84C5407 /* DailyActionCompletion.swift in Sources */,
 				6A3DB319DE6164B1DD14D3B5 /* DailyActionResultCard.swift in Sources */,
 				453CF4EBF12D39DFD3D9A76B /* DailyActionResultStore.swift in Sources */,
+				30277AB3F8885AC215CE5BF2 /* DailyActionStore.swift in Sources */,
 				E0C04C4FB510A614C52B46BA /* DailyNarrativeCard.swift in Sources */,
 				E2B99847AD49F5D60681E605 /* DailyNarrativeEngine.swift in Sources */,
 				141F28DBB6C3817E685A3701 /* DailySummaryScheduler.swift in Sources */,
@@ -2727,6 +2931,7 @@
 				9B59184BF23ADD2FEF80FDBD /* PersonalOptimizer.swift in Sources */,
 				795285976B887225AFD93F20 /* PersonalRecordAnalyzer.swift in Sources */,
 				A8DD9DAC1A25259DB2BF5BAB /* PersonalizationBlender.swift in Sources */,
+				18F310E0E1440F0EAF9F793A /* PhoneWatchSession.swift in Sources */,
 				C151A52B6967646056F07813 /* PostHogManager.swift in Sources */,
 				E3046977712C0BBCB4BD4240 /* PredictionBuilder.swift in Sources */,
 				352E4DAF1E3A2EBB11A84C18 /* PredictionVerdictEngine.swift in Sources */,
@@ -2833,7 +3038,9 @@
 				FA2BA1624F30A94BBAE03C10 /* VitalitySupportingSections.swift in Sources */,
 				A64ADEE58C78DFB87E8F0101 /* VitalityTrendSection.swift in Sources */,
 				EB96044F0C7FB5DA7FD04D4A /* WakeUpTimeDetector.swift in Sources */,
+				9B6B6F6AA6A56B6CFBFD30DE /* WatchBridge.swift in Sources */,
 				D46DA3E71BEC6288BAFAD011 /* WatchMonitor.swift in Sources */,
+				7550C3B504ADF8D5322BF255 /* WatchStrings.swift in Sources */,
 				63468BB32A6196DAB7DBD87D /* WebExportViewModel.swift in Sources */,
 				DDE8252144F3179CC3950AC3 /* WeeklyBarChart.swift in Sources */,
 				2D9EE3826558B031153DEE41 /* WeeklyChallenge.swift in Sources */,
@@ -2878,6 +3085,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		670C738A4AD94249A2324027 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E63B59C60A97718C53697EE /* Date+Extensions.swift in Sources */,
+				D9BAC84D95D7B021323F136B /* LasoWatchWidgetsBundle.swift in Sources */,
+				C8A943BF5FF12C7F30EF79ED /* ReadinessComplication.swift in Sources */,
+				B6B6401D132004FD6AE6D1ED /* WatchBridge.swift in Sources */,
+				FFE01E513561527219E35E33 /* WatchStrings.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD13FBA6B1460688514645C0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0004909582AA930451459F3B /* Date+Extensions.swift in Sources */,
+				26CDE9DD7326658BD23E2745 /* LasoWatchApp.swift in Sources */,
+				37935F4C2D5FBE7692148F6D /* WatchBridge.swift in Sources */,
+				4E27E107C793A5F4E7DFB0DF /* WatchCheckInView.swift in Sources */,
+				B049E2023B2502581B1C9A0B /* WatchJournalView.swift in Sources */,
+				70CE8A4825B420049A6EE5CC /* WatchRootView.swift in Sources */,
+				9BF926DE244CA54BBE547898 /* WatchStore.swift in Sources */,
+				7DD74221A83E90B417D4D45A /* WatchStrings.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F6A01CB564460C51976AF556 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2889,6 +3123,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		00D8DF7AE89070BC9B79EC6B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 352EFC7934409A0E2B4A5ACE /* LasoWatchWidgets */;
+			targetProxy = B003BBF229C8AE8BE7C45D86 /* PBXContainerItemProxy */;
+		};
 		583DB73450A6198AB37888AA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 2131E0565430F53E4EC2F615 /* LasoWidgets */;
@@ -2898,6 +3137,11 @@
 			isa = PBXTargetDependency;
 			target = 08AD24A007F4503B8999A065 /* Laso */;
 			targetProxy = ADBCAD5F3B66B6E557B42044 /* PBXContainerItemProxy */;
+		};
+		CFBBAB9A1FBC3AEE01AC94A7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1B53013A9579B763C5987AD2 /* LasoWatch */;
+			targetProxy = EB141E03233D6B5F00887D22 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2936,6 +3180,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 62;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2954,14 +3199,15 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.2.54;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -2974,7 +3220,6 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 61;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -2983,7 +3228,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.53;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3025,6 +3269,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 62;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3037,13 +3282,14 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.2.54;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -3053,7 +3299,6 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 61;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3062,7 +3307,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.53;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -3080,7 +3324,6 @@
 				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 61;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -3089,7 +3332,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.53;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3103,7 +3345,6 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 61;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
@@ -3112,12 +3353,95 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.53;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AF7E6A89BE631A98060D09BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LasoWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		C4B0687E9656928E47C105B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp.widgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		C601C56AB6790E4BC76EB7A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp.widgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		D457DF5FE824707DC93F05F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LasoWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -3182,6 +3506,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		5B4FE24D89D52C267887814E /* Build configuration list for PBXNativeTarget "LasoWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D457DF5FE824707DC93F05F3 /* Debug */,
+				AF7E6A89BE631A98060D09BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		B64CA1B46D5F97A1A1841A50 /* Build configuration list for PBXNativeTarget "Laso" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -3196,6 +3529,15 @@
 			buildConfigurations = (
 				0971BD436F5E2BE8D35D8478 /* Debug */,
 				2A0C6BCA03FECEA251E0E9BD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D8E2CF531DEE0EC11332118C /* Build configuration list for PBXNativeTarget "LasoWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C4B0687E9656928E47C105B6 /* Debug */,
+				C601C56AB6790E4BC76EB7A8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

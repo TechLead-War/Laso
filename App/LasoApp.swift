@@ -153,6 +153,7 @@ struct LasoApp: App {
                 // woken after the user deletes their data.
                 container.healthKitManager.stopDashboardObservers()
                 WatchMonitor.shared.stopMonitoring()
+                PhoneWatchSession.shared.clearForAccountWipe()
             }
             .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
         }

@@ -61,6 +61,11 @@ final class AppContainer {
             watchMonitor: watchMonitor,
             persistenceManager: persistenceManager
         )
+        // Activate the watch link as soon as the process is alive, not inside
+        // post-launch setup: wrist writes queued while the app was closed are
+        // delivered on activation, and every launch path must drain that queue.
+        PhoneWatchSession.shared.activate(healthDataStore: healthDataStore)
+
         let sharedReadinessStore = readinessStore
         backgroundRefreshCoordinator = BackgroundRefreshCoordinator(
             liveViewModelFactory: {

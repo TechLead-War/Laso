@@ -35,7 +35,15 @@ struct ContentView: View {
     }
 
     var body: some View {
-        mainApp
+        // Journal views write through `@Environment(\.modelContext)`. Without this
+        // the environment hands them a container that is not the one
+        // `HealthDataStore` owns, so a journal entry written from the wrist would
+        // land in a different store than the one the Journal screen reads.
+        if let modelContainer = container.healthDataStore.modelContainer {
+            mainApp.modelContainer(modelContainer)
+        } else {
+            mainApp
+        }
     }
 
     private var healthKitManager: HealthKitManager { container.healthKitManager }

@@ -15,34 +15,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "08AD24A007F4503B8999A065"
-               BuildableName = "Laso.app"
-               BlueprintName = "Laso"
-               ReferencedContainer = "container:Laso.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1029A915F9487DD209F51551"
-               BuildableName = "LasoUITests.xctest"
-               BlueprintName = "LasoUITests"
-               ReferencedContainer = "container:Laso.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "NO"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "1B53013A9579B763C5987AD2"
                BuildableName = "LasoWatch.app"
                BlueprintName = "LasoWatch"
@@ -63,20 +35,6 @@
                ReferencedContainer = "container:Laso.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "NO"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2131E0565430F53E4EC2F615"
-               BuildableName = "LasoWidgets.appex"
-               BlueprintName = "LasoWidgets"
-               ReferencedContainer = "container:Laso.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -88,27 +46,14 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "08AD24A007F4503B8999A065"
-            BuildableName = "Laso.app"
-            BlueprintName = "Laso"
+            BlueprintIdentifier = "1B53013A9579B763C5987AD2"
+            BuildableName = "LasoWatch.app"
+            BlueprintName = "LasoWatch"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1029A915F9487DD209F51551"
-               BuildableName = "LasoUITests.xctest"
-               BlueprintName = "LasoUITests"
-               ReferencedContainer = "container:Laso.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -124,17 +69,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "08AD24A007F4503B8999A065"
-            BuildableName = "Laso.app"
-            BlueprintName = "Laso"
+            BlueprintIdentifier = "1B53013A9579B763C5987AD2"
+            BuildableName = "LasoWatch.app"
+            BlueprintName = "LasoWatch"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
-      <StoreKitConfigurationFileReference
-         identifier = "../../Laso.storekit">
-      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -146,9 +86,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "08AD24A007F4503B8999A065"
-            BuildableName = "Laso.app"
-            BlueprintName = "Laso"
+            BlueprintIdentifier = "1B53013A9579B763C5987AD2"
+            BuildableName = "LasoWatch.app"
+            BlueprintName = "LasoWatch"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -706,8 +706,7 @@ struct HomeView: View {
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.todaysActionCard")
         .onAppear {
-            let stored = UserDefaults.standard.object(forKey: AppKeys.Data.dailyActionDoneDay) as? Date
-            actionDoneToday = stored.map { Date.cal.isDateInToday($0) } ?? false
+            actionDoneToday = DailyActionCompletion.isDoneToday
         }
     }
 
@@ -716,14 +715,15 @@ struct HomeView: View {
     private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
             // Locked once done for the day: a mark can't be undone, it auto-resets
-            // tomorrow (onAppear clears when the stored day is no longer today).
-            guard !actionDoneToday else { return }
+            // tomorrow. The guard lives inside `markDone` so a wrist tap earlier in
+            // the day cannot be overwritten from here.
+            DailyActionCompletion.markDone(
+                actionTitle: action.title,
+                actionIcon: action.icon,
+                score: liveReadinessScore,
+                source: "next_up_mark_done"
+            )
             actionDoneToday = true
-            UserDefaults.standard.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
-            DailyActionResultStore.save(actionTitle: action.title, actionIcon: action.icon, score: liveReadinessScore)
-            AppAnalytics.shared.trackBlockTap(
-                title: action.title, type: .homeDailyAction, screen: .home,
-                metadata: ["source": "next_up_mark_done", "done": "true"])
         } label: {
             HStack(spacing: 7) {
                 Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "checkmark")
