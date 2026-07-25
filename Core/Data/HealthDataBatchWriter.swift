@@ -15,8 +15,7 @@ struct HealthDataBatchWriter {
     static func persistAll(
         newData: [(HealthMetric, MetricTimeSeries)],
         fetchedMetrics: Set<HealthMetric>,
-        context: ModelContext,
-        endDate: Date
+        context: ModelContext
     ) -> BatchResult {
 
         var metricsWithChanges = Set<HealthMetric>()

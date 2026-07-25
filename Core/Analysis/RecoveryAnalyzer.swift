@@ -48,11 +48,9 @@ struct RecoveryAnalyzer {
                         "Your HRV returns to baseline in \(String(format: "%.1f", avgRecovery)) days on average. Post-workout HRV ~\(postWorkoutAvg)ms recovering to your \(baselineStr)ms baseline.",
                     severity: avgRecovery > 3 ? .warning : .info,
                     trend: trend,
-                    currentValue: avgRecovery,
                     baselineValue: 2.0,
                     deviationPercent: ((avgRecovery - 2.0) / 2.0) * 100,
                     category: .recovery,
-                    relatedMetrics: [.heartRateVariability, .workoutDuration]
                 ))
             }
         }
@@ -74,11 +72,9 @@ struct RecoveryAnalyzer {
                 recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(highIntensityCount) high-intensity sessions in the last 28 days. That's \(workoutCount28) workout days to \(restDays28) rest days.",
                 severity: .warning,
                 trend: .declining,
-                currentValue: weeklyRest,
                 baselineValue: Double(recommendedRest),
                 deviationPercent: ((weeklyRest - Double(recommendedRest)) / Double(recommendedRest)) * 100,
                 category: .recovery,
-                relatedMetrics: [.workoutDuration, .activeCalories]
             ))
         }
 
@@ -114,11 +110,9 @@ struct RecoveryAnalyzer {
                     : "2 of 3 overtraining indicators are trending in the same direction: \(signalText). This pattern has preceded extended recovery periods in your data.",
                 severity: isAllThree ? .critical : .warning,
                 trend: .declining,
-                currentValue: Double(signals.count),
                 baselineValue: 0,
                 deviationPercent: Double(signals.count) * 12,
                 category: .recovery,
-                relatedMetrics: [.heartRateVariability, .restingHeartRate, .sleepDuration]
             ))
         }
 

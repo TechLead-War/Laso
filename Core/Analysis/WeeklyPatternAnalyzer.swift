@@ -84,11 +84,9 @@ struct WeeklyPatternAnalyzer {
                         strongestAvg: entry.metric.formatWithUnit(strongest.avg)),
                     severity: deficit >= 25 ? .warning : .info,
                     trend: .stable,
-                    currentValue: weakest.avg,
                     baselineValue: overallAvg,
                     deviationPercent: -deficit,
                     category: .weeklyPattern,
-                    relatedMetrics: [entry.metric]
                 )
             }
         }
@@ -173,11 +171,9 @@ struct WeeklyPatternAnalyzer {
                             gap: String(format: "%.0f", abs(gap))),
                     severity: abs(gap) >= 30 ? .warning : .info,
                     trend: .stable,
-                    currentValue: weekendAvg,
                     baselineValue: weekdayAvg,
                     deviationPercent: -gap,
                     category: .weeklyPattern,
-                    relatedMetrics: [entry.metric]
                 )
             }
         }
@@ -226,11 +222,9 @@ struct WeeklyPatternAnalyzer {
                         "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) swings significantly between your most and least active days.",
                     severity: cv > 35 ? .warning : .info,
                     trend: isConsistent ? .improving : .stable,
-                    currentValue: cv,
                     baselineValue: 20,
                     deviationPercent: cv - 20,
                     category: .weeklyPattern,
-                    relatedMetrics: [metric]
                 )
             }
         }
@@ -410,8 +404,6 @@ struct CyclePhaseAnalyzer {
             recommendation += " Keep logging daily so the phase model can keep adapting to your own baseline."
         }
 
-        let relatedMetrics = signals.map(\.metric)
-
         let insight = Insight(
             metric: primarySignal.metric,
             title: Copy.Analysis.WeeklyPatternAnalyzer.cyclePhaseTitle(phaseName: currentPhase.displayName),
@@ -419,11 +411,9 @@ struct CyclePhaseAnalyzer {
             recommendation: recommendation,
             severity: severity,
             trend: trend,
-            currentValue: primarySignal.current,
             baselineValue: primarySignal.baseline,
             deviationPercent: primarySignal.deviationPercent,
             category: .cyclePhase,
-            relatedMetrics: relatedMetrics
         )
         return [insight]
     }

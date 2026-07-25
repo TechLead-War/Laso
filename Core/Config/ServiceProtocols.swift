@@ -21,7 +21,7 @@ protocol NotificationAuthorizationService {
         illnessWarningsCount: Int,
         metricsAnalyzed: Int
     )
-    func trackWeeklyScoreChange(newScore: Int, previousScore: Int?, delta: Int)
+    func trackWeeklyScoreChange(newScore: Int, delta: Int)
     func trackValueDelivered(newInsightsCount: Int, scoreChanged: Bool, newAnomalies: Int, newCorrelations: Int)
 }
 

@@ -184,9 +184,7 @@ struct HealthRiskEngine {
 
             let (title, description, target) = focusRecommendation(
                 riskType: riskType,
-                metric: factor.metric,
-                status: factor.status,
-                currentValue: factor.currentValue
+                metric: factor.metric
             )
 
             return FocusArea(
@@ -275,9 +273,7 @@ struct HealthRiskEngine {
 
     private static func focusRecommendation(
         riskType: HealthRiskType,
-        metric: HealthMetric,
-        status: RiskFactorStatus,
-        currentValue: Double
+        metric: HealthMetric
     ) -> (title: String, description: String, target: String) {
         let mapped: (title: String, description: String, target: String)?
         switch riskType {

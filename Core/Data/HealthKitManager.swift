@@ -322,8 +322,7 @@ final class HealthKitManager: @unchecked Sendable {
         let persisted = persistFetchedData(
             newData: newData,
             fetchedMetrics: fetchedMetrics,
-            store: store,
-            endDate: endDate
+            store: store
         )
 
         finalizeInMemoryTimeSeries(
@@ -384,8 +383,7 @@ final class HealthKitManager: @unchecked Sendable {
     private func persistFetchedData(
         newData: [(HealthMetric, MetricTimeSeries)],
         fetchedMetrics: Set<HealthMetric>,
-        store: HealthDataStore,
-        endDate: Date
+        store: HealthDataStore
     ) -> PersistedSyncSummary {
         guard let context = store.modelContext else {
             return PersistedSyncSummary(metricsWithChanges: [], totalInsertedSamples: 0, totalChangedSamples: 0)
@@ -394,8 +392,7 @@ final class HealthKitManager: @unchecked Sendable {
         let batchResult = HealthDataBatchWriter.persistAll(
             newData: newData,
             fetchedMetrics: fetchedMetrics,
-            context: context,
-            endDate: endDate
+            context: context
         )
 
         // Invalidate only the metrics that actually changed, not the entire cache

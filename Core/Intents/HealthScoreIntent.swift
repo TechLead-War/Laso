@@ -40,10 +40,8 @@ struct HealthScoreIntent: AppIntent {
         return .result(dialog: dialog) {
             IntentSnippetViews.ScoreSnippet(
                 score: result.score,
-                grade: result.grade,
                 summary: result.summary,
-                readinessScore: result.readinessScore,
-                readinessLabel: result.readinessLabel
+                readinessScore: result.readinessScore
             )
         }
     }

@@ -104,12 +104,10 @@ struct MobilityDeclineAnalyzer {
                 recommendation: Copy.Analysis.Research.MobilityDecline.multiMetricRecommendation,
                 severity: decliningMetrics.count >= 4 ? .warning : .info,
                 trend: .declining,
-                currentValue: Double(decliningMetrics.count),
                 baselineValue: 0,
                 deviationPercent: Double(decliningMetrics.count) / Double(totalEvaluated) * 100,
                 category: .clinicalTrajectory,
                 directive: decliningMetrics.count >= 4 ? .seekMedical : .informational,
-                relatedMetrics: decliningMetrics.map(\.indicator.metric),
                 context: InsightContext(
                     confidenceLevel: min(Double(totalEvaluated) / 5.0, 1.0),
                     dataPointCount: decliningMetrics.map(\.samples).reduce(0, +)
@@ -129,12 +127,10 @@ struct MobilityDeclineAnalyzer {
                 recommendation: Copy.Analysis.Research.MobilityDecline.walkingSpeedRecommendation(percent: percentText, samples: speedDecline.samples),
                 severity: speedDecline.changePercent >= 15 ? .warning : .info,
                 trend: .declining,
-                currentValue: 100 - speedDecline.changePercent,
                 baselineValue: 100,
                 deviationPercent: -speedDecline.changePercent,
                 category: .clinicalTrajectory,
                 directive: .increaseActivity,
-                relatedMetrics: [.walkingSpeed, .walkingStepLength, .walkingDoubleSupportPercentage]
             ))
         }
 
@@ -149,12 +145,10 @@ struct MobilityDeclineAnalyzer {
                 recommendation: Copy.Analysis.Research.MobilityDecline.asymmetryRecommendation(percent: percentText),
                 severity: asymDecline.changePercent >= 25 ? .warning : .info,
                 trend: .declining,
-                currentValue: asymDecline.changePercent,
                 baselineValue: 0,
                 deviationPercent: asymDecline.changePercent,
                 category: .clinicalTrajectory,
                 directive: asymDecline.changePercent >= 25 ? .seekMedical : .informational,
-                relatedMetrics: [.walkingAsymmetry, .walkingSpeed, .walkingStepLength]
             ))
         }
 
@@ -173,11 +167,9 @@ struct MobilityDeclineAnalyzer {
                 title: Copy.Analysis.Research.MobilityDecline.mobilityStableTitle,
                 summary: Copy.Analysis.Research.MobilityDecline.mobilityStableSummary(total: totalEvaluated, improvingList: improvingList),
                 recommendation: Copy.Analysis.Research.MobilityDecline.mobilityStableRecommendation(total: totalEvaluated),
-                currentValue: Double(totalEvaluated),
                 baselineValue: Double(totalEvaluated),
                 deviationPercent: 0,
                 category: .clinicalTrajectory,
-                relatedMetrics: indicators.prefix(4).map(\.metric)
             ))
         }
 

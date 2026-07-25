@@ -55,12 +55,10 @@ struct CircadianDisruptionAnalyzer {
                 recommendation: Copy.Analysis.Research.CircadianDisruption.disruptedRecommendation,
                 severity: .warning,
                 trend: .declining,
-                currentValue: circadianScore,
                 baselineValue: 70,
                 deviationPercent: ((circadianScore - 70) / 70) * 100,
                 category: .circadian,
                 directive: .sleepBetter,
-                relatedMetrics: [.steps, .sleepDuration, .timeInDaylight],
                 context: InsightContext(
                     confidenceLevel: min(Double(samples.count) / 30.0, 1.0),
                     dataPointCount: samples.count
@@ -76,12 +74,10 @@ struct CircadianDisruptionAnalyzer {
                 recommendation: Copy.Analysis.Research.CircadianDisruption.needsImprovementRecommendation(score: scoreText, weakest: weakestComponent.label, weakestScore: weakestScoreText),
                 severity: .info,
                 trend: .stable,
-                currentValue: circadianScore,
                 baselineValue: 70,
                 deviationPercent: ((circadianScore - 70) / 70) * 100,
                 category: .circadian,
                 directive: .informational,
-                relatedMetrics: [.steps, .sleepDuration, .timeInDaylight]
             ))
         } else if circadianScore >= 80 {
             let scoreText = String(format: "%.0f", circadianScore)
@@ -90,11 +86,9 @@ struct CircadianDisruptionAnalyzer {
                 title: Copy.Analysis.Research.CircadianDisruption.strongRhythmTitle,
                 summary: Copy.Analysis.Research.CircadianDisruption.strongRhythmSummary(score: scoreText, strongest: strongestComponent.label),
                 recommendation: Copy.Analysis.Research.CircadianDisruption.strongRhythmRecommendation(score: scoreText),
-                currentValue: circadianScore,
                 baselineValue: 70,
                 deviationPercent: ((circadianScore - 70) / 70) * 100,
                 category: .circadian,
-                relatedMetrics: [.steps, .sleepDuration, .timeInDaylight]
             ))
         }
 

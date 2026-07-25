@@ -139,10 +139,6 @@ struct CrossMetricAnomalyDetector {
                 .sorted { abs($0.zScore) > abs($1.zScore) }
                 .first?.metric ?? .heartRate
 
-            let relatedMetrics = anomaly.involvedMetrics
-                .map(\.metric)
-                .filter { $0 != primaryMetric }
-
             let recommendation = buildRecommendation(for: anomaly)
 
             return Insight(
@@ -152,11 +148,9 @@ struct CrossMetricAnomalyDetector {
                 recommendation: recommendation,
                 severity: anomaly.severity,
                 trend: .stable,
-                currentValue: anomaly.anomalyScore,
                 baselineValue: 50,
                 deviationPercent: anomaly.anomalyScore - 50,
                 category: .crossMetricAnomaly,
-                relatedMetrics: relatedMetrics
             )
         }
     }

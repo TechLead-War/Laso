@@ -4074,6 +4074,12 @@
     "isArray": false
   },
   {
+    "key": "copy_briefing_body_systems_detail_simple",
+    "defaultValue": "Your key health measures are moving together nicely.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_briefing_body_systems_normal_headline",
     "defaultValue": "Your body is mostly in sync today. Things are ticking along nicely.",
     "sourceFile": "Copy+Briefing.swift",
@@ -4147,7 +4153,7 @@
   },
   {
     "key": "copy_briefing_briefing_tomorrow_headline",
-    "defaultValue": "A few of your numbers are shifting together. An earlier bedtime tonight could help.",
+    "defaultValue": "There is about a %@ chance tomorrow feels tougher than usual. An earlier bedtime tonight could help.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4189,7 +4195,7 @@
   },
   {
     "key": "copy_briefing_detail_sleep_deficit",
-    "defaultValue": "You have missed about %@ of sleep over the past couple of weeks.",
+    "defaultValue": "You have missed about %@ of sleep over the past %d days.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4207,7 +4213,7 @@
   },
   {
     "key": "copy_briefing_detail_with_partial",
-    "defaultValue": "This connection seems strong, even when looking at other factors. Based on the past few weeks of your data.",
+    "defaultValue": "This connection looks strong, even when other things are taken into account. Based on %d days of your data.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4225,7 +4231,7 @@
   },
   {
     "key": "copy_briefing_deviator_description",
-    "defaultValue": "Your %@ is %@ today, %@ what you normally see on a %@.",
+    "defaultValue": "Your %@ is %@ today, %@ the %@ you usually see on a %@.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4237,7 +4243,7 @@
   },
   {
     "key": "copy_briefing_headline_with_recovery",
-    "defaultValue": "You are short on sleep by %@. A few good %@ of rest should get you back on track.",
+    "defaultValue": "You are short on sleep by %@. About %d good %@ of rest could get you back on track.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4326,6 +4332,12 @@
     "isArray": false
   },
   {
+    "key": "copy_briefing_stress_detail_simple",
+    "defaultValue": "Here is what is going on: %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_briefing_tomorrow_detail_generic",
     "defaultValue": "A few of your numbers are shifting together. Taking it easy could help.",
     "sourceFile": "Copy+Briefing.swift",
@@ -4368,6 +4380,42 @@
     "isArray": false
   },
   {
+    "key": "copy_briefing_urgent_headline_burnout",
+    "defaultValue": "Your body has been under steady strain lately. Some real time off would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_urgent_headline_fatigue",
+    "defaultValue": "Tiredness has been building up over the last few days. Extra sleep tonight would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_urgent_headline_immune",
+    "defaultValue": "Your body might be working harder than usual to keep up. Rest and fluids would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_urgent_headline_inactivity",
+    "defaultValue": "You have been moving less than usual lately. A short walk today would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_urgent_headline_overtraining",
+    "defaultValue": "Your training might be asking for more than your body is giving back. A few easier days would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_urgent_headline_sleep",
+    "defaultValue": "Sleep has been harder to come by lately. A calm wind down tonight could help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_briefing_verb_drives",
     "defaultValue": "lifts",
     "sourceFile": "Copy+Briefing.swift",
@@ -4382,6 +4430,12 @@
   {
     "key": "copy_briefing_what_might_happen_precursor_headline",
     "defaultValue": "Your %@ is shifting in a way that has often been linked with %@ before. A calmer day could help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_why_this_detail_simple",
+    "defaultValue": "This pattern has been steady across %d days of your data.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4800,12 +4854,6 @@
     "isArray": false
   },
   {
-    "key": "copy_common_common_data_confidence",
-    "defaultValue": "Data confidence: %@ tier",
-    "sourceFile": "Copy+Common.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_common_common_improved",
     "defaultValue": "Improved",
     "sourceFile": "Copy+Common.swift",
@@ -4868,12 +4916,6 @@
   {
     "key": "copy_common_day_streak_text",
     "defaultValue": "%d-day streak",
-    "sourceFile": "Copy+Common.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_common_days_of_data_tracked_value",
-    "defaultValue": "%d days of data tracked",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },

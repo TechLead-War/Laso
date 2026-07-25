@@ -64,11 +64,9 @@ struct CardioRespiratoryAgeAnalyzer {
             recommendation: Copy.Analysis.Research.CardioRespiratoryAge.cardioFitnessAgeRecommendation(vo2: vo2Text, percentile: percentileText),
             severity: .info,
             trend: trajectory,
-            currentValue: currentVO2,
             baselineValue: refBracket.p50,
             deviationPercent: ((currentVO2 - refBracket.p50) / max(refBracket.p50, 1)) * 100,
             category: .clinicalTrajectory,
-            relatedMetrics: [.vo2Max, .exerciseMinutes, .heartRateRecovery, .restingHeartRate],
             context: InsightContext(
                 confidenceLevel: min(Double(recent.count) / Cfg.confidenceFullSampleCount, 1.0),
                 dataPointCount: recent.count
@@ -82,12 +80,10 @@ struct CardioRespiratoryAgeAnalyzer {
                     metric: .vo2Max,
                     title: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingTitle(change: changeText, months: monthsTracked),
                     summary: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingSummary(change: changeText, months: monthsTracked),
-                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingRecommendation(change: changeText, months: monthsTracked),
-                    currentValue: currentVO2,
+                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingRecommendation(change: changeText),
                     baselineValue: currentVO2 - changeOverPeriod,
                     deviationPercent: (changeOverPeriod / max(currentVO2 - changeOverPeriod, 1)) * 100,
                     category: .clinicalTrajectory,
-                    relatedMetrics: [.vo2Max, .exerciseMinutes, .activeCalories]
                 ))
             } else if trajectory == .declining && changeOverPeriod <= -Cfg.trajectoryReportableChange {
                 let changeText = String(format: "%.1f", changeOverPeriod)
@@ -97,15 +93,13 @@ struct CardioRespiratoryAgeAnalyzer {
                     metric: .vo2Max,
                     title: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningTitle(change: changeText, months: monthsTracked),
                     summary: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningSummary(absChange: absChangeText, months: monthsTracked),
-                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningRecommendation(absChange: absChangeText, perMonth: perMonthText, months: monthsTracked),
+                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningRecommendation(absChange: absChangeText, perMonth: perMonthText),
                     severity: abs(changeOverPeriod) >= Cfg.warningDeclineMagnitude ? .warning : .info,
                     trend: .declining,
-                    currentValue: currentVO2,
                     baselineValue: currentVO2 - changeOverPeriod,
                     deviationPercent: (changeOverPeriod / max(currentVO2 - changeOverPeriod, 1)) * 100,
                     category: .clinicalTrajectory,
                     directive: .increaseActivity,
-                    relatedMetrics: [.vo2Max, .exerciseMinutes, .activeCalories]
                 ))
             }
         }
@@ -118,10 +112,8 @@ struct CardioRespiratoryAgeAnalyzer {
                 summary: Copy.Analysis.Research.CardioRespiratoryAge.belowThresholdSummary(vo2: vo2BelowText, threshold: Int(Cfg.veryLowVO2Threshold)),
                 recommendation: Copy.Analysis.Research.CardioRespiratoryAge.belowThresholdRecommendation(threshold: Int(Cfg.veryLowVO2Threshold)),
                 trend: trajectory,
-                currentValue: currentVO2,
                 baselineValue: Cfg.veryLowVO2Threshold,
                 deviationPercent: ((currentVO2 - Cfg.veryLowVO2Threshold) / Cfg.veryLowVO2Threshold) * 100,
-                relatedMetrics: [.vo2Max, .exerciseMinutes, .restingHeartRate]
             ))
         }
 

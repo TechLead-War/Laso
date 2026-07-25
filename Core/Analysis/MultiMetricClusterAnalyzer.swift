@@ -85,11 +85,9 @@ struct MultiMetricClusterAnalyzer {
                 recommendation: recommendationForCluster(category: category, count: decliningMetrics.count, avgDeviation: avgDeviation, metrics: sorted.map(\.metric)),
                 severity: worstSeverity >= .warning ? .critical : .warning,
                 trend: .declining,
-                currentValue: avgDeviation,
                 baselineValue: 0,
                 deviationPercent: avgDeviation,
                 category: .multiMetricCluster,
-                relatedMetrics: sorted.map(\.metric)
             )
             insights.append(insight)
         }
@@ -123,7 +121,6 @@ struct MultiMetricClusterAnalyzer {
             recommendation: Copy.Analysis.MultiMetricCluster.crossCategoryRecommendation(total: totalDeclining, categoryCount: categoriesWithDecline.count, names: categoryNames),
             severity: .warning,
             trend: .declining,
-            currentValue: Double(totalDeclining),
             baselineValue: 0,
             deviationPercent: Double(totalDeclining * 10),
             category: .multiMetricCluster

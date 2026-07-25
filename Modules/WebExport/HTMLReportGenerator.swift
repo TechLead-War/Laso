@@ -7,8 +7,7 @@ struct HTMLReportGenerator {
         overallScore: HealthScore,
         categoryScores: [HealthScore],
         insights: [Insight],
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline]
+        timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> String {
         var body = ""
 
@@ -42,7 +41,6 @@ struct HTMLReportGenerator {
                 body += generateChartSection(
                     metric: metric,
                     series: series,
-                    baseline: baselines[metric],
                     chartId: "chart\(chartIndex)"
                 )
                 chartIndex += 1
@@ -153,7 +151,6 @@ struct HTMLReportGenerator {
     private static func generateChartSection(
         metric: HealthMetric,
         series: MetricTimeSeries,
-        baseline: UserBaseline?,
         chartId: String
     ) -> String {
         let samples = series.samples(lastDays: 30)

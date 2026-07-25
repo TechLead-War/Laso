@@ -16,7 +16,7 @@ struct BaselineDriftDetector {
         var driftResults: [HealthMetric: (percent: Double, label: String)] = [:]
         for (metric, history) in baselineHistory {
             guard let current = currentBaselines[metric] else { continue }
-            if let drift = computeDrift(metric: metric, current: current, history: history) {
+            if let drift = computeDrift(current: current, history: history) {
                 driftResults[metric] = drift
             }
         }
@@ -33,7 +33,6 @@ struct BaselineDriftDetector {
 
     /// Compute the drift magnitude without generating an insight (used for co-drift detection)
     private static func computeDrift(
-        metric: HealthMetric,
         current: UserBaseline,
         history: [(date: Date, baseline: UserBaseline)]
     ) -> (percent: Double, label: String)? {
@@ -116,9 +115,16 @@ struct BaselineDriftDetector {
         let oldFormatted = metric.formatValue(drift.oldMean)
         let newFormatted = metric.formatValue(current.mean)
 
-        // Find co-drifting metrics (correlated metrics that also shifted in the same period)
+        // Find co-drifting metrics (correlated metrics that also shifted in the same period).
+        // Without the correlation filter any unrelated metric that happened to move would be
+        // listed next to this one, which reads as a connection the data does not support.
+        let relatedMetrics = Set(
+            correlations
+                .filter { $0.metricA == metric || $0.metricB == metric }
+                .map { $0.metricA == metric ? $0.metricB : $0.metricA }
+        )
         let coDriftMetrics = driftResults
-            .filter { $0.key != metric && abs($0.value.percent) > 5 }
+            .filter { $0.key != metric && relatedMetrics.contains($0.key) && abs($0.value.percent) > 5 }
             .sorted { abs($0.value.percent) > abs($1.value.percent) }
             .prefix(2)
         let coDriftNote: String
@@ -138,7 +144,6 @@ struct BaselineDriftDetector {
                 : "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit).",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
-            currentValue: current.mean,
             baselineValue: drift.oldMean,
             deviationPercent: drift.percent,
             category: .baselineDrift

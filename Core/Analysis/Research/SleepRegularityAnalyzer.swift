@@ -27,13 +27,10 @@ struct SleepRegularityAnalyzer {
         let samples = sleepSeries.samples(lastDays: 30)
         guard samples.count >= minDaysRequired else { return [] }
 
-        // Build daily sleep map
-        let sleepMap = TimeSeriesAligner.dailyValueMap(sleepSeries)
-
         // Compute Sleep Regularity Index
         // SRI = probability that any two time points 24h apart are in the same state
         // Approximation using sleep duration consistency + timing consistency
-        let sri = computeSRI(samples: samples, sleepMap: sleepMap)
+        let sri = computeSRI(samples: samples)
 
         // Compute social jet lag (weekday vs weekend midpoint difference)
         let socialJetLag = computeSocialJetLag(samples: samples)
@@ -42,8 +39,7 @@ struct SleepRegularityAnalyzer {
         let recentSamples = sleepSeries.samples(lastDays: 14)
         let recentSRI: Double
         if recentSamples.count >= 10 {
-            let recentMap = TimeSeriesAligner.dailyValueMap(sleepSeries)
-            recentSRI = computeSRI(samples: recentSamples, sleepMap: recentMap)
+            recentSRI = computeSRI(samples: recentSamples)
         } else {
             recentSRI = sri
         }
@@ -62,12 +58,10 @@ struct SleepRegularityAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepRegularity.irregularRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .warning,
                 trend: trendDirection,
-                currentValue: sri,
                 baselineValue: Double(goodSRI),
                 deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
                 category: .sleepPerformance,
                 directive: .sleepBetter,
-                relatedMetrics: [.sleepDuration, .sleepDeep, .sleepREM],
                 context: InsightContext(
                     confidenceLevel: min(Double(samples.count) / 30.0, 1.0),
                     dataPointCount: samples.count
@@ -83,12 +77,10 @@ struct SleepRegularityAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepRegularity.needsAttentionRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .info,
                 trend: trendDirection,
-                currentValue: sri,
                 baselineValue: Double(goodSRI),
                 deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
                 category: .sleepPerformance,
                 directive: .sleepBetter,
-                relatedMetrics: [.sleepDuration, .sleepDeep, .sleepREM]
             ))
         } else if sri >= goodSRI {
             let sriText = String(format: "%.0f", sri)
@@ -97,11 +89,9 @@ struct SleepRegularityAnalyzer {
                 title: Copy.Analysis.Research.SleepRegularity.excellentTitle,
                 summary: Copy.Analysis.Research.SleepRegularity.excellentSummary(sri: sriText),
                 recommendation: Copy.Analysis.Research.SleepRegularity.excellentRecommendation(sri: sriText, samples: samples.count),
-                currentValue: sri,
                 baselineValue: Double(goodSRI),
                 deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
                 category: .sleepPerformance,
-                relatedMetrics: [.sleepDuration]
             ))
         }
 
@@ -115,12 +105,10 @@ struct SleepRegularityAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepRegularity.socialJetLagRecommendation(minutes: jetLagText),
                 severity: socialJetLag > 90 ? .warning : .info,
                 trend: .stable,
-                currentValue: socialJetLag,
                 baselineValue: 30,
                 deviationPercent: ((socialJetLag - 30) / 30) * 100,
                 category: .circadian,
                 directive: .sleepBetter,
-                relatedMetrics: [.sleepDuration]
             ))
         }
 
@@ -132,10 +120,7 @@ struct SleepRegularityAnalyzer {
     /// Computes an approximation of the Sleep Regularity Index.
     /// True SRI requires minute-level sleep/wake state; we approximate using
     /// daily sleep duration consistency + weekday/weekend timing alignment.
-    private static func computeSRI(
-        samples: [MetricSample],
-        sleepMap: [Date: Double]
-    ) -> Double {
+    private static func computeSRI(samples: [MetricSample]) -> Double {
         let values = samples.map(\.value)
         guard values.count >= 2 else { return 50 }
 

@@ -81,7 +81,6 @@ struct ScoreTrajectoryAnalyzer {
                 : "Health score averaged \(currentScore) over the last \(days) days, down \(absChange)% from earlier in the period.\(categoryDriverText)",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
-            currentValue: secondAvg,
             baselineValue: firstAvg,
             deviationPercent: changePercent,
             category: .scoreTrajectory
@@ -124,7 +123,6 @@ struct ScoreTrajectoryAnalyzer {
                 recommendation: "Week-over-week score change accelerated: \(String(format: "%.1f", change1to2)) pts to \(String(format: "%.1f", change2to3)) pts. Current average: \(String(format: "%.0f", avg3)).",
                 severity: .info,
                 trend: .improving,
-                currentValue: avg3,
                 baselineValue: avg1,
                 deviationPercent: ((avg3 - avg1) / max(avg1, 1)) * 100,
                 category: .scoreTrajectory
@@ -137,7 +135,6 @@ struct ScoreTrajectoryAnalyzer {
                 recommendation: "Weekly decline rate increased from \(String(format: "%.1f", abs(change1to2))) pts to \(String(format: "%.1f", abs(change2to3))) pts. Score dropped from \(String(format: "%.0f", avg1)) to \(String(format: "%.0f", avg3)) over 3 weeks.",
                 severity: .warning,
                 trend: .declining,
-                currentValue: avg3,
                 baselineValue: avg1,
                 deviationPercent: ((avg3 - avg1) / max(avg1, 1)) * 100,
                 category: .scoreTrajectory
@@ -167,7 +164,6 @@ struct ScoreTrajectoryAnalyzer {
                 recommendation: "Score at 85+ for \(highDays) of the last \(recent.count) days, averaging \(String(format: "%.0f", avg)).",
                 severity: .info,
                 trend: .improving,
-                currentValue: avg,
                 baselineValue: 85,
                 deviationPercent: ((avg - 85) / 85) * 100,
                 category: .scoreTrajectory
@@ -183,7 +179,6 @@ struct ScoreTrajectoryAnalyzer {
                 recommendation: "Score below 60 for \(lowDays) of the last \(recent.count) days, averaging \(String(format: "%.0f", avg)).",
                 severity: .warning,
                 trend: .declining,
-                currentValue: avg,
                 baselineValue: 60,
                 deviationPercent: ((avg - 60) / 60) * 100,
                 category: .scoreTrajectory

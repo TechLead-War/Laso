@@ -96,33 +96,24 @@ struct WorkoutProgrammer {
 
     static func generatePlan(
         recoveryBand: WorkoutRecoveryBand,
-        strainTarget: Double? = nil,
         healthSignals: HealthSignalFlags = .none,
         cyclePhase: CyclePhaseModifier? = nil,
-        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR,
-        lastWorkoutType: String? = nil,
-        exerciseMinutesToday: Double = 0
+        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR
     ) -> WorkoutPlan {
         generatePlan(
             recoveryScore: recoveryBand.recoveryScoreSeed,
-            strainTarget: strainTarget,
             healthSignals: healthSignals,
             cyclePhase: cyclePhase,
-            estimatedMaxHR: estimatedMaxHR,
-            lastWorkoutType: lastWorkoutType,
-            exerciseMinutesToday: exerciseMinutesToday
+            estimatedMaxHR: estimatedMaxHR
         )
     }
 
     /// Generate a workout plan based on the user's current recovery and health state.
     static func generatePlan(
         recoveryScore: Int,
-        strainTarget: Double? = nil,
         healthSignals: HealthSignalFlags = .none,
         cyclePhase: CyclePhaseModifier? = nil,
-        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR,
-        lastWorkoutType: String? = nil,
-        exerciseMinutesToday: Double = 0
+        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR
     ) -> WorkoutPlan {
         // Determine base zone from recovery score
         var zone = zoneForRecovery(recoveryScore)

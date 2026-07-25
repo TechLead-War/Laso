@@ -1430,14 +1430,14 @@ extension Copy {
                 static func vo2ImprovingSummary(change: String, months: Int) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_summary", default: "Your heart and lung fitness has improved by %@ mL/kg/min over %d months. That is a real gain based on large health studies."), change, months)
                 }
-                static func vo2ImprovingRecommendation(change: String, months: Int) -> String {
+                static func vo2ImprovingRecommendation(change: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_recommendation", default: "A %@ mL/kg/min gain in VO2 Max is real progress. It makes your fitness age younger and goes with better long-term health."), change)
                 }
 
                 static func vo2DecliningSummary(absChange: String, months: Int) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_summary", default: "Your heart and lung fitness has dropped by %@ mL/kg/min over %d months. Since VO2 Max is a key fitness sign, this is worth turning around."), absChange, months)
                 }
-                static func vo2DecliningRecommendation(absChange: String, perMonth: String, months: Int) -> String {
+                static func vo2DecliningRecommendation(absChange: String, perMonth: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_recommendation", default: "A %@ mL/kg/min drop makes your fitness age older. Losing %@ mL/kg/min per month is faster than normal aging (about 1 to 2 mL/kg/min every 10 years). Doing cardio more often or a bit harder can help turn it around."), absChange, perMonth)
                 }
 

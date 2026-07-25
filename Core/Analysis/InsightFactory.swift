@@ -17,12 +17,10 @@ struct InsightFactory {
         recommendation: String,
         severity: Severity,
         trend: TrendDirection,
-        currentValue: Double,
         baselineValue: Double,
         deviationPercent: Double,
         category: InsightCategory,
         directive: InsightDirective,
-        relatedMetrics: [HealthMetric] = [],
         context: InsightContext? = nil
     ) -> Insight {
         Insight(
@@ -32,12 +30,10 @@ struct InsightFactory {
             recommendation: recommendation,
             severity: severity,
             trend: trend,
-            currentValue: currentValue,
             baselineValue: baselineValue,
             deviationPercent: deviationPercent,
             category: category,
             directive: directive,
-            relatedMetrics: relatedMetrics,
             context: context
         )
     }
@@ -52,11 +48,9 @@ struct InsightFactory {
         recommendation: String,
         severity: Severity = .info,
         trend: TrendDirection = .stable,
-        currentValue: Double,
         baselineValue: Double,
         deviationPercent: Double,
         category: InsightCategory,
-        relatedMetrics: [HealthMetric] = [],
         context: InsightContext? = nil
     ) -> Insight {
         make(
@@ -66,12 +60,10 @@ struct InsightFactory {
             recommendation: recommendation,
             severity: severity,
             trend: trend,
-            currentValue: currentValue,
             baselineValue: baselineValue,
             deviationPercent: deviationPercent,
             category: category,
             directive: .informational,
-            relatedMetrics: relatedMetrics,
             context: context
         )
     }
@@ -86,11 +78,9 @@ struct InsightFactory {
         recommendation: String,
         severity: Severity = .warning,
         trend: TrendDirection,
-        currentValue: Double,
         baselineValue: Double,
         deviationPercent: Double,
         category: InsightCategory = .clinicalTrajectory,
-        relatedMetrics: [HealthMetric] = [],
         context: InsightContext? = nil
     ) -> Insight {
         make(
@@ -100,12 +90,10 @@ struct InsightFactory {
             recommendation: recommendation,
             severity: severity,
             trend: trend,
-            currentValue: currentValue,
             baselineValue: baselineValue,
             deviationPercent: deviationPercent,
             category: category,
             directive: .seekMedical,
-            relatedMetrics: relatedMetrics,
             context: context
         )
     }

@@ -120,7 +120,6 @@ final class TodayIntelligenceEngine {
         if let report = orchestrator.healthSignalReport {
             let urgentSignals = report.urgentSignals
             if let topSignal = urgentSignals.first, topSignal.riskLevel >= PredictiveHealthSignals.RiskLevel.moderate {
-                let pctStr = formatPercent(topSignal.score)
                 let severity: IntelligenceCard.CardSeverity
                 let color: IntelligenceCard.AccentColor
                 let priorityBase: Double
@@ -140,7 +139,7 @@ final class TodayIntelligenceEngine {
                     type: .predictiveRisk,
                     icon: "exclamationmark.triangle.fill",
                     label: Copy.Briefing.Labels.headsUp,
-                    headline: Copy.Briefing.TrendSignal.urgentHeadline(riskPercent: pctStr, signalName: topSignal.signalName),
+                    headline: Copy.Briefing.TrendSignal.urgentHeadline(signalName: topSignal.signalName),
                     detail: Copy.Briefing.TrendSignal.urgentDetail(explanation: topSignal.explanation),
                     severity: severity,
                     confidence: topSignal.confidence,
@@ -199,9 +198,7 @@ final class TodayIntelligenceEngine {
 
         let isIncrease = topCP.direction == ChangePointDetector.ChangePoint.ChangeDirection.increase
         let directionWord = isIncrease ? "higher" : "lower"
-        let delta = abs(topCP.afterMean - topCP.beforeMean)
         let metricName = topCP.metric.displayName
-        let deltaStr = topCP.metric.formatWithUnit(delta)
         let dateStr = shortDateString(topCP.date)
 
         let severity: IntelligenceCard.CardSeverity
@@ -236,7 +233,7 @@ final class TodayIntelligenceEngine {
             type: .regimeShift,
             icon: "chart.line.uptrend.xyaxis",
             label: Copy.Briefing.Labels.somethingChanged,
-            headline: Copy.Briefing.SomethingChanged.headline(metricName: metricName, direction: directionWord, delta: deltaStr, dateStr: dateStr),
+            headline: Copy.Briefing.SomethingChanged.headline(metricName: metricName, direction: directionWord, dateStr: dateStr),
             detail: detail,
             severity: severity,
             confidence: topCP.confidence,
@@ -252,7 +249,6 @@ final class TodayIntelligenceEngine {
         // Highest priority: currently-triggered precursor patterns
         let triggeredPrecursors = orchestrator.precursorPatterns.filter { $0.isCurrentlyTriggered }
         if let top = triggeredPrecursors.sorted(by: { $0.historicalAccuracy > $1.historicalAccuracy }).first {
-            let pctStr = formatPercent(top.historicalAccuracy)
             let signalDesc = top.warningSignals.prefix(2).map { signal in
                 "\(signal.metric.displayName) \(signal.direction)"
             }.joined(separator: " and ")
@@ -261,7 +257,7 @@ final class TodayIntelligenceEngine {
                 type: .cascadeForecast,
                 icon: "arrow.triangle.branch",
                 label: Copy.Briefing.Labels.cascadeAlert,
-                headline: Copy.Briefing.WhatMightHappen.precursorHeadline(signalDescription: signalDesc, predictedEvent: top.predictedEvent, accuracy: pctStr),
+                headline: Copy.Briefing.WhatMightHappen.precursorHeadline(signalDescription: signalDesc, predictedEvent: top.predictedEvent),
                 detail: Copy.Briefing.WhatMightHappen.precursorDetail(description: top.description),
                 severity: .warning,
                 confidence: top.historicalAccuracy,
@@ -293,13 +289,11 @@ final class TodayIntelligenceEngine {
             outcomeStr = "\(nextStep.metric.displayName) \(dir) in ~\(nextStep.dayOffset - (topSeq.steps[currentStep].dayOffset))d"
         }
 
-        let pctStr = formatPercent(topSeq.confidence)
-
         return IntelligenceCard(
             type: .cascadeForecast,
             icon: "arrow.triangle.branch",
             label: Copy.Briefing.Labels.cascadeForecast,
-            headline: Copy.Briefing.WhatMightHappen.sequenceHeadline(outcome: outcomeStr, confidence: pctStr),
+            headline: Copy.Briefing.WhatMightHappen.sequenceHeadline(outcome: outcomeStr),
             detail: Copy.Briefing.WhatMightHappen.sequenceDetail(description: topSeq.description),
             severity: .notable,
             confidence: topSeq.confidence,
@@ -326,11 +320,10 @@ final class TodayIntelligenceEngine {
         let pVal = top.grangerPValue
 
         let detail: String
-        if let partial = top.partialCorrelation {
-            let partialStr = String(format: "%.2f", abs(partial))
-            detail = Copy.Briefing.WhyThisIsHappening.detailWithPartial(partialR: partialStr, stability: formatPercent(top.stability), sampleCount: top.sampleCount)
+        if top.partialCorrelation != nil {
+            detail = Copy.Briefing.WhyThisIsHappening.detailWithPartial(sampleCount: top.sampleCount)
         } else {
-            detail = Copy.Briefing.WhyThisIsHappening.detailSimple(sampleCount: top.sampleCount, stability: formatPercent(top.stability))
+            detail = Copy.Briefing.WhyThisIsHappening.detailSimple(sampleCount: top.sampleCount)
         }
 
         return IntelligenceCard(
@@ -482,14 +475,13 @@ final class TodayIntelligenceEngine {
         default: severity = .info; color = .green
         }
 
-        let indexStr = String(format: "%.0f", allostaticIndex)
         let headline: String
         if allostaticIndex >= 62 {
-            headline = Copy.Briefing.StressAndRecovery.highStressHeadline(score: indexStr, worstSystem: worstSystem.name)
+            headline = Copy.Briefing.StressAndRecovery.highStressHeadline(worstSystem: worstSystem.name)
         } else if allostaticIndex <= 40 {
-            headline = Copy.Briefing.StressAndRecovery.lowStressHeadline(score: indexStr)
+            headline = Copy.Briefing.StressAndRecovery.lowStressHeadline
         } else {
-            headline = Copy.Briefing.StressAndRecovery.normalStressHeadline(score: indexStr)
+            headline = Copy.Briefing.StressAndRecovery.normalStressHeadline
         }
 
         let systemSummaryItems = (percentileStr != nil ? sortedSystems.prefix(2) : sortedSystems.prefix(sortedSystems.count)).map { s in
@@ -576,13 +568,13 @@ final class TodayIntelligenceEngine {
 
         if sigma > 1.0 {
             // Recovery mode
-            headline = Copy.Briefing.NervousSystem.recoveryModeHeadline(hrvStr: hrvStr)
+            headline = Copy.Briefing.NervousSystem.recoveryModeHeadline
             detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .notable : .info
             color = .green
         } else if sigma < -1.0 {
             // Stress mode
-            headline = Copy.Briefing.NervousSystem.stressModeHeadline(hrvStr: hrvStr, rhrStr: rhrStr)
+            headline = Copy.Briefing.NervousSystem.stressModeHeadline
             detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .warning : .notable
             color = abs(sigma) >= 2.0 ? .red : .orange
@@ -659,7 +651,10 @@ final class TodayIntelligenceEngine {
         }
 
         // --- HRV Deficit ---
+        // The deficit score is recency weighted, so it is not a day count.
+        // Keep a plain count alongside it for anything shown to the user.
         var hrvDeficitScore = 0.0
+        var hrvBelowDays = 0
         if let hrvBaseline = baselines[.heartRateVariability],
            let hrvSeries = timeSeries[.heartRateVariability] {
             let recentHRV = hrvSeries.samples(lastDays: hrvWindowDays).sorted { $0.date > $1.date }
@@ -668,6 +663,7 @@ final class TodayIntelligenceEngine {
             for (i, sample) in recentHRV.enumerated() {
                 if sample.value < threshold {
                     hrvDeficitScore += pow(decay, Double(i))
+                    hrvBelowDays += 1
                 }
             }
         }
@@ -726,7 +722,7 @@ final class TodayIntelligenceEngine {
         if estimatedRecoveryDays > 0 {
             headline = Copy.Briefing.SleepDebt.headlineWithRecovery(debtHours: sleepDebtStr, recoveryDays: estimatedRecoveryDays)
         } else {
-            headline = Copy.Briefing.SleepDebt.headlineHRVSuppressed(dayCount: String(format: "%.0f", hrvDeficitScore), windowDays: hrvWindowDays)
+            headline = Copy.Briefing.SleepDebt.headlineHRVSuppressed
         }
 
         var detailParts: [String] = []
@@ -734,7 +730,7 @@ final class TodayIntelligenceEngine {
             detailParts.append(Copy.Briefing.SleepDebt.detailSleepDeficit(debtHours: sleepDebtStr, windowDays: sleepWindowDays))
         }
         if hrvDeficitScore >= 2.0 {
-            detailParts.append(Copy.Briefing.SleepDebt.detailHRVBelow(dayCount: String(format: "%.0f", hrvDeficitScore), windowDays: hrvWindowDays))
+            detailParts.append(Copy.Briefing.SleepDebt.detailHRVBelow(dayCount: String(hrvBelowDays), windowDays: hrvWindowDays))
         }
         if activityDeficitDays >= 3 {
             detailParts.append(Copy.Briefing.SleepDebt.detailExerciseBelow(missedDays: activityDeficitDays, windowDays: activityWindowDays))
@@ -806,11 +802,6 @@ final class TodayIntelligenceEngine {
             return gapA < gapB
         }
 
-        // Determine if coherence is unusually low
-        // Use all correlations (not just significant) to see overall coupling
-        let allAbsR = correlations.map { abs($0.pearsonR) }
-        _ = AccelerateML.mean(allAbsR)
-
         let severity: IntelligenceCard.CardSeverity
         let color: IntelligenceCard.AccentColor
 
@@ -827,19 +818,18 @@ final class TodayIntelligenceEngine {
 
         let headline: String
         if meanStability > 0 && coherence < meanStability * 0.7 {
-            let dropPct = String(format: "%.0f%%", (1.0 - coherence / meanStability) * 100)
-            headline = Copy.Briefing.BodySystems.decoupledHeadline(dropPercent: dropPct)
+            headline = Copy.Briefing.BodySystems.decoupledHeadline
         } else if coherence > 0.55 && density > 0.3 {
-            headline = Copy.Briefing.BodySystems.alignedHeadline(connectionCount: significantPairs.count, metricCount: n)
+            headline = Copy.Briefing.BodySystems.alignedHeadline
         } else {
-            headline = Copy.Briefing.BodySystems.normalHeadline(connectionCount: significantPairs.count)
+            headline = Copy.Briefing.BodySystems.normalHeadline
         }
 
         let detail: String
         if let weak = weakestLink {
-            detail = Copy.Briefing.BodySystems.detailWithWeakLink(connectionCount: significantPairs.count, metricCount: n, metricA: weak.metricA.displayName, metricB: weak.metricB.displayName)
+            detail = Copy.Briefing.BodySystems.detailWithWeakLink(metricA: weak.metricA.displayName, metricB: weak.metricB.displayName)
         } else {
-            detail = Copy.Briefing.BodySystems.detailSimple(connectionCount: significantPairs.count, metricCount: n)
+            detail = Copy.Briefing.BodySystems.detailSimple
         }
 
         let priority: Double

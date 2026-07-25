@@ -174,8 +174,7 @@ final class StressScorer {
         // Build daily history
         buildDailyHistory(
             hrvSeries: hrvSeries,
-            rhrSeries: allSeries[.restingHeartRate],
-            hrSeries: allSeries[.heartRate]
+            rhrSeries: allSeries[.restingHeartRate]
         )
     }
 
@@ -291,8 +290,7 @@ final class StressScorer {
     /// Build the last 30 days of daily stress history
     private func buildDailyHistory(
         hrvSeries: MetricTimeSeries,
-        rhrSeries: MetricTimeSeries?,
-        hrSeries: MetricTimeSeries?
+        rhrSeries: MetricTimeSeries?
     ) {
         let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())

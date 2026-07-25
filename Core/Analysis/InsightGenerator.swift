@@ -182,7 +182,6 @@ struct InsightGenerator {
                 recommendation: reversalRecommendation,
                 severity: isPositiveReversal ? .info : .warning,
                 trend: trendResult.direction,
-                currentValue: currentValue,
                 baselineValue: baseline.mean,
                 deviationPercent: trendResult.weekOverWeekChange,
                 context: reversalContext
@@ -258,7 +257,6 @@ struct InsightGenerator {
             recommendation: recommendation,
             severity: effectiveSeverity,
             trend: trend,
-            currentValue: currentValue,
             baselineValue: baselineValue,
             deviationPercent: deviationPercent,
             context: insightContext
@@ -641,12 +639,8 @@ struct InsightGenerator {
         // Try causation-style summary first when we have rich context
         if let causationSummary = generateCausationSummary(
             metric: metric,
-            currentValue: currentValue,
-            baselineValue: baselineValue,
             deviationPercent: deviationPercent,
             trend: trend,
-            inflection: inflection,
-            historicalContext: historicalContext,
             insightContext: insightContext
         ) {
             return causationSummary
@@ -669,12 +663,8 @@ struct InsightGenerator {
     /// Returns nil when there is not enough context to form a causation sentence.
     private static func generateCausationSummary(
         metric: HealthMetric,
-        currentValue: Double,
-        baselineValue: Double,
         deviationPercent: Double,
         trend: TrendDirection,
-        inflection: TrendAnalyzer.Inflection,
-        historicalContext: HistoricalAnalyzer.HistoricalContext?,
         insightContext: InsightContext?
     ) -> String? {
         guard let ctx = insightContext else { return nil }

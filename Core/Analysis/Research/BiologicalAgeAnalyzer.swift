@@ -77,11 +77,9 @@ struct BiologicalAgeAnalyzer {
             title: Copy.Analysis.Research.BiologicalAge.fitnessAgeTitle(years: weightedAgeText),
             summary: Copy.Analysis.Research.BiologicalAge.fitnessAgeSummary(componentCount: ageEstimates.count, years: weightedAgeText, strongest: youngestComponent.component, oldest: oldestComponent.component),
             recommendation: Copy.Analysis.Research.BiologicalAge.fitnessAgeRecommendation(breakdown: componentBreakdown),
-            currentValue: weightedAge,
             baselineValue: weightedAge,
             deviationPercent: 0,
             category: .clinicalTrajectory,
-            relatedMetrics: [.vo2Max, .restingHeartRate, .heartRateVariability, .walkingSpeed],
             context: InsightContext(
                 confidenceLevel: min(Double(ageEstimates.count) / 5.0, 1.0),
                 dataPointCount: ageEstimates.count
@@ -100,12 +98,10 @@ struct BiologicalAgeAnalyzer {
                 recommendation: Copy.Analysis.Research.BiologicalAge.imbalanceRecommendation(oldestComponent: oldestComponent.component),
                 severity: .info,
                 trend: .stable,
-                currentValue: ageSpread,
                 baselineValue: 10,
                 deviationPercent: ((ageSpread - 10) / 10) * 100,
                 category: .clinicalTrajectory,
                 directive: .informational,
-                relatedMetrics: [.vo2Max, .restingHeartRate, .walkingSpeed]
             ))
         }
 

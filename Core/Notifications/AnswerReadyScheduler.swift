@@ -24,7 +24,7 @@ enum AnswerReadyScheduler {
         guard let store else { return }
         guard let prediction = OnboardingPredictionStore.loadPrediction() else { return }
 
-        let history = liveHistory(for: prediction, store: store)
+        let history = liveHistory(store: store)
         let verdict = PredictionVerdictEngine.evaluate(prediction: prediction, history: history)
 
         // Only a matured verdict is news. Inconclusive means the answer is still
@@ -60,10 +60,7 @@ enum AnswerReadyScheduler {
     /// feeds it minutes). Convert here so the verdict is computed in the same
     /// unit regardless of source; skipping this would shrink a real one-hour
     /// effect to 1.0 and never confirm.
-    private static func liveHistory(
-        for prediction: PreRegisteredPrediction,
-        store: HealthDataStore
-    ) -> [PredictionMetric: [MetricSample]] {
+    private static func liveHistory(store: HealthDataStore) -> [PredictionMetric: [MetricSample]] {
         var history: [PredictionMetric: [MetricSample]] = [:]
         for metric in PredictionMetric.allCases {
             guard let series = store.loadTimeSeries(for: metric.healthMetric) else { continue }

@@ -251,8 +251,8 @@ struct TodaysActionDetailView: View {
             .padding(.horizontal, DS.screenPadding)
 
             VStack(alignment: .leading, spacing: DS.space3) {
-                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                    doTodayRow(index: index + 1, icon: item.icon, text: item.text)
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    doTodayRow(icon: item.icon, text: item.text)
                 }
 
                 if !benefit.isEmpty {
@@ -306,7 +306,7 @@ struct TodaysActionDetailView: View {
         }
     }
 
-    private func doTodayRow(index: Int, icon: String, text: String) -> some View {
+    private func doTodayRow(icon: String, text: String) -> some View {
         HStack(alignment: .top, spacing: DS.space3) {
             Image(systemName: icon)
                 .font(DS.Typography.calloutSemibold)

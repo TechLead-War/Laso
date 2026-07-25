@@ -84,7 +84,6 @@ struct CausalChainEngine {
                 effectMetric: effect,
                 correlationIndex: correlationIndex,
                 anomalyByMetric: anomalyByMetric,
-                trends: trends,
                 timeSeries: timeSeries,
                 baselines: baselines,
                 visited: [effect]
@@ -101,9 +100,6 @@ struct CausalChainEngine {
     static func generateInsights(from chains: [CausalChain]) -> [Insight] {
         chains.compactMap { chain -> Insight? in
             guard !chain.links.isEmpty else { return nil }
-
-            let allMetrics = chain.links.flatMap { [$0.causeMetric, $0.effectMetric] }
-            let uniqueRelated = Array(Set(allMetrics).subtracting([chain.affectedMetric]))
 
             // Severity based on the effect's deviation magnitude
             let effectDeviation = abs(chain.links.last?.effectDeviation ?? 0)
@@ -124,11 +120,9 @@ struct CausalChainEngine {
                 recommendation: recommendation,
                 severity: severity,
                 trend: .declining,
-                currentValue: chain.links.last?.effectDeviation ?? 0,
                 baselineValue: 0,
                 deviationPercent: chain.links.last?.effectDeviation ?? 0,
                 category: .correlation,
-                relatedMetrics: uniqueRelated
             )
         }
     }
@@ -203,7 +197,6 @@ struct CausalChainEngine {
         effectMetric: HealthMetric,
         correlationIndex: [HealthMetric: [(cause: HealthMetric, corr: HealthCorrelation)]],
         anomalyByMetric: [HealthMetric: AnomalyDetector.AnomalyResult],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
         visited: Set<HealthMetric>,
@@ -227,7 +220,6 @@ struct CausalChainEngine {
                 effectMetric: effectMetric,
                 correlation: corr,
                 anomalyByMetric: anomalyByMetric,
-                trends: trends,
                 timeSeries: timeSeries,
                 baselines: baselines
             ) else { continue }
@@ -241,7 +233,6 @@ struct CausalChainEngine {
                 effectMetric: causeMetric,
                 correlationIndex: correlationIndex,
                 anomalyByMetric: anomalyByMetric,
-                trends: trends,
                 timeSeries: timeSeries,
                 baselines: baselines,
                 visited: visited.union([causeMetric]),
@@ -267,7 +258,6 @@ struct CausalChainEngine {
         effectMetric: HealthMetric,
         correlation: HealthCorrelation,
         anomalyByMetric: [HealthMetric: AnomalyDetector.AnomalyResult],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> ChainLink? {
@@ -450,9 +440,9 @@ struct CausalChainEngine {
         case 1:
             return generateSingleLinkNarrative(link: links[0], baselines: baselines)
         case 2:
-            return generateTwoLinkNarrative(links: links, affectedMetric: affectedMetric, baselines: baselines)
+            return generateTwoLinkNarrative(links: links, affectedMetric: affectedMetric)
         case 3:
-            return generateThreeLinkNarrative(links: links, affectedMetric: affectedMetric, baselines: baselines)
+            return generateThreeLinkNarrative(links: links, affectedMetric: affectedMetric)
         default:
             return generateSingleLinkNarrative(link: links[0], baselines: baselines)
         }
@@ -504,8 +494,7 @@ struct CausalChainEngine {
     /// Narrative for a 2-link chain: "X changed because of Y, which changed because of Z"
     private static func generateTwoLinkNarrative(
         links: [ChainLink],
-        affectedMetric: HealthMetric,
-        baselines: [HealthMetric: UserBaseline]
+        affectedMetric: HealthMetric
     ) -> String {
         guard links.count == 2 else { return "" }
 
@@ -563,8 +552,7 @@ struct CausalChainEngine {
     /// Narrative for a 3-link chain: full story from root cause to final effect
     private static func generateThreeLinkNarrative(
         links: [ChainLink],
-        affectedMetric: HealthMetric,
-        baselines: [HealthMetric: UserBaseline]
+        affectedMetric: HealthMetric
     ) -> String {
         guard links.count == 3 else { return "" }
 

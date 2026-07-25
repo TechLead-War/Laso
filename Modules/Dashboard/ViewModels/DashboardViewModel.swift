@@ -537,7 +537,6 @@ final class DashboardViewModel {
             ui.syncPhase = .discovering
             let results = DiscoveryEngine.generateDiscoveries(
                 timeSeries: healthKitManager.timeSeries,
-                correlations: analysisEngine.correlations,
                 historicalContext: analysisEngine.historicalContext
             )
             if results.count >= DiscoveryEngine.minimumDiscoveriesRequired {

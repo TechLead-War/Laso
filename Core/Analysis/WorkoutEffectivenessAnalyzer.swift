@@ -78,11 +78,9 @@ struct WorkoutEffectivenessAnalyzer {
                     breakdown: weekBreakdown),
             severity: severity,
             trend: trend,
-            currentValue: consistencyScore,
             baselineValue: 75,
             deviationPercent: consistencyScore - 75,
             category: .workoutEffectiveness,
-            relatedMetrics: [.workoutDuration, .exerciseMinutes]
         )
     }
 
@@ -133,11 +131,9 @@ struct WorkoutEffectivenessAnalyzer {
                 "VO2 Max declined \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
             severity: abs(change) > 5 ? .warning : .info,
             trend: trend,
-            currentValue: recentAvg,
             baselineValue: olderAvg,
             deviationPercent: change,
             category: .workoutEffectiveness,
-            relatedMetrics: [.vo2Max, .exerciseMinutes]
         )
     }
 
@@ -175,11 +171,9 @@ struct WorkoutEffectivenessAnalyzer {
                 "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week. \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",
             severity: .info,
             trend: trend,
-            currentValue: efficiency7d,
             baselineValue: efficiency30d,
             deviationPercent: change,
             category: .workoutEffectiveness,
-            relatedMetrics: [.activeCalories, .exerciseMinutes]
         )
     }
 }

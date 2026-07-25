@@ -34,10 +34,6 @@ extension Copy {
         static var quickQuestion: String { RemoteConfigManager.shared.copyString("copy_common_common_quick_question", default: "Quick question") }
         static var shareHealthCard: String { RemoteConfigManager.shared.copyString("copy_common_common_share_health_card", default: "Share health card") }
 
-        static func dataConfidence(tier: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_common_common_data_confidence", default: "Data confidence: %@ tier"), tier)
-        }
-
         // MARK: - Lifted view literals
         static var healthScore: String { RemoteConfigManager.shared.copyString("copy_common_health_score", default: "Health Score") }
         static var lastNightSSleep: String { RemoteConfigManager.shared.copyString("copy_common_last_night_s_sleep", default: "Last Night's Sleep") }
@@ -120,7 +116,6 @@ extension Copy {
         static func dayStreakText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_day_streak_text", default: "%d-day streak"), p0) }
         static func x10100Text(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x10100_text", default: "%d%%"), p0) }
         static func percentValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_percent_value", default: "%d percent"), p0) }
-        static func daysOfDataTrackedValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_days_of_data_tracked_value", default: "%d days of data tracked"), p0) }
         static func errorText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_error_text", default: "Error: %@"), p0) }
         static func viaText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_via_text", default: "via %@"), p0) }
         static func opensTheSubscriptionPaywallToHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_opens_the_subscription_paywall_to_hint", default: "Opens the subscription paywall to unlock %@"), p0) }

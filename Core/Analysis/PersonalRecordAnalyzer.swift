@@ -163,11 +163,9 @@ struct PersonalRecordAnalyzer {
                 recommendation: prRecommendation,
                 severity: .info,
                 trend: .improving,
-                currentValue: currentAvg,
                 baselineValue: bestPrevious,
                 deviationPercent: improvement,
                 category: .personalRecord,
-                relatedMetrics: [metric]
             )
         }
 
@@ -210,11 +208,9 @@ struct PersonalRecordAnalyzer {
                     "Current streak: \(currentStreak) consecutive days of \(label.lowercased()).",
                 severity: .info,
                 trend: .improving,
-                currentValue: Double(currentStreak),
                 baselineValue: 3,
                 deviationPercent: Double(currentStreak - 3) / 3.0 * 100,
                 category: .personalRecord,
-                relatedMetrics: [tracked.metric]
             ))
         }
 
@@ -253,11 +249,9 @@ struct PersonalRecordAnalyzer {
                 recommendation: Copy.Analysis.PersonalRecord.milestoneRecommendation(label),
                 severity: .info,
                 trend: .improving,
-                currentValue: threshold,
                 baselineValue: 0,
                 deviationPercent: 100,
                 category: .personalRecord,
-                relatedMetrics: [tracked.metric]
             ))
         }
 

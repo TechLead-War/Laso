@@ -202,11 +202,9 @@ struct IllnessEarlyWarning {
                 recommendation: recommendation,
                 severity: warning.severity,
                 trend: .declining,
-                currentValue: Double(warning.confidence),
                 baselineValue: 0,
                 deviationPercent: Double(warning.activeSignals.count * 10),
                 category: .watchSignal,
-                relatedMetrics: relatedMetrics
             )
         }
     }

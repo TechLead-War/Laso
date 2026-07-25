@@ -65,12 +65,10 @@ struct RHRTrajectoryAnalyzer {
                     recommendation: Copy.Analysis.Research.RHRTrajectory.risingRecommendation(change: changeText, windowLabel: window.label, includeMedicalNote: totalChange >= 3),
                     severity: severity,
                     trend: .declining,
-                    currentValue: currentRHR,
                     baselineValue: startRHR,
                     deviationPercent: ((currentRHR - startRHR) / max(startRHR, 1)) * 100,
                     category: .clinicalTrajectory,
                     directive: totalChange >= 5 ? .seekMedical : .informational,
-                    relatedMetrics: [.restingHeartRate, .heartRateVariability, .activeCalories],
                     context: InsightContext(
                         slope: slopePerDay,
                         confidenceLevel: min(Double(samples.count) / Double(window.days), 1.0),
@@ -90,11 +88,9 @@ struct RHRTrajectoryAnalyzer {
                     title: Copy.Analysis.Research.RHRTrajectory.improvingTitle,
                     summary: Copy.Analysis.Research.RHRTrajectory.improvingSummary(change: changeText, windowLabel: window.label, startRHR: startText, currentRHR: currentText),
                     recommendation: Copy.Analysis.Research.RHRTrajectory.improvingRecommendation,
-                    currentValue: currentRHR,
                     baselineValue: startRHR,
                     deviationPercent: ((currentRHR - startRHR) / max(startRHR, 1)) * 100,
                     category: .clinicalTrajectory,
-                    relatedMetrics: [.restingHeartRate, .vo2Max, .exerciseMinutes],
                     context: InsightContext(
                         slope: slopePerDay,
                         dataPointCount: samples.count

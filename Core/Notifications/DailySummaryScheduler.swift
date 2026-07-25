@@ -15,7 +15,6 @@ struct DailySummaryScheduler {
         score: Int,
         anomalyCount: Int,
         topInsights: [Insight],
-        categoryBreakdown: String,
         preferences: NotificationPreferences,
         topAnomaly: (metricName: String, changePercent: Double)? = nil,
         scoreChangeFromYesterday: Int? = nil,
@@ -48,7 +47,6 @@ struct DailySummaryScheduler {
 
         let body = Copy.Notifications.dynamicDailySummaryBody(
             score: score,
-            categoryBreakdown: categoryBreakdown,
             topInsightAction: topAction,
             streakDays: streakDays,
             anomalyCount: anomalyCount,

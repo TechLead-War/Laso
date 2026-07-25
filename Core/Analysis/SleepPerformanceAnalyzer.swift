@@ -43,7 +43,7 @@ struct SleepPerformanceAnalyzer {
         }
 
         // --- Bedtime Consistency ---
-        if let consistencyInsight = analyzeConsistency(sleepSeries: sleepSeries, timeSeries: timeSeries) {
+        if let consistencyInsight = analyzeConsistency(sleepSeries: sleepSeries) {
             insights.append(consistencyInsight)
         }
 
@@ -102,11 +102,9 @@ struct SleepPerformanceAnalyzer {
                         totalNights: goodSleep.count + poorSleep.count),
                     severity: abs(percentDiff) >= Self.durationWarningPercent ? .warning : .info,
                     trend: .stable,
-                    currentValue: avgGood,
                     baselineValue: avgPoor,
                     deviationPercent: percentDiff,
                     category: .sleepPerformance,
-                    relatedMetrics: [.sleepDuration, performanceMetric]
                 )
             }
         }
@@ -182,20 +180,15 @@ struct SleepPerformanceAnalyzer {
                 totalNights: highQualityCals.count + lowQualityCals.count),
             severity: .info,
             trend: .stable,
-            currentValue: avgHigh,
             baselineValue: avgLow,
             deviationPercent: diff,
             category: .sleepPerformance,
-            relatedMetrics: [.sleepDeep, .sleepREM, .activeCalories]
         )
     }
 
     // MARK: - Consistency
 
-    private static func analyzeConsistency(
-        sleepSeries: MetricTimeSeries,
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> Insight? {
+    private static func analyzeConsistency(sleepSeries: MetricTimeSeries) -> Insight? {
         let last30Samples = sleepSeries.samples(lastDays: 30)
         let last30 = last30Samples.map(\.value)
         guard last30.count >= 14 else { return nil }
@@ -263,11 +256,9 @@ struct SleepPerformanceAnalyzer {
                 "Sleep varies by \u{00B1}\(String(format: "%.1f", stdDev)) hrs night to night (CV: \(String(format: "%.0f", cv * 100))%). Weekday avg: \(String(format: "%.1f", weekdayAvg)) hrs, weekend avg: \(String(format: "%.1f", weekendAvg)) hrs.\(gapNote)",
             severity: severity,
             trend: isConsistent ? .improving : .declining,
-            currentValue: cv * 100,
             baselineValue: 15,
             deviationPercent: (cv - 0.15) / 0.15 * 100,
             category: .sleepPerformance,
-            relatedMetrics: [.sleepDuration, .sleepDeep]
         )
     }
 }

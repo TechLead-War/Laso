@@ -11,7 +11,6 @@ struct DiscoveryEngine {
     /// Generate up to 5 high-quality discoveries from the user's health data.
     static func generateDiscoveries(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        correlations: [HealthCorrelation],
         historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext]
     ) -> [Discovery] {
         // Require minimum data depth
@@ -129,7 +128,7 @@ struct DiscoveryEngine {
             let direction = directionWord(for: pair.effect, diff: diff)
 
             let headline = Copy.Discovery.conditionalHeadline(effect: pair.effect.displayName.lowercased(), direction: direction, diff: formattedDiff, unit: effectUnit, thresholdLabel: pair.thresholdLabel)
-            let detail = detailText(effect: pair.effect, aboveMean: aboveMean, belowMean: belowMean, diff: diff)
+            let detail = detailText(effect: pair.effect, aboveMean: aboveMean, belowMean: belowMean)
             let months = max(1, totalPairs / 30)
             let evidence = Copy.Discovery.evidenceMonths(days: totalPairs, months: months)
 
@@ -525,7 +524,7 @@ struct DiscoveryEngine {
         }
     }
 
-    private static func detailText(effect: HealthMetric, aboveMean: Double, belowMean: Double, diff: Double) -> String {
+    private static func detailText(effect: HealthMetric, aboveMean: Double, belowMean: Double) -> String {
         let aboveFormatted = effect.formatValue(aboveMean)
         let belowFormatted = effect.formatValue(belowMean)
         return Copy.Discovery.averageEffectDetail(effect: effect.displayName.lowercased(), aboveFormatted: aboveFormatted, belowFormatted: belowFormatted, unit: effect.unit)

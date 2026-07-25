@@ -107,11 +107,7 @@ struct CorrelationAnalyzer {
             guard let best = bestResult else { continue }
 
             // Effect size: require >= 8% difference between above/below baseline groups
-            let effectResult = computeConditionalEffect(
-                aligned: best.aligned,
-                metricA: pair.metricA,
-                metricB: pair.metricB
-            )
+            let effectResult = computeConditionalEffect(aligned: best.aligned)
             guard effectResult.percentDiff >= 8.0 else { continue }
 
             let strengthLabel = Self.strengthLabel(for: abs(best.r))
@@ -137,8 +133,7 @@ struct CorrelationAnalyzer {
                 avgBBelow: effectResult.avgBBelow,
                 percentDiff: effectResult.percentDiff,
                 dayOffset: best.lag,
-                sampleCount: best.aligned.count,
-                r: best.r
+                sampleCount: best.aligned.count
             )
 
             results.append(HealthCorrelation(
@@ -180,11 +175,9 @@ struct CorrelationAnalyzer {
                 recommendation: insightRecommendation(result),
                 severity: severity,
                 trend: .stable,
-                currentValue: result.correlation,
                 baselineValue: 0,
                 deviationPercent: abs(result.correlation) * 100,
                 category: .correlation,
-                relatedMetrics: [result.metricA, result.metricB]
             )
         }
     }
@@ -306,8 +299,7 @@ struct CorrelationAnalyzer {
         avgBBelow: Double,
         percentDiff: Double,
         dayOffset: Int,
-        sampleCount: Int,
-        r: Double
+        sampleCount: Int
     ) -> String {
         let aName = metricA.displayName.lowercased()
         let bName = metricB.displayName.lowercased()
@@ -343,11 +335,7 @@ struct CorrelationAnalyzer {
     }
 
     /// Partition by above/below baseline of metric A, compute average difference in metric B
-    static func computeConditionalEffect(
-        aligned: [TimeSeriesAligner.AlignedPair],
-        metricA: HealthMetric,
-        metricB: HealthMetric
-    ) -> EffectResult {
+    static func computeConditionalEffect(aligned: [TimeSeriesAligner.AlignedPair]) -> EffectResult {
         guard !aligned.isEmpty else {
             return EffectResult(
                 percentDiff: 0,

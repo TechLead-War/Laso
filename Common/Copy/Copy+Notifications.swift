@@ -253,7 +253,6 @@ extension Copy {
         /// Structure: score + one specific data point + one concrete action + optional streak.
         static func dynamicDailySummaryBody(
             score: Int,
-            categoryBreakdown: String,
             topInsightAction: String?,
             streakDays: Int,
             anomalyCount: Int,
@@ -368,9 +367,7 @@ extension Copy {
 
         /// Body for the wind-down push. Always includes the specific bedtime as a hard number.
         /// `hrvHint` is an optional lead-in like "Your HRV suggests an early night" when data supports it.
-        /// `chronotypeBedtime` reserved for future scheduler wiring; the
-        /// caller-supplied `bedtimeDisplay` already carries the resolved time.
-        static func windDownBody(bedtimeDisplay: String, hrvHint: String?, chronotypeBedtime: String? = nil) -> String {
+        static func windDownBody(bedtimeDisplay: String, hrvHint: String?) -> String {
             if let hrvHint, !hrvHint.isEmpty {
                 return clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_wind_down_body_with_hint", default: "%@ Try to sleep by %@."), hrvHint, bedtimeDisplay), max: bodyMax)
             }

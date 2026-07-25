@@ -174,12 +174,10 @@ struct SleepCoherenceAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepCoherence.outOfSyncRecommendation(score: scoreText, severityLabel: severityLabel, total: totalNights),
                 severity: severity,
                 trend: coherenceTrend,
-                currentValue: avgCoherence,
                 baselineValue: 70,
                 deviationPercent: ((avgCoherence - 70) / 70) * 100,
                 category: .sleepPerformance,
                 directive: avgCoherence < 35 ? .sleepBetter : .informational,
-                relatedMetrics: [.sleepDeep, .sleepREM, .heartRate, .heartRateVariability],
                 context: InsightContext(
                     slope: (recentCoherence - priorCoherence) / 7,
                     confidenceLevel: min(Double(scoreCount) / 30.0, 1.0),
@@ -193,11 +191,9 @@ struct SleepCoherenceAnalyzer {
                 title: Copy.Analysis.Research.SleepCoherence.strongCoherenceTitle,
                 summary: Copy.Analysis.Research.SleepCoherence.strongCoherenceSummary(score: scoreText, total: totalNights),
                 recommendation: Copy.Analysis.Research.SleepCoherence.strongCoherenceRecommendation(score: scoreText),
-                currentValue: avgCoherence,
                 baselineValue: 70,
                 deviationPercent: ((avgCoherence - 70) / 70) * 100,
                 category: .sleepPerformance,
-                relatedMetrics: [.sleepDeep, .sleepREM, .heartRate, .heartRateVariability],
                 context: InsightContext(
                     confidenceLevel: min(Double(scoreCount) / 30.0, 1.0),
                     dataPointCount: scoreCount
@@ -223,12 +219,10 @@ struct SleepCoherenceAnalyzer {
             recommendation: Copy.Analysis.Research.SleepCoherence.decliningRecommendation(drop: dropText),
             severity: .warning,
             trend: .declining,
-            currentValue: recentCoherence,
             baselineValue: priorCoherence,
             deviationPercent: ((recentCoherence - priorCoherence) / max(priorCoherence, 1)) * 100,
             category: .sleepPerformance,
             directive: .sleepBetter,
-            relatedMetrics: [.heartRate, .heartRateVariability, .sleepDeep, .sleepREM]
         )
     }
 }

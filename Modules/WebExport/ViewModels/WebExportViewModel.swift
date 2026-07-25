@@ -28,8 +28,7 @@ final class WebExportViewModel {
             overallScore: analysisEngine.overallScore,
             categoryScores: analysisEngine.categoryScores,
             insights: analysisEngine.insights,
-            timeSeries: healthKitManager.timeSeries,
-            baselines: analysisEngine.baselines
+            timeSeries: healthKitManager.timeSeries
         )
 
         // Save to temp directory

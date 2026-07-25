@@ -124,7 +124,6 @@ final class DashboardHousekeepingService {
             defaults.set(weekKey, forKey: AppKeys.Data.weeklyScoreEventWeekKey)
             analytics.trackWeeklyScoreChange(
                 newScore: payload.currentScore,
-                previousScore: previousScore,
                 delta: scoreChange
             )
         }
@@ -153,11 +152,6 @@ final class DashboardHousekeepingService {
         scoreChange: Int
     ) async {
         let anomalyCount = payload.currentAnomalies.filter { $0.severity >= .warning }.count
-        let categoryBreakdown = payload.currentCategoryScores.compactMap { score -> String? in
-            guard let category = score.category else { return nil }
-            return "\(category.shortName): \(score.score)"
-        }.joined(separator: " | ")
-
         let topAnomaly: (metricName: String, changePercent: Double)? = payload.currentAnomalies
             .filter { $0.severity >= .warning }
             .max(by: { $0.severity < $1.severity })
@@ -171,7 +165,6 @@ final class DashboardHousekeepingService {
                 score: payload.currentScore,
                 anomalyCount: anomalyCount,
                 topInsights: Array(payload.insights.prefix(3)),
-                categoryBreakdown: categoryBreakdown,
                 preferences: preferences,
                 topAnomaly: topAnomaly,
                 scoreChangeFromYesterday: payload.scoreChangeFromYesterday,

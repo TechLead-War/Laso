@@ -211,22 +211,16 @@ struct PredictiveHealthSignals {
     static func generateInsights(from report: HealthSignalReport) -> [Insight] {
         var insights: [Insight] = []
 
-        let allSignals: [(any HealthSignal, HealthMetric, [HealthMetric])] = [
-            (report.fatigueScore, .heartRateVariability,
-             [.heartRateVariability, .restingHeartRate, .sleepDuration, .activeCalories]),
-            (report.burnoutRisk, .restingHeartRate,
-             [.restingHeartRate, .heartRateVariability, .sleepDeep, .activeCalories]),
-            (report.overtrainingRisk, .heartRateVariability,
-             [.heartRateVariability, .restingHeartRate, .activeCalories, .exerciseMinutes]),
-            (report.insomniaRisk, .sleepDuration,
-             [.sleepDuration, .sleepAwake, .restingHeartRate]),
-            (report.immuneRisk, .restingHeartRate,
-             [.restingHeartRate, .heartRateVariability, .sleepDuration]),
-            (report.inactivityAlert, .steps,
-             [.steps, .standHours, .vo2Max, .weight]),
+        let allSignals: [(any HealthSignal, HealthMetric)] = [
+            (report.fatigueScore, .heartRateVariability),
+            (report.burnoutRisk, .restingHeartRate),
+            (report.overtrainingRisk, .heartRateVariability),
+            (report.insomniaRisk, .sleepDuration),
+            (report.immuneRisk, .restingHeartRate),
+            (report.inactivityAlert, .steps),
         ]
 
-        for (signal, primaryMetric, relatedMetrics) in allSignals {
+        for (signal, primaryMetric) in allSignals {
             guard signal.riskLevel >= .moderate || signal.score > 0.3 else { continue }
 
             let category: InsightCategory
@@ -260,11 +254,9 @@ struct PredictiveHealthSignals {
                 recommendation: signal.recommendation,
                 severity: severity,
                 trend: trend,
-                currentValue: signal.score,
                 baselineValue: 0,
                 deviationPercent: signal.score * 100,
                 category: category,
-                relatedMetrics: relatedMetrics,
                 context: InsightContext(confidenceLevel: signal.confidence)
             ))
         }

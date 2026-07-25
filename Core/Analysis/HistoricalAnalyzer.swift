@@ -40,8 +40,7 @@ struct HistoricalAnalyzer {
 
     /// Analyze all metrics and produce historical context for each
     static func analyzeAll(
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline]
+        timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> [HealthMetric: HistoricalContext] {
         var results: [HealthMetric: HistoricalContext] = [:]
 
@@ -50,7 +49,7 @@ struct HistoricalAnalyzer {
             let currentValue = series.samples(lastDays: 3).map(\.value).mean
             guard currentValue > 0 else { continue }
 
-            let context = analyze(metric: metric, series: series, currentValue: currentValue)
+            let context = analyze(series: series, currentValue: currentValue)
             results[metric] = context
         }
 
@@ -60,7 +59,6 @@ struct HistoricalAnalyzer {
     // MARK: - Single Metric Analysis
 
     static func analyze(
-        metric: HealthMetric,
         series: MetricTimeSeries,
         currentValue: Double
     ) -> HistoricalContext {
@@ -172,8 +170,7 @@ struct HistoricalAnalyzer {
 
     /// Generate deep historical insights that no 90-day analysis can produce
     static func generateInsights(
-        historicalContext: [HealthMetric: HistoricalContext],
-        baselines: [HealthMetric: UserBaseline]
+        historicalContext: [HealthMetric: HistoricalContext]
     ) -> [Insight] {
         var insights: [Insight] = []
 
@@ -234,7 +231,6 @@ struct HistoricalAnalyzer {
                 : "Your \(metric.displayName.lowercased()) has declined since last year. Consider what changed in your routine over the past 12 months.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
-            currentValue: lastYearValue * (1 + yoyChange / 100),
             baselineValue: lastYearValue,
             deviationPercent: yoyChange,
             category: .baselineDrift
@@ -266,7 +262,6 @@ struct HistoricalAnalyzer {
                 : Copy.Analysis.Historical.rareLevelMayWarrantAttention,
             severity: goodExtreme ? .info : .warning,
             trend: goodExtreme ? .improving : .declining,
-            currentValue: isNearHigh ? high : low,
             baselineValue: (high + low) / 2,
             deviationPercent: ctx.allTimePercentile - 50,
             category: .baselineDrift
@@ -292,7 +287,6 @@ struct HistoricalAnalyzer {
                 : "This is worse than your usual \(monthName) levels. While some seasonal variation is normal, a \(absDev)% deviation is significant.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
-            currentValue: seasonalAvg * (1 + seasonalDev / 100),
             baselineValue: seasonalAvg,
             deviationPercent: seasonalDev,
             category: .baselineDrift
@@ -319,7 +313,6 @@ struct HistoricalAnalyzer {
                 : Copy.Analysis.Historical.sustainedDeclineStructural,
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
-            currentValue: ctx.longTermChangePercent ?? 0,
             baselineValue: 0,
             deviationPercent: changePercent,
             category: .baselineDrift
@@ -339,7 +332,6 @@ struct HistoricalAnalyzer {
             recommendation: Copy.Analysis.Historical.unusualValuesMonitor,
             severity: .info,
             trend: .stable,
-            currentValue: Double(daysSince),
             baselineValue: 0,
             deviationPercent: 0,
             category: .baselineDrift
@@ -351,6 +343,6 @@ struct HistoricalAnalyzer {
 
 extension HistoricalAnalyzer: InsightAnalyzer {
     static func generateInsights(context: AnalysisContext) -> [Insight] {
-        generateInsights(historicalContext: context.historicalContext, baselines: context.baselines)
+        generateInsights(historicalContext: context.historicalContext)
     }
 }

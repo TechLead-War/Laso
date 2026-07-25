@@ -79,12 +79,10 @@ struct InflammationRiskAnalyzer {
                 recommendation: Copy.Analysis.Research.InflammationRisk.bodyStressRecommendation(currentHRV: currentText, baseline: baselineText),
                 severity: .warning,
                 trend: .declining,
-                currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: -hrvDropPercent,
                 category: .watchSignal,
                 directive: .rest,
-                relatedMetrics: [.heartRateVariability, .appleSleepingWristTemperature, .restingHeartRate],
                 context: InsightContext(
                     slope: rollingAverages.count >= 2 ? (rollingAverages.last! - rollingAverages.first!) / Double(rollingAverages.count) : nil,
                     confidenceLevel: 0.85,
@@ -102,12 +100,10 @@ struct InflammationRiskAnalyzer {
                 recommendation: Copy.Analysis.Research.InflammationRisk.elevatedBodyStressRecommendation(currentHRV: currentText, baseline: baselineText, days: recent14.count),
                 severity: hrvDeviation < -2.0 ? .warning : .info,
                 trend: .declining,
-                currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: -hrvDropPercent,
                 category: .watchSignal,
                 directive: hrvDeviation < -2.0 ? .rest : .informational,
-                relatedMetrics: [.heartRateVariability, .restingHeartRate],
                 context: InsightContext(
                     slope: rollingAverages.count >= 2 ? (rollingAverages.last! - rollingAverages.first!) / Double(rollingAverages.count) : nil,
                     confidenceLevel: min(0.6 + Double(consecutiveDeclines) * 0.1, 0.9),
@@ -126,11 +122,9 @@ struct InflammationRiskAnalyzer {
                 title: Copy.Analysis.Research.InflammationRisk.strongRecoveryToneTitle,
                 summary: Copy.Analysis.Research.InflammationRisk.strongRecoverySummary(abovePercent: aboveText),
                 recommendation: Copy.Analysis.Research.InflammationRisk.strongRecoveryRecommendation(currentHRV: currentText, baseline: baselineText),
-                currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: ((currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1)) * 100,
                 category: .recovery,
-                relatedMetrics: [.heartRateVariability, .restingHeartRate]
             ))
         }
 

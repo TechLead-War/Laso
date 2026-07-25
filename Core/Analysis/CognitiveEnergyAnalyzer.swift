@@ -8,8 +8,7 @@ struct CognitiveEnergyAnalyzer {
     static func generateInsights(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult],
-        correlations: [HealthCorrelation]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> [Insight] {
         var insights: [Insight] = []
 
@@ -21,7 +20,7 @@ struct CognitiveEnergyAnalyzer {
             insights.append(sleepDebt)
         }
 
-        if let mentalFatigue = mentalFatigueInsight(timeSeries: timeSeries, baselines: baselines, trends: trends) {
+        if let mentalFatigue = mentalFatigueInsight(trends: trends) {
             insights.append(mentalFatigue)
         }
 
@@ -33,7 +32,7 @@ struct CognitiveEnergyAnalyzer {
             insights.append(recoveryDay)
         }
 
-        if let daylightChain = daylightSleepCognitionInsight(timeSeries: timeSeries, baselines: baselines, trends: trends) {
+        if let daylightChain = daylightSleepCognitionInsight(timeSeries: timeSeries, trends: trends) {
             insights.append(daylightChain)
         }
 
@@ -212,11 +211,9 @@ struct CognitiveEnergyAnalyzer {
             recommendation: recommendation,
             severity: severity,
             trend: isLow ? .declining : .improving,
-            currentValue: Double(finalScore),
             baselineValue: 70,
             deviationPercent: Double(finalScore - 70) / 70.0 * 100,
             category: .cognitiveEnergy,
-            relatedMetrics: [.heartRateVariability, .sleepDeep, .sleepREM, .sleepDuration]
         )
     }
 
@@ -251,19 +248,15 @@ struct CognitiveEnergyAnalyzer {
             recommendation: Copy.Analysis.CognitiveEnergy.sleepDebtRecommendation(catchUpNights: catchUpNights),
             severity: cumulativeDebt >= 5.0 ? .warning : .info,
             trend: .declining,
-            currentValue: weeklyAvg,
             baselineValue: sleepBaseline.mean,
             deviationPercent: -abs(dailyDeficit / sleepBaseline.mean * 100),
             category: .cognitiveEnergy,
-            relatedMetrics: [.sleepDuration, .sleepDeep, .heartRateVariability]
         )
     }
 
     // MARK: - 3. Mental Fatigue Pattern
 
     private static func mentalFatigueInsight(
-        timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         // Trigger: HRV declining + sleep quality dropping + (optional: mindfulness decreasing)
@@ -312,11 +305,9 @@ struct CognitiveEnergyAnalyzer {
             recommendation: Copy.Analysis.CognitiveEnergy.mentalFatigueRecommendation(actions: actions.joined(separator: ". ")),
             severity: .warning,
             trend: .declining,
-            currentValue: abs(hrvChange),
             baselineValue: 0,
             deviationPercent: abs(hrvChange),
             category: .cognitiveEnergy,
-            relatedMetrics: [.heartRateVariability, .sleepDeep, .mindfulMinutes, .timeInDaylight]
         )
     }
 
@@ -365,7 +356,7 @@ struct CognitiveEnergyAnalyzer {
         let signalText = signals.map(\.label).joined(separator: ", ")
 
         // Find a data-backed correlation for the recommendation
-        let stepCorrelation = findCorrelation(for: .steps, in: timeSeries, baselines: baselines)
+        let stepCorrelation = findCorrelation(for: .steps, in: timeSeries)
 
         let recommendation: String
         if let stepEffect = stepCorrelation {
@@ -381,11 +372,9 @@ struct CognitiveEnergyAnalyzer {
             recommendation: recommendation,
             severity: signals.count >= 3 ? .warning : .info,
             trend: .declining,
-            currentValue: Double(signals.count),
             baselineValue: 0,
             deviationPercent: Double(signals.count) * 15,
             category: .cognitiveEnergy,
-            relatedMetrics: [.sleepDuration, .restingHeartRate, .steps, .activeCalories]
         )
     }
 
@@ -449,11 +438,9 @@ struct CognitiveEnergyAnalyzer {
             recommendation: Copy.Analysis.CognitiveEnergy.recoveryDayRecommendation,
             severity: .warning,
             trend: .declining,
-            currentValue: Double(consecutiveHighDays),
             baselineValue: 3,
             deviationPercent: Double(consecutiveHighDays - 3) / 3.0 * 100,
             category: .cognitiveEnergy,
-            relatedMetrics: [.heartRateVariability, .restingHeartRate, .activeCalories]
         )
     }
 
@@ -461,7 +448,6 @@ struct CognitiveEnergyAnalyzer {
 
     private static func daylightSleepCognitionInsight(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         // Trigger: daylight exposure declining + sleep quality declining
@@ -496,11 +482,9 @@ struct CognitiveEnergyAnalyzer {
             recommendation: Copy.Analysis.CognitiveEnergy.daylightChainRecommendation(effectNote: effectNote),
             severity: .info,
             trend: .declining,
-            currentValue: abs(daylightTrend.weekOverWeekChange),
             baselineValue: 0,
             deviationPercent: abs(daylightTrend.weekOverWeekChange),
             category: .cognitiveEnergy,
-            relatedMetrics: [.timeInDaylight, .sleepDeep, .sleepDuration, .heartRateVariability]
         )
     }
 
@@ -509,8 +493,7 @@ struct CognitiveEnergyAnalyzer {
     /// Find the effect size of steps/activity on resting HR from actual data
     private static func findCorrelation(
         for metric: HealthMetric,
-        in timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline]
+        in timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> Double? {
         guard let metricSeries = timeSeries[metric],
               let rhrSeries = timeSeries[.restingHeartRate] else { return nil }
@@ -590,8 +573,7 @@ extension CognitiveEnergyAnalyzer: InsightAnalyzer {
         generateInsights(
             timeSeries: context.timeSeries,
             baselines: context.baselines,
-            trends: context.trends,
-            correlations: context.correlations
+            trends: context.trends
         )
     }
 }

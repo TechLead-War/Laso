@@ -165,7 +165,6 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Keep your current routine. Sleep, mindfulness, and consistent training are paying off.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 62,
                 baselineValue: 54,
                 deviationPercent: 14.8
             ),
@@ -176,7 +175,6 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Hold your bedtime anchor. Consistency is the single biggest driver of recovery.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 12,
                 baselineValue: 4,
                 deviationPercent: 200
             ),
@@ -187,7 +185,6 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Add one tempo session per week to push toward elite range.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 50,
                 baselineValue: 46,
                 deviationPercent: 8.7
             ),
@@ -198,7 +195,6 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Excellent. Continue prioritizing zone 2 work and recovery sleep.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 54,
                 baselineValue: 60,
                 deviationPercent: -10
             ),
@@ -209,7 +205,6 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Hold this baseline. Weekly distance correlates with longer healthspan.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 11800,
                 baselineValue: 8500,
                 deviationPercent: 38.8
             ),
@@ -220,11 +215,9 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Your sleep is the biggest lever for your recovery. Protect it.",
                 severity: .info,
                 trend: .stable,
-                currentValue: 0.71,
                 baselineValue: 0,
                 deviationPercent: 71,
                 category: .correlation,
-                relatedMetrics: [.sleepDuration, .heartRateVariability]
             ),
             Insight(
                 metric: .heartRateVariability,
@@ -233,11 +226,9 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Your conditioning supports a higher training load if you want to push.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 1.2,
                 baselineValue: 2.0,
                 deviationPercent: -40,
                 category: .recovery,
-                relatedMetrics: [.heartRateVariability, .workoutDuration]
             ),
             Insight(
                 metric: .workoutDuration,
@@ -246,11 +237,9 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Add a deload week every 4 to 6 weeks to lock in adaptation.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 8,
                 baselineValue: 3,
                 deviationPercent: 166,
                 category: .workoutEffectiveness,
-                relatedMetrics: [.workoutDuration, .exerciseMinutes]
             ),
             Insight(
                 metric: .steps,
@@ -259,11 +248,9 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Keep going. 21 days locks in the habit loop.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 14,
                 baselineValue: 6,
                 deviationPercent: 133,
                 category: .personalRecord,
-                relatedMetrics: [.steps]
             ),
             Insight(
                 metric: .mindfulMinutes,
@@ -272,11 +259,9 @@ struct PremiumShowcaseDataProvider {
                 recommendation: "Consider extending one weekly session to 30 minutes for deeper benefits.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 18,
                 baselineValue: 8,
                 deviationPercent: 125,
                 category: .personalRecord,
-                relatedMetrics: [.mindfulMinutes]
             ),
         ]
     }

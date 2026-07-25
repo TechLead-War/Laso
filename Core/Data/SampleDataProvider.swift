@@ -170,7 +170,6 @@ struct SampleDataProvider {
                 recommendation: "Consider reducing caffeine intake and ensuring 7-8 hours of sleep. If this persists, you may want to speak with a healthcare provider.",
                 severity: .warning,
                 trend: .declining,
-                currentValue: 70,
                 baselineValue: 65,
                 deviationPercent: 7.7
             ),
@@ -181,7 +180,6 @@ struct SampleDataProvider {
                 recommendation: "Keep up your current exercise routine! Consider adding interval training for further gains.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 40,
                 baselineValue: 38,
                 deviationPercent: 5.3
             ),
@@ -192,7 +190,6 @@ struct SampleDataProvider {
                 recommendation: "Set a consistent bedtime 30 minutes earlier. Avoid screens 1 hour before bed.",
                 severity: .warning,
                 trend: .declining,
-                currentValue: 6.2,
                 baselineValue: 7.2,
                 deviationPercent: -13.9
             ),
@@ -203,7 +200,6 @@ struct SampleDataProvider {
                 recommendation: "Great progress! Try to maintain 10,000+ steps daily for optimal cardiovascular health.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 9500,
                 baselineValue: 8500,
                 deviationPercent: 11.8
             ),
@@ -214,7 +210,6 @@ struct SampleDataProvider {
                 recommendation: "Prioritize recovery: try meditation, gentle yoga, or a rest day. Ensure adequate hydration.",
                 severity: .critical,
                 trend: .declining,
-                currentValue: 35,
                 baselineValue: 42,
                 deviationPercent: -16.7
             ),
@@ -233,11 +228,9 @@ struct SampleDataProvider {
                 recommendation: "Pay attention to your sleep duration. it has a positive correlation with your HRV.",
                 severity: .info,
                 trend: .stable,
-                currentValue: 0.45,
                 baselineValue: 0,
                 deviationPercent: 45,
                 category: .correlation,
-                relatedMetrics: [.sleepDuration, .heartRateVariability]
             ),
             Insight(
                 metric: .heartRateVariability,
@@ -246,11 +239,9 @@ struct SampleDataProvider {
                 recommendation: "Your recovery is strong. your body bounces back quickly after workouts.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 1.8,
                 baselineValue: 2.0,
                 deviationPercent: -10,
                 category: .recovery,
-                relatedMetrics: [.heartRateVariability, .workoutDuration]
             ),
             Insight(
                 metric: .workoutDuration,
@@ -259,11 +250,9 @@ struct SampleDataProvider {
                 recommendation: "Excellent consistency! Maintain this routine for long-term fitness gains.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 75,
                 baselineValue: 75,
                 deviationPercent: 0,
                 category: .workoutEffectiveness,
-                relatedMetrics: [.workoutDuration, .exerciseMinutes]
             ),
             Insight(
                 metric: .sleepDuration,
@@ -272,11 +261,9 @@ struct SampleDataProvider {
                 recommendation: "Prioritize 7+ hours of sleep to maximize your active calories.",
                 severity: .warning,
                 trend: .stable,
-                currentValue: 520,
                 baselineValue: 388,
                 deviationPercent: 34,
                 category: .sleepPerformance,
-                relatedMetrics: [.sleepDuration, .activeCalories]
             ),
             Insight(
                 metric: .steps,
@@ -285,11 +272,9 @@ struct SampleDataProvider {
                 recommendation: "Schedule a walk or light activity on Sundays to close the gap.",
                 severity: .warning,
                 trend: .stable,
-                currentValue: 5200,
                 baselineValue: 8400,
                 deviationPercent: -38,
                 category: .weeklyPattern,
-                relatedMetrics: [.steps]
             ),
             Insight(
                 metric: .steps,
@@ -298,11 +283,9 @@ struct SampleDataProvider {
                 recommendation: "You're building momentum. aim for 7 days to lock in the habit.",
                 severity: .info,
                 trend: .improving,
-                currentValue: 5,
                 baselineValue: 3,
                 deviationPercent: 66.7,
                 category: .personalRecord,
-                relatedMetrics: [.steps]
             ),
         ]
     }

@@ -30,7 +30,7 @@ struct DiscoveryView: View {
                 openingPage.tag(0)
 
                 ForEach(Array(discoveries.enumerated()), id: \.element.id) { index, discovery in
-                    discoveryPage(discovery, index: index + 1)
+                    discoveryPage(discovery)
                         .tag(index + 1)
                 }
 
@@ -140,7 +140,7 @@ struct DiscoveryView: View {
 
     // MARK: - Discovery Page
 
-    private func discoveryPage(_ discovery: Discovery, index: Int) -> some View {
+    private func discoveryPage(_ discovery: Discovery) -> some View {
         VStack(spacing: DS.space7) {
             Spacer()
 

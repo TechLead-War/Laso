@@ -135,11 +135,9 @@ struct NutritionCorrelationAnalyzer {
                 recommendation: Copy.Analysis.NutritionCorrelation.monitorToOptimize(nutrition: corr.nutritionMetric.displayName, outcome: corr.outcomeMetric.displayName),
                 severity: abs(corr.correlation) > 0.4 ? .warning : .info,
                 trend: .stable,
-                currentValue: corr.correlation,
                 baselineValue: 0,
                 deviationPercent: abs(corr.correlation) * 100,
                 category: .nutritionCorrelation,
-                relatedMetrics: [corr.outcomeMetric],
                 context: InsightContext(
                     confidenceLevel: min(1.0, Double(corr.sampleCount) / 60.0),
                     dataPointCount: corr.sampleCount

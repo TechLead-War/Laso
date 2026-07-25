@@ -361,10 +361,6 @@ final class BrainHealthScorer {
 
         // Build top factors
         let topFactors = buildTopFactors(
-            cognitiveReadiness: cognitiveReadiness,
-            memoryRecovery: memoryRecovery,
-            stressCognitionLoad: stressCognitionLoad,
-            neurovascularFitness: neurovascularFitness,
             circadianAlignment: circadianAlignment,
             currentHRV: currentHRV, hrvBaseline: hrvBase,
             currentREM: recentREM, remBaseline: remBaseline,
@@ -682,10 +678,6 @@ final class BrainHealthScorer {
     // MARK: - Top Factors
 
     private func buildTopFactors(
-        cognitiveReadiness: Double,
-        memoryRecovery: Double,
-        stressCognitionLoad: Double,
-        neurovascularFitness: Double,
         circadianAlignment: Double,
         currentHRV: Double, hrvBaseline: (mean: Double, sd: Double),
         currentREM: Double?, remBaseline: (mean: Double, sd: Double)?,

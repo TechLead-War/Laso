@@ -287,7 +287,7 @@ enum EngagementSequenceScheduler {
         case 1:
             return generateDay1(userName: userName)
         case 2:
-            return await generateDay2(dataStore: dataStore)
+            return await generateDay2()
         case 3:
             return await generateDay3(dataStore: dataStore)
         case 5:
@@ -309,7 +309,7 @@ enum EngagementSequenceScheduler {
     }
 
     /// Day 2: Variable Reward. recovery score reveal
-    private static func generateDay2(dataStore: HealthDataStore?) async -> (title: String, body: String) {
+    private static func generateDay2() async -> (title: String, body: String) {
         let score = defaults.integer(forKey: AppKeys.Readiness.cachedScore)
 
         if score > 0 {

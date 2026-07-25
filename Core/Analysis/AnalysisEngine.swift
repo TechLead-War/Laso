@@ -310,9 +310,7 @@ final class AnalysisEngine {
         }
 
         let newCorrelations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
-        let newHistoricalContext = HistoricalAnalyzer.analyzeAll(
-            timeSeries: timeSeries, baselines: baselines
-        )
+        let newHistoricalContext = HistoricalAnalyzer.analyzeAll(timeSeries: timeSeries)
         let newCrossMetricAnomalies = CrossMetricAnomalyDetector.detect(
             timeSeries: timeSeries, baselines: baselines
         )

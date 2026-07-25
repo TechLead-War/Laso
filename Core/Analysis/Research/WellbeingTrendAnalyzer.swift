@@ -74,12 +74,10 @@ struct WellbeingTrendAnalyzer {
                 recommendation: Copy.Analysis.Research.WellbeingTrend.patternShiftRecommendation(score: scoreText),
                 severity: concerningSignals.count >= 4 ? .warning : .info,
                 trend: .declining,
-                currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,
                 deviationPercent: ((weightedScore + 1) * 50 - 70) / 70 * 100,
                 category: .cognitiveEnergy,
                 directive: concerningSignals.count >= 4 ? .rest : .informational,
-                relatedMetrics: [.sleepDuration, .steps, .timeInDaylight, .mindfulMinutes],
                 context: InsightContext(
                     confidenceLevel: min(Double(signals.count) / 5.0, 1.0),
                     dataPointCount: signals.count
@@ -93,11 +91,9 @@ struct WellbeingTrendAnalyzer {
                 title: Copy.Analysis.Research.WellbeingTrend.mildPatternChangeTitle,
                 summary: Copy.Analysis.Research.WellbeingTrend.mildSummary(concerns: concernList),
                 recommendation: Copy.Analysis.Research.WellbeingTrend.mildRecommendation,
-                currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,
                 deviationPercent: ((weightedScore + 1) * 50 - 70) / 70 * 100,
                 category: .cognitiveEnergy,
-                relatedMetrics: [.sleepDuration, .steps, .timeInDaylight]
             ))
         }
 
@@ -108,11 +104,9 @@ struct WellbeingTrendAnalyzer {
                 title: Copy.Analysis.Research.WellbeingTrend.strongIndicatorsTitle,
                 summary: Copy.Analysis.Research.WellbeingTrend.strongSummary(total: signals.count, includeMindfulness: signals.count >= 4),
                 recommendation: Copy.Analysis.Research.WellbeingTrend.strongRecommendation,
-                currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,
                 deviationPercent: ((weightedScore + 1) * 50 - 70) / 70 * 100,
                 category: .cognitiveEnergy,
-                relatedMetrics: [.sleepDuration, .steps, .timeInDaylight, .mindfulMinutes]
             ))
         }
 

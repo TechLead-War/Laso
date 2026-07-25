@@ -160,7 +160,6 @@ enum BlockType: String {
     case homeRecoveryInfoButton = "home_recovery_info_button"
     case homeDailyAction = "home_daily_action"
     case homeBrainHealthCard = "home_brain_health_card"
-    case dataConfidenceBadge = "data_confidence_badge"
     case shareCard = "share_card"
 
     // Live
@@ -1282,7 +1281,7 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     /// Call after analysis refresh when we have a new score.
-    func trackWeeklyScoreChange(newScore: Int, previousScore: Int?, delta: Int) {
+    func trackWeeklyScoreChange(newScore: Int, delta: Int) {
         let direction: String
         if delta > 2 { direction = "improving" }
         else if delta < -2 { direction = "declining" }

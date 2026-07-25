@@ -66,12 +66,10 @@ struct HRRFitnessAnalyzer {
                 recommendation: Copy.Analysis.Research.HRRFitness.belowClinicalRecommendation(threshold: Int(abnormalThreshold), currentHRR: currentText, sampleCount: recent.count > 0 ? recent.count : allSamples.count),
                 severity: .warning,
                 trend: trajectory,
-                currentValue: currentHRR,
                 baselineValue: abnormalThreshold,
                 deviationPercent: ((currentHRR - abnormalThreshold) / abnormalThreshold) * 100,
                 category: .clinicalTrajectory,
                 directive: .increaseActivity,
-                relatedMetrics: [.heartRateRecovery, .heartRateVariability, .vo2Max],
                 context: InsightContext(
                     slope: sorted.count >= 10 ? totalChange / Double(monthsSpanned) : nil,
                     confidenceLevel: min(Double(allSamples.count) / 20.0, 1.0),
@@ -85,11 +83,9 @@ struct HRRFitnessAnalyzer {
                 title: Copy.Analysis.Research.HRRFitness.excellentTitle,
                 summary: Copy.Analysis.Research.HRRFitness.excellentSummary(currentHRR: currentText, goodThreshold: Int(goodThreshold)),
                 recommendation: Copy.Analysis.Research.HRRFitness.excellentRecommendation(currentHRR: currentText),
-                currentValue: currentHRR,
                 baselineValue: excellentThreshold,
                 deviationPercent: ((currentHRR - excellentThreshold) / excellentThreshold) * 100,
                 category: .recovery,
-                relatedMetrics: [.heartRateRecovery, .heartRateVariability, .vo2Max]
             ))
         }
 
@@ -102,11 +98,9 @@ struct HRRFitnessAnalyzer {
                     title: Copy.Analysis.Research.HRRFitness.improvingTitle(months: monthsSpanned),
                     summary: Copy.Analysis.Research.HRRFitness.improvingSummary(change: changeText, months: monthsSpanned),
                     recommendation: Copy.Analysis.Research.HRRFitness.improvingRecommendation(change: changeText, months: monthsSpanned),
-                    currentValue: currentHRR,
                     baselineValue: currentHRR - totalChange,
                     deviationPercent: (totalChange / max(currentHRR - totalChange, 1)) * 100,
                     category: .recovery,
-                    relatedMetrics: [.heartRateRecovery, .exerciseMinutes, .vo2Max],
                     context: InsightContext(
                         slope: totalChange / Double(monthsSpanned),
                         dataPointCount: sorted.count
@@ -123,12 +117,10 @@ struct HRRFitnessAnalyzer {
                     recommendation: Copy.Analysis.Research.HRRFitness.decliningRecommendation(start: startText, current: currentText, months: monthsSpanned),
                     severity: currentHRR < abnormalThreshold ? .warning : .info,
                     trend: .declining,
-                    currentValue: currentHRR,
                     baselineValue: currentHRR - totalChange,
                     deviationPercent: (totalChange / max(currentHRR - totalChange, 1)) * 100,
                     category: .clinicalTrajectory,
                     directive: .increaseActivity,
-                    relatedMetrics: [.heartRateRecovery, .exerciseMinutes, .vo2Max]
                 ))
             }
         }

@@ -77,12 +77,10 @@ struct TemperatureCompoundAnalyzer {
                     recommendation: Copy.Analysis.Research.TemperatureCompound.compoundRecommendation(deviation: plusDeviationText, baseline: baselineText),
                     severity: deviation >= significantElevationThreshold ? .warning : .info,
                     trend: .declining,
-                    currentValue: recentMean,
                     baselineValue: baselineMean,
                     deviationPercent: (deviation / max(abs(baselineMean), 0.1)) * 100,
                     category: .watchSignal,
                     directive: .rest,
-                    relatedMetrics: [.appleSleepingWristTemperature, .heartRateVariability, .restingHeartRate],
                     context: InsightContext(
                         confidenceLevel: 0.80,
                         dataPointCount: samples.count
@@ -101,12 +99,10 @@ struct TemperatureCompoundAnalyzer {
                     recommendation: Copy.Analysis.Research.TemperatureCompound.tempOnlyRecommendation(recent: recentText, baseline: baselineText, sd: sdText),
                     severity: .info,
                     trend: .declining,
-                    currentValue: recentMean,
                     baselineValue: baselineMean,
                     deviationPercent: (deviation / max(abs(baselineMean), 0.1)) * 100,
                     category: .watchSignal,
                     directive: .informational,
-                    relatedMetrics: [.appleSleepingWristTemperature, .heartRateVariability]
                 ))
             }
         }
@@ -122,11 +118,9 @@ struct TemperatureCompoundAnalyzer {
                     title: Copy.Analysis.Research.TemperatureCompound.cyclePatternTitle,
                     summary: Copy.Analysis.Research.TemperatureCompound.cyclePatternSummary(amplitude: amplitudeText),
                     recommendation: Copy.Analysis.Research.TemperatureCompound.cyclePatternRecommendation(amplitude: amplitudeText, baseline: baselineText),
-                    currentValue: cycleAmplitude,
                     baselineValue: 0.3,
                     deviationPercent: ((cycleAmplitude - 0.3) / 0.3) * 100,
                     category: .cyclePhase,
-                    relatedMetrics: [.appleSleepingWristTemperature, .restingHeartRate]
                 ))
             }
         }
@@ -141,11 +135,9 @@ struct TemperatureCompoundAnalyzer {
                 title: Copy.Analysis.Research.TemperatureCompound.highVariabilityTitle,
                 summary: Copy.Analysis.Research.TemperatureCompound.highVariabilitySummary(sd: sdText),
                 recommendation: Copy.Analysis.Research.TemperatureCompound.highVariabilityRecommendation(cvPercent: cvText),
-                currentValue: cv * 100,
                 baselineValue: 3,
                 deviationPercent: ((cv * 100 - 3) / 3) * 100,
                 category: .circadian,
-                relatedMetrics: [.appleSleepingWristTemperature, .sleepDuration]
             ))
         }
 

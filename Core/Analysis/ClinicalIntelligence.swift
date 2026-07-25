@@ -155,21 +155,20 @@ struct ClinicalIntelligence {
     /// Generate clinical insights from time series data.
     static func generateInsights(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        baselines: [HealthMetric: UserBaseline]
     ) -> [Insight] {
         var insights: [Insight] = []
 
         // Blood pressure compound analysis
-        insights.append(contentsOf: analyzeBP(timeSeries: timeSeries, baselines: baselines, trends: trends))
+        insights.append(contentsOf: analyzeBP(timeSeries: timeSeries, baselines: baselines))
 
         // Glucose trajectory
-        if let glucoseInsight = analyzeGlucose(timeSeries: timeSeries, baselines: baselines, trends: trends) {
+        if let glucoseInsight = analyzeGlucose(timeSeries: timeSeries, baselines: baselines) {
             insights.append(glucoseInsight)
         }
 
         // Respiratory rate
-        if let rrInsight = analyzeRespiratoryRate(timeSeries: timeSeries, baselines: baselines, trends: trends) {
+        if let rrInsight = analyzeRespiratoryRate(timeSeries: timeSeries, baselines: baselines) {
             insights.append(rrInsight)
         }
 
@@ -180,8 +179,7 @@ struct ClinicalIntelligence {
 
     private static func analyzeBP(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        baselines: [HealthMetric: UserBaseline]
     ) -> [Insight] {
         var insights: [Insight] = []
 
@@ -227,11 +225,9 @@ struct ClinicalIntelligence {
                 recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,
-                currentValue: latestSys,
                 baselineValue: baselines[.bloodPressureSystolic]?.mean ?? latestSys,
                 deviationPercent: slopePerMonth,
                 category: .clinicalTrajectory,
-                relatedMetrics: [.bloodPressureDiastolic],
                 context: InsightContext(
                     slope: slopePerMonth,
                     projectedDaysToThreshold: daysToNextStage?.days,
@@ -251,11 +247,9 @@ struct ClinicalIntelligence {
                     recommendation: "\(Copy.Analysis.Clinical.pulsePressureRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                     severity: .warning,
                     trend: .declining,
-                    currentValue: pulsePressure,
                     baselineValue: pulsePressureBaseline,
                     deviationPercent: ((pulsePressure - pulsePressureBaseline) / pulsePressureBaseline) * 100,
                     category: .clinicalTrajectory,
-                    relatedMetrics: [.bloodPressureSystolic, .bloodPressureDiastolic]
                 ))
             }
         }
@@ -267,8 +261,7 @@ struct ClinicalIntelligence {
 
     private static func analyzeGlucose(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        baselines: [HealthMetric: UserBaseline]
     ) -> Insight? {
         guard let glucoseSeries = timeSeries[.bloodGlucose],
               glucoseSeries.samples.count >= minSamplesForInsight else { return nil }
@@ -305,7 +298,6 @@ struct ClinicalIntelligence {
             recommendation: "\(Copy.Analysis.Clinical.glucoseRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: severity,
             trend: .declining,
-            currentValue: latest,
             baselineValue: baselines[.bloodGlucose]?.mean ?? latest,
             deviationPercent: slopePerMonth,
             category: .clinicalTrajectory,
@@ -324,8 +316,7 @@ struct ClinicalIntelligence {
 
     private static func analyzeRespiratoryRate(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        baselines: [HealthMetric: UserBaseline]
     ) -> Insight? {
         guard let rrSeries = timeSeries[.respiratoryRate],
               rrSeries.samples.count >= minSamplesForInsight else { return nil }
@@ -347,7 +338,6 @@ struct ClinicalIntelligence {
             recommendation: "\(Copy.Analysis.Clinical.respiratoryRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: stage == .severe ? .critical : .warning,
             trend: slopePerMonth > 0 ? .declining : .stable,
-            currentValue: latest,
             baselineValue: baselines[.respiratoryRate]?.mean ?? respiratoryRateBaseline,
             deviationPercent: ((latest - respiratoryRateBaseline) / respiratoryRateBaseline) * 100,
             category: .clinicalTrajectory,
@@ -395,8 +385,7 @@ extension ClinicalIntelligence: InsightAnalyzer {
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(
             timeSeries: context.timeSeries,
-            baselines: context.baselines,
-            trends: context.trends
+            baselines: context.baselines
         )
     }
 }

@@ -205,15 +205,12 @@ struct Insight: Identifiable {
     let recommendation: String
     let severity: Severity
     let trend: TrendDirection
-    let currentValue: Double
     let baselineValue: Double
     let deviationPercent: Double
-    let generatedAt: Date
     let category: InsightCategory
     /// Behavioral direction this insight pushes the user toward.
     /// Used by `InsightCoordinator` to detect and resolve conflicting advice.
     var directive: InsightDirective
-    let relatedMetrics: [HealthMetric]
     var context: InsightContext?
 
     /// First sentence of the recommendation. used as a concise action summary.
@@ -259,13 +256,10 @@ struct Insight: Identifiable {
         recommendation: String,
         severity: Severity,
         trend: TrendDirection,
-        currentValue: Double,
         baselineValue: Double,
         deviationPercent: Double,
-        generatedAt: Date = Date(),
         category: InsightCategory = .anomaly,
         directive: InsightDirective = .informational,
-        relatedMetrics: [HealthMetric] = [],
         context: InsightContext? = nil
     ) {
         self.id = id
@@ -275,13 +269,10 @@ struct Insight: Identifiable {
         self.recommendation = recommendation
         self.severity = severity
         self.trend = trend
-        self.currentValue = currentValue
         self.baselineValue = baselineValue
         self.deviationPercent = deviationPercent
-        self.generatedAt = generatedAt
         self.category = category
         self.directive = directive
-        self.relatedMetrics = relatedMetrics
         self.context = context
     }
 }

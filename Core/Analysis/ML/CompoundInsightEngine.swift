@@ -1058,11 +1058,9 @@ final class CompoundInsightEngine {
                 recommendation: compound.recommendation,
                 severity: severity,
                 trend: trend,
-                currentValue: 0,
                 baselineValue: 0,
                 deviationPercent: compound.surpriseScore * 100,
                 category: insightCategory,
-                relatedMetrics: Array(compound.involvedMetrics.dropFirst()),
                 context: InsightContext(
                     confidenceLevel: compound.confidence,
                     dataPointCount: compound.evidenceSources.count

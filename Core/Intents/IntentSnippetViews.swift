@@ -7,10 +7,8 @@ enum IntentSnippetViews {
 
     struct ScoreSnippet: View {
         let score: Int
-        let grade: String
         let summary: String
         var readinessScore: Int? = nil
-        var readinessLabel: String? = nil
 
         private var scoreColor: Color {
             switch score {
@@ -36,7 +34,6 @@ enum IntentSnippetViews {
                     // Health score gauge
                     scoreGauge(
                         value: score,
-                        label: grade,
                         color: scoreColor,
                         caption: "Health"
                     )
@@ -45,7 +42,6 @@ enum IntentSnippetViews {
                     if let readiness = readinessScore {
                         scoreGauge(
                             value: readiness,
-                            label: readinessLabel ?? "",
                             color: readinessColor,
                             caption: "Recovery"
                         )
@@ -64,7 +60,7 @@ enum IntentSnippetViews {
             .padding()
         }
 
-        private func scoreGauge(value: Int, label: String, color: Color, caption: String) -> some View {
+        private func scoreGauge(value: Int, color: Color, caption: String) -> some View {
             VStack(spacing: 4) {
                 ZStack {
                     Circle()

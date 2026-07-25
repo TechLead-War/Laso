@@ -653,7 +653,7 @@ struct HomeView: View {
     @ViewBuilder
     private var primaryActionCard: some View {
         let action = viewModel.smartDailyAction(liveVM: liveViewModel)
-        let actionRoute = routeForAction(action)
+        let actionRoute = Route.todaysAction
         VStack(alignment: .leading, spacing: 12) {
             Text(Copy.Home.nextUpHeader)
                 .font(DS.Typography.captionSemibold)
@@ -763,13 +763,6 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home.action.remind")
-    }
-
-    /// Routes Today's Action card contextually based on action text content.
-    /// Sleep-related actions go to sleep coach, strain/workout to strain detail,
-    /// recovery/rest to insights. Defaults to insightsDetail.
-    private func routeForAction(_ action: DashboardViewModel.SmartAction) -> Route {
-        .todaysAction
     }
 
     // MARK: - First Launch Loading

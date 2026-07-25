@@ -129,7 +129,7 @@ final class GamificationEngine {
         let stepsByDay = buildDayMap(from: allTimeSeries[.steps])
         let exerciseByDay = buildDayMap(from: allTimeSeries[.exerciseMinutes])
         let sleepByDay = buildDayMap(from: allTimeSeries[.sleepDuration])
-        let scoresByDay = buildScoreDayMap(from: scores, calendar: calendar)
+        let scoresByDay = buildScoreDayMap(from: scores)
 
         // Compute streaks
         streaks = computeStreaks(
@@ -194,7 +194,7 @@ final class GamificationEngine {
         return map
     }
 
-    private func buildScoreDayMap(from scores: [(date: Date, score: Int)], calendar: Calendar) -> [String: Int] {
+    private func buildScoreDayMap(from scores: [(date: Date, score: Int)]) -> [String: Int] {
         let formatter = Self.dayFormatter
         var map: [String: Int] = [:]
         for entry in scores {
@@ -712,8 +712,8 @@ final class GamificationEngine {
             description: Copy.Achievements.marathonMonthDescription,
             icon: "figure.walk",
             category: .record
-        ) { _, _, stepsByDay, _, _, _, _, calendar, today in
-            hasMarathonMonth(stepsByDay: stepsByDay, calendar: calendar, today: today)
+        ) { _, _, stepsByDay, _, _, _, _, _, _ in
+            hasMarathonMonth(stepsByDay: stepsByDay)
         },
 
         AchievementDef(
@@ -832,7 +832,7 @@ final class GamificationEngine {
     }
 
     /// Check if any calendar month has total steps > 300K.
-    private static func hasMarathonMonth(stepsByDay: [String: Double], calendar: Calendar, today: Date) -> Bool {
+    private static func hasMarathonMonth(stepsByDay: [String: Double]) -> Bool {
         let formatter = dayFormatter
         let monthFormatter = Self.monthFormatter
         // Group steps by year-month
