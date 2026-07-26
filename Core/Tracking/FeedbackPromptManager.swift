@@ -6,10 +6,13 @@ import FirebaseFirestore
 #endif
 
 /// Persists user feedback locally and to Firestore. Used by FeedbackSheet.
-final class FeedbackPromptManager {
+/// Sendable: holds no stored state. `defaults` is computed rather than stored
+/// because `UserDefaults` is thread-safe but not Sendable-audited by Apple, and
+/// storing an instance would block the conformance for no gain.
+final class FeedbackPromptManager: Sendable {
     static let shared = FeedbackPromptManager()
 
-    private let defaults = UserDefaults.standard
+    private var defaults: UserDefaults { .standard }
 
     private enum Key {
         static let installDate = AppKeys.Lifecycle.installDate

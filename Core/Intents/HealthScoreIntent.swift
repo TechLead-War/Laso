@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "What's my health score?". Returns the current overall health score with a brief summary.
 struct HealthScoreIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check Health Score"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Check Health Score"
+    static let description = IntentDescription(
         "Returns your current overall health score with a brief summary.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         await MainActor.run {

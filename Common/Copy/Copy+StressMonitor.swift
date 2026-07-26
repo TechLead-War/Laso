@@ -32,7 +32,7 @@ extension Copy {
 
         static var scaleLow: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_low", default: "Low") }
         static var scaleHigh: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_high", default: "High") }
-        static var scaleAndDirection: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_and_direction", default: "out of 3  ·  Lower is better") }
+        static var scaleAndDirection: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_and_direction", default: "out of 100  ·  Lower is better") }
         static var scaleSuffix: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_suffix", default: "/ 3") }
 
         // MARK: - Drivers

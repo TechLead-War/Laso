@@ -9,8 +9,12 @@ import Observation
 ///   - Limits (free tier)
 ///   - Pricing (product IDs, trial days)
 ///   - System config (alerts, retention, kill switches)
+/// @unchecked Sendable: the only nonisolated mutable property is
+/// `_remoteConfig`, serialized by `remoteConfigCreationLock`. Everything else
+/// that mutates (`lastFetchTime`, `fetchError`, `isFetching`,
+/// `configUpdateListener`) is main-actor isolated.
 @Observable
-final class RemoteConfigManager {
+final class RemoteConfigManager: @unchecked Sendable {
 
     static let shared = RemoteConfigManager()
 
@@ -33,15 +37,22 @@ final class RemoteConfigManager {
         return _remoteConfig
     }
 
-    private(set) var lastFetchTime: Date?
-    private(set) var fetchError: String?
+    /// Main-actor isolated: written only from `fetchAndActivate()`'s
+    /// `MainActor.run` blocks and the realtime listener's `@MainActor` task,
+    /// and read only from SwiftUI bodies.
+    @MainActor private(set) var lastFetchTime: Date?
+    @MainActor private(set) var fetchError: String?
 
     /// Retained so the realtime stream stays alive for the app's lifetime.
+    /// Not marked `@MainActor` even though it is only ever written from the
+    /// main-actor block in `fetchAndActivate()`: isolating `startRealtimeUpdates`
+    /// would make the Firebase callback it creates inherit main-actor isolation,
+    /// and Firebase delivers that callback off the main thread.
     @ObservationIgnored private var configUpdateListener: ConfigUpdateListenerRegistration?
 
     /// In-flight fetch flag. Only read/written inside `MainActor.run` in
     /// `fetchAndActivate()` so concurrent callers cannot interleave.
-    @ObservationIgnored private var isFetching = false
+    @ObservationIgnored @MainActor private var isFetching = false
 
     // MARK: - Init
 
@@ -71,7 +82,13 @@ final class RemoteConfigManager {
     /// registers a dependency on this manager. After `fetchAndActivate()`
     /// mutates `lastFetchTime`, any view that read a config value during its
     /// last body evaluation will be re-rendered automatically.
-    private func observeFetchUpdates() { _ = lastFetchTime }
+    /// The main-thread guard is what keeps `lastFetchTime` main-actor confined:
+    /// config values are also read from background scorers and analysis tasks,
+    /// and those readers have no SwiftUI dependency to register anyway.
+    private func observeFetchUpdates() {
+        guard Thread.isMainThread else { return }
+        MainActor.assumeIsolated { _ = lastFetchTime }
+    }
 
     private func stringValue(forKey key: String) -> String {
         observeFetchUpdates()
@@ -482,14 +499,19 @@ extension RemoteConfigManager {
     /// Holds every key from `defaults` (this file) and `expandedDefaults`
     /// (`RemoteConfigSchema.swift`). Existing keys win on overlap so legacy
     /// behaviour is bit-identical when the schema mirrors a pre-existing key.
-    static let mergedDefaults: [String: NSObject] = {
+    /// nonisolated(unsafe): built once on first access and never mutated after.
+    /// The values are immutable `NSString`/`NSNumber` instances, so concurrent
+    /// readers only ever see fully initialized, read-only state.
+    nonisolated(unsafe) static let mergedDefaults: [String: NSObject] = {
         defaults.merging(expandedDefaults) { current, _ in current }
     }()
 
     /// In-app defaults used when Remote Config hasn't been fetched yet.
     /// Only keys the app actually reads live here; the admin panel may expose
     /// additional keys these defaults do not mirror.
-    private static let defaults: [String: NSObject] = [
+    /// nonisolated(unsafe) for the same reason as `mergedDefaults`: a read-only
+    /// table of immutable `NSString`/`NSNumber` values.
+    nonisolated(unsafe) private static let defaults: [String: NSObject] = [
         // Feature access. Only flags that actually gate UI in the app.
         "feature_access_advancedAnalytics": "pro" as NSString,
         "feature_access_liveTab":           "pro" as NSString,

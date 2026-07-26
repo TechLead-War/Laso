@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "How did I sleep last night?". Returns last night's sleep summary.
 struct SleepSummaryIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check Sleep Summary"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Check Sleep Summary"
+    static let description = IntentDescription(
         "Returns a summary of your sleep from last night, including duration and quality.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         await MainActor.run {

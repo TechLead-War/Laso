@@ -52,7 +52,10 @@ struct CooldownManager {
 ///
 /// A class (not a struct) so `evaluate` can set the per-evaluation
 /// `suppressNonCritical` flag read by the send funnel. Only touched from the
-/// MainActor housekeeping pass.
+/// MainActor housekeeping pass, so the whole type is pinned there: that flag is
+/// set at the top of an evaluation and read by send calls further down it, which
+/// is only sound while one executor owns the pass.
+@MainActor
 final class AlertEvaluator {
 
     private let cooldownManager: CooldownManager

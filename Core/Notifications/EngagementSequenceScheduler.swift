@@ -33,7 +33,10 @@ import UserNotifications
 /// downstream funnels.
 enum EngagementSequenceScheduler {
 
-    private static let defaults = UserDefaults.standard
+    // Immutable reference. `start` runs from background refresh while
+    // `markActivation` runs from the view layer, so this really is touched from
+    // two executors, and UserDefaults serialises each of those accesses itself.
+    nonisolated(unsafe) private static let defaults = UserDefaults.standard
 
 
     /// Days on which engagement notifications fire. Preserved for backward compat.

@@ -103,7 +103,7 @@ struct StressMonitorView: View {
 
                 // Center: numeric value + level label. Context pulled out below for full width.
                 VStack(spacing: 2) {
-                    Text(String(format: "%.1f", stressScore))
+                    Text("\(Int(stressScore.rounded()))")
                         .font(DS.Typography.displayM)
                         .foregroundStyle(levelColor)
                         .minimumScaleFactor(0.6)
@@ -254,7 +254,7 @@ struct StressMonitorView: View {
                     tooltipLines: { point in
                         [
                             point.dayLabel,
-                            "\(String(format: "%.1f", point.score)) \(Copy.StressMonitor.scaleSuffix)"
+                            "\(Int(point.score.rounded())) \(Copy.StressMonitor.scaleSuffix)"
                         ]
                     },
                     tooltipColor: { barColor(for: $0.score) }
@@ -277,11 +277,11 @@ struct StressMonitorView: View {
         .cardStyle()
     }
 
+    /// Bars take their colour from the same level the gauge uses. A second copy of
+    /// the thresholds lived here and was missed when the scale changed, so every bar
+    /// read as high stress while the gauge said calm.
     private func barColor(for score: Double) -> Color {
-        if score < 0.75 { return AppColour.success }
-        if score < 1.5 { return AppColour.warning }
-        if score < 2.25 { return AppColour.scoreFair }
-        return AppColour.danger
+        StressLevel(score: score).color
     }
 
     // MARK: - Weekly Comparison
@@ -290,7 +290,7 @@ struct StressMonitorView: View {
         HStack(spacing: 16) {
             StatBoxView(
                 label: Copy.Common.thisWeek,
-                value: String(format: "%.1f", weeklyAverage),
+                value: "\(Int(weeklyAverage.rounded()))",
                 color: .primary,
                 suffix: Copy.StressMonitor.scaleSuffix
             )
@@ -301,7 +301,7 @@ struct StressMonitorView: View {
 
             StatBoxView(
                 label: Copy.Common.lastWeek,
-                value: String(format: "%.1f", previousWeekAverage),
+                value: "\(Int(previousWeekAverage.rounded()))",
                 color: .secondary,
                 suffix: Copy.StressMonitor.scaleSuffix
             )
@@ -415,22 +415,22 @@ struct DailyStressPoint: Identifiable {
 #Preview {
     NavigationStack {
         StressMonitorView(
-            stressScore: 1.2,
+            stressScore: 40,
             stressLevel: "Mild",
             levelColor: .yellow,
             hrvDeviation: 0.35,
             hrElevation: 0.22,
             weeklyScores: [
-                DailyStressPoint(dayLabel: "Mon", score: 0.8),
-                DailyStressPoint(dayLabel: "Tue", score: 1.1),
-                DailyStressPoint(dayLabel: "Wed", score: 1.5),
-                DailyStressPoint(dayLabel: "Thu", score: 1.2),
-                DailyStressPoint(dayLabel: "Fri", score: 0.9),
-                DailyStressPoint(dayLabel: "Sat", score: 0.6),
-                DailyStressPoint(dayLabel: "Sun", score: 1.2)
+                DailyStressPoint(dayLabel: "Mon", score: 27),
+                DailyStressPoint(dayLabel: "Tue", score: 37),
+                DailyStressPoint(dayLabel: "Wed", score: 50),
+                DailyStressPoint(dayLabel: "Thu", score: 40),
+                DailyStressPoint(dayLabel: "Fri", score: 30),
+                DailyStressPoint(dayLabel: "Sat", score: 20),
+                DailyStressPoint(dayLabel: "Sun", score: 40)
             ],
-            weeklyAverage: 1.04,
-            previousWeekAverage: 1.32
+            weeklyAverage: 35,
+            previousWeekAverage: 44
         )
     }
 }

@@ -12,7 +12,11 @@ import UserNotifications
 /// sets the `MessagingDelegate`, asks iOS to register for remote notifications
 /// after the user grants authorization, and persists each new registration
 /// token so the backend can target a device by token.
-final class PushNotificationManager: NSObject, MessagingDelegate {
+///
+/// Genuinely `Sendable`: the type has no stored properties, so the shared
+/// instance is an identity for the delegate binding and nothing more. Firebase
+/// may call the delegate back on any thread, which is fine for the same reason.
+final class PushNotificationManager: NSObject, MessagingDelegate, Sendable {
     static let shared = PushNotificationManager()
 
     /// Firestore collection holding one document per FCM registration token.

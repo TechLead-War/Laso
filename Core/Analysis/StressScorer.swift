@@ -36,12 +36,12 @@ enum StressLevel: String, CaseIterable, Codable {
         }
     }
 
-    /// Upper-exclusive score bound for the `low` stress level (0-3 scale).
-    static let mildLowerBound: Double = 0.75
-    /// Upper-exclusive score bound for the `mild` stress level (0-3 scale).
-    static let moderateLowerBound: Double = 1.5
+    /// Upper-exclusive score bound for the `low` stress level (0-100 scale).
+    static let mildLowerBound: Double = 25
+    /// Upper-exclusive score bound for the `mild` stress level (0-100 scale).
+    static let moderateLowerBound: Double = 50
     /// Upper-exclusive score bound for the `moderate` stress level; at/above is `high`.
-    static let highLowerBound: Double = 2.25
+    static let highLowerBound: Double = 75
 
     init(score: Double) {
         switch score {
@@ -58,8 +58,11 @@ enum StressLevel: String, CaseIterable, Codable {
 /// The stress score range and how it is drawn. Kept next to the scorer so a
 /// chart or gauge can never draw against a range the scorer does not produce.
 enum StressScale {
-    /// Scores run 0 (calm) to 3 (high stress). The screen labels this "out of 3".
-    static let maxScore: Double = 3.0
+    /// Scores run 0 (calm) to 100 (high stress), matching readiness, sleep, vitality
+    /// and brain health. Stress was previously 0 to 3, where real readings clustered
+    /// under 1.0 and the top of the range was unreachable, so the gauge looked broken
+    /// and the top band never fired.
+    static let maxScore: Double = 100
 
     /// Smallest fill drawn for a score above zero. Day to day scores sit far
     /// below the ceiling, so without a floor a real low reading draws as a
@@ -81,7 +84,7 @@ enum StressScale {
 // MARK: - Stress Score
 
 struct StressScore {
-    /// Continuous stress score from 0.0 (no stress) to 3.0 (high stress)
+    /// Continuous stress score from 0 (no stress) to 100 (high stress)
     let score: Double
     /// Categorical stress level derived from the score
     let level: StressLevel
@@ -116,8 +119,17 @@ final class StressScorer {
     private static let weeklyAverageWindowDays = 7
     /// Minimum samples required before `weeklyAverage` is reported.
     private static let weeklyAverageMinSamples = 3
-    /// Stress-score scaling factor that maps a 0-100% deviation onto the 0-3 stress scale.
-    private static let stressScoreScale: Double = 3.0
+    /// Deviation below personal baseline that reads as the top of the scale.
+    ///
+    /// HRV rarely falls more than about a third below a person's own baseline, so
+    /// mapping a full 100% deviation onto the scale left most of it unused and made
+    /// the top band unreachable. Anchoring the ceiling at half is a display choice
+    /// about resolution, not a clinical threshold: it puts everyday readings across
+    /// the usable range while still leaving headroom above a severe day.
+    private static let deviationAtMaxScore: Double = 0.5
+
+    /// Converts a fraction below baseline into a point on the 0 to 100 scale.
+    private static let stressScoreScale: Double = StressScale.maxScore / deviationAtMaxScore
     /// Minimum samples required to compute a per-window baseline (mean, sd).
     private static let minSamplesForBaseline = 5
     /// Look-back window (days) used when picking the most recent daily mean.

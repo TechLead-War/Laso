@@ -6,13 +6,24 @@ import AmplitudeSwift
 
 /// Amplitude implementation of `AnalyticsProvider`. Mirrors `PostHogManager`'s
 /// shape so the two are interchangeable behind `AnalyticsBackend.provider`.
-final class AmplitudeProvider: AnalyticsProvider {
+/// @unchecked Sendable: every mutable stored property (`_amplitude`,
+/// `errorWindows`, `preConfigureErrors`) is read and written only while `lock`
+/// is held. `Amplitude` itself is thread-safe by SDK contract.
+final class AmplitudeProvider: AnalyticsProvider, @unchecked Sendable {
 
     static let shared = AmplitudeProvider()
 
     /// nil until `configure()` runs; every method no-ops until then, matching
-    /// PostHogManager's `isConfigured` guard.
-    private var amplitude: Amplitude?
+    /// PostHogManager's `isConfigured` guard. Reads go through `amplitude`,
+    /// never this property directly, because `captureError` fires from
+    /// background queues before and during the launch-time `configure()` write.
+    private var _amplitude: Amplitude?
+
+    private var amplitude: Amplitude? {
+        lock.lock()
+        defer { lock.unlock() }
+        return _amplitude
+    }
 
     private init() {}
 
@@ -36,12 +47,15 @@ final class AmplitudeProvider: AnalyticsProvider {
         // they ride on every event, including autocaptured session/lifecycle
         // and crash events.
         amp.add(plugin: SuperPropertiesPlugin(superProps: AnalyticsEnvironment.staticSuperProperties()))
-        amplitude = amp
 
-        errorWindowLock.lock()
+        // Publish the instance and drain the buffer in one critical section so a
+        // concurrent captureError either buffers (and is drained here) or tracks
+        // directly. It can never do both or neither.
+        lock.lock()
+        _amplitude = amp
         let pending = preConfigureErrors
         preConfigureErrors = []
-        errorWindowLock.unlock()
+        lock.unlock()
         for buffered in pending {
             trackErrorGated(context: buffered.context, props: buffered.props)
         }
@@ -109,7 +123,11 @@ final class AmplitudeProvider: AnalyticsProvider {
     /// so suppression stays visible in Amplitude instead of failing silently.
     private static let errorEventsPerContextPerHour = 5
     private var errorWindows: [String: (start: Date, count: Int)] = [:]
-    private let errorWindowLock = NSLock()
+
+    /// Serializes every mutable stored property on this class. Analytics calls
+    /// arrive from the main actor, detached analysis tasks and HealthKit
+    /// background wakes, so none of them are single-threaded.
+    private let lock = NSLock()
 
     /// Errors captured before configure() runs (e.g. EncryptedStore purging
     /// orphaned blobs during AppContainer init) would otherwise be silently
@@ -141,16 +159,15 @@ final class AmplitudeProvider: AnalyticsProvider {
     }
 
     private func trackErrorGated(context: String, props: [String: Any]) {
-        guard let amplitude else {
-            errorWindowLock.lock()
+        lock.lock()
+        guard let amplitude = _amplitude else {
             if preConfigureErrors.count < Self.preConfigureErrorCap {
                 preConfigureErrors.append((context: context, props: props))
             }
-            errorWindowLock.unlock()
+            lock.unlock()
             return
         }
 
-        errorWindowLock.lock()
         let now = Date()
         var window = errorWindows[context] ?? (start: now, count: 0)
         if now.timeIntervalSince(window.start) > 3600 {
@@ -158,7 +175,7 @@ final class AmplitudeProvider: AnalyticsProvider {
         }
         window.count += 1
         errorWindows[context] = window
-        errorWindowLock.unlock()
+        lock.unlock()
 
         guard window.count <= Self.errorEventsPerContextPerHour else {
             if window.count == Self.errorEventsPerContextPerHour + 1 {

@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "Log X liters of water". Logs water intake to HealthKit with a specified amount.
 struct LogWaterIntent: AppIntent {
-    static var title: LocalizedStringResource = "Log Water Intake"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Log Water Intake"
+    static let description = IntentDescription(
         "Logs water intake to your Health app. Specify the amount in liters.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     @Parameter(
         title: "Amount (liters)",

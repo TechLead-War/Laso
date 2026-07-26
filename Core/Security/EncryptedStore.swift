@@ -4,12 +4,16 @@ import Security
 
 /// Encrypts and decrypts Data using AES-GCM with a Keychain-stored key.
 /// All sensitive health data should be stored/loaded through this class.
-final class EncryptedStore {
+/// Sendable: every stored property is an immutable `let`. `defaults` is
+/// computed rather than stored because `UserDefaults` is thread-safe but not
+/// Sendable-audited by Apple, and storing an instance would block the
+/// conformance for no gain.
+final class EncryptedStore: Sendable {
     static let shared = EncryptedStore()
 
     private let keychainAccount = AppSecrets.Keychain.encryptionKeyAccount
     private let syncKeychainAccount = AppSecrets.Keychain.syncKeyAccount
-    private let defaults = UserDefaults.standard
+    private var defaults: UserDefaults { .standard }
 
     /// Both flags live in UserDefaults so they ride device backups alongside the
     /// ciphertext blobs, while the local key is ThisDeviceOnly in the Keychain.

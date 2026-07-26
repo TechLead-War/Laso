@@ -34,8 +34,12 @@ enum DailyActionResultStore {
     }
 
     private static let key = AppKeys.Data.dailyActionResult
-    private static let defaults = UserDefaults.standard
-    private static let readinessStore = ReadinessStore()
+    // Both are immutable references, and UserDefaults serialises its own reads and
+    // writes. `ReadinessStore` adds no state of its own, it only forwards to the
+    // same UserDefaults, so a background refresh writing a morning lock cannot
+    // corrupt anything a Home read is doing here.
+    nonisolated(unsafe) private static let defaults = UserDefaults.standard
+    nonisolated(unsafe) private static let readinessStore = ReadinessStore()
 
     /// Records the action against today's morning lock. The baseline is read here
     /// rather than passed in: a caller's live on-screen number drains through the

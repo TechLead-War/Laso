@@ -13,7 +13,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .home: return "Today"
         case .live: return "Live"
-        case .explore: return "Explore"
+        case .explore: return "Biology"
         case .settings: return "Settings"
         }
     }

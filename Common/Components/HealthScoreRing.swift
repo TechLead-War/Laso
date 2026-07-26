@@ -70,7 +70,7 @@ struct HealthScoreRing: View {
 
             if showScore {
                 Text(Copy.Common.xText(score))
-                    .font(.custom("DINCondensed-Bold", size: size * 0.36).monospacedDigit())
+                    .font(.system(size: size * 0.28, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(ringColor)
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.5)
@@ -80,7 +80,7 @@ struct HealthScoreRing: View {
 
             if !label.isEmpty {
                 Text(label)
-                    .font(.custom("AvenirNext-Medium", size: showScore ? size * 0.12 : size * 0.15))
+                    .font(.system(size: showScore ? size * 0.12 : size * 0.15, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)

@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "What's my readiness?". Returns readiness/recovery status.
 struct ReadinessIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check Readiness"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Check Readiness"
+    static let description = IntentDescription(
         "Returns your current readiness and recovery status based on heart rate variability and resting heart rate.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         await MainActor.run {

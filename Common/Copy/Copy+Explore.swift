@@ -5,7 +5,7 @@ extension Copy {
 
         // MARK: - Navigation
 
-        static var title: String { RemoteConfigManager.shared.copyString("copy_explore_explore_title", default: "Explore") }
+        static var title: String { RemoteConfigManager.shared.copyString("copy_explore_explore_title", default: "Biology") }
 
         // MARK: - Score Hero
 

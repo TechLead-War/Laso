@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "Show my health trends". Opens the app to the Explore/trends view.
 struct ShowTrendsIntent: AppIntent {
-    static var title: LocalizedStringResource = "Show Health Trends"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Show Health Trends"
+    static let description = IntentDescription(
         "Opens Laso to the Explore tab showing your health trends and analysis.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = true
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         // Post a notification that ContentView can observe to switch to the Explore tab

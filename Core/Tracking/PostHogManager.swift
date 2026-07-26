@@ -6,11 +6,23 @@ import UIKit
 
 /// Central PostHog wrapper. sole analytics backend.
 /// All events, user properties, screen views, and error tracking flow through here.
-final class PostHogManager {
+/// @unchecked Sendable: the only mutable stored property is `_isConfigured`,
+/// read and written only while `lock` is held. `PostHogSDK.shared` is
+/// thread-safe by SDK contract.
+final class PostHogManager: @unchecked Sendable {
 
     static let shared = PostHogManager()
 
-    private var isConfigured = false
+    /// Written once by the launch-time `configure()`, read by every capture
+    /// call from any thread, so the two need serializing.
+    private var _isConfigured = false
+    private let lock = NSLock()
+
+    private var isConfigured: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return _isConfigured
+    }
 
     private init() {}
 
@@ -42,7 +54,9 @@ final class PostHogManager {
         }
         #endif
         PostHogSDK.shared.setup(config)
-        isConfigured = true
+        lock.lock()
+        _isConfigured = true
+        lock.unlock()
 
         // Super-properties auto-attach to every captured event. These let dashboards
         // filter prod-only data (`app_environment == "release"`) and segment by build,

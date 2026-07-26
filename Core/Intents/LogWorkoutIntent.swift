@@ -3,13 +3,13 @@ import SwiftUI
 
 /// "Log workout". Quick-log a workout type with duration.
 struct LogWorkoutIntent: AppIntent {
-    static var title: LocalizedStringResource = "Log Workout"
-    static var description = IntentDescription(
+    static let title: LocalizedStringResource = "Log Workout"
+    static let description = IntentDescription(
         "Quickly log a workout to your Health app with a type and duration.",
         categoryName: "Health"
     )
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     @Parameter(
         title: "Workout Type",

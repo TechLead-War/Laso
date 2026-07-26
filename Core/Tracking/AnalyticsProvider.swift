@@ -8,7 +8,10 @@ import UIKit
 /// touching any call site. Amplitude is the active provider; `PostHogManager`
 /// stays in the codebase and is re-plugged by changing the one line in
 /// `AnalyticsBackend`.
-protocol AnalyticsProvider: AnyObject {
+/// Sendable: `AnalyticsBackend.provider` is one process-wide instance called
+/// from every thread in the app, so any conforming backend must be safe to
+/// touch concurrently.
+protocol AnalyticsProvider: AnyObject, Sendable {
     func configure()
     func installCrashHandlers()
     func flush()

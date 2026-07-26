@@ -258,7 +258,10 @@ struct OnbV2Screen15SignIn: View {
         // Launch-time anonymous sign-in can fail on an offline first launch;
         // fire and forget a retry so Firestore writes regain an auth context.
         if Auth.auth().currentUser == nil {
-            Task { try? await Auth.auth().signInAnonymously() }
+            // The result is discarded inside the task: nothing here reads it, and
+            // letting it be the task's value would hand a non-Sendable
+            // AuthDataResult back out to whoever awaits the task.
+            Task { _ = try? await Auth.auth().signInAnonymously() }
         }
         #endif
         onSignedIn()

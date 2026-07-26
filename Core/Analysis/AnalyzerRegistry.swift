@@ -6,7 +6,12 @@ import Foundation
 enum AnalyzerRegistry {
 
     /// Lightweight analyzers that run immediately after core analysis (Phase 2A).
-    static let essential: [any InsightAnalyzer.Type] = [
+    ///
+    /// `nonisolated(unsafe)` here and on `heavy`: both are immutable `let` lists of
+    /// metatypes, and a metatype holds no state at all, so there is nothing to race
+    /// on. The compiler flags them only because an existential metatype
+    /// (`any InsightAnalyzer.Type`) is not itself Sendable.
+    nonisolated(unsafe) static let essential: [any InsightAnalyzer.Type] = [
         InsightGenerator.self,
         RecoveryAnalyzer.self,
         WorkoutEffectivenessAnalyzer.self,
@@ -20,7 +25,7 @@ enum AnalyzerRegistry {
     ]
 
     /// Expensive analyzers that run with TTL caching (Phase 2B).
-    static let heavy: [any InsightAnalyzer.Type] = [
+    nonisolated(unsafe) static let heavy: [any InsightAnalyzer.Type] = [
         CorrelationAnalyzer.self,
         HistoricalAnalyzer.self,
         CognitiveEnergyAnalyzer.self,

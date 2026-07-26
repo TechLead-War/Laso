@@ -6427,7 +6427,7 @@
   },
   {
     "key": "copy_explore_explore_title",
-    "defaultValue": "Explore",
+    "defaultValue": "Biology",
     "sourceFile": "Copy+Explore.swift",
     "isArray": false
   },
@@ -12637,7 +12637,7 @@
   },
   {
     "key": "copy_stress_monitor_stress_monitor_scale_and_direction",
-    "defaultValue": "out of 3  ·  Lower is better",
+    "defaultValue": "out of 100  ·  Lower is better",
     "sourceFile": "Copy+StressMonitor.swift",
     "isArray": false
   },

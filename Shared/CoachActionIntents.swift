@@ -48,9 +48,9 @@ enum CoachActionBridge {
 
 @available(iOS 17.0, *)
 struct CoachSetIntentionIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Set today's intention"
-    static var description = IntentDescription("Open Laso and capture your focus for the day.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Set today's intention"
+    static let description = IntentDescription("Open Laso and capture your focus for the day.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         CoachActionBridge.markPending(.setIntention, source: "today_score")
@@ -60,9 +60,9 @@ struct CoachSetIntentionIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct CoachBreatheIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Start a 2-minute breathwork reset"
-    static var description = IntentDescription("Open Laso and start a quick breathing session.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Start a 2-minute breathwork reset"
+    static let description = IntentDescription("Open Laso and start a quick breathing session.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         CoachActionBridge.markPending(.breathe, source: "today_score")
@@ -72,9 +72,9 @@ struct CoachBreatheIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct CoachWindDownIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Start wind-down routine"
-    static var description = IntentDescription("Open Laso and begin the evening wind-down flow.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Start wind-down routine"
+    static let description = IntentDescription("Open Laso and begin the evening wind-down flow.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         CoachActionBridge.markPending(.windDown, source: "today_score")
@@ -87,9 +87,9 @@ struct CoachWindDownIntent: LiveActivityIntent {
 /// wind-down engagement from the daily TodayScore surface.
 @available(iOS 17.0, *)
 struct WindDownBreatheIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Start a 2-minute wind-down breath"
-    static var description = IntentDescription("Open Laso and begin a short breath session from tonight's wind-down.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Start a 2-minute wind-down breath"
+    static let description = IntentDescription("Open Laso and begin a short breath session from tonight's wind-down.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         CoachActionBridge.markPending(.breathe, source: "wind_down")

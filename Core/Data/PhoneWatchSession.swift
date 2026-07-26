@@ -38,22 +38,27 @@ final class WatchLinkState {
 /// its methods are optional Objective-C requirements, and an extension witness does
 /// not reliably get the `@objc` entry point the framework looks up, so incoming
 /// wrist writes would silently never arrive.
+/// All state lives on the main actor because every sender (app launch, dashboard
+/// refresh, account wipe) already runs there. The delegate callbacks are the only
+/// exception: WatchConnectivity calls them on its own serial queue, so they are
+/// `nonisolated` and hop before touching anything.
+@MainActor
 final class PhoneWatchSession: NSObject, WCSessionDelegate {
 
     static let shared = PhoneWatchSession()
 
     /// Set once at startup so a wrist journal write reaches the same SwiftData
     /// store the app itself reads.
-    @MainActor private weak var healthDataStore: HealthDataStore?
+    private weak var healthDataStore: HealthDataStore?
 
     /// The readiness number in the last complication transfer, so an unchanged score
     /// never spends from the daily budget.
-    @MainActor private var lastComplicationScore: Int?
+    private var lastComplicationScore: Int?
 
-    @MainActor private let ledger = AppliedCommandLedger()
+    private let ledger = AppliedCommandLedger()
 
     /// Live view of the paired watch, for UI that has to react to it.
-    @MainActor let linkState = WatchLinkState()
+    let linkState = WatchLinkState()
 
     private override init() {
         super.init()
@@ -62,7 +67,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     // MARK: - Lifecycle
 
     /// Activates the session. Safe to call more than once; activation is idempotent.
-    @MainActor
     func activate(healthDataStore: HealthDataStore?) {
         self.healthDataStore = healthDataStore
 
@@ -81,7 +85,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     /// Pushes the current state to the watch after an analysis refresh. A score of 0
     /// means the analysis has nothing to say yet, and is kept off the wrist entirely
     /// rather than shown there as today's result.
-    @MainActor
     func push(readinessScore: Int, grade: String, dayType: String) {
         WatchCoreState.save(readinessScore: readinessScore, grade: grade, dayType: dayType)
         resend()
@@ -93,7 +96,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     /// a zero, and neither the wrist nor the watch face can tell that zero apart from
     /// a real score, so a background launched process used to overwrite the face with
     /// a live looking 0.
-    @MainActor
     private func resend() {
         guard let core = WatchCoreState.today() else { return }
         send(buildPayload(core: core))
@@ -103,7 +105,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     ///
     /// The watch keeps its own copy of the last payload, one container further out
     /// than the local wipe reaches, so it has to be overwritten rather than deleted.
-    @MainActor
     func clearForAccountWipe() {
         DailyActionStore.clear()
         WatchCoreState.clear()
@@ -111,7 +112,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
         send(buildPayload(core: nil))
     }
 
-    @MainActor
     private func buildPayload(core: WatchCoreState.Stored?) -> WatchPayload {
         let action = DailyActionStore.today()
         return WatchPayload(
@@ -129,7 +129,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     }
 
     /// The session to talk over, or nil when there is nothing on the other end.
-    @MainActor
     private var activeSession: WCSession? {
         guard WCSession.isSupported() else { return nil }
         let session = WCSession.default
@@ -138,7 +137,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
         return session
     }
 
-    @MainActor
     private func send(_ payload: WatchPayload) {
         guard let session = activeSession else { return }
 
@@ -166,7 +164,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
 
     // MARK: - Apply wrist writes
 
-    @MainActor
     private func apply(_ command: WatchCommand) {
         // WatchConnectivity redelivers queued transfers, and the journal writer
         // always inserts, so an unclaimed redelivery would double count. A
@@ -230,7 +227,6 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     /// The wrist needs this even when nothing else changes: it used to treat the next
     /// payload as proof the write landed, so a write the phone threw away still read
     /// as saved on the watch.
-    @MainActor
     private func report(_ commandId: UUID, rejection: WatchCommandRejection?) {
         guard let session = activeSession else { return }
         let result = WatchCommandResult(commandId: commandId, rejection: rejection)
@@ -244,7 +240,11 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
 
     // MARK: - WCSessionDelegate
 
-    @objc func session(
+    /// The callbacks below run on WatchConnectivity's own serial queue, never on the
+    /// main one, so they stay `nonisolated` and hand the work over with a hop. The
+    /// `session` they are given is always `WCSession.default`, and it is read after
+    /// the hop rather than carried across it, because a `WCSession` is not `Sendable`.
+    @objc nonisolated func session(
         _ session: WCSession,
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
@@ -255,29 +255,31 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
         }
         guard activationState == .activated else { return }
         Task { @MainActor in
-            self.linkState.update(from: session)
+            self.linkState.update(from: WCSession.default)
             self.resend()
         }
     }
 
     /// Required on iOS. The session goes inactive when the user switches watches.
-    @objc func sessionDidBecomeInactive(_ session: WCSession) {}
+    @objc nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
 
     /// Required on iOS. Reactivate so the newly paired watch gets a session.
-    @objc func sessionDidDeactivate(_ session: WCSession) {
+    @objc nonisolated func sessionDidDeactivate(_ session: WCSession) {
         WCSession.default.activate()
     }
 
     /// A watch was paired, unpaired, the watch app was installed or removed, or a
     /// complication was added to or taken off the face.
-    @objc func sessionWatchStateDidChange(_ session: WCSession) {
+    @objc nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
         Task { @MainActor in
-            self.linkState.update(from: session)
+            self.linkState.update(from: WCSession.default)
             self.resend()
         }
     }
 
-    @objc func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+    @objc nonisolated func session(
+        _ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]
+    ) {
         guard let data = userInfo[WatchBridge.commandKey] as? Data,
               let command = try? JSONDecoder().decode(WatchCommand.self, from: data) else {
             AnalyticsBackend.provider.captureError(
@@ -289,7 +291,7 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
 
     /// A queued transfer finished. Only surfaces failures; success needs no action
     /// because every applied command already sends its own result back.
-    @objc func session(
+    @objc nonisolated func session(
         _ session: WCSession,
         didFinish userInfoTransfer: WCSessionUserInfoTransfer,
         error: Error?
@@ -306,6 +308,9 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
 /// Persisted rather than held in the process: a background launch starts a fresh
 /// process where an in memory copy is always nil, and the payload built from that nil
 /// carried a readiness of 0 that the watch face showed as a live score.
+///
+/// Main actor because every caller is `PhoneWatchSession`, which is.
+@MainActor
 private enum WatchCoreState {
 
     struct Stored: Codable {

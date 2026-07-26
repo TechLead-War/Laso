@@ -76,42 +76,38 @@ enum DS {
     // MARK: - Typography
 
     enum Typography {
-        // Brand faces: Avenir Next for text (a built-in match for WHOOP's Proxima
-        // Nova) and DIN Condensed for numeric readouts. Both ship with iOS, so no
-        // font bundling. relativeTo: keeps Dynamic Type scaling for accessibility.
-        private static func avenir(_ face: String, _ size: CGFloat, _ style: Font.TextStyle) -> Font {
-            .custom(face, size: size, relativeTo: style)
-        }
+        // Semantic fonts: the system face, so Dynamic Type and every accessibility
+        // weight setting apply without a custom face fighting them.
+        static let largeTitle: Font = .largeTitle.weight(.bold)
+        static let title: Font = .title.weight(.bold)
+        static let title2: Font = .title2.weight(.semibold)
+        static let title3: Font = .title3.weight(.semibold)
+        static let headline: Font = .headline
+        static let subheadline: Font = .subheadline
+        static let subheadlineMedium: Font = .subheadline.weight(.medium)
+        static let subheadlineSemibold: Font = .subheadline.weight(.semibold)
+        static let body: Font = .body
+        static let bodyMedium: Font = .body.weight(.medium)
+        static let bodySemibold: Font = .body.weight(.semibold)
+        static let callout: Font = .callout
+        static let calloutSemibold: Font = .callout.weight(.semibold)
+        static let footnote: Font = .footnote
+        static let footnoteMedium: Font = .footnote.weight(.medium)
+        static let caption: Font = .caption
+        static let captionMedium: Font = .caption.weight(.medium)
+        static let captionSemibold: Font = .caption.weight(.semibold)
+        static let caption2: Font = .caption2
+        static let caption2Medium: Font = .caption2.weight(.medium)
+        static let caption2Semibold: Font = .caption2.weight(.semibold)
 
-        static let largeTitle: Font = avenir("AvenirNext-Bold", 34, .largeTitle)
-        static let title: Font = avenir("AvenirNext-Bold", 28, .title)
-        static let title2: Font = avenir("AvenirNext-DemiBold", 22, .title2)
-        static let title3: Font = avenir("AvenirNext-DemiBold", 20, .title3)
-        static let headline: Font = avenir("AvenirNext-DemiBold", 17, .headline)
-        static let subheadline: Font = avenir("AvenirNext-Regular", 15, .subheadline)
-        static let subheadlineMedium: Font = avenir("AvenirNext-Medium", 15, .subheadline)
-        static let subheadlineSemibold: Font = avenir("AvenirNext-DemiBold", 15, .subheadline)
-        static let body: Font = avenir("AvenirNext-Regular", 17, .body)
-        static let bodyMedium: Font = avenir("AvenirNext-Medium", 17, .body)
-        static let bodySemibold: Font = avenir("AvenirNext-DemiBold", 17, .body)
-        static let callout: Font = avenir("AvenirNext-Regular", 16, .callout)
-        static let calloutSemibold: Font = avenir("AvenirNext-DemiBold", 16, .callout)
-        static let footnote: Font = avenir("AvenirNext-Regular", 13, .footnote)
-        static let footnoteMedium: Font = avenir("AvenirNext-Medium", 13, .footnote)
-        static let caption: Font = avenir("AvenirNext-Regular", 12, .caption)
-        static let captionMedium: Font = avenir("AvenirNext-Medium", 12, .caption)
-        static let captionSemibold: Font = avenir("AvenirNext-DemiBold", 12, .caption)
-        static let caption2: Font = avenir("AvenirNext-Regular", 11, .caption2)
-        static let caption2Medium: Font = avenir("AvenirNext-Medium", 11, .caption2)
-        static let caption2Semibold: Font = avenir("AvenirNext-DemiBold", 11, .caption2)
+        // Numeric readouts. Rounded plus monospacedDigit so digits do not jitter as
+        // a score ticks over.
+        static let displayXL: Font = .system(size: 56, weight: .bold, design: .rounded).monospacedDigit()
+        static let displayL: Font = .system(size: 44, weight: .bold, design: .rounded).monospacedDigit()
+        static let displayM: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
+        static let displayS: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
 
-        // Numeric readouts — DIN Condensed (WHOOP-style), monospacedDigit so digits don't jitter.
-        static let displayXL: Font = Font.custom("DINCondensed-Bold", size: 56, relativeTo: .largeTitle).monospacedDigit()
-        static let displayL: Font = Font.custom("DINCondensed-Bold", size: 44, relativeTo: .largeTitle).monospacedDigit()
-        static let displayM: Font = Font.custom("DINCondensed-Bold", size: 36, relativeTo: .title).monospacedDigit()
-        static let displayS: Font = Font.custom("DINCondensed-Bold", size: 28, relativeTo: .title).monospacedDigit()
-
-        // Icon fonts (large SF symbols in empty states and hero slots) — keep SF for symbols.
+        // Large SF Symbols in empty states and hero slots.
         static let heroIcon: Font = .system(size: 56, weight: .medium)
         static let largeIcon: Font = .system(size: 44, weight: .medium)
         static let mediumIcon: Font = .system(size: 36, weight: .medium)

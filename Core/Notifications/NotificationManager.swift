@@ -2,7 +2,14 @@ import Foundation
 import UserNotifications
 
 /// Manages scheduling and canceling local notifications
-final class NotificationManager {
+///
+/// `@unchecked Sendable` rather than actor-isolated: `scheduleNotification` is a
+/// synchronous call made from the main actor and from background delivery alike,
+/// and every piece of state behind it is serialised. `center` is safe to use from
+/// any thread, `frequencyCap` and `fatigueTracker` keep all their state in
+/// UserDefaults and their read-modify-write sequences run under `gateLock`, and
+/// the two mutable properties run under `stateLock`.
+final class NotificationManager: @unchecked Sendable {
     static let shared = NotificationManager()
 
     private let center = UNUserNotificationCenter.current()
@@ -16,8 +23,18 @@ final class NotificationManager {
     /// double-spend the cap.
     private let gateLock = NSLock()
 
-    /// Data store for notification event tracking (set at app launch)
-    var store: HealthDataStore?
+    /// Guards the two mutable properties below. Deliberately not `gateLock`:
+    /// NSLock is not recursive, and a separate lock keeps a future property read
+    /// from deadlocking inside the cap accounting that already holds `gateLock`.
+    private let stateLock = NSLock()
+
+    /// Data store for notification event tracking (set at app launch).
+    /// Written on the main actor at launch, read from background schedules.
+    var store: HealthDataStore? {
+        get { stateLock.lock(); defer { stateLock.unlock() }; return _store }
+        set { stateLock.lock(); defer { stateLock.unlock() }; _store = newValue }
+    }
+    private var _store: HealthDataStore?
 
     /// Cached authorization state, refreshed by `requestAuthorization` and
     /// `isCurrentlyAuthorized`. Lets `scheduleNotification` short-circuit a
@@ -25,7 +42,11 @@ final class NotificationManager {
     /// time. Defaults to `false`; the launch path MUST call
     /// `isCurrentlyAuthorized()` before the first non-critical schedule so a
     /// genuinely-authorized user is not wrongly suppressed at startup.
-    private var cachedAuthorized = false
+    private var cachedAuthorized: Bool {
+        get { stateLock.lock(); defer { stateLock.unlock() }; return _cachedAuthorized }
+        set { stateLock.lock(); defer { stateLock.unlock() }; _cachedAuthorized = newValue }
+    }
+    private var _cachedAuthorized = false
 
     /// iOS keeps at most 64 pending local notifications; the oldest are
     /// silently dropped past that. Warn before the cap so a runaway scheduler

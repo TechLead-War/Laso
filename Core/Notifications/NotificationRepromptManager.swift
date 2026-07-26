@@ -9,7 +9,10 @@ import UserNotifications
 /// - The re-prompt is an in-app banner, not the system dialog (iOS blocks re-asking)
 enum NotificationRepromptManager {
 
-    private static let defaults = UserDefaults.standard
+    // Immutable reference, and UserDefaults serialises its own reads and writes.
+    // The denial keys are only ever read-modify-written from the foreground
+    // check, so no cross-thread ordering is at stake either.
+    nonisolated(unsafe) private static let defaults = UserDefaults.standard
 
     /// Call on every foreground return to record denial if needed.
     /// Returns `true` if the re-prompt banner should be shown.
