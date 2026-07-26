@@ -38,7 +38,9 @@ struct LasoApp: App {
     /// Returns an error message when calibration fails; nil indicates success.
     @MainActor
     private func performInitialCalibration() async -> String? {
-        let calibrator = container.makeDashboardViewModel()
+        // The shared instance, not a throwaway: a second one repeats the whole
+        // scorer prewarm and its SwiftData write for results nothing reads.
+        let calibrator = container.dashboardViewModel
         await calibrator.load(
             skipDiscovery: true,
             awaitDeferredAnalysis: true,
@@ -56,9 +58,6 @@ struct LasoApp: App {
         return nil
     }
 
-    /// Integrity check failure reason, if any. Set once at launch.
-    private let integrityFailure: String?
-
     init() {
         UITestMode.configureDefaults()
         isUITestMode = UITestMode.isEnabled
@@ -68,19 +67,14 @@ struct LasoApp: App {
         }
         _container = State(wrappedValue: newContainer)
         _showSplash = State(initialValue: !isUITestMode)
-        integrityFailure = AppIntegrityGuard.performChecks()
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // -1. Integrity failure. blocks everything on compromised devices
-                if let failure = integrityFailure {
-                    CompromisedEnvironmentView(reason: failure)
-                }
                 // 0. Force update or maintenance. blocks everything
                 // Skip in UI test mode and during App Store review / TestFlight
-                else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.requiresForceUpdate {
+                if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
                 } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled {
                     MaintenanceView(message: remoteConfig.killSwitchMessage)
@@ -133,6 +127,9 @@ struct LasoApp: App {
             }
             .task {
                 guard !isUITestMode else { return }
+                // Reporting only, and it walks every loaded dyld image, so it runs
+                // off the launch path instead of inside `init` ahead of first frame.
+                Task.detached(priority: .utility) { AppIntegrityGuard.performChecks() }
                 await container.startupCoordinator.runInitialSetup(
                     healthDataStore: container.healthDataStore,
                     healthKitManager: container.healthKitManager

@@ -53,17 +53,30 @@ struct MetricTimeSeries: Identifiable {
         self.metric = metric
         self.samples = validSamples
 
-        let calendar = Date.cal
+        // `localDayBucket` lands on exactly the boundary `Calendar.startOfDay`
+        // would, daylight saving included, but in float math rather than a full
+        // date-component decomposition. It is already the persistence dedupe key,
+        // and at ~26k samples on a cold load this loop was the single largest
+        // main-actor cost in the store.
         var distinctDayCount = 0
-        var previousDay: Date?
+        var previousDay = Int64.min
 
         for sample in validSamples {
-            let currentDay = calendar.startOfDay(for: sample.date)
+            let currentDay = MetricSample.localDayBucket(for: sample.date)
             if currentDay != previousDay {
                 distinctDayCount += 1
                 previousDay = currentDay
             }
         }
+        self.distinctDayCount = distinctDayCount
+    }
+
+    /// Trusted init for slices of an already-built series: the samples are known
+    /// sorted and outlier-filtered, so re-running that work would be pure waste.
+    /// Deliberately private — a public caller could bypass the outlier invariant.
+    private init(metric: HealthMetric, validatedSamples: [MetricSample], distinctDayCount: Int) {
+        self.metric = metric
+        self.samples = validatedSamples
         self.distinctDayCount = distinctDayCount
     }
 
@@ -173,7 +186,21 @@ struct MetricTimeSeries: Identifiable {
         }
         let endIndex = samples.firstIndex(onOrAfter: dayEnd)
         if endIndex >= samples.count { return self }
-        return MetricTimeSeries(metric: metric, samples: Array(samples[..<endIndex]))
+
+        // A prefix of a sorted, filtered array is still sorted and filtered, so
+        // this takes the trusted init. The backfill replays this once per day per
+        // metric, where the full init's re-sort and re-filter dominated.
+        let prefix = Array(samples[..<endIndex])
+        var dayCount = 0
+        var previousDay = Int64.min
+        for sample in prefix {
+            let currentDay = MetricSample.localDayBucket(for: sample.date)
+            if currentDay != previousDay {
+                dayCount += 1
+                previousDay = currentDay
+            }
+        }
+        return MetricTimeSeries(metric: metric, validatedSamples: prefix, distinctDayCount: dayCount)
     }
 
     /// Number of years of data available

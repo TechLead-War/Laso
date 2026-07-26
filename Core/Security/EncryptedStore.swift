@@ -4,7 +4,8 @@ import Security
 
 /// Encrypts and decrypts Data using AES-GCM with a Keychain-stored key.
 /// All sensitive health data should be stored/loaded through this class.
-/// Sendable: every stored property is an immutable `let`. `defaults` is
+/// Sendable: every stored property is an immutable `let`, except `cachedKey`,
+/// which is mutable but only ever touched under `keyLock`. `defaults` is
 /// computed rather than stored because `UserDefaults` is thread-safe but not
 /// Sendable-audited by Apple, and storing an instance would block the
 /// conformance for no gain.
@@ -126,16 +127,28 @@ final class EncryptedStore: Sendable {
 
     // MARK: - Keychain Key Management
 
+    /// Resolved key for this process. Every read and write went to securityd over
+    /// XPC before this cache existed, which put ~10-15 round trips on a refresh,
+    /// most of them on the main actor. The key is reconstructed into a
+    /// `SymmetricKey` on use either way, so holding it changes how long it stays
+    /// resident, not what is exposed. Every access is inside `keyLock`, which is
+    /// what makes the unchecked annotation sound.
+    private nonisolated(unsafe) var cachedKey: SymmetricKey?
+
     private func getOrCreateKey() -> SymmetricKey? {
         keyLock.lock()
         defer { keyLock.unlock() }
+
+        if let cachedKey { return cachedKey }
 
         var status: OSStatus = errSecSuccess
         if let data = loadFromKeychain(account: keychainAccount, synchronizable: false, status: &status) {
             if !defaults.bool(forKey: keyProvisionedFlag) {
                 defaults.set(true, forKey: keyProvisionedFlag)
             }
-            return SymmetricKey(data: data)
+            let key = SymmetricKey(data: data)
+            cachedKey = key
+            return key
         }
         // Transient unavailability (e.g. keychain still sealed before the first
         // unlock after reboot) is not key loss: never mint or purge on it.
@@ -148,6 +161,7 @@ final class EncryptedStore: Sendable {
         }
         guard let key = resolveKey(account: keychainAccount, accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, synchronizable: false) else { return nil }
         defaults.set(true, forKey: keyProvisionedFlag)
+        cachedKey = key
         return key
     }
 

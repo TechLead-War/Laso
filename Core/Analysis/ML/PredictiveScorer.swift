@@ -187,6 +187,12 @@ final class PredictiveScorer {
 
         // Pre-bin features for histogram-based split finding
         let binEdges = precomputeBinEdges(X: trainX, numBins: numBins)
+        // Materialise the binned matrix once, feature-major, so the split search
+        // reads one contiguous byte per row instead of chasing a row pointer into
+        // a separate buffer and binary-searching 64 edges for every
+        // (node, candidate feature, row). Bin indices are bounded by
+        // `numBins` (64), so a byte is wide enough.
+        let binnedMatrix = precomputeBinnedMatrix(X: trainX, binEdges: binEdges)
 
         // Initialize predictions to base score
         var F = [Double](repeating: baseScore, count: trainX.count)
@@ -224,7 +230,7 @@ final class PredictiveScorer {
             let root = buildTree(
                 X: trainX, gradients: gradients, hessians: hessians,
                 indices: sampleIndices, colIndices: colIndices,
-                binEdges: binEdges, depth: 0
+                binEdges: binEdges, binned: binnedMatrix, rowCount: trainX.count, depth: 0
             )
 
             let tree = DecisionTree(root: root)
@@ -302,7 +308,7 @@ final class PredictiveScorer {
     private func buildTree(
         X: [[Double]], gradients: [Double], hessians: [Double],
         indices: [Int], colIndices: [Int],
-        binEdges: [[Double]], depth: Int
+        binEdges: [[Double]], binned: [UInt8], rowCount: Int, depth: Int
     ) -> TreeNode {
         // Compute leaf value
         let G = indices.reduce(0.0) { $0 + gradients[$1] }
@@ -322,29 +328,44 @@ final class PredictiveScorer {
 
         let parentScore = (G * G) / (H + l2Lambda)
 
+        // Histogram accumulators, allocated once per node and reset per feature
+        // rather than reallocated for every (node, feature) pair. Sized from the
+        // widest feature: `precomputeBinEdges` returns every distinct value as an
+        // edge when a feature has fewer than `numBins` of them, so `edges.count`
+        // is not bounded by `numBins`.
+        let maxBins = (binEdges.map(\.count).max() ?? 0) + 1
+        guard maxBins > 1 else { return .leaf(value: leafValue) }
+        var binGrad = [Double](repeating: 0, count: maxBins)
+        var binHess = [Double](repeating: 0, count: maxBins)
+        var binCount = [Int](repeating: 0, count: maxBins)
+
         // Try each candidate feature
         for featureIdx in colIndices {
             guard featureIdx < binEdges.count else { continue }
             let edges = binEdges[featureIdx]
             guard !edges.isEmpty else { continue }
 
-            // Build histogram
-            var bins = [HistogramBin](repeating: HistogramBin(), count: edges.count + 1)
-            for i in indices {
-                let val = X[i][featureIdx]
-                let binIdx = findBin(val, edges: edges)
-                bins[binIdx].gradientSum += gradients[i]
-                bins[binIdx].hessianSum += hessians[i]
-                bins[binIdx].count += 1
+            let usedBins = edges.count + 1
+            for b in 0..<usedBins { binGrad[b] = 0; binHess[b] = 0; binCount[b] = 0 }
+
+            // Build histogram from the pre-binned matrix
+            binned.withUnsafeBufferPointer { bin in
+                let col = bin.baseAddress! + featureIdx * rowCount
+                for i in indices {
+                    let binIdx = Int(col[i])
+                    binGrad[binIdx] += gradients[i]
+                    binHess[binIdx] += hessians[i]
+                    binCount[binIdx] += 1
+                }
             }
 
             // Scan bins for best split
             var leftG = 0.0, leftH = 0.0
             var leftCount = 0
-            for binIdx in 0..<bins.count - 1 {
-                leftG += bins[binIdx].gradientSum
-                leftH += bins[binIdx].hessianSum
-                leftCount += bins[binIdx].count
+            for binIdx in 0..<usedBins - 1 {
+                leftG += binGrad[binIdx]
+                leftH += binHess[binIdx]
+                leftCount += binCount[binIdx]
                 let rightG = G - leftG
                 let rightH = H - leftH
                 let rightCount = indices.count - leftCount
@@ -379,10 +400,10 @@ final class PredictiveScorer {
 
         let left = buildTree(X: X, gradients: gradients, hessians: hessians,
                             indices: bestLeftIndices, colIndices: colIndices,
-                            binEdges: binEdges, depth: depth + 1)
+                            binEdges: binEdges, binned: binned, rowCount: rowCount, depth: depth + 1)
         let right = buildTree(X: X, gradients: gradients, hessians: hessians,
                              indices: bestRightIndices, colIndices: colIndices,
-                             binEdges: binEdges, depth: depth + 1)
+                             binEdges: binEdges, binned: binned, rowCount: rowCount, depth: depth + 1)
 
         return .split(featureIndex: bestFeature, threshold: bestThreshold,
                      gain: bestGain, left: left, right: right)
@@ -405,6 +426,32 @@ final class PredictiveScorer {
             let step = max(1, values.count / numBins)
             return stride(from: step, to: values.count, by: step).map { values[$0] }
         }
+    }
+
+    /// Bin every training value once, feature-major (`[featureIdx * rowCount + row]`).
+    /// `findBin` is unchanged and still the single definition of the bin boundary,
+    /// so a pre-binned lookup and a live search always agree.
+    private func precomputeBinnedMatrix(X: [[Double]], binEdges: [[Double]]) -> [UInt8] {
+        let rowCount = X.count
+        let featureCount = binEdges.count
+        guard rowCount > 0, featureCount > 0 else { return [] }
+
+        // A bin index is at most `edges.count`. `precomputeBinEdges` is widest
+        // when the quantile stride is still 1, which happens only for a feature
+        // with between `numBins + 1` and `2 * numBins - 1` distinct values; that
+        // yields at most `2 * numBins - 2` (126) edges. Comfortably inside UInt8.
+        // The conversion is left trapping on purpose: if that bound ever changes,
+        // this must fail loudly rather than wrap silently.
+        var binned = [UInt8](repeating: 0, count: featureCount * rowCount)
+        for featureIdx in 0..<featureCount {
+            let edges = binEdges[featureIdx]
+            guard !edges.isEmpty else { continue }
+            let base = featureIdx * rowCount
+            for i in 0..<rowCount {
+                binned[base + i] = UInt8(findBin(X[i][featureIdx], edges: edges))
+            }
+        }
+        return binned
     }
 
     private func findBin(_ value: Double, edges: [Double]) -> Int {

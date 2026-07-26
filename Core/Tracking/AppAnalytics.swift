@@ -869,19 +869,25 @@ final class AppAnalytics {
         let networkType: String = ConnectivityMonitor.shared.isOnline
             ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
             : "offline"
-        setUserProperty("streak_days", value: "\(session.streakDays)")
-        setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
-        setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
-        setUserProperty("total_sessions", value: "\(session.totalSessions)")
-        setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
-        setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
-        setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
-        setUserProperty("session_source", value: session.currentSessionSource.rawValue)
-        setUserProperty("network_type", value: networkType)
-        setUserProperty("nav_depth", value: "\(session.currentDepth)")
-        setUserProperty("activation_status", value: session.isActivated ? "activated" : "not_activated")
-        setUserProperty("engagement_level", value: engagement.rawValue)
-        setUserProperty("subscription_age_days", value: "\(subscriptionAgeDays)")
+        // One batched Identify instead of one per property. Each setUserProperty
+        // is a separate $identify event that Amplitude enqueues, writes to its
+        // on-disk event file and uploads, so this was 13 payloads per session
+        // carrying the same information as one.
+        AnalyticsBackend.provider.setUserProperties([
+            "streak_days": "\(session.streakDays)",
+            "price_tier": SubscriptionConfig.currentTier.rawValue,
+            "days_since_install": "\(session.daysSinceInstall)",
+            "total_sessions": "\(session.totalSessions)",
+            "lifetime_core_actions": "\(session.lifetimeCoreActions)",
+            "weekly_active_days": "\(session.weeklyActiveDays)",
+            "organic_session_pct": "\(session.organicSessionPercent)",
+            "session_source": session.currentSessionSource.rawValue,
+            "network_type": networkType,
+            "activation_status": session.isActivated ? "activated" : "not_activated",
+            "engagement_level": engagement.rawValue,
+            "subscription_age_days": "\(subscriptionAgeDays)",
+            "nav_depth": "\(session.currentDepth)"
+        ])
 
         // Refresh demographic & device properties every session
         setDemographicProperties()

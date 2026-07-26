@@ -33,10 +33,21 @@ final class PersistenceManager {
         AppKeys.Data.currentScore
     ]
 
+    /// Token for the KVS observer. Held so `deinit` can unregister it — the block
+    /// form of `addObserver` keeps the entry alive until it is removed by token,
+    /// so discarding it left every short-lived instance observing forever.
+    @ObservationIgnored private var cloudObserver: NSObjectProtocol?
+
     init() {
         startCloudSync()
         migratePlaintextData()
         migrateCriticalAlertsDefault()
+    }
+
+    deinit {
+        if let cloudObserver {
+            NotificationCenter.default.removeObserver(cloudObserver)
+        }
     }
 
     // MARK: - Migration
@@ -72,7 +83,7 @@ final class PersistenceManager {
     // MARK: - iCloud Sync (non-sensitive only)
 
     private func startCloudSync() {
-        NotificationCenter.default.addObserver(
+        cloudObserver = NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
             object: cloud,
             queue: .main

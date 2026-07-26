@@ -230,6 +230,7 @@ enum AppKeys {
         static let detectedWakeHour  = "laso.engagement.detected_wake_hour"
         static let detectedWakeMinute = "laso.engagement.detected_wake_minute"
         static let wakeTimeSource    = "laso.engagement.wake_time_source"
+        static let lastWakeDetection = "laso.engagement.last_wake_detection"
 
         // Activation gates (Headspace pattern: 0 to 1 activation moment, not calendar).
         // Day 2 gate: user has opened the app and seen their first real Recovery score.

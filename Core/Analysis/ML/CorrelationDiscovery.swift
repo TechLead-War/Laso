@@ -247,12 +247,26 @@ final class CorrelationDiscovery {
         var bestConfounder: HealthMetric?
         var bestConfR: Double = 0
 
-        // Find the metric most correlated with both A and B
+        // Find the metric most correlated with both A and B.
+        //
+        // A candidate only qualifies if it has a value on every common date, so
+        // the gather stops at the first gap instead of walking the whole window
+        // and then failing the count check. One reused buffer replaces an array
+        // allocation per candidate. Date hashing here, not the correlations,
+        // dominated this loop.
+        var cValues = [Double]()
+        cValues.reserveCapacity(commonDates.count)
+
         for (metric, dv) in allDateValues {
             guard metric != metricA, metric != metricB else { continue }
 
-            let cValues = commonDates.compactMap { dv[$0] }
-            guard cValues.count == a.count else { continue }
+            cValues.removeAll(keepingCapacity: true)
+            var isComplete = true
+            for date in commonDates {
+                guard let value = dv[date] else { isComplete = false; break }
+                cValues.append(value)
+            }
+            guard isComplete, cValues.count == a.count else { continue }
 
             let rAC = abs([Double].pearsonCorrelation(a, cValues) ?? 0)
             let rBC = abs([Double].pearsonCorrelation(b, cValues) ?? 0)

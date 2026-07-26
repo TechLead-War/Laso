@@ -90,6 +90,70 @@ final class RemoteConfigManager: @unchecked Sendable {
         MainActor.assumeIsolated { _ = lastFetchTime }
     }
 
+    // MARK: - Copy Resolution Cache
+
+    /// Resolved copy strings, keyed by config key.
+    ///
+    /// Uncached, every `Copy.*` read paid a Firestore-override dictionary probe
+    /// with an `Any` dynamic cast, a Firebase `configValue(forKey:)` (a lock, a
+    /// namespace walk and an Objective-C object allocation) and an NSString
+    /// bridge. A dashboard body evaluates dozens of these per render on the main
+    /// thread. Resolution is deterministic for a given (RC activation, override
+    /// payload) pair, so the whole cache is dropped when either changes rather
+    /// than being invalidated key by key.
+    ///
+    /// `observeFetchUpdates()` still runs on every read: it is the SwiftUI
+    /// dependency edge, not part of the resolution cost.
+    ///
+    /// All three are `@ObservationIgnored` and that is load-bearing, not tidiness.
+    /// Left tracked, every cache write goes through the observation registrar
+    /// while this lock is held, so a reader that takes the registrar lock first
+    /// and then resolves a copy string deadlocks against it. Cache state is never
+    /// a view dependency; `lastFetchTime` is.
+    @ObservationIgnored private let copyCacheLock = NSLock()
+    @ObservationIgnored private var copyCache: [String: String] = [:]
+    @ObservationIgnored private var copyCacheToken: Int = -1
+
+    /// Bumped on every activation so cached strings cannot outlive a config push.
+    @ObservationIgnored private var configGeneration: Int = 0
+
+    /// Called on the main actor from both activation paths.
+    @MainActor
+    private func invalidateCopyCache() {
+        copyCacheLock.lock()
+        configGeneration &+= 1
+        copyCache.removeAll(keepingCapacity: true)
+        copyCacheLock.unlock()
+    }
+
+    /// Resolve through the cache, calling `resolve` only on a miss.
+    private func cachedCopy(_ key: String, resolve: () -> String) -> String {
+        let token = configGeneration &+ CopyOverridesStore.shared.revision
+
+        copyCacheLock.lock()
+        if token == copyCacheToken, let hit = copyCache[key] {
+            copyCacheLock.unlock()
+            return hit
+        }
+        if token != copyCacheToken {
+            copyCacheToken = token
+            copyCache.removeAll(keepingCapacity: true)
+        }
+        copyCacheLock.unlock()
+
+        let value = resolve()
+
+        copyCacheLock.lock()
+        // Only publish under the token this value was resolved for; an
+        // activation that landed mid-resolve must not have a stale value
+        // written back on top of the cleared cache.
+        if token == copyCacheToken {
+            copyCache[key] = value
+        }
+        copyCacheLock.unlock()
+        return value
+    }
+
     private func stringValue(forKey key: String) -> String {
         observeFetchUpdates()
         return remoteConfig?.configValue(forKey: key).stringValue ?? (Self.mergedDefaults[key] as? String ?? "")
@@ -134,6 +198,7 @@ final class RemoteConfigManager: @unchecked Sendable {
             await MainActor.run {
                 isFetching = false
                 if status == .successFetchedFromRemote || status == .successUsingPreFetchedData {
+                    invalidateCopyCache()
                     lastFetchTime = Date()
                     fetchError = nil
                 }
@@ -166,6 +231,7 @@ final class RemoteConfigManager: @unchecked Sendable {
                     return
                 }
                 Task { @MainActor in
+                    self?.invalidateCopyCache()
                     self?.lastFetchTime = Date()
                     self?.fetchError = nil
                 }
@@ -447,14 +513,16 @@ final class RemoteConfigManager: @unchecked Sendable {
     /// through so operators cannot accidentally blank the UI.
     func copyString(_ key: String, default fallback: String) -> String {
         observeFetchUpdates()
-        if let override = CopyOverridesStore.shared.string(forKey: key) {
-            return override
+        return cachedCopy(key) {
+            if let override = CopyOverridesStore.shared.string(forKey: key) {
+                return override
+            }
+            guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
+                  !raw.isEmpty else {
+                return fallback
+            }
+            return raw
         }
-        guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
-              !raw.isEmpty else {
-            return fallback
-        }
-        return raw
     }
 
     /// Look up an array of user-facing strings. Same precedence as

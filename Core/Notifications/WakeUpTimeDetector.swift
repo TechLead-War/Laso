@@ -152,21 +152,37 @@ enum WakeUpTimeDetector {
     }
 
     /// Detect and persist wake-up time. Returns the resolved (hour, minute).
+    /// How long a detected wake time is trusted before re-querying HealthKit.
+    /// A sleep schedule does not move meaningfully inside a week, and the query
+    /// underneath is an unbounded 14-day sleep-stage fetch.
+    private static let detectionTTL: TimeInterval = 7 * 24 * 3600
+
     static func detectAndPersist(healthStore: HKHealthStore) async -> (hour: Int, minute: Int) {
         let defaults = UserDefaults.standard
+
+        // Gated at the choke point so both callers inherit it. Without this the
+        // detector re-ran its 14-day HealthKit query on every refresh.
+        if let last = defaults.object(forKey: AppKeys.Engagement.lastWakeDetection) as? Date,
+           Date().timeIntervalSince(last) < detectionTTL,
+           defaults.string(forKey: AppKeys.Engagement.wakeTimeSource) != nil {
+            return persistedWakeTime
+        }
 
         if let detected = await detect(healthStore: healthStore) {
             let safe = clamped(hour: detected.hour, minute: detected.minute, origin: "detected")
             defaults.set(safe.hour, forKey: AppKeys.Engagement.detectedWakeHour)
             defaults.set(safe.minute, forKey: AppKeys.Engagement.detectedWakeMinute)
             defaults.set("detected", forKey: AppKeys.Engagement.wakeTimeSource)
+            defaults.set(Date(), forKey: AppKeys.Engagement.lastWakeDetection)
             return safe
         }
 
-        // Fallback
+        // Fallback. The stamp is written here too: a user with no sleep data
+        // would otherwise re-run the full query on every single refresh.
         defaults.set(fallbackHour, forKey: AppKeys.Engagement.detectedWakeHour)
         defaults.set(fallbackMinute, forKey: AppKeys.Engagement.detectedWakeMinute)
         defaults.set("fallback", forKey: AppKeys.Engagement.wakeTimeSource)
+        defaults.set(Date(), forKey: AppKeys.Engagement.lastWakeDetection)
         return (hour: fallbackHour, minute: fallbackMinute)
     }
 

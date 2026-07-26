@@ -43,6 +43,11 @@ final class InteractionEffectEngine {
     // MARK: - State
 
     private(set) var doseResponseCurves: [DoseResponseCurve] = []
+    /// Last discovered effects, retained so a run skipped by `needsRetrain`
+    /// can hand back the previous results instead of blanking the UI.
+    private(set) var effects: [InteractionEffect] = []
+
+    var isReady: Bool { !effects.isEmpty || !doseResponseCurves.isEmpty }
 
     // MARK: - Constants
 
@@ -66,11 +71,23 @@ final class InteractionEffectEngine {
 
     // MARK: - Discovery (Main Entry Point)
 
+    /// Last analysis date. guards against rerunning too frequently
+    private var lastAnalysisDate: Date?
+
+    /// Whether a full reanalysis is needed (never run, or >30 days since last).
+    /// Same 30-day contract as `CorrelationDiscovery` and `HealthStateClassifier`;
+    /// this engine is the most expensive in the pipeline and had no gate at all.
+    var needsRetrain: Bool {
+        guard let lastAnalysis = lastAnalysisDate else { return true }
+        return Date().timeIntervalSince(lastAnalysis) > 30 * 24 * 3600
+    }
+
     /// Run all interaction analyses. Returns discovered effects sorted by strength.
     func discover(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> [InteractionEffect] {
+        lastAnalysisDate = Date()
         let calendar = Date.cal
         var dateValues: [HealthMetric: [Date: Double]] = [:]
         for (metric, series) in timeSeries {
@@ -86,20 +103,31 @@ final class InteractionEffectEngine {
 
         // Collect candidate pairs: priority first, then all with |r| > threshold
         var pairs: [(HealthMetric, HealthMetric)] = []
-        var seen: Set<String> = []
+        var seen: Set<MetricPairKey> = []
+        // Pearson is symmetric and the pair key is direction-independent, so
+        // (a, b) and (b, a) always reach the same verdict. `seen` alone only
+        // skipped the reverse of an *accepted* pair, so every rejected pair —
+        // the large majority — had its whole alignment and correlation computed
+        // a second time. Tracking what has been tested halves this O(n^2) sweep.
+        var tested: Set<MetricPairKey> = []
 
         for (c, e) in Self.priorityPairs where dateValues[c] != nil && dateValues[e] != nil {
-            if seen.insert(pairKey(c, e)).inserted { pairs.append((c, e)) }
+            let key = MetricPairKey(c, e)
+            if seen.insert(key).inserted {
+                tested.insert(key)
+                pairs.append((c, e))
+            }
         }
         for i in 0..<available.count {
             for j in 0..<available.count where i != j {
                 let (c, e) = (available[i], available[j])
-                guard !seen.contains(pairKey(c, e)) else { continue }
+                let key = MetricPairKey(c, e)
+                guard !seen.contains(key), tested.insert(key).inserted else { continue }
                 let (cv, ev) = aligned(c, e, dateValues)
                 guard cv.count >= Self.minimumDays,
                       let r = [Double].pearsonCorrelation(cv, ev),
                       abs(r) >= Self.minCorrelation else { continue }
-                seen.insert(pairKey(c, e))
+                seen.insert(key)
                 pairs.append((c, e))
             }
         }
@@ -111,7 +139,10 @@ final class InteractionEffectEngine {
             // Bail out mid-loop if device reaches critical thermal state
             if idx % 5 == 0 && ProcessInfo.processInfo.thermalState == .critical { break }
 
-            let (cv, ev) = aligned(cause, effect, dateValues)
+            // One alignment per pair. `aligned` returns exactly the first two
+            // elements of `alignedWithDates` — same intersection, same sort — so
+            // running both was doing the Date-keyed intersect and sort twice.
+            let (cv, ev, dates) = alignedWithDates(cause, effect, dateValues)
             guard cv.count >= Self.minimumDays else { continue }
 
             if let curve = analyzeDoseResponse(cause: cause, effect: effect, cv: cv, ev: ev) {
@@ -119,11 +150,8 @@ final class InteractionEffectEngine {
                 if let ie = effectFromCurve(curve, n: cv.count) { allEffects.append(ie) }
             }
 
-            let (cv2, ev2, dates) = alignedWithDates(cause, effect, dateValues)
-            if cv2.count >= Self.minimumDays {
-                let ce = analyzeConditional(cause: cause, effect: effect, cv: cv2, ev: ev2, dates: dates, baselines: baselines)
-                allEffects.append(contentsOf: ce)
-            }
+            let ce = analyzeConditional(cause: cause, effect: effect, cv: cv, ev: ev, dates: dates, baselines: baselines)
+            allEffects.append(contentsOf: ce)
 
             allEffects.append(contentsOf: analyzeModeration(
                 cause: cause, effect: effect, dateValues: dateValues,
@@ -133,6 +161,7 @@ final class InteractionEffectEngine {
 
         allEffects.sort { $0.strength > $1.strength }
         doseResponseCurves = allCurves
+        effects = allEffects
         return allEffects
     }
 
@@ -465,8 +494,15 @@ final class InteractionEffectEngine {
         return (cv, ev, vd)
     }
 
-    private func pairKey(_ a: HealthMetric, _ b: HealthMetric) -> String {
-        a.rawValue < b.rawValue ? "\(a.rawValue)|\(b.rawValue)" : "\(b.rawValue)|\(a.rawValue)"
+    /// Direction-independent pair identity, matching the old string key's
+    /// `rawValue`-ordered normalisation but without building a String for every
+    /// one of the ~5k candidate pairs.
+    private struct MetricPairKey: Hashable {
+        let low: HealthMetric
+        let high: HealthMetric
+        init(_ a: HealthMetric, _ b: HealthMetric) {
+            if a.rawValue < b.rawValue { low = a; high = b } else { low = b; high = a }
+        }
     }
 
     private func pooledStd(_ bins: [DoseResponseCurve.DoseResponseBin]) -> Double {

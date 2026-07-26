@@ -57,6 +57,18 @@ final class TemporalSequenceMiner {
     /// Hash of input data from last run. Skip recomputation if unchanged.
     private var lastInputHash: Int = 0
 
+    /// Last mine date. guards against rerunning too frequently
+    private var lastAnalysisDate: Date?
+
+    /// Whether a full remine is needed (never run, or >30 days since last).
+    /// The input hash below only catches identical data; a single new daily
+    /// sample changes it, so without this gate the whole miner re-ran on every
+    /// pipeline tick. Same 30-day contract as `CorrelationDiscovery`.
+    var needsRetrain: Bool {
+        guard let lastAnalysis = lastAnalysisDate else { return true }
+        return Date().timeIntervalSince(lastAnalysis) > 30 * 24 * 3600
+    }
+
     // MARK: - Internal State
 
     /// Metrics most likely to participate in cross-metric sequences
@@ -90,6 +102,37 @@ final class TemporalSequenceMiner {
     /// Maximum lag between steps in a sequence (days)
     private let maxStepLag = 7
 
+    /// Every calendar day spanned by the data, contiguous and ascending, plus the
+    /// reverse lookup. `sortedDates` alone cannot be indexed for "N days later"
+    /// because it skips days with no samples. Built once per mine so the lag
+    /// probes below are two array reads instead of a `Calendar.date(byAdding:)`
+    /// call each. Calendar builds it, so DST-shifted days stay correct.
+    private var dayGrid: [Date] = []
+    private var dayGridIndex: [Date: Int] = [:]
+
+    private func buildDayGrid(sortedDates: [Date]) {
+        dayGrid = []
+        dayGridIndex = [:]
+        guard let first = sortedDates.first, let last = sortedDates.last else { return }
+
+        var cursor = first
+        while cursor <= last {
+            dayGridIndex[cursor] = dayGrid.count
+            dayGrid.append(cursor)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+    }
+
+    /// The day `lag` calendar days after `date`, or nil when that falls outside
+    /// the observed span (the caller then has no event there anyway).
+    private func day(after date: Date, lag: Int) -> Date? {
+        guard let index = dayGridIndex[date] else { return nil }
+        let target = index + lag
+        guard target < dayGrid.count else { return nil }
+        return dayGrid[target]
+    }
+
     // MARK: - Main Entry
 
     /// Discover all temporal sequences from time series data.
@@ -106,6 +149,7 @@ final class TemporalSequenceMiner {
         let inputHash = computeInputHash(timeSeries: timeSeries)
         if inputHash == lastInputHash && isReady { return }
         lastInputHash = inputHash
+        lastAnalysisDate = Date()
 
         // Filter to metrics with sufficient data
         let available = timeSeries.filter { $0.value.sortedSamples.count >= Self.minimumDays }
@@ -116,6 +160,7 @@ final class TemporalSequenceMiner {
         guard dailyValues.count >= Self.minimumDays else { return }
 
         let sortedDates = dailyValues.keys.sorted()
+        buildDayGrid(sortedDates: sortedDates)
 
         // 1. Mine sequential patterns (2-step and 3-step)
         let mined = mineSequentialPatterns(
@@ -197,15 +242,24 @@ final class TemporalSequenceMiner {
         }
 
         // Step 3: Extend to 3-step sequences from strong 2-step pairs
+        //
+        // Only the effect side of each pair is used as the candidate third metric,
+        // so iterating `pairsToTest` directly evaluated (and appended) the same
+        // triple once per cause that shares an effect — roughly 11 duplicates each,
+        // enough to fill both surfaced insight slots with the same sequence.
+        // Dedupe in first-seen order so the output stays deterministic.
+        var seenThirdMetrics: Set<HealthMetric> = []
+        let candidateThirdMetrics = pairsToTest.compactMap { seenThirdMetrics.insert($0.effect).inserted ? $0.effect : nil }
+
         let strong2Step = results.filter { $0.totalOccurrences >= minSupport + 1 && $0.confidence > 0.5 }
         for twoStep in strong2Step {
             guard twoStep.steps.count == 2 else { continue }
             let secondMetric = twoStep.steps[1].metric
+            guard let midEvents = events[secondMetric] else { continue }
 
             // Try extending: find a third metric that follows the second
-            for (_, effectMetric) in pairsToTest where effectMetric != twoStep.steps[0].metric && effectMetric != secondMetric {
-                guard let effectEvents = events[effectMetric],
-                      let midEvents = events[secondMetric] else { continue }
+            for effectMetric in candidateThirdMetrics where effectMetric != twoStep.steps[0].metric && effectMetric != secondMetric {
+                guard let effectEvents = events[effectMetric] else { continue }
 
                 if let threeStep = find3StepSequence(
                     baseSequence: twoStep,
@@ -331,7 +385,11 @@ final class TemporalSequenceMiner {
         dailyValues: [Date: [HealthMetric: Double]],
         baselines: [HealthMetric: UserBaseline]
     ) -> TemporalSequence? {
-        let effectDateSet = Set(effectEvents.map { calendar.startOfDay(for: $0.date) })
+        // Event dates come from `TimeSeriesAligner.dailyValueMap`, so each one is
+        // already an exact local midnight and `identifyEvents` emits at most one
+        // event per metric per day. That makes an equality-keyed index exactly
+        // equivalent to the same-day linear scan this replaces, at O(1).
+        let effectByDay = Dictionary(effectEvents.map { ($0.date, $0) }, uniquingKeysWith: { first, _ in first })
 
         // For each cause event, check if an effect event follows within maxStepLag days
         var hits: [(causeEvent: MetricEvent, effectEvent: MetricEvent, lag: Int)] = []
@@ -340,15 +398,11 @@ final class TemporalSequenceMiner {
         for causeEvent in causeEvents {
             var foundEffect = false
             for lag in 1...maxStepLag {
-                guard let futureDate = calendar.date(byAdding: .day, value: lag, to: causeEvent.date) else { continue }
-                let futureDay = calendar.startOfDay(for: futureDate)
-                if effectDateSet.contains(futureDay) {
-                    // Find the matching effect event
-                    if let effectEvent = effectEvents.first(where: { calendar.isDate($0.date, inSameDayAs: futureDay) }) {
-                        hits.append((causeEvent, effectEvent, lag))
-                        foundEffect = true
-                        break
-                    }
+                guard let futureDay = day(after: causeEvent.date, lag: lag) else { break }
+                if let effectEvent = effectByDay[futureDay] {
+                    hits.append((causeEvent, effectEvent, lag))
+                    foundEffect = true
+                    break
                 }
             }
             if !foundEffect {
@@ -475,7 +529,8 @@ final class TemporalSequenceMiner {
         guard baseSequence.steps.count == 2 else { return nil }
 
         let midStep = baseSequence.steps[1]
-        let thirdDateSet = Set(thirdEvents.map { calendar.startOfDay(for: $0.date) })
+        // Same day-keyed index as the 2-step matcher above; see the note there.
+        let thirdByDay = Dictionary(thirdEvents.map { ($0.date, $0) }, uniquingKeysWith: { first, _ in first })
 
         // For each mid-event, check if third event follows
         var hits: [(midEvent: MetricEvent, thirdEvent: MetricEvent, lag: Int)] = []
@@ -484,14 +539,11 @@ final class TemporalSequenceMiner {
         for midEvent in midEvents {
             var found = false
             for lag in 1...maxStepLag {
-                guard let futureDate = calendar.date(byAdding: .day, value: lag, to: midEvent.date) else { continue }
-                let futureDay = calendar.startOfDay(for: futureDate)
-                if thirdDateSet.contains(futureDay) {
-                    if let thirdEvent = thirdEvents.first(where: { calendar.isDate($0.date, inSameDayAs: futureDay) }) {
-                        hits.append((midEvent, thirdEvent, lag))
-                        found = true
-                        break
-                    }
+                guard let futureDay = day(after: midEvent.date, lag: lag) else { break }
+                if let thirdEvent = thirdByDay[futureDay] {
+                    hits.append((midEvent, thirdEvent, lag))
+                    found = true
+                    break
                 }
             }
             if !found { misses += 1 }

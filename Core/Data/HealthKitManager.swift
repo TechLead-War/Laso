@@ -785,14 +785,27 @@ final class HealthKitManager: @unchecked Sendable {
         // Awake time recorded just before falling asleep or just after waking
         // rides along with that session, otherwise a 23:00 awake stretch would
         // land on a different day than the sleep it belongs to.
+        //
+        // A forward-only cursor replaces a rescan-from-zero per sample. This holds
+        // on two invariants that must stay true: `results` arrives sorted ascending
+        // by start date (the query sets HKSampleSortIdentifierStartDate), and
+        // `sessions` is built above in ascending, non-overlapping start order.
+        // Break either and samples are silently mis-assigned rather than dropped.
         var unassigned: [HKCategorySample] = []
+        var cursor = 0
         for sample in results where !asleepStageValues.contains(sample.value) {
-            let index = sessions.firstIndex {
-                sample.endDate >= $0.start.addingTimeInterval(-sleepSessionGapThreshold)
-                    && sample.startDate <= $0.end.addingTimeInterval(sleepSessionGapThreshold)
+            // A session that ends before this sample's window opens can never match
+            // this sample, and samples only move forward, so it can never match a
+            // later one either. The cursor therefore never rewinds.
+            while cursor < sessions.count,
+                  sessions[cursor].end.addingTimeInterval(sleepSessionGapThreshold) < sample.startDate {
+                cursor += 1
             }
-            if let index {
-                sessions[index].samples.append(sample)
+            // Sessions are non-overlapping and ascending, so if this one starts too
+            // late for the sample, every later one does too — no match exists.
+            if cursor < sessions.count,
+               sample.endDate >= sessions[cursor].start.addingTimeInterval(-sleepSessionGapThreshold) {
+                sessions[cursor].samples.append(sample)
             } else {
                 unassigned.append(sample)
             }
@@ -1259,10 +1272,18 @@ final class HealthKitManager: @unchecked Sendable {
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
         let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
-        // Use the existing stored data's oldest date to preserve full history,
-        // falling back to 10 years for metrics without stored data yet.
-        let existingOldest = timeSeries[metric]?.samples.first?.date
-        let startDate = existingOldest ?? Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+        // A manual log only ever changes today, so refetching the full history here
+        // made the save sheet wait on a statistics collection over every stored day.
+        // Yesterday is included so a log made either side of midnight still lands.
+        // Metrics with no stored data at all still take the 10-year path once, to
+        // seed whatever history HealthKit already holds.
+        let hasStoredHistory = timeSeries[metric]?.samples.isEmpty == false
+        let startDate: Date
+        if hasStoredHistory {
+            startDate = Date.cal.date(byAdding: .day, value: -1, to: Date.cal.startOfDay(for: Date())) ?? endDate
+        } else {
+            startDate = Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+        }
         guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
         store.saveSamples(series.samples, for: metric)
         let reloaded = store.loadTimeSeries(for: metric)

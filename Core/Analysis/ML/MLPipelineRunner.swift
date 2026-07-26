@@ -232,22 +232,36 @@ final class MLPipelineRunner {
         // --- Tier 2 (Exploratory): Skipped under thermal pressure (.fair skips these) ---
 
         // --- 9. InteractionEffectEngine (14+ days, tier 2) ---
+        // Gated on the same 30-day retrain contract as steps 3-6. This is the
+        // most expensive component in the pipeline and previously re-ran on every
+        // tick; the stored results are handed back on a skipped run so the UI
+        // keeps showing the last discovery rather than blanking.
         if thermal.shouldRunComponent(tier: 2), totalDays >= InteractionEffectEngine.minimumDays {
-            logger.debug("Running InteractionEffectEngine")
-            output.interactionEffects = components.interactionEngine.discover(timeSeries: input.timeSeries, baselines: input.baselines)
+            if components.interactionEngine.needsRetrain || !components.interactionEngine.isReady {
+                logger.debug("Running InteractionEffectEngine")
+                output.interactionEffects = components.interactionEngine.discover(timeSeries: input.timeSeries, baselines: input.baselines)
+                output.componentsRunCount += 1
+            } else {
+                output.interactionEffects = components.interactionEngine.effects
+            }
             output.doseResponseCurves = components.interactionEngine.doseResponseCurves
         }
 
         if await shouldStopForThermal(after: "InteractionEffectEngine") { output.stoppedEarly = true; return output }
 
         // --- 10. TemporalSequenceMiner (14+ days, tier 2) ---
+        // The miner keeps its own results, so the output reads back the stored
+        // state either way and a skipped run costs the UI nothing.
         if thermal.shouldRunComponent(tier: 2), totalDays >= TemporalSequenceMiner.minimumDays {
-            logger.debug("Running TemporalSequenceMiner")
-            components.temporalMiner.mine(
-                timeSeries: input.timeSeries,
-                baselines: input.baselines,
-                stateHistory: output.smoothedStates
-            )
+            if components.temporalMiner.needsRetrain || !components.temporalMiner.isReady {
+                logger.debug("Running TemporalSequenceMiner")
+                components.temporalMiner.mine(
+                    timeSeries: input.timeSeries,
+                    baselines: input.baselines,
+                    stateHistory: output.smoothedStates
+                )
+                output.componentsRunCount += 1
+            }
             output.temporalSequences = components.temporalMiner.sequences
             output.precursorPatterns = components.temporalMiner.precursorPatterns
         }

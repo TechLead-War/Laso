@@ -40,6 +40,13 @@ final class CopyOverridesStore {
     private(set) var lastUpdated: Date?
     private(set) var loadError: String?
 
+    /// Monotonic payload version. `RemoteConfigManager` folds this into its copy
+    /// cache key so a fresh override payload invalidates every resolved string
+    /// without either type reaching into the other's storage. Deliberately not
+    /// observation-tracked: it is a cache token, not a view dependency, and
+    /// `lastUpdated` above already provides the view dependency.
+    @ObservationIgnored private(set) var revision: Int = 0
+
     private var overrides: [String: Any] = [:]
     private var listener: ListenerRegistration?
     private var hasFirebase: Bool { FirebaseApp.app() != nil }
@@ -62,6 +69,7 @@ final class CopyOverridesStore {
             }
             self.overrides = snapshot?.data() ?? [:]
             self.loadError = nil
+            self.revision &+= 1
             self.lastUpdated = Date()
         }
     }

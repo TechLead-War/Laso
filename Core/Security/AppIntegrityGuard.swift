@@ -13,11 +13,12 @@ enum AppIntegrityGuard {
     /// Checks still execute for analytics visibility but no longer block the UI.
     /// Apple App Store Review guidelines discourage hard-blocking users based on
     /// jailbreak or environment detection, so results are logged only.
-    static func performChecks() -> String? {
+    /// Reports a compromised environment to analytics. Deliberately never blocks
+    /// the app, so it returns nothing and the caller runs it off the launch path.
+    static func performChecks() {
         #if DEBUG
-        return nil
+        return
         #else
-        // Run checks for analytics tracking but never block the app.
         var reason: String?
         if isJailbroken() { reason = "unsupported_environment" }
         else if isDebuggerAttached() { reason = "debugger_detected" }
@@ -30,9 +31,6 @@ enum AppIntegrityGuard {
                 context: "app_integrity_guard"
             )
         }
-
-        // Always return nil so the app is never blocked.
-        return nil
         #endif
     }
 

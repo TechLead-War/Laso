@@ -196,14 +196,33 @@ final class HealthStateClassifier {
         let n = data.count
         guard n > k, dim > 0 else { return nil }
 
+        // Column-major copy of `data`, built once. Every per-feature pass below
+        // used to rebuild its column with `(0..<n).map { data[$0][d] }` — an
+        // allocation plus a strided walk across n separate row buffers, repeated
+        // for every feature, every component, every EM iteration, over an array
+        // that never changes. One contiguous copy replaces all of them.
+        var columns = [Double](repeating: 0, count: dim * n)
+        for i in 0..<n {
+            let row = data[i]
+            for d in 0..<dim { columns[d * n + i] = row[d] }
+        }
+
         // Data-adaptive variance floor: 1% of each feature's global variance
         // This prevents zero-variance degeneracy while preserving meaningful differences
         var perFeatureVarFloor = [Double](repeating: Self.minVarianceFloor, count: dim)
-        for d in 0..<dim {
-            let colValues = (0..<n).map { data[$0][d] }
-            let colMean = colValues.reduce(0, +) / Double(n)
-            let colVar = colValues.reduce(0.0) { $0 + ($1 - colMean) * ($1 - colMean) } / Double(n)
-            perFeatureVarFloor[d] = max(Self.minVarianceFloor, 0.01 * colVar)
+        columns.withUnsafeBufferPointer { cols in
+            for d in 0..<dim {
+                let col = cols.baseAddress! + d * n
+                var colMean: Double = 0
+                vDSP_meanvD(col, 1, &colMean, vDSP_Length(n))
+                var colVar: Double = 0
+                for i in 0..<n {
+                    let diff = col[i] - colMean
+                    colVar += diff * diff
+                }
+                colVar /= Double(n)
+                perFeatureVarFloor[d] = max(Self.minVarianceFloor, 0.01 * colVar)
+            }
         }
 
         // Initialize with K-means++ seeding for stable starting points
@@ -213,10 +232,12 @@ final class HealthStateClassifier {
         )
         var currentWeights = [Double](repeating: 1.0 / Double(k), count: k)
 
-        // Responsibilities: n x k
-        var responsibilities = [[Double]](
-            repeating: [Double](repeating: 0, count: k), count: n
-        )
+        // Responsibilities, component-major: `responsibilities[j * n + i]`.
+        // Row-major `[[Double]]` meant the M-step gathered each component's
+        // column with a strided walk across n row buffers; this layout makes
+        // that column one contiguous run.
+        var responsibilities = [Double](repeating: 0, count: k * n)
+        var logProbs = [Double](repeating: 0, count: k)
 
         var prevLogLikelihood = -Double.infinity
 
@@ -224,20 +245,26 @@ final class HealthStateClassifier {
             // E-step: compute responsibilities
             var totalLogLikelihood = 0.0
 
-            for i in 0..<n {
-                var logProbs = [Double](repeating: 0, count: k)
+            // Per-component terms that do not vary across samples, hoisted out
+            // of the inner loop: the log-determinant alone was a full
+            // `vForce.log` over `dim` on every one of the n*k calls below.
+            let logPriors = currentWeights.map { log(max($0, 1e-300)) }
+            let logDetSums = currentVariances.map { AccelerateML.diagonalMVNLogDetSum($0) }
 
+            for i in 0..<n {
                 for j in 0..<k {
-                    let logPrior = log(max(currentWeights[j], 1e-300))
                     let logLik = AccelerateML.diagonalMVNLogLikelihood(
-                        x: data[i], mean: currentMeans[j], diagVariance: currentVariances[j]
+                        x: data[i],
+                        mean: currentMeans[j],
+                        diagVariance: currentVariances[j],
+                        logDetSum: logDetSums[j]
                     )
-                    logProbs[j] = logPrior + logLik
+                    logProbs[j] = logPriors[j] + logLik
                 }
 
                 // Normalize responsibilities using softmax (numerically stable)
                 let resp = AccelerateML.softmax(logProbs)
-                responsibilities[i] = resp
+                for j in 0..<k { responsibilities[j * n + i] = resp[j] }
 
                 // Accumulate log-likelihood using log-sum-exp
                 totalLogLikelihood += AccelerateML.logSumExp(logProbs)
@@ -253,43 +280,53 @@ final class HealthStateClassifier {
             }
             prevLogLikelihood = totalLogLikelihood
 
-            // M-step: update parameters
+            // M-step: update parameters. Mean and variance share one pass over
+            // each contiguous column instead of two rebuilt gathers.
             for j in 0..<k {
-                // Extract responsibilities for component j
-                let rj = (0..<n).map { responsibilities[$0][j] }
-
-                // Effective count
-                var Nj: Double = 0
-                vDSP_sveD(rj, 1, &Nj, vDSP_Length(n))
-                guard Nj > 1e-10 else { continue }
-
-                // Update weight
-                currentWeights[j] = Nj / Double(n)
-
-                // Update mean: weighted mean of data points
                 var newMean = [Double](repeating: 0, count: dim)
-                for d in 0..<dim {
-                    let colValues = (0..<n).map { data[$0][d] }
-                    newMean[d] = AccelerateML.weightedMean(colValues, weights: rj)
-                }
-                currentMeans[j] = newMean
-
-                // Update variance: weighted variance with floor
                 var newVar = [Double](repeating: 0, count: dim)
-                for d in 0..<dim {
-                    var weightedSumSqDiff: Double = 0
-                    for i in 0..<n {
-                        let diff = data[i][d] - newMean[d]
-                        weightedSumSqDiff += rj[i] * diff * diff
+                var Nj: Double = 0
+                var converged = true
+
+                columns.withUnsafeBufferPointer { cols in
+                    responsibilities.withUnsafeBufferPointer { resp in
+                        let rj = resp.baseAddress! + j * n
+                        vDSP_sveD(rj, 1, &Nj, vDSP_Length(n))
+                        guard Nj > 1e-10 else { converged = false; return }
+
+                        for d in 0..<dim {
+                            let col = cols.baseAddress! + d * n
+                            // Weighted mean == dot(column, responsibilities) / Nj,
+                            // which is exactly what weightedMean computed before.
+                            var dot: Double = 0
+                            vDSP_dotprD(col, 1, rj, 1, &dot, vDSP_Length(n))
+                            let mean = dot / Nj
+                            newMean[d] = mean
+
+                            var weightedSumSqDiff: Double = 0
+                            for i in 0..<n {
+                                let diff = col[i] - mean
+                                weightedSumSqDiff += rj[i] * diff * diff
+                            }
+                            newVar[d] = max(weightedSumSqDiff / Nj, perFeatureVarFloor[d])
+                        }
                     }
-                    newVar[d] = max(weightedSumSqDiff / Nj, perFeatureVarFloor[d])
                 }
+
+                guard converged else { continue }
+                currentWeights[j] = Nj / Double(n)
+                currentMeans[j] = newMean
                 currentVariances[j] = newVar
             }
         }
 
         // Hard assignments via argmax of responsibilities
-        let hardAssignments = responsibilities.map { AccelerateML.argmax($0) }
+        var hardAssignments = [Int](repeating: 0, count: n)
+        var sampleResp = [Double](repeating: 0, count: k)
+        for i in 0..<n {
+            for j in 0..<k { sampleResp[j] = responsibilities[j * n + i] }
+            hardAssignments[i] = AccelerateML.argmax(sampleResp)
+        }
 
         return GMMResult(
             means: currentMeans,

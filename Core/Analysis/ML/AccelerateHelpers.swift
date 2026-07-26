@@ -275,6 +275,39 @@ enum AccelerateML {
         return logLikelihood
     }
 
+    /// `sum(ln(var_i))` for a diagonal covariance. Fixed for a component across
+    /// every sample, so EM hoists it out of the per-sample likelihood call.
+    static func diagonalMVNLogDetSum(_ diagVariance: [Double]) -> Double {
+        guard !diagVariance.isEmpty else { return 0 }
+        var logVar = [Double](repeating: 0, count: diagVariance.count)
+        vForce.log(diagVariance, result: &logVar)
+        var total: Double = 0
+        vDSP_sveD(logVar, 1, &total, vDSP_Length(logVar.count))
+        return total
+    }
+
+    /// Log-likelihood with the log-determinant supplied by the caller.
+    ///
+    /// The array-allocating version above is right for a one-off call. EM calls
+    /// this once per sample per component per iteration with the same variance
+    /// vector, where four dim-sized allocations and a full `vForce.log` pass per
+    /// call dominate. One fused pass, no allocations. The division is kept rather
+    /// than folded into a precomputed reciprocal so results stay bit-identical to
+    /// the `vDSP_vdivD` the allocating version uses.
+    static func diagonalMVNLogLikelihood(
+        x: [Double], mean: [Double], diagVariance: [Double], logDetSum: Double
+    ) -> Double {
+        let d = x.count
+        guard d == mean.count, d == diagVariance.count, d > 0 else { return -.infinity }
+
+        var mahalanobis: Double = 0
+        for i in 0..<d {
+            let diff = x[i] - mean[i]
+            mahalanobis += (diff * diff) / diagVariance[i]
+        }
+        return -0.5 * (Double(d) * log(2.0 * .pi) + logDetSum + mahalanobis)
+    }
+
     // MARK: - Weighted Mean
 
     /// Weighted mean: sum(values * weights) / sum(weights)

@@ -27,23 +27,28 @@ struct SettingsView: View {
     @State private var activeFeedbackEntry: FeedbackSheet.EntryPoint?
     @State private var rateHapticTrigger = false
 
-    private let persistence = PersistenceManager()
+    // Injected rather than built here: this view sits in a ViewBuilder that
+    // re-evaluates on every tab switch and navigation push, so each construction
+    // was a fresh migration pass, a KVS sync and ~13 keychain round trips.
+    let persistence: PersistenceManager
     let webExportViewModel: WebExportViewModel
     let deviceSourceManager: DeviceSourceManager
     let healthKitManager: HealthKitManager
     let healthDataStore: HealthDataStore
 
     init(
+        persistence: PersistenceManager,
         webExportViewModel: WebExportViewModel,
         deviceSourceManager: DeviceSourceManager,
         healthKitManager: HealthKitManager,
         healthDataStore: HealthDataStore
     ) {
+        self.persistence = persistence
         self.webExportViewModel = webExportViewModel
         self.deviceSourceManager = deviceSourceManager
         self.healthKitManager = healthKitManager
         self.healthDataStore = healthDataStore
-        self._preferences = State(initialValue: PersistenceManager().loadPreferences())
+        self._preferences = State(initialValue: persistence.loadPreferences())
     }
 
     private var devicesStatusText: String {
@@ -885,6 +890,7 @@ struct ShareSheet: UIViewControllerRepresentable {
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     SettingsView(
+        persistence: PersistenceManager(),
         webExportViewModel: WebExportViewModel(
             healthKitManager: hkManager,
             analysisEngine: engine

@@ -89,6 +89,13 @@ final class DashboardViewModel {
     /// the start of each refresh and after saving a new analysis snapshot.
     @MainActor private var _cachedScoreHistory: [(date: Date, score: Int)]?
 
+    /// Memoized baseline-drift insights. See the note at the compute site.
+    /// Observation-ignored: pure cache state, and writing it mid-refresh would
+    /// invalidate every view observing this model for no visible change.
+    @ObservationIgnored @MainActor private var _cachedDriftInsights: [Insight] = []
+    @ObservationIgnored @MainActor private var _driftInsightsComputedAt: Date?
+    private static let driftInsightsTTL: TimeInterval = 3600
+
     // MARK: - Nested @Observable Classes
 
     @Observable
@@ -916,14 +923,31 @@ final class DashboardViewModel {
             scoreHistory: scoreHistory,
             categoryScores: currentCategoryScores
         )
-        let baselineHistory = await MainActor.run { store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys)) }
         var extraInsights = trajectoryInsights
-        if !baselineHistory.isEmpty {
-            extraInsights.append(contentsOf: BaselineDriftDetector.generateInsights(
+        // Drift compares today against 30/90/180/365 days ago, and at most one
+        // snapshot row is written per day, so recomputing it more than hourly
+        // cannot change the answer. It is memoized because the uncached path
+        // decodes every stored snapshot's full baseline dictionary on the main
+        // actor, and this phase runs on every refresh, not on the heavy TTL.
+        let cachedDrift = await MainActor.run { () -> [Insight]? in
+            guard let computedAt = _driftInsightsComputedAt,
+                  Date().timeIntervalSince(computedAt) < Self.driftInsightsTTL else { return nil }
+            return _cachedDriftInsights
+        }
+        if let cachedDrift {
+            extraInsights.append(contentsOf: cachedDrift)
+        } else {
+            let baselineHistory = await MainActor.run { store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys)) }
+            let driftInsights = baselineHistory.isEmpty ? [] : BaselineDriftDetector.generateInsights(
                 currentBaselines: currentBaselines,
                 baselineHistory: baselineHistory,
                 correlations: currentCorrelations
-            ))
+            )
+            await MainActor.run {
+                _cachedDriftInsights = driftInsights
+                _driftInsightsComputedAt = Date()
+            }
+            extraInsights.append(contentsOf: driftInsights)
         }
         if !extraInsights.isEmpty {
             analysisEngine.insights.append(contentsOf: extraInsights)

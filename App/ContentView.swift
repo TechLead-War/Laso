@@ -23,9 +23,9 @@ struct ContentView: View {
 
     init(container: AppContainer) {
         self.container = container
-        _dashboardViewModel = State(wrappedValue: container.makeDashboardViewModel())
-        _liveViewModel = State(wrappedValue: container.makeLiveViewModel())
-        _webExportViewModel = State(wrappedValue: container.makeWebExportViewModel())
+        _dashboardViewModel = State(wrappedValue: container.dashboardViewModel)
+        _liveViewModel = State(wrappedValue: container.liveViewModel)
+        _webExportViewModel = State(wrappedValue: container.webExportViewModel)
 
         // App Store screenshot pre-positioning: if a launch flag asks to land on
         // a specific tab, honor it before the first render so the screenshot is
@@ -400,6 +400,7 @@ struct ContentView: View {
     @ViewBuilder
     private var settingsTabView: some View {
         SettingsView(
+            persistence: container.persistenceManager,
             webExportViewModel: webExportViewModel,
             deviceSourceManager: deviceSourceManager,
             healthKitManager: healthKitManager,

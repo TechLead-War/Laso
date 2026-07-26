@@ -31,13 +31,22 @@ struct HealthDataBatchWriter {
             totalChanged += result.changedSampleCount
         }
 
-        // Update sync metadata for all fetched metrics
+        // Update sync metadata for all fetched metrics. One unpredicated fetch of
+        // the whole table (72 rows at most, one per metric) instead of a predicated
+        // fetch per metric, which was up to 72 round trips on the main actor.
+        let metadataDescriptor = FetchDescriptor<StoredSyncMetadata>()
+        var metadataByMetric: [String: StoredSyncMetadata] = [:]
+        for row in (try? context.fetch(metadataDescriptor)) ?? [] {
+            metadataByMetric[row.metricRawValue] = row
+        }
+
         let metricsWithFetchedSamples = Set(newData.map { $0.0 })
         for metric in fetchedMetrics {
             upsertSyncMetadata(
                 for: metric,
                 context: context,
-                sampleDelta: metricsWithFetchedSamples.contains(metric) ? nil : 0
+                sampleDelta: metricsWithFetchedSamples.contains(metric) ? nil : 0,
+                existing: &metadataByMetric
             )
         }
 
@@ -147,29 +156,31 @@ struct HealthDataBatchWriter {
         return UpsertResult(insertedCount: insertedCount, updatedCount: updatedCount)
     }
 
+    /// `existing` is the caller's one-shot index of the metadata table. A newly
+    /// inserted row is written back into it so a repeated metric in the same batch
+    /// updates that row instead of inserting a duplicate.
     private static func upsertSyncMetadata(
         for metric: HealthMetric,
         context: ModelContext,
-        sampleDelta: Int?
+        sampleDelta: Int?,
+        existing: inout [String: StoredSyncMetadata]
     ) {
         let rawValue = metric.rawValue
-        let predicate = #Predicate<StoredSyncMetadata> { $0.metricRawValue == rawValue }
-        let descriptor = FetchDescriptor(predicate: predicate)
-        let existingMetadata = (try? context.fetch(descriptor))?.first
-
         let now = Date()
 
-        if let existing = existingMetadata {
-            existing.lastSyncDate = now
+        if let row = existing[rawValue] {
+            row.lastSyncDate = now
             if let sampleDelta {
-                existing.totalSamples = max(0, existing.totalSamples + sampleDelta)
+                row.totalSamples = max(0, row.totalSamples + sampleDelta)
             }
         } else {
-            context.insert(StoredSyncMetadata(
+            let row = StoredSyncMetadata(
                 metricRawValue: rawValue,
                 lastSyncDate: now,
                 totalSamples: 0
-            ))
+            )
+            context.insert(row)
+            existing[rawValue] = row
         }
     }
 }

@@ -183,32 +183,41 @@ final class GamificationEngine {
 
     // MARK: - Day Map Builders
 
-    /// Builds a dictionary mapping "yyyy-MM-dd" -> value for quick day lookups.
-    private func buildDayMap(from series: MetricTimeSeries?) -> [String: Double] {
+    /// UTC day number: days elapsed since 1970-01-01 UTC.
+    ///
+    /// This is the exact key the `"yyyy-MM-dd"` UTC formatter used to produce, so
+    /// streak boundaries are unchanged — but it costs one divide instead of an
+    /// ICU format on write and an ICU parse on every read back. The old scheme
+    /// forced every consumer to round-trip Date -> String -> Date, which was
+    /// thousands of formatter calls per recompute, on the main actor.
+    /// Being UTC, there is no daylight-saving case to handle.
+    private static func utcDay(_ date: Date) -> Int {
+        Int(floor(date.timeIntervalSince1970 / 86400))
+    }
+
+    private static func date(fromUTCDay day: Int) -> Date {
+        Date(timeIntervalSince1970: Double(day) * 86400)
+    }
+
+    /// Builds a dictionary mapping UTC day number -> value for quick day lookups.
+    private func buildDayMap(from series: MetricTimeSeries?) -> [Int: Double] {
         guard let samples = series?.samples else { return [:] }
-        let formatter = Self.dayFormatter
-        var map: [String: Double] = [:]
+        var map: [Int: Double] = [:]
+        map.reserveCapacity(samples.count)
         for sample in samples {
-            map[formatter.string(from: sample.date)] = sample.value
+            map[Self.utcDay(sample.date)] = sample.value
         }
         return map
     }
 
-    private func buildScoreDayMap(from scores: [(date: Date, score: Int)]) -> [String: Int] {
-        let formatter = Self.dayFormatter
-        var map: [String: Int] = [:]
+    private func buildScoreDayMap(from scores: [(date: Date, score: Int)]) -> [Int: Int] {
+        var map: [Int: Int] = [:]
+        map.reserveCapacity(scores.count)
         for entry in scores {
-            map[formatter.string(from: entry.date)] = entry.score
+            map[Self.utcDay(entry.date)] = entry.score
         }
         return map
     }
-
-    private static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
-        return f
-    }()
 
     /// Cached year-month formatter (UTC) for marathon-month detection.
     /// Avoids allocating a DateFormatter on every gamification recompute.
@@ -222,76 +231,43 @@ final class GamificationEngine {
     // MARK: - Streak Computation
 
     private func computeStreaks(
-        stepsByDay: [String: Double],
-        exerciseByDay: [String: Double],
-        sleepByDay: [String: Double],
-        scoresByDay: [String: Int],
+        stepsByDay: [Int: Double],
+        exerciseByDay: [Int: Double],
+        sleepByDay: [Int: Double],
+        scoresByDay: [Int: Int],
         today: Date,
         calendar: Calendar
     ) -> ActiveStreaks {
         var result = ActiveStreaks()
-        let formatter = Self.dayFormatter
 
-        // Walk backwards from today counting consecutive qualifying days
-        var activityCurrent = 0
-        var sleepCurrent = 0
-        var recoveryCurrent = 0
-        var masterCurrent = 0
-
-        var activityLongest = 0
-        var sleepLongest = 0
-        var recoveryLongest = 0
-        var masterLongest = 0
-
-        // First pass: current streaks (walk back from today)
-        for offset in 0..<3650 {
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { break }
-            let key = formatter.string(from: date)
-
-            let meetsActivity = meetsActivityGoal(steps: stepsByDay[key], exercise: exerciseByDay[key])
-            let meetsSleep = meetsSleepGoal(sleep: sleepByDay[key])
-            let meetsRecovery = meetsRecoveryGoal(score: scoresByDay[key])
-
-            if meetsActivity { activityCurrent += 1 } else if offset > 0 { break }
-            if meetsSleep { sleepCurrent += 1 }
-            if meetsRecovery { recoveryCurrent += 1 }
-
-            // Master streak requires all three on the same day
-            let meetsAll = meetsActivity && meetsSleep && meetsRecovery
-            if meetsAll { masterCurrent += 1 }
-
-            // Stop when none qualify (streak broken for all remaining)
-            if !meetsActivity && !meetsSleep && !meetsRecovery && offset > 0 { break }
-        }
-
-        // For sleep/recovery/master, we need a proper backward walk that stops at first miss
-        sleepCurrent = countConsecutiveStreak(from: today, calendar: calendar, formatter: formatter) { key in
+        // Current streaks: each one is a backward walk that stops at the first miss.
+        let sleepCurrent = countConsecutiveStreak(from: today, calendar: calendar) { key in
             meetsSleepGoal(sleep: sleepByDay[key])
         }
-        recoveryCurrent = countConsecutiveStreak(from: today, calendar: calendar, formatter: formatter) { key in
+        let recoveryCurrent = countConsecutiveStreak(from: today, calendar: calendar) { key in
             meetsRecoveryGoal(score: scoresByDay[key])
         }
-        activityCurrent = countConsecutiveStreak(from: today, calendar: calendar, formatter: formatter) { key in
+        let activityCurrent = countConsecutiveStreak(from: today, calendar: calendar) { key in
             meetsActivityGoal(steps: stepsByDay[key], exercise: exerciseByDay[key])
         }
-        masterCurrent = countConsecutiveStreak(from: today, calendar: calendar, formatter: formatter) { key in
+        let masterCurrent = countConsecutiveStreak(from: today, calendar: calendar) { key in
             let a = meetsActivityGoal(steps: stepsByDay[key], exercise: exerciseByDay[key])
             let s = meetsSleepGoal(sleep: sleepByDay[key])
             let r = meetsRecoveryGoal(score: scoresByDay[key])
             return a && s && r
         }
 
-        // Second pass: find longest historical streaks
-        activityLongest = findLongestStreak(dayMap: stepsByDay, exerciseMap: exerciseByDay, calendar: calendar) { steps, exercise in
+        // Longest historical streaks
+        let activityLongest = findLongestStreak(dayMap: stepsByDay, exerciseMap: exerciseByDay, calendar: calendar) { steps, exercise in
             meetsActivityGoal(steps: steps, exercise: exercise)
         }
-        sleepLongest = findLongestStreak(singleMap: sleepByDay, calendar: calendar) { value in
+        let sleepLongest = findLongestStreak(singleMap: sleepByDay, calendar: calendar) { value in
             value != nil && value! >= 7.0
         }
-        recoveryLongest = findLongestScoreStreak(scoresByDay: scoresByDay, calendar: calendar) { score in
+        let recoveryLongest = findLongestScoreStreak(scoresByDay: scoresByDay, calendar: calendar) { score in
             score != nil && score! > 75
         }
-        masterLongest = findLongestMasterStreak(
+        let masterLongest = findLongestMasterStreak(
             stepsByDay: stepsByDay,
             exerciseByDay: exerciseByDay,
             sleepByDay: sleepByDay,
@@ -316,17 +292,20 @@ final class GamificationEngine {
 
     // MARK: - Streak Helpers
 
+    /// Walks back one local calendar day at a time and keys each step by its UTC
+    /// day number — exactly the sequence the old `"yyyy-MM-dd"` UTC formatter
+    /// produced, minus the ICU format call per step. The local walk is kept
+    /// deliberately: switching to plain integer day arithmetic changes the result
+    /// across a daylight-saving transition, and streaks are user-visible state.
     private func countConsecutiveStreak(
         from today: Date,
         calendar: Calendar,
-        formatter: DateFormatter,
-        qualifies: (String) -> Bool
+        qualifies: (Int) -> Bool
     ) -> Int {
         var count = 0
         for offset in 0..<3650 {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { break }
-            let key = formatter.string(from: date)
-            if qualifies(key) {
+            if qualifies(Self.utcDay(date)) {
                 count += 1
             } else {
                 break
@@ -349,10 +328,9 @@ final class GamificationEngine {
         (score ?? 0) > 75
     }
 
-    private func sessionDaysCheckInStreak(scoresByDay: [String: Int], today: Date, calendar: Calendar) -> Int {
+    private func sessionDaysCheckInStreak(scoresByDay: [Int: Int], today: Date, calendar: Calendar) -> Int {
         // Check-in streak: consecutive days with a score entry (proxy for app usage)
-        let formatter = Self.dayFormatter
-        return countConsecutiveStreak(from: today, calendar: calendar, formatter: formatter) { key in
+        countConsecutiveStreak(from: today, calendar: calendar) { key in
             scoresByDay[key] != nil
         }
     }
@@ -360,23 +338,22 @@ final class GamificationEngine {
     // MARK: - Longest Streak Finders
 
     private func findLongestStreak(
-        dayMap: [String: Double],
-        exerciseMap: [String: Double],
+        dayMap: [Int: Double],
+        exerciseMap: [Int: Double],
         calendar: Calendar,
         qualifies: (Double?, Double?) -> Bool
     ) -> Int {
         let allKeys = Set(dayMap.keys).union(exerciseMap.keys)
         guard !allKeys.isEmpty else { return 0 }
 
-        let formatter = Self.dayFormatter
-        let dates = allKeys.compactMap { formatter.date(from: $0) }.sorted()
-        guard let first = dates.first, let last = dates.last else { return 0 }
+        guard let firstDay = allKeys.min(), let lastDay = allKeys.max() else { return 0 }
+        let lastDate = Self.date(fromUTCDay: lastDay)
 
         var longest = 0
         var current = 0
-        var date = first
-        while date <= last {
-            let key = formatter.string(from: date)
+        var date = Self.date(fromUTCDay: firstDay)
+        while date <= lastDate {
+            let key = Self.utcDay(date)
             if qualifies(dayMap[key], exerciseMap[key]) {
                 current += 1
                 longest = max(longest, current)
@@ -390,20 +367,19 @@ final class GamificationEngine {
     }
 
     private func findLongestStreak(
-        singleMap: [String: Double],
+        singleMap: [Int: Double],
         calendar: Calendar,
         qualifies: (Double?) -> Bool
     ) -> Int {
         guard !singleMap.isEmpty else { return 0 }
-        let formatter = Self.dayFormatter
-        let dates = singleMap.keys.compactMap { formatter.date(from: $0) }.sorted()
-        guard let first = dates.first, let last = dates.last else { return 0 }
+        guard let firstDay = singleMap.keys.min(), let lastDay = singleMap.keys.max() else { return 0 }
+        let lastDate = Self.date(fromUTCDay: lastDay)
 
         var longest = 0
         var current = 0
-        var date = first
-        while date <= last {
-            let key = formatter.string(from: date)
+        var date = Self.date(fromUTCDay: firstDay)
+        while date <= lastDate {
+            let key = Self.utcDay(date)
             if qualifies(singleMap[key]) {
                 current += 1
                 longest = max(longest, current)
@@ -417,20 +393,19 @@ final class GamificationEngine {
     }
 
     private func findLongestScoreStreak(
-        scoresByDay: [String: Int],
+        scoresByDay: [Int: Int],
         calendar: Calendar,
         qualifies: (Int?) -> Bool
     ) -> Int {
         guard !scoresByDay.isEmpty else { return 0 }
-        let formatter = Self.dayFormatter
-        let dates = scoresByDay.keys.compactMap { formatter.date(from: $0) }.sorted()
-        guard let first = dates.first, let last = dates.last else { return 0 }
+        guard let firstDay = scoresByDay.keys.min(), let lastDay = scoresByDay.keys.max() else { return 0 }
+        let lastDate = Self.date(fromUTCDay: lastDay)
 
         var longest = 0
         var current = 0
-        var date = first
-        while date <= last {
-            let key = formatter.string(from: date)
+        var date = Self.date(fromUTCDay: firstDay)
+        while date <= lastDate {
+            let key = Self.utcDay(date)
             if qualifies(scoresByDay[key]) {
                 current += 1
                 longest = max(longest, current)
@@ -443,15 +418,15 @@ final class GamificationEngine {
         return longest
     }
 
-    private func findLongestCheckInStreak(scoresByDay: [String: Int], calendar: Calendar) -> Int {
+    private func findLongestCheckInStreak(scoresByDay: [Int: Int], calendar: Calendar) -> Int {
         findLongestScoreStreak(scoresByDay: scoresByDay, calendar: calendar) { $0 != nil }
     }
 
     private func findLongestMasterStreak(
-        stepsByDay: [String: Double],
-        exerciseByDay: [String: Double],
-        sleepByDay: [String: Double],
-        scoresByDay: [String: Int],
+        stepsByDay: [Int: Double],
+        exerciseByDay: [Int: Double],
+        sleepByDay: [Int: Double],
+        scoresByDay: [Int: Int],
         calendar: Calendar
     ) -> Int {
         let allKeys = Set(stepsByDay.keys)
@@ -460,15 +435,14 @@ final class GamificationEngine {
             .union(scoresByDay.keys)
         guard !allKeys.isEmpty else { return 0 }
 
-        let formatter = Self.dayFormatter
-        let dates = allKeys.compactMap { formatter.date(from: $0) }.sorted()
-        guard let first = dates.first, let last = dates.last else { return 0 }
+        guard let firstDay = allKeys.min(), let lastDay = allKeys.max() else { return 0 }
+        let lastDate = Self.date(fromUTCDay: lastDay)
 
         var longest = 0
         var current = 0
-        var date = first
-        while date <= last {
-            let key = formatter.string(from: date)
+        var date = Self.date(fromUTCDay: firstDay)
+        while date <= lastDate {
+            let key = Self.utcDay(date)
             let a = meetsActivityGoal(steps: stepsByDay[key], exercise: exerciseByDay[key])
             let s = meetsSleepGoal(sleep: sleepByDay[key])
             let r = meetsRecoveryGoal(score: scoresByDay[key])
@@ -489,10 +463,10 @@ final class GamificationEngine {
     private func evaluateAchievements(
         sessionDays: Int,
         streaks: ActiveStreaks,
-        stepsByDay: [String: Double],
-        exerciseByDay: [String: Double],
-        sleepByDay: [String: Double],
-        scoresByDay: [String: Int],
+        stepsByDay: [Int: Double],
+        exerciseByDay: [Int: Double],
+        sleepByDay: [Int: Double],
+        scoresByDay: [Int: Int],
         allTimeSeries: [HealthMetric: MetricTimeSeries],
         calendar: Calendar,
         today: Date
@@ -526,10 +500,10 @@ final class GamificationEngine {
         let condition: (
             _ sessionDays: Int,
             _ streaks: ActiveStreaks,
-            _ stepsByDay: [String: Double],
-            _ exerciseByDay: [String: Double],
-            _ sleepByDay: [String: Double],
-            _ scoresByDay: [String: Int],
+            _ stepsByDay: [Int: Double],
+            _ exerciseByDay: [Int: Double],
+            _ sleepByDay: [Int: Double],
+            _ scoresByDay: [Int: Int],
             _ allTimeSeries: [HealthMetric: MetricTimeSeries],
             _ calendar: Calendar,
             _ today: Date
@@ -772,21 +746,21 @@ final class GamificationEngine {
     // MARK: - Achievement Condition Helpers
 
     /// Check if there are `required` consecutive days in `dayMap` meeting `threshold`.
-    private static func consecutiveDaysMeeting(dayMap: [String: Double], threshold: Double, required: Int) -> Bool {
-        let formatter = dayFormatter
-        let dates = dayMap.keys.compactMap { formatter.date(from: $0) }.sorted()
-        guard dates.count >= required else { return false }
+    private static func consecutiveDaysMeeting(dayMap: [Int: Double], threshold: Double, required: Int) -> Bool {
+        let days = dayMap.keys.sorted()
+        guard days.count >= required else { return false }
 
         var consecutive = 0
-        var previousDate: Date?
+        var previousDay: Int?
         let calendar = Date.cal
 
-        for date in dates {
-            let key = formatter.string(from: date)
-            let value = dayMap[key] ?? 0
+        for day in days {
+            let value = dayMap[day] ?? 0
 
-            if let prev = previousDate {
-                let daysBetween = calendar.dateComponents([.day], from: prev, to: date).day ?? 0
+            if let prev = previousDay {
+                let daysBetween = calendar.dateComponents(
+                    [.day], from: Self.date(fromUTCDay: prev), to: Self.date(fromUTCDay: day)
+                ).day ?? 0
                 if daysBetween == 1 && value >= threshold {
                     consecutive += 1
                 } else if value >= threshold {
@@ -799,14 +773,13 @@ final class GamificationEngine {
             }
 
             if consecutive >= required { return true }
-            previousDate = date
+            previousDay = day
         }
         return false
     }
 
     /// Check if any full calendar week (Mon-Sun) has all green scores (> 75).
-    private static func hasFullGreenWeek(scoresByDay: [String: Int], calendar: Calendar, today: Date) -> Bool {
-        let formatter = dayFormatter
+    private static func hasFullGreenWeek(scoresByDay: [Int: Int], calendar: Calendar, today: Date) -> Bool {
         let scoreSet = Set(scoresByDay.filter { $0.value > 75 }.keys)
 
         // Check last 52 weeks
@@ -821,7 +794,7 @@ final class GamificationEngine {
                     allGreen = false
                     break
                 }
-                if !scoreSet.contains(formatter.string(from: day)) {
+                if !scoreSet.contains(utcDay(day)) {
                     allGreen = false
                     break
                 }
@@ -832,27 +805,24 @@ final class GamificationEngine {
     }
 
     /// Check if any calendar month has total steps > 300K.
-    private static func hasMarathonMonth(stepsByDay: [String: Double]) -> Bool {
-        let formatter = dayFormatter
+    private static func hasMarathonMonth(stepsByDay: [Int: Double]) -> Bool {
         let monthFormatter = Self.monthFormatter
         // Group steps by year-month
         var monthlyTotals: [String: Double] = [:]
 
-        for (key, value) in stepsByDay {
-            guard let date = formatter.date(from: key) else { continue }
-            let monthKey = monthFormatter.string(from: date)
+        for (day, value) in stepsByDay {
+            let monthKey = monthFormatter.string(from: date(fromUTCDay: day))
             monthlyTotals[monthKey, default: 0] += value
         }
         return monthlyTotals.values.contains { $0 >= 300_000 }
     }
 
     /// Detect sleep improvement: a 14-day window averaging 7+ after a prior 14-day window averaging < 6.5.
-    private static func hasSleepImprovement(sleepByDay: [String: Double]) -> Bool {
-        let formatter = dayFormatter
-        let sorted = sleepByDay.keys.compactMap { key -> (Date, Double)? in
-            guard let date = formatter.date(from: key), let val = sleepByDay[key] else { return nil }
-            return (date, val)
-        }.sorted { $0.0 < $1.0 }
+    private static func hasSleepImprovement(sleepByDay: [Int: Double]) -> Bool {
+        let sorted = sleepByDay.keys.sorted().compactMap { key -> (Int, Double)? in
+            guard let val = sleepByDay[key] else { return nil }
+            return (key, val)
+        }
 
         guard sorted.count >= 28 else { return false }
 
@@ -872,12 +842,11 @@ final class GamificationEngine {
     }
 
     /// Check if scores stay within `maxSpread` points for `days` consecutive days.
-    private static func hasStableScoreRun(scoresByDay: [String: Int], days: Int, maxSpread: Int) -> Bool {
-        let formatter = dayFormatter
-        let sorted = scoresByDay.keys.compactMap { key -> (Date, Int)? in
-            guard let date = formatter.date(from: key), let val = scoresByDay[key] else { return nil }
-            return (date, val)
-        }.sorted { $0.0 < $1.0 }
+    private static func hasStableScoreRun(scoresByDay: [Int: Int], days: Int, maxSpread: Int) -> Bool {
+        let sorted = scoresByDay.keys.sorted().compactMap { key -> (Int, Int)? in
+            guard let val = scoresByDay[key] else { return nil }
+            return (key, val)
+        }
 
         guard sorted.count >= days else { return false }
 
@@ -889,7 +858,11 @@ final class GamificationEngine {
             // Verify consecutive days
             var isConsecutive = true
             for j in 1..<windowArray.count {
-                let gap = calendar.dateComponents([.day], from: windowArray[j - 1].0, to: windowArray[j].0).day ?? 0
+                let gap = calendar.dateComponents(
+                    [.day],
+                    from: Self.date(fromUTCDay: windowArray[j - 1].0),
+                    to: Self.date(fromUTCDay: windowArray[j].0)
+                ).day ?? 0
                 if gap != 1 {
                     isConsecutive = false
                     break

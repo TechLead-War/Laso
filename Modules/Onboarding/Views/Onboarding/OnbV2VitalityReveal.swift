@@ -47,9 +47,22 @@ private struct OrbCanvas: View {
     let tint: Color
     let tintBright: Color
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// 30 fps instead of the display's native rate. The draw loop allocates a
+    /// `Path` and a `Color` per particle and fills each one separately under
+    /// `.plusLighter`, so at 720 particles a native-rate tick is ~43k fills and
+    /// ~86k short-lived allocations per second on the main thread. Rotation is
+    /// 0.22 rad/s, slow enough that halving the tick rate is not visible.
+    private static let frameInterval: Double = 1.0 / 30.0
+
     var body: some View {
-        TimelineView(.animation) { tl in
-            Canvas { ctx, size in
+        // Reduce Motion gets one static frame, matching how the rest of the
+        // onboarding flow already honours the setting.
+        TimelineView(reduceMotion
+            ? .periodic(from: start, by: .greatestFiniteMagnitude)
+            : .periodic(from: start, by: Self.frameInterval)) { tl in
+            Canvas(opaque: false, colorMode: .linear, rendersAsynchronously: true) { ctx, size in
                 let now = tl.date
                 let t = now.timeIntervalSince(start)
                 let intro = min(1, t / 1.4)

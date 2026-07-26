@@ -78,32 +78,35 @@ final class AppContainer {
         )
     }
 
-    func makeDashboardViewModel() -> DashboardViewModel {
-        DashboardViewModel(
-            healthKitManager: healthKitManager,
-            analysisEngine: analysisEngine,
-            store: healthDataStore,
-            persistence: persistenceManager,
-            appStateStore: appStateStore,
-            intentCacheStore: intentCacheStore,
-            smartActionAdvisor: dashboardSmartActionAdvisor,
-            housekeepingService: dashboardHousekeepingService
-        )
-    }
+    // Long-lived, exactly like every other service above. They are `lazy` rather
+    // than built in `init` so nothing here runs before the container is ready.
+    //
+    // These used to be factory methods. `State(wrappedValue:)` takes a value, not
+    // an autoclosure, so `ContentView.init` built all three on every construction
+    // and SwiftUI discarded all but the first — and `ContentView` is reconstructed
+    // whenever `LasoApp`'s body re-evaluates, which `showSplash` alone guarantees
+    // at least once per launch. Each discarded `DashboardViewModel.init` still ran
+    // its scorer prewarm and a synchronous SwiftData write.
+    lazy var dashboardViewModel: DashboardViewModel = DashboardViewModel(
+        healthKitManager: healthKitManager,
+        analysisEngine: analysisEngine,
+        store: healthDataStore,
+        persistence: persistenceManager,
+        appStateStore: appStateStore,
+        intentCacheStore: intentCacheStore,
+        smartActionAdvisor: dashboardSmartActionAdvisor,
+        housekeepingService: dashboardHousekeepingService
+    )
 
-    func makeLiveViewModel() -> LiveViewModel {
-        LiveViewModel(
-            healthKitManager: healthKitManager,
-            readinessStore: readinessStore
-        )
-    }
+    lazy var liveViewModel: LiveViewModel = LiveViewModel(
+        healthKitManager: healthKitManager,
+        readinessStore: readinessStore
+    )
 
-    func makeWebExportViewModel() -> WebExportViewModel {
-        WebExportViewModel(
-            healthKitManager: healthKitManager,
-            analysisEngine: analysisEngine
-        )
-    }
+    lazy var webExportViewModel: WebExportViewModel = WebExportViewModel(
+        healthKitManager: healthKitManager,
+        analysisEngine: analysisEngine
+    )
 
     /// Seeds the in-memory stores with SampleDataProvider output so screenshot
     /// tests can exercise every data-dependent screen. Only runs when

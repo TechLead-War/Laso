@@ -183,6 +183,13 @@ final class MLOrchestrator {
             isRunning = false
             hasRunOnce = true
             lastPipelineCompletion = Date()
+            // Stamping this is what makes the 30-day gate below real. Without it
+            // `needsFullRetrain` collapses to `hasRunOnce`, so the GBDT scorer and
+            // the pattern miner full-retrained on every pipeline run for the rest
+            // of the process instead of once.
+            if componentsRunCount > 0 {
+                lastFullRetrain = Date()
+            }
             // Record completion time for BackgroundRefreshCoordinator incremental skip logic
             UserDefaults.standard.set(Date(), forKey: "lastMLPipelineCompletion")
             if componentsRunCount > 0 {
