@@ -135,6 +135,7 @@
 		4B3C5E787F8549F148E30B39 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D3ED642BDDD09B3C456AE95F /* FirebaseAnalytics */; };
 		4B773F9C735552245456F7FF /* Copy+Policy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2691A6C92314B1678FECFAEE /* Copy+Policy.swift */; };
 		4C30D582082F9E66CB5E66E1 /* ClinicalIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */; };
+		4C357F2518307C5D539A95E9 /* RegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F3EF7A987ECE8E28373C79 /* RegressionTests.swift */; };
 		4DC1BEE6A23D830F01B45179 /* Copy+StressMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E41714304771021F932CA6C /* Copy+StressMonitor.swift */; };
 		4E27E107C793A5F4E7DFB0DF /* WatchCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */; };
 		4EBC16B1DE144526BA2D2102 /* Copy+CategoryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B03925296E89BF5307979F /* Copy+CategoryDetail.swift */; };
@@ -462,6 +463,13 @@
 			remoteGlobalIDString = 2131E0565430F53E4EC2F615;
 			remoteInfo = LasoWidgets;
 		};
+		41D25247C51B576965B83E04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08AD24A007F4503B8999A065;
+			remoteInfo = Laso;
+		};
 		ADBCAD5F3B66B6E557B42044 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
@@ -619,6 +627,7 @@
 		368FC2819DDF1775D1DCEF84 /* BackgroundRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefreshCoordinator.swift; sourceTree = "<group>"; };
 		36A650A85671846F162958D4 /* DecisionPolicyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionPolicyEngine.swift; sourceTree = "<group>"; };
 		3742B8C9E0215B86F3844543 /* LockedInsightsCTA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedInsightsCTA.swift; sourceTree = "<group>"; };
+		37F3EF7A987ECE8E28373C79 /* RegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegressionTests.swift; sourceTree = "<group>"; };
 		389D4EF2B1C07CC3283E66F0 /* LiveSleepSummaryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSleepSummaryBuilder.swift; sourceTree = "<group>"; };
 		38F517E99828FB741CA291EE /* Copy+MetricDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+MetricDetail.swift"; sourceTree = "<group>"; };
 		39B09FA7D8667FCB502B1850 /* HealthKitQueryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitQueryBuilder.swift; sourceTree = "<group>"; };
@@ -727,6 +736,7 @@
 		7645C33E2BC23C63E1F1BF07 /* ConnectedDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDevicesView.swift; sourceTree = "<group>"; };
 		77717BE0C826ED4BCC307EB5 /* InsightAnalyzerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightAnalyzerProtocol.swift; sourceTree = "<group>"; };
 		77AF23C7F3838851A71205F9 /* Copy+Referral.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Referral.swift"; sourceTree = "<group>"; };
+		77E281ECD7431A2D718F182D /* LasoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnbV2VitalityReveal.swift; sourceTree = "<group>"; };
 		78D0A7A8A5CE97B2C4468D86 /* RulesConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesConfiguration.swift; sourceTree = "<group>"; };
 		794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
@@ -1065,6 +1075,14 @@
 				2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */,
 			);
 			path = LasoUITests;
+			sourceTree = "<group>";
+		};
+		10E335CB2A1EC93FFBDE7284 /* LasoTests */ = {
+			isa = PBXGroup;
+			children = (
+				37F3EF7A987ECE8E28373C79 /* RegressionTests.swift */,
+			);
+			path = LasoTests;
 			sourceTree = "<group>";
 		};
 		1378C2BDE03C2BBE4D993A19 /* LasoWatch */ = {
@@ -1796,6 +1814,7 @@
 			isa = PBXGroup;
 			children = (
 				2E6A79C6A57A85AF78D95A7B /* Laso.app */,
+				77E281ECD7431A2D718F182D /* LasoTests.xctest */,
 				DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */,
 				4C62BC8962C09E3FE0A0037E /* LasoWatch.app */,
 				50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */,
@@ -2215,6 +2234,7 @@
 				53CCE31CF6A15F16DA081F2E /* Common */,
 				A8E5CFB21D057A5EF7F1E794 /* Core */,
 				E539D755BFE39275A3539FF3 /* HealthPulse */,
+				10E335CB2A1EC93FFBDE7284 /* LasoTests */,
 				0FBA80065D66CD82E801C536 /* LasoUITests */,
 				1378C2BDE03C2BBE4D993A19 /* LasoWatch */,
 				45C06879F59FECF3BC0B45E3 /* LasoWatchWidgets */,
@@ -2323,6 +2343,24 @@
 			productReference = DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		12B932B2BF8CDB1A1FD8B93A /* LasoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E8C8B22EB7067F634C033355 /* Build configuration list for PBXNativeTarget "LasoTests" */;
+			buildPhases = (
+				39E8FD838C2191978C923F0E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				82361986CE7BAA3B3244CB2A /* PBXTargetDependency */,
+			);
+			name = LasoTests;
+			packageProductDependencies = (
+			);
+			productName = LasoTests;
+			productReference = 77E281ECD7431A2D718F182D /* LasoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		1B53013A9579B763C5987AD2 /* LasoWatch */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5B4FE24D89D52C267887814E /* Build configuration list for PBXNativeTarget "LasoWatch" */;
@@ -2405,6 +2443,10 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
+					12B932B2BF8CDB1A1FD8B93A = {
+						DevelopmentTeam = S2MAH8X8JM;
+						ProvisioningStyle = Automatic;
+					};
 					1B53013A9579B763C5987AD2 = {
 						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
@@ -2455,6 +2497,7 @@
 			projectRoot = "";
 			targets = (
 				08AD24A007F4503B8999A065 /* Laso */,
+				12B932B2BF8CDB1A1FD8B93A /* LasoTests */,
 				1029A915F9487DD209F51551 /* LasoUITests */,
 				1B53013A9579B763C5987AD2 /* LasoWatch */,
 				352EFC7934409A0E2B4A5ACE /* LasoWatchWidgets */,
@@ -2925,6 +2968,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		39E8FD838C2191978C923F0E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C357F2518307C5D539A95E9 /* RegressionTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6501C3250FFD532234200DF0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -3002,6 +3053,11 @@
 			target = 08AD24A007F4503B8999A065 /* Laso */;
 			targetProxy = ADBCAD5F3B66B6E557B42044 /* PBXContainerItemProxy */;
 		};
+		82361986CE7BAA3B3244CB2A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08AD24A007F4503B8999A065 /* Laso */;
+			targetProxy = 41D25247C51B576965B83E04 /* PBXContainerItemProxy */;
+		};
 		CFBBAB9A1FBC3AEE01AC94A7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1B53013A9579B763C5987AD2 /* LasoWatch */;
@@ -3044,7 +3100,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 72;
+				CURRENT_PROJECT_VERSION = 73;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3063,7 +3119,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.64;
+				MARKETING_VERSION = 1.2.65;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3133,7 +3189,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 72;
+				CURRENT_PROJECT_VERSION = 73;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3146,7 +3202,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.64;
+				MARKETING_VERSION = 1.2.65;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3225,6 +3281,26 @@
 			};
 			name = Debug;
 		};
+		9B204EBD0BFCFCC564F4AED8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.tests;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Laso.app/Laso";
+			};
+			name = Release;
+		};
 		AF7E6A89BE631A98060D09BA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3289,6 +3365,26 @@
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
+		};
+		CE676A797BB79EA0EF988FC8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.tests;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Laso.app/Laso";
+			};
+			name = Debug;
 		};
 		D457DF5FE824707DC93F05F3 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -3402,6 +3498,15 @@
 			buildConfigurations = (
 				C4B0687E9656928E47C105B6 /* Debug */,
 				C601C56AB6790E4BC76EB7A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E8C8B22EB7067F634C033355 /* Build configuration list for PBXNativeTarget "LasoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE676A797BB79EA0EF988FC8 /* Debug */,
+				9B204EBD0BFCFCC564F4AED8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

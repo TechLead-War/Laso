@@ -29,6 +29,20 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "12B932B2BF8CDB1A1FD8B93A"
+               BuildableName = "LasoTests.xctest"
+               BlueprintName = "LasoTests"
+               ReferencedContainer = "container:Laso.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "1029A915F9487DD209F51551"
                BuildableName = "LasoUITests.xctest"
                BlueprintName = "LasoUITests"
@@ -95,6 +109,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "12B932B2BF8CDB1A1FD8B93A"
+               BuildableName = "LasoTests.xctest"
+               BlueprintName = "LasoTests"
+               ReferencedContainer = "container:Laso.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
          <TestableReference
             skipped = "NO"
             parallelizable = "NO">

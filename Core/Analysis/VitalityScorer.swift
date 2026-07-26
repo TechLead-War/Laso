@@ -8,7 +8,10 @@ import Observation
 /// norms but no specific source DOIs are linked; treat outputs as
 /// informational signals only, not clinical measurements.
 /// Each table maps age -> expected median value for that age group.
-private enum VitalityNorms {
+/// Module internal rather than file private so the reference tables can be tested
+/// directly. The clamp at the youngest row silently made every metric report the
+/// same age difference in a shipped build, which a test would have caught.
+enum VitalityNorms {
 
     /// VO2 Max norms (mL/kg/min) by age. combined sex average.
     static let vo2Max: [(age: Int, value: Double)] = [

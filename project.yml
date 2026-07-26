@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.64"
-    CURRENT_PROJECT_VERSION: "72"
+    MARKETING_VERSION: "1.2.65"
+    CURRENT_PROJECT_VERSION: "73"
 
 packages:
   Firebase:
@@ -162,6 +162,26 @@ targets:
         com.apple.BackgroundModes:
           enabled: true
 
+  # Unit tests. Separate from LasoUITests because these need no simulator UI and
+  # run in seconds, so they can guard logic that a UI test would never reach.
+  LasoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LasoTests
+    dependencies:
+      - target: Laso
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.tests
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: S2MAH8X8JM
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Laso.app/Laso
+        BUNDLE_LOADER: $(TEST_HOST)
+        SWIFT_EMIT_LOC_STRINGS: "NO"
+        GENERATE_INFOPLIST_FILE: "YES"
+        TARGETED_DEVICE_FAMILY: "1"
+
   LasoUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -295,11 +315,13 @@ schemes:
         LasoWidgets: [build]
         LasoWatch: [build]
         LasoWatchWidgets: [build]
+        LasoTests: [test]
         LasoUITests: [test]
     run:
       storeKitConfiguration: Laso.storekit
     test:
       targets:
+        - LasoTests
         - LasoUITests
 
   LasoWidgets:
