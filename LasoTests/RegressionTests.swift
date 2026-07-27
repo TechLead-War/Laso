@@ -662,6 +662,7 @@ struct RegressionTests {
         #expect((7.5).hoursAsClock == Copy.Common.durationHoursMinutes(7, 30))
     }
 
+
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(
             candidate: candidate(actionType: actionType),

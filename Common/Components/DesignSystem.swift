@@ -205,17 +205,31 @@ extension View {
     /// Tinted card — colored background, matching stroke, and subtle shadow.
     func cardStyle(tint: Color) -> some View {
         self
-            .background(tint.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background {
+                RoundedRectangle(cornerRadius: DS.cardRadius)
+                    .fill(tint.opacity(DS.tintBg))
+                    .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity),
+                            radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
+            }
             .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(tint.opacity(DS.strokeAlpha), lineWidth: 1.0))
-            .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity), radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
     }
 
     /// Neutral card — system background, subtle stroke, and shadow.
+    ///
+    /// The shadow hangs on the background SHAPE, not on the card as a whole. As a
+    /// whole-view modifier it forced every card to rasterize offscreen and blur
+    /// its entire contents each frame: the Biology month calendar, 31 day dials
+    /// inside one card, measured 883 ms to rasterize that way. The silhouette is
+    /// identical either way because the background is opaque.
     func cardStyle() -> some View {
         self
-            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background {
+                RoundedRectangle(cornerRadius: DS.cardRadius)
+                    .fill(.background)
+                    .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity),
+                            radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
+            }
             .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(.primary.opacity(0.10), lineWidth: 1.0))
-            .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity), radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
     }
 }
 

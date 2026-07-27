@@ -77,12 +77,17 @@ private struct MetricTileView: View {
             }
             .frame(width: 96)
             .padding(.vertical, 10)
-            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            // Shadow on the shape, not on the tile. Six tiles each blurring their
+            // whole contents offscreen measured 170 ms to rasterize the strip.
+            .background {
+                RoundedRectangle(cornerRadius: DS.cardRadius)
+                    .fill(AppColour.surfaceRaised)
+                    .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+            }
             .overlay(
                 RoundedRectangle(cornerRadius: DS.cardRadius)
                     .strokeBorder(tile.color.opacity(DS.strokeAlpha), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
