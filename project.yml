@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.79"
-    CURRENT_PROJECT_VERSION: "87"
+    MARKETING_VERSION: "1.2.80"
+    CURRENT_PROJECT_VERSION: "88"
 
 packages:
   Firebase:
@@ -112,6 +112,10 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit
+        # Xcode 16 splits a Debug build into a stub plus Laso.debug.dylib. The
+        # stub cannot launch without that dylib, so tapping the icon on a device
+        # crashes inside dyld before main runs. Build one whole binary instead.
+        ENABLE_DEBUG_DYLIB: "NO"
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
