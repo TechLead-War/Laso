@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.73"
-    CURRENT_PROJECT_VERSION: "81"
+    MARKETING_VERSION: "1.2.74"
+    CURRENT_PROJECT_VERSION: "82"
 
 packages:
   Firebase:

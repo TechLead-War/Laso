@@ -8,9 +8,7 @@ private struct CachedParticle: Sendable {
     let y: CGFloat
     let alpha: Double
     let size: CGFloat
-    let r: Double
-    let g: Double
-    let b: Double
+    let isCyan: Bool
 }
 
 /// Pre-computed geometry for a single animation frame — paths, scalars, positions.
@@ -63,11 +61,17 @@ struct AskDataOrbView: View {
     let size: CGFloat
     @State private var thermalManager = ThermalManager.shared
     @State private var cache: FrameCache?
+    @State private var isVisible = false
 
     /// 180 frames at 30 fps = 6 seconds of real-time animation before the loop wraps.
     private nonisolated static let cacheFrameCount = 180
     /// Duration of the loop in t-space (t = elapsed * 0.4, so 2.4 t ≈ 6 s real).
     private nonisolated static let cacheLoopDuration: Double = 2.4
+    /// The only two tints across every shell particle, from the web original's neon
+    /// palette (sRGB 0-255: 0,113,227 and 6,182,212). Held here so the draw loop can
+    /// resolve them once per frame instead of per particle.
+    private nonisolated static let shellTintBlue = Color(.sRGB, red: 0, green: 113 / 255, blue: 227 / 255, opacity: 1)
+    private nonisolated static let shellTintCyan = Color(.sRGB, red: 6 / 255, green: 182 / 255, blue: 212 / 255, opacity: 1)
 
     init(size: CGFloat = 200) {
         self.size = size
@@ -78,19 +82,22 @@ struct AskDataOrbView: View {
             if thermalManager.shouldThrottle {
                 staticOrb
             } else if let cache {
-                TimelineView(.periodic(from: .now, by: frameInterval)) { timeline in
+                // This screen stays alive under anything pushed or presented over it,
+                // so an unpaused tick keeps rendering an orb nobody can see.
+                TimelineView(.animation(minimumInterval: frameInterval, paused: !isVisible)) { timeline in
                     let t = timeline.date.timeIntervalSinceReferenceDate * 0.4
                     Canvas(opaque: false, colorMode: .linear, rendersAsynchronously: true) { ctx, canvasSize in
                         renderCached(ctx: ctx, size: canvasSize, time: t, cache: cache)
                     }
                 }
-                .drawingGroup()
             } else {
                 staticOrb
             }
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .task(id: size) {
             cache = await Self.buildCache(size: size)
         }
@@ -279,9 +286,17 @@ struct AskDataOrbView: View {
         var shell = ctx
         shell.blendMode = .plusLighter
 
+        // 1,920 particles share two tints and differ only in alpha, so both shadings
+        // are resolved once rather than building a Color per fill. plusLighter works
+        // on a premultiplied source, so carrying the alpha on the context lands on
+        // the same pixels as baking it into the color.
+        let blue = shell.resolve(.color(Self.shellTintBlue))
+        let cyan = shell.resolve(.color(Self.shellTintCyan))
+
         for p in frame.particles {
             let rect = Path(CGRect(x: p.x - p.size / 2, y: p.y - p.size / 2, width: p.size, height: p.size))
-            shell.fill(rect, with: .color(rgba(p.r, p.g, p.b, p.alpha)))
+            shell.opacity = p.alpha
+            shell.fill(rect, with: p.isCyan ? cyan : blue)
         }
     }
 
@@ -476,12 +491,12 @@ struct AskDataOrbView: View {
         struct ShellConfig {
             let base: Double, spread: Double, ribs: Int, points: Int
             let offset: Double, alpha: Double, size: Double, speed: Double, spin: Double
-            let r: Double, g: Double, b: Double
+            let isCyan: Bool
         }
 
         let shells: [ShellConfig] = [
-            ShellConfig(base: R * 1.35, spread: R * 0.08, ribs: 12, points: 100, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, r: 0, g: 113, b: 227),
-            ShellConfig(base: R * 1.3, spread: R * 0.064, ribs: 8, points: 90, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, r: 6, g: 182, b: 212),
+            ShellConfig(base: R * 1.35, spread: R * 0.08, ribs: 12, points: 100, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, isCyan: false),
+            ShellConfig(base: R * 1.3, spread: R * 0.064, ribs: 8, points: 90, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, isCyan: true),
         ]
 
         func outerRadius(a: Double, phase: Double, base: Double, spread: Double) -> Double {
@@ -518,7 +533,7 @@ struct AskDataOrbView: View {
                     particles.append(CachedParticle(
                         x: CGFloat(x), y: CGFloat(y),
                         alpha: alpha, size: CGFloat(sz),
-                        r: s.r, g: s.g, b: s.b
+                        isCyan: s.isCyan
                     ))
                 }
             }

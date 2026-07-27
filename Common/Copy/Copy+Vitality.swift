@@ -102,9 +102,6 @@ extension Copy {
 
         // MARK: - Chart Accessibility (VitalityTrendSection)
 
-        static func chartPointAccessibilityValue(age: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_chart_point_accessibility_value", default: "Vitality age %d years"), age)
-        }
         static func chartAccessibilityLabel(dayCount: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_chart_accessibility_label", default: "Vitality age trend over last %d days"), dayCount)
         }

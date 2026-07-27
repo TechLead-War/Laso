@@ -49,11 +49,11 @@ private struct OrbCanvas: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// 30 fps instead of the display's native rate. The draw loop allocates a
-    /// `Path` and a `Color` per particle and fills each one separately under
-    /// `.plusLighter`, so at 720 particles a native-rate tick is ~43k fills and
-    /// ~86k short-lived allocations per second on the main thread. Rotation is
-    /// 0.22 rad/s, slow enough that halving the tick rate is not visible.
+    /// 30 fps instead of the display's native rate. Per-particle alpha rules out
+    /// batching, so the loop still fills each of the 720 particles separately under
+    /// `.plusLighter` and a native-rate tick would be ~43k fills per second on the
+    /// main thread. Rotation is 0.22 rad/s, slow enough that halving the tick rate
+    /// is not visible.
     private static let frameInterval: Double = 1.0 / 30.0
 
     var body: some View {
@@ -80,7 +80,15 @@ private struct OrbCanvas: View {
                 let ay = t * 0.22, tilt = -0.32
                 let cay = cos(ay), say = sin(ay), ctt = cos(tilt), stt = sin(tilt)
 
-                ctx.blendMode = .plusLighter
+                // Only two tints exist across the 720 particles and they differ only
+                // in alpha, so both shadings are resolved once rather than building a
+                // Color per fill. plusLighter works on a premultiplied source, so
+                // carrying the alpha on the context lands on the same pixels as
+                // baking it into the color.
+                var dots = ctx
+                dots.blendMode = .plusLighter
+                let base = dots.resolve(.color(tint))
+                let bright = dots.resolve(.color(tintBright))
                 for p in particles {
                     let x = p.x * cay + p.z * say
                     let z = -p.x * say + p.z * cay
@@ -95,11 +103,10 @@ private struct OrbCanvas: View {
                     var a = p.alpha * tw * (0.34 + 0.85 * depth) * intro * (1 + flare * 1.1)
                     if a > 1 { a = 1 }
                     let rect = CGRect(x: sx - sz / 2, y: sy - sz / 2, width: sz, height: sz)
-                    let col = p.white ? tintBright : tint
-                    ctx.fill(Path(ellipseIn: rect), with: .color(col.opacity(a)))
+                    dots.opacity = a
+                    dots.fill(Path(ellipseIn: rect), with: p.white ? bright : base)
                 }
 
-                ctx.blendMode = .normal
                 let rw = reff * 1.02 * bx, rh = reff * 1.02 * by
                 let rimRect = CGRect(x: cx - rw, y: cy - rh, width: 2 * rw, height: 2 * rh)
                 ctx.stroke(Path(ellipseIn: rimRect),

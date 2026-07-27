@@ -3,6 +3,9 @@ import SwiftUI
 struct OrganicParticleOrbView: View {
     let phase: CGFloat
     let tint: Color
+    /// True while the orb is off screen or the app is not active. Both loops here
+    /// drive the display link every frame, so they must stop when nobody sees them.
+    let paused: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var glowPulse = false
@@ -11,16 +14,17 @@ struct OrganicParticleOrbView: View {
     private static let fullParticles: [ParticleSeed] = makeParticles(count: 160)
     private static let reducedParticles: [ParticleSeed] = makeParticles(count: 80)
 
+    /// Midpoint of the old 16 to 24 pulse. An animated shadow radius cannot be
+    /// cached, so the whole orb is re-blurred every frame; a fixed radius is
+    /// rasterised once and only the colour keeps animating.
+    private static let glowShadowRadius: CGFloat = 20
+
     private var effectiveParticles: [ParticleSeed] {
         if reduceMotion { return [] }
         if thermalManager.shouldReduceVisualEffects {
             return Self.reducedParticles
         }
         return Self.fullParticles
-    }
-
-    private var animationPaused: Bool {
-        reduceMotion || thermalManager.shouldThrottle
     }
 
     var body: some View {
@@ -57,7 +61,7 @@ struct OrganicParticleOrbView: View {
         OrbParticleCanvas(
             tint: tint,
             particles: effectiveParticles,
-            paused: animationPaused,
+            paused: paused,
             frameRate: thermalManager.maxFrameRate
         )
         .overlay(
@@ -70,10 +74,18 @@ struct OrganicParticleOrbView: View {
                 .blur(radius: 14)
                 .blendMode(BlendMode.screen)
         )
-        .shadow(color: tint.opacity(glowPulse ? 0.5 : 0.3), radius: glowPulse ? 24 : 16, y: 4)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-                glowPulse = true
+        .shadow(color: tint.opacity(glowPulse ? 0.5 : 0.3), radius: Self.glowShadowRadius, y: 4)
+        .onChange(of: paused, initial: true) { _, isPaused in
+            if isPaused {
+                // A repeatForever animation only ends when its value is written
+                // outside an animation.
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { glowPulse = false }
+            } else {
+                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                    glowPulse = true
+                }
             }
         }
     }

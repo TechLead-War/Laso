@@ -7,6 +7,11 @@ struct VitalityTrendSection: View {
     private var paceTint: Color { vitalityPaceTint(for: scorer) }
 
     @State private var selectedTrendDate: Date?
+    @State private var isScrubbing = false
+
+    /// A scroll view claims a pan at roughly 10pt, so scrubbing has to engage just
+    /// under that to stay instant without stealing a vertical page scroll.
+    private static let scrubMinimumDrag: CGFloat = 8
 
     private var selectedTrendPoint: (date: Date, age: Int)? {
         guard let selectedTrendDate, !scorer.history.isEmpty else { return nil }
@@ -16,6 +21,10 @@ struct VitalityTrendSection: View {
     }
 
     var body: some View {
+        // Resolved once: each read scans the whole history, and a scrub rebuilds
+        // this body on every frame.
+        let selected = selectedTrendPoint
+
         VStack(alignment: .leading, spacing: 10) {
             vitalitySectionHeader(icon: "chart.xyaxis.line", title: Copy.Vitality.ninetyDayTrend)
 
@@ -42,10 +51,6 @@ struct VitalityTrendSection: View {
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(historyLineColor)
                         .lineStyle(StrokeStyle(lineWidth: 2.5))
-                        // Per-mark VoiceOver readout so users can
-                        // navigate each daily vitality-age point.
-                        .accessibilityLabel(Text(point.date.formatted(date: .abbreviated, time: .omitted)))
-                        .accessibilityValue(Text(Copy.Vitality.chartPointAccessibilityValue(age: point.age)))
                     }
 
                     if let latest = scorer.history.last {
@@ -57,7 +62,7 @@ struct VitalityTrendSection: View {
                         .foregroundStyle(historyLineColor)
                     }
 
-                    if let selected = selectedTrendPoint {
+                    if let selected {
                         RuleMark(x: .value("Selected", selected.date))
                             .foregroundStyle(historyLineColor.opacity(0.4))
                             .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
@@ -110,15 +115,21 @@ struct VitalityTrendSection: View {
                             .fill(Color.clear)
                             .contentShape(Rectangle())
                             .gesture(
-                                DragGesture(minimumDistance: 0)
+                                DragGesture(minimumDistance: Self.scrubMinimumDrag)
                                     .onChanged { value in
+                                        // This chart sits in a scrolling page, so it only
+                                        // takes the touch once the finger is clearly moving
+                                        // sideways, and keeps it for the rest of the drag.
+                                        guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
                                         guard let plotFrame = proxy.plotFrame else { return }
+                                        isScrubbing = true
                                         let origin = geometry[plotFrame].origin
                                         let x = value.location.x - origin.x
                                         if let date: Date = proxy.value(atX: x) {
                                             selectedTrendDate = date
                                         }
                                     }
+                                    .onEnded { _ in isScrubbing = false }
                             )
                             .onTapGesture { location in
                                 guard let plotFrame = proxy.plotFrame else { return }
@@ -136,7 +147,7 @@ struct VitalityTrendSection: View {
                     }
                 }
                 .overlay(alignment: .topLeading) {
-                    if let selected = selectedTrendPoint {
+                    if let selected {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(selected.date, format: .dateTime.month(.abbreviated).day().year())
                                 .font(.caption2)
@@ -163,7 +174,7 @@ struct VitalityTrendSection: View {
                         .padding(DS.space1)
                     }
                 }
-                .sensoryFeedback(.selection, trigger: selectedTrendPoint?.date)
+                .sensoryFeedback(.selection, trigger: selected?.date)
 
                 HStack(spacing: 0) {
                     trendStat(title: Copy.Vitality.ninetyDayChange, value: historyChangeText, color: historyChangeColor)

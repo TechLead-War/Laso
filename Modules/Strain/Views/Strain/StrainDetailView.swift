@@ -75,6 +75,12 @@ struct StrainDetailView: View {
     @State private var animatedProgress: Double = 0
     @State private var showLearnMore = false
     @State private var selectedHistoryDate: Date?
+    /// Latches once the drag is claimed as a scrub, so a curving finger keeps
+    /// scrubbing instead of handing the touch back to the page scroll.
+    @State private var isScrubbing = false
+
+    /// Matches `MetricChartView`: below this the touch belongs to the page scroll.
+    private static let scrubMinimumDrag: CGFloat = 8
 
     private var selectedHistoryPoint: DailyStrainPoint? {
         guard let selectedHistoryDate, !weekHistory.isEmpty else { return nil }
@@ -348,8 +354,14 @@ struct StrainDetailView: View {
                             .fill(Color.clear)
                             .contentShape(Rectangle())
                             .gesture(
-                                DragGesture(minimumDistance: 0)
+                                DragGesture(minimumDistance: Self.scrubMinimumDrag)
                                     .onChanged { value in
+                                        // The chart fills the width of a scrolling page, so it
+                                        // only takes over once the finger is clearly moving
+                                        // sideways. Once scrubbing it keeps the touch, however
+                                        // the finger drifts.
+                                        guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
+                                        isScrubbing = true
                                         guard let plotFrame = proxy.plotFrame else { return }
                                         let origin = geometry[plotFrame].origin
                                         let x = value.location.x - origin.x
@@ -357,6 +369,7 @@ struct StrainDetailView: View {
                                             selectedHistoryDate = date
                                         }
                                     }
+                                    .onEnded { _ in isScrubbing = false }
                             )
                             .onTapGesture { location in
                                 guard let plotFrame = proxy.plotFrame else { return }

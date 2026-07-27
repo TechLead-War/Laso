@@ -324,6 +324,7 @@ struct RegressionTests {
     }
 
 
+
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(
             candidate: candidate(actionType: actionType),

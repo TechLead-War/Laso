@@ -3,6 +3,7 @@ import SwiftUI
 struct VitalityHeroSection: View {
     let scorer: VitalityScorer
     let orbPhase: CGFloat
+    let orbPaused: Bool
 
     private var paceTint: Color { vitalityPaceTint(for: scorer) }
 
@@ -16,7 +17,7 @@ struct VitalityHeroSection: View {
                 let chipOffsetX = (containerW - chipW) / 2 - 4
 
                 ZStack {
-                    OrganicParticleOrbView(phase: orbPhase, tint: paceTint)
+                    OrganicParticleOrbView(phase: orbPhase, tint: paceTint, paused: orbPaused)
                         .frame(width: orbW, height: orbH)
 
                     VStack(spacing: 6) {

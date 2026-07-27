@@ -18,6 +18,10 @@ struct MetricChartView: View {
     @State private var selectedDate: Date?
     @State private var isDragging = false
 
+    /// A scroll view claims a pan at roughly 10pt, so scrubbing has to engage just
+    /// under that to still feel instant without stealing a vertical page scroll.
+    private static let scrubMinimumDrag: CGFloat = 8
+
     init(
         samples: [MetricSample],
         metric: HealthMetric,
@@ -98,10 +102,6 @@ struct MetricChartView: View {
                 .foregroundStyle(color.gradient)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 .interpolationMethod(.catmullRom)
-                // Per-mark VoiceOver labels so users can navigate
-                // each data point in the chart by date and value.
-                .accessibilityLabel(Text(sample.date.formatted(date: .abbreviated, time: .omitted)))
-                .accessibilityValue(Text(Copy.Common.sampleValueWithUnit(formattedValue(sample.value), metric.unit)))
 
                 AreaMark(
                     x: .value("Date", sample.date),
@@ -229,8 +229,12 @@ struct MetricChartView: View {
                     .fill(Color.clear)
                     .contentShape(Rectangle())
                     .gesture(
-                        DragGesture(minimumDistance: 0)
+                        DragGesture(minimumDistance: Self.scrubMinimumDrag)
                             .onChanged { value in
+                                // The chart fills the width of a scrolling page, so it only
+                                // takes over once the finger is clearly moving sideways.
+                                // Once scrubbing it keeps the touch, however the finger drifts.
+                                guard isDragging || abs(value.translation.width) > abs(value.translation.height) else { return }
                                 if !isDragging {
                                     AppAnalytics.shared.trackChartInteraction(
                                         metric: metric.rawValue,
@@ -249,6 +253,9 @@ struct MetricChartView: View {
                                 }
                             }
                             .onEnded { _ in
+                                // A drag that was left to the page scroll never sent a
+                                // drag_start, so it must not send a drag_end either.
+                                guard isDragging else { return }
                                 isDragging = false
                                 AppAnalytics.shared.trackChartInteraction(
                                     metric: metric.rawValue,

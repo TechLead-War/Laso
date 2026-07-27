@@ -4,12 +4,20 @@ struct VitalityDetailView: View {
     let scorer: VitalityScorer
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var orbPhase: CGFloat = 0
+    @State private var isOnScreen = false
+
+    /// The blob shape re-solves 81 points of trig on every frame this animation
+    /// runs, so it may only run while the screen is actually in front of the user.
+    /// `.inactive` is deliberately still animating: the screen stays visible behind
+    /// system overlays, and stopping there would dim the glow in front of the user.
+    private var orbAnimating: Bool { isOnScreen && scenePhase != .background }
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                VitalityHeroSection(scorer: scorer, orbPhase: orbPhase)
+                VitalityHeroSection(scorer: scorer, orbPhase: orbPhase, orbPaused: !orbAnimating)
 
                 if !scorer.isFullyMature {
                     VitalityDataMaturityBanner(scorer: scorer)
@@ -45,13 +53,25 @@ struct VitalityDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.vitalityDetail)
+            isOnScreen = true
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.vitalityDetail)
+            isOnScreen = false
+        }
+        .onChange(of: orbAnimating) { _, animating in
+            guard animating else {
+                // A repeatForever animation only ends when its value is written
+                // outside an animation.
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { orbPhase = 0 }
+                return
+            }
             guard !reduceMotion else { return }
             withAnimation(.linear(duration: 18).repeatForever(autoreverses: false)) {
                 orbPhase = .pi * 2
             }
-        }
-        .onDisappear {
-            AppAnalytics.shared.trackFeatureClose(.vitalityDetail)
         }
     }
 }

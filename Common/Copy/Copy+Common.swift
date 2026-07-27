@@ -166,7 +166,6 @@ extension Copy {
         // MARK: - Lifted interpolated view literals
         static func activeText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_active_text", default: "%d active"), p0) }
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_text", default: "%d"), p0) }
-        static func sampleValueWithUnit(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_sample_value_with_unit", default: "%@ %@"), p0, p1) }
         static func metricsLabel(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_metrics_label", default: "%d metrics %@"), p0, p1) }
         static func xText2(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_text2", default: "%@ %@"), p0, p1) }
         static func intentReadinessScoreText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_intent_readiness_score_text", default: "%d"), p0) }
