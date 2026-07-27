@@ -27,8 +27,13 @@ struct StressMonitorView: View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
                 if hasData {
+                    // One spine, same order on every detail screen: the score,
+                    // the two numbers it is built from, one plain sentence, the
+                    // shape of the period, then the comparison. Actions come
+                    // after understanding, never before it.
                     heroGauge
-                    driverSection
+                    driverTiles
+                    readingSentence
                     weeklyChartSection
                     weeklyComparison
                     tipsSection
@@ -124,18 +129,23 @@ struct StressMonitorView: View {
             Text(Copy.StressMonitor.scaleAndDirection)
                 .font(DS.Typography.caption2Medium)
                 .foregroundStyle(.tertiary)
-
-            // Context line. what this state means + what to do. Full width, no truncation.
-            Text(contextSubtitle)
-                .font(DS.Typography.subheadline)
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, DS.space2)
         }
         .padding(DS.cardPadding)
         .cardStyle(tint: levelColor)
+    }
+
+    // MARK: - Reading Sentence
+
+    /// The only prose on the screen. Everything else is a number with a label,
+    /// so a person can scan the page and still land on one plain takeaway.
+    private var readingSentence: some View {
+        Text(contextSubtitle)
+            .font(DS.Typography.subheadline)
+            .foregroundStyle(.primary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DS.cardPadding)
+            .cardStyle()
     }
 
     private func arcSegment(from startFraction: Double, to endFraction: Double, color: Color) -> some View {
@@ -201,28 +211,48 @@ struct StressMonitorView: View {
 
     // MARK: - Stress Drivers
 
-    private var driverSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text(Copy.StressMonitor.whatsDrivingStress)
-                .font(DS.Typography.headline)
-
-            DriverRowView(
+    /// The two readings the score is built from, side by side under the dial.
+    /// A bar filling to an unlabelled end never said how far from normal the
+    /// reading actually was; a percentage of the person's own baseline does.
+    private var driverTiles: some View {
+        HStack(spacing: DS.itemSpacing) {
+            driverTile(
                 label: Copy.StressMonitor.hrvDeviation,
                 icon: "waveform.path.ecg",
-                value: hrvDeviation,
-                color: driverColor(hrvDeviation)
+                fraction: hrvDeviation
             )
-
-            DriverRowView(
+            driverTile(
                 label: Copy.StressMonitor.hrElevation,
                 icon: "heart.fill",
-                value: hrElevation,
-                color: driverColor(hrElevation)
+                fraction: hrElevation
             )
+        }
+    }
+
+    private func driverTile(label: String, icon: String, fraction: Double) -> some View {
+        let tint = driverColor(fraction)
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(tint)
+                Text(label)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            Text(Copy.StressMonitor.driverOffUsual(Int((fraction * 100).rounded())))
+                .font(DS.Typography.title3)
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .postHogMask()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
+        .accessibilityElement(children: .combine)
     }
 
     private func driverColor(_ value: Double) -> Color {

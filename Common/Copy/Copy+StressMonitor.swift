@@ -37,7 +37,11 @@ extension Copy {
 
         // MARK: - Drivers
 
-        static var whatsDrivingStress: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_whats_driving_stress", default: "What Is Driving Your Stress") }
+        /// Driver tile value. The fraction is a departure from the person's
+        /// own baseline, so it reads as a gap, never as an absolute reading.
+        static func driverOffUsual(_ pct: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_driver_off_usual", default: "%d%% off usual"), pct)
+        }
         static var hrvDeviation: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_hrv_deviation", default: "Heart Rate Variability") }
         static var hrElevation: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_hr_elevation", default: "Heart Rate") }
 
