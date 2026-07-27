@@ -60,15 +60,11 @@ struct ShareButton: View {
                 category: category
             ))
             cardTypeLabel = "insight"
-        case .rings(let vitalityAge, let realAge, let recovery, let sleepSeconds, let photo):
-            cardView = AnyView(ShareableRingsCard(
-                vitalityAge: vitalityAge,
-                realAge: realAge,
-                recovery: recovery,
-                sleepSeconds: sleepSeconds,
-                photo: photo
-            ))
-            cardTypeLabel = "rings"
+        case .template(let template, let photo):
+            cardView = AnyView(ShareableTemplateCard(template: template, photo: photo))
+            // Per-template label so Amplitude separates which win actually gets
+            // posted, not just that a photo card was shared.
+            cardTypeLabel = "template_\(template.kind.rawValue)"
         }
 
         AppAnalytics.shared.trackBlockTap(

@@ -345,7 +345,7 @@ final class DecisionPolicyEngine {
         let currentValue = timeSeries[metric]?.latestValue
 
         let title = generateTitle(candidate: candidate, baseline: baseline, currentValue: currentValue)
-        let description = generateDescription(candidate: candidate, baseline: baseline, trend: trend, currentValue: currentValue)
+        let description = generateDescription(candidate: candidate, baseline: baseline, currentValue: currentValue)
         let whyMatters = generateWhyMatters(candidate: candidate, trend: trend, currentValue: currentValue, baseline: baseline)
         let expectedBenefit = generateExpectedBenefit(candidate: candidate, baseline: baseline, unit: unit, trend: trend)
 
@@ -523,184 +523,58 @@ final class DecisionPolicyEngine {
 
     // MARK: - Description Generation
 
+    /// One sentence: where the target metric sits against the user's own usual.
+    /// Trend, model confidence and source detail are deliberately left out —
+    /// `generateWhyMatters` and `generateExpectedBenefit` already carry those to
+    /// the detail screen, and stacking all three onto the card printed the same
+    /// week-over-week number twice in one paragraph.
     private func generateDescription(
         candidate: InterventionCandidate,
         baseline: UserBaseline?,
-        trend: TrendAnalyzer.TrendResult?,
         currentValue: Double? = nil
     ) -> String {
+        guard let bl = baseline else { return "" }
         let metric = candidate.targetMetric
-        var parts: [String] = []
+        let name = metric.displayName.lowercased()
+        let evidence = candidate.evidence
 
-        // Lead with current state vs baseline. use actual numbers
-        if let bl = baseline {
-            let evidence = candidate.evidence
-            if let historical = evidence.historicalResponseMean, evidence.historicalResponseCount >= 3 {
-                let direction = metric.higherIsBetter
-                    ? (historical > 0 ? "improved" : "declined")
-                    : (historical < 0 ? "improved" : "increased")
-                parts.append(
-                    "When you've taken similar action before, your \(metric.displayName.lowercased())"
-                    + " \(direction) by \(metric.formatValue(abs(historical))) \(metric.unit)"
-                    + " on average (\(evidence.historicalResponseCount) observations)."
-                )
-            } else if let current = currentValue {
-                let dev = bl.deviationPercent(for: current)
-                let absDevPct = Int(abs(dev))
-                if absDevPct >= 5 {
-                    let dir = dev < 0 ? "below" : "above"
-                    parts.append(
-                        "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit)"
-                        + ". \(absDevPct)% \(dir) your personal baseline of \(metric.formatValue(bl.mean)) \(metric.unit)."
-                    )
-                } else {
-                    parts.append(
-                        "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit)"
-                        + " (near your \(metric.formatValue(bl.mean)) \(metric.unit) baseline)."
-                    )
-                }
-            } else {
-                parts.append(
-                    "Your \(metric.displayName.lowercased()) baseline is"
-                    + " \(metric.formatValue(bl.mean)) \(metric.unit)."
-                )
-            }
-        }
-
-        // Add trend context with actual numbers
-        if let trend, trend.direction == .declining {
-            let wowAbs = Int(abs(trend.weekOverWeekChange))
-            if wowAbs > 8 {
-                parts.append(
-                    "It has dropped \(wowAbs)% this week alone. the decline is accelerating."
-                )
-            } else if wowAbs > 2 {
-                parts.append(
-                    "It's been drifting down \(wowAbs)% week-over-week."
-                )
-            }
-        } else if let trend, trend.direction == .improving {
-            let wowAbs = Int(abs(trend.weekOverWeekChange))
-            if wowAbs > 5 {
-                parts.append(
-                    "The positive trend (\(wowAbs)% up this week) makes now a good time to build on momentum."
-                )
-            }
-        }
-
-        // Source-specific detail. use actual evidence values
-        switch candidate.source {
-        case .predictiveModel:
-            let factors = candidate.evidence.contributingFeatures.prefix(2)
-            if !factors.isEmpty {
-                let factorNames = factors.map { f in
-                    let featureDesc: String
-                    switch f.featureType {
-                    case .roc: featureDesc = "\(f.metric.displayName) rate of change"
-                    case .vol7: featureDesc = "\(f.metric.displayName) volatility"
-                    case .devBaseline: featureDesc = "\(f.metric.displayName) baseline deviation"
-                    default: featureDesc = f.metric.displayName
-                    }
-                    return featureDesc.lowercased()
-                }
-                let prob = Int(candidate.upliftConfidence * 100)
-                parts.append(
-                    "Tomorrow's risk model (\(prob)% confidence) identified \(factorNames.joined(separator: " and "))"
-                    + " as the top drivers. this action targets the most impactful one."
-                )
-            } else {
-                parts.append(
-                    "Tomorrow's risk model flagged this as the highest-leverage action"
-                    + " (\(Int(candidate.upliftConfidence * 100))% confidence)."
-                )
-            }
-
-        case .causalDiscovery:
-            let pValue = candidate.evidence.grangerPValue ?? 1.0
-            let effectSize = candidate.evidence.grangerEffectSize ?? 0
-            let lag = candidate.evidence.grangerOptimalLag
-            if pValue < 0.05 {
-                var causalDetail = "Causal analysis shows changes in \(metric.displayName.lowercased())"
-                    + " reliably predict downstream health outcomes"
-                if let lag, lag > 0 {
-                    causalDetail += " \(lag) day\(lag == 1 ? "" : "s") later"
-                }
-                if effectSize > 0.15 {
-                    causalDetail += " (strong effect size: f²=\(String(format: "%.2f", effectSize)))"
-                } else if effectSize > 0.02 {
-                    causalDetail += " (moderate effect)"
-                }
-                parts.append(causalDetail + ".")
-            }
-
-        case .stateTransition:
-            let stateName = candidate.evidence.contributingFeatures.isEmpty
-                ? "a suboptimal state"
-                : "your current health state"
-            parts.append(
-                "You've been in \(stateName) for \(max(1, Int(candidate.upliftConfidence / 0.03))) days."
-                + " Improving \(metric.displayName.lowercased()) is the key differentiator"
-                + " to shift toward a healthier operating mode."
+        if let historical = evidence.historicalResponseMean, evidence.historicalResponseCount >= 3 {
+            let improved = metric.higherIsBetter ? historical > 0 : historical < 0
+            return Copy.Policy.reasonHistorical(
+                metric: name,
+                direction: improved ? Copy.Policy.reasonWentUp : Copy.Policy.reasonWentDown,
+                amount: metric.formatValue(abs(historical)),
+                unit: metric.unit,
+                days: evidence.historicalResponseCount
             )
-
-        case .anomalyResponse:
-            if let current = currentValue, let bl = baseline {
-                let devPct = Int(abs(bl.deviationPercent(for: current)))
-                parts.append(
-                    "Your \(metric.displayName.lowercased()) (\(metric.formatValue(current)) \(metric.unit))"
-                    + " is \(devPct)% outside your normal range."
-                    + " Addressing it now prevents cascading effects on sleep and recovery."
-                )
-            } else {
-                parts.append(
-                    "Your recent reading is unusual compared to your personal history."
-                    + " This action helps bring it back to your normal range."
-                )
-            }
-
-        case .trendReversal:
-            if let trend {
-                let wowPct = Int(abs(trend.weekOverWeekChange))
-                let inflectionNote = trend.inflection == .accelerating
-                    ? " and the decline is accelerating" : ""
-                parts.append(
-                    "Your \(metric.displayName.lowercased()) is down \(wowPct)% week-over-week\(inflectionNote)."
-                    + " Intervening now is easier than reversing a deeper decline."
-                )
-            }
-
-        case .circadianTiming:
-            parts.append(
-                "Your circadian data shows this is your optimal window."
-                + " Aligning with your biological rhythm multiplies the benefit."
-            )
-
-        case .baselineRecovery:
-            if let current = currentValue, let bl = baseline {
-                let devPct = Int(abs(bl.deviationPercent(for: current)))
-                let gap = metric.formatValue(abs(current - bl.mean))
-                parts.append(
-                    "You're \(gap) \(metric.unit) (\(devPct)%) away from your personal baseline."
-                    + " Closing this gap is the fastest path to feeling the difference."
-                )
-            } else {
-                parts.append(
-                    "You're significantly below your personal baseline."
-                    + " This action focuses on recovering to your normal level."
-                )
-            }
-
-        case .counterfactual:
-            if let delta = candidate.evidence.forecastedScoreDelta {
-                let direction = delta > 0 ? "improve" : "change"
-                parts.append(
-                    "Counterfactual analysis estimates this could \(direction)"
-                    + " your overall score by \(Int(abs(delta))) points tomorrow."
-                )
-            }
         }
 
-        return parts.joined(separator: " ")
+        guard let current = currentValue else {
+            return Copy.Policy.reasonUsualOnly(
+                metric: name,
+                baseline: metric.formatValue(bl.mean),
+                unit: metric.unit
+            )
+        }
+
+        let deviation = bl.deviationPercent(for: current)
+        let deviationPct = Int(abs(deviation))
+        guard deviationPct >= 5 else {
+            return Copy.Policy.reasonNearUsual(
+                metric: name,
+                value: metric.formatValue(current),
+                unit: metric.unit
+            )
+        }
+
+        return Copy.Policy.reasonOffUsual(
+            metric: name,
+            value: metric.formatValue(current),
+            unit: metric.unit,
+            pct: deviationPct,
+            direction: deviation < 0 ? Copy.Policy.reasonBelow : Copy.Policy.reasonAbove,
+            baseline: metric.formatValue(bl.mean)
+        )
     }
 
     // MARK: - Why It Matters

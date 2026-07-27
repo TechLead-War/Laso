@@ -123,5 +123,29 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_policy_counterfactual_with_delta", default: "What-if check: making this change could move your overall score by %d points tomorrow. That's the biggest boost one step can give."), delta)
         }
         static var counterfactualDefault: String { RemoteConfigManager.shared.copyString("copy_policy_counterfactual_default", default: "A what-if check shows this is the one change most likely to lift your overall score tomorrow.") }
+
+        // MARK: - Card Reason
+        //
+        // One sentence under the Next Up action: where the metric sits against
+        // the user's own usual. Trend, model confidence and source detail stay
+        // on the detail screen, so the card never states the same number twice.
+
+        static var reasonAbove: String { RemoteConfigManager.shared.copyString("copy_policy_reason_above", default: "above") }
+        static var reasonBelow: String { RemoteConfigManager.shared.copyString("copy_policy_reason_below", default: "below") }
+        static var reasonWentUp: String { RemoteConfigManager.shared.copyString("copy_policy_reason_went_up", default: "went up") }
+        static var reasonWentDown: String { RemoteConfigManager.shared.copyString("copy_policy_reason_went_down", default: "went down") }
+
+        static func reasonHistorical(metric: String, direction: String, amount: String, unit: String, days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_reason_historical", default: "Last time you did this, your %1$@ %2$@ by %3$@ %4$@ across %5$d days."), metric, direction, amount, unit, days)
+        }
+        static func reasonOffUsual(metric: String, value: String, unit: String, pct: Int, direction: String, baseline: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_reason_off_usual", default: "Your %1$@ is %2$@ %3$@, %4$d%% %5$@ your usual %6$@."), metric, value, unit, pct, direction, baseline)
+        }
+        static func reasonNearUsual(metric: String, value: String, unit: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_reason_near_usual", default: "Your %1$@ is %2$@ %3$@, right around your usual."), metric, value, unit)
+        }
+        static func reasonUsualOnly(metric: String, baseline: String, unit: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_reason_usual_only", default: "Your usual %1$@ is %2$@ %3$@."), metric, baseline, unit)
+        }
     }
 }

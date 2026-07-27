@@ -135,6 +135,8 @@ struct RecoveryHeroCard: View {
                 }
             }
 
+            missingSignalsRow
+
             // Plain-word takeaway kept as a footer so it is never dropped.
             if !summaryHead.isEmpty || !summarySub.isEmpty {
                 Divider()
@@ -196,18 +198,69 @@ struct RecoveryHeroCard: View {
         .contentShape(Rectangle())
     }
 
+    private var signalsWithData: Int {
+        whyReasons.filter { $0.tone != .noData }.count
+    }
+
     /// How much of the score is real readings today. Counted off the rows the
     /// card is already showing, so the number can never drift from the list.
+    ///
+    /// The bar carries the weight the sentence alone could not: a score built on
+    /// one signal used to render exactly as confidently as one built on five.
     @ViewBuilder
     private var confidenceRow: some View {
         if !whyReasons.isEmpty {
-            Text(Copy.Home.scoreConfidence(whyReasons.filter { $0.tone != .noData }.count, whyReasons.count))
+            let fraction = Double(signalsWithData) / Double(whyReasons.count)
+            VStack(spacing: 5) {
+                Text(Copy.Home.scoreConfidence(signalsWithData, whyReasons.count))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(AppColour.textTertiary.opacity(0.22))
+                        Capsule()
+                            .fill(certaintyTint(fraction))
+                            .frame(width: max(4, geo.size.width * fraction))
+                    }
+                }
+                .frame(height: 4)
+                .accessibilityHidden(true)   // the sentence above already says it
+            }
+        }
+    }
+
+    private func certaintyTint(_ fraction: Double) -> Color {
+        if fraction >= 0.8 { return AppColour.success }
+        if fraction >= 0.4 { return AppColour.warning }
+        return AppColour.danger
+    }
+
+    /// Names the signals with no reading and the one thing that fixes them.
+    /// Silent when every signal reported, so a full read carries no clutter.
+    @ViewBuilder
+    private var missingSignalsRow: some View {
+        let missing = whyReasons.filter { $0.tone == .noData }.map(\.kind.displayName)
+        if !missing.isEmpty {
+            Text(Copy.Home.scoreMissingSignals(Self.sentenceList(missing)))
                 .font(DS.Typography.caption)
                 .foregroundStyle(AppColour.textTertiary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 10)
+                .accessibilityIdentifier("home.recoveryCard.missingSignals")
         }
+    }
+
+    /// "Sleep, heart and stress" — the final joiner differs so the line reads as
+    /// a sentence rather than a machine list.
+    private static func sentenceList(_ items: [String]) -> String {
+        guard items.count > 1 else { return items.first ?? "" }
+        let head = items.dropLast().joined(separator: Copy.Home.scoreListJoiner)
+        return head + Copy.Home.scoreListFinalJoiner + (items.last ?? "")
     }
 
     /// Yesterday comparison. Up, down and flat each read differently; a missing

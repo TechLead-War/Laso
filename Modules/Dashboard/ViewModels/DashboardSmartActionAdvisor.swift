@@ -18,6 +18,9 @@ struct DashboardSmartActionAdvisor {
         let restingHeartRateBaselineMean: Double?
         let userFocuses: Set<HealthFocus>
         let topInsights: [Insight]
+        /// A rest context the user switched on, e.g. injured or unwell. Nil when
+        /// none is active.
+        var restContext: LifeContextStore.Context?
     }
 
     struct Recommendation: Equatable {
@@ -27,6 +30,9 @@ struct DashboardSmartActionAdvisor {
         var source: String = "context_rules"
         /// Why we chose this specific action. shown on the detail page
         var rationale: String = ""
+        /// What the user gets from doing it, shown as a chip under the reason.
+        /// Empty for the rule-based sources, which have no forecast behind them.
+        var expectedBenefit: String = ""
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.icon == rhs.icon && lhs.title == rhs.title &&
@@ -38,6 +44,19 @@ struct DashboardSmartActionAdvisor {
         live: LiveSnapshot,
         analysis: AnalysisSnapshot
     ) -> Recommendation {
+        // 0. A rest context the user set beats every signal below it. The body
+        // data cannot see a sprained ankle, so without this a strong recovery
+        // score tells an injured person to push harder.
+        if let rest = analysis.restContext {
+            return Recommendation(
+                icon: rest.systemImage,
+                title: Copy.Home.contextRestTitle,
+                subtitle: Copy.Home.contextRestSubtitle(rest.displayName.lowercasedFirst),
+                source: "life_context",
+                rationale: Copy.Home.contextRestRationale(rest.displayName.lowercasedFirst)
+            )
+        }
+
         // 1. ML policy engine. highest quality, fully personalized
         if let r = recommendFromPolicyEngine(analysis: analysis) { return r }
 
@@ -76,12 +95,17 @@ struct DashboardSmartActionAdvisor {
     private func recommendFromPolicyEngine(analysis: AnalysisSnapshot) -> Recommendation? {
         guard let decision = analysis.policyDecision,
               decision.decisionConfidence >= 0.3 else { return nil }
+        // The headline is the action itself, not `decision.prescriptiveHeadline`:
+        // that string comes from the recovery state bucket, so it could announce
+        // strong recovery while the sentence below reported a metric 91% below
+        // baseline. Card title and card reason now describe the same thing.
         return Recommendation(
             icon: icon(for: decision.primaryAction.candidate.actionType),
-            title: decision.prescriptiveHeadline,
+            title: actionTitle(for: decision.primaryAction.candidate.actionType),
             subtitle: decision.primaryAction.description,
             source: "policy_engine",
-            rationale: decision.primaryAction.whyItMatters
+            rationale: decision.primaryAction.whyItMatters,
+            expectedBenefit: decision.primaryAction.expectedBenefit
         )
     }
 
@@ -251,6 +275,30 @@ struct DashboardSmartActionAdvisor {
         }
 
         return nil
+    }
+
+    /// Verb-first headline for a policy action, so the card reads as one thing
+    /// to do and the Mark done button has something to mark.
+    private func actionTitle(for type: InterventionCandidate.ActionType) -> String {
+        switch type {
+        case .sleepEarlier:         return Copy.Home.SmartAction.doSleepEarlier
+        case .sleepLater:           return Copy.Home.SmartAction.doSleepLater
+        case .extendSleep:          return Copy.Home.SmartAction.doExtendSleep
+        case .reduceScreenTime:     return Copy.Home.SmartAction.doReduceScreenTime
+        case .reduceEvening:        return Copy.Home.SmartAction.doReduceEvening
+        case .activeRecovery:       return Copy.Home.SmartAction.doActiveRecovery
+        case .intensifyExercise:    return Copy.Home.SmartAction.doIntensifyExercise
+        case .reduceExercise:       return Copy.Home.SmartAction.doReduceExercise
+        case .shiftCaffeineTiming:  return Copy.Home.SmartAction.doShiftCaffeineTiming
+        case .reduceCaffeine:       return Copy.Home.SmartAction.doReduceCaffeine
+        case .breathingSession:     return Copy.Home.SmartAction.doBreathingSession
+        case .meditation:           return Copy.Home.SmartAction.doMeditation
+        case .adjustMealTiming:     return Copy.Home.SmartAction.doAdjustMealTiming
+        case .hydration:            return Copy.Home.SmartAction.doHydration
+        case .increaseSteps:        return Copy.Home.SmartAction.doIncreaseSteps
+        case .reduceSteps:          return Copy.Home.SmartAction.doReduceSteps
+        case .napRecommendation:    return Copy.Home.SmartAction.doNap
+        }
     }
 
     private func icon(for type: InterventionCandidate.ActionType) -> String {

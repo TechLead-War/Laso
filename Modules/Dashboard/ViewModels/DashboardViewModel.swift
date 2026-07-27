@@ -29,6 +29,9 @@ final class DashboardViewModel {
     private let appStateStore: AppStateStore
     private let intentCacheStore: IntentCacheStore
     private let smartActionAdvisor: DashboardSmartActionAdvisor
+    /// What the user told us is going on. Read on every action rebuild, so
+    /// turning a chip on changes today's card immediately.
+    let lifeContextStore: LifeContextStore
     private let housekeepingService: DashboardHousekeepingService
     private let derivedStateBuilder: DashboardDerivedStateBuilder
 
@@ -243,6 +246,16 @@ final class DashboardViewModel {
             case .red: AppColour.scorePoor
             }
         }
+
+        /// One word for the band, so a score can be read without knowing the
+        /// thresholds. Used wherever a number appears without its ring.
+        var plainName: String {
+            switch self {
+            case .green: Copy.Home.stateNameGood
+            case .yellow: Copy.Home.stateNameSteady
+            case .red: Copy.Home.stateNameLow
+            }
+        }
     }
 
     // MARK: - Convenience accessors (kept for backward compat with internal methods)
@@ -403,8 +416,10 @@ final class DashboardViewModel {
         intentCacheStore: IntentCacheStore = IntentCacheStore(),
         smartActionAdvisor: DashboardSmartActionAdvisor = DashboardSmartActionAdvisor(),
         housekeepingService: DashboardHousekeepingService,
-        derivedStateBuilder: DashboardDerivedStateBuilder = DashboardDerivedStateBuilder()
+        derivedStateBuilder: DashboardDerivedStateBuilder = DashboardDerivedStateBuilder(),
+        lifeContextStore: LifeContextStore = LifeContextStore()
     ) {
+        self.lifeContextStore = lifeContextStore
         self.persistence = persistence
         self.appStateStore = appStateStore
         self.intentCacheStore = intentCacheStore
@@ -1476,6 +1491,18 @@ final class DashboardViewModel {
         return all.filter { $0.date >= cutoff }
     }
 
+    /// One score per calendar day for the month calendar, keyed by start of day.
+    /// A day with two snapshots keeps the later one, which is the day's settled
+    /// score rather than a partial morning read.
+    @MainActor
+    func dailyScoresByDay(days: Int) -> [Date: Int] {
+        var byDay: [Date: Int] = [:]
+        for entry in scoreHistoryCached(days: days) where entry.score > 0 {
+            byDay[Date.cal.startOfDay(for: entry.date)] = entry.score
+        }
+        return byDay
+    }
+
     /// Clears the cached score history so the next access re-fetches from the store.
     @MainActor
     private func invalidateScoreHistoryCache() {
@@ -1768,7 +1795,8 @@ final class DashboardViewModel {
                 policyDecision: analysisEngine.mlOrchestrator.policyDecision,
                 restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
                 userFocuses: insights.cachedHealthFocuses,
-                topInsights: rotatedInsights
+                topInsights: rotatedInsights,
+                restContext: activeRestContext
             )
         )
 
@@ -1781,7 +1809,8 @@ final class DashboardViewModel {
             source: recommendation.source,
             rationale: recommendation.rationale,
             supportingInsights: Array(sortedInsights.prefix(2)),
-            proofSummary: proofSummary
+            proofSummary: proofSummary,
+            expectedBenefit: recommendation.expectedBenefit
         )
 
         _cachedDailyAction = action
@@ -2018,6 +2047,8 @@ final class DashboardViewModel {
         var supportingInsights: [Insight] = []
         /// Full proof summary for the detail view
         var proofSummary: RecommendationEvaluator.ActionProofSummary?
+        /// What doing this is forecast to change. Empty for rule-based actions.
+        var expectedBenefit: String = ""
     }
 
     /// Snapshot of the three core recovery signals for the Today's Action detail view.
@@ -2097,7 +2128,7 @@ final class DashboardViewModel {
             let dev = abs(hrv - base) / base
             candidates.append((.init(kind: .heart,
                 label: calm ? Copy.Home.whyHeartCalm : Copy.Home.whyHeartWorking,
-                value: calm ? Copy.Home.whyHeartGoodValue : Copy.Home.whyHeartHighValue,
+                value: Self.gapToUsual(current: hrv, baseline: base, unit: HealthMetric.heartRateVariability.unit),
                 tone: calm ? .good : .concern), dev * 1.2))
         }
 
@@ -2107,7 +2138,7 @@ final class DashboardViewModel {
             let dev = abs(rhr - base) / base
             candidates.append((.init(kind: .restingHR,
                 label: up ? Copy.Home.whyRhrUp : Copy.Home.whyRhrCalm,
-                value: up ? Copy.Home.whyRhrValueUp : Copy.Home.whyRhrValueCalm,
+                value: Self.gapToUsual(current: rhr, baseline: base, unit: HealthMetric.restingHeartRate.unit),
                 tone: up ? .concern : .good), dev * 1.1))
         }
 
@@ -2146,6 +2177,54 @@ final class DashboardViewModel {
             .filter { !readKinds.contains($0) }
             .map { RecoveryWhyReason.noData(kind: $0) }
         return withReading + missing
+    }
+
+    /// How many of the last N days actually produced a reading for one signal.
+    struct SignalCoverage: Identifiable, Equatable {
+        let metric: HealthMetric
+        let daysWithData: Int
+        let window: Int
+        var id: HealthMetric { metric }
+        var isMissing: Bool { daysWithData == 0 }
+    }
+
+    /// Coverage for the signals the readiness score is built from. Counted off
+    /// the same in-memory series the score uses, so the card can never claim
+    /// data the score did not have.
+    @MainActor
+    func signalCoverage(window: Int = 14) -> [SignalCoverage] {
+        let signals: [HealthMetric] = [.sleepDuration, .heartRateVariability, .restingHeartRate, .steps, .bloodOxygen]
+        let cutoff = Date.cal.date(byAdding: .day, value: -window, to: Date.cal.startOfDay(for: Date())) ?? Date()
+
+        return signals.map { metric in
+            let days = Set(
+                (healthKitManager.timeSeries[metric]?.samples ?? [])
+                    .filter { $0.date >= cutoff }
+                    .map { Date.cal.startOfDay(for: $0.date) }
+            ).count
+            return SignalCoverage(metric: metric, daysWithData: days, window: window)
+        }
+    }
+
+    /// The rest context in force today, if any. Expired chips are pruned first
+    /// so a context the user set two weeks ago cannot still be suppressing
+    /// advice today.
+    private var activeRestContext: LifeContextStore.Context? {
+        lifeContextStore.pruneExpired()
+        return lifeContextStore.active.first { $0.requiresRest }
+    }
+
+    /// The gap between today's reading and the person's own usual, in their own
+    /// unit. A row that said only "Good" gave nothing to act on; a row that says
+    /// "6 bpm above usual" does. Gaps under 3% read as at-usual, since a rounded
+    /// "0 bpm above usual" is noise, not a finding.
+    private static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
+        let gap = current - baseline
+        guard baseline > 0, abs(gap) / baseline >= 0.03 else { return Copy.Home.whyValueAtUsual }
+        let amount = String(Int(abs(gap).rounded()))
+        return gap > 0
+            ? Copy.Home.whyValueAboveUsual(amount, unit)
+            : Copy.Home.whyValueBelowUsual(amount, unit)
     }
 
     /// Plain-English summary under the score as a bold heading + a lighter sub

@@ -119,4 +119,192 @@ struct RegressionTests {
         #expect(payload(dayKey: yesterday, age: 0).isStale(),
                 "a payload for another day is stale however fresh it is")
     }
+
+    // MARK: - Next Up card
+
+    /// The card announced "Recovery numbers are well above your usual" over a
+    /// sentence saying stand hours were 91% below baseline, because the headline
+    /// came from the recovery state bucket and the body from a metric reason.
+    @Test func nextUpHeadlineIsTheActionNotTheRecoveryState() {
+        let action = DashboardSmartActionAdvisor().recommend(
+            live: Self.emptyLive,
+            analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
+                policyDecision: Self.decision(actionType: .increaseSteps),
+                restingHeartRateBaselineMean: nil,
+                userFocuses: [],
+                topInsights: []
+            )
+        )
+
+        #expect(action.source == "policy_engine")
+        #expect(action.title == Copy.Home.SmartAction.doIncreaseSteps,
+                "the headline must be the thing to do, so Mark done has something to mark")
+        #expect(!Copy.Policy.excellentHeadlines.contains(action.title),
+                "a recovery state sentence must never be the action headline again")
+    }
+
+    /// The same week-over-week percentage was printed twice inside one four
+    /// sentence paragraph, because the reason stacked baseline, trend and source
+    /// text together.
+    @Test func nextUpReasonStatesOneFactOnce() {
+        let baseline = UserBaseline(metric: .steps, mean: 1.1, standardDeviation: 0.3,
+                                    median: 1.1, sampleCount: 30, lastUpdated: Date())
+        let reason = DecisionPolicyEngine().generateLanguage(
+            for: Self.candidate(actionType: .increaseSteps),
+            baselines: [.steps: baseline],
+            trends: [:],
+            timeSeries: [:]
+        ).description
+
+        #expect(!reason.isEmpty)
+        #expect(reason.filter { $0 == "." }.count <= 1, "the card reason is one sentence")
+        #expect(!reason.contains("week-over-week"),
+                "trend detail belongs on the detail screen, not stacked onto the card")
+    }
+
+    /// An injured user with strong recovery numbers was told to push harder,
+    /// because nothing in the app knew about the injury.
+    @Test func aRestContextOverridesEveryBodySignal() {
+        let action = DashboardSmartActionAdvisor().recommend(
+            live: DashboardSmartActionAdvisor.LiveSnapshot(
+                hour: 9, stressLevel: 10, readinessScore: 95, hasSleepData: true,
+                sleepHours: 8.5, deepSleepMinutes: 95, exerciseMinutes: 0, exerciseGoal: 30,
+                latestRestingHeartRate: 52
+            ),
+            analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
+                policyDecision: Self.decision(actionType: .intensifyExercise),
+                restingHeartRateBaselineMean: 54,
+                userFocuses: [.fitness],
+                topInsights: [],
+                restContext: .injured
+            )
+        )
+
+        #expect(action.source == "life_context")
+        #expect(action.title == Copy.Home.contextRestTitle,
+                "a rest context must win over a 95 readiness score and a fitness focus")
+    }
+
+    /// A context set two weeks ago kept suppressing advice forever.
+    @Test func aRestContextExpiresOnItsOwn() {
+        let suite = UserDefaults(suiteName: "regression.\(UUID().uuidString)")!
+        let store = LifeContextStore(defaults: suite)
+
+        store.toggle(.injured)
+        #expect(store.requiresRest, "turning it on applies it today")
+
+        let afterWindow = Date().addingTimeInterval(Double(LifeContextStore.Context.injured.defaultDays + 1) * 86_400)
+        store.pruneExpired(now: afterWindow)
+        #expect(!store.requiresRest, "past its end date the context stops applying")
+        #expect(store.active.isEmpty)
+    }
+
+    private static let emptyLive = DashboardSmartActionAdvisor.LiveSnapshot(
+        hour: 13, stressLevel: nil, readinessScore: nil, hasSleepData: false,
+        sleepHours: 0, deepSleepMinutes: 0, exerciseMinutes: 0, exerciseGoal: 30,
+        latestRestingHeartRate: nil
+    )
+
+    private static func candidate(actionType: InterventionCandidate.ActionType) -> InterventionCandidate {
+        InterventionCandidate(
+            id: "test", targetMetric: .steps, actionType: actionType, source: .trendReversal,
+            predictedUplift: 0.4, upliftConfidence: 0.8, effortCost: 0.2,
+            timeToBenefit: .nextDay, adherenceLikelihood: 0.7, historicalEffectiveness: nil,
+            evidence: InterventionEvidence(
+                historicalResponseMean: nil, historicalResponseCount: 0,
+                forecastedScoreDelta: nil, uncertaintyBand: nil,
+                contributingFeatures: [], grangerPValue: nil,
+                grangerEffectSize: nil, grangerOptimalLag: nil
+            )
+        )
+    }
+
+    // MARK: - Share card
+
+    /// The old rings card printed whatever the day gave it, so an ordinary day
+    /// published "vitality age 44" with a near-empty ring and an amber recovery
+    /// score onto the user's own photo. Every template is now hard-gated: a
+    /// number that does not read as a win produces no card at all.
+    @Test func shareTemplatesNeverCarryANumberThatLooksBad() {
+        /// The rings card is opt-in by design and shows the day as it is, so the
+        /// gates are about which *wins* get offered.
+        func wins(_ templates: [ShareTemplate]) -> [ShareTemplate.Kind] {
+            templates.map(\.kind).filter { $0 != .rings }
+        }
+
+        let olderBody = ShareTemplateBuilder.build(
+            vitalityAge: 44, realAge: 38, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )
+        #expect(wins(olderBody).isEmpty, "a body reading older than the user must never be a win card")
+
+        let warmUpGap = ShareTemplateBuilder.build(
+            vitalityAge: 37, realAge: 38, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )
+        #expect(wins(warmUpGap).isEmpty, "a 1 year gap is inside the model's warm-up, not a win")
+
+        let shortStreak = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil,
+            masterStreak: ShareTemplateGates.minMasterStreak - 1,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )
+        #expect(shortStreak.isEmpty, "a streak under the floor is not worth posting")
+
+        let shortOfRecord = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: 7.0 * 3600, allTimeBestSleepHours: 8.2
+        )
+        #expect(wins(shortOfRecord).isEmpty, "a normal night is not a personal best")
+
+        // If the sleep series ever switches from hours to seconds upstream, the
+        // win card must vanish rather than print "8194:12 best sleep yet".
+        let unitMismatch = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: 29_520, allTimeBestSleepHours: 29_520
+        )
+        #expect(wins(unitMismatch).isEmpty, "an implausible sleep value must not reach a win card")
+
+        let nothingAtAll = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )
+        #expect(nothingAtAll.isEmpty, "with no data at all there is no card to offer, not even rings")
+    }
+
+    /// The picker is only useful if a real win actually reaches it, and the
+    /// referral caption must follow the picked card rather than always claiming
+    /// an age win.
+    @Test func shareTemplatesCarryEarnedWins() {
+        let earned = ShareTemplateBuilder.build(
+            vitalityAge: 31, realAge: 38, recovery: 82, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: 8.2 * 3600, allTimeBestSleepHours: 8.2
+        )
+        #expect(earned.map(\.kind) == [.younger, .streak, .bestSleep, .rings],
+                "strongest win first, only the ones that qualify, rings offered last")
+
+        #expect(earned[0].captionYears == 7, "the age card drives the years-younger invite caption")
+        #expect(earned[1].captionYears == nil, "the streak card must not send an age claim with it")
+
+        #expect(earned[2].chip == "8:12", "8.2 hours reads as 8:12, not 8:2 or 8:20")
+        #expect(earned[3].content == .rings(vitalityAge: 31, realAge: 38,
+                                            recovery: 82, sleepSeconds: 8.2 * 3600),
+                "the rings card still carries all three of the day's numbers")
+    }
+
+
+    private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
+        let ranked = PolicyDecision.RankedIntervention(
+            candidate: candidate(actionType: actionType),
+            expectedUtility: 0.6, noveltyFactor: 1.0,
+            description: "Your steps are 0.1 hrs, 91% below your usual 1.1 hrs.",
+            whyItMatters: "why", expectedBenefit: "benefit"
+        )
+        return PolicyDecision(
+            primaryAction: ranked, secondaryAction: nil, allCandidates: [ranked],
+            rationale: "test", decisionConfidence: 0.9, decidedAt: Date(),
+            prescriptiveHeadline: Copy.Policy.excellentHeadlines[0],
+            targetSleepTime: nil, strainBudget: nil
+        )
+    }
 }

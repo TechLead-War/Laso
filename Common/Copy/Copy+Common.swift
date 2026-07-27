@@ -53,16 +53,56 @@ extension Copy {
         static var laso: String { RemoteConfigManager.shared.copyString("copy_common_laso", default: "Laso") }
         static var trackYourHealthWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_track_your_health_with_laso", default: "Track your health with Laso") }
 
-        // Rings share card (Whoop-style photo share)
-        static var shareRingVitalityAge: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_vitality_age", default: "VITALITY AGE") }
-        static var shareRingRecovery: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_recovery", default: "RECOVERY") }
-        static var shareRingSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_sleep", default: "HOURS OF SLEEP") }
+        // Photo share card
         static var shareCardFooter: String { RemoteConfigManager.shared.copyString("copy_common_share_card_footer", default: "laso.fit") }
         static var shareAddPhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_add_photo", default: "Add your photo") }
         static var shareTakePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_take_photo", default: "Take a photo") }
         static var shareChangePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_change_photo", default: "Change photo") }
         static var shareCTA: String { RemoteConfigManager.shared.copyString("copy_common_share_cta", default: "Share") }
-        static var shareSheetTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_sheet_title", default: "Share your day") }
+        static var shareSheetTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_sheet_title", default: "Share a win") }
+        static var shareTrayHint: String { RemoteConfigManager.shared.copyString("copy_common_share_tray_hint", default: "Pick a win, then add your photo.") }
+
+        // Shown when no template qualifies. The tray is deliberately empty
+        // rather than filled with a number the user would not want to post.
+        static var shareEmptyTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_empty_title", default: "Nothing to share yet") }
+        static var shareEmptyBody: String { RemoteConfigManager.shared.copyString("copy_common_share_empty_body", default: "Laso only makes a card when you have a real win. Keep going and one will turn up here.") }
+
+        // Share templates. Each one is only built when its number reads as a win.
+        static var shareChipYounger: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_younger", default: "Younger") }
+        static var shareChipStreak: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_streak", default: "Streak") }
+        static var shareChipProof: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_proof", default: "Proof") }
+        static var shareChipBestSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_best_sleep", default: "Best sleep") }
+        static var shareChipToday: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_today", default: "Today") }
+
+        // Rings template labels
+        static var shareRingVitalityAge: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_vitality_age", default: "VITALITY AGE") }
+        static var shareRingRecovery: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_recovery", default: "RECOVERY") }
+        static var shareRingSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_ring_sleep", default: "HOURS OF SLEEP") }
+
+        static func shareYoungerAccent(years: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_younger_accent", default: "%d years"), years)
+        }
+        static var shareYoungerPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_younger_plain", default: "younger") }
+        static func shareYoungerSub(realAge: Int, vitalityAge: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_younger_sub", default: "%1$d on paper. %2$d in the body."), realAge, vitalityAge)
+        }
+
+        static func shareStreakAccent(days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_streak_accent", default: "%d days"), days)
+        }
+        static var shareStreakPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_streak_plain", default: "in a row") }
+        static var shareStreakSub: String { RemoteConfigManager.shared.copyString("copy_common_share_streak_sub", default: "Sleep, movement and recovery. Every one.") }
+
+        static func shareProofAccent(delta: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_proof_accent", default: "+%d"), delta)
+        }
+        static var shareProofPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_proof_plain", default: "recovery") }
+        static func shareProofSub(action: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_proof_sub", default: "Yesterday: %@. That is what it did."), action)
+        }
+
+        static var shareBestSleepPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_best_sleep_plain", default: "best sleep yet") }
+        static var shareBestSleepSub: String { RemoteConfigManager.shared.copyString("copy_common_share_best_sleep_sub", default: "My longest night since I started tracking.") }
         static var laso2: String { RemoteConfigManager.shared.copyString("copy_common_laso2", default: "Laso") }
         static var discoverYourHealthPatternsWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_discover_your_health_patterns_with_laso", default: "Discover your health patterns with Laso") }
         static var hidesThisBannerWithoutChangingNotificationHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_notification_hint", default: "Hides this banner without changing notification settings") }

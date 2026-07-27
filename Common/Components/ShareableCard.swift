@@ -5,7 +5,171 @@ import PhotosUI
 enum ShareCardType {
     case score(score: Int, scoreChange: Int?, streakDays: Int)
     case insight(text: String, metric: String, category: String)
-    case rings(vitalityAge: Int?, realAge: Int?, recovery: Int?, sleepSeconds: Double?, photo: UIImage?)
+    case template(ShareTemplate, photo: UIImage?)
+}
+
+// MARK: - Share Templates
+
+/// One card the user can pick from the share tray.
+///
+/// The four win templates are gated: each is only built when its number reads
+/// as a win, so the picker cannot hand someone a number they would not post.
+/// `rings` is the exception and is deliberate: it shows the day as it is, so it
+/// is offered last and never sits in front of a real win.
+struct ShareTemplate: Identifiable, Equatable {
+    enum Kind: String {
+        case younger, streak, proof, bestSleep, rings
+    }
+
+    /// What the card draws. The gated wins are a single headline; `rings` keeps
+    /// the original three stat rings.
+    enum Content: Equatable {
+        case headline(accent: String, plain: String, sub: String)
+        case rings(vitalityAge: Int?, realAge: Int?, recovery: Int?, sleepSeconds: Double?)
+    }
+
+    let kind: Kind
+    /// Value shown on the tray chip.
+    let chip: String
+    let content: Content
+    /// Years younger, set only on `.younger`. Drives the referral caption so a
+    /// user who picks the streak card does not send an age claim with it.
+    let captionYears: Int?
+
+    var id: String { kind.rawValue }
+
+    var chipLabel: String {
+        switch kind {
+        case .younger:   return Copy.Common.shareChipYounger
+        case .streak:    return Copy.Common.shareChipStreak
+        case .proof:     return Copy.Common.shareChipProof
+        case .bestSleep: return Copy.Common.shareChipBestSleep
+        case .rings:     return Copy.Common.shareChipToday
+        }
+    }
+}
+
+/// Floors that decide whether a template is offered. Product thresholds, not
+/// clinical ones.
+enum ShareTemplateGates {
+    /// A 3 day streak is not worth posting. Streaks travel at a threshold only.
+    static let minMasterStreak = 7
+    /// `VitalityScorer` holds vitality age at chronological age for the first
+    /// week and ramps to full personalisation at 30 days, so a 1 year gap early
+    /// on is model warm-up rather than a real win.
+    static let minYearsYounger = 2
+    /// The `.sleepDuration` series is stored in hours. A value outside this
+    /// range means the upstream unit changed, so the card stays hidden rather
+    /// than printing a nonsense number onto someone's photo.
+    static let plausibleSleepHours: ClosedRange<Double> = 3...14
+    /// HealthKit rounds sleep, so exact equality with the all-time high would
+    /// almost never fire. Within a minute counts as tying the record.
+    static let bestSleepToleranceHours: Double = 1.0 / 60.0
+}
+
+/// Builds the tray, strongest win first, with the rings card last. Every win
+/// gate is hard: a win that does not qualify is absent, never greyed out with a
+/// bad number behind it.
+enum ShareTemplateBuilder {
+    static func build(
+        vitalityAge: Int?,
+        realAge: Int?,
+        recovery: Int?,
+        masterStreak: Int,
+        actionResult: DailyActionResultStore.Result?,
+        lastNightSleepSeconds: Double?,
+        allTimeBestSleepHours: Double?
+    ) -> [ShareTemplate] {
+        var templates: [ShareTemplate] = []
+
+        if let vitalityAge, let realAge {
+            let years = realAge - vitalityAge
+            if years >= ShareTemplateGates.minYearsYounger {
+                templates.append(ShareTemplate(
+                    kind: .younger,
+                    chip: "\(years)",
+                    content: .headline(
+                        accent: Copy.Common.shareYoungerAccent(years: years),
+                        plain: Copy.Common.shareYoungerPlain,
+                        sub: Copy.Common.shareYoungerSub(realAge: realAge, vitalityAge: vitalityAge)
+                    ),
+                    captionYears: years
+                ))
+            }
+        }
+
+        if masterStreak >= ShareTemplateGates.minMasterStreak {
+            templates.append(ShareTemplate(
+                kind: .streak,
+                chip: "\(masterStreak)",
+                content: .headline(
+                    accent: Copy.Common.shareStreakAccent(days: masterStreak),
+                    plain: Copy.Common.shareStreakPlain,
+                    sub: Copy.Common.shareStreakSub
+                ),
+                captionYears: nil
+            ))
+        }
+
+        if let actionResult, actionResult.direction == .up {
+            templates.append(ShareTemplate(
+                kind: .proof,
+                chip: "+\(actionResult.delta)",
+                content: .headline(
+                    accent: Copy.Common.shareProofAccent(delta: actionResult.delta),
+                    plain: Copy.Common.shareProofPlain,
+                    sub: Copy.Common.shareProofSub(action: actionResult.record.actionTitle)
+                ),
+                captionYears: nil
+            ))
+        }
+
+        if let lastNightSleepSeconds, let best = allTimeBestSleepHours {
+            let hours = lastNightSleepSeconds / 3600
+            if hours >= best - ShareTemplateGates.bestSleepToleranceHours,
+               ShareTemplateGates.plausibleSleepHours.contains(hours),
+               ShareTemplateGates.plausibleSleepHours.contains(best) {
+                let text = clockText(hours: hours)
+                templates.append(ShareTemplate(
+                    kind: .bestSleep,
+                    chip: text,
+                    content: .headline(
+                        accent: text,
+                        plain: Copy.Common.shareBestSleepPlain,
+                        sub: Copy.Common.shareBestSleepSub
+                    ),
+                    captionYears: nil
+                ))
+            }
+        }
+
+        // The original three-ring card, kept as a choice the user makes rather
+        // than the default. It shows the day as it is, good or bad, so it goes
+        // last and never sits in front of an earned win.
+        let hasSleep = (lastNightSleepSeconds ?? 0) > 0
+        if vitalityAge != nil || recovery != nil || hasSleep {
+            let chip = recovery.map(String.init)
+                ?? vitalityAge.map(String.init)
+                ?? lastNightSleepSeconds.map { clockText(hours: $0 / 3600) }
+                ?? ""
+            templates.append(ShareTemplate(
+                kind: .rings,
+                chip: chip,
+                content: .rings(vitalityAge: vitalityAge, realAge: realAge,
+                                recovery: recovery, sleepSeconds: lastNightSleepSeconds),
+                captionYears: nil
+            ))
+        }
+
+        return templates
+    }
+
+    /// "8:12" from 8.2 hours. Rounds once on the total minute count so 7.999
+    /// does not render as 7:60.
+    private static func clockText(hours: Double) -> String {
+        let minutes = Int((hours * 60).rounded())
+        return "\(minutes / 60):\(String(format: "%02d", minutes % 60))"
+    }
 }
 
 // MARK: - Rings Card (Whoop-style photo share)
@@ -43,9 +207,11 @@ struct ShareableRingsCard: View {
 
     private var sleepText: String {
         guard let sleepSeconds, sleepSeconds > 0 else { return "" }
-        let h = Int(sleepSeconds / 3600)
-        let m = Int((sleepSeconds - Double(h) * 3600) / 60)
-        return "\(h):\(String(format: "%02d", m))"
+        // Round on the total minute count rather than truncating each part:
+        // 8.2 hours is 29519.999… seconds in binary, which truncated to whole
+        // minutes reads 8:11 here while the best-sleep card reads 8:12.
+        let minutes = Int((sleepSeconds / 60).rounded())
+        return "\(minutes / 60):\(String(format: "%02d", minutes % 60))"
     }
 
     var body: some View {
@@ -147,6 +313,97 @@ struct ShareableRingsCard: View {
     }
 }
 
+// MARK: - Template Card
+
+/// Draws whichever template the user picked. `.headline` is the story-sized
+/// (9:16) card carrying one earned number, legible to someone who has never
+/// seen the app; `.rings` hands off to the original three-ring card.
+struct ShareableTemplateCard: View {
+    let template: ShareTemplate
+    let photo: UIImage?
+
+    var body: some View {
+        switch template.content {
+        case .rings(let vitalityAge, let realAge, let recovery, let sleepSeconds):
+            ShareableRingsCard(vitalityAge: vitalityAge, realAge: realAge,
+                               recovery: recovery, sleepSeconds: sleepSeconds, photo: photo)
+        case .headline(let accent, let plain, let sub):
+            headlineCard(accent: accent, plain: plain, sub: sub)
+        }
+    }
+
+    private func headlineCard(accent: String, plain: String, sub: String) -> some View {
+        ZStack {
+            if let photo {
+                // The fill image must be framed and clipped HERE: unframed it
+                // inflates the ZStack's layout bounds, which spreads the
+                // headline beyond the visible card and cuts it off.
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 390, height: 693)
+                    .clipped()
+            } else {
+                LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+
+            // Readability fades over the photo, top and bottom.
+            LinearGradient(stops: [
+                .init(color: .black.opacity(0.45), location: 0),
+                .init(color: .clear, location: 0.3),
+                .init(color: .clear, location: 0.5),
+                .init(color: .black.opacity(0.65), location: 1)
+            ], startPoint: .top, endPoint: .bottom)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text(Copy.Common.laso.uppercased())
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .tracking(3)
+                        .foregroundStyle(.white.opacity(0.85))
+                    Spacer()
+                }
+                .padding(.horizontal, DS.space6)
+                .padding(.top, 30)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: DS.space3) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(accent)
+                            .foregroundStyle(AppColour.scoreOptimal)
+                        Text(plain)
+                            .foregroundStyle(.white)
+                    }
+                    .font(.system(size: 50, weight: .heavy, design: .rounded))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.55)
+                    .shadow(color: .black.opacity(0.55), radius: 12, y: 2)
+
+                    Text(sub)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                        .shadow(color: .black.opacity(0.6), radius: 6)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 30)
+
+                Spacer().frame(height: 40)
+
+                Text(Copy.Common.shareCardFooter)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.bottom, 26)
+            }
+        }
+        .frame(width: 390, height: 693)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+    }
+}
+
 // MARK: - Camera capture
 
 /// Minimal camera wrapper for the share card's "take a photo" option. iOS
@@ -185,96 +442,92 @@ struct CameraCaptureView: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Rings share flow (photo pick -> preview -> share)
+// MARK: - Share flow (pick a win -> add photo -> share)
 
-/// Sheet presented from the home Recovery card's share icon. Shows a live
-/// preview of the rings card, lets the user attach a photo via the system
-/// photo picker (no permission prompt needed), and hands the rendered image
-/// to the share sheet through `ShareButton`.
-struct ShareRingsSheet: View {
-    let vitalityAge: Int?
-    let realAge: Int?
-    let recovery: Int?
-    let sleepSeconds: Double?
+/// Sheet presented from the home Recovery card's share icon. Shows the wins the
+/// user has actually earned, a live preview of the picked one, and the photo
+/// attach step, then hands the rendered image to the share sheet through
+/// `ShareButton`.
+///
+/// `templates` is built by `ShareTemplateBuilder` and can legitimately be empty.
+/// Home hides the share affordance in that case, so the empty state here is the
+/// backstop for a card that was earned when the screen loaded and expired
+/// before the sheet opened.
+struct ShareWinSheet: View {
+    let templates: [ShareTemplate]
 
+    @State private var selectedID: String?
     @State private var photoItem: PhotosPickerItem?
     @State private var photo: UIImage?
     @State private var showCamera = false
+
+    private var selected: ShareTemplate? {
+        templates.first { $0.id == selectedID } ?? templates.first
+    }
 
     /// Referral invite line attached as text next to the image. The card image
     /// itself stays clean; message apps show this under the photo.
     private var inviteCaption: String? {
         let referral = ReferralManager.shared
         guard referral.isEnabled, let code = referral.referralCode else { return nil }
-        if let vitalityAge, let realAge, vitalityAge < realAge {
-            return Copy.Referral.shareCaptionYounger(years: realAge - vitalityAge, code: code)
+        if let years = selected?.captionYears {
+            return Copy.Referral.shareCaptionYounger(years: years, code: code)
         }
         return Copy.Referral.shareCaptionGeneric(code: code)
     }
 
+    /// Title, tray, hint, photo row, Share button and their spacing need about
+    /// this much room under the preview. The preview shrinks to fit rather than
+    /// pushing the Share button below the fold on a small phone.
+    private static let sheetChromeHeight: CGFloat = 300
+
+    private func previewScale(forHeight height: CGFloat) -> CGFloat {
+        min(0.55, max(height - Self.sheetChromeHeight, 200) / 693)
+    }
+
     var body: some View {
-        VStack(spacing: DS.space4) {
-            Text(Copy.Common.shareSheetTitle)
-                .font(DS.Typography.title3)
-                .foregroundStyle(AppColour.textPrimary)
-                .padding(.top, DS.space5)
+        // Outside the ScrollView on purpose: inside, the proxy would report the
+        // scroll content height rather than the sheet's.
+        GeometryReader { proxy in
+            let scale = previewScale(forHeight: proxy.size.height)
 
-            ShareableRingsCard(
-                vitalityAge: vitalityAge,
-                realAge: realAge,
-                recovery: recovery,
-                sleepSeconds: sleepSeconds,
-                photo: photo
-            )
-            .scaleEffect(0.62)
-            .frame(width: 390 * 0.62, height: 693 * 0.62)
+            ScrollView(.vertical) {
+                VStack(spacing: DS.space4) {
+                    Text(Copy.Common.shareSheetTitle)
+                        .font(DS.Typography.title3)
+                        .foregroundStyle(AppColour.textPrimary)
+                        .padding(.top, DS.space5)
 
-            HStack(spacing: DS.space5) {
-                PhotosPicker(selection: $photoItem, matching: .images) {
-                    Label(photo == nil ? Copy.Common.shareAddPhoto : Copy.Common.shareChangePhoto,
-                          systemImage: "photo")
-                        .font(DS.Typography.bodySemibold)
-                }
-                .onChange(of: photoItem) { _, item in
-                    guard let item else { return }
-                    let wasChange = photo != nil
-                    Task { @MainActor in
-                        if let data = try? await item.loadTransferable(type: Data.self),
-                           let image = UIImage(data: data) {
-                            photo = image
-                            AppAnalytics.shared.trackSharePhotoAdded(source: "library", isChange: wasChange)
+                    if let selected {
+                        ShareableTemplateCard(template: selected, photo: photo)
+                            .scaleEffect(scale)
+                            .frame(width: 390 * scale, height: 693 * scale)
+
+                        // A single earned win is not a choice, so the tray is
+                        // only worth its vertical space when there are two.
+                        if templates.count > 1 {
+                            templateTray(selectedID: selected.id)
+                            Text(Copy.Common.shareTrayHint)
+                                .font(DS.Typography.footnote)
+                                .foregroundStyle(AppColour.textSecondary)
                         }
+
+                        photoControls
+
+                        ShareButton(
+                            cardType: .template(selected, photo: photo),
+                            screen: .home,
+                            title: Copy.Common.shareCTA,
+                            captionText: inviteCaption
+                        )
+                    } else {
+                        emptyState
                     }
-                }
 
-                // Camera capture, hidden where no camera exists (simulator).
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                    Button {
-                        showCamera = true
-                    } label: {
-                        Label(Copy.Common.shareTakePhoto, systemImage: "camera")
-                            .font(DS.Typography.bodySemibold)
-                    }
+                    Spacer(minLength: DS.space4)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .fullScreenCover(isPresented: $showCamera) {
-                CameraCaptureView { image in
-                    let wasChange = photo != nil
-                    photo = image
-                    AppAnalytics.shared.trackSharePhotoAdded(source: "camera", isChange: wasChange)
-                }
-                .ignoresSafeArea()
-            }
-
-            ShareButton(
-                cardType: .rings(vitalityAge: vitalityAge, realAge: realAge,
-                                 recovery: recovery, sleepSeconds: sleepSeconds, photo: photo),
-                screen: .home,
-                title: Copy.Common.shareCTA,
-                captionText: inviteCaption
-            )
-
-            Spacer(minLength: DS.space4)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -283,6 +536,109 @@ struct ShareRingsSheet: View {
             // caption can carry it. No-op when cached or program disabled.
             await ReferralManager.shared.ensureReferralCode()
         }
+    }
+
+    private func templateTray(selectedID currentID: String) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.space3) {
+                ForEach(templates) { template in
+                    Button {
+                        self.selectedID = template.id
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Share template",
+                            type: .shareCard,
+                            screen: .home,
+                            metadata: ["template": template.kind.rawValue]
+                        )
+                    } label: {
+                        VStack(spacing: DS.space1) {
+                            Text(template.chip)
+                                .font(.system(size: 20, weight: .heavy, design: .rounded))
+                                .monospacedDigit()
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                            Text(template.chipLabel)
+                                .font(.system(size: 10, weight: .semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, DS.space1)
+                        .frame(width: 68, height: 82)
+                        .background(
+                            LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
+                                           startPoint: .topLeading, endPoint: .bottomTrailing),
+                            in: RoundedRectangle(cornerRadius: DS.Radius.md)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.md)
+                                .strokeBorder(template.id == currentID ? AppColour.scoreOptimal : .clear,
+                                              lineWidth: 2)
+                        )
+                    }
+                    .accessibilityLabel(template.chipLabel)
+                    .accessibilityValue(template.chip)
+                    .accessibilityAddTraits(template.id == currentID ? [.isSelected] : [])
+                }
+            }
+            .padding(.horizontal, DS.screenPadding)
+        }
+    }
+
+    private var photoControls: some View {
+        HStack(spacing: DS.space5) {
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Label(photo == nil ? Copy.Common.shareAddPhoto : Copy.Common.shareChangePhoto,
+                      systemImage: "photo")
+                    .font(DS.Typography.bodySemibold)
+            }
+            .onChange(of: photoItem) { _, item in
+                guard let item else { return }
+                let wasChange = photo != nil
+                Task { @MainActor in
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        photo = image
+                        AppAnalytics.shared.trackSharePhotoAdded(source: "library", isChange: wasChange)
+                    }
+                }
+            }
+
+            // Camera capture, hidden where no camera exists (simulator).
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button {
+                    showCamera = true
+                } label: {
+                    Label(Copy.Common.shareTakePhoto, systemImage: "camera")
+                        .font(DS.Typography.bodySemibold)
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCaptureView { image in
+                let wasChange = photo != nil
+                photo = image
+                AppAnalytics.shared.trackSharePhotoAdded(source: "camera", isChange: wasChange)
+            }
+            .ignoresSafeArea()
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: DS.space3) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 34))
+                .foregroundStyle(AppColour.textTertiary)
+            Text(Copy.Common.shareEmptyTitle)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.textPrimary)
+            Text(Copy.Common.shareEmptyBody)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, DS.space6)
+        }
+        .padding(.vertical, DS.space7)
     }
 }
 
@@ -543,6 +899,30 @@ struct ShareableInsightCard: View {
 }
 
 // MARK: - Previews
+
+#Preview("Template - Younger") {
+    ShareableTemplateCard(
+        template: ShareTemplateBuilder.build(
+            vitalityAge: 31, realAge: 38, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )[0],
+        photo: nil
+    )
+    .scaleEffect(0.55)
+    .frame(width: 390 * 0.55, height: 693 * 0.55)
+}
+
+#Preview("Template - Streak") {
+    ShareableTemplateCard(
+        template: ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
+        )[0],
+        photo: nil
+    )
+    .scaleEffect(0.55)
+    .frame(width: 390 * 0.55, height: 693 * 0.55)
+}
 
 #Preview("Score Card - High") {
     ShareableScoreCard(score: 85, scoreChange: 5, streakDays: 14)

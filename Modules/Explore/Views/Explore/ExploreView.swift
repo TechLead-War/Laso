@@ -61,7 +61,12 @@ struct ExploreView: View {
                     .onAppear { dataSummaryTracker.appeared() }
                     .onDisappear { dataSummaryTracker.disappeared() }
 
-                    // 3. Your Trends. prominent trend-first section
+                    // 3. Month calendar. the only view of whether anything is
+                    // actually improving, and the surface the habit lives on.
+                    ExploreMonthCalendarSection(scoresByDay: viewModel.dailyScoresByDay(days: 62))
+                        .padding(.horizontal)
+
+                    // 4. Your Trends. prominent trend-first section
                     if !trendMetrics.isEmpty {
                         ExploreYourTrendsSection(
                             trendMetrics: trendMetrics,

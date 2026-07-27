@@ -48,6 +48,51 @@ extension Copy {
         static func nextUpRemindTomorrow(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind_tomorrow", default: "Remind tomorrow %@"), time) }
         static var nextUpReminderSet: String { RemoteConfigManager.shared.copyString("copy_home_next_up_reminder_set", default: "Reminder set") }
 
+        // MARK: - Data coverage
+        //
+        // What Apple Health has actually given us, per signal. A score built on
+        // a missing signal has to say which one is missing on the same screen,
+        // otherwise silent zeros read as a broken app rather than a switch that
+        // was never turned on.
+
+        static var coverageTitle: String { RemoteConfigManager.shared.copyString("copy_home_coverage_title", default: "WHAT WE ARE READING") }
+        /// %1$d days with data out of %2$d checked.
+        static func coverageDays(_ days: Int, _ window: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_coverage_days", default: "%1$d of %2$d days"), days, window)
+        }
+        static var coverageNone: String { RemoteConfigManager.shared.copyString("copy_home_coverage_none", default: "Nothing yet") }
+        /// HealthKit never tells an app which read permissions were refused, so
+        /// this line offers both real causes instead of guessing one.
+        static func coverageMissingHint(_ names: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_coverage_missing_hint", default: "%@ has sent nothing. Either it is switched off for Laso in the Health app, or your watch has not recorded it."), names)
+        }
+        static var coverageOpenSettings: String { RemoteConfigManager.shared.copyString("copy_home_coverage_open_settings", default: "Check Health settings") }
+
+        // MARK: - Life context chips
+        //
+        // What the watch cannot see. An active chip is a hard constraint on the
+        // day's advice, not a label.
+
+        static var contextInjured: String { RemoteConfigManager.shared.copyString("copy_home_context_injured", default: "Injured") }
+        static var contextUnwell: String { RemoteConfigManager.shared.copyString("copy_home_context_unwell", default: "Unwell") }
+        static var contextTravelling: String { RemoteConfigManager.shared.copyString("copy_home_context_travelling", default: "Travelling") }
+        static var contextPoorSleepWeek: String { RemoteConfigManager.shared.copyString("copy_home_context_poor_sleep_week", default: "Sleeping badly") }
+        /// %@ is the day the context stops applying, e.g. "31 Jul".
+        static func contextUntil(_ name: String, _ date: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_context_until", default: "%1$@ until %2$@"), name, date)
+        }
+        static var contextAddHint: String { RemoteConfigManager.shared.copyString("copy_home_context_add_hint", default: "Tell us what is going on") }
+
+        // The action shown while a rest context is on. It overrides everything
+        // the body signals would otherwise suggest.
+        static var contextRestTitle: String { RemoteConfigManager.shared.copyString("copy_home_context_rest_title", default: "Keep today easy") }
+        static func contextRestSubtitle(_ name: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_context_rest_subtitle", default: "You told us you are %@, so we are not asking for load today. Gentle movement is fine, hard effort is not."), name)
+        }
+        static func contextRestRationale(_ name: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_context_rest_rationale", default: "While %@ is on, recovery matters more than any training gain, so the day's action ignores your readiness score."), name)
+        }
+
         // Activation banner: first week calibration progress line.
         static var activationFullyCalibrated: String { RemoteConfigManager.shared.copyString("copy_home_activation_fully_calibrated", default: "Fully calibrated") }
         /// %@ is the next milestone name, e.g. "Trend Detected".
@@ -67,13 +112,24 @@ extension Copy {
         static var scoreSummaryHighHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_head", default: "Higher than usual today.") }
         static var scoreSummaryHighSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_sub", default: "Good to push a little.") }
         static var scoreWhyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_why_label", default: "Why") }
+        // One word per recovery band, for places that show a score without its ring.
+        static var stateNameGood: String { RemoteConfigManager.shared.copyString("copy_home_state_name_good", default: "Ready") }
+        static var stateNameSteady: String { RemoteConfigManager.shared.copyString("copy_home_state_name_steady", default: "Steady") }
+        static var stateNameLow: String { RemoteConfigManager.shared.copyString("copy_home_state_name_low", default: "Low") }
         // Plain-word reasons and their status values.
         static var whySleepShort: String { RemoteConfigManager.shared.copyString("copy_home_why_sleep_short", default: "Sleep was short") }
         static var whySleepGood: String { RemoteConfigManager.shared.copyString("copy_home_why_sleep_good", default: "Sleep was solid") }
         static var whyHeartCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_calm", default: "Heart is calm") }
         static var whyHeartWorking: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_working", default: "Heart is working hard") }
-        static var whyHeartGoodValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_good_value", default: "Good") }
-        static var whyHeartHighValue: String { RemoteConfigManager.shared.copyString("copy_home_why_heart_high_value", default: "Higher") }
+        /// Comparative readings. "Good" told a person nothing they could act on,
+        /// so every row that has a baseline now shows the gap to their own usual.
+        static func whyValueBelowUsual(_ amount: String, _ unit: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_why_value_below_usual", default: "%1$@ %2$@ below usual"), amount, unit)
+        }
+        static func whyValueAboveUsual(_ amount: String, _ unit: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_why_value_above_usual", default: "%1$@ %2$@ above usual"), amount, unit)
+        }
+        static var whyValueAtUsual: String { RemoteConfigManager.shared.copyString("copy_home_why_value_at_usual", default: "At your usual") }
         static var whyEnergyLow: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low", default: "Energy is low") }
         static var whyEnergyGood: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good", default: "Energy is good") }
         static var whyEnergyLowValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low_value", default: "Below usual") }
@@ -93,8 +149,6 @@ extension Copy {
         // Extra dynamic signals that can surface in the Why list.
         static var whyRhrUp: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_up", default: "Resting heart rate is up") }
         static var whyRhrCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_calm", default: "Heart rate is calm at rest") }
-        static var whyRhrValueUp: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_value_up", default: "Above usual") }
-        static var whyRhrValueCalm: String { RemoteConfigManager.shared.copyString("copy_home_why_rhr_value_calm", default: "Good") }
         static var whyStressHigh: String { RemoteConfigManager.shared.copyString("copy_home_why_stress_high", default: "Stress is high") }
         static var whyStressLow: String { RemoteConfigManager.shared.copyString("copy_home_why_stress_low", default: "Stress is low") }
 
@@ -105,6 +159,13 @@ extension Copy {
 
         /// How many of the score's signals actually had a reading today.
         static func scoreConfidence(_ withData: Int, _ total: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_score_confidence", default: "Based on %d of %d signals"), withData, total) }
+        /// Named under the Why list whenever a signal has no reading, so a
+        /// partial score says out loud what it is missing and what fixes it.
+        static func scoreMissingSignals(_ names: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_score_missing_signals", default: "%@ not recorded yet. Wear your watch tonight and tomorrow is a full read."), names)
+        }
+        static var scoreListJoiner: String { RemoteConfigManager.shared.copyString("copy_home_score_list_joiner", default: ", ") }
+        static var scoreListFinalJoiner: String { RemoteConfigManager.shared.copyString("copy_home_score_list_final_joiner", default: " and ") }
 
         // Yesterday's result: the loop-closer shown the morning after an action
         // is marked done, reporting how the readiness score moved.
@@ -344,6 +405,31 @@ extension Copy {
         // MARK: - Smart Action Recommendations
 
         enum SmartAction {
+            // MARK: - Policy engine action titles
+            //
+            // The card headline must be the thing to do, so it can be read as an
+            // instruction and marked done. The old headline came from the
+            // recovery state bucket, which described a different metric than the
+            // sentence underneath it.
+
+            static var doSleepEarlier: String { RemoteConfigManager.shared.copyString("copy_home_do_sleep_earlier", default: "Go to bed 30 minutes earlier tonight") }
+            static var doSleepLater: String { RemoteConfigManager.shared.copyString("copy_home_do_sleep_later", default: "Shift bedtime a little later tonight") }
+            static var doExtendSleep: String { RemoteConfigManager.shared.copyString("copy_home_do_extend_sleep", default: "Give yourself an extra 30 minutes in bed") }
+            static var doReduceScreenTime: String { RemoteConfigManager.shared.copyString("copy_home_do_reduce_screen_time", default: "Put screens away an hour before bed") }
+            static var doReduceEvening: String { RemoteConfigManager.shared.copyString("copy_home_do_reduce_evening", default: "Keep tonight calm and low key") }
+            static var doActiveRecovery: String { RemoteConfigManager.shared.copyString("copy_home_do_active_recovery", default: "Take an easy 20 minute walk or stretch") }
+            static var doIntensifyExercise: String { RemoteConfigManager.shared.copyString("copy_home_do_intensify_exercise", default: "Push a little harder in today's workout") }
+            static var doReduceExercise: String { RemoteConfigManager.shared.copyString("copy_home_do_reduce_exercise", default: "Dial today's workout back a notch") }
+            static var doShiftCaffeineTiming: String { RemoteConfigManager.shared.copyString("copy_home_do_shift_caffeine_timing", default: "Have your last coffee before 2 PM") }
+            static var doReduceCaffeine: String { RemoteConfigManager.shared.copyString("copy_home_do_reduce_caffeine", default: "Drop one coffee today") }
+            static var doBreathingSession: String { RemoteConfigManager.shared.copyString("copy_home_do_breathing_session", default: "Take 5 minutes of slow breathing") }
+            static var doMeditation: String { RemoteConfigManager.shared.copyString("copy_home_do_meditation", default: "Sit quietly for 10 minutes") }
+            static var doAdjustMealTiming: String { RemoteConfigManager.shared.copyString("copy_home_do_adjust_meal_timing", default: "Finish dinner at least 3 hours before bed") }
+            static var doHydration: String { RemoteConfigManager.shared.copyString("copy_home_do_hydration", default: "Drink two more glasses of water today") }
+            static var doIncreaseSteps: String { RemoteConfigManager.shared.copyString("copy_home_do_increase_steps", default: "Add a 10 minute walk today") }
+            static var doReduceSteps: String { RemoteConfigManager.shared.copyString("copy_home_do_reduce_steps", default: "Stay off your feet more than usual today") }
+            static var doNap: String { RemoteConfigManager.shared.copyString("copy_home_do_nap", default: "Take a 20 minute nap this afternoon") }
+
             // Default fallback
             static var defaultTitle: String { RemoteConfigManager.shared.copyString("copy_home_smart_action_default_title", default: "Get moving for 15 minutes") }
             static var defaultSubtitle: String { RemoteConfigManager.shared.copyString("copy_home_smart_action_default_subtitle", default: "A short walk boosts mood, energy, and sleep quality tonight") }

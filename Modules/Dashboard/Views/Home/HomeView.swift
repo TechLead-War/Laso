@@ -186,6 +186,26 @@ struct HomeView: View {
         liveViewModel.recovery.readinessScore != nil
     }
 
+    /// The wins the user has actually earned right now. Empty is a valid answer
+    /// and hides the share affordance: every template here is gated so the card
+    /// can only ever carry a number the user would be glad to post.
+    ///
+    /// `allTimeBestSleepHours` comes from the deferred heavy analysis tier, so it
+    /// is nil until that has run. The personal-best card simply does not appear
+    /// until then.
+    private var shareTemplates: [ShareTemplate] {
+        ShareTemplateBuilder.build(
+            vitalityAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.vitalityAge : nil,
+            realAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.chronologicalAge : nil,
+            recovery: liveReadinessScore > 0 ? liveReadinessScore : nil,
+            masterStreak: viewModel.gamificationEngine.streaks.masterStreak,
+            actionResult: dailyResult,
+            lastNightSleepSeconds: liveViewModel.sleep.lastNightSleepDuration > 0
+                ? liveViewModel.sleep.lastNightSleepDuration : nil,
+            allTimeBestSleepHours: viewModel.analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh
+        )
+    }
+
     /// Compute the loop-closer card once today's morning lock exists. Guarded on
     /// `dailyResult == nil` so it resolves once per morning and the shown event
     /// fires a single time despite the 30-minute score refresh.
@@ -342,6 +362,15 @@ struct HomeView: View {
                 } else if hasData {
                     // ── Above the fold ──
 
+                    // 0b. What the watch cannot see. Sits above the action card
+                    // because an active rest chip overrides what that card says.
+                    LifeContextChipRow(store: viewModel.lifeContextStore)
+                        .onChange(of: viewModel.lifeContextStore.active) { _, _ in
+                            // The action is cached for the day, so without this
+                            // the card keeps yesterday's advice after a toggle.
+                            viewModel.invalidateDailyActionCache()
+                        }
+
                     // 0a. Yesterday's result. When present, the proof that
                     // yesterday's action moved the score leads the screen — it
                     // is the reason the user came back this morning.
@@ -378,7 +407,9 @@ struct HomeView: View {
                             }
                         },
                         onTapWhy: { kind in openWhySignal(kind) },
-                        onShare: {
+                        // No earned win means no share icon at all. Offering the
+                        // sheet with nothing in it would train users to ignore it.
+                        onShare: shareTemplates.isEmpty ? nil : {
                             // Entry step of the share funnel: without this the
                             // first event is the Share CTA inside the sheet, so
                             // open-then-dismiss users were invisible.
@@ -386,20 +417,13 @@ struct HomeView: View {
                                 title: "Share",
                                 type: .shareCard,
                                 screen: .home,
-                                metadata: ["source": "recovery_hero", "card_type": "rings"]
+                                metadata: ["source": "recovery_hero", "card_type": "template"]
                             )
                             showShareCard = true
                         }
                     )
                     .sheet(isPresented: $showShareCard) {
-                        // vitalityAge/realAge are 0 until the scorer's snapshot
-                        // exists; pass nil so empty rings never render.
-                        ShareRingsSheet(
-                            vitalityAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.vitalityAge : nil,
-                            realAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.chronologicalAge : nil,
-                            recovery: liveReadinessScore > 0 ? liveReadinessScore : nil,
-                            sleepSeconds: liveViewModel.sleep.lastNightSleepDuration > 0 ? liveViewModel.sleep.lastNightSleepDuration : nil
-                        )
+                        ShareWinSheet(templates: shareTemplates)
                     }
                     .onAppear {
                         recoveryTracker.appeared()
@@ -411,6 +435,19 @@ struct HomeView: View {
                     }
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked) { showSoftLockPaywall = true }
+
+                    // 1a. What Apple Health has actually sent. Only rendered
+                    // when a signal is empty, so a full read carries no clutter.
+                    DataCoverageCard(coverage: viewModel.signalCoverage()) {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Check Health settings",
+                            type: .errorRetry,
+                            screen: .home,
+                            metadata: ["source": "data_coverage"]
+                        )
+                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                        UIApplication.shared.open(url)
+                    }
 
                     // 1b. Activation Progress (first 8 days. Paper 8)
                     ActivationProgressBanner(
@@ -690,6 +727,25 @@ struct HomeView: View {
                         .foregroundStyle(AppColour.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // The payoff sits in its own row rather than in the sentence:
+                    // it is the one line that answers "what do I get", and keeping
+                    // it out of the paragraph stops the reason growing back into
+                    // the four-sentence block this card used to show.
+                    if !action.expectedBenefit.isEmpty {
+                        Label(action.expectedBenefit, systemImage: "arrow.up.right")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.scoreGood)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.vertical, DS.space1 + 2)
+                            .padding(.horizontal, DS.space2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                AppColour.scoreGood.opacity(0.10),
+                                in: RoundedRectangle(cornerRadius: DS.Radius.sm)
+                            )
+                            .padding(.top, 2)
+                    }
                 }
             }
             .buttonStyle(.plain)

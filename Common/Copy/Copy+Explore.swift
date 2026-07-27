@@ -33,6 +33,27 @@ extension Copy {
         static var roomToImprove: String { RemoteConfigManager.shared.copyString("copy_explore_explore_room_to_improve", default: "Building up") }
         static var needsAttention: String { RemoteConfigManager.shared.copyString("copy_explore_explore_needs_attention", default: "Getting started") }
 
+        // MARK: - Month Calendar
+        //
+        // The only place a person can see whether anything is actually getting
+        // better. Every day the app scored is one cell, so the habit is visible.
+
+        static var monthTitle: String { RemoteConfigManager.shared.copyString("copy_explore_month_title", default: "Your month") }
+        static var monthTapHint: String { RemoteConfigManager.shared.copyString("copy_explore_month_tap_hint", default: "Tap a day") }
+        static var monthToday: String { RemoteConfigManager.shared.copyString("copy_explore_month_today", default: "Today") }
+        static var monthNoScore: String { RemoteConfigManager.shared.copyString("copy_explore_month_no_score", default: "No score for this day") }
+        static func monthDayScore(_ score: Int, _ state: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_month_day_score", default: "%1$d, %2$@"), score, state)
+        }
+        static var monthStreakLabel: String { RemoteConfigManager.shared.copyString("copy_explore_month_streak_label", default: "Days scored in a row") }
+        static func monthStreakDays(_ days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_month_streak_days", default: "%d days"), days)
+        }
+        static var monthStreakBest: String { RemoteConfigManager.shared.copyString("copy_explore_month_streak_best", default: "Keep it going") }
+        static func monthScoredDays(_ scored: Int, _ total: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_month_scored_days", default: "%1$d of %2$d days scored this month"), scored, total)
+        }
+
         // MARK: - Data Summary
 
         static var metrics: String { RemoteConfigManager.shared.copyString("copy_explore_explore_metrics", default: "Metrics") }
