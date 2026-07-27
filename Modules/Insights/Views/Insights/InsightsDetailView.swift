@@ -104,8 +104,11 @@ struct InsightsDetailView: View {
 
                     ForEach(visibleItems) { insight in
                         Button {
-                            AppAnalytics.shared.trackInsightOpened(
-                                metricCategory: insight.metric.category
+                            AppAnalytics.shared.trackInsightTapped(
+                                category: insight.category.rawValue,
+                                severity: insight.severity.rawValue,
+                                metric: insight.metric.rawValue,
+                                screen: .insightsDetail
                             )
                             store?.recordRecommendationTapped(insightId: insight.id)
                             onTapMetric(insight.metric)
@@ -118,7 +121,7 @@ struct InsightsDetailView: View {
                     }
 
                     if hiddenItems > 0 {
-                        LockedInsightsCTA(hiddenCount: hiddenItems)
+                        LockedInsightsCTA(hiddenCount: hiddenItems, screen: .insightsDetail)
                             .padding(.horizontal)
                     }
                 } else {

@@ -35,6 +35,7 @@ struct HealthRiskDetailView: View {
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .riskDetail)
             await onRefresh?()
         }
         .navigationTitle(risk.riskType.displayName)
@@ -115,6 +116,8 @@ struct HealthRiskDetailView: View {
                     AppAnalytics.shared.trackRiskTapped(
                         riskType: risk.riskType.rawValue,
                         grade: risk.riskGrade.rawValue,
+                        metric: area.metric.rawValue,
+                        source: "focus_area",
                         screen: .riskDetail
                     )
                     onTapMetric(area.metric)
@@ -137,6 +140,8 @@ struct HealthRiskDetailView: View {
                         AppAnalytics.shared.trackRiskTapped(
                             riskType: risk.riskType.rawValue,
                             grade: risk.riskGrade.rawValue,
+                            metric: factor.metric.rawValue,
+                            source: "contributing_factor",
                             screen: .riskDetail
                         )
                         onTapMetric(factor.metric)

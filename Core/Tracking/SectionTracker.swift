@@ -104,9 +104,11 @@ final class SectionTracker {
         self.tab = tab
     }
 
+    /// Only stamps the appear time. `section_viewed` is emitted once, on
+    /// disappear, with the real dwell — emitting here too doubled every section
+    /// impression count and half the rows carried duration_ms = 0.
     func appeared() {
         appearDate = Date()
-        AppAnalytics.shared.trackSectionViewed(section: section, tab: tab, durationMs: 0)
     }
 
     func disappeared() {

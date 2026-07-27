@@ -419,6 +419,27 @@ final class DashboardViewModel {
     /// lazily from inside that body.
     @MainActor private(set) var cachedDailyScoresByDay: [Date: Int] = [:]
 
+    /// Life contexts per calendar day, for the same window as the score map.
+    /// A context covers a whole date range, so turning one off rewrites every
+    /// past day it covered; the calendar compares this to know that happened.
+    @MainActor private(set) var cachedContextsByDay: [Date: [LifeContextStore.Context]] = [:]
+
+    /// Walks the window once and asks the store per day. Days with no context
+    /// are left out so the dictionary stays small and comparing it is cheap.
+    private static func contextsByDay(
+        store: LifeContextStore,
+        days: Int
+    ) -> [Date: [LifeContextStore.Context]] {
+        let today = Date.cal.startOfDay(for: Date())
+        var byDay: [Date: [LifeContextStore.Context]] = [:]
+        for offset in 0..<days {
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { continue }
+            let contexts = store.contexts(on: day)
+            if !contexts.isEmpty { byDay[day] = contexts }
+        }
+        return byDay
+    }
+
     // MARK: - Research-Backed Feature State (Papers 1-10)
 
     /// Personal health forecast cards (Paper 3: Conformal Prediction + Digital Twin)
@@ -1129,6 +1150,15 @@ final class DashboardViewModel {
         // at this point.
         cachedDailyScoresByDay = dailyScoresByDay(days: Self.scoreCalendarDays)
 
+        // Contexts as a value, not a closure. The calendar used to call into the
+        // store once per visible cell on every render; as a plain dictionary it
+        // is built once per publish and lets the calendar compare its whole
+        // input and skip redrawing when nothing moved.
+        cachedContextsByDay = Self.contextsByDay(
+            store: lifeContextStore,
+            days: Self.scoreCalendarDays
+        )
+
         // North-star activation event: fire exactly once per install when the
         // first non-zero score is computed. Gate on a UserDefaults flag so
         // re-launches don't double-fire. Without this, activation rate cannot
@@ -1276,6 +1306,11 @@ final class DashboardViewModel {
         counts.append(analysisEngine.mlOrchestrator.compoundInsights.count)
         counts.append(analysisEngine.mlOrchestrator.interactionEffects.count)
         counts.append(analysisEngine.mlOrchestrator.doseResponseCurves.count)
+
+        // A context covers a date range, so toggling one rewrites past calendar
+        // days without touching a single score. Without this the gate would
+        // refuse to republish and the calendar would show stale contexts.
+        counts.append(lifeContextStore.revision)
 
         return Self.cachePublishFingerprint(
             expensiveInputsHash: cacheInputFingerprint(),

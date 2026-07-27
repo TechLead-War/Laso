@@ -32,8 +32,17 @@ struct WindDownScheduler {
         }
 
         // Hard requirement: never fake a bedtime. If we have no target, cancel and skip.
+        // Reported so a data-availability gap is separable from "the user turned
+        // wind-down off", which is the only other reason volume drops.
         guard let bedtime = recommendedBedtime else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
+            Task { @MainActor in
+                AppAnalytics.shared.trackNotificationSuppressed(
+                    type: NotificationManager.notificationType(identifier),
+                    identifier: identifier,
+                    reason: "no_bedtime"
+                )
+            }
             return
         }
 

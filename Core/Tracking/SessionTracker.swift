@@ -53,6 +53,10 @@ final class SessionTracker {
         case organic
         case notification
         case widget
+        /// laso:// links produced by the three Live Activity widgets. Kept
+        /// distinct from `widget` so the home-screen widget bucket is not
+        /// silently made up of Live Activity opens.
+        case liveActivity = "live_activity"
     }
 
     /// Set this BEFORE calling startSession() to tag the session source.
@@ -103,6 +107,11 @@ final class SessionTracker {
         static let restCreditsRemaining = AppKeys.Session.restCreditsRemaining
         static let lastRestCreditGrantDate = AppKeys.Session.lastRestCreditGrantDate
         static let openSession = AppKeys.Session.openSession
+        /// Separate from `firstValueTimeSec` because a first value recorded in the
+        /// same second as session start stores 0, which is indistinguishable from
+        /// "never recorded" and would leave the one-shot open forever.
+        static let firstValueRecorded = "laso.session.first_value_recorded"
+        static let liveActivitySessions = "laso.session.live_activity_sessions"
     }
 
     // MARK: - Rest-Day Credits
@@ -170,6 +179,7 @@ final class SessionTracker {
         let durationSec: Int
         let activeSec: Int
         let screensVisited: Int
+        let maxDepth: Int
         let coreActionsCount: Int
         let reason: String
     }
@@ -190,12 +200,21 @@ final class SessionTracker {
         let priorActivity = lastActivityDate
         let idleFor = now.timeIntervalSince(priorActivity)
 
+        // Recomputed every foreground: the singleton is built once per process and
+        // a process kept alive across midnight would otherwise evaluate retention
+        // milestones against the day it launched on.
+        refreshDaysSinceInstall()
+
         // Resume: still inside the idle window and a session is already open. The
         // background closed the active span; reopen it without resetting state so a
         // quick app-switch stays ONE session (no session_started/session_ended).
         if idleFor < Self.idleTimeoutSec && sessionIsOpen {
             lastActivityDate = now
             if activeSpanStart == nil { activeSpanStart = now }
+            // A notification/widget tap that landed while already foregrounded (or
+            // inside the idle window) is consumed by THIS session. Leaving the tag
+            // armed would stamp the next genuinely-new session with it.
+            pendingSessionSource = .organic
             persistOpenSession(now: now)
             return (false, nil)
         }
@@ -218,6 +237,7 @@ final class SessionTracker {
                 durationSec: max(Int(priorActivity.timeIntervalSince(sessionStartDate)), 0),
                 activeSec: max(Int(accumulatedActiveSec.rounded()), 0),
                 screensVisited: screensVisited.count,
+                maxDepth: maxDepth,
                 coreActionsCount: coreActionsThisSession.count,
                 reason: EndReason.idleTimeout.rawValue
             )
@@ -287,6 +307,7 @@ final class SessionTracker {
             durationSec: max(Int(last.timeIntervalSince(start)), 0),
             activeSec: max(Int((d["active"] as? Double ?? 0).rounded()), 0),
             screensVisited: d["screens"] as? Int ?? 0,
+            maxDepth: d["depth"] as? Int ?? 0,
             coreActionsCount: d["actions"] as? Int ?? 0,
             reason: reason.rawValue
         )
@@ -409,23 +430,30 @@ final class SessionTracker {
     // MARK: - Retention Milestones
 
     /// Check and record retention day milestones (day 1, 2, 3, 7, 14, 30).
-    /// Returns the milestone day if newly reached, nil otherwise.
+    /// Returns the milestone day ONLY when today is exactly that day since install.
+    /// Every earlier milestone the user skipped is consumed silently in the same
+    /// pass: returning the oldest unconsumed one instead (one per session) made a
+    /// user who first returned on day 30 emit day=1, then day=2, then day=3 —
+    /// which turned D1/D7/D30 into "opened the app an Nth time".
     func checkRetentionMilestone() -> Int? {
         if retentionMilestones.isEmpty,
            let stored = defaults.stringArray(forKey: Key.retentionMilestones) {
             retentionMilestones = Set(stored)
         }
 
-        let milestones = [1, 2, 3, 7, 14, 30]
-        for day in milestones {
+        var reachedToday: Int?
+        var changed = false
+        for day in [1, 2, 3, 7, 14, 30] where daysSinceInstall >= day {
             let key = "day_\(day)"
-            if daysSinceInstall >= day && !retentionMilestones.contains(key) {
-                retentionMilestones.insert(key)
-                defaults.set(Array(retentionMilestones), forKey: Key.retentionMilestones)
-                return day
-            }
+            guard !retentionMilestones.contains(key) else { continue }
+            retentionMilestones.insert(key)
+            changed = true
+            if day == daysSinceInstall { reachedToday = day }
         }
-        return nil
+        if changed {
+            defaults.set(Array(retentionMilestones), forKey: Key.retentionMilestones)
+        }
+        return reachedToday
     }
 
     // MARK: - Inactivity Detection
@@ -467,6 +495,10 @@ final class SessionTracker {
             defaults.set(Date(), forKey: Key.installDate)
         }
 
+        refreshDaysSinceInstall()
+    }
+
+    private func refreshDaysSinceInstall() {
         let installDate = defaults.object(forKey: Key.installDate) as? Date ?? Date()
         daysSinceInstall = Date.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
@@ -502,10 +534,22 @@ final class SessionTracker {
     }
 
     /// Record time-to-first-value (only once, on first meaningful data load).
-    func recordFirstValueTime() {
-        guard defaults.integer(forKey: Key.firstValueTimeSec) == 0 else { return }
-        let elapsed = sessionElapsedSeconds
-        defaults.set(elapsed, forKey: Key.firstValueTimeSec)
+    /// Returns true ONLY on the first recording, so the caller emits
+    /// `time_to_first_value` exactly once instead of re-emitting the session-1
+    /// value on every later sync.
+    @discardableResult
+    func recordFirstValueTime() -> Bool {
+        if defaults.bool(forKey: Key.firstValueRecorded) { return false }
+        // Installs that recorded a TTFV before this flag existed: adopt the stored
+        // value rather than overwriting it with the current session's elapsed,
+        // which would ship one bogus time_to_first_value on the upgrade.
+        if defaults.integer(forKey: Key.firstValueTimeSec) > 0 {
+            defaults.set(true, forKey: Key.firstValueRecorded)
+            return false
+        }
+        defaults.set(true, forKey: Key.firstValueRecorded)
+        defaults.set(sessionElapsedSeconds, forKey: Key.firstValueTimeSec)
+        return true
     }
 
     var firstValueTimeSec: Int {
@@ -568,9 +612,14 @@ final class SessionTracker {
         defaults.integer(forKey: AppKeys.Session.widgetSessions)
     }
 
+    var liveActivitySessionCount: Int {
+        defaults.integer(forKey: Key.liveActivitySessions)
+    }
+
     /// Percentage of sessions that were organic (0-100).
     var organicSessionPercent: Int {
-        let total = organicSessionCount + notificationSessionCount + widgetSessionCount
+        let total = organicSessionCount + notificationSessionCount
+            + widgetSessionCount + liveActivitySessionCount
         guard total > 0 else { return 100 }
         return (organicSessionCount * 100) / total
     }
@@ -583,6 +632,8 @@ final class SessionTracker {
             defaults.set(notificationSessionCount + 1, forKey: AppKeys.Session.notifSessions)
         case .widget:
             defaults.set(widgetSessionCount + 1, forKey: AppKeys.Session.widgetSessions)
+        case .liveActivity:
+            defaults.set(liveActivitySessionCount + 1, forKey: Key.liveActivitySessions)
         }
     }
 }

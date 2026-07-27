@@ -57,8 +57,19 @@ final class BackgroundRefreshCoordinator {
 
     func handle(_ task: BGAppRefreshTask) {
         if ThermalManager.shared.shouldThrottle {
-            task.setTaskCompleted(success: false)
             schedule() // re-schedule for later
+            // Emitted before setTaskCompleted so the system keeps the process
+            // alive long enough to send it. Without this a throttling device is
+            // a silent gap, indistinguishable from a BGTask that never ran.
+            Task { @MainActor in
+                AppAnalytics.shared.trackBackgroundRefreshResult(
+                    success: false,
+                    reason: .thermalThrottle,
+                    durationMs: 0,
+                    samplesLoaded: 0
+                )
+                task.setTaskCompleted(success: false)
+            }
             return
         }
 
@@ -71,6 +82,12 @@ final class BackgroundRefreshCoordinator {
             // Re-check thermal state before doing work — device may have heated up
             // between the initial check and actual execution.
             guard !ThermalManager.shared.shouldThrottle else {
+                AppAnalytics.shared.trackBackgroundRefreshResult(
+                    success: false,
+                    reason: .thermalThrottle,
+                    durationMs: Int(Date().timeIntervalSince(startTime) * 1000),
+                    samplesLoaded: 0
+                )
                 task.setTaskCompleted(success: false)
                 return
             }
@@ -126,14 +143,39 @@ final class BackgroundRefreshCoordinator {
             task.setTaskCompleted(success: success)
             AppAnalytics.shared.trackBackgroundRefreshResult(
                 success: success,
+                reason: success ? .ok : .noReadiness,
                 durationMs: durationMs,
-                samplesLoaded: success ? 1 : 0
+                samplesLoaded: loadedReadingCount(liveViewModel)
             )
         }
 
         task.expirationHandler = {
             workTask.cancel()
         }
+    }
+
+    /// How many readings this background pass actually pulled.
+    ///
+    /// `samples_loaded` used to be `success ? 1 : 0`, a second copy of `success`,
+    /// so a pass that only re-read the cached morning lock looked exactly like
+    /// one that pulled fresh data. The view model is built fresh for every pass,
+    /// so every value present here was loaded by this pass. `fetchHomeData` does
+    /// not run the HealthKit sync pipeline, so no true sample count exists in
+    /// this path — this is a count of populated readings.
+    @MainActor
+    private func loadedReadingCount(_ liveViewModel: LiveViewModel) -> Int {
+        let readings: [Bool] = [
+            liveViewModel.vitals.currentHeartRate != nil,
+            liveViewModel.vitals.currentBloodOxygen != nil,
+            liveViewModel.vitals.currentRespiratoryRate != nil,
+            liveViewModel.recovery.latestRestingHeartRate != nil,
+            liveViewModel.recovery.latestHRV != nil,
+            liveViewModel.activity.todaySteps > 0,
+            liveViewModel.activity.todayActiveCalories > 0,
+            liveViewModel.activity.todayExerciseMinutes > 0,
+            liveViewModel.sleep.lastNightSleepDuration > 0
+        ]
+        return readings.filter { $0 }.count
     }
 
     /// Re-arm the post-onboarding notification tracks during a background refresh

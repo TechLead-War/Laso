@@ -23,7 +23,9 @@ struct HomeView: View {
     @State private var dailyResult: DailyActionResultStore.Result?
     /// Master-streak milestone just crossed and not yet celebrated, if any.
     @State private var streakMilestone: Int?
-    @State private var maxScrollDepth: Int = 0
+    /// Not @State on purpose: see `ScrollDepthTracker`. Every write here
+    /// used to re-run this whole body while the user was scrolling.
+    @State private var scrollDepth = ScrollDepthTracker()
     @State private var showMorningCheckIn = false
     @State private var showSoftLockPaywall = false
     /// One-shot full live fetch on first appear. Without it, Home only starts the
@@ -128,8 +130,8 @@ struct HomeView: View {
             stopHomeRefresh()
             stopReadinessRefresh()
             stopFirstLaunchDotTimer()
-            if maxScrollDepth > 0 {
-                AppAnalytics.shared.trackScrollDepth(screen: .home, maxDepthPercent: maxScrollDepth)
+            if scrollDepth.maxDepth > 0 {
+                AppAnalytics.shared.trackScrollDepth(screen: .home, maxDepthPercent: scrollDepth.maxDepth)
             }
             AppAnalytics.shared.trackFeatureClose(.home)
         }
@@ -403,6 +405,7 @@ struct HomeView: View {
                 .foregroundStyle(AppColour.textSecondary)
 
             Button {
+                AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "home_unlock_bar", screen: .home)
                 showSoftLockPaywall = true
             } label: {
                 Text(Copy.Home.softLockCTA)
@@ -496,6 +499,12 @@ struct HomeView: View {
                         // explainer; otherwise the headline is the Daily Health
                         // Score (fallback) so we open the matching guide.
                         onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Recovery Score",
+                                type: .homeRecoveryInfoButton,
+                                screen: .home,
+                                metadata: ["has_live_readiness": hasLiveReadiness]
+                            )
                             if hasLiveReadiness {
                                 showRecoveryInfo = true
                             } else {
@@ -523,14 +532,14 @@ struct HomeView: View {
                     }
                     .onAppear {
                         recoveryTracker.appeared()
-                        maxScrollDepth = max(maxScrollDepth, 10)
+                        scrollDepth.record(10)
                         AppAnalytics.shared.trackScoreViewed(
                             score: liveReadinessScore,
                             previousScore: viewModel.scores.scoreChangeFromYesterday.map { liveReadinessScore - $0 }
                         )
                     }
                     .onDisappear { recoveryTracker.disappeared() }
-                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
+                    .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
 
                     // 1a0. Sleep bank. The only running total on the screen, so
                     // it sits right under the score it helps explain. Hidden
@@ -592,17 +601,23 @@ struct HomeView: View {
                             metadata: ["source": "home_card"]
                         )
                         if isSoftLocked {
+                            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "ask_your_data", screen: .home)
                             showSoftLockPaywall = true
                         } else {
                             navigationPath.append(Route.askYourData)
                         }
                     }
+                    // Depth marker on a card that always renders. The old 20
+                    // marker sat on the alert banner, which is absent for a
+                    // healthy user, so their depth jumped 10 -> 90.
+                    .onAppear { scrollDepth.record(40) }
 
                     // 3. Compact alert banner (illness + health risks)
+                    // Each tracker is attached to its own sub-block inside the
+                    // banner, not here: the banner renders when either an
+                    // illness warning or a risk exists.
                     compactAlertBanner
-                        .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
-                        .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
-                        .softLocked(isSoftLocked) { showSoftLockPaywall = true }
+                        .softLocked(isSoftLocked, feature: "home_alerts") { showSoftLockPaywall = true }
 
                     sectionHeader("VITALS")
                         .padding(.top, DS.space3)
@@ -611,13 +626,14 @@ struct HomeView: View {
                     MetricStripView(tiles: viewModel.cachedMetricTiles) { tile in
                         AppAnalytics.shared.trackBlockTap(
                             title: tile.label,
-                            type: .recoveryCard,
+                            type: .metricRow,
                             screen: .home,
                             metadata: ["destination": tile.id]
                         )
                         navigationPath.append(tile.route)
                     }
-                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
+                    .onAppear { scrollDepth.record(65) }
+                    .softLocked(isSoftLocked, feature: "home_vitals") { showSoftLockPaywall = true }
 
                     // ── Below the fold ──
 
@@ -644,9 +660,9 @@ struct HomeView: View {
                         )
                         navigationPath.append(Route.weeklyReview)
                     }
-                    .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
+                    .onAppear { weeklyReviewTracker.appeared(); scrollDepth.record(90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
-                    .softLocked(isSoftLocked) { showSoftLockPaywall = true }
+                    .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
 
                     // Last updated footer. always rendered so the user can confirm
                     // the screen is alive; falls back to a pull-to-refresh hint
@@ -708,6 +724,16 @@ struct HomeView: View {
             VStack(spacing: 6) {
                 if let warning {
                     Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Early Warning",
+                            type: .headlineInsight,
+                            screen: .home,
+                            metadata: [
+                                "severity": warning.severity.rawValue,
+                                "destination": "insights_detail"
+                            ]
+                        )
+                        illnessTracker.tapped(target: "early_warning")
                         navigationPath.append(Route.insightsDetail)
                     } label: {
                         HStack(spacing: 10) {
@@ -747,51 +773,61 @@ struct HomeView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .onAppear { illnessTracker.appeared() }
+                    .onDisappear { illnessTracker.disappeared() }
                 }
 
-                ForEach(risks.prefix(2)) { risk in
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: risk.riskType.displayName,
-                            type: .homeRiskRow,
-                            screen: .home,
-                            metadata: [
-                                "risk_id": risk.riskType.rawValue,
-                                "risk_grade": risk.riskGrade.rawValue
-                            ]
-                        )
-                        risksTracker.tapped(target: risk.riskType.rawValue)
-                        navigationPath.append(risk.riskType)
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: risk.riskType.systemImageName)
-                                .font(DS.Typography.body)
-                                .foregroundStyle(risk.riskGrade.color)
-                                .frame(width: 28, height: 28)
-                                .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+                // Wrapped so the impression fires once for the risk block, not
+                // once per row, and only when a risk actually rendered.
+                if !risks.isEmpty {
+                    VStack(spacing: 6) {
+                        ForEach(risks.prefix(2)) { risk in
+                            Button {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: risk.riskType.displayName,
+                                    type: .homeRiskRow,
+                                    screen: .home,
+                                    metadata: [
+                                        "risk_id": risk.riskType.rawValue,
+                                        "risk_grade": risk.riskGrade.rawValue
+                                    ]
+                                )
+                                risksTracker.tapped(target: risk.riskType.rawValue)
+                                navigationPath.append(risk.riskType)
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: risk.riskType.systemImageName)
+                                        .font(DS.Typography.body)
+                                        .foregroundStyle(risk.riskGrade.color)
+                                        .frame(width: 28, height: 28)
+                                        .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
 
-                            Text(risk.riskType.displayName)
-                                .font(DS.Typography.footnoteMedium)
-                                .foregroundStyle(AppColour.textPrimary)
+                                    Text(risk.riskType.displayName)
+                                        .font(DS.Typography.footnoteMedium)
+                                        .foregroundStyle(AppColour.textPrimary)
 
-                            Spacer()
+                                    Spacer()
 
-                            Text(risk.riskGrade.displayName)
-                                .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(risk.riskGrade.color)
+                                    Text(risk.riskGrade.displayName)
+                                        .font(DS.Typography.captionSemibold)
+                                        .foregroundStyle(risk.riskGrade.color)
 
-                            Image(systemName: "chevron.right")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(AppColour.textTertiary)
+                                    Image(systemName: "chevron.right")
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(AppColour.textTertiary)
+                                }
+                                .padding(DS.space2 + 2)
+                                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: DS.Radius.md)
+                                        .strokeBorder(risk.riskGrade.color.opacity(DS.strokeAlpha), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .padding(DS.space2 + 2)
-                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.Radius.md)
-                                .strokeBorder(risk.riskGrade.color.opacity(DS.strokeAlpha), lineWidth: 1)
-                        )
                     }
-                    .buttonStyle(.plain)
+                    .onAppear { risksTracker.appeared() }
+                    .onDisappear { risksTracker.disappeared() }
                 }
             }
             .padding(DS.cardPadding)
@@ -1093,6 +1129,9 @@ struct HomeView: View {
 /// sheet. Whole-card blur is deliberate; per-element granularity is skipped.
 private struct SoftLockModifier: ViewModifier {
     let isLocked: Bool
+    /// Names the blocked surface, so the six Home walls stay separable instead of
+    /// collapsing into one paywall_viewed(source: "soft_lock_home").
+    let feature: String
     let onTap: () -> Void
 
     func body(content: Content) -> some View {
@@ -1112,7 +1151,10 @@ private struct SoftLockModifier: ViewModifier {
                     .background(Color.accentColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.full))
                 )
                 .contentShape(Rectangle())
-                .onTapGesture(perform: onTap)
+                .onTapGesture {
+                    AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .home)
+                    onTap()
+                }
         } else {
             content
         }
@@ -1120,8 +1162,8 @@ private struct SoftLockModifier: ViewModifier {
 }
 
 private extension View {
-    func softLocked(_ isLocked: Bool, onTap: @escaping () -> Void) -> some View {
-        modifier(SoftLockModifier(isLocked: isLocked, onTap: onTap))
+    func softLocked(_ isLocked: Bool, feature: String, onTap: @escaping () -> Void) -> some View {
+        modifier(SoftLockModifier(isLocked: isLocked, feature: feature, onTap: onTap))
     }
 }
 

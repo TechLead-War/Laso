@@ -193,6 +193,15 @@ struct SleepCoachView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
+            .onChange(of: performanceLevel) { oldLevel, newLevel in
+                guard oldLevel != newLevel else { return }
+                AppAnalytics.shared.trackFilterChanged(
+                    screen: .sleepCoach,
+                    filterType: "performance_level",
+                    from: oldLevel.rawValue,
+                    to: newLevel.rawValue
+                )
+            }
         }
     }
 

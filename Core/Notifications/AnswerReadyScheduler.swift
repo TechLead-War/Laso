@@ -36,7 +36,19 @@ enum AnswerReadyScheduler {
         // the schedule actually passed every gate — a suppressed attempt stays
         // retryable on the next refresh.
         Task {
-            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            // This pre-check returns before NotificationManager, so its own
+            // not_authorized suppression never runs. Report it here (matching
+            // ReengagementScheduler) or a cohort that never gets the payoff
+            // looks identical to one whose prediction never matured.
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else {
+                let id = AppConstants.NotificationID.answerReady
+                AppAnalytics.shared.trackNotificationSuppressed(
+                    type: NotificationManager.notificationType(id),
+                    identifier: id,
+                    reason: "not_authorized"
+                )
+                return
+            }
             let scheduled = NotificationManager.shared.scheduleNotification(
                 title: Copy.Notifications.answerReadyTitle(phrase: prediction.userPhrase),
                 body: Copy.Notifications.answerReadyBody(phrase: prediction.userPhrase),

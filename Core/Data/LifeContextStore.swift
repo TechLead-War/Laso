@@ -88,6 +88,9 @@ final class LifeContextStore {
         spans = Self.load(from: defaults)
     }
 
+    /// Increments whenever any span changes. See `persist(now:)`.
+    private(set) var revision: Int = 0
+
     var active: Set<Context> { Set(spans.keys.filter { openSpan($0) != nil }) }
 
     var requiresRest: Bool { active.contains { $0.requiresRest } }
@@ -142,6 +145,10 @@ final class LifeContextStore {
 
     private func persist(now: Date) {
         prune(now: now)
+        // Bumped on every change. The spans are private and a context covers a
+        // whole date range, so anything caching data derived from this store
+        // compares this number instead of trying to diff the spans themselves.
+        revision &+= 1
         let encodable = spans.reduce(into: [String: [Span]]()) { $0[$1.key.rawValue] = $1.value }
         guard let data = try? JSONEncoder().encode(encodable) else { return }
         defaults.set(data, forKey: Self.storageKey)

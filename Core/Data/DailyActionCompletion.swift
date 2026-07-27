@@ -43,8 +43,19 @@ enum DailyActionCompletion {
             title: actionTitle,
             type: .homeDailyAction,
             screen: .home,
-            metadata: ["source": source, "done": "true"]
+            metadata: ["source": source]
         )
+        // Closes the recommendation loop: `recommendation_viewed` fires with a
+        // "todays_action_" type when the card is opened, and without this the
+        // viewed→completed conversion existed only for breathwork. `metric` is a
+        // controlled dimension, so the free-text action title never goes in it.
+        AppAnalytics.shared.trackRecommendationCompleted(
+            type: "todays_action",
+            metric: "general"
+        )
+        // The app's primary daily action has to count toward lifetime_core_actions,
+        // otherwise it never triggers re-engagement notification attribution.
+        AppAnalytics.shared.trackCoreAction(.completedDailyAction, screen: .home)
         return true
     }
 }

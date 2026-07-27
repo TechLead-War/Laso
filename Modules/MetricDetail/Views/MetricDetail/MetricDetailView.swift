@@ -221,7 +221,7 @@ struct MetricDetailView: View {
                     }
 
                     if hiddenInsights > 0 {
-                        LockedInsightsCTA(hiddenCount: hiddenInsights)
+                        LockedInsightsCTA(hiddenCount: hiddenInsights, screen: .metricDetail)
                             .padding(.horizontal)
                     }
                 }
@@ -595,7 +595,7 @@ struct MetricDetailView: View {
             .padding(.horizontal)
 
             if hiddenInsights > 0 {
-                LockedInsightsCTA(hiddenCount: hiddenInsights)
+                LockedInsightsCTA(hiddenCount: hiddenInsights, screen: .metricDetail)
                     .padding(.horizontal)
             }
         }

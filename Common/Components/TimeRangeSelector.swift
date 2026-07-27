@@ -33,9 +33,10 @@ struct TimeRangeSelector: View {
                     if isAllowed {
                         selectedDays = option.days
                     } else {
+                        // No screen passed: this selector is embedded in Metric Detail and
+                        // Category Detail, so logEvent injects whichever one is on screen.
                         AppAnalytics.shared.trackPremiumFeatureAttempted(
-                            feature: "time_range_\(option.key)",
-                            screen: .proOverlay
+                            feature: "time_range_\(option.key)"
                         )
                         showPaywall = true
                     }

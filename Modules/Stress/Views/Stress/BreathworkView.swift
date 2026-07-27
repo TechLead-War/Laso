@@ -153,6 +153,7 @@ struct BreathworkView: View {
     @State private var didTrackCompletedSession = false
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
@@ -197,6 +198,14 @@ struct BreathworkView: View {
                 endSession()
             }
             AppAnalytics.shared.trackFeatureClose(.breathwork)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // onDisappear does not run when the app is backgrounded, and a suspended
+            // app can be killed without ever returning, so a finished session left on
+            // the mood screen would otherwise emit no completed event at all.
+            // `.background` is the last callback before a possible kill.
+            guard newPhase == .background, sessionState == .complete else { return }
+            trackCompletedSessionIfNeeded()
         }
         .alert(Copy.Breathwork.endSessionTitle, isPresented: $showStopConfirmation) {
             Button(Copy.Breathwork.endSessionConfirm, role: .destructive) { endSession() }
@@ -715,12 +724,10 @@ struct BreathworkView: View {
         guard !didTrackCompletedSession else { return }
         didTrackCompletedSession = true
 
-        let actualDurationSec: Int
-        if let sessionStartedAt {
-            actualDurationSec = max(Int(Date().timeIntervalSince(sessionStartedAt)), 0)
-        } else {
-            actualDurationSec = Int(selectedProtocol.sessionDuration)
-        }
+        // Active elapsed time, the same measure endSession reports on abandon, so the
+        // two events are comparable. Wall clock since session start would also count
+        // paused time and the whole dwell on the mood screen.
+        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - sessionTimeRemaining), 0)
 
         AppAnalytics.shared.trackBreathworkSessionCompleted(
             selectedProtocol,

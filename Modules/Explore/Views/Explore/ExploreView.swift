@@ -9,7 +9,9 @@ struct ExploreView: View {
     @Binding var navigationPath: NavigationPath
     @State private var showScoreGuide = false
     @State private var trendTimeframe: Int = 30
-    @State private var maxScrollDepth: Int = 0
+    /// Not @State on purpose: see `ScrollDepthTracker`. Every write here
+    /// used to re-run this whole body while the user was scrolling.
+    @State private var scrollDepth = ScrollDepthTracker()
 
     // Section trackers
     @State private var scoreHeroTracker = SectionTracker(section: .exploreScoreHero, tab: .explore)
@@ -62,7 +64,7 @@ struct ExploreView: View {
                         }
                     )
                     .padding(.horizontal)
-                    .onAppear { scoreHeroTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 15) }
+                    .onAppear { scoreHeroTracker.appeared(); scrollDepth.record(15) }
                     .onDisappear { scoreHeroTracker.disappeared() }
 
                     // 2. Data depth bar. Metrics, Data Points, Days
@@ -94,9 +96,14 @@ struct ExploreView: View {
                         scoresByDay: viewModel.cachedDailyScoresByDay.isEmpty
                             ? viewModel.dailyScoresByDay(days: Self.calendarDays)
                             : viewModel.cachedDailyScoresByDay,
-                        contextsForDay: { viewModel.lifeContextStore.contexts(on: $0) },
+                        contextsByDay: viewModel.cachedContextsByDay,
                         detailForDay: { viewModel.dayDetail(for: $0) }
                     )
+                    // The tab rebuilds for reasons that have nothing to do with
+                    // the calendar. This makes SwiftUI compare its inputs first
+                    // and skip the most expensive draw in the app when they have
+                    // not moved.
+                    .equatable()
                     .padding(.horizontal)
 
                     // 4. Your Trends. prominent trend-first section
@@ -163,7 +170,7 @@ struct ExploreView: View {
                         }
                     )
                     .padding(.horizontal)
-                    .onAppear { categoriesTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 45) }
+                    .onAppear { categoriesTracker.appeared(); scrollDepth.record(45) }
                     .onDisappear { categoriesTracker.disappeared() }
 
                     // 5. Health State Timeline link (requires 30+ days)
@@ -243,7 +250,7 @@ struct ExploreView: View {
                         }
                     )
                     .padding(.horizontal)
-                    .onAppear { needsAttentionTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 65) }
+                    .onAppear { needsAttentionTracker.appeared(); scrollDepth.record(65) }
                     .onDisappear { needsAttentionTracker.disappeared() }
 
                     // 8. Why this week — declining metrics merged with their causal explanation
@@ -279,8 +286,8 @@ struct ExploreView: View {
                                 navigationPath.append(Route.correlationsDetail)
                             } : nil
                         )
-                        .onAppear { decliningTrendsTracker.appeared() }
-                        .onDisappear { decliningTrendsTracker.disappeared() }
+                        .onAppear { decliningTrendsTracker.appeared(); correlationsTracker.appeared() }
+                        .onDisappear { decliningTrendsTracker.disappeared(); correlationsTracker.disappeared() }
                     }
 
                     // 9. Free tier upsell for advanced analytics. Pro users see the
@@ -309,8 +316,7 @@ struct ExploreView: View {
                             .cardStyle()
                             .padding(.horizontal)
                         }
-                        .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
-                        .onDisappear { correlationsTracker.disappeared() }
+                        .onAppear { scrollDepth.record(90) }
                     }
                 } else {
                     ExploreEmptyStateSection(
@@ -318,6 +324,14 @@ struct ExploreView: View {
                         isAuthorized: viewModel.healthKitManager.isAuthorized
                     )
                     .padding(.horizontal)
+                    .onAppear {
+                        AppAnalytics.shared.trackEmptyStateShown(
+                            screen: .explore,
+                            reason: hasAnyHealthData
+                                ? "syncing"
+                                : (viewModel.healthKitManager.isAuthorized ? "authorized_no_data" : "not_authorized")
+                        )
+                    }
                 }
             }
             .padding(.bottom, DS.space4)
@@ -328,7 +342,7 @@ struct ExploreView: View {
         .navigationTitle(Copy.Explore.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
-            maxScrollDepth = 0
+            scrollDepth.reset()
             AppAnalytics.shared.trackFeatureOpen(.explore, metadata: [
                 "weakest_category": weakestCategory?.category.displayName ?? "none",
                 "insights_count": viewModel.insights.focusedInsights.count,
@@ -338,8 +352,8 @@ struct ExploreView: View {
             AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
         }
         .onDisappear {
-            if maxScrollDepth > 0 {
-                AppAnalytics.shared.trackScrollDepth(screen: .explore, maxDepthPercent: maxScrollDepth)
+            if scrollDepth.maxDepth > 0 {
+                AppAnalytics.shared.trackScrollDepth(screen: .explore, maxDepthPercent: scrollDepth.maxDepth)
             }
             AppAnalytics.shared.trackFeatureClose(.explore)
         }

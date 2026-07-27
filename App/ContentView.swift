@@ -256,10 +256,19 @@ struct ContentView: View {
             case .explore: .tabExplore
             case .settings: .tabSettings
             }
+            // The tap happened on the tab the user is LEAVING. Hardcoding .home
+            // put every Settings→Live switch on Home, and trackBlockTap derives
+            // element_id/action_id from this value too.
+            let fromScreen: AppFeature = switch oldTab {
+            case .home: .home
+            case .live: .live
+            case .explore: .explore
+            case .settings: .settings
+            }
             AppAnalytics.shared.trackBlockTap(
                 title: newTab.rawValue.capitalized,
                 type: blockType,
-                screen: .home,
+                screen: fromScreen,
                 metadata: ["from_tab": oldTab.rawValue, "to_tab": newTab.rawValue]
             )
             guard scenePhase == .active else { return }
@@ -865,8 +874,17 @@ struct ContentView: View {
         // session before scenePhase-driven trackSessionStart consumes it so
         // these opens stop counting as organic (same pattern as the
         // notification tag in AppDelegate).
-        SessionTracker.shared.pendingSessionSource = .widget
-        AppAnalytics.shared.trackDeepLinkOpened(url: url.absoluteString, source: "widget")
+        //
+        // These three routes are the widgetURLs of the three Live Activities and
+        // nothing else links to them, so tagging every laso:// open as "widget"
+        // put pure Live Activity traffic in the widget bucket. A home-screen
+        // widget that gains a widgetURL lands in the default branch.
+        let isLiveActivityRoute = route == .todaysAction || route == .sleepCoach || route == .stressMonitor
+        SessionTracker.shared.pendingSessionSource = isLiveActivityRoute ? .liveActivity : .widget
+        AppAnalytics.shared.trackDeepLinkOpened(
+            url: url.absoluteString,
+            source: isLiveActivityRoute ? "live_activity" : "widget"
+        )
         navigate(to: route)
     }
 

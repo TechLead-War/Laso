@@ -136,33 +136,11 @@ struct PaywallView: View {
         .onChange(of: subscriptionManager.errorMessage) { _, newValue in
             guard let message = newValue, !message.isEmpty else { return }
             AppAnalytics.shared.trackPaywallError(
-                errorType: classifyPaywallError(message),
+                errorType: subscriptionManager.lastErrorKind ?? .unknown,
                 source: source,
                 timeOnPaywallSec: Int(Date().timeIntervalSince(paywallOpenDate))
             )
         }
-    }
-
-    /// Map a free-form StoreKit error message to a stable `error_type` bucket
-    /// so PostHog can group similar failures across iOS locales.
-    private func classifyPaywallError(_ message: String) -> String {
-        let lower = message.lowercased()
-        if lower.contains("restore") {
-            return "restore_failed"
-        }
-        if lower.contains("network") || lower.contains("internet") || lower.contains("connection") {
-            return "network"
-        }
-        if lower.contains("cancel") {
-            return "cancelled"
-        }
-        if lower.contains("declin") || lower.contains("payment") {
-            return "payment_declined"
-        }
-        if lower.contains("not allowed") || lower.contains("permission") {
-            return "not_permitted"
-        }
-        return "unknown"
     }
 
     /// Single entry point for "user has full access, advance the parent flow".
@@ -228,6 +206,7 @@ struct PaywallView: View {
             if let yearly {
                 pricingOption(
                     product: yearly,
+                    period: .yearly,
                     label: Copy.Paywall.yearly,
                     detail: yearlyDetail(yearly),
                     badge: savingsBadge
@@ -238,6 +217,7 @@ struct PaywallView: View {
             if let monthly {
                 pricingOption(
                     product: monthly,
+                    period: .monthly,
                     label: Copy.Paywall.monthly,
                     detail: Copy.Paywall.perMonth(monthly.displayPrice),
                     badge: nil
@@ -261,8 +241,12 @@ struct PaywallView: View {
         return Copy.Paywall.savePercent(pct)
     }
 
+    /// `period` comes from product identity at the call site, never from `label`:
+    /// the labels are Remote Config copy, so a copy change would retag every
+    /// yearly selection as monthly.
     private func pricingOption(
         product: Product,
+        period: AppAnalytics.BillingPeriod,
         label: String,
         detail: String,
         badge: String?
@@ -273,7 +257,7 @@ struct PaywallView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProduct = product
             }
-            let type: BlockType = label == "Yearly" ? .paywallPlanYearly : .paywallPlanMonthly
+            let type: BlockType = period == .yearly ? .paywallPlanYearly : .paywallPlanMonthly
             AppAnalytics.shared.trackBlockTap(
                 title: label,
                 type: type,
@@ -281,17 +265,17 @@ struct PaywallView: View {
                 metadata: [
                     "product_id": product.id,
                     "price": product.displayPrice,
-                    "billing_period": label.lowercased()
+                    "billing_period": period.rawValue
                 ]
             )
             // Plan-selection funnel signal: distinct from CTA tap so we can see
             // how many users toggle yearly vs monthly before committing.
             AppAnalytics.shared.trackPaywallPlanSelected(
                 productID: product.id,
-                period: label.lowercased(),
+                period: period,
                 price: product.displayPrice
             )
-            pricingTracker.tapped(target: label.lowercased())
+            pricingTracker.tapped(target: period.rawValue)
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: DS.space1) {
@@ -365,7 +349,8 @@ struct PaywallView: View {
                 footerTracker.tapped(target: "subscribe")
                 AppAnalytics.shared.trackPaywallCTATapped(
                     productID: product.id,
-                    price: product.displayPrice
+                    price: product.displayPrice,
+                    source: source
                 )
                 Task { await subscriptionManager.purchase(product) }
             } label: {

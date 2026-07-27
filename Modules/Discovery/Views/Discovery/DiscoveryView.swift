@@ -228,10 +228,7 @@ struct DiscoveryView: View {
                     ]
                 )
                 flowTracker.tapped(target: "continue")
-                AppAnalytics.shared.trackDiscoveryCompleted(
-                    pagesViewed: maxPageViewed + 1,
-                    totalPages: totalPages
-                )
+                AppAnalytics.shared.trackDiscoveryCompleted(totalPages: totalPages)
                 onDismiss()
             } label: {
                 Text(Copy.Buttons.continueButton)

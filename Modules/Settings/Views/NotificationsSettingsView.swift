@@ -110,18 +110,6 @@ struct NotificationsSettingsView: View {
 
             NavigationLink {
                 MetricAlertPickerView(selectedMetrics: $preferences)
-                    .onAppear {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Warning Alert Metrics",
-                            type: .metricAlertsPicker,
-                            screen: .settings,
-                            metadata: [
-                                "destination": "metric_alert_picker",
-                                "selected_metrics_count": preferences.warningAlertMetrics.count
-                            ]
-                        )
-                        metricAlertsTracker.tapped(target: "warning_alert_metrics")
-                    }
             } label: {
                 HStack {
                     Text(Copy.Settings.whichMetrics)
@@ -130,6 +118,20 @@ struct NotificationsSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // Bound to the tap, not the destination's onAppear, so returning to the
+            // picker does not count as a fresh tap from this screen.
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Warning Alert Metrics",
+                    type: .metricAlertsPicker,
+                    screen: .notificationsSettings,
+                    metadata: [
+                        "destination": "metric_alert_picker",
+                        "selected_metrics_count": preferences.warningAlertMetrics.count
+                    ]
+                )
+                metricAlertsTracker.tapped(target: "warning_alert_metrics")
+            })
         } header: {
             Text(Copy.Settings.healthAlerts)
         } footer: {

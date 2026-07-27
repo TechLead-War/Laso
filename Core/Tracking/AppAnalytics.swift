@@ -46,12 +46,12 @@ enum AppFeature: String, Hashable {
     case todaysActionDetail = "todays_action_detail"
     case askYourData = "ask_your_data"
     case notificationsSettings = "notifications_settings"
+    case exploreDaySheet = "explore_day_sheet"
 }
 
 /// Actionable block/card types. only user-initiated taps and meaningful interactions.
 enum BlockType: String {
     // Home. user taps
-    case recoveryCard = "recovery_card"
     case sleepCard = "sleep_card"
     case smartAction = "smart_action"
     case headlineInsight = "headline_insight"
@@ -98,6 +98,7 @@ enum BlockType: String {
     case trendFilter = "trend_filter"
     case periodSelector = "period_selector"
     case correlationFilterChip = "correlation_filter_chip"
+    case correlationsExpandAll = "correlations_expand_all"
 
     // Chart. user taps
     case chartTouch = "chart_touch"
@@ -154,6 +155,9 @@ enum BlockType: String {
     case exploreSeeAllCorrelations = "explore_see_all_correlations"
     case exploreCorrelationPreview = "explore_correlation_preview"
     case exploreTrendMetric = "explore_trend_metric"
+    case exploreCalendarDay = "explore_calendar_day"
+    case exploreCalendarMonthStep = "explore_calendar_month_step"
+    case exploreCalendarToday = "explore_calendar_today"
 
     // Home extras
     case homeRiskRow = "home_risk_row"
@@ -219,50 +223,50 @@ enum BlockType: String {
 //   5. Churn                     → subscription_cancelled / inactive_period_detected
 //
 // ─── Q1: WHO GETS VALUE? ────────────────────────────────────────────────────
-//  onboarding_completed          focuses, duration_sec               Setup completion
-//  onboarding_step_completed     step, step_name, duration_sec       Drop-off funnel
-//  onboarding_drop_off           last_step, duration_sec             Where they quit
+//  onboarding_completed          focuses, focus_count, duration_sec  Setup completion
+//  onboarding_step_completed     step_key, step_index, step_count, duration_sec, action  Drop-off funnel
+//  onboarding_drop_off           last_step, step_index, step_count, duration_sec  Where they quit
 //  activation_milestone          milestone, time_since_install       Which features click
-//  activation_completed          milestones_count, days_to_activate  Aha moment reached
-//  time_to_first_value           seconds                             Speed to value
+//  activation_completed          milestones_completed, days_to_activate  Aha moment reached
+//  time_to_first_value           seconds                             Speed to value (once per install)
 //  first_score_generated         score, time_since_install_sec       First real output
 //  health_permission_requested   metrics_requested                   Permission funnel start
-//  health_permission_result      granted, denied, grant_rate         Permission success
+//  health_permission_result      granted (0/1), granted_count, denied, grant_rate  Permission success
 //  source_connected              source_type, metrics_available      Wearable onboarded
 //  data_pipeline_quality         coverage, enough_for_score          Data readiness
 //  empty_state_shown             screen, reason                      Blocked from value
 //  day1_data_richness_segment    segment                             Day-1 data branch (rich/sparse/denied)
 //  verdict_delivered             zone, magnitude_band, nights_remaining  Instant verdict payoff
 //  promise_shown                 branch, nights_remaining            Sparse/denied promise screen
-//  repermission_conversion       granted                             Health access after re-permission push
+//  repermission_conversion       (none)                              Health access after re-permission push
 //  first_checkin_done            (none)                              Denied-branch first value moment
 //
 // ─── Q2: WHO COMES BACK? ────────────────────────────────────────────────────
-//  session_start                 hour, weekday, streak, source       When & how they open
-//  session_end                   duration_sec, screens, depth        Session quality
+//  session_started               day_of_week (rest ride as globals)  When & how they open
+//  session_ended                 duration_sec, active_sec, screens_viewed, max_depth, session_source  Session quality
 //  return_session                session_number, days_since_last     Return cadence
-//  daily_active                  source, weekly_active_days          DAU/WAU/MAU
-//  retention_milestone           day (1,2,3,7,14,30)                 Retention curve
+//  daily_active                  session_source, weekly_active_days  DAU/WAU/MAU
+//  retention_milestone           day (1,2,3,7,14,30) — only on the actual day  Retention curve
 //  streak_milestone              days (7,14,30,60,100)               Habit formation
 //  streak_broken                 previous_streak                     Habit loss
 //  inactive_period_detected      days_inactive                       Churn signal
-//  notification_opened           notification_id, type               Re-engagement
-//  recommendation_completed      type, metric                        Action loop
+//  notification_opened           notification_id, notification_type, time_to_open_min  Re-engagement
+//  recommendation_completed      recommendation_type, metric         Action loop
 //
 // ─── Q3: WHAT CREATES TRUST? ────────────────────────────────────────────────
-//  explanation_viewed            type, screen                        Do they check methodology?
-//  insight_marked_helpful        category, metric                    Insight quality signal
-//  insight_marked_unhelpful      category, metric, reason            False positives
+//  explanation_viewed            explanation_type, screen            Do they check methodology?
 //  privacy_page_viewed           source                              Privacy concern
-//  recommendation_viewed         type, metric, difficulty            Shown vs acted on
-//  recommendation_skipped        type, metric, reason                Why they ignore advice
-//  nps_submitted                 score, category                     Would they recommend?
+//  recommendation_viewed         recommendation_type, metric, difficulty  Shown vs acted on
+//  recommendation_skipped        recommendation_type, metric, reason Why they ignore advice
 //  feedback_submitted            category, text_length, sentiment    What they want
 //
 // ─── Q4: WHAT CONVERTS TO PAID? ─────────────────────────────────────────────
 //  paywall_viewed                source                              When they see paywall
 //  paywall_dismissed             time_on_paywall, source, reason     Why they don't convert
-//  paywall_cta_tapped            product_id, price                   Purchase intent
+//  paywall_cta_tapped            product_id, price, source           Purchase intent
+//  paywall_plan_selected         product_id, period (yearly|monthly), price  Plan preference
+//  paywall_error                 error_type (controlled), source     Paywall breakage
+//  purchase_failed               product_id, failure_reason          Post-CTA friction
 //  trial_started                 days_remaining                      Trial began
 //  trial_day_check               days_remaining, milestones          Trial engagement
 //  trial_expired                 milestones_completed                Why no conversion
@@ -273,7 +277,7 @@ enum BlockType: String {
 //  pro_feature_upgrade_tapped    feature_name                        Upgrade intent (dupes pro_feature_funnel)
 //
 // ─── Q5: WHAT PREDICTS CHURN? ───────────────────────────────────────────────
-//  subscription_cancelled        months_subscribed                   Who churns
+//  subscription_cancelled        months_subscribed, cancellation_reason  Who churns
 //  subscription_renewed          months_subscribed, trial_converted  Who stays (client-detected at status refresh)
 //  inactive_period_detected      days_inactive, was_activated        Churn signal
 //  stale_data_detected           stale_since_hours, metric           Data pipeline death
@@ -289,11 +293,12 @@ enum BlockType: String {
 //  share_photo_added             source, is_change, screen           Share card personalization
 //  daily_result_shown            direction, score_delta              Loop-closer proof shown
 //  core_action_completed         action, screen                      Retention predictor
-//  insight_tapped                category, severity, metric          Insight engagement
+//  insight_tapped                insight_category, severity, metric  Insight engagement (single event for every surface)
 //  correlation_tapped            metric_a, metric_b, strength        Discovery
-//  risk_tapped                   risk_type, grade                    Risk awareness
+//  risk_tapped                   risk_type, grade, metric, source    Risk awareness
 //  analysis_completed            score, insights_count               Engine output
-//  weekly_score_change           delta, direction, new_score         Outcome improvement
+//  weekly_score_change           score_delta, direction, score_bracket  Outcome improvement
+//  account_data_deleted          stored_samples                      Hard churn (emitted before the wipe)
 //
 // ─── USER PROPERTIES (cohort segmentation) ──────────────────────────────────
 //
@@ -318,36 +323,32 @@ enum BlockType: String {
 //  longest_streak      0, 1, 2, ...               ENGAGEMENT:
 //  lifetime_core_actions 0, 1, 2, ...             health_score_bracket low | medium | high
 //  organic_session_pct 0-100                      health_focus         sleep,fitness,...
-//  nps_category        promoter | passive | detractor
 //  pmf_response        very_disappointed | somewhat | not
 //
 // ─── PMF-SPECIFIC EVENTS (direct measurement) ──────────────────────────
-//  pmf_survey_response           response, source                    Sean Ellis canonical Q
-//  pmf_segment_response          segment                             Ideal user persona
-//  pmf_benefit_response          benefit                             Core value proposition
-//  pmf_improvement_response      text_length                         What to build next
+//  satisfaction_survey_answered  sean_ellis_choice                   Sean Ellis canonical Q (step 1)
+//  pmf_survey_step               step, text_length                   Steps 2-4 reach + answer length (never the text)
+//  pmf_survey_completed          steps_answered                      Survey completion rate
 //  share_completed               content_type, activity_type, completed  Viral loop closure
-//  cloud_backup_completed        snapshot_count, ml_state_count      Data safety signal
-//  cloud_backup_failed           reason                              Trust risk
-//  cloud_restore_completed       snapshot_count, success             Returning user signal
 //  app_store_review_prompted     trigger                             Review velocity
-//  deep_link_opened              url, source                         Attribution
+//  deep_link_opened              url, source (widget|live_activity)  Attribution
 //  notification_permission_requested  source                         Permission funnel start
 //  notification_permission_result     granted, source                Permission conversion
+//  push_route_unresolved         route                               Remote push landed on an unmapped route
 //  query_feedback                helpful, confidence, query_length   LLM quality signal
 //
 // ─── BEHAVIORAL INTELLIGENCE (auto-computed, non-obvious) ───────────────────
-//  ghost_session                 duration_sec, screens_visited      Opened but did nothing
+//  ghost_session                 duration_sec, screens_viewed       Opened but did nothing
 //  session_quality               quality (deep/engaged/shallow/bounce) Session classification
 //  score_viewed                  score, delta, direction            When score is seen
 //  score_reaction                reaction_type, next_action         What they do after seeing score
 //  screenshot_taken              screen, tab                        Trust/share signal
-//  habit_ritual_formed           ritual_strength, peak_hour         Morning ritual detection
+//  habit_ritual_formed           ritual_strength_ratio, peak_hour_local  Morning ritual detection
 //  feature_discovered            feature, discovery_pct             Feature adoption map
 //  rage_tap                      element, screen, tap_count         Frustration detection
 //  pre_churn_signal              avg_engagement_score, trend        1-2 week churn warning
 //  value_delivered               has_new_value, new_insights        Did this session matter?
-//  background_refresh_result     success, samples_loaded            Data freshness pipeline
+//  background_refresh_result     success, reason, samples_loaded    Data freshness pipeline
 //
 //  USER PROPERTIES (behavioral):
 //  engagement_level              power_user | casual | at_risk | disengaging
@@ -399,6 +400,20 @@ final class AppAnalytics {
     }
 
     private init() {}
+
+    /// Events that must fire at most once per app run. The onboarding router
+    /// renders `content.id(screen)`, so every back navigation destroys and
+    /// rebuilds the screen and resets its view-local @State guard — the payoff
+    /// reveals re-fired on every back tap. A process-scoped claim dedupes the
+    /// whole flow run while still allowing a genuinely restarted onboarding (new
+    /// launch) to report its reveals.
+    private var oneShotEmitted: Set<String> = []
+
+    private func claimOneShot(_ key: String) -> Bool {
+        guard !oneShotEmitted.contains(key) else { return false }
+        oneShotEmitted.insert(key)
+        return true
+    }
 
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - Demographics & Device Properties
@@ -574,9 +589,14 @@ final class AppAnalytics {
     /// computed health results, so only the coarse band and the verdict are
     /// sent; the numbers stay on the phone.
     func trackOnboardingVitalityRevealed(vitalityAge: Int, realAge: Int, metricCount: Int, hasHealthData: Bool) {
+        guard claimOneShot("onboarding_vitality_revealed") else { return }
         let diff = realAge - vitalityAge   // + younger, - older
         let band: String
-        if diff >= 0 { band = "younger" }
+        // `even` is its own band: folding a zero gap into "younger" contradicted
+        // the verdict on the same event and swept the whole no-data cohort
+        // (vitality age == chronological age) into the younger bucket.
+        if diff > 0 { band = "younger" }
+        else if diff == 0 { band = "even" }
         else if diff >= -3 { band = "slightly_older" }
         else { band = "much_older" }
         logEvent("onboarding_vitality_revealed", parameters: [
@@ -610,10 +630,24 @@ final class AppAnalytics {
         logEvent("onboarding_symptoms_selected", parameters: ["symptoms": symptoms, "count": count])
     }
 
-    /// Apple sign-in outcome on the onboarding sign-in screen (13). Success is the
-    /// key account-creation conversion; failure includes user cancellation.
-    func trackSignInCompleted(method: String, success: Bool) {
-        logEvent("sign_in_completed", parameters: ["method": method, "success": success])
+    /// How the sign-in step ended. `skipped` exists because "Skip for now" creates
+    /// no account at all — reporting it as success=true made the account-creation
+    /// conversion rate read as ~100%.
+    enum SignInOutcome: String {
+        case completed
+        case skipped
+        case failed
+    }
+
+    /// Sign-in outcome on the onboarding sign-in screen (13). `success` stays on
+    /// the event for existing charts but is now derived: only `completed` is the
+    /// account-creation conversion.
+    func trackSignInCompleted(method: String, outcome: SignInOutcome) {
+        logEvent("sign_in_completed", parameters: [
+            "method": method,
+            "outcome": outcome.rawValue,
+            "success": outcome == .completed
+        ])
     }
 
     /// Heart screen (11): the resting-HR reveal outcome, so empty-state vs
@@ -622,6 +656,7 @@ final class AppAnalytics {
     /// funnel question, and events are joined to a signed-in user id, so a raw
     /// vital here would be identified health data leaving the phone.
     func trackOnboardingHeartRevealed(hasData: Bool, monthsCovered: Int?) {
+        guard claimOneShot("onboarding_heart_revealed") else { return }
         var params: [String: Any] = ["has_data": hasData]
         if let monthsCovered { params["months_covered"] = monthsCovered }
         logEvent("onboarding_heart_revealed", parameters: params)
@@ -633,16 +668,20 @@ final class AppAnalytics {
         logEvent("onboarding_notification_skipped", parameters: ["source": source])
     }
 
-    /// Call when onboarding is fully completed. The caller MUST run
-    /// `markOnboardingCompleted()` BEFORE this so the onboarding_completed user
-    /// property is already true and not self-contradictory. health_focus is kept
-    /// as a user property; the event itself carries only duration_sec.
+    /// Call when onboarding is fully completed. The two Identify calls run BEFORE
+    /// logEvent: Amplitude applies identifies in arrival order, so setting them
+    /// afterwards stamped this very event with the session-start value
+    /// onboarding_completed="no". `focuses` ships on the event as well as on the
+    /// user property so activation can be cut by goal at the completion moment.
     func trackOnboardingCompleted(focuses: [String], durationSec: Int) {
-        logEvent("onboarding_completed", parameters: [
-            "duration_sec": durationSec
-        ])
         setUserProperty("onboarding_completed", value: "yes")
         setUserProperty("health_focus", value: focuses.joined(separator: ","))
+
+        logEvent("onboarding_completed", parameters: [
+            "duration_sec": durationSec,
+            "focuses": focuses,
+            "focus_count": focuses.count
+        ])
 
         // Set demographics now that profile is captured
         setDemographicProperties()
@@ -707,16 +746,19 @@ final class AppAnalytics {
         }
     }
 
+    /// North-star metric #2. The caller runs inside every sync, so the one-shot
+    /// lives in `recordFirstValueTime()`: gating on `ttfv > 0` re-emitted the
+    /// session-1 seconds value on every later sync under the CURRENT session
+    /// number, and never emitted at all when the first value landed in the same
+    /// second as session start.
     func trackTimeToFirstValue() {
-        session.recordFirstValueTime()
+        guard session.recordFirstValueTime() else { return }
         let ttfv = session.firstValueTimeSec
-        if ttfv > 0 {
-            logEvent("time_to_first_value", parameters: [
-                "seconds": ttfv,
-                "session_number": session.totalSessions
-            ])
-            setUserProperty("first_value_time_sec", value: "\(ttfv)")
-        }
+        logEvent("time_to_first_value", parameters: [
+            "seconds": ttfv,
+            "session_number": session.totalSessions
+        ])
+        setUserProperty("first_value_time_sec", value: "\(ttfv)")
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -885,8 +927,10 @@ final class AppAnalytics {
             "network_type": networkType,
             "activation_status": session.isActivated ? "activated" : "not_activated",
             "engagement_level": engagement.rawValue,
-            "subscription_age_days": "\(subscriptionAgeDays)",
-            "nav_depth": "\(session.currentDepth)"
+            "subscription_age_days": "\(subscriptionAgeDays)"
+            // nav_depth is deliberately absent: startSession() resets currentDepth
+            // to 0 a few lines above, so it could only ever be "0". Session depth
+            // now ships as max_depth on session_ended.
         ])
 
         // Refresh demographic & device properties every session
@@ -920,12 +964,22 @@ final class AppAnalytics {
         // session_number is passed explicitly: by the time the idle-timeout end is
         // emitted, the live session.totalSessions has already incremented for the new
         // session, so logEvent's global injection would otherwise be off by one.
+        // session_source and opened_from are passed explicitly for the same reason
+        // session_number is: by the time this fires, the LIVE session's source is
+        // either the new session's (idle-timeout end) or the fresh process default
+        // (reconciled end), so logEvent's injection would describe the wrong
+        // session. A stored source that no longer maps onto the enum ships as
+        // "unknown" rather than being silently rewritten to app_icon.
+        let endedSource = SessionTracker.SessionSource(rawValue: stats.sessionSource)
         logEvent("session_ended", parameters: [
             "session_id": stats.sessionId,
             "session_number": stats.sessionNumber,
+            "session_source": stats.sessionSource,
+            "opened_from": endedSource.map(Self.openedFrom(for:)) ?? "unknown",
             "duration_sec": stats.durationSec,
             "active_sec": stats.activeSec,
             "screens_viewed": stats.screensVisited,
+            "max_depth": stats.maxDepth,
             "core_actions_count": stats.coreActionsCount,
             "ended_reason": stats.reason
         ])
@@ -983,6 +1037,7 @@ final class AppAnalytics {
         case viewedRiskDetail = "viewed_risk_detail"
         case completedMorningCheckIn = "completed_morning_checkin"
         case viewedDailyAction = "viewed_daily_action"
+        case completedDailyAction = "completed_daily_action"
         case loggedJournal = "logged_journal"
     }
 
@@ -1077,6 +1132,7 @@ final class AppAnalytics {
 
     /// Instant verdict payoff on the rich onboarding branch.
     func trackVerdictDelivered(zone: String, magnitudeBand: String, weekday: Int, nightsRemaining: Int, sideDiscoveryCount: Int) {
+        guard claimOneShot("verdict_delivered") else { return }
         logEvent("verdict_delivered", parameters: [
             "zone": zone,
             "magnitude_band": magnitudeBand,
@@ -1095,8 +1151,11 @@ final class AppAnalytics {
     }
 
     /// Denied-branch payoff: Health access granted after the re-permission push.
+    /// No properties: the event only exists on conversion, so a literal
+    /// `granted: 1` added nothing and collided with the boolean `granted` on the
+    /// notification-permission events.
     func trackRepermissionConversion() {
-        logEvent("repermission_conversion", parameters: ["granted": 1])
+        logEvent("repermission_conversion", parameters: [:])
     }
 
     /// First-ever morning check-in, the denied branch's value moment.
@@ -1128,6 +1187,7 @@ final class AppAnalytics {
         case viewedRiskDetail = "viewed_risk_detail"
         case completedMorningCheckIn = "completed_morning_checkin"
         case viewedDailyAction = "viewed_daily_action"
+        case completedDailyAction = "completed_daily_action"
         case askedHealthQuery = "asked_health_query"
     }
 
@@ -1232,19 +1292,30 @@ final class AppAnalytics {
         ])
     }
 
-    func trackCorrelationTapped(metricA: String, metricB: String, strength: String, screen: AppFeature) {
+    /// `source` names which Correlations tier the tap came from. It is a separate
+    /// property because `strength` is a single value space (Strong | Moderate |
+    /// Mild | none) and folding the tier into it would make one property carry two
+    /// unrelated vocabularies.
+    func trackCorrelationTapped(metricA: String, metricB: String, strength: String, source: String, screen: AppFeature) {
         logEvent("correlation_tapped", parameters: [
             "metric_a": metricA,
             "metric_b": metricB,
             "strength": strength,
+            "source": source,
             "screen": screen.rawValue
         ])
     }
 
-    func trackRiskTapped(riskType: String, grade: String, screen: AppFeature) {
+    /// `metric` is the tapped row's metric and `source` names which row type it
+    /// was ("focus_area" / "contributing_factor"). Without them the two call
+    /// sites on Risk Detail produce byte-identical payloads that only restate the
+    /// preceding screen_viewed.
+    func trackRiskTapped(riskType: String, grade: String, metric: String, source: String, screen: AppFeature) {
         logEvent("risk_tapped", parameters: [
             "risk_type": riskType,
             "grade": grade,
+            "metric": metric,
+            "source": source,
             "screen": screen.rawValue
         ])
     }
@@ -1297,6 +1368,10 @@ final class AppAnalytics {
 
         logEvent("weekly_score_change", parameters: [
             "score_bracket": scoreBracket(newScore),
+            // The magnitude, not just the bucket: a +3 and a +40 week were the
+            // same row. score_delta is the key daily_result_shown and
+            // score_reaction already use, and a delta is not an identifiable score.
+            "score_delta": delta,
             "direction": direction,
             "days_since_install": session.daysSinceInstall
         ])
@@ -1445,34 +1520,61 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call when user taps subscribe/CTA button on paywall.
-    func trackPaywallCTATapped(productID: String, price: String) {
+    /// Call when user taps subscribe/CTA button on paywall. `source` is the same
+    /// placement string passed to `trackPaywallViewed` — without it the
+    /// viewed→CTA→purchase conversion cannot be scored per placement, which is
+    /// the only reason the source dimension exists.
+    func trackPaywallCTATapped(productID: String, price: String, source: String) {
         logEvent("paywall_cta_tapped", parameters: [
             "product_id": productID,
             "price": price,
+            "source": source,
             "days_since_install": session.daysSinceInstall,
             "lifetime_core_actions": session.lifetimeCoreActions
         ])
     }
 
+    /// Billing period as a controlled value. Never derive this from display copy:
+    /// the plan labels are Firebase Remote Config strings, so a copy experiment
+    /// would silently retag every yearly selection as monthly.
+    enum BillingPeriod: String {
+        case yearly
+        case monthly
+    }
+
     /// Call when user toggles between yearly / monthly plans on the paywall
     /// (before the final CTA tap). Lets us see plan-selection bias separately
     /// from final purchase intent.
-    func trackPaywallPlanSelected(productID: String, period: String, price: String) {
+    func trackPaywallPlanSelected(productID: String, period: BillingPeriod, price: String) {
         logEvent("paywall_plan_selected", parameters: [
             "product_id": productID,
-            "period": period,
+            "period": period.rawValue,
             "price": price,
             "days_since_install": session.daysSinceInstall
         ])
     }
 
+    /// Controlled paywall failure cause. Never a substring match on a
+    /// user-facing message — those are Remote Config copy and every post-CTA
+    /// failure fell through to `unknown`.
+    enum PaywallErrorType: String {
+        case productsUnavailable = "products_unavailable"
+        case network
+        case purchaseFailed = "purchase_failed"
+        case purchasePending = "purchase_pending"
+        case paymentDeclined = "payment_declined"
+        case cancelled
+        case notPermitted = "not_permitted"
+        case restoreFailed = "restore_failed"
+        case unknown
+    }
+
     /// Call when paywall hits an error: products fail to load, restore fails,
     /// network times out, or payment is declined. Distinct from `purchase_failed`
     /// which is post-CTA only.
-    func trackPaywallError(errorType: String, source: String, timeOnPaywallSec: Int) {
+    func trackPaywallError(errorType: PaywallErrorType, source: String, timeOnPaywallSec: Int) {
         logEvent("paywall_error", parameters: [
-            "error_type": errorType,
+            "error_type": errorType.rawValue,
             "source": source,
             "time_on_paywall_sec": timeOnPaywallSec,
             "days_since_install": session.daysSinceInstall
@@ -1612,8 +1714,14 @@ final class AppAnalytics {
     /// webhook (server-side); until then this is client-inferred from a status flip
     /// and defaults the reason to `unknown`.
     func trackSubscriptionCancelled(reason: CancellationReason = .unknown) {
+        // months_subscribed must be read BEFORE subscription_status flips to
+        // expired: tenure-at-churn is the question this event exists for, and the
+        // user property it would otherwise have to be joined against is
+        // overwritten on the next line.
         logEvent("subscription_cancelled", parameters: [
-            "cancellation_reason": reason.rawValue
+            "cancellation_reason": reason.rawValue,
+            "months_subscribed": monthsSubscribed,
+            "days_since_install": session.daysSinceInstall
         ])
         setUserProperty("subscription_status", value: "expired")
     }
@@ -1656,6 +1764,11 @@ final class AppAnalytics {
         case paymentDeclined = "payment_declined"
         case networkError = "network_error"
         case verification
+        /// Ask to Buy / SCA challenge / deferred approval. A normal family-account
+        /// state, so these CTA taps must land somewhere instead of vanishing.
+        case pending
+        /// A StoreKit outcome this build does not know about.
+        case unknown
     }
 
     /// Call when a post-CTA purchase attempt fails. `failure_reason` is a
@@ -1867,10 +1980,12 @@ final class AppAnalytics {
         case let v as String: stringValue = v
         default: stringValue = String(describing: value)
         }
+        // No hardcoded `screen`: most call sites are on Notifications Settings,
+        // a distinct AppFeature, and the literal overrode logEvent's injection so
+        // every toggle looked like it happened on the Settings root.
         logEvent("setting_changed", parameters: [
             "setting_name": name,
-            "new_value": stringValue,
-            "screen": AppFeature.settings.rawValue
+            "new_value": stringValue
         ])
     }
 
@@ -1929,11 +2044,15 @@ final class AppAnalytics {
         ])
     }
 
-    // Section analytics
+    // Section analytics.
+    // `tab` is NOT set here: SectionTracker's `tab` is really the hosting SCREEN
+    // and views legitimately pass non-tab AppFeatures (.categoryDetail,
+    // .correlations, .weeklyReview…). Writing those into `tab` overrode
+    // logEvent's global and mixed a dozen screen names into a value space that is
+    // otherwise only home | live | explore | settings.
     func trackSectionViewed(section: AppSection, tab: AppFeature, durationMs: Int) {
         logEvent("section_viewed", parameters: [
             "section_id": section.rawValue,
-            "tab": tab.rawValue,
             "screen": tab.rawValue,
             "duration_ms": durationMs,
             "session_id": session.sessionId
@@ -1943,7 +2062,6 @@ final class AppAnalytics {
     func trackSectionTapped(section: AppSection, tab: AppFeature, target: String) {
         logEvent("section_tapped", parameters: [
             "section_id": section.rawValue,
-            "tab": tab.rawValue,
             "screen": tab.rawValue,
             "target_id": slugify(target),
             "target": target,
@@ -2001,11 +2119,14 @@ final class AppAnalytics {
         let storedHook = defaults.string(forKey: "healthpulse.notif.hook.\(identifier)")
         let hookCategory = Copy.Notifications.HookCategory(rawValue: storedHook ?? "").map(\.rawValue) ?? "none"
 
-        // alert_metric is the metric segment, already routed through
-        // anonymizeMetricValue (it's in metricParameterKeys) so a raw condition
-        // name never reaches Amplitude.
-        let parts = identifier.split(separator: ".")
-        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
+        // Time from the notification's real FIRE time to the open. The stored
+        // stamp is the trigger's fire date (written by trackNotificationScheduled),
+        // so this is a response latency, not the enqueue lead time.
+        let firedTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
+        let timeToOpenKnown = firedTimestamp > 0
+        let timeToOpenMin = timeToOpenKnown
+            ? max(Int(Date().timeIntervalSince1970 - firedTimestamp) / 60, 0)
+            : 0
 
         let params: [String: Any] = [
             // PII-safe id: any embedded HealthMetric raw value is collapsed to its
@@ -2014,7 +2135,9 @@ final class AppAnalytics {
             "notification_id": sanitizedNotificationID(identifier),
             "notification_type": NotificationManager.notificationType(identifier),
             "hook_category": hookCategory,
-            "alert_metric": alertMetric
+            "alert_metric": alertMetricSegment(identifier),
+            "time_to_open_min": timeToOpenMin,
+            "time_to_open_known": timeToOpenKnown ? 1 : 0
         ]
         logEvent("notification_opened", parameters: params)
 
@@ -2058,16 +2181,19 @@ final class AppAnalytics {
         let defaults = UserDefaults.standard
         let type = NotificationManager.notificationType(identifier)
 
-        let sentTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
+        // Measured from the trigger's FIRE date, not from enqueue time: a push
+        // scheduled 72h ahead used to report latency_minutes ~4320, which is the
+        // trigger lead time wearing a response-latency name. Clamped at 0 because
+        // willPresent can run a hair before the stored fire date.
+        let firedTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
         let now = Date()
-        let latencyKnown = sentTimestamp > 0
+        let latencyKnown = firedTimestamp > 0
         let latencyMinutes: Int = latencyKnown
-            ? Int(now.timeIntervalSince1970 - sentTimestamp) / 60
+            ? max(Int(now.timeIntervalSince1970 - firedTimestamp) / 60, 0)
             : 0
 
         let cal = Date.cal
         let parts = identifier.split(separator: ".")
-        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
         let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_presented", parameters: [
@@ -2077,7 +2203,7 @@ final class AppAnalytics {
             "latency_known": latencyKnown ? 1 : 0,
             "hour_presented_local": cal.component(.hour, from: now),
             "day_of_week": cal.component(.weekday, from: now),
-            "alert_metric": alertMetric,
+            "alert_metric": alertMetricSegment(identifier),
             "alert_subtype": alertSubtype
         ])
     }
@@ -2087,15 +2213,34 @@ final class AppAnalytics {
     func trackNotificationDismissed(identifier: String) {
         let type = NotificationManager.notificationType(identifier)
         let parts = identifier.split(separator: ".")
-        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
         let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_dismissed", parameters: [
             "notification_id": sanitizedNotificationID(identifier),
             "notification_type": type,
-            "alert_metric": alertMetric,
+            "alert_metric": alertMetricSegment(identifier),
             "alert_subtype": alertSubtype
         ])
+    }
+
+    /// Notification families whose identifier carries a HealthMetric rawValue in
+    /// its third dot segment. Matched through `NotificationManager.notificationType`
+    /// so the prefix scheme keeps one source of truth.
+    private static let alertMetricTypes: Set<String> = [
+        "safety_triage", "spike", "trend_reversal", "celebration", "alert"
+    ]
+
+    /// `alert_metric` for a notification identifier, or "none" when the id is not
+    /// an alert. A blind `parts[2]` slice shipped "day1", "2h", "gettingStarted"
+    /// and "notWorn" as metric values, and because alert_metric is in
+    /// `metricParameterKeys` that junk passed through untouched while real
+    /// metrics were collapsed to a category — so the breakdown mixed the two.
+    private func alertMetricSegment(_ identifier: String) -> String {
+        guard Self.alertMetricTypes.contains(NotificationManager.notificationType(identifier)) else {
+            return "none"
+        }
+        let parts = identifier.split(separator: ".")
+        return parts.count >= 3 ? String(parts[2]) : "none"
     }
 
     /// center.add() threw. Distinct from notification_suppressed (cap/filter). `error` is the
@@ -2120,12 +2265,18 @@ final class AppAnalytics {
     }
 
     // Monetization signals
-    func trackPremiumFeatureAttempted(feature: String, screen: AppFeature) {
-        logEvent("premium_feature_attempted", parameters: [
+
+    /// `screen` is where the user hit the wall. Pass nil from a reusable
+    /// component that does not know its host (TimeRangeSelector, LockedInsightsCTA)
+    /// so logEvent injects the real current screen — hardcoding .proOverlay there
+    /// overrode the global and collapsed the dimension to one constant value.
+    func trackPremiumFeatureAttempted(feature: String, screen: AppFeature? = nil) {
+        var params: [String: Any] = [
             "feature": feature,
-            "screen": screen.rawValue,
             "days_since_install": session.daysSinceInstall
-        ])
+        ]
+        if let screen { params["screen"] = screen.rawValue }
+        logEvent("premium_feature_attempted", parameters: params)
     }
 
     func trackLastMeaningfulAction(action: String, screen: AppFeature) {
@@ -2149,9 +2300,11 @@ final class AppAnalytics {
         ])
     }
 
-    func trackDiscoveryCompleted(pagesViewed: Int, totalPages: Int) {
+    /// No `pages_viewed`: Discovery is a non-dismissable full-screen cover whose
+    /// only exit is the last page's Continue button, so the count was always equal
+    /// to `total_pages`. Depth still ships on feature_close as max_page_viewed.
+    func trackDiscoveryCompleted(totalPages: Int) {
         logEvent("discovery_completed", parameters: [
-            "pages_viewed": pagesViewed,
             "total_pages": totalPages,
             "days_since_install": session.daysSinceInstall
         ])
@@ -2202,11 +2355,32 @@ final class AppAnalytics {
         ])
     }
 
-    /// Enqueue/intent-to-send floor (when we schedule a local notification), not delivered reach.
-    func trackNotificationScheduled(type: String, identifier: String, hookCategory: String? = nil) {
-        let now = Date()
-        let parts = identifier.split(separator: ".")
-        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
+    /// Enqueue/intent-to-send floor (when we schedule a local notification), not
+    /// delivered reach. `fireDate` is the trigger's real fire time — it is what
+    /// notification_presented / notification_opened measure their latency from,
+    /// so an enqueue stamp there reported the trigger lead time instead.
+    ///
+    /// Deduped per identifier per fire day: schedulers replace an already-pending
+    /// request idempotently (WatchMonitor re-runs on every heart-rate delivery,
+    /// housekeeping re-enqueues the repeating summaries on every dashboard
+    /// refresh), and counting each replacement as a fresh enqueue let
+    /// watch_monitor swamp the event and broke every scheduled→presented rate.
+    func trackNotificationScheduled(type: String, identifier: String, fireDate: Date, hookCategory: String? = nil) {
+        let defaults = UserDefaults.standard
+
+        if let hook = hookCategory {
+            defaults.set(hook, forKey: "healthpulse.notif.hook.\(identifier)")
+        }
+        defaults.set(fireDate.timeIntervalSince1970, forKey: "healthpulse.notif.sent.\(identifier)")
+
+        let dayKey = "healthpulse.notif.schedday.\(identifier)"
+        let fireDay = Date.cal.startOfDay(for: fireDate)
+        if let lastFireDay = defaults.object(forKey: dayKey) as? Date,
+           Date.cal.isDate(lastFireDay, inSameDayAs: fireDay) {
+            return
+        }
+        defaults.set(fireDay, forKey: dayKey)
+
         var params: [String: Any] = [
             "notification_type": type,
             // Same sanitized id as opened/presented/dismissed/suppressed, so the
@@ -2217,15 +2391,23 @@ final class AppAnalytics {
             // format flip. Remove once the pre-flip scheduled cohort has aged out
             // and dashboards read notification_id.
             "notification_id_legacy": Self.sha256Hash16(identifier),
-            "alert_metric": alertMetric
+            "alert_metric": alertMetricSegment(identifier),
+            "lead_time_min": max(Int(fireDate.timeIntervalSinceNow) / 60, 0)
         ]
         if let hook = hookCategory {
             params["hook_category"] = hook
-            UserDefaults.standard.set(hook, forKey: "healthpulse.notif.hook.\(identifier)")
         }
-        // Store send timestamp for time-to-open calculation
-        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "healthpulse.notif.sent.\(identifier)")
         logEvent("notification_scheduled", parameters: params)
+    }
+
+    /// A remote push carried a route this build cannot map. Deliberately NOT a
+    /// notification_suppressed: this runs from `didReceive`, i.e. the push was
+    /// delivered AND opened, so filing it as a pre-delivery suppression polluted
+    /// the suppression-reason breakdown the cap/filter gates own.
+    func trackPushRouteUnresolved(route: String) {
+        logEvent("push_route_unresolved", parameters: [
+            "route": route
+        ])
     }
 
     /// Stable, non-reversible SHA256 hash truncated to 16 hex chars. Used for
@@ -2297,16 +2479,6 @@ final class AppAnalytics {
         ])
     }
 
-    /// Track that the user opened an insight. `metricCategory` must be a
-    /// controlled `HealthCategory` rawValue (heart, sleep, activity, body,
-    /// respiratory, mindfulness, mobility, nutrition, hearing) — never a raw
-    /// metric name. screen/tab/opened_from arrive as auto-injected globals.
-    func trackInsightOpened(metricCategory: HealthCategory) {
-        logEvent("insight_opened", parameters: [
-            "metric_category": metricCategory.rawValue
-        ])
-    }
-
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 16. Health Data Pipeline Quality
     // ══════════════════════════════════════════════════════════════════════
@@ -2322,10 +2494,14 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call after HealthKit authorization response.
+    /// Call after HealthKit authorization response. The COUNT ships as
+    /// `granted_count`: `granted` is a 0/1 boolean on every other permission
+    /// event, and Amplitude treats one property name as one value space, so a
+    /// count here made every "granted = 1" filter mean two different things.
     func trackHealthPermissionResult(granted: Int, denied: Int, total: Int) {
         logEvent("health_permission_result", parameters: [
-            "granted": granted,
+            "granted": granted > 0,
+            "granted_count": granted,
             "denied": denied,
             "total": total,
             "grant_rate": total > 0 ? Double(granted) / Double(total) : 0
@@ -2542,16 +2718,15 @@ final class AppAnalytics {
         mood: PostSessionMood?
     ) {
         let plannedDurationSec = Int(breathingProtocol.sessionDuration)
-        let completionRate = plannedDurationSec > 0
-            ? min(max(Double(actualDurationSec) / Double(plannedDurationSec), 0), 1)
-            : 0
 
+        // No `completion_rate`: completeSession() only runs when the timer reaches
+        // zero, so it was a constant 1.0 here. It is a real dimension only on
+        // breathwork_session_abandoned.
         logEvent("breathwork_session_completed", parameters: [
             "protocol_type": breathingProtocol.subtitle,
             "protocol_id": breathingProtocol.rawValue,
             "planned_duration_sec": plannedDurationSec,
             "actual_duration_sec": actualDurationSec,
-            "completion_rate": completionRate,
             "pause_count": pauseCount,
             "mood": mood?.rawValue.lowercased() ?? "unanswered"
         ])
@@ -2752,7 +2927,18 @@ final class AppAnalytics {
     // MARK: - 20c. Achievement Events
     // ══════════════════════════════════════════════════════════════════════
 
+    /// One event per achievement per install. GamificationEngine holds its
+    /// unlocked set in memory only, so on the first compute() of every cold
+    /// launch it classifies every already-unlocked achievement as new — a user
+    /// with 8 unlocked emitted 8 events on every launch. The persisted claim
+    /// below is the only place that survives the process.
     func trackAchievementUnlocked(id: String, title: String, category: String) {
+        let key = "laso.analytics.achievements_emitted"
+        var emitted = Set(defaults.stringArray(forKey: key) ?? [])
+        guard !emitted.contains(id) else { return }
+        emitted.insert(id)
+        defaults.set(Array(emitted), forKey: key)
+
         logEvent("achievement_unlocked", parameters: [
             "achievement_id": id,
             "achievement_title": title,
@@ -2808,6 +2994,19 @@ final class AppAnalytics {
         ])
     }
 
+    /// The user wiped their account from Settings. MUST be emitted as the FIRST
+    /// statement of the deletion routine: the wipe calls
+    /// `AnalyticsBackend.provider.reset()`, after which any event lands on a
+    /// fresh anonymous id and the strongest churn signal in the product is lost.
+    func trackAccountDataDeleted(storedSamples: Int) {
+        logEvent("account_data_deleted", parameters: [
+            "stored_samples": storedSamples,
+            "days_since_install": session.daysSinceInstall,
+            "total_sessions": session.totalSessions,
+            "was_activated": session.isActivated ? 1 : 0
+        ])
+    }
+
     /// Call when score generation fails.
     func trackScoreGenerationFailed(reason: String) {
         logEvent("score_generation_failed", parameters: [
@@ -2816,10 +3015,23 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call when sync times out or fails.
-    func trackSyncFailed(reason: String, retryCount: Int = 0) {
+    /// Controlled sync-failure cause. Free text produced one distinct `reason`
+    /// per device locale and per underlying error string, so the dimension could
+    /// not be grouped. Put the localized description on `trackError` instead.
+    enum SyncFailureReason: String {
+        case healthkitAuthorization = "healthkit_authorization"
+        case protectedDataUnavailable = "protected_data_unavailable"
+        case noModelContext = "no_model_context"
+        case timeout
+        case unknown
+    }
+
+    /// Call when sync times out or fails. `retryCount` is the number of attempts
+    /// already burned — the whole point of the property is answering "did retries
+    /// help?", so pass the real count, never the default.
+    func trackSyncFailed(reason: SyncFailureReason, retryCount: Int = 0) {
         logEvent("sync_failed", parameters: [
-            "reason": reason,
+            "reason": reason.rawValue,
             "retry_count": retryCount
         ])
     }
@@ -2841,11 +3053,15 @@ final class AppAnalytics {
         // Ghost: >5 sec but zero core actions and ≤1 screen
         let isGhost = durationSec >= 5 && coreActionsCount == 0 && screensVisited <= 1
         if isGhost {
+            // screens_viewed / core_actions_count, matching session_ended: these
+            // three events are built from the SAME EndedStats milliseconds apart,
+            // and two key names for one value meant no single breakdown could
+            // chart screens-per-session across the session funnel.
             logEvent("ghost_session", parameters: [
                 "session_id": stats.sessionId,
                 "session_number": stats.sessionNumber,
                 "duration_sec": durationSec,
-                "screens_visited": screensVisited,
+                "screens_viewed": screensVisited,
                 "days_since_install": session.daysSinceInstall,
                 "streak_days": session.streakDays,
                 "session_source": stats.sessionSource
@@ -2864,8 +3080,8 @@ final class AppAnalytics {
             "session_number": stats.sessionNumber,
             "quality": quality,
             "duration_sec": durationSec,
-            "screens_visited": screensVisited,
-            "core_actions": coreActionsCount,
+            "screens_viewed": screensVisited,
+            "core_actions_count": coreActionsCount,
             "session_source": stats.sessionSource
         ])
     }
@@ -2993,14 +3209,13 @@ final class AppAnalytics {
 
         if isRitual && !defaults.bool(forKey: HabitKey.ritualDetected) {
             defaults.set(true, forKey: HabitKey.ritualDetected)
-            // peak_hour is computed only when at least one session hour exists.
-            // Send a sibling `peak_hour_known` flag instead of a -1 sentinel so
-            // PostHog charts that average peak_hour aren't poisoned.
+            // `hours` is guaranteed non-empty by the count >= 5 guard above, so
+            // max() cannot return nil — the old sibling `peak_hour_known` flag was
+            // a constant 1 on every event.
             let computedPeakHour = hours.max(by: { a, b in hours.filter { $0 == a }.count < hours.filter { $0 == b }.count })
             logEvent("habit_ritual_formed", parameters: [
                 "ritual_strength_ratio": ritualStrength,
                 "peak_hour_local": computedPeakHour ?? 0,
-                "peak_hour_known": computedPeakHour == nil ? 0 : 1,
                 "days_since_install": session.daysSinceInstall,
                 "streak_days": session.streakDays
             ])
@@ -3132,10 +3347,21 @@ final class AppAnalytics {
     // --- H. Background Refresh Success ---
     // If background refresh fails, the app feels stale when opened. Users leave.
 
-    /// Call after background refresh completes.
-    func trackBackgroundRefreshResult(success: Bool, durationMs: Int, samplesLoaded: Int) {
+    /// Why a background pass ended the way it did. Without it a drop in
+    /// background_refresh_result volume cannot be split between "BGTask never
+    /// ran", "thermal throttle" and "no readiness produced".
+    enum BackgroundRefreshReason: String {
+        case ok
+        case noReadiness = "no_readiness"
+        case thermalThrottle = "thermal_throttle"
+    }
+
+    /// Call after background refresh completes, INCLUDING the early exits — a
+    /// throttled device must show up as failures with a cause, not as silence.
+    func trackBackgroundRefreshResult(success: Bool, reason: BackgroundRefreshReason, durationMs: Int, samplesLoaded: Int) {
         logEvent("background_refresh_result", parameters: [
             "success": success ? 1 : 0,
+            "reason": reason.rawValue,
             "duration_ms": durationMs,
             "samples_loaded": samplesLoaded
         ])
@@ -3356,6 +3582,24 @@ final class AppAnalytics {
         setUserProperty("pmf_response", value: choice.rawValue)
     }
 
+    /// Steps 2-4 of the survey (segment / benefit / improvement). Only the step id
+    /// and how much the user wrote are sent — the free-text answers are health
+    /// context and stay on the phone.
+    func trackPMFSurveyStep(step: String, textLength: Int) {
+        logEvent("pmf_survey_step", parameters: [
+            "step": step,
+            "text_length": textLength
+        ])
+    }
+
+    /// The survey's terminal event. Without it, completion rate cannot be
+    /// computed at all: only step 1 emitted anything.
+    func trackPMFSurveyCompleted(stepsAnswered: Int) {
+        logEvent("pmf_survey_completed", parameters: [
+            "steps_answered": stepsAnswered
+        ])
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 24. Share Completion
     // ══════════════════════════════════════════════════════════════════════
@@ -3367,34 +3611,6 @@ final class AppAnalytics {
             "content_type": contentType,
             "activity_type": activityType ?? "unknown",
             "completed": completed ? 1 : 0
-        ])
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 25. Cloud Backup Lifecycle
-    // ══════════════════════════════════════════════════════════════════════
-
-    /// Call after a cloud backup succeeds.
-    func trackCloudBackupCompleted(snapshotCount: Int, mlStateCount: Int) {
-        logEvent("cloud_backup_completed", parameters: [
-            "snapshot_count": snapshotCount,
-            "ml_state_count": mlStateCount
-        ])
-    }
-
-    /// Call after a cloud backup fails.
-    func trackCloudBackupFailed(reason: String) {
-        logEvent("cloud_backup_failed", parameters: [
-            "reason": reason
-        ])
-    }
-
-    /// Call after a cloud restore completes.
-    func trackCloudRestoreCompleted(snapshotCount: Int, mlStateCount: Int, success: Bool) {
-        logEvent("cloud_restore_completed", parameters: [
-            "snapshot_count": snapshotCount,
-            "ml_state_count": mlStateCount,
-            "success": success ? 1 : 0
         ])
     }
 
@@ -3539,6 +3755,7 @@ final class AppAnalytics {
         case .organic:      return "app_icon"
         case .notification: return "notification"
         case .widget:       return "widget"
+        case .liveActivity: return "live_activity"
         }
     }
 

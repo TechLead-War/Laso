@@ -8,14 +8,27 @@ import SwiftUI
 /// The dial reads as a quantity, not just a band. A filled tile said only which
 /// of three buckets a day fell in, so 52 and 74 looked identical; the arc shows
 /// how far into the band the day actually was.
-struct ExploreMonthCalendarSection: View {
+struct ExploreMonthCalendarSection: View, Equatable {
     /// Score per day, keyed by `startOfDay`.
     let scoresByDay: [Date: Int]
     /// The life contexts switched on for a given day, finished ones included.
     /// A dip explains itself when the calendar can say it was the injured week.
-    let contextsForDay: (Date) -> [LifeContextStore.Context]
+    /// A value rather than a closure so the whole input can be compared.
+    let contextsByDay: [Date: [LifeContextStore.Context]]
     /// Everything the app can honestly say about one past day.
     let detailForDay: (Date) -> DashboardViewModel.DayDetail
+
+    /// This card is the most expensive thing the app draws: 31 day dials in one
+    /// view, measured at 88 ms to rasterize. Comparing its inputs lets SwiftUI
+    /// skip it entirely when a parent rebuilds for an unrelated reason, which is
+    /// what used to repaint it mid-scroll.
+    ///
+    /// `detailForDay` is excluded on purpose: it runs only when a day is tapped
+    /// and reads live view-model state at that moment, so it cannot go stale.
+    /// Everything actually drawn comes from the two dictionaries above.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.scoresByDay == rhs.scoresByDay && lhs.contextsByDay == rhs.contextsByDay
+    }
 
     @State private var monthAnchor: Date = Date.cal.startOfDay(for: Date())
     @State private var selectedDay: SelectedDay?
@@ -103,6 +116,12 @@ struct ExploreMonthCalendarSection: View {
         let disabled = step > 0 && isViewingCurrentMonth
         return Button {
             guard let moved = Date.cal.date(byAdding: .month, value: step, to: monthAnchor) else { return }
+            AppAnalytics.shared.trackBlockTap(
+                title: "Month Step",
+                type: .exploreCalendarMonthStep,
+                screen: .explore,
+                metadata: ["step": step]
+            )
             monthAnchor = moved
         } label: {
             Image(systemName: systemImage)
@@ -154,9 +173,15 @@ struct ExploreMonthCalendarSection: View {
         let score = scoresByDay[day]
         let isFuture = day > today
         let isToday = day == today
-        let contexts = contextsForDay(day)
+        let contexts = contextsByDay[day] ?? []
 
         return Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Calendar Day",
+                type: .exploreCalendarDay,
+                screen: .explore,
+                metadata: ["has_score": score != nil, "is_today": isToday]
+            )
             selectedDay = SelectedDay(date: day)
         } label: {
             VStack(spacing: 1) {
@@ -227,6 +252,11 @@ struct ExploreMonthCalendarSection: View {
                     .accessibilityIdentifier("explore.monthCalendar.scoredDays")
             } else {
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Today",
+                        type: .exploreCalendarToday,
+                        screen: .explore
+                    )
                     monthAnchor = today
                 } label: {
                     Text(Copy.Explore.monthToday)

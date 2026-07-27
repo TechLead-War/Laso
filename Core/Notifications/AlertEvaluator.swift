@@ -114,8 +114,18 @@ final class AlertEvaluator {
         }
 
         // Trend reversals and improvement celebrations are never critical, so
-        // they are skipped outright while non-critical alerts are muted.
-        guard !suppressNonCritical else { return }
+        // they are skipped outright while non-critical alerts are muted. No
+        // identifier exists yet at this point, so the family prefix stands in
+        // for the batch and only enabled families are reported.
+        if suppressNonCritical {
+            if preferences.trendReversalAlertsEnabled {
+                trackSuppressed(identifier: AppConstants.NotificationID.reversalPrefix, reason: "non_critical_muted")
+            }
+            if preferences.improvementAlertsEnabled {
+                trackSuppressed(identifier: AppConstants.NotificationID.celebrationPrefix, reason: "non_critical_muted")
+            }
+            return
+        }
 
         // 3. Trend reversal alerts
         if preferences.trendReversalAlertsEnabled {
@@ -491,9 +501,27 @@ final class AlertEvaluator {
         )
     }
 
+    /// Mirrors the per-gate reporting NotificationManager does for its own
+    /// gates. These two gates run BEFORE the manager is reached, so without this
+    /// the cooldown dedupe (the largest attrition source in the alert funnel)
+    /// and the kill switch drop alerts with nothing emitted at all.
+    private func trackSuppressed(identifier: String, reason: String) {
+        AppAnalytics.shared.trackNotificationSuppressed(
+            type: NotificationManager.notificationType(identifier),
+            identifier: identifier,
+            reason: reason
+        )
+    }
+
     private func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
-        guard severity == .critical || !suppressNonCritical else { return }
-        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
+        guard severity == .critical || !suppressNonCritical else {
+            trackSuppressed(identifier: identifier, reason: "non_critical_muted")
+            return
+        }
+        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else {
+            trackSuppressed(identifier: identifier, reason: "alert_cooldown")
+            return
+        }
 
         let scheduled = NotificationManager.shared.scheduleNotification(
             title: title,
@@ -511,8 +539,14 @@ final class AlertEvaluator {
     }
 
     private func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
-        guard severity == .critical || !suppressNonCritical else { return }
-        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
+        guard severity == .critical || !suppressNonCritical else {
+            trackSuppressed(identifier: identifier, reason: "non_critical_muted")
+            return
+        }
+        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else {
+            trackSuppressed(identifier: identifier, reason: "alert_cooldown")
+            return
+        }
 
         let scheduled = NotificationManager.shared.scheduleNotification(
             title: title,

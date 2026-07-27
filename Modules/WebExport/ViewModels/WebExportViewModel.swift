@@ -49,6 +49,11 @@ final class WebExportViewModel {
             )
         } catch {
             self.error = "Failed to save report: \(error.localizedDescription)"
+            AppAnalytics.shared.trackError(
+                type: "report_export_failed",
+                screen: .settings,
+                message: error.localizedDescription
+            )
         }
     }
 

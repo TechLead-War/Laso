@@ -36,6 +36,13 @@ struct ExploreDaySheet: View {
         }
         .presentationDetents([.medium, .large])
         .accessibilityIdentifier("explore.daySheet")
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.exploreDaySheet, metadata: [
+                "has_score": detail.score != nil,
+                "signals_count": detail.signals.count
+            ])
+        }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.exploreDaySheet) }
     }
 
     @ViewBuilder

@@ -19,17 +19,14 @@ final class NotificationRouter {
     private init() {}
 
     /// Parse a remote-push `userInfo` payload and stage its route for navigation.
-    /// Unknown or missing routes are recorded as a suppressed push so routing
-    /// gaps are visible in analytics rather than failing silently.
+    /// An unmappable route is reported as `push_route_unresolved` so routing gaps
+    /// are visible in analytics rather than failing silently. Not a suppression:
+    /// this runs from `didReceive`, so the push was already delivered and opened.
     func handle(userInfo: [AnyHashable: Any]) {
         guard let routeString = userInfo["route"] as? String else { return }
 
         guard let route = Route.fromUITestIdentifier(routeString) else {
-            AppAnalytics.shared.trackNotificationSuppressed(
-                type: "push",
-                identifier: routeString,
-                reason: "unknown_route"
-            )
+            AppAnalytics.shared.trackPushRouteUnresolved(route: routeString)
             return
         }
 

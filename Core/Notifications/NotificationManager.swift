@@ -101,24 +101,38 @@ final class NotificationManager: @unchecked Sendable {
     }
 
     /// Request notification authorization
+    ///
+    /// The permission funnel events only fire from `.notDetermined`, the one
+    /// status where iOS actually shows the dialog. From `.denied` the OS returns
+    /// false immediately with no UI, so emitting them there inflated the funnel
+    /// denominator with prompts the user never saw (the Remind button re-asks on
+    /// every tap) and understated the grant rate.
     @discardableResult
     func requestAuthorization(source: String = "system") async -> Bool {
-        await MainActor.run {
-            AppAnalytics.shared.trackNotificationPermissionRequested(source: source)
+        let status = await center.notificationSettings().authorizationStatus
+        let willPrompt = status == .notDetermined
+        if willPrompt {
+            await MainActor.run {
+                AppAnalytics.shared.trackNotificationPermissionRequested(source: source)
+            }
         }
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             cachedAuthorized = granted
             await MainActor.run {
                 AppAnalytics.shared.updateNotificationProperties(enabled: granted)
-                AppAnalytics.shared.trackNotificationPermissionResult(granted: granted, source: source)
+                if willPrompt {
+                    AppAnalytics.shared.trackNotificationPermissionResult(granted: granted, source: source)
+                }
             }
             return granted
         } catch {
             cachedAuthorized = false
             await MainActor.run {
                 AppAnalytics.shared.updateNotificationProperties(enabled: false)
-                AppAnalytics.shared.trackNotificationPermissionResult(granted: false, source: source)
+                if willPrompt {
+                    AppAnalytics.shared.trackNotificationPermissionResult(granted: false, source: source)
+                }
             }
             #if DEBUG
             print("Notification authorization failed: \(error.localizedDescription)")
@@ -349,8 +363,13 @@ final class NotificationManager: @unchecked Sendable {
                         store.recordNotificationSent(id: identifier, type: notifType)
                     }
                 }
-                Task { @MainActor in
-                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, hookCategory: hookCategory)
+                // `fireDate` is captured by value: it is a var that quiet-hours
+                // deferral rewrites, and a concurrent read of it is a Swift 6 error.
+                Task { @MainActor [fireDate] in
+                    // The trigger's true fire date, not the enqueue time: the
+                    // tracker stamps it as the send time, so presented/opened
+                    // latencies measure user response instead of trigger lead.
+                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, fireDate: fireDate, hookCategory: hookCategory)
                 }
             }
         }

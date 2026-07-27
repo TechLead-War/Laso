@@ -310,6 +310,10 @@ struct BrainHealthDetailView: View {
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
+        .onChange(of: showLearnMore) { _, isOpen in
+            guard isOpen else { return }
+            AppAnalytics.shared.trackExplanationViewed(type: "brain_health_methodology", screen: .brainHealth)
+        }
     }
 
     private var memoryBlock: some View {

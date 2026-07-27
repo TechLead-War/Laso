@@ -134,6 +134,10 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
+                AppAnalytics.shared.trackPMFSurveyStep(
+                    step: "\(step.rawValue)",
+                    textLength: segmentAnswer.count
+                )
                 withAnimation(.smooth(duration: 0.3)) { step = .benefit }
             } label: {
                 Text(Copy.Common.continueLabel)
@@ -159,6 +163,10 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
+                AppAnalytics.shared.trackPMFSurveyStep(
+                    step: "\(step.rawValue)",
+                    textLength: benefitAnswer.count
+                )
                 withAnimation(.smooth(duration: 0.3)) { step = .improvement }
             } label: {
                 Text(Copy.Common.continueLabel2)
@@ -184,6 +192,10 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
+                AppAnalytics.shared.trackPMFSurveyStep(
+                    step: "\(step.rawValue)",
+                    textLength: improvementText.count
+                )
                 submitSurvey()
             } label: {
                 Text(improvementText.isEmpty ? Copy.Common.doneButton : Copy.Common.submitButton)
@@ -219,6 +231,11 @@ struct PMFSurveySheet: View {
     // MARK: - Submit
 
     private func submitSurvey() {
+        // Only the count of answered steps ships; the free-text answers stay in-app (PII).
+        let stepsAnswered = [disappointmentAnswer, segmentAnswer, benefitAnswer, improvementText]
+            .filter { !($0 ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .count
+        AppAnalytics.shared.trackPMFSurveyCompleted(stepsAnswered: stepsAnswered)
         PMFSurveyManager.shared.markSurveyCompleted()
         withAnimation(.smooth(duration: 0.3)) { submitted = true }
     }

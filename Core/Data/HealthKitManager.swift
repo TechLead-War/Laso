@@ -113,6 +113,10 @@ final class HealthKitManager: @unchecked Sendable {
 
     private static let authorizationGrantedKey = "Laso.HealthKitManager.authorizationGranted"
 
+    /// Metric rawValue -> the day it was last reported stale, so a metric that
+    /// stays stale for a month reports once a day instead of once per sync.
+    private static let staleReportedDayKey = "Laso.HealthKitManager.staleReportedDay"
+
     func requestAuthorization() async {
         guard isHealthKitAvailable else {
             error = "HealthKit is not available on this device"
@@ -179,10 +183,17 @@ final class HealthKitManager: @unchecked Sendable {
                 // Data-pipeline failure signal: lets analytics see HealthKit auth/sync
                 // failures separately from generic errors so churn analysis can isolate
                 // permission-related drop-off from runtime errors.
-                AppAnalytics.shared.trackSyncFailed(reason: "healthkit_authorization: \(error.localizedDescription)")
+                // The retry helper only rethrows from its final attempt, so
+                // reaching here means every attempt was burned.
+                AppAnalytics.shared.trackSyncFailed(
+                    reason: .healthkitAuthorization,
+                    retryCount: Self.authorizationAttempts
+                )
             }
         }
     }
+
+    private static let authorizationAttempts = 4
 
     /// Requests HealthKit authorization, retrying the transient cold-launch
     /// daemon error a few times with growing backoff (~0.3s, 0.6s, 1.2s). Only
@@ -191,7 +202,7 @@ final class HealthKitManager: @unchecked Sendable {
     private func requestAuthorizationWithRetry(
         share: Set<HKSampleType>,
         read: Set<HKObjectType>,
-        attempts: Int = 4
+        attempts: Int = HealthKitManager.authorizationAttempts
     ) async throws {
         var delayNs: UInt64 = 300_000_000
         for attempt in 1...attempts {
@@ -235,6 +246,9 @@ final class HealthKitManager: @unchecked Sendable {
         // the next unlock/foreground trigger syncs instead.
         #if os(iOS)
         guard UIApplication.shared.isProtectedDataAvailable else {
+            // Reported, not silent: a locked device skipping every pass is a
+            // broken pipeline from the outside, and this used to emit nothing.
+            AppAnalytics.shared.trackSyncFailed(reason: .protectedDataUnavailable)
             return SyncResult(metricsWithNewData: [], isFirstSync: false)
         }
         #endif
@@ -299,16 +313,6 @@ final class HealthKitManager: @unchecked Sendable {
                     // Check if this metric's latest sample is stale
                     let latestSampleDate = timeSeries[metric]?.samples.last?.date
                     if let latestSampleDate, latestSampleDate < staleCutoff {
-                        // Stale data signal: latest sample is older than 7 days,
-                        // strongest churn precursor for wearable users (device
-                        // not worn, paired wrong, sync broken).
-                        let staleHours = Int(Date().timeIntervalSince(latestSampleDate) / 3600)
-                        await MainActor.run {
-                            AppAnalytics.shared.trackStaleDataDetected(
-                                staleSinceHours: staleHours,
-                                metric: metric.rawValue
-                            )
-                        }
                         syncProgress?.metricsCompleted += 1
                         fetchedMetrics.insert(metric)
                         continue
@@ -376,43 +380,80 @@ final class HealthKitManager: @unchecked Sendable {
         let permissionGranted = HealthMetric.allCases.filter { timeSeries[$0]?.samples.isEmpty == false }.count
         reportHealthPermissionGrantOnce(granted: permissionGranted, denied: permissionTotal - permissionGranted, total: permissionTotal)
 
+        reportStaleCoreMetrics(staleCutoff: staleCutoff, coreMetrics: coreMetrics)
+
         lastRefresh = Date()
         isLoading = false
 
-        // Track sync completion
-        let totalNewSamples = persisted.totalInsertedSamples
-        let changedMetricsCount = persisted.metricsWithChanges.count
-        let syncDuration = Int(Date().timeIntervalSince(syncStartTime))
-        AppAnalytics.shared.trackDataSync(
-            metricsCount: changedMetricsCount,
-            newSamplesCount: totalNewSamples,
-            durationSec: syncDuration,
-            isFirstSync: isFirstSync
-        )
-        AppAnalytics.shared.trackSyncPerformance(
-            durationMs: Int(Date().timeIntervalSince(syncStartTime) * 1000),
-            metricsCount: changedMetricsCount,
-            samplesLoaded: persisted.totalChangedSamples,
-            isIncremental: !isFirstSync
-        )
-        AppAnalytics.shared.trackDataPipelineQuality(
-            metricsAvailable: fetchedMetrics.count,
-            metricsMissing: max(HealthMetric.allCases.count - fetchedMetrics.count, 0),
-            dataCoveragePercent: (fetchedMetrics.count * 100) / max(HealthMetric.allCases.count, 1),
-            lastSyncAgeSec: previousRefresh.map { Int(syncStartTime.timeIntervalSince($0)) } ?? -1,
-            hasEnoughForScore: fetchedMetrics.count >= 8
-        )
+        // Track sync completion. Skipped entirely when persistence was
+        // unavailable (`persisted` is nil): sync_failed already went out, and
+        // emitting a zero-sample success next to it would read as "the user had
+        // no new health data".
+        if let persisted {
+            let totalNewSamples = persisted.totalInsertedSamples
+            let changedMetricsCount = persisted.metricsWithChanges.count
+            let syncDuration = Int(Date().timeIntervalSince(syncStartTime))
+            AppAnalytics.shared.trackDataSync(
+                metricsCount: changedMetricsCount,
+                newSamplesCount: totalNewSamples,
+                durationSec: syncDuration,
+                isFirstSync: isFirstSync
+            )
+            AppAnalytics.shared.trackSyncPerformance(
+                durationMs: Int(Date().timeIntervalSince(syncStartTime) * 1000),
+                metricsCount: changedMetricsCount,
+                samplesLoaded: persisted.totalChangedSamples,
+                isIncremental: !isFirstSync
+            )
+            AppAnalytics.shared.trackDataPipelineQuality(
+                metricsAvailable: fetchedMetrics.count,
+                metricsMissing: max(HealthMetric.allCases.count - fetchedMetrics.count, 0),
+                dataCoveragePercent: (fetchedMetrics.count * 100) / max(HealthMetric.allCases.count, 1),
+                lastSyncAgeSec: previousRefresh.map { Int(syncStartTime.timeIntervalSince($0)) } ?? -1,
+                hasEnoughForScore: fetchedMetrics.count >= 8
+            )
+        }
+
+        let changedMetrics = persisted?.metricsWithChanges ?? []
 
         // Activation: first data load + time-to-first-value
-        if !persisted.metricsWithChanges.isEmpty {
+        if !changedMetrics.isEmpty {
             AppAnalytics.shared.trackActivationMilestone(.firstDataLoad)
             AppAnalytics.shared.trackTimeToFirstValue()
         }
 
         return SyncResult(
-            metricsWithNewData: persisted.metricsWithChanges,
+            metricsWithNewData: changedMetrics,
             isFirstSync: isFirstSync
         )
+    }
+
+    /// Emits `stale_data_detected` for core metrics whose newest sample is older
+    /// than the staleness cutoff, at most once per metric per day.
+    ///
+    /// This used to live inside the "skip this metric" branch of the fetch
+    /// fan-out, which is guarded on `!coreMetrics.contains(metric)` — so the
+    /// exact cohort the signal exists for (watch not worn, pairing broken, sync
+    /// dead) could never emit it. Peripheral metrics no longer emit: a weight or
+    /// mindfulness gap is normal use, not a broken wearable.
+    @MainActor
+    private func reportStaleCoreMetrics(staleCutoff: Date, coreMetrics: Set<HealthMetric>) {
+        let defaults = UserDefaults.standard
+        var reportedDays = defaults.dictionary(forKey: Self.staleReportedDayKey) as? [String: Int] ?? [:]
+        let now = Date()
+        let today = Int(now.timeIntervalSince1970 / 86400)
+
+        for metric in coreMetrics {
+            // No samples at all is "never had this data", not stale data.
+            guard let latest = timeSeries[metric]?.samples.last?.date, latest < staleCutoff else { continue }
+            guard reportedDays[metric.rawValue] != today else { continue }
+            reportedDays[metric.rawValue] = today
+            AppAnalytics.shared.trackStaleDataDetected(
+                staleSinceHours: Int(now.timeIntervalSince(latest) / 3600),
+                metric: metric.rawValue
+            )
+        }
+        defaults.set(reportedDays, forKey: Self.staleReportedDayKey)
     }
 
     @MainActor
@@ -420,9 +461,13 @@ final class HealthKitManager: @unchecked Sendable {
         newData: [(HealthMetric, MetricTimeSeries)],
         fetchedMetrics: Set<HealthMetric>,
         store: HealthDataStore
-    ) -> PersistedSyncSummary {
+    ) -> PersistedSyncSummary? {
         guard let context = store.modelContext else {
-            return PersistedSyncSummary(metricsWithChanges: [], totalInsertedSamples: 0, totalChangedSamples: 0)
+            // nil, not a zeroed summary: the caller must be able to tell a
+            // persistence outage from "the user had no new health data", which a
+            // zeroed summary made indistinguishable.
+            AppAnalytics.shared.trackSyncFailed(reason: .noModelContext)
+            return nil
         }
 
         let batchResult = HealthDataBatchWriter.persistAll(

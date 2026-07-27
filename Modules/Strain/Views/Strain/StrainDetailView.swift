@@ -618,6 +618,10 @@ struct StrainDetailView: View {
             .padding(DS.cardPadding)
             .cardStyle()
             .padding(.horizontal)
+            .onChange(of: showLearnMore) { _, isOpen in
+                guard isOpen else { return }
+                AppAnalytics.shared.trackExplanationViewed(type: "strain_methodology", screen: .strainDetail)
+            }
         }
     }
 

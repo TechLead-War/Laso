@@ -22,7 +22,6 @@ enum NotificationRepromptManager {
         switch settings.authorizationStatus {
         case .denied:
             recordDenialIfNeeded()
-            await AppAnalytics.shared.trackBlockTap(title: "Notification Permission Denied", type: .dataSyncEvent, screen: .home, metadata: ["source": "notification_reprompt", "event": "permission_denied"])
             return shouldShowReprompt()
         case .authorized, .provisional, .ephemeral:
             // Permission restored. clear denial tracking
@@ -41,6 +40,12 @@ enum NotificationRepromptManager {
         let existing = defaults.double(forKey: AppKeys.Notifications.permissionDeniedDate)
         if existing == 0 {
             defaults.set(Date().timeIntervalSince1970, forKey: AppKeys.Notifications.permissionDeniedDate)
+            // Tracked inside the once-only branch: the caller runs on every
+            // foreground return, so tracking beside it emitted one event per
+            // app open forever and denials could not be counted.
+            Task { @MainActor in
+                AppAnalytics.shared.trackBlockTap(title: "Notification Permission Denied", type: .dataSyncEvent, screen: .home, metadata: ["source": "notification_reprompt", "event": "permission_denied"])
+            }
         }
     }
 

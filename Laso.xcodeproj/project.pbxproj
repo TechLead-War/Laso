@@ -242,6 +242,7 @@
 		818F3B51A54F5778B6B3C103 /* ShareButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D382D5C85F21F7AF16A0859 /* ShareButton.swift */; };
 		81A5CFF6BB130BD0AC26A52C /* LifeContextStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE09DF13E3BB3F60E42DE072 /* LifeContextStore.swift */; };
 		82FC4578117A1D29DEA905A0 /* ReferralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B727ED1031D4D01216F07B67 /* ReferralManager.swift */; };
+		83B806C029BEE2C2FF1C3283 /* ScrollDepthTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45EC82D52BD96558ECDEAC3 /* ScrollDepthTracker.swift */; };
 		83CD8A0FAF5341781E380E81 /* CausalChainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FB1F0B6F65A579057550A9 /* CausalChainEngine.swift */; };
 		84427010C0992FC88B494C37 /* ActivationProgressBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */; };
 		84635AAE673CEB62AB76BF36 /* MenstrualCycleTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB0ECC498E15CAE9AC31BCB /* MenstrualCycleTracker.swift */; };
@@ -940,6 +941,7 @@
 		DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
 		E020657065005DF616545BF6 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCoverageCard.swift; sourceTree = "<group>"; };
+		E45EC82D52BD96558ECDEAC3 /* ScrollDepthTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDepthTracker.swift; sourceTree = "<group>"; };
 		E48A81F37075D7FBB01F687D /* MetricVerdict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricVerdict.swift; sourceTree = "<group>"; };
 		E4D82C406619CC236860AF7A /* StressMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressMonitorView.swift; sourceTree = "<group>"; };
 		E50B66375422C657743904CE /* IntentCacheStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentCacheStore.swift; sourceTree = "<group>"; };
@@ -2223,6 +2225,7 @@
 				E7DA3A23144BE59D58F6EF1A /* AppStoreReviewManager.swift */,
 				1E1D030EF7F163D8F2CDD0CD /* FeedbackPromptManager.swift */,
 				ED49FAA121568FDED3E98149 /* PostHogManager.swift */,
+				E45EC82D52BD96558ECDEAC3 /* ScrollDepthTracker.swift */,
 				6B261CA79AE5F8EE731B0B35 /* SectionTracker.swift */,
 				10473A4E47171198AA83332A /* SessionTracker.swift */,
 			);
@@ -2916,6 +2919,7 @@
 				2E4746BFFC23A24376ED0F58 /* ScoreBucketsConfig.swift in Sources */,
 				268F02E787681E98625C517F /* ScoreGuideSheet.swift in Sources */,
 				96D5155AC39616347E70B5EA /* ScoreTrajectoryAnalyzer.swift in Sources */,
+				83B806C029BEE2C2FF1C3283 /* ScrollDepthTracker.swift in Sources */,
 				5D81B87741ACEF75AC67CD37 /* SectionHeaderView.swift in Sources */,
 				AF832D43060E793A960082FF /* SectionTracker.swift in Sources */,
 				71E0D0FF2B2B16765F2D6D62 /* ServiceProtocols.swift in Sources */,
@@ -3140,7 +3144,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 89;
+				CURRENT_PROJECT_VERSION = 90;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3159,7 +3163,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.81;
+				MARKETING_VERSION = 1.2.82;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3230,7 +3234,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 89;
+				CURRENT_PROJECT_VERSION = 90;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3243,7 +3247,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.81;
+				MARKETING_VERSION = 1.2.82;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

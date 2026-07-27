@@ -22,6 +22,10 @@ final class SubscriptionManager {
     private(set) var status: Status = .unknown
     private(set) var products: [Product] = []
     private(set) var errorMessage: String?
+    /// Controlled cause for the message above, set alongside every `errorMessage`
+    /// assignment. The paywall reports this instead of substring-matching the
+    /// message, which is Remote Config copy and cannot be a stable dimension.
+    private(set) var lastErrorKind: AppAnalytics.PaywallErrorType?
     private(set) var isPurchasing = false
 
     // MARK: - Status
@@ -121,7 +125,7 @@ final class SubscriptionManager {
         await processUnfinishedTransactions()
         await loadProducts()
         await refreshStatus()
-        AppAnalytics.shared.updateSubscriptionProperties(status: status)
+        reportSubscriptionStatus()
     }
 
     /// Finishes any unfinished StoreKit transactions queued for this app.
@@ -155,11 +159,14 @@ final class SubscriptionManager {
             NSLog("[StoreKit] got %d products: %@", loaded.count, "\(loaded.map { $0.id })")
             products = loaded.sorted { $0.price > $1.price } // yearly first
             errorMessage = nil
+            lastErrorKind = nil
         } catch is TimeoutError {
             NSLog("[StoreKit] timeout")
+            lastErrorKind = .network
             errorMessage = "Loading prices took too long. Check your connection and tap Retry."
         } catch {
             NSLog("[StoreKit] error: %@", "\(error)")
+            lastErrorKind = .productsUnavailable
             errorMessage = "Could not load subscription options. Check your connection."
         }
     }
@@ -195,6 +202,7 @@ final class SubscriptionManager {
         guard !isPurchasing else { return }
         isPurchasing = true
         errorMessage = nil
+        lastErrorKind = nil
         defer { isPurchasing = false }
 
         do {
@@ -234,14 +242,23 @@ final class SubscriptionManager {
                 AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .userCancelled)
 
             case .pending:
+                lastErrorKind = .purchasePending
                 errorMessage = "Purchase is pending approval."
+                // Ask to Buy / SCA challenge: a normal family-account outcome, so
+                // the CTA tap must land somewhere instead of leaving the funnel
+                // with no terminal event.
+                AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .pending)
 
             @unknown default:
-                break
+                AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .unknown)
             }
         } catch {
+            lastErrorKind = .purchaseFailed
             errorMessage = "Purchase failed. Please try again."
-            AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .verification)
+            AppAnalytics.shared.trackPurchaseFailed(
+                productID: product.id,
+                reason: Self.purchaseFailureReason(for: error)
+            )
         }
     }
 
@@ -271,6 +288,7 @@ final class SubscriptionManager {
         // (PaywallView tracks restore failures via .onChange of errorMessage; a repeated
         // identical message would otherwise not re-fire onChange and go untracked).
         errorMessage = nil
+        lastErrorKind = nil
         do {
             try await AppStore.sync()
             await refreshStatus()
@@ -280,8 +298,9 @@ final class SubscriptionManager {
             // keys off lastKnownStatus, so a restore that leaves it stale
             // (e.g. "expired" from earlier in the launch) silently swallows
             // the first post-restore renewal or trial conversion.
-            AppAnalytics.shared.updateSubscriptionProperties(status: status)
+            reportSubscriptionStatus()
         } catch {
+            lastErrorKind = .restoreFailed
             errorMessage = "Could not restore purchases. Please try again."
         }
     }
@@ -310,9 +329,6 @@ final class SubscriptionManager {
                     // entitlement. Distinguish it so the trial-lifecycle analytics
                     // (trial_started / trial_day_check / trial->paid conversion) and
                     // the trial countdown can fire; a paid period stays .subscribed.
-                    // Capture grace state before reassigning status so the
-                    // billing_grace_resolved event fires on recovery.
-                    let wasInGrace = isBillingGrace
                     status = isInFreeTrial(transaction)
                         ? .trial(expiration: expiration)
                         : .subscribed(expirationDate: expiration)
@@ -324,7 +340,7 @@ final class SubscriptionManager {
                     AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expiration)
                     // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
-                    clearGraceState(wasActive: wasInGrace)
+                    clearGraceState(resolved: true)
                     await armCancelledSaveIfNeeded(productID: transaction.productID, expiration: expiration)
                     return
                 }
@@ -536,18 +552,17 @@ final class SubscriptionManager {
         return 0
     }
 
-    private func clearGraceState(wasActive: Bool? = nil) {
-        if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
-            // Recovery callers reassign `status` away from .billingGrace before
-            // calling this, so isBillingGrace would already read false. They pass
-            // the pre-reassignment value explicitly; other callers pass nil and
-            // fall back to the current status.
-            let wasActive = wasActive ?? isBillingGrace
-            let daysInGrace = Date.cal.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
-            defaults.removeObject(forKey: Key.graceStartDate)
-            if wasActive {
-                AppAnalytics.shared.trackBillingGraceResolved(daysInGrace: daysInGrace)
-            }
+    /// `resolved: true` marks the entitlement-recovery path. A stored start date
+    /// is the only proof the user was in grace: the recovery a user actually
+    /// experiences lands on a cold launch where in-memory `status` never became
+    /// .billingGrace, so reading it here reported ~0% recovery. The exhaustion
+    /// callers keep the default — grace ran out, it was not resolved.
+    private func clearGraceState(resolved: Bool = false) {
+        guard let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date else { return }
+        let daysInGrace = Date.cal.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
+        defaults.removeObject(forKey: Key.graceStartDate)
+        if resolved {
+            AppAnalytics.shared.trackBillingGraceResolved(daysInGrace: daysInGrace)
         }
     }
 
@@ -569,7 +584,7 @@ final class SubscriptionManager {
         // a transaction lands during cold launch, so it cannot be trusted here.
         await refreshStatus()
         await syncCurrentEntitlementToFirestore()
-        AppAnalytics.shared.updateSubscriptionProperties(status: status)
+        reportSubscriptionStatus()
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
@@ -681,6 +696,38 @@ final class SubscriptionManager {
 
     // MARK: - Analytics
 
+    /// Publishes the current status to analytics. An `.expired` status reached
+    /// with no loaded products is unverifiable: `isInBillingRetry()` reads
+    /// `products` and returns false when it is empty, so a failed or timed-out
+    /// product load falls through to expired for a user Apple may still be
+    /// retrying. Reporting it would emit subscription_cancelled, the churn
+    /// north-star, for a state we cannot confirm; the next launch that loads
+    /// products reports the real status and the event still fires if it is real.
+    private func reportSubscriptionStatus() {
+        if case .expired = status, products.isEmpty { return }
+        AppAnalytics.shared.updateSubscriptionProperties(status: status)
+    }
+
+    /// Controlled failure reason for a thrown purchase error. StoreKit reports
+    /// distinct causes (network, declined card, ineligible offer) that all landed
+    /// on `.verification` before, which made the property a constant.
+    private static func purchaseFailureReason(for error: Error) -> AppAnalytics.PurchaseFailureReason {
+        if let subscriptionError = error as? SubscriptionError {
+            switch subscriptionError {
+            case .failedVerification: return .verification
+            }
+        }
+        if let storeKitError = error as? StoreKitError {
+            switch storeKitError {
+            case .networkError: return .networkError
+            case .notEntitled: return .paymentDeclined
+            default: return .verification
+            }
+        }
+        if error is Product.PurchaseError { return .paymentDeclined }
+        return .verification
+    }
+
     /// Billing-period label for analytics, derived from the product's
     /// subscription period unit. Shared by purchase tracking and the
     /// non-trial activation event so the mapping lives in one place.
@@ -707,7 +754,7 @@ final class SubscriptionManager {
             isFreeTrialStart: isFreeTrialStart,
             transactionIDHash: AppAnalytics.sha256Hash16(String(transactionID))
         )
-        AppAnalytics.shared.updateSubscriptionProperties(status: status)
+        reportSubscriptionStatus()
 
         // Meta ad optimization: send the standard StartTrial / Subscribe event
         // so campaigns optimizing for subscription activation have a signal to

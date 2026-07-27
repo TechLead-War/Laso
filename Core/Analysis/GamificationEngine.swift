@@ -98,6 +98,12 @@ final class GamificationEngine {
     private(set) var achievements: [Achievement] = []
     private(set) var totalDaysTracked: Int = 0
 
+    /// Analytics-only: what has already been reported as unlocked / as the user's
+    /// level. Kept separate from the displayed state above, which is rebuilt from
+    /// health data on every launch.
+    private static let reportedAchievementsKey = "GamificationEngine.reportedAchievements.v1"
+    private static let reportedLevelKey = "GamificationEngine.reportedLevel.v1"
+
     // MARK: - Compute
 
     /// Main entry point: compute level, streaks, and achievements from health data.
@@ -141,10 +147,6 @@ final class GamificationEngine {
             calendar: calendar
         )
 
-        // Capture previous state for change detection
-        let previouslyUnlockedIds = Set(achievements.filter(\.isUnlocked).map(\.id))
-        let previousLevel = currentLevel
-
         // Evaluate achievements
         achievements = evaluateAchievements(
             sessionDays: sessionDays,
@@ -158,10 +160,34 @@ final class GamificationEngine {
             today: today
         )
 
-        // Track newly unlocked achievements
-        let newlyUnlocked = achievements.filter { $0.isUnlocked && !previouslyUnlockedIds.contains($0.id) }
-        let didLevelUp = currentLevel > previousLevel && !previouslyUnlockedIds.isEmpty
+        // What has already been reported is persisted: `achievements` and
+        // `currentLevel` live only in memory, so diffing against them replayed
+        // every earned achievement on each cold launch, and the level was
+        // overwritten above before the old value was read, which made level_up
+        // unreachable.
+        let defaults = UserDefaults.standard
+        let reportedIds = defaults.stringArray(forKey: Self.reportedAchievementsKey)
+        let reportedLevel = defaults.object(forKey: Self.reportedLevelKey) as? Int
+        let unlockedIds = achievements.filter(\.isUnlocked).map(\.id)
+
+        // A missing key means this is the first compute after install or after
+        // this state was introduced: whatever is already earned is history, so
+        // seed the baseline and report nothing.
+        let newlyUnlocked: [Achievement]
+        if let reportedIds {
+            let reported = Set(reportedIds)
+            newlyUnlocked = achievements.filter { $0.isUnlocked && !reported.contains($0.id) }
+        } else {
+            newlyUnlocked = []
+        }
+        let didLevelUp = reportedLevel.map { currentLevel.rawValue > $0 } ?? false
         let newLevelName = currentLevel.displayName
+
+        // Union, not replace: an achievement whose streak later breaks flips back
+        // to locked, and re-earning it must not count as a second unlock.
+        defaults.set(Array(Set(reportedIds ?? []).union(unlockedIds)), forKey: Self.reportedAchievementsKey)
+        defaults.set(currentLevel.rawValue, forKey: Self.reportedLevelKey)
+
         if !newlyUnlocked.isEmpty || didLevelUp {
             Task { @MainActor in
                 for achievement in newlyUnlocked {

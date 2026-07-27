@@ -36,16 +36,9 @@ struct ExploreYourTrendsSection: View {
             ForEach(trendMetrics.prefix(8)) { item in
                 let verdict = item.verdict
                 Button {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: item.metric.displayName,
-                        type: .exploreTrendMetric,
-                        screen: .explore,
-                        metadata: [
-                            "metric_id": item.metric.rawValue,
-                            "trend_direction": item.trend.direction.rawValue,
-                            "timeframe_days": trendTimeframe
-                        ]
-                    )
+                    // block_tapped for this row is emitted by the owner of
+                    // `onMetricTapped`, which knows the timeframe and the
+                    // period change. Emitting here too doubled the CTR.
                     onMetricTapped(item)
                 } label: {
                     trendMetricRow(item, verdict: verdict)

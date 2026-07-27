@@ -84,12 +84,19 @@ struct CorrelationsView: View {
         .navigationTitle(Copy.Insights.Correlations.navigationTitle)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
+            // Gated users get ProFeatureOverlay in the same hierarchy and it emits its
+            // own screen_viewed(pro_overlay). Emitting here too would double-count the
+            // screen and inflate "reached Correlations" with users the gate blocked.
+            guard !isGated else { return }
             AppAnalytics.shared.trackFeatureOpen(.correlations)
             AppAnalytics.shared.trackActivationMilestone(.firstCorrelation)
             AppAnalytics.shared.trackCoreAction(.viewedCorrelation, screen: .correlations)
             AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_correlation", screen: .correlations)
         }
-        .onDisappear { AppAnalytics.shared.trackFeatureClose(.correlations) }
+        .onDisappear {
+            guard !isGated else { return }
+            AppAnalytics.shared.trackFeatureClose(.correlations)
+        }
     }
 
     // MARK: - Tier 1: Key Discoveries
@@ -101,9 +108,19 @@ struct CorrelationsView: View {
 
             ForEach(Array(compoundInsights.prefix(5).enumerated()), id: \.offset) { _, insight in
                 CompoundInsightCard(insight: insight) {
-                    if let metric = insight.involvedMetrics.first {
-                        onTapMetric(metric)
-                    }
+                    guard let metric = insight.involvedMetrics.first else { return }
+                    AppAnalytics.shared.trackCorrelationTapped(
+                        metricA: metric.rawValue,
+                        // "none" when the insight involves a single metric; there is no
+                        // second metric to report and a repeat of metricA would fake a pair.
+                        metricB: insight.involvedMetrics.dropFirst().first?.rawValue ?? "none",
+                        // Compound insights have no correlation-strength value; "none"
+                        // matches the metricB convention above rather than faking a band.
+                        strength: "none",
+                        source: "compound_insight",
+                        screen: .correlations
+                    )
+                    onTapMetric(metric)
                 }
                 .padding(.horizontal)
             }
@@ -122,6 +139,13 @@ struct CorrelationsView: View {
                     chain: chain,
                     evidence: evidenceByChainID[chain.id] ?? []
                 ) {
+                    AppAnalytics.shared.trackCorrelationTapped(
+                        metricA: chain.links.first?.causeMetric.rawValue ?? "none",
+                        metricB: chain.affectedMetric.rawValue,
+                        strength: "none",
+                        source: "causal_chain",
+                        screen: .correlations
+                    )
                     onTapMetric(chain.affectedMetric)
                 }
                 .padding(.horizontal)
@@ -138,6 +162,13 @@ struct CorrelationsView: View {
 
             ForEach(Array(interactionEffects.prefix(4).enumerated()), id: \.offset) { _, effect in
                 InteractionEffectCard(effect: effect) {
+                    AppAnalytics.shared.trackCorrelationTapped(
+                        metricA: effect.cause.rawValue,
+                        metricB: effect.effect.rawValue,
+                        strength: "none",
+                        source: "interaction_effect",
+                        screen: .correlations
+                    )
                     onTapMetric(effect.cause)
                 }
                 .padding(.horizontal)
@@ -150,6 +181,14 @@ struct CorrelationsView: View {
     private var connectionsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: Copy.Insights.Correlations.allConnections,
+                    type: .correlationsExpandAll,
+                    screen: .correlations,
+                    // section_viewed(correlations_list) only fires on expand, so the
+                    // collapse tap is visible nowhere else.
+                    metadata: ["expanded": !showAllConnections]
+                )
                 withAnimation(DS.Motion.toast) {
                     showAllConnections.toggle()
                 }
@@ -184,6 +223,7 @@ struct CorrelationsView: View {
                                 metricA: correlation.metricA.rawValue,
                                 metricB: correlation.metricB.rawValue,
                                 strength: correlation.strengthLabel,
+                                source: "connections_list",
                                 screen: .correlations
                             )
                             listTracker.tapped(target: "\(correlation.metricA.rawValue)_\(correlation.metricB.rawValue)")

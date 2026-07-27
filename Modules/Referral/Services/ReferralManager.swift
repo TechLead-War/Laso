@@ -207,6 +207,7 @@ final class ReferralManager {
 
         guard redeemedCode == nil else {
             redeemError = Copy.Referral.errorAlreadyRedeemed
+            AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "already_redeemed")
             return false
         }
 

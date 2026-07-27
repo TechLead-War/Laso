@@ -109,16 +109,17 @@ enum ReengagementScheduler {
             trigger: trigger
         )
 
-        // Mirror the central manager's success/error tracking: scheduled also
-        // stamps the sent timestamp so a later presented/opened has a known
-        // latency.
+        // Mirror the central manager's success/error tracking: scheduled stamps
+        // `target` (the quiet-hours-adjusted fire time the trigger was built
+        // from, not the enqueue time) so a later presented/opened measures the
+        // user's response latency rather than the 3-day lead.
         let notifType = NotificationManager.notificationType(identifier)
         center.add(request) { error in
             Task { @MainActor in
                 if let error {
                     AppAnalytics.shared.trackNotificationFailed(type: notifType, identifier: identifier, error: error.localizedDescription)
                 } else {
-                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
+                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, fireDate: target)
                 }
             }
         }

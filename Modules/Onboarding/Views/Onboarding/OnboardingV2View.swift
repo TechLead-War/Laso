@@ -29,6 +29,9 @@ struct OnboardingV2View: View {
     // forward funnel step, and the promise screen impression at one emission.
     @State private var scanRouted = false
     @State private var promiseTracked = false
+    // Set by the done screen's CTA. `.done` is a live screen, so backgrounding
+    // on it before the CTA is a real abandonment; only the CTA ends the funnel.
+    @State private var completedTracked = false
     @State private var healthSnapshot = OnboardingHealthSnapshot()
 
     // The pre-registered claim, built from goal + symptom on the prediction
@@ -152,7 +155,7 @@ struct OnboardingV2View: View {
             if screen == .welcome, RemoteConfigManager.shared.onboardingForceSkipToPaywall {
                 // record the welcome exit so the kill-switch jump still shows in the funnel
                 AppAnalytics.shared.trackOnboardingStepCompleted(
-                    stepKey: Screen.welcome.rawValue, stepIndex: screenOrdinal(.welcome),
+                    stepKey: Screen.welcome.rawValue, stepIndex: funnelIndex(.welcome),
                     stepCount: stepCount, durationSec: 0, action: .completed)
                 screen = .paywall
                 // Without this the paywall's step duration includes welcome dwell.
@@ -168,11 +171,13 @@ struct OnboardingV2View: View {
             // Record the screen the user quit on. Only `.background` (true quit /
             // home / app-switcher dismiss) counts — `.inactive` is skipped because
             // it also fires for the system HealthKit and Apple Sign-In sheets,
-            // which are not exits. `.done` is the post-flow state, not a drop-off.
-            guard newPhase == .background, screen != .done else { return }
+            // which are not exits. Quitting on `.done` before its CTA leaves the
+            // user un-completed and restarts onboarding next launch, so it is a
+            // drop-off until `completedTracked` says otherwise.
+            guard newPhase == .background, !completedTracked else { return }
             AppAnalytics.shared.trackOnboardingDropOff(
                 lastStep: screen.rawValue,
-                stepIndex: screenOrdinal(screen),
+                stepIndex: funnelIndex(screen),
                 stepCount: stepCount,
                 durationSec: max(0, Int(Date().timeIntervalSince(stepStartedAt)))
             )
@@ -293,6 +298,7 @@ struct OnboardingV2View: View {
                                  })
         case .done:
             OnbV2ScreenDone {
+                completedTracked = true
                 persistOnboardingProfile()
                 // Mark complete BEFORE tracking so the onboarding_completed user
                 // property is already true when the event fires (not contradictory).
@@ -346,7 +352,7 @@ struct OnboardingV2View: View {
         if trackStep, screenOrdinal(target) > screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
-                stepIndex: screenOrdinal(screen),
+                stepIndex: funnelIndex(screen),
                 stepCount: stepCount,
                 durationSec: durationSec,
                 action: action
@@ -354,7 +360,7 @@ struct OnboardingV2View: View {
         } else if trackStep, screenOrdinal(target) < screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 stepKey: screen.rawValue,
-                stepIndex: screenOrdinal(screen),
+                stepIndex: funnelIndex(screen),
                 stepCount: stepCount,
                 durationSec: durationSec,
                 action: .back
@@ -385,13 +391,41 @@ struct OnboardingV2View: View {
         }
     }
 
-    /// Total user-facing steps (excludes the post-flow `done` screen). Every
-    /// branch order has the same count, so the funnel denominator matches the
-    /// visible progress total on all branches.
-    private var stepCount: Int { linearOrder.count - 1 }
+    /// The screens this user will actually walk: the branch order minus the
+    /// Remote Config skip list and the two gated screens. `linearOrder.count` is
+    /// the same on every branch, so a denominator taken from it is a constant
+    /// that ignores every live shortener and makes step_index/step_count
+    /// meaningless for a shortened flow.
+    private var liveOrder: [Screen] {
+        let skipSet = RemoteConfigManager.shared.onboardingSkipScreens
+        return linearOrder.filter { candidate in
+            guard !skipSet.contains(candidate.rawValue) else { return false }
+            switch candidate {
+            case .referral:
+                return ReferralManager.shared.isEnabled && ReferralManager.shared.redeemedCode == nil
+            case .paywall:
+                return !FeatureGate.hasFullAccess
+            default:
+                return true
+            }
+        }
+    }
 
-    /// 1-based step number used in analytics and the progress bar, derived
-    /// from the current branch order. The two router screens absent from that
+    /// Total user-facing steps in the live flow (excludes the post-flow `done`
+    /// screen). Paired with `funnelIndex`, never with `screenOrdinal`.
+    private var stepCount: Int { max(1, liveOrder.count - 1) }
+
+    /// 1-based position in the live flow, used only for the funnel's
+    /// `step_index`. A screen the user reached but that is not in `liveOrder`
+    /// (a DEBUG jump, or a back tap onto a skip-listed screen) reports the slot
+    /// it would have occupied, so the index stays monotonic.
+    private func funnelIndex(_ target: Screen) -> Int {
+        let cut = screenOrdinal(target)
+        return liveOrder.filter { screenOrdinal($0) < cut }.count + 1
+    }
+
+    /// 1-based step number used for routing direction and the progress bar,
+    /// derived from the current branch order. The two router screens absent from that
     /// order never render on it; they fall back to the post-scan slot (7) they
     /// would have occupied, keeping the funnel monotonic even for stale skip
     /// entries or DEBUG jumps.
@@ -571,7 +605,16 @@ struct OnboardingV2View: View {
     /// out is still recovered.
     @MainActor
     private func requestNotificationPermission(source: String) async {
-        let granted = await NotificationManager.shared.requestAuthorization(source: source)
+        // iOS only shows the prompt while the status is notDetermined; asking a
+        // second time returns the cached answer with no alert. Both callers sit
+        // on screens that back-navigation recreates, so calling through would
+        // log a requested+result pair for a prompt nobody saw.
+        let granted: Bool
+        if await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
+            granted = await NotificationManager.shared.requestAuthorization(source: source)
+        } else {
+            granted = await NotificationManager.shared.isCurrentlyAuthorized()
+        }
         if granted {
             OnboardingAbandonmentScheduler.schedule()
         }

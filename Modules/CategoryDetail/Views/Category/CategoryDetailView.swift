@@ -67,6 +67,18 @@ struct CategoryDetailView: View {
                                 }
                                 .buttonStyle(.dsPress)
                                 .contentShape(Rectangle())
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: item.metric.displayName,
+                                        type: .metricRow,
+                                        screen: .categoryDetail,
+                                        metadata: [
+                                            "metric_id": item.metric.rawValue,
+                                            "source": "historical_highlight"
+                                        ]
+                                    )
+                                    historyTracker.tapped(target: item.metric.rawValue)
+                                })
                             }
                         }
                         .cardStyle()
@@ -104,7 +116,7 @@ struct CategoryDetailView: View {
                         }
 
                         if hiddenInsights > 0 {
-                            LockedInsightsCTA(hiddenCount: hiddenInsights)
+                            LockedInsightsCTA(hiddenCount: hiddenInsights, screen: .categoryDetail)
                                 .padding(.horizontal)
                         }
                     }
@@ -159,6 +171,19 @@ struct CategoryDetailView: View {
                         }
                         .buttonStyle(.dsPress)
                         .accessibilityIdentifier("category.metric.\(metric.rawValue)")
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: metric.displayName,
+                                type: .metricRow,
+                                screen: .categoryDetail,
+                                metadata: [
+                                    "metric_id": metric.rawValue,
+                                    "severity": viewModel.severity(for: metric)?.rawValue ?? "none",
+                                    "source": "metric_list"
+                                ]
+                            )
+                            metricsTracker.tapped(target: metric.rawValue)
+                        })
                     }
                 }
                 .onAppear { metricsTracker.appeared() }

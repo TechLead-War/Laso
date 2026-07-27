@@ -36,7 +36,19 @@ enum RepermissionScheduler {
         // retryable on the next refresh. Runs on the main actor so the flag
         // check-and-set cannot interleave with the other main-actor schedulers.
         Task { @MainActor in
-            guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+            // This pre-check returns before NotificationManager, so its own
+            // not_authorized suppression never runs. Report it here (matching
+            // ReengagementScheduler) so the denied-branch nudge has a visible
+            // attrition reason instead of vanishing.
+            guard await NotificationManager.shared.isCurrentlyAuthorized() else {
+                let id = AppConstants.NotificationID.repermission
+                AppAnalytics.shared.trackNotificationSuppressed(
+                    type: NotificationManager.notificationType(id),
+                    identifier: id,
+                    reason: "not_authorized"
+                )
+                return
+            }
             let scheduled = NotificationManager.shared.scheduleNotification(
                 title: Copy.Notifications.repermissionTitle(count: count),
                 body: Copy.Notifications.repermissionBody(phrase: prediction.userPhrase, count: count),

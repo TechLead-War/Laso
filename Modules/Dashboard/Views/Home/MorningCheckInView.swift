@@ -182,7 +182,9 @@ struct MorningCheckInView: View {
             energyLevel: energyLevel,
             soreness: soreness
         )
-        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+        // core_action_completed is emitted by MorningCheckInManager.record, the
+        // single writer for both the phone and the watch path. Emitting it here
+        // too double-counted every phone check-in.
         AppAnalytics.shared.trackBlockTap(title: "Morning Check-In Submitted", type: .smartAction, screen: .home, metadata: ["source": "morning_checkin", "sleep_quality": sleepQuality, "energy_level": energyLevel, "soreness": soreness])
         onComplete(checkIn)
     }

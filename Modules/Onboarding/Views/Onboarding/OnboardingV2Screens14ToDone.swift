@@ -240,10 +240,10 @@ struct OnbV2Screen15SignIn: View {
                     UserProfileStore.shared.saveDisplayName(given)
                 }
                 signedInOk.toggle()   // outcome haptic: success only, never on request
-                AppAnalytics.shared.trackSignInCompleted(method: "apple", success: true)
+                AppAnalytics.shared.trackSignInCompleted(method: "apple", outcome: .completed)
                 onSignedIn()
             } catch {
-                AppAnalytics.shared.trackSignInCompleted(method: "apple", success: false)
+                AppAnalytics.shared.trackSignInCompleted(method: "apple", outcome: .failed)
                 self.errorMessage = error.localizedDescription
             }
         }
@@ -253,7 +253,7 @@ struct OnbV2Screen15SignIn: View {
     /// links that UID if the user signs in later from Settings, so no auth is
     /// created here.
     private func skip() {
-        AppAnalytics.shared.trackSignInCompleted(method: "skipped", success: true)
+        AppAnalytics.shared.trackSignInCompleted(method: "skipped", outcome: .skipped)
         #if canImport(FirebaseAuth)
         // Launch-time anonymous sign-in can fail on an offline first launch;
         // fire and forget a retry so Firestore writes regain an auth context.
@@ -461,7 +461,7 @@ struct OnbV2Screen16Paywall: View {
                                 ) {
                                     selectedIsAnnual = true
                                     AppAnalytics.shared.trackPaywallPlanSelected(
-                                        productID: yearly?.id ?? "annual", period: "annual", price: annualPriceText)
+                                        productID: yearly?.id ?? "annual", period: .yearly, price: annualPriceText)
                                 }
 
                                 OnbV2PlanCard(
@@ -473,7 +473,7 @@ struct OnbV2Screen16Paywall: View {
                                 ) {
                                     selectedIsAnnual = false
                                     AppAnalytics.shared.trackPaywallPlanSelected(
-                                        productID: monthly?.id ?? "monthly", period: "monthly", price: monthlyPriceText)
+                                        productID: monthly?.id ?? "monthly", period: .monthly, price: monthlyPriceText)
                                 }
                             }
                             .opacity(plansAppeared ? 1 : 0)
@@ -519,7 +519,9 @@ struct OnbV2Screen16Paywall: View {
                         guard let product = selectedIsAnnual ? yearly : monthly else { return }
                         purchaseTapped.toggle()   // .impact(.medium): purchase intent
                         AppAnalytics.shared.trackPaywallCTATapped(
-                            productID: product.id, price: selectedIsAnnual ? annualPriceText : monthlyPriceText)
+                            productID: product.id,
+                            price: selectedIsAnnual ? annualPriceText : monthlyPriceText,
+                            source: "onboarding")
                         Task { @MainActor in
                             await SubscriptionManager.shared.purchase(product)
                             if FeatureGate.hasFullAccess {
@@ -535,7 +537,12 @@ struct OnbV2Screen16Paywall: View {
                         Button {
                             Task { @MainActor in
                                 await SubscriptionManager.shared.restorePurchases()
-                                if FeatureGate.hasFullAccess { onPurchased() }
+                                // An entitled user never reaches this screen
+                                // (advanceAfterReferral skips the paywall), so
+                                // access here can only have come from the restore.
+                                let restored = FeatureGate.hasFullAccess
+                                AppAnalytics.shared.trackRestoreAttempted(success: restored)
+                                if restored { onPurchased() }
                             }
                         } label: {
                             Text(Copy.OnboardingV2.s16Restore)
@@ -589,6 +596,17 @@ struct OnbV2Screen16Paywall: View {
         .onAppear {
             paywallStart = Date()
             AppAnalytics.shared.trackPaywallViewed(source: "onboarding")
+        }
+        // This paywall is a mandatory step, so a StoreKit outage here reads as an
+        // ordinary decline unless the failure is reported. The cause comes from
+        // the manager's typed `lastErrorKind`, never from the message (copy).
+        .onChange(of: manager.errorMessage) { _, newValue in
+            guard newValue?.isEmpty == false else { return }
+            AppAnalytics.shared.trackPaywallError(
+                errorType: manager.lastErrorKind ?? .unknown,
+                source: "onboarding",
+                timeOnPaywallSec: Int(Date().timeIntervalSince(paywallStart))
+            )
         }
         .task {
             if SubscriptionManager.shared.products.isEmpty {

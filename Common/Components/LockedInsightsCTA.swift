@@ -4,6 +4,9 @@ import SwiftUI
 /// available than the `FeatureGate.insightLimit` cap allows. Tapping opens the paywall.
 struct LockedInsightsCTA: View {
     let hiddenCount: Int
+    /// Host screen the card is rendered on. No pro overlay is on screen when this
+    /// is tapped, so a hardcoded `.proOverlay` would hide where free users hit the wall.
+    let screen: AppFeature
 
     @State private var showPaywall = false
 
@@ -12,10 +15,10 @@ struct LockedInsightsCTA: View {
             AppAnalytics.shared.trackBlockTap(
                 title: "Unlock more insights",
                 type: .proUpgradeButton,
-                screen: .proOverlay,
+                screen: screen,
                 metadata: ["hidden_count": hiddenCount, "feature": "insights"]
             )
-            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "all_insights", screen: .proOverlay)
+            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "all_insights", screen: screen)
             showPaywall = true
         } label: {
             HStack(spacing: DS.space3) {
@@ -54,6 +57,6 @@ struct LockedInsightsCTA: View {
 }
 
 #Preview {
-    LockedInsightsCTA(hiddenCount: 5)
+    LockedInsightsCTA(hiddenCount: 5, screen: .metricDetail)
         .padding()
 }

@@ -305,18 +305,6 @@ struct SettingsView: View {
                         healthKitManager: healthKitManager
                     )
                 )
-                .onAppear {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: "Manage Devices",
-                        type: .manageDevices,
-                        screen: .settings,
-                        metadata: [
-                            "destination": "connected_devices",
-                            "connected_devices_count": deviceSourceManager.connectedDevices.count
-                        ]
-                    )
-                    devicesTracker.tapped(target: "manage_devices")
-                }
             } label: {
                 settingsRow(
                     icon: "heart.text.square.fill",
@@ -326,6 +314,21 @@ struct SettingsView: View {
                 )
             }
             .accessibilityIdentifier("settings.row.connectedDevices")
+            // Bound to the tap, not the destination's onAppear: ConnectedDevicesView
+            // pushes its own detail screens, so popping back re-ran onAppear and
+            // counted a navigation the user never made from Settings.
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Manage Devices",
+                    type: .manageDevices,
+                    screen: .settings,
+                    metadata: [
+                        "destination": "connected_devices",
+                        "connected_devices_count": deviceSourceManager.connectedDevices.count
+                    ]
+                )
+                devicesTracker.tapped(target: "manage_devices")
+            })
 
             storageRow
                 .onAppear { dataStorageTracker.appeared() }
@@ -776,6 +779,10 @@ struct SettingsView: View {
     // MARK: - Actions
 
     private func performDataDeletion() {
+        // Must be first: AnalyticsBackend.provider.reset() below drops the identity,
+        // so anything emitted after it lands on a fresh anonymous id.
+        AppAnalytics.shared.trackAccountDataDeleted(storedSamples: healthDataStore.totalStoredSamples)
+
         isDeleting = true
 
         let encryptedStore = EncryptedStore.shared
