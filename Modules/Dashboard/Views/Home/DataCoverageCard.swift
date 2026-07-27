@@ -29,7 +29,7 @@ struct DataCoverageCard: View {
                     }
                 }
 
-                Text(Copy.Home.coverageMissingHint(Self.sentenceList(missing.map(\.metric.displayName))))
+                Text(Copy.Home.coverageMissingHint(missing.map(\.metric.displayName).sentenceList))
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -78,9 +78,4 @@ struct DataCoverageCard: View {
             : AppColour.warning
     }
 
-    private static func sentenceList(_ items: [String]) -> String {
-        guard items.count > 1 else { return items.first ?? "" }
-        let head = items.dropLast().joined(separator: Copy.Home.scoreListJoiner)
-        return head + Copy.Home.scoreListFinalJoiner + (items.last ?? "")
-    }
 }

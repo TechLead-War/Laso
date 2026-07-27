@@ -15,11 +15,14 @@ struct SleepCoachView: View {
     var onRefresh: (() async -> Void)? = nil
 
     @State private var showAllTips = false
-    @State private var expandedDayId: UUID? = nil
+    @State private var expandedDayId: Date? = nil
 
     /// A single day's sleep record for the 14-day history chart.
     struct DayEntry: Identifiable {
-        let id = UUID()
+        // The caller rebuilds this array inside a @ViewBuilder on every parent
+        // re-render, so a fresh UUID here would collapse the expanded row.
+        // One entry per calendar day, so the date cannot collide.
+        var id: Date { date }
         let date: Date
         let actual: Double   // hours slept (asleep stages summed)
         let needed: Double   // hours needed
@@ -606,8 +609,7 @@ struct SleepCoachView: View {
 
     // MARK: - Tips Data
 
-    private struct SleepTip: Identifiable {
-        let id = UUID()
+    private struct SleepTip {
         let icon: String
         let color: Color
         let title: String

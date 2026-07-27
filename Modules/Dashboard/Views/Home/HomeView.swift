@@ -21,6 +21,8 @@ struct HomeView: View {
     @State private var showShareCard = false
     /// Yesterday's marked-done action result, surfaced this morning (loop closer).
     @State private var dailyResult: DailyActionResultStore.Result?
+    /// Master-streak milestone just crossed and not yet celebrated, if any.
+    @State private var streakMilestone: Int?
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
     @State private var showSoftLockPaywall = false
@@ -150,6 +152,11 @@ struct HomeView: View {
             startHomeRefresh()
             startReadinessRefresh()
         }
+        // `initial: true` covers the streak already being computed when Home
+        // opens; the change side covers it landing after the first analysis pass.
+        .onChange(of: viewModel.gamificationEngine.streaks.masterStreak, initial: true) { _, _ in
+            refreshStreakMilestone()
+        }
     }
 
     /// Periodically refresh home data. uses tiered polling to minimize HealthKit queries.
@@ -220,6 +227,87 @@ struct HomeView: View {
         case .down:   direction = "down"
         }
         AppAnalytics.shared.trackDailyResultShown(direction: direction, delta: result.delta)
+    }
+
+    /// Resolve the milestone offer once per Home session. Guarded on
+    /// `streakMilestone == nil` so the repeated streak recomputes behind the
+    /// refresh timers cannot re-raise a card the user just dismissed.
+    private func refreshStreakMilestone() {
+        guard streakMilestone == nil,
+              let milestone = StreakMilestoneStore.pending(
+                streak: viewModel.gamificationEngine.streaks.masterStreak) else { return }
+        streakMilestone = milestone
+    }
+
+    /// Retires the milestone for good. Both dismissing and opening the share
+    /// sheet end the offer: it is tied to the moment, not to whether the user
+    /// actually posted.
+    private func closeStreakMilestone(_ milestone: Int) {
+        StreakMilestoneStore.markCelebrated(milestone)
+        withAnimation { streakMilestone = nil }
+    }
+
+    /// One time offer to share a streak the user has just crossed. Matches
+    /// `DailyActionResultCard` so the two never compete for weight above the fold.
+    private func streakMilestoneCard(_ milestone: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Copy.Home.streakMilestoneHeader)
+                .font(DS.Typography.captionSemibold)
+                .tracking(1.2)
+                .foregroundStyle(AppColour.success)
+
+            HStack(spacing: 12) {
+                Image(systemName: "flame.fill")
+                    .font(DS.Typography.title3)
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(AppColour.success, in: RoundedRectangle(cornerRadius: 10))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(Copy.Home.streakMilestoneTitle(days: milestone))
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.textPrimary)
+
+                    Text(Copy.Home.streakMilestoneBody)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: DS.space3) {
+                Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Share",
+                        type: .shareCard,
+                        screen: .home,
+                        metadata: ["source": "streak_milestone", "milestone_days": milestone]
+                    )
+                    closeStreakMilestone(milestone)
+                    showShareCard = true
+                } label: {
+                    Text(Copy.Home.streakMilestoneShare)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.success)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home.streakMilestoneCard.share")
+
+                Button { closeStreakMilestone(milestone) } label: {
+                    Text(Copy.Home.streakMilestoneDismiss)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(DS.cardPadding)
+        .cardStyle(tint: AppColour.success)
+        .padding(.horizontal, DS.screenPadding)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("home.streakMilestoneCard")
     }
 
     /// Opens the screen behind one Why row on the score card. Energy has no
@@ -381,6 +469,13 @@ struct HomeView: View {
                         }
                     }
 
+                    // 0a2. A streak milestone just crossed. Sits with the other
+                    // above-the-fold moment cards and retires itself for good on
+                    // either button, so it can never become daily furniture.
+                    if let streakMilestone {
+                        streakMilestoneCard(streakMilestone)
+                    }
+
                     // 0. Next Up. the daily action leads the screen: Laso's core
                     // promise is telling you what to do next, so the step comes
                     // before the score that explains it.
@@ -396,6 +491,7 @@ struct HomeView: View {
                         hasLiveReadiness: hasLiveReadiness,
                         scoreChange: viewModel.scores.scoreDeltaFromYesterday,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
+                        scoreUncertainty: liveViewModel.recovery.readinessUncertainty,
                         // When live Recovery exists the tap opens the Recovery
                         // explainer; otherwise the headline is the Daily Health
                         // Score (fallback) so we open the matching guide.

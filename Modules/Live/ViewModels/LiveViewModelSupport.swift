@@ -220,6 +220,9 @@ extension LiveViewModel {
         var latestHRVTimestamp: Date?
         var readinessScore: Int?
         var readinessConfidence: Int?
+        /// Score points the model held back for the signals it did not have.
+        /// Drives the range shown on the card instead of a bare number.
+        var readinessUncertainty: Int?
         var isWearingWatch: Bool = true
         var scoreLabel: String = "Recovery"
         /// Stays false until `computeReadinessScore` has had a chance to inspect

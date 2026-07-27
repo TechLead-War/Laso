@@ -118,6 +118,10 @@ extension Copy {
         static var scoreSummaryModerateSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_moderate_sub", default: "A steady day suits you.") }
         static var scoreSummaryHighHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_head", default: "Higher than usual today.") }
         static var scoreSummaryHighSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_high_sub", default: "Good to push a little.") }
+        /// The band a thin reading sits in, e.g. "Likely 61 to 77".
+        static func scoreRange(_ low: Int, _ high: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_score_range", default: "Likely %1$d to %2$d"), low, high)
+        }
         static var scoreWhyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_why_label", default: "Why") }
         // One word per recovery band, for places that show a score without its ring.
         static var stateNameGood: String { RemoteConfigManager.shared.copyString("copy_home_state_name_good", default: "Ready") }
@@ -181,6 +185,14 @@ extension Copy {
         static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Small steps add up.") }
         static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
         static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
+
+        // Streak milestone: the one time offer to share a streak the user has
+        // just crossed. Shown once per milestone, never again.
+        static var streakMilestoneHeader: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_header", default: "STREAK MILESTONE") }
+        static func streakMilestoneTitle(days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_streak_milestone_title", default: "%d days in a row"), days) }
+        static var streakMilestoneBody: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_body", default: "You hit activity, sleep and recovery on every one of those days.") }
+        static var streakMilestoneShare: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_share", default: "Share this") }
+        static var streakMilestoneDismiss: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_dismiss", default: "No thanks") }
 
         // MARK: - Connection Status (Home empty state)
 

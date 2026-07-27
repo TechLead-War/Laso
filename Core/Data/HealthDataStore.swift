@@ -40,12 +40,17 @@ final class StoredAnalysisSnapshot {
     var overallScore: Int
     var categoryScoresJSON: Data
     var baselinesJSON: Data
+    /// Vitality age as it was actually computed on this day. Optional so the
+    /// field is a lightweight migration, and so days recorded before this
+    /// existed stay honestly empty instead of being back-filled with a guess.
+    var vitalityAge: Int?
 
-    init(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data) {
+    init(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data, vitalityAge: Int? = nil) {
         self.date = date
         self.overallScore = overallScore
         self.categoryScoresJSON = categoryScoresJSON
         self.baselinesJSON = baselinesJSON
+        self.vitalityAge = vitalityAge
     }
 }
 
@@ -485,6 +490,39 @@ final class HealthDataStore {
         saveContext("swiftdata_restore_snapshot")
     }
 
+    /// The score and the baselines that were in force on one calendar day.
+    ///
+    /// The day sheet has to compare a past reading against the baseline the
+    /// scorer actually used then, not today's, or a day would be described
+    /// against a body average it never saw.
+    func analysisSnapshot(on day: Date) -> (score: Int, baselines: [HealthMetric: UserBaseline])? {
+        let dayStart = Date.cal.startOfDay(for: day)
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= dayStart && $0.date < dayEnd }
+        var descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\StoredAnalysisSnapshot.date)])
+        descriptor.fetchLimit = 1
+        guard let snapshot = try? modelContext?.fetch(descriptor).first else { return nil }
+
+        let decoded = Self.decodeJSON([String: UserBaseline].self, from: snapshot.baselinesJSON) ?? [:]
+        let baselines = decoded.reduce(into: [HealthMetric: UserBaseline]()) { result, pair in
+            guard let metric = HealthMetric(rawValue: pair.key) else { return }
+            result[metric] = pair.value
+        }
+        return (snapshot.overallScore, baselines)
+    }
+
+    /// The strain recorded for one calendar day, with the level word the
+    /// scorer assigned at the time.
+    func dailyStrain(on day: Date) -> (strain: Double, level: String)? {
+        let dayStart = Date.cal.startOfDay(for: day)
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        let predicate = #Predicate<StoredDailyStrain> { $0.date >= dayStart && $0.date < dayEnd }
+        var descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\StoredDailyStrain.date)])
+        descriptor.fetchLimit = 1
+        guard let record = try? modelContext?.fetch(descriptor).first else { return nil }
+        return (record.strain, record.level)
+    }
+
     /// Load score history for charting (optional day limit, nil = all time)
     func loadScoreHistory(days: Int? = nil) -> [(date: Date, score: Int)] {
         var descriptor: FetchDescriptor<StoredAnalysisSnapshot>
@@ -497,6 +535,34 @@ final class HealthDataStore {
         }
         let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
         return snapshots.map { ($0.date, $0.overallScore) }
+    }
+
+    /// Record today's vitality age on today's snapshot.
+    /// Deliberately does not create a snapshot: inserting one here would put a
+    /// row with `overallScore` 0 into the score history every caller reads.
+    /// The daily analysis pass writes the snapshot first, so this lands on it.
+    func saveVitalityAge(_ age: Int) {
+        guard age > 0 else { return }
+        let today = Date.cal.startOfDay(for: Date())
+        guard let tomorrow = Date.cal.date(byAdding: .day, value: 1, to: today) else { return }
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= today && $0.date < tomorrow }
+        guard let snapshot = try? modelContext?.fetch(FetchDescriptor(predicate: predicate)).first else { return }
+        guard snapshot.vitalityAge != age else { return }
+        snapshot.vitalityAge = age
+        saveContext("swiftdata_save_vitality_age")
+    }
+
+    /// Vitality ages actually recorded in the window, oldest first.
+    /// Days with no recorded age are omitted rather than interpolated.
+    func loadVitalityAgeHistory(days: Int) -> [(date: Date, age: Int)] {
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= cutoff && $0.vitalityAge != nil }
+        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\StoredAnalysisSnapshot.date)])
+        let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
+        return snapshots.compactMap { snapshot in
+            guard let age = snapshot.vitalityAge else { return nil }
+            return (snapshot.date, age)
+        }
     }
 
     /// Load baseline history for ALL metrics in a single pass (avoids N separate full-table fetches + JSON decodes)

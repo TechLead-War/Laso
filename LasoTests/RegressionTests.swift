@@ -227,6 +227,62 @@ struct RegressionTests {
         )
     }
 
+    // MARK: - Readiness
+
+    /// Home printed a big "96 Ready" from a single signal, reading exactly as
+    /// confidently as a day built on all five. The model already holds a reading
+    /// back toward the middle when signals are missing; it just never said so.
+    @Test func aThinReadingReportsHowMuchWasHeldBack() {
+        let baseline = ReadinessScorer.BaselineStats(mean: 50, median: 50,
+                                                     standardDeviation: 8, sampleCount: 30)
+        let now = Date()
+
+        // One signal, and an extreme one, which is the case that produced 96.
+        var thin = ReadinessScorer.Input()
+        thin.now = now
+        thin.hrv = 95
+        thin.hrvTimestamp = now
+        thin.hrvBaseline = baseline
+
+        // The same day with every signal reporting.
+        var full = thin
+        full.restingHeartRate = 48
+        full.restingHeartRateTimestamp = now
+        full.restingHeartRateBaseline = ReadinessScorer.BaselineStats(
+            mean: 55, median: 55, standardDeviation: 4, sampleCount: 30)
+        full.sleepDuration = 8 * 3600
+        full.deepSleep = 90 * 60
+        full.remSleep = 100 * 60
+        full.hasSleepStageBreakdown = true
+        full.workoutTimestamp = now
+        full.workoutDurationMinutes = 45
+        full.workoutCalories = 400
+
+        guard let thinResult = ReadinessScorer.assess(thin),
+              let fullResult = ReadinessScorer.assess(full) else {
+            Issue.record("the scorer returned nothing for a reading it accepted")
+            return
+        }
+
+        #expect(thinResult.confidence < fullResult.confidence,
+                "fewer signals must report lower confidence")
+        #expect(thinResult.uncertainty > fullResult.uncertainty,
+                "a thin day must report more held back than a complete one")
+        #expect(fullResult.uncertainty >= 0)
+
+        // The range has to describe missing signals, not yesterday's number.
+        // Measuring it against the smoothed score folded in the EMA lag, so a
+        // complete day after a big swing printed a range with nothing missing.
+        var lagging = full
+        lagging.previousSmoothedScore = 20
+        guard let laggingResult = ReadinessScorer.assess(lagging) else {
+            Issue.record("the scorer returned nothing for a reading it accepted")
+            return
+        }
+        #expect(laggingResult.uncertainty == fullResult.uncertainty,
+                "yesterday's score must not widen today's range")
+    }
+
     // MARK: - Share card
 
     /// The old rings card printed whatever the day gave it, so an ordinary day
@@ -324,6 +380,38 @@ struct RegressionTests {
     }
 
 
+
+
+
+
+    // MARK: - Share milestone
+
+    /// The share offer is attached to a moment, so it must fire once per
+    /// milestone and never again. A fresh install that syncs a year of history
+    /// crosses every milestone at once and must still see only one prompt.
+    @Test func aStreakMilestoneIsOfferedOnce() {
+        let defaults = UserDefaults.standard
+        let key = "healthpulse.streakMilestoneCelebrated"
+        let saved = defaults.object(forKey: key)
+        defer {
+            if let saved { defaults.set(saved, forKey: key) } else { defaults.removeObject(forKey: key) }
+        }
+        defaults.removeObject(forKey: key)
+
+        #expect(StreakMilestoneStore.pending(streak: 6) == nil, "below the floor there is nothing to offer")
+
+        #expect(StreakMilestoneStore.pending(streak: 7) == 7)
+        StreakMilestoneStore.markCelebrated(7)
+        #expect(StreakMilestoneStore.pending(streak: 7) == nil, "the same milestone must never fire twice")
+        #expect(StreakMilestoneStore.pending(streak: 13) == nil, "days between milestones offer nothing")
+        #expect(StreakMilestoneStore.pending(streak: 14) == 14, "the next milestone still fires")
+
+        // A year of history synced on day one crosses every milestone at once.
+        defaults.removeObject(forKey: key)
+        #expect(StreakMilestoneStore.pending(streak: 365) == 100, "only the highest one crossed")
+        StreakMilestoneStore.markCelebrated(100)
+        #expect(StreakMilestoneStore.pending(streak: 365) == nil, "marking the highest retires the lower ones")
+    }
 
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(

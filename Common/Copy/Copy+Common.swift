@@ -12,6 +12,20 @@ extension Copy {
         static var improved: String { RemoteConfigManager.shared.copyString("copy_common_common_improved", default: "Improved") }
         static var increased: String { RemoteConfigManager.shared.copyString("copy_common_common_increased", default: "Increased") }
 
+        // MARK: - Trend Cards
+
+        enum Trend {
+            static var sectionTitle: String { RemoteConfigManager.shared.copyString("copy_common_trend_section_title", default: "Trends") }
+            static var inUsualRange: String { RemoteConfigManager.shared.copyString("copy_common_trend_in_usual_range", default: "In your usual range") }
+            static var aboveUsual: String { RemoteConfigManager.shared.copyString("copy_common_trend_above_usual", default: "Above your usual") }
+            static var belowUsual: String { RemoteConfigManager.shared.copyString("copy_common_trend_below_usual", default: "Below your usual") }
+            static var buildingUsualRange: String { RemoteConfigManager.shared.copyString("copy_common_trend_building_usual_range", default: "Learning your usual range") }
+
+            static func accessibilityValue(value: String, status: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_common_trend_a11y_value", default: "%@, %@"), value, status)
+            }
+        }
+
         // MARK: - Metric Verdict
 
         enum Verdict {

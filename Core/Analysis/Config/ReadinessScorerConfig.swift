@@ -26,6 +26,17 @@ enum ReadinessScorerConfig {
     static var sleepStageSignalWeight: Double     { rc.readinessSleepStageWeight }
     static var workoutSignalWeight: Double        { rc.readinessWorkoutWeight }
 
+    /// Weight of every signal the score can be built from, present or not.
+    ///
+    /// Confidence has to divide by this, not by the weight of the signals that
+    /// happened to report. Dividing by what arrived meant a day carrying HRV
+    /// alone scored 100% confident, so the centre-pull never engaged and Home
+    /// printed a bold "96 Ready" off one reading.
+    static var allSignalWeightTotal: Double {
+        hrvSignalWeight + rhrSignalWeight + sleepDurationSignalWeight
+            + sleepStageSignalWeight + workoutSignalWeight
+    }
+
     // MARK: - Confidence Caps & Defaults
 
     static var baselineConfidenceSampleCap: Double { rc.readinessBaselineSampleCap }

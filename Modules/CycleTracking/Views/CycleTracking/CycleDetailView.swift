@@ -98,7 +98,9 @@ enum CyclePhase: String, CaseIterable, Identifiable {
 
 /// Represents one historical menstrual cycle for the history section.
 struct CycleHistoryEntry: Identifiable {
-    let id = UUID()
+    // The caller rebuilds this array inside a @ViewBuilder on every parent
+    // re-render. Two cycles can never begin on the same day.
+    var id: Date { startDate }
     let startDate: Date
     let length: Int
 }

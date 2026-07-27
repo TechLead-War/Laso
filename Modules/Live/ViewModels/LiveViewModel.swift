@@ -840,6 +840,10 @@ final class LiveViewModel {
             } else if recovery.hasCheckedOnWristOnce {
                 recovery.readinessScore = nil
                 recovery.readinessConfidence = nil
+                // Travels with the score it describes. Left behind, the card
+                // falls back to the Daily Health Score and prints last
+                // readiness reading's range around an unrelated number.
+                recovery.readinessUncertainty = nil
             }
             // else: cold-launch flicker guard — the very first call after
             // `init` may run before HR has streamed in. Leave whatever the
@@ -909,6 +913,7 @@ final class LiveViewModel {
         readinessStore.saveMorningLock(assessment.score, for: now)
         readinessStore.saveMorningLockConfidence(assessment.confidence, for: now)
         recovery.readinessConfidence = assessment.confidence
+        recovery.readinessUncertainty = assessment.uncertainty
         return assessment.score
     }
 

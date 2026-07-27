@@ -9,7 +9,9 @@ import SwiftUI
 struct AcknowledgementsView: View {
 
     struct Library: Identifiable {
-        let id = UUID()
+        // `libraries` is a stored property initializer, so it re-runs each time
+        // SwiftUI recreates the view value. Package names are unique.
+        var id: String { name }
         let name: String
         let license: String
         let url: URL

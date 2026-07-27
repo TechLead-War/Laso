@@ -44,7 +44,10 @@ enum StrainBalance {
 // MARK: - Daily Strain Point
 
 struct DailyStrainPoint: Identifiable {
-    let id = UUID()
+    // The caller rebuilds this array inside a @ViewBuilder on every parent
+    // re-render, so a fresh UUID here would re-fire the selection haptic and
+    // restart the bar animations. One point per calendar day, no collision.
+    var id: Date { date }
     let date: Date
     let strain: Double
     let level: StrainLevel

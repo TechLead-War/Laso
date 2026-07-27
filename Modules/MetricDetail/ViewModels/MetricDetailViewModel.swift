@@ -145,7 +145,10 @@ final class MetricDetailViewModel {
     }
 
     struct HistoricalFact: Identifiable {
-        let id = UUID()
+        // historicalFacts is computed, so it is rebuilt on every read. Each
+        // branch above appends at most once and uses a distinct icon, so the
+        // icon is a collision-free identity.
+        var id: String { icon }
         let icon: String
         let text: String
     }

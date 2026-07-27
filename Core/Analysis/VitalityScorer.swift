@@ -239,9 +239,13 @@ final class VitalityScorer {
         return .earlyEstimate
     }
 
-    /// 90-day pace of aging trend.
+    /// Pace of aging over the recorded trend window.
     /// < 1.0 = aging slower than calendar time, > 1.0 = aging faster.
     private(set) var paceOfAging: Double = 1.0
+
+    /// False until enough real recorded days exist to quote a pace at all.
+    /// Pace is a slope, and a slope off two weeks of integer ages is noise.
+    private(set) var hasPaceEstimate: Bool = false
 
     /// Per-metric breakdown of contributing ages
     private(set) var componentAges: [VitalityComponent] = []
@@ -281,6 +285,29 @@ final class VitalityScorer {
 
     /// Days held at chronological age before allowing vitality divergence.
     private static let zeroDeltaDaysBeforeRamp = 7
+
+    // MARK: - Trend Window
+
+    /// How far back the vitality age trend looks for recorded days.
+    static let trendWindowDays = 90
+
+    /// Fewest recorded days before the trend chart is worth drawing.
+    static let minimumTrendDays = 7
+
+    /// Fewest recorded days before a pace of aging is quoted. A slope fitted to
+    /// two weeks of whole-year ages is dominated by rounding, not by biology.
+    static let minimumPaceDays = 30
+
+    /// Smoothing applied before the pace slope is fitted. Vitality age is a
+    /// whole number, so day-to-day it steps by 1 year; without smoothing that
+    /// step alone reads as a pace of several years per year.
+    private static let paceSmoothingWindowDays = 7
+
+    /// Outlier guard on the reported pace, not an expected operating range.
+    private static let paceLowerBound: Double = 0.5
+    private static let paceUpperBound: Double = 2.0
+
+    private static let secondsPerYear: Double = 365.25 * 24 * 60 * 60
 
     /// Days of data available at last compute. 0 means no data yet.
     private(set) var availableDays: Int = 0
@@ -585,6 +612,7 @@ final class VitalityScorer {
             isReady = true
             history = []
             paceOfAging = 1.0
+            hasPaceEstimate = false
             return
         }
 
@@ -617,9 +645,17 @@ final class VitalityScorer {
 
     /// Human-readable pace of aging label
     var paceLabel: String {
-        if paceOfAging < 0.85 { return "Improving" }
-        if paceOfAging <= 1.15 { return "Stable" }
-        return "Declining"
+        guard hasPaceEstimate else { return Copy.Vitality.paceBuilding }
+        if paceOfAging < 0.85 { return Copy.Vitality.paceImproving }
+        if paceOfAging <= 1.15 { return Copy.Vitality.paceStable }
+        return Copy.Vitality.paceDeclining
+    }
+
+    /// Calendar days the recorded history actually spans, for honest chart
+    /// titles. A two week old install must not be labelled a 90 day trend.
+    var historySpanDays: Int {
+        guard let first = history.first?.date, let last = history.last?.date else { return 0 }
+        return max(1, (Date.cal.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
     }
 
     // MARK: - Private Helpers
@@ -783,65 +819,43 @@ final class VitalityScorer {
         return table[table.count / 2].value
     }
 
-    /// Build vitality age history from stored analysis snapshots
-    /// Uses a simplified re-computation approach: samples the overall score trend
-    /// and maps it to a vitality age approximation over time.
+    /// Record today's vitality age, then read back the days actually recorded.
+    ///
+    /// This used to reshape the overall health score curve into a fake age curve
+    /// anchored on today. That had two failures the chart made visible: it was
+    /// the score, not vitality age, and because it re-anchored on every compute
+    /// the past redrew itself whenever today moved. Only real recorded days now.
     private func computeHistory(from store: HealthDataStore) {
-        let scoreHistory = MainActor.assumeIsolated { store.loadScoreHistory(days: 90) }
-        guard scoreHistory.count >= 7 else {
-            history = []
-            return
-        }
-
-        // Map health scores to approximate vitality ages.
-        // A perfect score (100) maps to chronologicalAge - 10,
-        // a poor score (40) maps to chronologicalAge + 15.
-        // The current vitality age anchors the most recent point.
-        let latestScore = scoreHistory.last?.score ?? 75
-        let currentDelta = vitalityAge - chronologicalAge
-
-        history = scoreHistory.map { entry in
-            let scoreDiff = entry.score - latestScore
-            // Each point of health score difference ~= 0.3 years of vitality age
-            let ageOffset = currentDelta - Int(Double(scoreDiff) * 0.3)
-            let historicalAge = max(18, min(95, chronologicalAge + ageOffset))
-            return (date: entry.date, age: historicalAge)
+        MainActor.assumeIsolated {
+            store.saveVitalityAge(vitalityAge)
+            let recorded = store.loadVitalityAgeHistory(days: Self.trendWindowDays)
+            history = recorded.count >= Self.minimumTrendDays ? recorded : []
         }
     }
 
-    /// Compute pace of aging from the 90-day history.
-    /// Pace = (change in vitality age) / (change in calendar time).
-    /// < 1.0 means aging slower, > 1.0 means aging faster.
+    /// Pace of aging: how many years of vitality age accrue per calendar year.
+    /// 1.0 tracks the calendar, below 1.0 is aging slower, above is faster.
+    ///
+    /// Chronological age is a constant across this window, so the slope of
+    /// vitality age is the slope of the gap between them, which is why the
+    /// fitted slope is offset by 1.
     private func computePaceOfAging() {
-        guard history.count >= 14 else {
-            paceOfAging = 1.0
-            return
-        }
+        paceOfAging = 1.0
+        hasPaceEstimate = false
 
-        // Compare first third vs last third of history
-        let thirdCount = history.count / 3
-        let earlySlice = history.prefix(thirdCount)
-        let lateSlice = history.suffix(thirdCount)
+        guard history.count >= Self.minimumPaceDays else { return }
 
-        guard !earlySlice.isEmpty, !lateSlice.isEmpty,
-              let earlyDate = earlySlice.first?.date,
-              let lateDate = lateSlice.last?.date else {
-            paceOfAging = 1.0
-            return
-        }
+        let smoothed = history.map { Double($0.age) }.movingAverage(window: Self.paceSmoothingWindowDays)
+        // `movingAverage` labels each window by its last day, so the dates that
+        // line up with it are the trailing ones.
+        let dates = history.map(\.date).suffix(smoothed.count)
+        guard smoothed.count >= 2, let firstDate = dates.first else { return }
 
-        let earlyAvgAge = Double(earlySlice.map(\.age).reduce(0, +)) / Double(earlySlice.count)
-        let lateAvgAge = Double(lateSlice.map(\.age).reduce(0, +)) / Double(lateSlice.count)
-        let calendarDays = Date.cal.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
-        let calendarYears = Double(max(calendarDays, 1)) / 365.25
+        let elapsedYears = dates.map { $0.timeIntervalSince(firstDate) / Self.secondsPerYear }
+        let (slope, _) = [Double].linearRegression(x: elapsedYears, y: smoothed)
+        guard slope.isFinite else { return }
 
-        if calendarYears > 0 {
-            let vitalityAgeChange = lateAvgAge - earlyAvgAge
-            let calendarAgeChange = calendarYears
-            // Ratio: how many years of vitality age change per calendar year
-            paceOfAging = max(0.5, min(2.0, (vitalityAgeChange / calendarAgeChange) + 1.0))
-        } else {
-            paceOfAging = 1.0
-        }
+        paceOfAging = max(Self.paceLowerBound, min(Self.paceUpperBound, slope + 1.0))
+        hasPaceEstimate = true
     }
 }

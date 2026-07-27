@@ -448,7 +448,13 @@ struct StressMonitorView: View {
 // MARK: - Daily Stress Point
 
 struct DailyStressPoint: Identifiable {
-    let id = UUID()
+    // The caller rebuilds this array inside a @ViewBuilder on every parent
+    // re-render, so a fresh UUID here would drop WeeklyBarChart's selected bar
+    // and its tooltip. Keyed on the day itself, not on `dayLabel`: the scorer
+    // skips any day it cannot score, so the last seven scored days can span
+    // more than a week and repeat a weekday abbreviation.
+    var id: Date { date }
+    let date: Date
     let dayLabel: String
     let score: Double
 }
@@ -464,13 +470,13 @@ struct DailyStressPoint: Identifiable {
             hrvDeviation: 0.35,
             hrElevation: 0.22,
             weeklyScores: [
-                DailyStressPoint(dayLabel: "Mon", score: 27),
-                DailyStressPoint(dayLabel: "Tue", score: 37),
-                DailyStressPoint(dayLabel: "Wed", score: 50),
-                DailyStressPoint(dayLabel: "Thu", score: 40),
-                DailyStressPoint(dayLabel: "Fri", score: 30),
-                DailyStressPoint(dayLabel: "Sat", score: 20),
-                DailyStressPoint(dayLabel: "Sun", score: 40)
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -6, to: .now)!, dayLabel: "Mon", score: 27),
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -5, to: .now)!, dayLabel: "Tue", score: 37),
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -4, to: .now)!, dayLabel: "Wed", score: 50),
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -3, to: .now)!, dayLabel: "Thu", score: 40),
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -2, to: .now)!, dayLabel: "Fri", score: 30),
+                DailyStressPoint(date: Date.cal.date(byAdding: .day, value: -1, to: .now)!, dayLabel: "Sat", score: 20),
+                DailyStressPoint(date: .now, dayLabel: "Sun", score: 40)
             ],
             weeklyAverage: 35,
             previousWeekAverage: 44

@@ -90,9 +90,9 @@ struct VitalityHeroSection: View {
                         badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
                     }
 
-                    if scorer.personalizationStatus == .personalized {
+                    if scorer.personalizationStatus == .personalized && scorer.hasPaceEstimate {
                         badge(
-                            text: Copy.Vitality.ninetyDayPace(scorer.paceLabel),
+                            text: Copy.Vitality.paceOverDays(days: scorer.historySpanDays, label: scorer.paceLabel),
                             tint: paceTint.opacity(0.26),
                             foreground: paceTint,
                             icon: vitalityPaceIcon(for: scorer)

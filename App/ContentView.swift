@@ -563,7 +563,9 @@ struct ContentView: View {
         if let stress = dashboardViewModel.stressScorer.currentStress {
             let history = dashboardViewModel.stressScorer.dailyStressHistory
             let weekScores = history.suffix(7).map {
-                DailyStressPoint(dayLabel: $0.date.formatted(.dateTime.weekday(.abbreviated)), score: $0.score)
+                DailyStressPoint(date: $0.date,
+                                 dayLabel: $0.date.formatted(.dateTime.weekday(.abbreviated)),
+                                 score: $0.score)
             }
             let prevWeek = history.count > 7 ? Array(history.dropLast(7).suffix(7)) : [(date: Date, score: Double)]()
             let prevAvg = prevWeek.isEmpty

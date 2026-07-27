@@ -26,7 +26,7 @@ struct VitalityTrendSection: View {
         let selected = selectedTrendPoint
 
         VStack(alignment: .leading, spacing: 10) {
-            vitalitySectionHeader(icon: "chart.xyaxis.line", title: Copy.Vitality.ninetyDayTrend)
+            vitalitySectionHeader(icon: "chart.xyaxis.line", title: Copy.Vitality.trendTitle(days: scorer.historySpanDays))
 
             VStack(alignment: .leading, spacing: 12) {
                 Chart {
@@ -89,7 +89,9 @@ struct VitalityTrendSection: View {
                 .accessibilityLabel(Text(Copy.Vitality.chartAccessibilityLabel(dayCount: scorer.history.count)))
                 .accessibilityValue(Text(vitalityChartAccessibilityValue))
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: 15)) { _ in
+                    // Six or so labels whatever the span. A fixed 15 day stride
+                    // printed a single tick once the chart stopped assuming 90 days.
+                    AxisMarks(values: .stride(by: .day, count: max(1, scorer.historySpanDays / 6))) { _ in
                         AxisGridLine().foregroundStyle(.secondary.opacity(0.15))
                         AxisValueLabel(format: .dateTime.month(.abbreviated).day(), centered: true)
                             .font(.caption2)
@@ -177,7 +179,7 @@ struct VitalityTrendSection: View {
                 .sensoryFeedback(.selection, trigger: selected?.date)
 
                 HStack(spacing: 0) {
-                    trendStat(title: Copy.Vitality.ninetyDayChange, value: historyChangeText, color: historyChangeColor)
+                    trendStat(title: Copy.Vitality.changeOverDays(scorer.historySpanDays), value: historyChangeText, color: historyChangeColor)
 
                     Divider()
                         .frame(height: DS.dividerHeight)

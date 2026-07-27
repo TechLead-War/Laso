@@ -24,6 +24,10 @@ func vitalityPaceState(for scorer: VitalityScorer) -> VitalityPaceState {
 }
 
 func vitalityPaceTint(for scorer: VitalityScorer) -> Color {
+    // With no pace yet, `paceOfAging` is the 1.0 placeholder. Tinting that green
+    // would tell the user their aging is normal on the strength of no evidence.
+    guard scorer.hasPaceEstimate else { return AppColour.textSecondary }
+
     // Delta overrides pace: a large positive delta (aging much older) should never show green
     let delta = scorer.delta
     if delta > 5 { return vitalityPaceRed }
@@ -45,6 +49,7 @@ func vitalityDeltaColor(for delta: Int) -> Color {
 }
 
 func vitalityPaceIcon(for scorer: VitalityScorer) -> String {
+    guard scorer.hasPaceEstimate else { return "hourglass" }
     switch vitalityPaceState(for: scorer) {
     case .healthy: return "checkmark.circle.fill"
     case .caution: return "exclamationmark.triangle.fill"
@@ -53,6 +58,7 @@ func vitalityPaceIcon(for scorer: VitalityScorer) -> String {
 }
 
 func vitalityPaceStateText(for scorer: VitalityScorer) -> String {
+    guard scorer.hasPaceEstimate else { return Copy.Vitality.paceNeedsDays(VitalityScorer.minimumPaceDays) }
     switch vitalityPaceState(for: scorer) {
     case .healthy: return Copy.Vitality.normalOrSlower
     case .caution: return Copy.Vitality.agingTooQuickly

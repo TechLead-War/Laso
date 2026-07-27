@@ -30,6 +30,15 @@ struct ReadinessScorer {
         let score: Int
         let confidence: Int
         let smoothedScore: Double
+        /// How far the model pulled the raw signal reading toward the centre
+        /// because it did not have every signal, in score points.
+        ///
+        /// This is not a new estimate: the centre-pull below already decides how
+        /// much of the raw reading we are willing to claim, and this is simply
+        /// that same distance made visible. It lets the card show a range on a
+        /// thin day instead of one confident looking number, without inventing a
+        /// spread from nowhere.
+        let uncertainty: Int
     }
 
     private struct Signal {
@@ -107,9 +116,19 @@ struct ReadinessScorer {
             partial + (signal.score * signal.weight * signal.confidence)
         } / effectiveWeightTotal
 
-        let totalConfiguredWeight = signals.reduce(0.0) { $0 + $1.weight }
+        // Against every signal the score can use, not just the ones that turned
+        // up: a missing signal has to cost confidence, otherwise a lone HRV
+        // reading reports as certain as a full day.
+        let totalConfiguredWeight = ReadinessScorerConfig.allSignalWeightTotal
         let confidence = min(1.0, effectiveWeightTotal / max(totalConfiguredWeight, 0.0001))
         var score = ReadinessScorerConfig.scoreCenter + (weightedScore - ReadinessScorerConfig.scoreCenter) * (ReadinessScorerConfig.scoreConfidenceFloor + ReadinessScorerConfig.scoreConfidenceSlope * confidence)
+
+        // Read the centre-pull here, before the staleness penalty and the EMA.
+        // Measuring it against the final shown score instead folds in
+        // yesterday's number: at full confidence the EMA alone leaves a 9 point
+        // gap after a 30 point day-over-day swing, and the card would print a
+        // range on a day where nothing was missing.
+        let centrePull = abs(weightedScore - score)
 
         if let bestAge = freshestCardiacAgeHours(
             hrvTimestamp: input.hrvTimestamp,
@@ -127,10 +146,14 @@ struct ReadinessScorer {
             smoothedScore = clampedScore
         }
 
+        let shown = clamp(smoothedScore, min: 0, max: 100)
         return Assessment(
-            score: Int(clamp(smoothedScore, min: 0, max: 100).rounded()),
+            score: Int(shown.rounded()),
             confidence: Int((confidence * 100).rounded()),
-            smoothedScore: smoothedScore
+            smoothedScore: smoothedScore,
+            // How far the centre-pull moved the raw reading. Full confidence
+            // collapses it to 0.
+            uncertainty: Int(centrePull.rounded())
         )
     }
 

@@ -11,7 +11,7 @@ extension Copy {
 
         static var vitalityAgeLabel: String { RemoteConfigManager.shared.copyString("copy_vitality_vitality_vitality_age_label", default: "VITALITY AGE") }
         static func actualAge(_ age: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_actual_age", default: "Actual age %d"), age) }
-        static func ninetyDayPace(_ label: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_vitality_ninety_day_pace", default: "90d %@"), label) }
+        static func paceOverDays(days: Int, label: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_pace_over_days", default: "%dd %@"), days, label) }
         static var buildingProfile: String { RemoteConfigManager.shared.copyString("copy_vitality_vitality_building_profile", default: "Building your profile") }
         static func yearsYounger(_ years: Int) -> String {
             Copy.plural(years,
@@ -83,10 +83,16 @@ extension Copy {
 
         // MARK: - Trend
 
-        static var ninetyDayTrend: String { RemoteConfigManager.shared.copyString("copy_vitality_ninety_day_trend", default: "90-Day Trend") }
-        static var ninetyDayChange: String { RemoteConfigManager.shared.copyString("copy_vitality_ninety_day_change", default: "90d change") }
+        /// Titled with the days actually recorded, never a window we did not fill.
+        static func trendTitle(days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_trend_title", default: "Last %d days"), days) }
+        static func changeOverDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_change_over_days", default: "%dd change"), days) }
         static var pace: String { RemoteConfigManager.shared.copyString("copy_vitality_pace", default: "Pace") }
         static var current: String { RemoteConfigManager.shared.copyString("copy_vitality_current", default: "Current") }
+        static var paceBuilding: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_building", default: "Building") }
+        static func paceNeedsDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_pace_needs_days", default: "Pace needs %d days of history"), days) }
+        static var paceImproving: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_improving", default: "Improving") }
+        static var paceStable: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_stable", default: "Stable") }
+        static var paceDeclining: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_declining", default: "Declining") }
 
         // MARK: - Improvement Suggestions
 

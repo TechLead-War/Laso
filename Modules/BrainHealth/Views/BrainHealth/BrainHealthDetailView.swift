@@ -681,7 +681,9 @@ private struct BrainWeeklyPoint: Identifiable {
 }
 
 private struct ScoreLever: Identifiable {
-    let id = UUID()
+    // computeScoreLevers() runs from body on every re-render. Exactly one lever
+    // is built per kind, so the kind is a collision-free identity.
+    var id: Kind { kind }
     let title: String
     let icon: String
     let score: Int

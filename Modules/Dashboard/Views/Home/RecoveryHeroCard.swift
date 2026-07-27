@@ -16,6 +16,11 @@ struct RecoveryHeroCard: View {
     /// which renders nothing rather than a misleading zero.
     var scoreChange: Int? = nil
     var isWearingWatch: Bool = true
+    /// Score points the model held back because signals were missing. When it is
+    /// meaningful the card shows a range rather than a single number, so a thin
+    /// day cannot read as confidently as a complete one. Nil or zero shows the
+    /// plain score.
+    var scoreUncertainty: Int? = nil
     var onTap: (() -> Void)? = nil
     /// Opens the detail screen for one signal in the Why list.
     var onTapWhy: ((DashboardViewModel.RecoveryWhyReason.Kind) -> Void)? = nil
@@ -191,12 +196,33 @@ struct RecoveryHeroCard: View {
                 )
             }
 
+            scoreRangeRow
             changeChip
             confidenceRow
         }
         .frame(width: 132)
         .contentShape(Rectangle())
     }
+
+    /// The band the reading actually sits in on a thin day. Hidden once the
+    /// model had enough signals to hold the number still, so a complete day
+    /// stays clean.
+    @ViewBuilder
+    private var scoreRangeRow: some View {
+        if let scoreUncertainty, scoreUncertainty >= Self.minimumUncertaintyToShowRange {
+            Text(Copy.Home.scoreRange(max(0, score - scoreUncertainty),
+                                      min(100, score + scoreUncertainty)))
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textTertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .accessibilityIdentifier("home.recoveryCard.scoreRange")
+        }
+    }
+
+    /// Below this the band is narrower than the rounding on the score itself, so
+    /// printing it would suggest more precision than it removes.
+    private static let minimumUncertaintyToShowRange = 3
 
     private var signalsWithData: Int {
         whyReasons.filter { $0.tone != .noData }.count
@@ -245,7 +271,7 @@ struct RecoveryHeroCard: View {
     private var missingSignalsRow: some View {
         let missing = whyReasons.filter { $0.tone == .noData }.map(\.kind.displayName)
         if !missing.isEmpty {
-            Text(Copy.Home.scoreMissingSignals(Self.sentenceList(missing)))
+            Text(Copy.Home.scoreMissingSignals(missing.sentenceList))
                 .font(DS.Typography.caption)
                 .foregroundStyle(AppColour.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -253,14 +279,6 @@ struct RecoveryHeroCard: View {
                 .padding(.top, 10)
                 .accessibilityIdentifier("home.recoveryCard.missingSignals")
         }
-    }
-
-    /// "Sleep, heart and stress" — the final joiner differs so the line reads as
-    /// a sentence rather than a machine list.
-    private static func sentenceList(_ items: [String]) -> String {
-        guard items.count > 1 else { return items.first ?? "" }
-        let head = items.dropLast().joined(separator: Copy.Home.scoreListJoiner)
-        return head + Copy.Home.scoreListFinalJoiner + (items.last ?? "")
     }
 
     /// Yesterday comparison. Up, down and flat each read differently; a missing

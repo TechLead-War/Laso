@@ -1503,6 +1503,140 @@ final class DashboardViewModel {
         return byDay
     }
 
+    // MARK: - One Day, Explained
+
+    /// One signal as it read on a past day, next to the baseline the scorer was
+    /// using then.
+    struct DaySignal: Identifiable {
+        let title: String
+        /// The metric screen this row opens. Nil for strain, which is a derived
+        /// score rather than a recorded metric.
+        let metric: HealthMetric?
+        let valueText: String
+        /// "12 ms below your usual", or "At your usual". Same wording as Home.
+        let gapText: String
+        /// Where the reading sits inside the person's own recent range, for the
+        /// bar. Nil when there is no baseline to place it against.
+        let fraction: Double?
+        let isBelowUsual: Bool
+
+        var id: String { title }
+    }
+
+    /// Everything the app can honestly say about one past day. Every field is
+    /// read back from what was stored on that day; nothing is recomputed
+    /// against today's baselines and nothing is filled in when missing.
+    struct DayDetail {
+        let date: Date
+        let score: Int?
+        let contexts: [LifeContextStore.Context]
+        let signals: [DaySignal]
+        /// Signals the day sheet would have shown if the day had recorded them.
+        let missing: [HealthMetric]
+
+        var state: RecoveryState? { score.map { RecoveryState(score: $0) } }
+    }
+
+    /// The signals a day is judged on, in the order the sheet lists them.
+    private static let daySignalMetrics: [HealthMetric] = [
+        .heartRateVariability, .restingHeartRate, .sleepDuration
+    ]
+
+    @MainActor
+    func dayDetail(for day: Date) -> DayDetail {
+        let dayStart = Date.cal.startOfDay(for: day)
+        let snapshot = store.analysisSnapshot(on: dayStart)
+
+        var signals: [DaySignal] = []
+        var missing: [HealthMetric] = []
+
+        for metric in Self.daySignalMetrics {
+            guard let raw = dayValue(of: metric, on: dayStart) else {
+                missing.append(metric)
+                continue
+            }
+            let value = Self.displayValue(raw, of: metric)
+            let baseline = snapshot?.baselines[metric].map { Self.displayValue($0.mean, of: metric) }
+            signals.append(DaySignal(
+                title: metric.displayName,
+                metric: metric,
+                valueText: Self.dayValueText(value, of: metric),
+                gapText: baseline.map { Self.gapToUsual(current: value, baseline: $0, unit: metric.unit) }
+                    ?? Copy.Explore.dayNoBaseline,
+                fraction: baseline.map { Self.signalFraction(value: value, baseline: $0) },
+                isBelowUsual: baseline.map { value < $0 } ?? false
+            ))
+        }
+
+        if let strain = store.dailyStrain(on: dayStart) {
+            signals.append(DaySignal(
+                title: Copy.Explore.dayStrainTitle,
+                metric: nil,
+                valueText: Copy.Explore.dayStrainValue(String(format: "%.1f", strain.strain), strain.level),
+                gapText: Copy.Explore.dayStrainCaption,
+                fraction: min(1, max(0, strain.strain / StrainScorerConfig.strainScaleMax)),
+                isBelowUsual: false
+            ))
+        }
+
+        return DayDetail(date: dayStart,
+                         score: snapshot?.score,
+                         contexts: lifeContextStore.contexts(on: dayStart),
+                         signals: signals,
+                         missing: missing)
+    }
+
+    /// That day's reading for one metric, aggregated the way the metric is
+    /// meant to be: sleep and steps accumulate across the day, a heart reading
+    /// averages. Nil when the day recorded nothing, which the sheet says out
+    /// loud rather than drawing a zero.
+    @MainActor
+    private func dayValue(of metric: HealthMetric, on dayStart: Date) -> Double? {
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        let samples = (healthKitManager.timeSeries[metric]?.samples ?? [])
+            .filter { $0.date >= dayStart && $0.date < dayEnd }
+        guard !samples.isEmpty else { return nil }
+
+        let total = samples.reduce(0.0) { $0 + $1.value }
+        switch metric {
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .steps,
+             .activeCalories, .exerciseMinutes, .standHours:
+            return total
+        default:
+            return total / Double(samples.count)
+        }
+    }
+
+    /// Converts a stored value into the unit `HealthMetric.unit` advertises.
+    /// Sleep is stored in seconds but reads in hours.
+    private static func displayValue(_ raw: Double, of metric: HealthMetric) -> Double {
+        switch metric {
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
+            return raw / 3600
+        default:
+            return raw
+        }
+    }
+
+    private static func dayValueText(_ value: Double, of metric: HealthMetric) -> String {
+        switch metric {
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
+            let hours = Int(value)
+            let minutes = Int((value - Double(hours)) * 60)
+            return Copy.Explore.dayHoursMinutes(hours, minutes)
+        default:
+            return Copy.Explore.dayValue(String(Int(value.rounded())), metric.unit)
+        }
+    }
+
+    /// The reading placed on a bar that runs from half to one and a half times
+    /// the person's own usual, so the bar answers "how far off was this" rather
+    /// than pretending the metric has an absolute scale.
+    private static func signalFraction(value: Double, baseline: Double) -> Double {
+        guard baseline > 0 else { return 0.5 }
+        return min(1, max(0, (value / baseline - 0.5)))
+    }
+
     /// Clears the cached score history so the next access re-fetches from the store.
     @MainActor
     private func invalidateScoreHistoryCache() {

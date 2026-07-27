@@ -13,6 +13,11 @@ enum StrainScorerConfig {
 
     private static var rc: RemoteConfigManager { .shared }
 
+    /// Top of the strain scale. The curve is defined to land here at
+    /// `maxExpectedLoad`, so anything showing strain as a fraction has to
+    /// divide by this and not by a locally typed 21.
+    static let strainScaleMax: Double = 21
+
     // MARK: - StrainLevel Bucket Boundaries (0-21 strain units)
 
     static var lowUpperExclusive: Double          { rc.strainLowUpper }

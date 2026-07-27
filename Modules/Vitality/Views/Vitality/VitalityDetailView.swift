@@ -27,7 +27,7 @@ struct VitalityDetailView: View {
                     VitalityMetricContributionSection(scorer: scorer)
                 }
 
-                if scorer.history.count >= 7 {
+                if scorer.history.count >= VitalityScorer.minimumTrendDays {
                     VitalityTrendSection(scorer: scorer)
                 }
 

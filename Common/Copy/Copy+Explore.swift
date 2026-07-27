@@ -54,6 +54,38 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_month_scored_days", default: "%1$d of %2$d days scored this month"), scored, total)
         }
 
+        static var monthPrevious: String { RemoteConfigManager.shared.copyString("copy_explore_month_previous", default: "Previous month") }
+        static var monthNext: String { RemoteConfigManager.shared.copyString("copy_explore_month_next", default: "Next month") }
+
+        // MARK: - Day Sheet
+        //
+        // Opened by tapping a day in the month calendar. Every line here is read
+        // back from what was stored on that day, so it stays silent rather than
+        // filling a gap in.
+
+        static var dayNoScore: String { RemoteConfigManager.shared.copyString("copy_explore_day_no_score", default: "This day was not scored") }
+        static var dayNoScoreHint: String { RemoteConfigManager.shared.copyString("copy_explore_day_no_score_hint", default: "Nothing was recorded, so there is nothing to score.") }
+        static var daySignalsTitle: String { RemoteConfigManager.shared.copyString("copy_explore_day_signals_title", default: "What the score was built from") }
+        static var dayNoBaseline: String { RemoteConfigManager.shared.copyString("copy_explore_day_no_baseline", default: "No usual to compare against yet") }
+        static func dayValue(_ amount: String, _ unit: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_value", default: "%1$@ %2$@"), amount, unit)
+        }
+        static func dayHoursMinutes(_ hours: Int, _ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_hours_minutes", default: "%1$dh %2$dm"), hours, minutes)
+        }
+        static var dayStrainTitle: String { RemoteConfigManager.shared.copyString("copy_explore_day_strain_title", default: "Strain") }
+        static func dayStrainValue(_ amount: String, _ level: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_strain_value", default: "%1$@ · %2$@"), amount, level)
+        }
+        static var dayStrainCaption: String { RemoteConfigManager.shared.copyString("copy_explore_day_strain_caption", default: "How hard the day was on your body") }
+        static func dayContext(_ name: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_context", default: "You were marked %1$@ that day"), name)
+        }
+        static func dayMissing(_ names: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_missing", default: "%1$@ was not recorded, so it did not count toward the score."), names)
+        }
+        static var dayClose: String { RemoteConfigManager.shared.copyString("copy_explore_day_close", default: "Close") }
+
         // MARK: - Data Summary
 
         static var metrics: String { RemoteConfigManager.shared.copyString("copy_explore_explore_metrics", default: "Metrics") }

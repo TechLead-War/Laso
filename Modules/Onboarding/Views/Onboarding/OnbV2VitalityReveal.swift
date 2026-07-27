@@ -64,10 +64,17 @@ private struct OrbCanvas: View {
             : .periodic(from: start, by: Self.frameInterval)) { tl in
             Canvas(opaque: false, colorMode: .linear, rendersAsynchronously: true) { ctx, size in
                 let now = tl.date
-                let t = now.timeIntervalSince(start)
-                let intro = min(1, t / 1.4)
-                // brightness/size pulse decays from the last metric feed
-                let fb = lastFeed.map { max(0, exp(-3.2 * now.timeIntervalSince($0))) } ?? 0
+                // The Reduce Motion schedule only ever emits `start`, so the clock is
+                // frozen at 0: rotation, idle wobble, breathe and twinkle all sit at
+                // rest, which is the point. The fade-in has to be forced complete or
+                // that one frame is the frame before anything has faded in and the
+                // whole orb draws at alpha 0.
+                let t = reduceMotion ? 0 : now.timeIntervalSince(start)
+                let intro = reduceMotion ? 1 : min(1, t / 1.4)
+                // brightness/size pulse decays from the last metric feed. Feeds land
+                // after `start`, so on the frozen clock the elapsed time is negative
+                // and exp() would grow instead of decay: no pulse under Reduce Motion.
+                let fb = reduceMotion ? 0 : (lastFeed.map { max(0, exp(-3.2 * now.timeIntervalSince($0))) } ?? 0)
                 let flare = 0.9 * fb
                 let pulse = 1.0 * fb
 
