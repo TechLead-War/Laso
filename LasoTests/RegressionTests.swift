@@ -604,6 +604,57 @@ struct RegressionTests {
         #expect(small.source != "sleep_bank", "half an hour is not worth taking over the day for")
     }
 
+    // MARK: - Dashboard
+
+    /// One refresh called `updateCachedProperties` four to five times, and every
+    /// call rewrote ~25 observable properties. Most of those types are not
+    /// Equatable, so Observation could not suppress the identical write and both
+    /// Home and Explore rebuilt in full each time — including on the "no new data"
+    /// early-out, where a refresh that found nothing still repainted both screens.
+    /// The gate must hold when nothing moved, and every input that changes what is
+    /// published must still get through it.
+    ///
+    /// Driven through the fingerprint the gate compares rather than through
+    /// `DashboardViewModel` itself: constructing one needs HealthKit, a live
+    /// SwiftData store and the analysis engine, none of which a unit test can raise.
+    @Test func theDashboardOnlyRepublishesWhenAnInputMoved() {
+        let today = Date.cal.startOfDay(for: Date())
+        let insightIDs = [UUID(), UUID()]
+
+        func fingerprint(
+            expensiveInputsHash: Int = 4242,
+            focuses: Set<HealthFocus> = [.sleep],
+            generation: Int = 7,
+            day: Date = today,
+            objectIDs: [UUID] = insightIDs,
+            counts: [Int] = [71, 64, 3]
+        ) -> Int {
+            DashboardViewModel.cachePublishFingerprint(
+                expensiveInputsHash: expensiveInputsHash,
+                focuses: focuses,
+                scoreHistoryGeneration: generation,
+                today: day,
+                objectIDs: objectIDs,
+                counts: counts
+            )
+        }
+
+        let unchanged = fingerprint()
+        #expect(fingerprint() == unchanged, "a refresh that found nothing must not republish")
+
+        #expect(fingerprint(expensiveInputsHash: 4243) != unchanged, "new samples must republish")
+        #expect(fingerprint(focuses: [.sleep, .recovery]) != unchanged,
+                "a changed focus area must republish")
+        #expect(fingerprint(generation: 8) != unchanged,
+                "a newly stored day's score must republish")
+        #expect(fingerprint(day: today.addingTimeInterval(86_400)) != unchanged,
+                "crossing midnight must republish, since yesterday and weekly are anchored to today")
+        #expect(fingerprint(objectIDs: [UUID(), UUID()]) != unchanged,
+                "an insight list rebuilt by a deferred phase must republish, even at the same length")
+        #expect(fingerprint(counts: [70, 64, 3]) != unchanged,
+                "a changed category score must republish")
+    }
+
     /// A duration of 5.999 hours printed as "5h 60m" once minutes were rounded.
     @Test func aDurationNeverPrintsSixtyMinutes() {
         #expect((5.999).hoursAsClock == (6.0).hoursAsClock, "rounding up must carry into the hour")

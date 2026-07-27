@@ -77,10 +77,25 @@ final class DashboardViewModel {
     @MainActor private var lastScorerInputHash: Int = 0
     @MainActor private var lastScorerDay: Int = 0
 
-    /// Fingerprint of the inputs that drive the expensive derived caches (trend
-    /// metrics, historical highlights, correlations). updateCachedProperties runs
-    /// 4-5× per refresh; this lets those heavy recomputes run only when their
-    /// inputs actually changed, while the cheap assignments still run every call.
+    /// Fingerprint of every input `updateCachedProperties` reads. It runs 4-5×
+    /// per refresh, and each run republishes ~25 observable properties: most of
+    /// the published types (HealthScore, [Insight], [MetricTile],
+    /// [HealthCorrelation]) are not Equatable, so Observation cannot suppress an
+    /// identical write and each call repaints Home (0.34 ms per body pass) and
+    /// Explore (2.13 ms per body pass) in full. `nil` means "never computed", so
+    /// the very first call always publishes.
+    @MainActor private var lastCacheHash: Int?
+
+    /// Bumped whenever the stored score history actually changes (a new analysis
+    /// snapshot, or backfilled days). The fingerprint carries this counter
+    /// instead of the history itself so deciding whether to publish never pays
+    /// `loadScoreHistory`'s measured 3.16 ms SwiftData fetch.
+    @MainActor private var scoreHistoryGeneration: Int = 0
+
+    /// Fingerprint of the inputs behind the heavy derived caches alone (trend
+    /// metrics ×3, historical highlights, top correlations). Kept separate from
+    /// `lastCacheHash`: a phase that only rewrote insights has to republish, but
+    /// must not pay to recompute trends whose inputs it never touched.
     @MainActor private var lastExpensiveCacheHash: Int = 0
 
     /// Cached daily action. computed once per calendar day (or after analysis refresh)
@@ -396,6 +411,13 @@ final class DashboardViewModel {
 
     /// Pre-built metric tiles for MetricStripView. rebuilt after scorer computation
     @MainActor var cachedMetricTiles: [MetricTile] = []
+
+    /// One score per calendar day for Explore's month calendar, keyed by start
+    /// of day. Built at the end of every refresh path rather than from a SwiftUI
+    /// body: building it measured 0.60 ms per Explore body pass, and the score
+    /// history behind it is a 3.16 ms SwiftData fetch that used to be reached
+    /// lazily from inside that body.
+    @MainActor private(set) var cachedDailyScoresByDay: [Date: Int] = [:]
 
     // MARK: - Research-Backed Feature State (Papers 1-10)
 
@@ -1071,6 +1093,17 @@ final class DashboardViewModel {
     private func updateCachedProperties() {
         // Cache raw focuses + derived categories (Keychain + AES-GCM decrypt. do once, not per view access)
         let focuses = persistence.loadHealthFocuses()
+
+        // Every assignment below writes an observable property, and most of the
+        // published types are not Equatable, so Observation republishes even when
+        // the value is byte-identical: one call repaints Home and Explore in full.
+        // Refuse the whole call when nothing this function reads has moved — the
+        // no-new-data early-out in refreshCore reaches here on every foreground
+        // return with nothing to say.
+        let fingerprint = cachePublishFingerprint(focuses: focuses)
+        guard fingerprint != lastCacheHash else { return }
+        lastCacheHash = fingerprint
+
         insights.cachedHealthFocuses = focuses
         insights.cachedFocusCategories = HealthFocus.categories(for: focuses)
 
@@ -1088,6 +1121,13 @@ final class DashboardViewModel {
         scores.rollingAverageScore = computeRollingAverageScore()
         scores.cachedWeeklyScoreChange = computeWeeklyScoreChange()
         scores.scoreExplanation = analysisEngine.scoreExplanation
+
+        // Built here rather than from Explore's body. Explore rebuilt it on every
+        // body pass (0.60 ms each, 9 passes per refresh burst) and reached the
+        // 3.16 ms `loadScoreHistory` SwiftData fetch lazily from inside that body.
+        // The lines above have already paid that fetch, so the map is close to free
+        // at this point.
+        cachedDailyScoresByDay = dailyScoresByDay(days: Self.scoreCalendarDays)
 
         // North-star activation event: fire exactly once per install when the
         // first non-zero score is computed. Gate on a UserDefaults flag so
@@ -1207,6 +1247,67 @@ final class DashboardViewModel {
         }
         hasher.combine(analysisEngine.correlations.count)
         hasher.combine(analysisEngine.overallScore.score)
+        return hasher.finalize()
+    }
+
+    /// Fingerprint of every input `updateCachedProperties` publishes from, i.e. a
+    /// superset of `cacheInputFingerprint()`.
+    ///
+    /// The analysis arrays are fingerprinted by element id, not by content. Every
+    /// analysis phase (`runDeferredEssentials`, `runDeferredHeavy`, `runMLAnalysis`)
+    /// rebuilds its output array from freshly constructed values, so new ids mean
+    /// "a phase actually produced something" and unchanged ids mean "that phase's
+    /// own gate skipped it and the published values are still current". That is
+    /// cheaper than comparing content and it can never read as unchanged when it is.
+    @MainActor
+    private func cachePublishFingerprint(focuses: Set<HealthFocus>) -> Int {
+        var objectIDs: [UUID] = []
+        objectIDs.append(contentsOf: analysisEngine.insights.map(\.id))
+        objectIDs.append(contentsOf: analysisEngine.correlations.map(\.id))
+        objectIDs.append(contentsOf: analysisEngine.healthRisks.map(\.id))
+        objectIDs.append(contentsOf: analysisEngine.illnessWarnings.map(\.id))
+
+        // Category scores carry their value, not just their shape: the ring and the
+        // weakest-category name change without any array being rebuilt.
+        var counts = analysisEngine.categoryScores.map(\.score)
+        counts.append(analysisEngine.anomalies.count)
+        counts.append(analysisEngine.crossMetricAnomalies.count)
+        counts.append(analysisEngine.causalChains.count)
+        counts.append(analysisEngine.mlOrchestrator.compoundInsights.count)
+        counts.append(analysisEngine.mlOrchestrator.interactionEffects.count)
+        counts.append(analysisEngine.mlOrchestrator.doseResponseCurves.count)
+
+        return Self.cachePublishFingerprint(
+            expensiveInputsHash: cacheInputFingerprint(),
+            focuses: focuses,
+            scoreHistoryGeneration: scoreHistoryGeneration,
+            // The yesterday, weekly and EWMA numbers are all anchored to "today",
+            // so a session left open across midnight has to republish even though
+            // no other input moved.
+            today: Date.cal.startOfDay(for: Date()),
+            objectIDs: objectIDs,
+            counts: counts
+        )
+    }
+
+    /// Pure core of the publish gate, split out from the instance method so it can
+    /// be exercised in tests: building a `DashboardViewModel` needs HealthKit, a
+    /// live SwiftData store and the analysis engine.
+    nonisolated static func cachePublishFingerprint(
+        expensiveInputsHash: Int,
+        focuses: Set<HealthFocus>,
+        scoreHistoryGeneration: Int,
+        today: Date,
+        objectIDs: [UUID],
+        counts: [Int]
+    ) -> Int {
+        var hasher = Hasher()
+        hasher.combine(expensiveInputsHash)
+        hasher.combine(focuses)
+        hasher.combine(scoreHistoryGeneration)
+        hasher.combine(today)
+        hasher.combine(objectIDs)
+        hasher.combine(counts)
         return hasher.finalize()
     }
 
@@ -1359,15 +1460,38 @@ final class DashboardViewModel {
 
     private static let sleepSnapshotKey = "DashboardViewModel.sleepTile.v1"
 
+    /// The values last actually written to disk. Observation-ignored: pure write
+    /// bookkeeping, and publishing it would repaint Home for no visible change.
+    @ObservationIgnored @MainActor
+    private var _lastWrittenSleepSnapshot: (duration: TimeInterval, quality: String, writtenAt: Date)?
+
+    /// How long an unchanged snapshot may sit without being rewritten.
+    /// `loadFreshSleepSnapshot` expires a snapshot at 36h, so refreshing `savedAt`
+    /// hourly keeps skipped writes from ever flipping that freshness decision.
+    private static let sleepSnapshotRefreshInterval: TimeInterval = 3600
+
     /// Persist the latest live sleep values for use on the next launch's
     /// first frame. Skips zero-duration "no data" inputs so we never restore
     /// an empty placeholder.
-    private static func saveSleepSnapshot(duration: TimeInterval, quality: String) {
+    ///
+    /// Writes only on a real change: `rebuildMetricTiles` runs on every Home appear
+    /// and every live-sleep update, and this JSON encode plus UserDefaults write was
+    /// 97% of that function's measured 0.156 ms, each time re-writing a snapshot
+    /// identical to the one already on disk.
+    @MainActor
+    private func saveSleepSnapshot(duration: TimeInterval, quality: String) {
         guard duration > 0 else { return }
-        let snap = SleepTileSnapshot(duration: duration, quality: quality, savedAt: Date())
-        if let data = try? JSONEncoder().encode(snap) {
-            UserDefaults.standard.set(data, forKey: sleepSnapshotKey)
+        let now = Date()
+        if let last = _lastWrittenSleepSnapshot,
+           last.duration == duration,
+           last.quality == quality,
+           now.timeIntervalSince(last.writtenAt) < Self.sleepSnapshotRefreshInterval {
+            return
         }
+        let snap = SleepTileSnapshot(duration: duration, quality: quality, savedAt: now)
+        guard let data = try? JSONEncoder().encode(snap) else { return }
+        UserDefaults.standard.set(data, forKey: Self.sleepSnapshotKey)
+        _lastWrittenSleepSnapshot = (duration, quality, now)
     }
 
     /// Restore the saved sleep tile values only when they're recent enough to
@@ -1415,9 +1539,11 @@ final class DashboardViewModel {
         // back to the most recent snapshot so the tile shows on the very
         // first frame after launch instead of waiting for LiveViewModel to
         // finish its async fetch.
+        if hasSleepData {
+            saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
+        }
         let effectiveSleep: (duration: TimeInterval, quality: String)? = {
             if hasSleepData {
-                Self.saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
                 return (lastNightSleepDuration, sleepQualityLabel)
             }
             if let snap = Self.loadFreshSleepSnapshot() {
@@ -1502,9 +1628,16 @@ final class DashboardViewModel {
         return all.filter { $0.date >= cutoff }
     }
 
+    /// A full year plus the current day, so paging one month back in Explore's
+    /// calendar never lands on a grid that was cut off at the window edge.
+    private static let scoreCalendarDays = 366
+
     /// One score per calendar day for the month calendar, keyed by start of day.
     /// A day with two snapshots keeps the later one, which is the day's settled
     /// score rather than a partial morning read.
+    ///
+    /// Builds `cachedDailyScoresByDay` once per publish; views read that property
+    /// rather than calling this from a body.
     @MainActor
     func dailyScoresByDay(days: Int) -> [Date: Int] {
         var byDay: [Date: Int] = [:]
@@ -1668,6 +1801,11 @@ final class DashboardViewModel {
     @MainActor
     private func invalidateScoreHistoryCache() {
         _cachedScoreHistory = nil
+        // Both callers have just written a snapshot row, so this is also the only
+        // place the stored history changes. The publish gate takes the counter as
+        // its "history moved" signal because re-reading the history to compare it
+        // would cost the 3.16 ms SwiftData fetch the gate exists to avoid.
+        scoreHistoryGeneration &+= 1
     }
 
     /// Replays the scorer over the last `WeeklyScoreSmoothing.windowDays`
@@ -2359,12 +2497,16 @@ final class DashboardViewModel {
         let signals: [HealthMetric] = [.sleepDuration, .heartRateVariability, .restingHeartRate, .steps, .bloodOxygen]
         let cutoff = Date.cal.date(byAdding: .day, value: -window, to: Date.cal.startOfDay(for: Date())) ?? Date()
 
+        // Home calls this on every body pass, and it was the only reading here that
+        // got slower as history grew: 0.238 ms at one year of data, 0.436 ms at
+        // three, because it filtered all five metrics' full sample arrays. The
+        // binary-searched window and the arithmetic day bucket land on exactly the
+        // same days as the old filter plus `startOfDay`, with no upper bound so a
+        // sample dated slightly ahead of now still counts as it did before.
         return signals.map { metric in
-            let days = Set(
-                (healthKitManager.timeSeries[metric]?.samples ?? [])
-                    .filter { $0.date >= cutoff }
-                    .map { Date.cal.startOfDay(for: $0.date) }
-            ).count
+            let inWindow = healthKitManager.timeSeries[metric]?
+                .samples(from: cutoff, until: .distantFuture) ?? []
+            let days = Set(inWindow.map { MetricSample.localDayBucket(for: $0.date) }).count
             return SignalCoverage(metric: metric, daysWithData: days, window: window)
         }
     }

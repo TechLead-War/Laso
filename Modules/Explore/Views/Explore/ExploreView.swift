@@ -20,9 +20,24 @@ struct ExploreView: View {
     @State private var categoriesTracker = SectionTracker(section: .exploreCategories, tab: .explore)
     @State private var yourTrendsTracker = SectionTracker(section: .exploreYourTrends, tab: .explore)
 
+    /// A full year plus the current day, matching the window the view model builds
+    /// `cachedDailyScoresByDay` over, so the fallback and the cache show the same grid.
+    private static let calendarDays = 366
+
     var body: some View {
+        // Bound once per pass. The categories section calls insightCountProvider per
+        // row, and each call ran the whole InsightCoordinator pipeline: 0.55 ms per
+        // body pass for nine categories.
+        let insightCounts = insightCountsByCategory
         ScrollView {
-            VStack(spacing: 24) {
+            // Lazy on purpose. A plain VStack evaluated every section body on
+            // every pass, and a pass measured 2.13 ms across the 9 passes a
+            // single refresh triggers. It also makes the per-section `onAppear`
+            // handlers below honest: they used to all fire the instant the tab
+            // opened, so `maxScrollDepth` reported 90 for a user who never
+            // scrolled and every SectionTracker logged an impression nobody saw.
+            // Expect a step change in those two metrics from this build on.
+            LazyVStack(spacing: 24) {
                 if hasScoreData {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
@@ -65,8 +80,20 @@ struct ExploreView: View {
                     // actually improving, and the surface the habit lives on.
                     // A year of scores, so paging back a month is not an empty
                     // grid the moment someone looks at it.
+                    //
+                    // The view model builds this map once per publish. Building it
+                    // from here cost 0.60 ms per body pass (9 passes per refresh
+                    // burst) and pulled a 3.16 ms SwiftData score-history fetch onto
+                    // the main thread from inside a body. The fallback covers the one
+                    // window the cached map misses: core analysis fills
+                    // `categoryScores` on a background task, so `hasScoreData` can
+                    // flip true a HealthKit fetch ahead of the publish that fills the
+                    // map, and the calendar would flash empty. Same window length as
+                    // the builder, so the fallback shows the same days.
                     ExploreMonthCalendarSection(
-                        scoresByDay: viewModel.dailyScoresByDay(days: 366),
+                        scoresByDay: viewModel.cachedDailyScoresByDay.isEmpty
+                            ? viewModel.dailyScoresByDay(days: Self.calendarDays)
+                            : viewModel.cachedDailyScoresByDay,
                         contextsForDay: { viewModel.lifeContextStore.contexts(on: $0) },
                         detailForDay: { viewModel.dayDetail(for: $0) }
                     )
@@ -118,9 +145,9 @@ struct ExploreView: View {
                     // 4. Categories. primary navigation
                     ExploreCategoriesSection(
                         categories: sortedCategories,
-                        insightCountProvider: { category in
-                            viewModel.analysisEngine.insights(for: category).count
-                        },
+                        // A category absent from the map has no insights at all,
+                        // which is the 0 that `coordinate([])` returns for it.
+                        insightCountProvider: { insightCounts[$0] ?? 0 },
                         onCategoryTapped: { category, score in
                             AppAnalytics.shared.trackBlockTap(
                                 title: category.displayName,
@@ -358,6 +385,17 @@ struct ExploreView: View {
 
     private var sortedCategories: [(category: HealthCategory, score: Int?)] {
         viewModel.exploreSortedCategories
+    }
+
+    /// Same slice, same order and same coordinator as `AnalysisEngine.insights(for:)`,
+    /// so the counts on screen do not move. One grouping pass replaces nine full-array
+    /// filters, and the coordinator only runs for categories that have insights.
+    private var insightCountsByCategory: [HealthCategory: Int] {
+        var byCategory: [HealthCategory: [Insight]] = [:]
+        for insight in viewModel.analysisEngine.insights {
+            byCategory[insight.metric.category, default: []].append(insight)
+        }
+        return byCategory.mapValues { InsightCoordinator.coordinate($0).count }
     }
 }
 

@@ -11,15 +11,36 @@ enum ActionReminderScheduler {
     static let defaultHour = 21
     static let defaultMinute = 30
 
+    /// Reused because building a `DateFormatter` costs 0.055 ms and the Home body reads
+    /// the label on every pass. Held privately: nothing outside `timeLabel` may mutate it.
+    private static let labelFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        f.calendar = Date.cal
+        return f
+    }()
+
     /// The reminder clock time formatted for the button label (e.g. "9:30 PM").
+    ///
+    /// A formatter keeps whatever locale and time zone it had at first use, so a shared
+    /// one would freeze this label at launch: switching iOS to 24-hour time, or changing
+    /// region or time zone, would leave the pill naming a time the reminder does not fire
+    /// at. Setting `calendar` does not carry a time zone across, so both are re-read on
+    /// every call, exactly as a fresh formatter picked them up. They are only written back
+    /// when they actually differ, because assigning either one throws away the formatter's
+    /// internal cache and gives back the cost this change exists to remove.
+    ///
+    /// Main-thread only: the formatter is shared mutable state, and mutating one from two
+    /// threads at once is a crash, not a wrong string.
     static func timeLabel(hour: Int = defaultHour, minute: Int = defaultMinute) -> String {
+        assert(Thread.isMainThread, "ActionReminderScheduler.timeLabel mutates a shared DateFormatter")
         var comps = DateComponents()
         comps.hour = hour
         comps.minute = minute
         let date = Date.cal.date(from: comps) ?? Date()
-        let f = DateFormatter()
-        f.timeStyle = .short
-        f.calendar = Date.cal
+        let f = labelFormatter
+        if f.locale != Locale.current { f.locale = Locale.current }
+        if f.timeZone != TimeZone.current { f.timeZone = TimeZone.current }
         return f.string(from: date)
     }
 
