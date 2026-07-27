@@ -465,6 +465,41 @@ struct OnboardingV2View: View {
         AppAnalytics.shared.trackPromiseShown(branch: branch, nightsRemaining: nightsRemaining)
     }
 
+    /// The scan animation already runs about 7 seconds before this is awaited,
+    /// so a snapshot that has not landed by now is not going to.
+    private static let snapshotLoadDeadline: UInt64 = 8_000_000_000
+
+    /// Lets exactly one of the two racers resume the continuation.
+    private actor ResumeGate {
+        private var claimed = false
+        func claim() -> Bool {
+            guard !claimed else { return false }
+            claimed = true
+            return true
+        }
+    }
+
+    /// Returns when the task finishes or the deadline passes, whichever comes
+    /// first. The task is left running: its results still land on the snapshot
+    /// if they arrive later, they simply stop blocking the user.
+    ///
+    /// Deliberately not a task group. `await task.value` on a `Task<Void, Never>`
+    /// ignores cancellation, so a group cannot leave until the hung task itself
+    /// returns, which is the exact hang this is meant to escape.
+    static func finish(_ task: Task<Void, Never>, within deadlineNs: UInt64) async {
+        let gate = ResumeGate()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            Task {
+                await task.value
+                if await gate.claim() { continuation.resume() }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: deadlineNs)
+                if await gate.claim() { continuation.resume() }
+            }
+        }
+    }
+
     /// Runs after the scan animation. Awaits the snapshot, segments on data
     /// richness, and routes to the matching branch screen. Computes the
     /// instant verdict only on the rich branch. MainActor because it mutates
@@ -474,10 +509,18 @@ struct OnboardingV2View: View {
         // Await the load started during the scan animation (see
         // requestHealthKitAndAdvance). If the user deep-linked straight to scan
         // (no load task), load now as a fallback so segmentation has data.
+        //
+        // Never wait forever. `OnboardingHealthSnapshot.load()` fans out to
+        // fourteen concurrent HealthKit queries and awaits every one, so a
+        // single query that never calls back used to strand the user on the
+        // scan screen with no way out. Whatever loaded by the deadline is what
+        // segmentation sees; a thin snapshot routes to the sparse branch, which
+        // is a real experience rather than a dead end.
         if let snapshotLoadTask {
-            await snapshotLoadTask.value
+            await Self.finish(snapshotLoadTask, within: Self.snapshotLoadDeadline)
         } else {
-            await healthSnapshot.load()
+            await Self.finish(Task { await healthSnapshot.load() },
+                              within: Self.snapshotLoadDeadline)
         }
         persistCapturedAnswers()
 

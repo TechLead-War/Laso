@@ -663,6 +663,34 @@ struct RegressionTests {
     }
 
 
+    // MARK: - Onboarding
+
+    /// Connecting Apple Health left users on a black scan screen with no way
+    /// out. `OnboardingHealthSnapshot.load()` fans out to fourteen concurrent
+    /// HealthKit queries and awaits every one, and `routeAfterScan` awaited that
+    /// with no deadline, so a single query that never called back stranded the
+    /// whole flow. The wait is now bounded.
+    @Test func onboardingNeverWaitsForeverOnHealthKit() async {
+        let neverFinishes = Task<Void, Never> {
+            // Far longer than any real HealthKit query, standing in for one that
+            // never calls back.
+            try? await Task.sleep(nanoseconds: 60_000_000_000)
+        }
+        defer { neverFinishes.cancel() }
+
+        let start = ContinuousClock.now
+        await OnboardingV2View.finish(neverFinishes, within: 300_000_000)
+        let waited = ContinuousClock.now - start
+
+        #expect(waited < .seconds(3), "a hung HealthKit query must not hold onboarding")
+
+        // A task that does finish must still be awaited, not cut short.
+        let quick = Task<Void, Never> { try? await Task.sleep(nanoseconds: 50_000_000) }
+        await OnboardingV2View.finish(quick, within: 5_000_000_000)
+        #expect(quick.isCancelled == false)
+    }
+
+
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(
             candidate: candidate(actionType: actionType),
