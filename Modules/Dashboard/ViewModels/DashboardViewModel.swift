@@ -2206,12 +2206,11 @@ final class DashboardViewModel {
         }
     }
 
-    /// The rest context in force today, if any. Expired chips are pruned first
-    /// so a context the user set two weeks ago cannot still be suppressing
-    /// advice today.
+    /// The rest context in force today, if any. Nothing expires on a timer here:
+    /// only the user turns a context off, and Home nudges them to confirm it is
+    /// still true so it cannot sit on unnoticed.
     private var activeRestContext: LifeContextStore.Context? {
-        lifeContextStore.pruneExpired()
-        return lifeContextStore.active.first { $0.requiresRest }
+        lifeContextStore.active.first { $0.requiresRest }
     }
 
     /// The gap between today's reading and the person's own usual, in their own

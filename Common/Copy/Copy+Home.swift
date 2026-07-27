@@ -77,11 +77,18 @@ extension Copy {
         static var contextUnwell: String { RemoteConfigManager.shared.copyString("copy_home_context_unwell", default: "Unwell") }
         static var contextTravelling: String { RemoteConfigManager.shared.copyString("copy_home_context_travelling", default: "Travelling") }
         static var contextPoorSleepWeek: String { RemoteConfigManager.shared.copyString("copy_home_context_poor_sleep_week", default: "Sleeping badly") }
-        /// %@ is the day the context stops applying, e.g. "31 Jul".
-        static func contextUntil(_ name: String, _ date: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_home_context_until", default: "%1$@ until %2$@"), name, date)
+        /// %2$@ is the day the user switched it on, e.g. "20 Jul". We show the
+        /// start, never an end: how long an injury lasts is not ours to predict.
+        static func contextSince(_ name: String, _ date: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_context_since", default: "%1$@ since %2$@"), name, date)
         }
         static var contextAddHint: String { RemoteConfigManager.shared.copyString("copy_home_context_add_hint", default: "Tell us what is going on") }
+        /// The periodic check in, so a context can never sit on silently.
+        static func contextStillOn(_ name: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_context_still_on", default: "Still %@?"), name)
+        }
+        static var contextStillYes: String { RemoteConfigManager.shared.copyString("copy_home_context_still_yes", default: "Yes") }
+        static var contextStillNo: String { RemoteConfigManager.shared.copyString("copy_home_context_still_no", default: "No, all better") }
 
         // The action shown while a rest context is on. It overrides everything
         // the body signals would otherwise suggest.

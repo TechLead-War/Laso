@@ -185,18 +185,26 @@ struct RegressionTests {
                 "a rest context must win over a 95 readiness score and a fitness focus")
     }
 
-    /// A context set two weeks ago kept suppressing advice forever.
-    @Test func aRestContextExpiresOnItsOwn() {
+    /// The first build switched a context off after a fixed number of days per
+    /// context, which is a claim about how long an injury lasts that this app
+    /// cannot make. Only the user ends it now, and we ask rather than assume.
+    @Test func aRestContextEndsOnlyWhenTheUserSaysSo() {
         let suite = UserDefaults(suiteName: "regression.\(UUID().uuidString)")!
         let store = LifeContextStore(defaults: suite)
 
         store.toggle(.injured)
-        #expect(store.requiresRest, "turning it on applies it today")
+        #expect(store.requiresRest, "turning it on applies it")
 
-        let afterWindow = Date().addingTimeInterval(Double(LifeContextStore.Context.injured.defaultDays + 1) * 86_400)
-        store.pruneExpired(now: afterWindow)
-        #expect(!store.requiresRest, "past its end date the context stops applying")
-        #expect(store.active.isEmpty)
+        let muchLater = Date().addingTimeInterval(90 * 86_400)
+        #expect(store.needingConfirmation(now: muchLater).contains(.injured),
+                "a context we have not heard about must ask, not expire")
+        #expect(store.requiresRest, "no amount of time switches it off by itself")
+
+        store.confirm(.injured, now: muchLater)
+        #expect(store.needingConfirmation(now: muchLater).isEmpty, "confirming resets the reminder")
+
+        store.toggle(.injured)
+        #expect(!store.requiresRest, "only the user ends it")
     }
 
     private static let emptyLive = DashboardSmartActionAdvisor.LiveSnapshot(

@@ -8,15 +8,47 @@ struct LifeContextChipRow: View {
     let store: LifeContextStore
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DS.space2) {
-                ForEach(LifeContextStore.Context.allCases, id: \.self) { context in
-                    chip(context)
+        VStack(alignment: .leading, spacing: DS.space2) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.space2) {
+                    ForEach(LifeContextStore.Context.allCases, id: \.self) { context in
+                        chip(context)
+                    }
                 }
+                .padding(.horizontal, DS.screenPadding)
             }
-            .padding(.horizontal, DS.screenPadding)
+
+            // Nothing switches itself off, so the only thing keeping a stale
+            // context from suppressing advice for months is asking.
+            ForEach(store.needingConfirmation(), id: \.self) { context in
+                confirmRow(context)
+            }
         }
         .accessibilityIdentifier("home.lifeContextChips")
+    }
+
+    private func confirmRow(_ context: LifeContextStore.Context) -> some View {
+        HStack(spacing: DS.space2) {
+            Text(Copy.Home.contextStillOn(context.displayName.lowercasedFirst))
+                .font(DS.Typography.footnote)
+                .foregroundStyle(AppColour.textSecondary)
+
+            Spacer(minLength: 8)
+
+            Button(Copy.Home.contextStillYes) { store.confirm(context) }
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(AppColour.accent)
+
+            Button(Copy.Home.contextStillNo) { store.toggle(context) }
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(AppColour.textSecondary)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, DS.space3)
+        .padding(.vertical, DS.space2)
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+        .padding(.horizontal, DS.screenPadding)
+        .accessibilityIdentifier("home.lifeContext.confirm")
     }
 
     private func chip(_ context: LifeContextStore.Context) -> some View {
@@ -55,10 +87,10 @@ struct LifeContextChipRow: View {
         .accessibilityHint(Copy.Home.contextAddHint)
     }
 
-    /// An active chip carries its own end date, so the person can see when the
-    /// app will stop holding them back without opening anything.
+    /// An active chip shows the day it was switched on. That is a fact we know;
+    /// an end date would be a guess about how long the person stays injured.
     private func label(for context: LifeContextStore.Context, isOn: Bool) -> String {
-        guard isOn, let end = store.endDate(for: context) else { return context.displayName }
-        return Copy.Home.contextUntil(context.displayName, end.formatted(.dateTime.day().month(.abbreviated)))
+        guard isOn, let start = store.startDate(for: context) else { return context.displayName }
+        return Copy.Home.contextSince(context.displayName, start.formatted(.dateTime.day().month(.abbreviated)))
     }
 }
