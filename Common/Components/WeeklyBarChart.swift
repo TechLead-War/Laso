@@ -12,6 +12,13 @@ struct WeeklyBarChart<Point: Identifiable>: View {
     var tooltipLines: ((Point) -> [String])? = nil
     /// Tooltip accent color. Falls back to the bar color when nil.
     var tooltipColor: ((Point) -> Color)? = nil
+    /// Where the person's own average sits, in the same 0 to 1 space as `value`.
+    /// Without it the bars float against nothing and a reader cannot tell a good
+    /// day from a bad one. Nil when the caller has no real average to show; the
+    /// line is never drawn from an assumed number.
+    var referenceFraction: Double? = nil
+    /// Short caption for that line, e.g. "Your average".
+    var referenceLabel: String? = nil
 
     @State private var selectedID: Point.ID?
 
@@ -26,16 +33,48 @@ struct WeeklyBarChart<Point: Identifiable>: View {
                 tooltipView(for: selectedPoint, lines: tooltipLines(selectedPoint))
             }
 
-            HStack(alignment: .bottom, spacing: 6) {
-                ForEach(points) { point in
-                    barCell(for: point)
+            // The bars sit in their own fixed-height plot area so the average
+            // line can be positioned against the same baseline the bars grow
+            // from. Day labels live below it, outside the plot.
+            ZStack(alignment: .bottom) {
+                HStack(alignment: .bottom, spacing: 6) {
+                    ForEach(points) { point in
+                        barCell(for: point)
+                    }
                 }
+                referenceLine
             }
             .frame(maxWidth: .infinity)
             .frame(height: maxBarHeight + (topLabel != nil ? 40 : 20))
         }
         .frame(maxWidth: .infinity)
         .sensoryFeedback(.selection, trigger: selectedID.map { String(describing: $0) })
+    }
+
+    /// Dashed line across the plot at the person's own average, with its caption
+    /// tucked above the line so it never covers a bar.
+    @ViewBuilder
+    private var referenceLine: some View {
+        if let referenceFraction {
+            let clamped = min(max(referenceFraction, 0), 1)
+            HStack(spacing: 6) {
+                Rectangle()
+                    .fill(Color.primary.opacity(0.30))
+                    .frame(height: 1)
+                if let referenceLabel {
+                    // Caption rides at the end of the line rather than above it,
+                    // so a low average cannot drop its text onto the bars.
+                    Text(referenceLabel)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize()
+                }
+            }
+            // Offset from the same baseline the bars grow from, clearing the
+            // day-label row underneath.
+            .padding(.bottom, (maxBarHeight * clamped) + 20)
+            .allowsHitTesting(false)
+        }
     }
 
     private func barCell(for point: Point) -> some View {

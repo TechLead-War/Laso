@@ -189,6 +189,12 @@ struct StressMonitorView: View {
         StressScale.position(for: stressScore)
     }
 
+    /// The average line is worth drawing only when it rounds to something a
+    /// person can read. Below that it is a line labelled zero.
+    private var showsWeeklyAverage: Bool {
+        Int(weeklyAverage.rounded()) >= 1
+    }
+
     private var normalizedLevel: String {
         stressLevel.lowercased()
     }
@@ -284,10 +290,17 @@ struct StressMonitorView: View {
                     tooltipLines: { point in
                         [
                             point.dayLabel,
-                            "\(Int(point.score.rounded())) \(Copy.StressMonitor.scaleSuffix)"
+                            "\(Int(point.score.rounded())) \(Copy.StressMonitor.scaleSuffix(max: Int(StressScale.maxScore)))"
                         ]
                     },
-                    tooltipColor: { barColor(for: $0.score) }
+                    tooltipColor: { barColor(for: $0.score) },
+                    // The person's own weekly average, so a bar can be read as
+                    // high or low for them rather than against nothing. Drawn
+                    // only once it rounds to a real value: a line captioned
+                    // "Your average 0" is the same empty claim the rest of this
+                    // screen was cleaned up to avoid.
+                    referenceFraction: showsWeeklyAverage ? StressScale.position(for: weeklyAverage) : nil,
+                    referenceLabel: showsWeeklyAverage ? Copy.StressMonitor.yourAverage(Int(weeklyAverage.rounded())) : nil
                 )
 
                 // Scale labels
@@ -322,7 +335,7 @@ struct StressMonitorView: View {
                 label: Copy.Common.thisWeek,
                 value: "\(Int(weeklyAverage.rounded()))",
                 color: .primary,
-                suffix: Copy.StressMonitor.scaleSuffix
+                suffix: Copy.StressMonitor.scaleSuffix(max: Int(StressScale.maxScore))
             )
 
             RoundedRectangle(cornerRadius: 1)
@@ -333,7 +346,7 @@ struct StressMonitorView: View {
                 label: Copy.Common.lastWeek,
                 value: "\(Int(previousWeekAverage.rounded()))",
                 color: .secondary,
-                suffix: Copy.StressMonitor.scaleSuffix
+                suffix: Copy.StressMonitor.scaleSuffix(max: Int(StressScale.maxScore))
             )
 
             RoundedRectangle(cornerRadius: 1)

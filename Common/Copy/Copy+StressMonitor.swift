@@ -30,10 +30,20 @@ extension Copy {
 
         // MARK: - Scale
 
+        /// Caption on the average line drawn across the weekly chart.
+        static func yourAverage(_ value: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_your_average", default: "Your average %d"), value)
+        }
         static var scaleLow: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_low", default: "Low") }
         static var scaleHigh: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_high", default: "High") }
         static var scaleAndDirection: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_and_direction", default: "out of 100  ·  Lower is better") }
-        static var scaleSuffix: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_scale_suffix", default: "/ 3") }
+        /// Suffix beside a stress value. The caller passes the live ceiling from
+        /// `StressScale.maxScore`, because a hardcoded copy string kept reading
+        /// "/ 3" long after the scale moved to 0 to 100, so every tooltip and
+        /// weekly box showed a value out of the wrong maximum.
+        static func scaleSuffix(max: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_stress_monitor_scale_suffix_max", default: "/ %d"), max)
+        }
 
         // MARK: - Drivers
 
