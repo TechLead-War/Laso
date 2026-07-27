@@ -189,6 +189,15 @@ struct ContentView: View {
                         showHealthKitReprompt = false
                     }
                 }
+                // A background relaunch cannot obtain HealthKit permission, so the
+                // initial load can fail before the user ever sees the app. `.task`
+                // does not re-run on a foreground return, so retry it here instead
+                // of parking on the error screen until a manual tap.
+                if appStateStore.onboardingCompleted,
+                   !dashboardViewModel.ui.hasCompletedInitialLoad,
+                   !dashboardViewModel.ui.isLoading {
+                    Task { await dashboardViewModel.load() }
+                }
                 if selectedTab == .home {
                     // HomeView's own onChange(scenePhase) handles fetchHomeData. no duplicate needed here
                     // Retry sync only when Home is visible and potentially stuck.

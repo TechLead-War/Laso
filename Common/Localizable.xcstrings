@@ -16,6 +16,16 @@
     "(+%lld)" : {
 
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ dropped %@ this week." : {
       "localizations" : {
         "en" : {
@@ -58,22 +68,22 @@
         }
       }
     },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "%@, %@ %@, %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, %2$@ %3$@, %4$@"
-          }
-        }
-      }
-    },
-    "%@, %@ %@, %@ %@ percent" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@ %3$@, %4$@ %5$@ percent"
           }
         }
       }
@@ -482,9 +492,6 @@
     "Failed to log water. Make sure Laso has write access to Apple Health." : {
 
     },
-    "Focus: %@" : {
-
-    },
     "Forecast" : {
 
     },
@@ -595,19 +602,10 @@
     "Mobility" : {
 
     },
-    "Next day effect" : {
-
-    },
     "No score yet" : {
 
     },
     "Not Enough Data" : {
-
-    },
-    "Not selected" : {
-
-    },
-    "Open Journal" : {
 
     },
     "Open Laso and begin a short breath session from tonight's wind-down." : {
@@ -631,9 +629,6 @@
     "Opens Laso to the Explore tab showing your health trends and analysis." : {
 
     },
-    "Period" : {
-
-    },
     "Quickly log a workout to your Health app with a type and duration." : {
 
     },
@@ -652,16 +647,10 @@
     "Returns your current readiness and recovery status based on heart rate variability and resting heart rate." : {
 
     },
-    "Risk Data Unavailable" : {
-
-    },
     "Rowing" : {
 
     },
     "Running" : {
-
-    },
-    "Same day" : {
 
     },
     "Score %lld" : {
@@ -703,16 +692,6 @@
     "Strain" : {
 
     },
-    "Strain %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Strain %1$@, %2$@"
-          }
-        }
-      }
-    },
     "Strength Training" : {
 
     },
@@ -725,13 +704,7 @@
     "Tap to collapse stage breakdown" : {
 
     },
-    "Tap to collapse tier timeline" : {
-
-    },
     "Tap to show stage breakdown" : {
-
-    },
-    "Tap to show tier progression details" : {
 
     },
     "Target High" : {

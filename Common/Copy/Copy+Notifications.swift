@@ -655,7 +655,9 @@ extension Copy {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_answer_ready_title", default: "Your answer is ready"), phrase), max: titleMax)
         }
         static func answerReadyBody(phrase: String) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_answer_ready_body", default: "We have enough data on your %@ now. Open the app to see what it shows."), phrase), max: bodyMax)
+            // The phrase is a picked label ("Tired mornings"), so it lands
+            // mid-sentence with a stray capital unless the first letter drops.
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_answer_ready_body", default: "We have enough data on your %@ now. Open the app to see what it shows."), phrase.lowercasedFirst), max: bodyMax)
         }
 
         // MARK: - Denied-Branch Re-permission (Journey 5)

@@ -1551,6 +1551,10 @@ struct OnbV2ScreenVerdict: View {
 /// taps yes.
 struct OnbV2ScreenCliffhanger: View {
     let nightsRemaining: Int
+    /// The user's own goal or symptom words, used verbatim by the answer-ready
+    /// push. nil only on the deep-linked test path, where no prediction exists —
+    /// the sample notification is replaced by the heart rather than invented.
+    let userPhrase: String?
     /// Fires the system notification prompt; returns the granted state.
     let onNotifyYes: () async -> Void
     let onContinue: () -> Void
@@ -1566,8 +1570,14 @@ struct OnbV2ScreenCliffhanger: View {
 
                 Spacer(minLength: 0)
 
-                OnbV2HeartHero(size: 180, color: OnbV2.blue)
-                    .onbV2StaggerIn(index: 0, appeared: appeared)
+                Group {
+                    if let userPhrase {
+                        lockScreenPreview(phrase: userPhrase)
+                    } else {
+                        OnbV2HeartHero(size: 180, color: OnbV2.blue)
+                    }
+                }
+                .onbV2StaggerIn(index: 0, appeared: appeared)
 
                 Spacer().frame(height: 28)
 
@@ -1631,6 +1641,87 @@ struct OnbV2ScreenCliffhanger: View {
         // promise_shown is fired by the flow router, which owns the one-shot
         // guard against the back-nav scan re-run recreating this screen.
         .onAppear { appeared = true }
+    }
+
+    /// A lock screen carrying the exact push we send when the answer matures, so
+    /// the opt-in shows the payoff instead of describing it. The clock is the
+    /// real current time and the banner text comes from the shipped notification
+    /// copy, so nothing on this preview is invented.
+    private func lockScreenPreview(phrase: String) -> some View {
+        VStack(spacing: 8) {
+            Text(Date().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+                .font(.system(size: 12))
+                .foregroundStyle(OnbV2.fg3)
+
+            Text(Date().formatted(date: .omitted, time: .shortened))
+                .font(.system(size: 46, weight: .light))
+                .foregroundStyle(OnbV2.fg)
+
+            pushBanner(phrase: phrase)
+                .padding(.top, 6)
+
+            // Dimmed stand-ins for everything else on a lock screen, so the Laso
+            // banner reads as the top card rather than a floating tooltip.
+            ForEach(0..<2, id: \.self) { _ in
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+                    .frame(height: 32)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [OnbV2.blue.opacity(0.22), OnbV2.bg2],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(OnbV2.line, lineWidth: 1)
+        )
+        .padding(.horizontal, OnbV2.bodyPadH)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// iOS renders banners on a light card, so the text colours here are fixed
+    /// dark values rather than OnbV2's on-dark tokens.
+    private func pushBanner(phrase: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image("LaunchIcon")
+                .resizable()
+                .frame(width: 30, height: 30)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(Copy.Labels.appName)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.black.opacity(0.85))
+                    Spacer(minLength: 0)
+                    Text(Copy.OnboardingV2.cliffhangerPushTime)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.black.opacity(0.5))
+                }
+
+                Text(Copy.Notifications.answerReadyTitle(phrase: phrase))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.black.opacity(0.9))
+
+                Text(Copy.Notifications.answerReadyBody(phrase: phrase))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.black.opacity(0.62))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .multilineTextAlignment(.leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.92))
+        )
     }
 }
 
@@ -1746,12 +1837,3 @@ struct OnbV2ScreenJournalFirst: View {
 
 // MARK: - String helper
 
-private extension String {
-    /// Lowercases only the first character so a user phrase like "Tired
-    /// mornings" reads naturally mid-sentence without touching acronyms later
-    /// in the string.
-    var lowercasedFirst: String {
-        guard let first else { return self }
-        return first.lowercased() + String(dropFirst())
-    }
-}

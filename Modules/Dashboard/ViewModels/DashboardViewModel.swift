@@ -498,6 +498,9 @@ final class DashboardViewModel {
         runHousekeeping: Bool = true
     ) async {
         ui.isLoading = true
+        // Clear any error from a previous attempt: without this a successful retry
+        // still renders the error screen, because nothing else ever resets it.
+        ui.errorMessage = nil
         defer { ui.isLoading = false }
 
         if UITestMode.isEnabled {

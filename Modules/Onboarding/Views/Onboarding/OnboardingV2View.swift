@@ -235,6 +235,7 @@ struct OnboardingV2View: View {
             }
         case .cliffhanger:
             OnbV2ScreenCliffhanger(nightsRemaining: cliffhangerNights,
+                                   userPhrase: prediction?.userPhrase,
                                    onNotifyYes: { await requestNotificationPermission(source: "cliffhanger") },
                                    onContinue: { advance(to: .heart) })
                 .onAppear { trackPromiseShownOnce(branch: "cliffhanger", nightsRemaining: cliffhangerNights) }

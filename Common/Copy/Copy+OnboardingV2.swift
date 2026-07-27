@@ -353,6 +353,9 @@ extension Copy {
             let unit = nights == 1 ? s("copy_onboardingv2_night_singular", "night") : s("copy_onboardingv2_night_plural", "nights")
             return String(format: s("copy_onboardingv2_cliffhanger_body", "We have a strong start. About %1$d more %2$@ of sleep and we can give you a real answer."), nights, unit)
         }
+        /// Delivery-time label on the sample notification. The push itself lands
+        /// weeks later, so the preview shows a relative label, not a real clock.
+        static var cliffhangerPushTime: String    { s("copy_onboardingv2_cliffhanger_push_time", "now") }
         static var cliffhangerNotifyTitle: String { s("copy_onboardingv2_cliffhanger_notify_title", "Want us to tell you the moment your answer is ready?") }
         static var cliffhangerNotifyYes: String   { s("copy_onboardingv2_cliffhanger_notify_yes", "Yes, tell me") }
         static var cliffhangerSkip: String        { s("copy_onboardingv2_cliffhanger_skip", "Not now") }

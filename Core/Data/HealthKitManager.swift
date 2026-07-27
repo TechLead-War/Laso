@@ -26,7 +26,11 @@ final class HealthKitManager: @unchecked Sendable {
         var oldestSampleDate: Date?
     }
 
-    var isAuthorized = false
+    /// Seeded from the persisted grant. A HealthKit background-delivery wake
+    /// relaunches the app off-foreground, where the permission request cannot run
+    /// at all, so a plain `false` default would strand the dashboard on the error
+    /// screen for the rest of that launch.
+    var isAuthorized = UserDefaults.standard.bool(forKey: HealthKitManager.authorizationGrantedKey)
     var isLoading = false
     var timeSeries: [HealthMetric: MetricTimeSeries] = [:]
     var lastRefresh: Date?
@@ -107,11 +111,23 @@ final class HealthKitManager: @unchecked Sendable {
         HKHealthStore.isHealthDataAvailable()
     }
 
+    private static let authorizationGrantedKey = "Laso.HealthKitManager.authorizationGranted"
+
     func requestAuthorization() async {
         guard isHealthKitAvailable else {
             error = "HealthKit is not available on this device"
             return
         }
+
+        // Background delivery relaunches the app without a foreground scene, and
+        // HealthKit cannot take its privacy-service assertion there, so the request
+        // always throws "Unable to acquire legacy assertion on
+        // com.apple.HealthPrivacyService". Retrying cannot help while backgrounded:
+        // keep the persisted grant and let the next foreground launch ask.
+        #if os(iOS)
+        let isBackgrounded = await MainActor.run { UIApplication.shared.applicationState == .background }
+        if isBackgrounded { return }
+        #endif
 
         // Read types are derived from the metric registry so every supported
         // HealthMetric is included in the permission prompt. HealthKit returns
@@ -148,6 +164,8 @@ final class HealthKitManager: @unchecked Sendable {
             // the first launch no longer shows a false "Unable to Load Data".
             try await requestAuthorizationWithRetry(share: shareTypes, read: readTypes)
             isAuthorized = true
+            error = nil
+            UserDefaults.standard.set(true, forKey: Self.authorizationGrantedKey)
             // Do NOT emit health_permission_result here: HealthKit never reveals which
             // READ permissions the user granted (Apple hides it so apps cannot infer
             // conditions from denials), so an all-granted count would be fabricated.
