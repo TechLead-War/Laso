@@ -234,10 +234,12 @@ struct RegressionTests {
     /// score onto the user's own photo. Every template is now hard-gated: a
     /// number that does not read as a win produces no card at all.
     @Test func shareTemplatesNeverCarryANumberThatLooksBad() {
-        /// The rings card is opt-in by design and shows the day as it is, so the
-        /// gates are about which *wins* get offered.
+        /// The rings card and the everyday cards show the day as it is and are
+        /// opt-in by design, so the gates here are about which *wins* get
+        /// offered on top of them.
         func wins(_ templates: [ShareTemplate]) -> [ShareTemplate.Kind] {
-            templates.map(\.kind).filter { $0 != .rings }
+            let everyday: Set<ShareTemplate.Kind> = [.rings, .recovery, .sleep, .bodyAge]
+            return templates.map(\.kind).filter { !everyday.contains($0) }
         }
 
         let olderBody = ShareTemplateBuilder.build(
@@ -258,6 +260,11 @@ struct RegressionTests {
             actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil
         )
         #expect(shortStreak.isEmpty, "a streak under the floor is not worth posting")
+
+        // The everyday cards must not smuggle back the thing the gates exist to
+        // prevent: a body reading older than the user is still never offered.
+        #expect(!olderBody.map(\.kind).contains(.bodyAge),
+                "a body age older than the real age is not an everyday card either")
 
         let shortOfRecord = ShareTemplateBuilder.build(
             vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 0,
@@ -288,16 +295,32 @@ struct RegressionTests {
             vitalityAge: 31, realAge: 38, recovery: 82, masterStreak: 23,
             actionResult: nil, lastNightSleepSeconds: 8.2 * 3600, allTimeBestSleepHours: 8.2
         )
-        #expect(earned.map(\.kind) == [.younger, .streak, .bestSleep, .rings],
-                "strongest win first, only the ones that qualify, rings offered last")
+        #expect(earned.map(\.kind) == [.younger, .streak, .bestSleep,
+                                       .recovery, .sleep, .bodyAge, .rings],
+                "earned wins first, then the everyday cards, rings offered last")
 
         #expect(earned[0].captionYears == 7, "the age card drives the years-younger invite caption")
         #expect(earned[1].captionYears == nil, "the streak card must not send an age claim with it")
 
         #expect(earned[2].chip == "8:12", "8.2 hours reads as 8:12, not 8:2 or 8:20")
-        #expect(earned[3].content == .rings(vitalityAge: 31, realAge: 38,
-                                            recovery: 82, sleepSeconds: 8.2 * 3600),
+        #expect(earned.last?.content == .rings(vitalityAge: 31, realAge: 38,
+                                               recovery: 82, sleepSeconds: 8.2 * 3600),
                 "the rings card still carries all three of the day's numbers")
+    }
+
+    /// Every card was gated on an achievement, so an ordinary day left the tray
+    /// with a single option and the picker had nothing to pick between.
+    @Test func anOrdinaryDayStillOffersAChoice() {
+        let ordinary = ShareTemplateBuilder.build(
+            // A 1 year gap sits inside the model's warm-up, so no win qualifies.
+            vitalityAge: 37, realAge: 38, recovery: 64, masterStreak: 1,
+            actionResult: nil, lastNightSleepSeconds: 7.1 * 3600, allTimeBestSleepHours: 8.4
+        )
+
+        #expect(ordinary.map(\.kind) == [.recovery, .sleep, .bodyAge, .rings],
+                "no win qualifies here, so the three everyday cards carry the tray")
+        #expect(ordinary.allSatisfy { $0.captionYears == nil },
+                "an everyday card must not send an age claim with the invite")
     }
 
 

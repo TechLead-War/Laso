@@ -18,7 +18,12 @@ enum ShareCardType {
 /// is offered last and never sits in front of a real win.
 struct ShareTemplate: Identifiable, Equatable {
     enum Kind: String {
-        case younger, streak, proof, bestSleep, rings
+        case younger, streak, proof, bestSleep
+        /// Everyday cards. No win required, only the reading. They exist because
+        /// gating every card on an achievement left an ordinary day with one
+        /// option in the tray, which is not a choice.
+        case recovery, sleep, bodyAge
+        case rings
     }
 
     /// What the card draws. The gated wins are a single headline; `rings` keeps
@@ -44,6 +49,9 @@ struct ShareTemplate: Identifiable, Equatable {
         case .streak:    return Copy.Common.shareChipStreak
         case .proof:     return Copy.Common.shareChipProof
         case .bestSleep: return Copy.Common.shareChipBestSleep
+        case .recovery:  return Copy.Common.shareChipRecovery
+        case .sleep:     return Copy.Common.shareChipSleep
+        case .bodyAge:   return Copy.Common.shareChipAge
         case .rings:     return Copy.Common.shareChipToday
         }
     }
@@ -141,6 +149,61 @@ enum ShareTemplateBuilder {
                     captionYears: nil
                 ))
             }
+        }
+
+        // Everyday cards, after the earned wins and before the rings card. They
+        // are gated on the reading existing and on nothing else, so an ordinary
+        // day still offers a real choice instead of a single option.
+        if let recovery {
+            templates.append(ShareTemplate(
+                kind: .recovery,
+                chip: "\(recovery)",
+                content: .headline(
+                    accent: Copy.Common.shareRecoveryAccent(score: recovery),
+                    plain: Copy.Common.shareRecoveryPlain,
+                    // No band word here on purpose: the recovery thresholds live
+                    // in the dashboard layer, and copying them into Common would
+                    // give the app two tables that can drift apart.
+                    sub: Copy.Common.shareRecoverySubPlain
+                ),
+                captionYears: nil
+            ))
+        }
+
+        if let lastNightSleepSeconds {
+            let hours = lastNightSleepSeconds / 3600
+            // Same plausibility guard as the best-sleep card: an out of range
+            // value means the stored unit changed, and that must never be
+            // printed onto someone's photo.
+            if ShareTemplateGates.plausibleSleepHours.contains(hours) {
+                let text = clockText(hours: hours)
+                templates.append(ShareTemplate(
+                    kind: .sleep,
+                    chip: text,
+                    content: .headline(
+                        accent: text,
+                        plain: Copy.Common.shareSleepPlain,
+                        sub: Copy.Common.shareSleepSub
+                    ),
+                    captionYears: nil
+                ))
+            }
+        }
+
+        // Body age is an everyday card only while it is not older than the real
+        // age. Recovery and sleep are neutral facts, but "my body is 6 years
+        // older" is not something anyone posts, so that case stays out.
+        if let vitalityAge, let realAge, vitalityAge <= realAge {
+            templates.append(ShareTemplate(
+                kind: .bodyAge,
+                chip: "\(vitalityAge)",
+                content: .headline(
+                    accent: Copy.Common.shareAgeAccent(age: vitalityAge),
+                    plain: Copy.Common.shareAgePlain,
+                    sub: Copy.Common.shareAgeSub(realAge: realAge)
+                ),
+                captionYears: nil
+            ))
         }
 
         // The original three-ring card, kept as a choice the user makes rather

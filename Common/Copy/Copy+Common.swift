@@ -103,6 +103,29 @@ extension Copy {
 
         static var shareBestSleepPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_best_sleep_plain", default: "best sleep yet") }
         static var shareBestSleepSub: String { RemoteConfigManager.shared.copyString("copy_common_share_best_sleep_sub", default: "My longest night since I started tracking.") }
+
+        // Everyday cards. These need no win, only the reading to exist, so the
+        // tray is never down to a single option on an ordinary day.
+        static var shareChipRecovery: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_recovery", default: "Recovery") }
+        static var shareChipSleep: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_sleep", default: "Sleep") }
+        static var shareChipAge: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_age", default: "Body age") }
+
+        static func shareRecoveryAccent(score: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_recovery_accent", default: "%d"), score)
+        }
+        static var shareRecoveryPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_recovery_plain", default: "recovery today") }
+        static var shareRecoverySubPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_recovery_sub_plain", default: "Read against my own baseline, not an average.") }
+
+        static var shareSleepPlain: String { RemoteConfigManager.shared.copyString("copy_common_share_sleep_plain", default: "asleep last night") }
+        static var shareSleepSub: String { RemoteConfigManager.shared.copyString("copy_common_share_sleep_sub", default: "Tracked start to finish, not guessed.") }
+
+        static func shareAgeAccent(age: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_age_accent", default: "%d"), age)
+        }
+        static var shareAgePlain: String { RemoteConfigManager.shared.copyString("copy_common_share_age_plain", default: "is my body age") }
+        static func shareAgeSub(realAge: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_age_sub", default: "%d on paper."), realAge)
+        }
         static var laso2: String { RemoteConfigManager.shared.copyString("copy_common_laso2", default: "Laso") }
         static var discoverYourHealthPatternsWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_discover_your_health_patterns_with_laso", default: "Discover your health patterns with Laso") }
         static var hidesThisBannerWithoutChangingNotificationHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_notification_hint", default: "Hides this banner without changing notification settings") }
