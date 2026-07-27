@@ -306,6 +306,7 @@
 		A0EB451C0C8BA423941D3BF9 /* MorningCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8085E5E05DF400C5C89BD403 /* MorningCheckInView.swift */; };
 		A11FCCCCBB63FF89CBF82D6E /* CloudBackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E503FF45AC5FA46CF0FC82B /* CloudBackupManager.swift */; };
 		A165F775F6B6935CB9C754AE /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C7BCB77296C0CC52749362 /* AppContainer.swift */; };
+		A2B0E6139D3E5C79D48AE979 /* SleepBankCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10622B5AE3EFDDB558A23AE /* SleepBankCard.swift */; };
 		A3D9D9A211F6ADBD4CDBF242 /* MLTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACFE2AE5F5D3B3FF1D373404 /* MLTypes.swift */; };
 		A568AF3CC1C4BDCBDAEE796D /* BaselineDriftDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD0BE0BF21974EC6E903F3C /* BaselineDriftDetector.swift */; };
 		A5999F3949D0A6196202784C /* LasoWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB108A1ADD5CA7F2A023528 /* LasoWidgetsBundle.swift */; };
@@ -366,6 +367,7 @@
 		C782912B245ACF19023C1CCC /* DashboardHousekeepingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFF271AA73B1889E41C4880 /* DashboardHousekeepingService.swift */; };
 		C7D79CD9DC6D3923059DF163 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72E987E767FDDCAFD0451FF5 /* RemoteConfigManager.swift */; };
 		C86B3F008099763930CA1616 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8057ABB26B05E77B38085142 /* PushNotificationManager.swift */; };
+		C87835AC65B9194A7CB1D558 /* Double+Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3540CCB130E2D1A1A6AC55 /* Double+Duration.swift */; };
 		C87ABF2F45B508364BC8CF90 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */; };
 		C8A559E9EBA2B8273B040AE1 /* HealthRiskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F2F5F8278612F9522DBE27 /* HealthRiskDetailView.swift */; };
 		C8A943BF5FF12C7F30EF79ED /* ReadinessComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B42DC72327B5FEEF57CD5B /* ReadinessComplication.swift */; };
@@ -671,6 +673,7 @@
 		4A0C2E0CF5A4959261FCFD4C /* WindDownOutcomeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownOutcomeTracker.swift; sourceTree = "<group>"; };
 		4AA786B48A9B4849B9C790D3 /* HealthCorrelation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthCorrelation.swift; sourceTree = "<group>"; };
 		4AB6116F31543CD4B4E1CFAC /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		4C3540CCB130E2D1A1A6AC55 /* Double+Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+Duration.swift"; sourceTree = "<group>"; };
 		4C62BC8962C09E3FE0A0037E /* LasoWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LasoWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D9645432EC22E5B7F4837C5 /* AppleAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleAuthService.swift; sourceTree = "<group>"; };
 		4F0ADF675FBAD032C37D2E17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -887,6 +890,7 @@
 		C012846D9977EE0DE8FB08B3 /* LiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewModel.swift; sourceTree = "<group>"; };
 		C0566D7CAB7A16F90364F54C /* PersonalBand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalBand.swift; sourceTree = "<group>"; };
 		C0D3CD31C134826D06EC4CA7 /* HealthRisk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRisk.swift; sourceTree = "<group>"; };
+		C10622B5AE3EFDDB558A23AE /* SleepBankCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepBankCard.swift; sourceTree = "<group>"; };
 		C1AEC2AF73AD9B3739033C85 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C22377E64ABD3F3590B33625 /* Copy+Explore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Explore.swift"; sourceTree = "<group>"; };
 		C2C7BCB77296C0CC52749362 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
@@ -1914,6 +1918,7 @@
 				19CDDC345B114B7CB4D67DBC /* RecoveryHeroCard.swift */,
 				651AACA82D15D407671E1FFC /* RecoveryInfoSheet.swift */,
 				8E191C477794DD8ED3B5F34F /* ScoreGuideSheet.swift */,
+				C10622B5AE3EFDDB558A23AE /* SleepBankCard.swift */,
 				2630646758E72C032CFF3399 /* TodayBriefingView.swift */,
 				282D3653E910175FDBD29EF1 /* TodaysActionDetailView.swift */,
 				DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */,
@@ -2092,6 +2097,7 @@
 		C9B0B1F52E19F3937A6A403D /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				4C3540CCB130E2D1A1A6AC55 /* Double+Duration.swift */,
 				AF22A29A28E0D95D998927E2 /* String+Sentence.swift */,
 				BE727A3DE25980A4AFDEA71C /* View+WritingTools.swift */,
 			);
@@ -2725,6 +2731,7 @@
 				637DFBE2E2227CBD1222C9B8 /* Discovery.swift in Sources */,
 				B437713E5B4A65C13C0472CF /* DiscoveryEngine.swift in Sources */,
 				3928B5FC6358E560B1110646 /* DiscoveryView.swift in Sources */,
+				C87835AC65B9194A7CB1D558 /* Double+Duration.swift in Sources */,
 				D21C631F7EDE8F1E73FED4B3 /* DriverRowView.swift in Sources */,
 				86EC8CCBC8DD203F76E5DB9E /* EncryptedStore.swift in Sources */,
 				9BD1B50C5D53BC137F465840 /* EngagementSequenceScheduler.swift in Sources */,
@@ -2920,6 +2927,7 @@
 				B286237FFD4722DDE28A1278 /* ShareableCard.swift in Sources */,
 				C964C1310CB0D96F5B119C40 /* ShowTrendsIntent.swift in Sources */,
 				DBBDD4A8400537CA537D1C3B /* SimulationTypes.swift in Sources */,
+				A2B0E6139D3E5C79D48AE979 /* SleepBankCard.swift in Sources */,
 				8F4D8209F967F2B1F0A6F463 /* SleepCoachView.swift in Sources */,
 				0F6504434CD6CD3D097F9D62 /* SleepCoherenceAnalyzer.swift in Sources */,
 				306A84E4FBE1ABFFCE25AE46 /* SleepDebtTracker.swift in Sources */,
@@ -3132,7 +3140,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 84;
+				CURRENT_PROJECT_VERSION = 85;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3151,7 +3159,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.76;
+				MARKETING_VERSION = 1.2.77;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3221,7 +3229,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 84;
+				CURRENT_PROJECT_VERSION = 85;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3234,7 +3242,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.76;
+				MARKETING_VERSION = 1.2.77;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

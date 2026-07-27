@@ -1514,6 +1514,31 @@ final class DashboardViewModel {
         return byDay
     }
 
+    // MARK: - Sleep Bank
+
+    struct SleepBank {
+        let debtHours: Double
+        let personalBaseline: Double
+        let deficits: [SleepDebtTracker.DailyDeficit]
+        /// How many of the 14 nights actually recorded sleep. The card says so
+        /// when the window is thin, rather than presenting a partial balance as
+        /// a complete one.
+        let nightsRecorded: Int
+    }
+
+    /// The running sleep balance, or nil when there is nothing worth showing:
+    /// too few recorded nights, or a balance small enough that naming it would
+    /// be noise. Home renders no card at all in that case rather than a
+    /// reassuring zero.
+    var sleepBank: SleepBank? {
+        guard sleepDebtTracker.isReady, let debt = sleepDebtTracker.currentDebt else { return nil }
+        guard debt.totalDebtHours >= SleepDebtTracker.actionableDebtHours else { return nil }
+        return SleepBank(debtHours: debt.totalDebtHours,
+                         personalBaseline: debt.personalBaseline,
+                         deficits: debt.dailyDeficits,
+                         nightsRecorded: debt.nightsRecorded)
+    }
+
     // MARK: - One Day, Explained
 
     /// One signal as it read on a past day, next to the baseline the scorer was
@@ -1932,7 +1957,9 @@ final class DashboardViewModel {
                 restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
                 userFocuses: insights.cachedHealthFocuses,
                 topInsights: rotatedInsights,
-                restContext: activeRestContext
+                restContext: activeRestContext,
+                sleepDebtHours: sleepBank?.debtHours ?? 0,
+                sleepDebtIsGrowing: sleepDebtTracker.debtTrend == .increasing
             )
         )
 

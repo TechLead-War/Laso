@@ -538,6 +538,79 @@ struct RegressionTests {
         #expect(Copy.Home.RecoveryInfo.moderateRange.contains("\(DS.fairFloor)"))
     }
 
+
+    // MARK: - Sleep bank
+
+    /// A night the watch did not record was stored as a zero deficit, which on
+    /// a chart draws as a night slept exactly to target. The bank has to know
+    /// the difference between "you met it" and "we have nothing".
+    @MainActor
+    @Test func aNightWithNoSleepRecordedIsNotDrawnAsMet() {
+        let today = Date.cal.startOfDay(for: Date())
+        // 13 nights of 6 hours against a 7.5 hour floor, and one gap.
+        let samples: [MetricSample] = (0..<14).compactMap { offset in
+            guard offset != 5 else { return nil }
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return MetricSample(date: day, value: 6.0)
+        }
+
+        let tracker = SleepDebtTracker()
+        tracker.compute(from: HealthDataStore(),
+                        sleepSeries: MetricTimeSeries(metric: .sleepDuration, samples: samples))
+
+        let debt = try? #require(tracker.currentDebt)
+        #expect(tracker.isReady)
+        #expect(debt?.dailyDeficits.count == 14, "every night in the window gets a slot")
+        #expect(debt?.nightsRecorded == 13, "the missing night must not count as recorded")
+
+        let gap = Date.cal.date(byAdding: .day, value: -5, to: today)
+        let missing = debt?.dailyDeficits.first { $0.date == gap }
+        #expect(missing?.hasData == false, "a night with no sample is flagged, not drawn as met")
+        #expect(missing?.deficit == 0, "and it still adds no invented debt")
+    }
+
+    /// The payback line is arithmetic on the balance, so it has to round up:
+    /// telling someone 2 nights clears a debt that 2 nights leaves open is the
+    /// kind of small lie that costs trust in every other number.
+    @Test func paybackNightsAlwaysCoverTheWholeBalance() {
+        let extra = SleepDebtTracker.paybackExtraMinutes / 60
+
+        #expect(SleepDebtTracker.nightsToClear(debtHours: 0) == 0, "nothing owed needs no nights")
+        #expect(SleepDebtTracker.nightsToClear(debtHours: extra) == 1, "an exact night is one night")
+        #expect(SleepDebtTracker.nightsToClear(debtHours: extra + 0.01) == 2, "any remainder needs another night")
+        #expect(SleepDebtTracker.nightsToClear(debtHours: 3.0) == 4)
+    }
+
+    /// Anyone who sleeps under the 7.5 hour floor carries a standing balance, so
+    /// a rule that fired on size alone made "get to bed early" the daily action
+    /// every single day, which is not an action.
+    @Test func theSleepActionOnlyTakesOverWhenTheBalanceIsGrowing() {
+        let advisor = DashboardSmartActionAdvisor()
+        func snapshot(debt: Double, growing: Bool) -> DashboardSmartActionAdvisor.AnalysisSnapshot {
+            DashboardSmartActionAdvisor.AnalysisSnapshot(
+                policyDecision: nil, restingHeartRateBaselineMean: nil, userFocuses: [],
+                topInsights: [], restContext: nil, sleepDebtHours: debt, sleepDebtIsGrowing: growing
+            )
+        }
+
+        let standing = advisor.recommend(live: Self.emptyLive, analysis: snapshot(debt: 9, growing: false))
+        #expect(standing.source != "sleep_bank", "a balance that is simply always there is not today's news")
+
+        let growing = advisor.recommend(live: Self.emptyLive, analysis: snapshot(debt: 9, growing: true))
+        #expect(growing.source == "sleep_bank", "a balance getting worse outranks the model")
+        #expect(!growing.subtitle.contains("12"), "a 12 night count reads as a sentence, not a plan")
+
+        let small = advisor.recommend(live: Self.emptyLive, analysis: snapshot(debt: 0.5, growing: true))
+        #expect(small.source != "sleep_bank", "half an hour is not worth taking over the day for")
+    }
+
+    /// A duration of 5.999 hours printed as "5h 60m" once minutes were rounded.
+    @Test func aDurationNeverPrintsSixtyMinutes() {
+        #expect((5.999).hoursAsClock == (6.0).hoursAsClock, "rounding up must carry into the hour")
+        #expect((0.75).hoursAsClock == Copy.Common.durationMinutes(45), "under an hour drops the leading zero")
+        #expect((7.5).hoursAsClock == Copy.Common.durationHoursMinutes(7, 30))
+    }
+
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(
             candidate: candidate(actionType: actionType),

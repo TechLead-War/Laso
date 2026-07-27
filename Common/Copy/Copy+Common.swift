@@ -10,6 +10,14 @@ extension Copy {
         static var thisWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_this_week", default: "This Week") }
         static var lastWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_last_week", default: "Last Week") }
         static var improved: String { RemoteConfigManager.shared.copyString("copy_common_common_improved", default: "Improved") }
+        /// A span of time written as a clock, e.g. "7h 30m".
+        static func durationHoursMinutes(_ hours: Int, _ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_duration_hours_minutes", default: "%1$dh %2$02dm"), hours, minutes)
+        }
+        /// Under an hour, so the leading "0h" is dropped.
+        static func durationMinutes(_ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_duration_minutes", default: "%dm"), minutes)
+        }
         static var increased: String { RemoteConfigManager.shared.copyString("copy_common_common_increased", default: "Increased") }
 
         // MARK: - Trend Cards

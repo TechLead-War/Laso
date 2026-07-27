@@ -68,6 +68,55 @@ extension Copy {
         }
         static var coverageOpenSettings: String { RemoteConfigManager.shared.copyString("copy_home_coverage_open_settings", default: "Check Health settings") }
 
+        // MARK: - Sleep bank
+        //
+        // The only number on Home that accumulates. Everything else resets each
+        // morning, so without this nothing can say "this has been building all
+        // week". Silent until there is a balance worth naming.
+
+        static var sleepBankTitle: String { RemoteConfigManager.shared.copyString("copy_home_sleep_bank_title", default: "SLEEP BANK · LAST 14 NIGHTS") }
+        /// The running balance, e.g. "3h 20m". Shown with a minus in front.
+        static func sleepBankBehind(_ amount: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_behind", default: "-%@"), amount)
+        }
+        static var sleepBankBehindLabel: String { RemoteConfigManager.shared.copyString("copy_home_sleep_bank_behind_label", default: "Behind") }
+        /// %@ is the person's own nightly average, e.g. "7h 30m".
+        static func sleepBankAgainst(_ baseline: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_against", default: "Against your usual %@ a night"), baseline)
+        }
+        /// %1$d nights of %2$d extra minutes clears the balance. Plain
+        /// arithmetic on the number above, not a claim about recovery speed.
+        static func sleepBankPayback(_ nights: Int, _ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_payback", default: "%2$d minutes extra for %1$d nights puts you back to level"), nights, minutes)
+        }
+        static func sleepBankPaybackOneNight(_ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_payback_one", default: "%d minutes extra tonight puts you back to level"), minutes)
+        }
+        /// Used once the balance is too big for a nights-to-clear count to be a
+        /// plan. Says what one early night is worth, which stays true at any size.
+        static func sleepBankPaybackPerNight(_ minutes: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_payback_per_night", default: "Every early night takes %d minutes off this"), minutes)
+        }
+        static var sleepBankFirstNight: String { RemoteConfigManager.shared.copyString("copy_home_sleep_bank_first_night", default: "14 nights ago") }
+        static var sleepBankLastNight: String { RemoteConfigManager.shared.copyString("copy_home_sleep_bank_last_night", default: "Last night") }
+        /// %d nights of the 14 actually recorded sleep.
+        static func sleepBankNightsRecorded(_ nights: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_nights_recorded", default: "Built from %d recorded nights"), nights)
+        }
+        /// The daily action when the balance is the biggest thing about the day.
+        static var sleepBankActionTitle: String { RemoteConfigManager.shared.copyString("copy_home_sleep_bank_action_title", default: "Get to bed early tonight") }
+        static func sleepBankActionSubtitle(_ amount: String, _ nights: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_action_subtitle", default: "You are %1$@ down on sleep. %2$d early nights clear it."), amount, nights)
+        }
+        /// Once clearing the balance would take longer than a week, quoting the
+        /// count reads as a punishment rather than a plan.
+        static func sleepBankActionSubtitleLong(_ amount: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_action_subtitle_long", default: "You are %@ down on sleep, and it grew again this week. Tonight is the place to start."), amount)
+        }
+        static func sleepBankActionRationale(_ amount: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_sleep_bank_action_rationale", default: "A %@ shortfall built up over the last two weeks weighs on recovery more than anything you can do in the gym today, so tonight's sleep is the action."), amount)
+        }
+
         // MARK: - Life context chips
         //
         // What the watch cannot see. An active chip is a hard constraint on the
@@ -110,7 +159,9 @@ extension Copy {
         static func activationMilestoneInDays(day: Int, milestone: String, days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_activation_milestone_in_days", default: "Day %1$d of 7. %2$@ in %3$d days"), day, milestone, days) }
 
         // Score card (redesigned): one word state + a plain summary + the Why list.
-        static var scoreReadyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_ready_label", default: "Ready") }
+        // Names the metric, not the verdict. "Ready" under an amber 55 read as a
+        // judgement that contradicted the band word one line below it.
+        static var scoreReadyLabel: String { RemoteConfigManager.shared.copyString("copy_home_score_ready_label", default: "Readiness") }
         // Split into a bold heading line and a lighter sub line under the orb.
         static var scoreSummaryLowHead: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low_head", default: "Lower than usual today.") }
         static var scoreSummaryLowSub: String { RemoteConfigManager.shared.copyString("copy_home_score_summary_low_sub", default: "Worth an easy day.") }

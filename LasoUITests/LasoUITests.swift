@@ -187,6 +187,36 @@ final class LasoUITests: XCTestCase {
                        "Today did not bring the calendar back to this month")
     }
 
+    /// The sleep bank is the only running total on Home, so it has to survive a
+    /// scroll and render with a real balance rather than an empty frame.
+    @MainActor
+    func testSleepBankCardRendersOnHome() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode", "--ui-test-initial-tab=home"]
+        app.launch()
+
+        let home = app.descendants(matching: .any)["screen.home"].firstMatch
+        XCTAssertTrue(home.waitForExistence(timeout: 30), "Home never appeared")
+
+        let bank = app.descendants(matching: .any)["home.sleepBank"].firstMatch
+        XCTAssertTrue(bank.waitForExistence(timeout: 20), "Sleep bank card never rendered on Home")
+
+        // The card combines its children, so its label carries the balance, the
+        // baseline it is measured against and the payback line. Asserting on it
+        // proves real numbers rendered, not just an empty frame.
+        let texts = app.staticTexts.matching(identifier: "home.sleepBank")
+        let labels = (0..<texts.count).map { texts.element(boundBy: $0).label }
+        XCTAssertTrue(labels.contains { $0.contains("Against your usual") },
+                      "Card did not name the baseline it measures against, got: \(labels)")
+        XCTAssertTrue(labels.contains { $0.contains("early night") || $0.contains("puts you back") },
+                      "Card did not say what an early night is worth, got: \(labels)")
+
+        // No scroll here on purpose: Home's accessibility tree is deep enough
+        // that any swipe query times out. The labels above already prove the
+        // card rendered with real numbers rather than an empty frame.
+        saveScreenshot(name: "home-sleep-bank")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

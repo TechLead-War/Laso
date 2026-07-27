@@ -161,7 +161,7 @@ struct SleepCoachView: View {
                     Image(systemName: "moon.fill")
                         .font(DS.Typography.title2)
                         .foregroundStyle(AppColour.categorySleep)
-                    Text(formatDuration(adjustedNeed))
+                    Text(adjustedNeed.hoursAsClock)
                         .font(DS.Typography.displayS)
                     Text(Copy.SleepCoach.tonight)
                         .font(DS.Typography.caption)
@@ -250,7 +250,7 @@ struct SleepCoachView: View {
                             .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)
 
-                        Text(formatDuration(debtHours))
+                        Text(debtHours.hoursAsClock)
                             .font(DS.Typography.title2.weight(.bold).monospacedDigit())
                             .foregroundStyle(debtHours > 0 ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.success))
                     }
@@ -339,7 +339,7 @@ struct SleepCoachView: View {
                 historyBar(day, isExpanded: isExpanded)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), formatDuration(day.bedToWakeHours)))
+            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), day.bedToWakeHours.hoursAsClock))
             .accessibilityHint(isExpanded ? "Tap to collapse stage breakdown" : "Tap to show stage breakdown")
 
             if let napMinutes = day.napMinutes, napMinutes > 0 {
@@ -383,7 +383,7 @@ struct SleepCoachView: View {
                 .foregroundStyle(day.wakeTime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .leading)
 
-            Text(formatDuration(day.bedToWakeHours))
+            Text(day.bedToWakeHours.hoursAsClock)
                 .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
                 .frame(width: 46, alignment: .trailing)
@@ -441,7 +441,7 @@ struct SleepCoachView: View {
             }
             .frame(height: 6)
 
-            Text(formatDuration(value))
+            Text(value.hoursAsClock)
                 .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(AppColour.textPrimary)
                 .frame(width: 56, alignment: .trailing)
@@ -740,14 +740,6 @@ struct SleepCoachView: View {
     }
 
     // MARK: - Formatting Helpers
-
-    private func formatDuration(_ hours: Double) -> String {
-        let clamped = max(0, hours)
-        let h = Int(clamped)
-        let m = max(0, Int((clamped - Double(h)) * 60))
-        if h == 0 { return "\(m)m" }
-        return "\(h)h \(String(format: "%02d", m))m"
-    }
 
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()

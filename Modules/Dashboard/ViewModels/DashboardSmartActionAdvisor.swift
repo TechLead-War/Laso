@@ -21,6 +21,13 @@ struct DashboardSmartActionAdvisor {
         /// A rest context the user switched on, e.g. injured or unwell. Nil when
         /// none is active.
         var restContext: LifeContextStore.Context?
+        /// The running sleep balance in hours. Zero when it is too small to act
+        /// on or there are not enough recorded nights to know.
+        var sleepDebtHours: Double = 0
+        /// True only while the last three nights are worse than the three before
+        /// them. A balance that is merely large is a standing fact about how
+        /// this person sleeps; a growing one is today's news.
+        var sleepDebtIsGrowing: Bool = false
     }
 
     struct Recommendation: Equatable {
@@ -54,6 +61,29 @@ struct DashboardSmartActionAdvisor {
                 subtitle: Copy.Home.contextRestSubtitle(rest.displayName.lowercasedFirst),
                 source: "life_context",
                 rationale: Copy.Home.contextRestRationale(rest.displayName.lowercasedFirst)
+            )
+        }
+
+        // 0b. A sleep balance that is actively getting worse. It ranks above the
+        // model because the model scores today in isolation: a good-looking
+        // morning after five short nights still produced "push a little harder",
+        // which is exactly the advice that keeps the hole open.
+        //
+        // Gated on the balance growing, not merely existing. Anyone who sleeps
+        // under the 7.5 hour floor carries a standing balance, so without this
+        // the daily action would read "get to bed early" every day forever and
+        // stop being an action at all.
+        if analysis.sleepDebtIsGrowing, analysis.sleepDebtHours >= SleepDebtTracker.actionableDebtHours {
+            let amount = analysis.sleepDebtHours.hoursAsClock
+            let nights = SleepDebtTracker.nightsToClear(debtHours: analysis.sleepDebtHours)
+            return Recommendation(
+                icon: "bed.double.fill",
+                title: Copy.Home.sleepBankActionTitle,
+                subtitle: nights <= SleepDebtTracker.paybackNightsWorthQuoting
+                    ? Copy.Home.sleepBankActionSubtitle(amount, nights)
+                    : Copy.Home.sleepBankActionSubtitleLong(amount),
+                source: "sleep_bank",
+                rationale: Copy.Home.sleepBankActionRationale(amount)
             )
         }
 

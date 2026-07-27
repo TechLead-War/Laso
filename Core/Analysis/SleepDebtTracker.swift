@@ -16,10 +16,43 @@ final class SleepDebtTracker {
         case decreasing
     }
 
+    struct DailyDeficit {
+        let date: Date
+        /// Hours short of the personal baseline. Negative means a surplus.
+        let deficit: Double
+        /// False when that night recorded nothing. The running total treats a
+        /// missing night as met so it cannot invent debt, but a chart must not
+        /// draw it as a night slept exactly to target.
+        let hasData: Bool
+    }
+
     struct SleepDebtInfo {
         let totalDebtHours: Double
-        let dailyDeficits: [(date: Date, deficit: Double)]
+        let dailyDeficits: [DailyDeficit]
         let personalBaseline: Double
+
+        var nightsRecorded: Int { dailyDeficits.filter(\.hasData).count }
+    }
+
+    /// Below this the balance is small enough that naming it would be noise
+    /// rather than a finding, so the Home card stays quiet and the daily action
+    /// is left to the usual ranking.
+    static let actionableDebtHours: Double = 2.0
+
+    /// The extra sleep the payback line is quoted against. A fixed, stated
+    /// amount keeps the line plain arithmetic on the balance instead of a claim
+    /// about how fast a body clears a deficit.
+    static let paybackExtraMinutes: Double = 45
+
+    /// Past this many nights, "N nights clears it" stops being a plan and starts
+    /// being a sentence. Beyond it the card says what one early night is worth
+    /// instead, which is true at any size of balance.
+    static let paybackNightsWorthQuoting = 7
+
+    /// How many nights of `paybackExtraMinutes` extra sleep clear the balance.
+    static func nightsToClear(debtHours: Double) -> Int {
+        guard debtHours > 0 else { return 0 }
+        return Int((debtHours / (paybackExtraMinutes / 60)).rounded(.up))
     }
 
     // MARK: - Properties
@@ -77,7 +110,7 @@ final class SleepDebtTracker {
         }
 
         // Walk last 14 days and compute deficits
-        var dailyDeficits: [(date: Date, deficit: Double)] = []
+        var dailyDeficits: [DailyDeficit] = []
         var cumulativeDebt: Double = 0
 
         for offset in stride(from: -13, through: 0, by: 1) {
@@ -86,13 +119,13 @@ final class SleepDebtTracker {
 
             if let actual = dailyMap[dayStart] {
                 let deficit = personalBaseline - actual
-                dailyDeficits.append((date: dayStart, deficit: deficit))
+                dailyDeficits.append(DailyDeficit(date: dayStart, deficit: deficit, hasData: true))
 
                 // Positive deficit adds to debt; surplus reduces debt but never below 0
                 cumulativeDebt = Swift.max(0, cumulativeDebt + deficit)
             } else {
                 // Missing day: assume baseline met (no deficit)
-                dailyDeficits.append((date: dayStart, deficit: 0))
+                dailyDeficits.append(DailyDeficit(date: dayStart, deficit: 0, hasData: false))
             }
         }
 
@@ -108,7 +141,7 @@ final class SleepDebtTracker {
 
     // MARK: - Private
 
-    private func computeTrend(from deficits: [(date: Date, deficit: Double)]) {
+    private func computeTrend(from deficits: [DailyDeficit]) {
         guard deficits.count >= 6 else {
             debtTrend = .stable
             return

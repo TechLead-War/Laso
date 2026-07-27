@@ -532,6 +532,16 @@ struct HomeView: View {
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked) { showSoftLockPaywall = true }
 
+                    // 1a0. Sleep bank. The only running total on the screen, so
+                    // it sits right under the score it helps explain. Hidden
+                    // entirely until the balance is big enough to act on.
+                    if let bank = viewModel.sleepBank {
+                        SleepBankCard(debtHours: bank.debtHours,
+                                      personalBaseline: bank.personalBaseline,
+                                      deficits: bank.deficits,
+                                      nightsRecorded: bank.nightsRecorded)
+                    }
+
                     // 1a. What Apple Health has actually sent. Only rendered
                     // when a signal is empty, so a full read carries no clutter.
                     DataCoverageCard(coverage: viewModel.signalCoverage()) {

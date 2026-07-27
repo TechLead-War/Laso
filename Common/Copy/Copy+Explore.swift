@@ -38,8 +38,6 @@ extension Copy {
         // The only place a person can see whether anything is actually getting
         // better. Every day the app scored is one cell, so the habit is visible.
 
-        static var monthTitle: String { RemoteConfigManager.shared.copyString("copy_explore_month_title", default: "Your month") }
-        static var monthTapHint: String { RemoteConfigManager.shared.copyString("copy_explore_month_tap_hint", default: "Tap a day") }
         static var monthToday: String { RemoteConfigManager.shared.copyString("copy_explore_month_today", default: "Today") }
         static var monthNoScore: String { RemoteConfigManager.shared.copyString("copy_explore_month_no_score", default: "No score for this day") }
         static func monthDayScore(_ score: Int, _ state: String) -> String {
@@ -49,7 +47,6 @@ extension Copy {
         static func monthStreakDays(_ days: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_month_streak_days", default: "%d days"), days)
         }
-        static var monthStreakBest: String { RemoteConfigManager.shared.copyString("copy_explore_month_streak_best", default: "Keep it going") }
         static func monthScoredDays(_ scored: Int, _ total: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_month_scored_days", default: "%1$d of %2$d days scored this month"), scored, total)
         }

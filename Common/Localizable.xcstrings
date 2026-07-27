@@ -197,9 +197,6 @@
         }
       }
     },
-    "%lld vs actual" : {
-
-    },
     "%lld win%@" : {
       "localizations" : {
         "en" : {
@@ -217,9 +214,6 @@
 
     },
     "+%lld from last week" : {
-
-    },
-    "+%lld vs actual" : {
 
     },
     "+%lld%%" : {
@@ -483,6 +477,9 @@
     "Elliptical" : {
 
     },
+    "End" : {
+
+    },
     "Expanded" : {
 
     },
@@ -677,6 +674,9 @@
     "Sleep Summary" : {
 
     },
+    "Start" : {
+
+    },
     "Start a 2-minute breathwork reset" : {
 
     },
@@ -735,6 +735,15 @@
 
     },
     "Update" : {
+
+    },
+    "Usual high" : {
+
+    },
+    "Usual low" : {
+
+    },
+    "Value" : {
 
     },
     "Walking" : {
