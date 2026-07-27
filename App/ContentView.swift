@@ -554,7 +554,10 @@ struct ContentView: View {
             weekHistory: scorer.weeklyStrainHistory.map {
                 DailyStrainPoint(date: $0.date, strain: $0.strain, level: StrainLevel(strain: $0.strain))
             },
-            strainBalance: balance
+            strainBalance: balance,
+            trendPoints: scorer.trendStrainHistory.map {
+                TrendSparkPoint(date: $0.date, value: $0.strain)
+            }
         )
     }
 
@@ -579,7 +582,8 @@ struct ContentView: View {
                 hrElevation: stress.hrElevation,
                 weeklyScores: weekScores,
                 weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
-                previousWeekAverage: prevAvg
+                previousWeekAverage: prevAvg,
+                trendPoints: history.map { TrendSparkPoint(date: $0.date, value: $0.score) }
             )
         } else {
             ContentUnavailableView(
@@ -598,7 +602,10 @@ struct ContentView: View {
                 brainScore: brain,
                 weeklyHistory: dashboardViewModel.brainHealthScorer.weeklyHistory,
                 weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
-                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend
+                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend,
+                trendPoints: dashboardViewModel.brainHealthScorer.weeklyHistory.map {
+                    TrendSparkPoint(date: $0.date, value: Double($0.score))
+                }
             )
         } else {
             ContentUnavailableView(

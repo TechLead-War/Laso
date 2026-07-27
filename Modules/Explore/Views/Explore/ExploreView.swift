@@ -63,8 +63,14 @@ struct ExploreView: View {
 
                     // 3. Month calendar. the only view of whether anything is
                     // actually improving, and the surface the habit lives on.
-                    ExploreMonthCalendarSection(scoresByDay: viewModel.dailyScoresByDay(days: 62))
-                        .padding(.horizontal)
+                    // A year of scores, so paging back a month is not an empty
+                    // grid the moment someone looks at it.
+                    ExploreMonthCalendarSection(
+                        scoresByDay: viewModel.dailyScoresByDay(days: 366),
+                        contextsForDay: { viewModel.lifeContextStore.contexts(on: $0) },
+                        detailForDay: { viewModel.dayDetail(for: $0) }
+                    )
+                    .padding(.horizontal)
 
                     // 4. Your Trends. prominent trend-first section
                     if !trendMetrics.isEmpty {

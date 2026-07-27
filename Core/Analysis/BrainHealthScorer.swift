@@ -98,7 +98,11 @@ final class BrainHealthScorer {
     private static let minimumDaysRequired = 7
     private static let baselineWindowDays = 14
     private static let recentWindowDays = 3
-    private static let historyWindowDays = 14
+    /// Long enough to feed the trend card. Everything reading a shorter span
+    /// takes its own suffix, so widening this does not move those numbers.
+    private static let historyWindowDays = 90
+    /// Days the improving/declining verdict compares across.
+    private static let trendWindowDays = 14
 
     // Subscore weights (must sum to 1.0). Exposed (non-private) so the
     // Improve-Your-Score section can read them without duplicating magic numbers.
@@ -236,7 +240,7 @@ final class BrainHealthScorer {
     /// Whether the scorer has enough data to produce a meaningful result (7+ days of HRV)
     private(set) var isReady: Bool = false
 
-    /// Daily brain health scores for the last 14 days
+    /// Daily brain health scores, oldest first, over `historyWindowDays`.
     private(set) var weeklyHistory: [(date: Date, score: Int)] = []
 
     /// Average brain health score over the last 7 days, or nil if insufficient history
@@ -251,10 +255,12 @@ final class BrainHealthScorer {
     var brainHealthTrend: String {
         guard weeklyHistory.count >= Self.weeklyAverageWindowDays else { return Copy.BrainHealth.trendStable }
 
-        let count = weeklyHistory.count
-        let halfPoint = count / 2
-        let firstHalf = weeklyHistory.prefix(halfPoint)
-        let secondHalf = weeklyHistory.suffix(halfPoint)
+        // Pinned to the recent window. Halving the whole history would quietly
+        // turn this into a 45 day comparison now that history runs to 90 days.
+        let recent = weeklyHistory.suffix(Self.trendWindowDays)
+        let halfPoint = recent.count / 2
+        let firstHalf = recent.prefix(halfPoint)
+        let secondHalf = recent.suffix(halfPoint)
 
         guard !firstHalf.isEmpty, !secondHalf.isEmpty else { return Copy.BrainHealth.trendStable }
 

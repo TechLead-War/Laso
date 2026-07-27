@@ -108,10 +108,14 @@ struct VitalityHeroSection: View {
                 }
 
                 if scorer.personalizationStatus == .personalized {
+                    // The waiting-for-history tint is tuned for the light trend
+                    // card, and it disappears against this dark hero. On here it
+                    // reads as white like the sibling badge instead.
+                    let stateTint = scorer.hasPaceEstimate ? paceTint : Color.white.opacity(0.8)
                     badge(
                         text: vitalityPaceStateText(for: scorer),
-                        tint: paceTint.opacity(0.26),
-                        foreground: paceTint
+                        tint: stateTint.opacity(0.26),
+                        foreground: stateTint
                     )
                 }
             }

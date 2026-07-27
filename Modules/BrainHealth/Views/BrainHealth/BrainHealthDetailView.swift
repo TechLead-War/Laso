@@ -8,6 +8,8 @@ struct BrainHealthDetailView: View {
     let weeklyHistory: [(date: Date, score: Int)]
     let weeklyAverage: Int?
     let trend: String
+    /// Longer daily history behind the trend card, oldest first.
+    let trendPoints: [TrendSparkPoint]
 
     @State private var showLearnMore = false
 
@@ -19,6 +21,9 @@ struct BrainHealthDetailView: View {
                 VStack(spacing: DS.sectionSpacing) {
                     heroSection.frame(width: sectionWidth)
                     weeklyChartSection.frame(width: sectionWidth)
+                    if trendPoints.count >= TrendSparkCard.minimumPoints {
+                        trendsSection.frame(width: sectionWidth)
+                    }
                     readinessSection.frame(width: sectionWidth)
                     insightsSection.frame(width: sectionWidth)
                     improveSection.frame(width: sectionWidth)
@@ -180,6 +185,21 @@ struct BrainHealthDetailView: View {
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
+    }
+
+    // MARK: - Trends
+
+    private var trendsSection: some View {
+        TrendSection {
+            TrendSparkCard(
+                icon: "brain.head.profile",
+                title: Copy.BrainHealth.title,
+                value: "\(brainScore.score)",
+                points: trendPoints,
+                band: PersonalBand.make(from: trendPoints.map(\.value)),
+                tint: AppColour.accent
+            )
+        }
     }
 
     // MARK: - Readiness Drivers (Top 3)
@@ -733,7 +753,13 @@ private struct ScoreLever: Identifiable {
                 (date: Date(), score: 78)
             ],
             weeklyAverage: 76,
-            trend: "improving"
+            trend: "improving",
+            trendPoints: (0..<30).reversed().map { offset in
+                TrendSparkPoint(
+                    date: Date.cal.date(byAdding: .day, value: -offset, to: Date())!,
+                    value: 70 + Double((offset * 5) % 18)
+                )
+            }
         )
     }
 }

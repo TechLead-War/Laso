@@ -611,8 +611,13 @@ struct HomeView: View {
 
                     // ── Below the fold ──
 
-                    sectionHeader("REVIEW")
-                        .padding(.top, DS.space3)
+                    // The header used to render unconditionally while the card
+                    // below returns an empty Group with no review, so a new user
+                    // saw a heading with nothing under it.
+                    if weeklyReviewViewModel?.review != nil {
+                        sectionHeader("REVIEW")
+                            .padding(.top, DS.space3)
+                    }
 
                     // 7. Weekly Review
                     WeeklyReviewEntryCard(

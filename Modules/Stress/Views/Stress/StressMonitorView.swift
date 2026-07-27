@@ -10,6 +10,8 @@ struct StressMonitorView: View {
     let weeklyScores: [DailyStressPoint]
     let weeklyAverage: Double
     let previousWeekAverage: Double
+    /// Longer daily history behind the trend card, oldest first.
+    let trendPoints: [TrendSparkPoint]
 
     /// True only when we actually have signal: drivers above zero, OR a non-
     /// trivial gauge reading, OR any meaningful weekly history. All-zero across
@@ -36,6 +38,9 @@ struct StressMonitorView: View {
                     readingSentence
                     weeklyChartSection
                     weeklyComparison
+                    if trendPoints.count >= TrendSparkCard.minimumPoints {
+                        trendsSection
+                    }
                     tipsSection
                     breathingCTA
                 } else {
@@ -327,6 +332,21 @@ struct StressMonitorView: View {
         StressLevel(score: score).color
     }
 
+    // MARK: - Trends
+
+    private var trendsSection: some View {
+        TrendSection {
+            TrendSparkCard(
+                icon: "gauge.with.dots.needle.33percent",
+                title: Copy.StressMonitor.trendCardTitle,
+                value: "\(Int(stressScore.rounded()))",
+                points: trendPoints,
+                band: PersonalBand.make(from: trendPoints.map(\.value)),
+                tint: levelColor
+            )
+        }
+    }
+
     // MARK: - Weekly Comparison
 
     private var weeklyComparison: some View {
@@ -479,7 +499,13 @@ struct DailyStressPoint: Identifiable {
                 DailyStressPoint(date: .now, dayLabel: "Sun", score: 40)
             ],
             weeklyAverage: 35,
-            previousWeekAverage: 44
+            previousWeekAverage: 44,
+            trendPoints: (0..<30).reversed().map { offset in
+                TrendSparkPoint(
+                    date: Date.cal.date(byAdding: .day, value: -offset, to: .now)!,
+                    value: 30 + Double((offset * 7) % 25)
+                )
+            }
         )
     }
 }

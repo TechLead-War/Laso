@@ -220,6 +220,10 @@ final class VitalityScorer {
     /// The computed vitality age (biological performance age)
     private(set) var vitalityAge: Int = 0
 
+    /// The same age before rounding. Only the trend and pace read this; every
+    /// screen shows the whole number.
+    private(set) var preciseVitalityAge: Double = 0
+
     /// The user's actual chronological age
     private(set) var chronologicalAge: Int = 0
 
@@ -253,8 +257,9 @@ final class VitalityScorer {
     /// Whether enough data exists to compute vitality age
     private(set) var isReady: Bool = false
 
-    /// Vitality age history for charting (date, age)
-    private(set) var history: [(date: Date, age: Int)] = []
+    /// Vitality age history for charting, oldest first. Unrounded, so the line
+    /// moves with the person instead of stepping a whole year at a time.
+    private(set) var history: [(date: Date, age: Double)] = []
 
     // MARK: - Weights
 
@@ -617,13 +622,14 @@ final class VitalityScorer {
         }
 
         // Normalize weights if not all metrics are available
-        let computedAge = Int((weightedAgeSum / totalWeight).rounded())
-        computedBiologicalAge = max(18, min(95, computedAge))
-        vitalityAge = blendedBiologicalAge(
+        let computedAge = max(18, min(95, weightedAgeSum / totalWeight))
+        computedBiologicalAge = Int(computedAge.rounded())
+        preciseVitalityAge = blendedBiologicalAge(
             chronologicalAge: chronologicalAge,
-            computedBiologicalAge: computedBiologicalAge,
+            computedBiologicalAge: computedAge,
             progress: personalizationProgress
         )
+        vitalityAge = Int(preciseVitalityAge.rounded())
         componentAges = components.sorted { $0.metricAge > $1.metricAge }
         isReady = true
 
@@ -710,14 +716,17 @@ final class VitalityScorer {
     }
 
     /// Blend from chronological age to computed biological age based on personalization progress.
+    /// Kept unrounded. Rounding here is what made pace of aging unmeasurable:
+    /// over a quarter, real drift is a fraction of a year, and a whole number
+    /// cannot hold a fraction, so the trend could only ever sit flat or jump.
     private func blendedBiologicalAge(
         chronologicalAge: Int,
-        computedBiologicalAge: Int,
+        computedBiologicalAge: Double,
         progress: Double
-    ) -> Int {
-        let rawDelta = Double(computedBiologicalAge - chronologicalAge)
+    ) -> Double {
+        let rawDelta = computedBiologicalAge - Double(chronologicalAge)
         let blended = Double(chronologicalAge) + (rawDelta * max(0, min(1, progress)))
-        return max(18, min(95, Int(blended.rounded())))
+        return max(18, min(95, blended))
     }
 
     /// Get the average value from the most recent N days, requiring at least 3 data points
@@ -827,7 +836,7 @@ final class VitalityScorer {
     /// the past redrew itself whenever today moved. Only real recorded days now.
     private func computeHistory(from store: HealthDataStore) {
         MainActor.assumeIsolated {
-            store.saveVitalityAge(vitalityAge)
+            store.saveVitalityAge(preciseVitalityAge)
             let recorded = store.loadVitalityAgeHistory(days: Self.trendWindowDays)
             history = recorded.count >= Self.minimumTrendDays ? recorded : []
         }
@@ -840,22 +849,29 @@ final class VitalityScorer {
     /// vitality age is the slope of the gap between them, which is why the
     /// fitted slope is offset by 1.
     private func computePaceOfAging() {
-        paceOfAging = 1.0
-        hasPaceEstimate = false
+        if let pace = Self.pace(from: history) {
+            paceOfAging = pace
+            hasPaceEstimate = true
+        } else {
+            paceOfAging = 1.0
+            hasPaceEstimate = false
+        }
+    }
 
-        guard history.count >= Self.minimumPaceDays else { return }
+    /// Returns nil when the history is too short to fit a slope worth showing.
+    static func pace(from history: [(date: Date, age: Double)]) -> Double? {
+        guard history.count >= minimumPaceDays else { return nil }
 
-        let smoothed = history.map { Double($0.age) }.movingAverage(window: Self.paceSmoothingWindowDays)
+        let smoothed = history.map(\.age).movingAverage(window: paceSmoothingWindowDays)
         // `movingAverage` labels each window by its last day, so the dates that
         // line up with it are the trailing ones.
         let dates = history.map(\.date).suffix(smoothed.count)
-        guard smoothed.count >= 2, let firstDate = dates.first else { return }
+        guard smoothed.count >= 2, let firstDate = dates.first else { return nil }
 
-        let elapsedYears = dates.map { $0.timeIntervalSince(firstDate) / Self.secondsPerYear }
+        let elapsedYears = dates.map { $0.timeIntervalSince(firstDate) / secondsPerYear }
         let (slope, _) = [Double].linearRegression(x: elapsedYears, y: smoothed)
-        guard slope.isFinite else { return }
+        guard slope.isFinite else { return nil }
 
-        paceOfAging = max(Self.paceLowerBound, min(Self.paceUpperBound, slope + 1.0))
-        hasPaceEstimate = true
+        return max(paceLowerBound, min(paceUpperBound, slope + 1.0))
     }
 }

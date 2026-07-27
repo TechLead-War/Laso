@@ -111,7 +111,9 @@ final class StressScorer {
 
     private static let minimumDaysRequired = 3
     private static let baselineWindowDays = 14
-    private static let historyWindowDays = 30
+    /// Long enough to feed the trend card. Everything reading a shorter span
+    /// takes its own suffix, so widening this does not move those numbers.
+    private static let historyWindowDays = 90
     private static let hrvWeight = 0.6
     private static let hrWeight = 0.4
 

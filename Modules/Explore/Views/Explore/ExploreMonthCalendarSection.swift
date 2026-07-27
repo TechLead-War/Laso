@@ -1,21 +1,31 @@
 import SwiftUI
 
-/// A month of daily scores, one cell per day, coloured by the same three band
+/// A month of daily scores, one dial per day, coloured by the same three band
 /// model the home ring uses. This is the only surface that answers "is anything
 /// actually getting better", so it never invents a day: a date with no stored
-/// snapshot renders empty rather than as a zero.
+/// snapshot renders as an empty dial rather than as a zero.
+///
+/// The dial reads as a quantity, not just a band. A filled tile said only which
+/// of three buckets a day fell in, so 52 and 74 looked identical; the arc shows
+/// how far into the band the day actually was.
 struct ExploreMonthCalendarSection: View {
     /// Score per day, keyed by `startOfDay`.
     let scoresByDay: [Date: Int]
+    /// The life contexts switched on for a given day, finished ones included.
+    /// A dip explains itself when the calendar can say it was the injured week.
+    let contextsForDay: (Date) -> [LifeContextStore.Context]
+    /// Everything the app can honestly say about one past day.
+    let detailForDay: (Date) -> DashboardViewModel.DayDetail
 
-    @State private var selectedDay: Date?
+    @State private var monthAnchor: Date = Date.cal.startOfDay(for: Date())
+    @State private var selectedDay: SelectedDay?
 
     private var today: Date { Date.cal.startOfDay(for: Date()) }
 
-    /// Every day of the current month, plus leading blanks so the first day
+    /// Every day of the anchored month, plus leading blanks so the first day
     /// lands under its real weekday column.
     private var cells: [Date?] {
-        guard let interval = Date.cal.dateInterval(of: .month, for: today) else { return [] }
+        guard let interval = Date.cal.dateInterval(of: .month, for: monthAnchor) else { return [] }
         let firstDay = interval.start
         let dayCount = Date.cal.range(of: .day, in: .month, for: firstDay)?.count ?? 0
         // `firstWeekday` is 1-based and locale dependent, so a Monday-first
@@ -29,6 +39,10 @@ struct ExploreMonthCalendarSection: View {
         return Array(repeating: nil, count: leading) + days.map { Optional($0) }
     }
 
+    private var isViewingCurrentMonth: Bool {
+        Date.cal.isDate(monthAnchor, equalTo: today, toGranularity: .month)
+    }
+
     private var scoredThisMonth: Int {
         cells.compactMap { $0 }.filter { scoresByDay[$0] != nil }.count
     }
@@ -39,7 +53,8 @@ struct ExploreMonthCalendarSection: View {
 
     /// Consecutive scored days ending today or yesterday. Counting from
     /// yesterday too means the streak does not read as broken before the day's
-    /// own score has been written.
+    /// own score has been written. Always measured from today, not from the
+    /// month being viewed, so paging back cannot appear to change it.
     private var streak: Int {
         var count = 0
         var cursor = scoresByDay[today] != nil
@@ -59,25 +74,46 @@ struct ExploreMonthCalendarSection: View {
             weekdayHeader
             grid
             Divider().overlay(AppColour.borderLow)
-            selectedDayRow
-            streakRow
+            footerRow
         }
         .padding(DS.cardPadding)
         .cardStyle()
         .accessibilityIdentifier("explore.monthCalendar")
+        .sheet(item: $selectedDay) { selection in
+            ExploreDaySheet(detail: detailForDay(selection.date))
+        }
     }
 
     private var header: some View {
         HStack {
-            Text(Copy.Explore.monthTitle)
+            Text(monthAnchor.formatted(.dateTime.month(.wide).year()))
                 .font(DS.Typography.headline)
                 .foregroundStyle(AppColour.textPrimary)
             Spacer()
-            Text(selectedDay == nil ? Copy.Explore.monthTapHint : Copy.Explore.monthToday)
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
-                .onTapGesture { selectedDay = nil }
+            HStack(spacing: 6) {
+                monthButton(step: -1, systemImage: "chevron.left", label: Copy.Explore.monthPrevious)
+                monthButton(step: 1, systemImage: "chevron.right", label: Copy.Explore.monthNext)
+            }
         }
+    }
+
+    private func monthButton(step: Int, systemImage: String, label: String) -> some View {
+        // Forward is dead on the current month: there is nothing recorded ahead
+        // of today, so paging into it would only show an empty grid.
+        let disabled = step > 0 && isViewingCurrentMonth
+        return Button {
+            guard let moved = Date.cal.date(byAdding: .month, value: step, to: monthAnchor) else { return }
+            monthAnchor = moved
+        } label: {
+            Image(systemName: systemImage)
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(disabled ? AppColour.textQuaternary : AppColour.textSecondary)
+                .frame(width: 30, height: 30)
+                .background(AppColour.surfaceRaised, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .accessibilityLabel(label)
     }
 
     private var weekdayHeader: some View {
@@ -106,67 +142,73 @@ struct ExploreMonthCalendarSection: View {
                 if let day {
                     dayCell(day)
                 } else {
-                    Color.clear.frame(height: 34)
+                    Color.clear.frame(height: Self.cellHeight)
                 }
             }
         }
     }
 
+    private static let cellHeight: CGFloat = 58
+
     private func dayCell(_ day: Date) -> some View {
         let score = scoresByDay[day]
         let isFuture = day > today
-        let tint: Color = score.map { DashboardViewModel.RecoveryState(score: $0).color }
-            ?? AppColour.textTertiary.opacity(isFuture ? 0.12 : 0.28)
+        let isToday = day == today
+        let contexts = contextsForDay(day)
 
         return Button {
-            selectedDay = (selectedDay == day) ? nil : day
+            selectedDay = SelectedDay(date: day)
         } label: {
-            Text("\(Date.cal.component(.day, from: day))")
-                .font(DS.Typography.caption)
-                .foregroundStyle(score == nil ? AppColour.textTertiary : AppColour.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 34)
-                .background(tint.opacity(score == nil ? 0.0 : 0.14), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(tint, lineWidth: selectedDay == day ? 2 : 1)
-                )
+            VStack(spacing: 1) {
+                DayScoreDial(score: isFuture ? nil : score)
+                    .frame(width: 26, height: 26)
+                Text("\(Date.cal.component(.day, from: day))")
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(dayNumberColour(isToday: isToday, isFuture: isFuture, hasScore: score != nil))
+                if let context = contexts.first {
+                    Image(systemName: context.systemImage)
+                        .font(.system(size: 7))
+                        .foregroundStyle(AppColour.accent)
+                } else {
+                    // Holds the row height steady so marked and unmarked days
+                    // do not shift each other around the grid.
+                    Color.clear.frame(height: 8)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.cellHeight)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .fill(isToday ? AppColour.surfaceRaised : Color.clear)
+            )
         }
         .buttonStyle(.plain)
         .disabled(isFuture)
-        .accessibilityLabel(accessibilityLabel(day: day, score: score))
+        .accessibilityIdentifier("explore.monthCalendar.day")
+        .accessibilityLabel(accessibilityLabel(day: day, score: score, contexts: contexts))
     }
 
-    private func accessibilityLabel(day: Date, score: Int?) -> String {
+    private func dayNumberColour(isToday: Bool, isFuture: Bool, hasScore: Bool) -> Color {
+        if isToday { return AppColour.accent }
+        if isFuture || !hasScore { return AppColour.textTertiary }
+        return AppColour.textPrimary
+    }
+
+    private func accessibilityLabel(day: Date, score: Int?, contexts: [LifeContextStore.Context]) -> String {
         let date = day.formatted(.dateTime.weekday(.wide).day().month(.wide))
-        guard let score else { return "\(date). \(Copy.Explore.monthNoScore)" }
-        return "\(date). \(Copy.Explore.monthDayScore(score, DashboardViewModel.RecoveryState(score: score).plainName))"
-    }
-
-    /// The tapped day, or today when nothing is selected, so the row always
-    /// carries a real reading instead of sitting empty.
-    private var selectedDayRow: some View {
-        let day = selectedDay ?? today
-        let score = scoresByDay[day]
-        return HStack(alignment: .firstTextBaseline) {
-            Text(day.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                .font(DS.Typography.subheadline)
-                .foregroundStyle(AppColour.textSecondary)
-            Spacer(minLength: 8)
-            if let score {
-                Text(Copy.Explore.monthDayScore(score, DashboardViewModel.RecoveryState(score: score).plainName))
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DashboardViewModel.RecoveryState(score: score).color)
-            } else {
-                Text(Copy.Explore.monthNoScore)
-                    .font(DS.Typography.footnote)
-                    .foregroundStyle(AppColour.textTertiary)
-            }
+        var parts = [date]
+        if let score {
+            parts.append(Copy.Explore.monthDayScore(score, DashboardViewModel.RecoveryState(score: score).plainName))
+        } else {
+            parts.append(Copy.Explore.monthNoScore)
         }
-        .accessibilityElement(children: .combine)
+        if let context = contexts.first {
+            parts.append(Copy.Explore.dayContext(context.displayName.lowercasedFirst))
+        }
+        return parts.joined(separator: ". ")
     }
 
-    private var streakRow: some View {
+    private var footerRow: some View {
         HStack {
             VStack(alignment: .leading, spacing: 1) {
                 Text(Copy.Explore.monthStreakDays(streak))
@@ -177,11 +219,76 @@ struct ExploreMonthCalendarSection: View {
                     .foregroundStyle(AppColour.textTertiary)
             }
             Spacer(minLength: 8)
-            Text(Copy.Explore.monthScoredDays(scoredThisMonth, daysElapsed))
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
-                .multilineTextAlignment(.trailing)
+            if isViewingCurrentMonth {
+                Text(Copy.Explore.monthScoredDays(scoredThisMonth, daysElapsed))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .multilineTextAlignment(.trailing)
+                    .accessibilityIdentifier("explore.monthCalendar.scoredDays")
+            } else {
+                Button {
+                    monthAnchor = today
+                } label: {
+                    Text(Copy.Explore.monthToday)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(AppColour.accent.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .accessibilityElement(children: .combine)
     }
+}
+
+/// A ring of ticks, filled in proportion to the day's score and tinted by its
+/// band. An empty dial means the day was never scored, which is a different
+/// thing from a low score and has to look different.
+private struct DayScoreDial: View {
+    let score: Int?
+
+    private static let tickCount = 20
+
+    private static func litTickCount(for score: Int?) -> Int {
+        guard let score else { return 0 }
+        let fraction = Double(score) / 100
+        return Int((Double(tickCount) * fraction).rounded())
+    }
+
+    private static func tickPath(index: Int, in size: CGSize) -> Path {
+        let angle: Double = (Double(index) / Double(tickCount)) * 2 * .pi - .pi / 2
+        let centreX: Double = size.width / 2
+        let centreY: Double = size.height / 2
+        let inner: Double = size.width * 0.30
+        let outer: Double = size.width * 0.48
+        let cosine: Double = cos(angle)
+        let sine: Double = sin(angle)
+
+        var path = Path()
+        path.move(to: CGPoint(x: centreX + inner * cosine, y: centreY + inner * sine))
+        path.addLine(to: CGPoint(x: centreX + outer * cosine, y: centreY + outer * sine))
+        return path
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let lit: Int = Self.litTickCount(for: score)
+            let tint: Color = score.map { DashboardViewModel.RecoveryState(score: $0).color } ?? AppColour.borderLow
+
+            for index in 0..<Self.tickCount {
+                let path = Self.tickPath(index: index, in: size)
+                let colour: Color = index < lit ? tint : AppColour.borderLow
+                context.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Lets a tapped day drive `.sheet(item:)`. A wrapper rather than a retroactive
+/// `Identifiable` on `Date`, which would apply to every date in the app.
+private struct SelectedDay: Identifiable {
+    let date: Date
+    var id: TimeInterval { date.timeIntervalSince1970 }
 }

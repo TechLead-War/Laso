@@ -90,6 +90,14 @@ extension Copy {
         static var current: String { RemoteConfigManager.shared.copyString("copy_vitality_current", default: "Current") }
         static var paceBuilding: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_building", default: "Building") }
         static func paceNeedsDays(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_pace_needs_days", default: "Pace needs %d days of history"), days) }
+        static var noValue: String { RemoteConfigManager.shared.copyString("copy_vitality_no_value", default: "--") }
+        static var noHistoryAvailable: String { RemoteConfigManager.shared.copyString("copy_vitality_no_history_available", default: "No history available") }
+        static var matchesActualAge: String { RemoteConfigManager.shared.copyString("copy_vitality_matches_actual_age", default: "matches your actual age") }
+        static func yearChange(_ years: Double) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_year_change", default: "%+.1fy"), years) }
+        static func deltaVsActual(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_delta_vs_actual", default: "%+d vs actual"), years) }
+        static func yearsOlderThanActual(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_years_older_than_actual", default: "%d years older than your actual age"), years) }
+        static func yearsYoungerThanActual(_ years: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_years_younger_than_actual", default: "%d years younger than your actual age"), years) }
+        static func chartAccessibilityValue(age: Int, comparison: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_chart_a11y_value", default: "Latest vitality age %d, %@"), age, comparison) }
         static var paceImproving: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_improving", default: "Improving") }
         static var paceStable: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_stable", default: "Stable") }
         static var paceDeclining: String { RemoteConfigManager.shared.copyString("copy_vitality_pace_declining", default: "Declining") }

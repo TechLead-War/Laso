@@ -141,6 +141,9 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_home_why_value_above_usual", default: "%1$@ %2$@ above usual"), amount, unit)
         }
         static var whyValueAtUsual: String { RemoteConfigManager.shared.copyString("copy_home_why_value_at_usual", default: "At your usual") }
+        /// "1 hrs below usual" read as broken English. Only spelled-out units
+        /// agree with the number; symbols like ms and bpm never change.
+        static var unitHourSingular: String { RemoteConfigManager.shared.copyString("copy_home_unit_hour_singular", default: "hr") }
         static var whyEnergyLow: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low", default: "Energy is low") }
         static var whyEnergyGood: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_good", default: "Energy is good") }
         static var whyEnergyLowValue: String { RemoteConfigManager.shared.copyString("copy_home_why_energy_low_value", default: "Below usual") }
@@ -361,24 +364,27 @@ extension Copy {
         // MARK: - Recovery Info
 
         enum RecoveryInfo {
-            static var title: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_title", default: "How Your Score Works") }
-            static var description: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_description", default: "Each morning your Recovery is locked in from last night's sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops to show your live Energy. Take off the Apple Watch and the live drain pauses, but your morning Recovery still stays on the screen.") }
+            static var title: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_title", default: "How Readiness Works") }
+            // Ranges here must match `DS.optimalFloor` and `DS.fairFloor`. This
+            // sheet used to print 80/50 while the ring graded at 67/45, so a 55
+            // was amber on screen and "decent recovery" one tap away.
+            static var description: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_description", default: "Each morning your Readiness is locked in from last night's sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops. Take off the Apple Watch and the drop pauses, but your morning Readiness still stays on the screen.") }
 
             // Score levels
             static var scoreLevels: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_score_levels", default: "Score levels") }
-            static var fullyRecoveredRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_fully_recovered_range", default: "80 to 100") }
-            static var fullyRecoveredLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_fully_recovered_label", default: "Fully Recovered") }
+            static var fullyRecoveredRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_fully_recovered_range", default: "67 to 100") }
+            static var fullyRecoveredLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_fully_recovered_label", default: "Ready") }
             static var fullyRecoveredDescription: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_fully_recovered_description", default: "Your body is well rested. Great day for a hard workout.") }
-            static var moderateRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_range", default: "50 to 79") }
-            static var moderateLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_label", default: "Moderate") }
-            static var moderateDescription: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_description", default: "Decent recovery. Moderate effort is best today.") }
-            static var lowRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_low_range", default: "Below 50") }
-            static var lowLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_low_label", default: "Low Recovery") }
+            static var moderateRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_range", default: "45 to 66") }
+            static var moderateLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_label", default: "Steady") }
+            static var moderateDescription: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_moderate_description", default: "About your usual. Moderate effort is best today.") }
+            static var lowRange: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_low_range", default: "Below 45") }
+            static var lowLabel: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_low_label", default: "Low") }
             static var lowDescription: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_low_description", default: "Your body needs rest. Focus on easy movement and sleep.") }
 
             // How it's calculated
             static var howItsCalculated: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated", default: "How it\u{2019}s calculated") }
-            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated_body", default: "Recovery blends a few signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it moves the score.") }
+            static var howItsCalculatedBody: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_how_its_calculated_body", default: "Readiness blends a few signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it moves the score.") }
             static var hrvName: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_name", default: "Heart Calm Signal") }
             static var hrvWeight: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_weight", default: "40% weight") }
             static var hrvDetail: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_hrv_detail", default: "A higher heart calm signal means better recovery and lower stress. Compared to your usual.") }

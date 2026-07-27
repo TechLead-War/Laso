@@ -82,6 +82,11 @@ final class StrainScorer {
     /// Rolling 7-day strain history for trend visualization
     private(set) var weeklyStrainHistory: [(date: Date, strain: Double)] = []
 
+    /// Longer strain history for the trend card. Persisted days only: the
+    /// per-day recompute the weekly chart falls back on is far too expensive
+    /// to run across a quarter, and a guessed day does not belong in a trend.
+    private(set) var trendStrainHistory: [(date: Date, strain: Double)] = []
+
     /// Human-readable label for the current strain
     var strainLabel: String { strainLevel.displayName }
 
@@ -95,6 +100,9 @@ final class StrainScorer {
 
     /// HR zone multipliers. higher zones contribute disproportionately more strain.
     private static let zoneMultipliers: [Int: Double] = StrainScorerConfig.zoneMultipliers
+
+    /// How far back the trend card looks for persisted strain days.
+    private static let trendLookbackDays = 90
 
     // Hot-path caches: avoid per-compute allocations.
     // StrainScorer.compute runs on every Dashboard refresh; both the calendar
@@ -401,9 +409,13 @@ final class StrainScorer {
         let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
 
-        let persistedHistory = store.loadDailyStrainHistory(lookbackDays: lookbackDays)
+        // One fetch covers both: the weekly loop only ever looks up the last
+        // seven days, so the older entries in this map are simply never read.
+        trendStrainHistory = store.loadDailyStrainHistory(lookbackDays: Self.trendLookbackDays)
+            .map { (date: $0.date, strain: $0.strain) }
+
         var persistedByDate: [Date: Double] = [:]
-        for entry in persistedHistory {
+        for entry in trendStrainHistory {
             persistedByDate[calendar.startOfDay(for: entry.date)] = entry.strain
         }
 

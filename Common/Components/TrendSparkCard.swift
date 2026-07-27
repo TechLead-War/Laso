@@ -20,6 +20,9 @@ struct TrendSparkCard: View {
     let band: PersonalBand?
     let tint: Color
 
+    /// Fewest recorded days before the card is worth drawing at all.
+    static let minimumPoints = 7
+
     private var status: TrendBandStatus? {
         guard let band, let latest = points.last else { return nil }
         return band.status(for: latest.value)

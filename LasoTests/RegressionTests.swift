@@ -10,6 +10,46 @@ struct RegressionTests {
 
     // MARK: - Vitality
 
+    /// The 90-day age trend quoted a pace off two weeks of data, and the old
+    /// formula divided a whole-year age step by a quarter of a year, so the
+    /// number sat pinned at the 0.5 or 2.0 clamp instead of measuring anything.
+    @Test func paceOfAgingNeedsRealHistoryAndTracksTheCalendar() {
+        func history(days: Int, agePerDay: Double) -> [(date: Date, age: Double)] {
+            let start = Date().addingTimeInterval(-Double(days) * 86_400)
+            return (0..<days).map { day in
+                (date: start.addingTimeInterval(Double(day) * 86_400),
+                 age: 40 + agePerDay * Double(day))
+            }
+        }
+
+        #expect(VitalityScorer.pace(from: history(days: 14, agePerDay: 0)) == nil,
+                "two weeks is too short to fit a slope, so no pace may be shown")
+
+        let flat = VitalityScorer.pace(from: history(days: 90, agePerDay: 0))
+        #expect(flat != nil, "90 recorded days is enough to quote a pace")
+        // A vitality age that never moves is aging slower than the calendar.
+        #expect(abs((flat ?? 0) - 1.0) < 0.05, "a flat history must read as roughly on pace, got \(flat ?? -1)")
+
+        // Half a year of vitality age added per calendar year reads above 1.
+        let rising = VitalityScorer.pace(from: history(days: 90, agePerDay: 0.5 / 365.25))
+        #expect((rising ?? 0) > 1.0, "a rising vitality age must read as a faster pace, got \(rising ?? -1)")
+    }
+
+    /// A usual range drawn off three days is noise, and a band of zero width
+    /// would have marked every single reading as out of range.
+    @Test func personalBandRefusesThinHistory() {
+        #expect(PersonalBand.make(from: [10, 12, 11]) == nil, "three days cannot define a usual range")
+        #expect(PersonalBand.make(from: Array(repeating: 20.0, count: 30)) == nil,
+                "an unvarying history has no band to draw")
+
+        let values = (0..<30).map { Double(20 + $0 % 5) }
+        let band = PersonalBand.make(from: values)
+        #expect(band != nil)
+        #expect(band?.status(for: 22) == .usual)
+        #expect(band?.status(for: 100) == .aboveUsual)
+        #expect(band?.status(for: 0) == .belowUsual)
+    }
+
     /// Every metric chip on the Vitality screen printed the same "12y", because
     /// the reference tables stop at age 20 and anything better clamped to it.
     @Test func metricBetterThanYoungestReferenceIsFlagged() {
@@ -411,6 +451,91 @@ struct RegressionTests {
         #expect(StreakMilestoneStore.pending(streak: 365) == 100, "only the highest one crossed")
         StreakMilestoneStore.markCelebrated(100)
         #expect(StreakMilestoneStore.pending(streak: 365) == nil, "marking the highest retires the lower ones")
+    }
+
+    /// Switching a context off used to delete it, so the month calendar could
+    /// never say why a past week was bad. The finished stretch has to survive.
+    @Test func aFinishedContextStillMarksTheDaysItCovered() {
+        let suite = UserDefaults(suiteName: "regression.\(UUID().uuidString)")!
+        let store = LifeContextStore(defaults: suite)
+
+        let start = Date().addingTimeInterval(-10 * 86_400)
+        let end = Date().addingTimeInterval(-4 * 86_400)
+        let middle = Date().addingTimeInterval(-7 * 86_400)
+        let before = Date().addingTimeInterval(-12 * 86_400)
+        let after = Date().addingTimeInterval(-2 * 86_400)
+
+        store.toggle(.injured, now: start)
+        store.toggle(.injured, now: end)
+
+        #expect(!store.isActive(.injured), "the user ended it, so it is not on today")
+        #expect(store.contexts(on: middle).contains(.injured), "a day inside the stretch keeps its mark")
+        #expect(store.contexts(on: start).contains(.injured), "the first day is inside the stretch")
+        #expect(store.contexts(on: end).contains(.injured), "the last day is inside the stretch")
+        #expect(!store.contexts(on: before).contains(.injured), "days before it are untouched")
+        #expect(!store.contexts(on: after).contains(.injured), "days after it are untouched")
+
+        // Reading it back from storage must not lose the history.
+        let reloaded = LifeContextStore(defaults: suite)
+        #expect(reloaded.contexts(on: middle).contains(.injured), "history survives a relaunch")
+    }
+
+    /// An open stretch has no end, so every day from its start onward carries
+    /// the mark. Without this, a context switched on today would mark nothing.
+    @Test func anOpenContextMarksEveryDaySinceItStarted() {
+        let suite = UserDefaults(suiteName: "regression.\(UUID().uuidString)")!
+        let store = LifeContextStore(defaults: suite)
+
+        let start = Date().addingTimeInterval(-3 * 86_400)
+        store.toggle(.travelling, now: start)
+
+        #expect(store.contexts(on: start).contains(.travelling))
+        #expect(store.contexts(on: Date()).contains(.travelling), "still on means today is marked too")
+        #expect(!store.contexts(on: start.addingTimeInterval(-86_400)).contains(.travelling),
+                "the day before it started is not marked")
+    }
+
+    /// The day sheet printed "0 hrs below usual" under a sleep row. The 3%
+    /// floor let a fraction-of-an-hour gap through, and it then rounded to
+    /// zero, so the line claimed a difference and quoted none.
+    @MainActor
+    @Test func aGapThatRoundsAwayReadsAsAtUsual() {
+        let atUsual = Copy.Home.whyValueAtUsual
+
+        #expect(DashboardViewModel.gapToUsual(current: 6.2, baseline: 6.5, unit: "hrs") == atUsual,
+                "a gap under half an hour has no whole number to quote")
+        #expect(DashboardViewModel.gapToUsual(current: 5.4, baseline: 6.5, unit: "hrs") != atUsual,
+                "a real hour of missing sleep must still be named")
+        #expect(DashboardViewModel.gapToUsual(current: 43, baseline: 43, unit: "ms") == atUsual)
+        #expect(DashboardViewModel.gapToUsual(current: 30, baseline: 43, unit: "ms") != atUsual)
+    }
+
+
+    // MARK: - Readiness bands
+
+    /// The same score used to be graded by four different tables: the ring
+    /// painted amber at 55, the sentence under it said "lower than usual", and
+    /// the explainer one tap away said "decent recovery". A user who checked
+    /// twice got two answers. Every grader now reads `DS.recoveryTier`, and
+    /// `readinessSummary` switches on `RecoveryState` so it has no table of its
+    /// own left to drift.
+    @Test func oneScoreIsGradedByOneTable() {
+        for score in 0...100 {
+            let ring = DashboardViewModel.RecoveryState(score: score)
+            let expected: DashboardViewModel.RecoveryState = switch DS.recoveryTier(for: score) {
+            case .optimal: .green
+            case .fair:    .yellow
+            case .poor:    .red
+            }
+            #expect(ring == expected, "the ring and DS.scoreColor disagree at \(score)")
+        }
+
+        // The explainer sheet prints its own ranges, so they must name the same
+        // numbers the grader uses or the sheet lies about the bands.
+        #expect(Copy.Home.RecoveryInfo.fullyRecoveredRange.contains("\(DS.optimalFloor)"),
+                "the sheet must print the floor it is actually graded by")
+        #expect(Copy.Home.RecoveryInfo.lowRange.contains("\(DS.fairFloor)"))
+        #expect(Copy.Home.RecoveryInfo.moderateRange.contains("\(DS.fairFloor)"))
     }
 
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {

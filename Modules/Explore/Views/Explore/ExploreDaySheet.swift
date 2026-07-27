@@ -126,8 +126,12 @@ struct ExploreDaySheet: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(AppColour.borderLow)
+                        // One neutral tint on purpose: below usual is bad for
+                        // HRV and good for resting heart rate, so a good/bad
+                        // colour here would be wrong half the time. The bar
+                        // shows size of the gap, the line below reads it out.
                         Capsule()
-                            .fill(signal.isBelowUsual ? AppColour.warning : AppColour.success)
+                            .fill(AppColour.accent)
                             .frame(width: max(3, geo.size.width * fraction))
                     }
                 }

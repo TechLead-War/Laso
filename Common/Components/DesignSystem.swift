@@ -177,18 +177,26 @@ enum DS {
         }
     }
 
-    private enum RecoveryTier {
+    enum RecoveryTier {
         case optimal, fair, poor
     }
 
-    /// Threshold table — must stay aligned with `DashboardViewModel.RecoveryState.init(score:)`.
-    private static func recoveryTier(for score: Int) -> RecoveryTier {
+    /// The ONLY readiness threshold table in the app. `RecoveryState`, the ring
+    /// colour, the summary sentence and the explainer sheet all read it, so a
+    /// score can never be amber in one place and "decent recovery" in another.
+    /// Anything that grades a readiness score and does not call this is a bug.
+    static func recoveryTier(for score: Int) -> RecoveryTier {
         // Green from 67 up (WHOOP-style "good recovery" zone): a 73 Ready is a good
         // day and should read green, not the amber warning it showed before.
-        if score >= 67 { return .optimal }
-        if score >= 45 { return .fair }
+        if score >= optimalFloor { return .optimal }
+        if score >= fairFloor { return .fair }
         return .poor
     }
+
+    /// Exposed so the explainer sheet can print the same numbers it grades by,
+    /// rather than a second table that drifts.
+    static let optimalFloor = 67
+    static let fairFloor = 45
 }
 
 // MARK: - Unified Card Background

@@ -72,6 +72,8 @@ struct StrainDetailView: View {
     let guidanceText: String
     let weekHistory: [DailyStrainPoint]
     let strainBalance: StrainBalance
+    /// Longer daily history behind the trend card, oldest first.
+    let trendPoints: [TrendSparkPoint]
 
     private let maxStrain: Double = 21.0
 
@@ -125,6 +127,10 @@ struct StrainDetailView: View {
                     heroSection
                     if !weekHistory.isEmpty {
                         historySection
+                    }
+                    if trendPoints.count >= TrendSparkCard.minimumPoints {
+                        trendsSection
+                            .padding(.horizontal)
                     }
                     snapshotSection
                 } else {
@@ -456,6 +462,21 @@ struct StrainDetailView: View {
         }
     }
 
+    // MARK: - Trends
+
+    private var trendsSection: some View {
+        TrendSection {
+            TrendSparkCard(
+                icon: "figure.run",
+                title: Copy.Strain.title,
+                value: String(format: "%.1f", strainValue),
+                points: trendPoints,
+                band: PersonalBand.make(from: trendPoints.map(\.value)),
+                tint: strainLevel.color
+            )
+        }
+    }
+
     // MARK: - Today's Snapshot (3 compact lines)
 
     private var snapshotSection: some View {
@@ -736,7 +757,13 @@ struct StrainDetailView: View {
                 DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -1, to: .now)!, strain: 18.9, level: .overreaching),
                 DailyStrainPoint(date: .now, strain: 14.2, level: .high)
             ],
-            strainBalance: .optimal
+            strainBalance: .optimal,
+            trendPoints: (0..<30).reversed().map { offset in
+                TrendSparkPoint(
+                    date: Date.cal.date(byAdding: .day, value: -offset, to: .now)!,
+                    value: 10 + Double((offset * 3) % 9)
+                )
+            }
         )
     }
 }

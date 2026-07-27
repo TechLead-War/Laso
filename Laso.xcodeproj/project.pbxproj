@@ -51,6 +51,7 @@
 		1942162E0BC037328CC0AE8E /* ReadinessScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA12FE108924D92F34FCEA1 /* ReadinessScorer.swift */; };
 		1950AF944ADD8EF215AD4FD4 /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31985DC9984558EDF16D01E /* AppSecrets.swift */; };
 		1955D9EA60382BB34F811D18 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */; };
+		1A5B4C51BD1A30EB25E10584 /* ExploreDaySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB234C0335F57B5C4F4C3812 /* ExploreDaySheet.swift */; };
 		1BC6822E5685CE8B1601D04F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 246EB96A91A1CDEB84FE85E5 /* SettingsView.swift */; };
 		1BC812C3E45AC3544CC21969 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 5196EE7C3D1093CD151E4C73 /* Localizable.xcstrings */; };
 		1C3500C4B4D3622DA2535EA9 /* AccelerateHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */; };
@@ -244,6 +245,7 @@
 		83CD8A0FAF5341781E380E81 /* CausalChainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FB1F0B6F65A579057550A9 /* CausalChainEngine.swift */; };
 		84427010C0992FC88B494C37 /* ActivationProgressBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */; };
 		84635AAE673CEB62AB76BF36 /* MenstrualCycleTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB0ECC498E15CAE9AC31BCB /* MenstrualCycleTracker.swift */; };
+		84914D0704052F0EFF3C6F05 /* TrendSparkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC58BA694A808A84C0C8BAB8 /* TrendSparkCard.swift */; };
 		84E2985505570173FA32A080 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C894749F24040044533EB /* CustomTabBar.swift */; };
 		85DF5C172F622FEF75DFC5E1 /* FacebookCore in Frameworks */ = {isa = PBXBuildFile; productRef = BAA6C7B84534D26ECC6F9BC0 /* FacebookCore */; };
 		86BB3DA0955B3211A25C9660 /* MetricLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E82A6E1BC82AC5F7CBCB007D /* MetricLogSheet.swift */; };
@@ -372,6 +374,7 @@
 		C964C1310CB0D96F5B119C40 /* ShowTrendsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66A4092EF304A681D9F1C82 /* ShowTrendsIntent.swift */; };
 		C965B162B278B13C36D027FF /* FoundationModelQueryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7901D4D2355FF56E578ED1E /* FoundationModelQueryEngine.swift */; };
 		CA020233DB2343F7195A9C14 /* WatchComplicationSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A5915EA6DF7CFFB17243357 /* WatchComplicationSteps.swift */; };
+		CA93E83027713D4757804642 /* PersonalBand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0566D7CAB7A16F90364F54C /* PersonalBand.swift */; };
 		CB9AA1D29F656DB971133E5F /* HTMLReportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EBA5AC0F025FC3F0497A9A /* HTMLReportGenerator.swift */; };
 		CD9138E6FFBB96392C95F92F /* Copy+HealthState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D0B6CCAF0E1D7D023AFC59 /* Copy+HealthState.swift */; };
 		CDBB5DF98B410B1273C6768F /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 16587D2E046AB7E7BE441D31 /* FirebaseCrashlytics */; };
@@ -837,6 +840,7 @@
 		A97775C40E61B1F730B33BE0 /* HealthScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorer.swift; sourceTree = "<group>"; };
 		A9A065E46C9925CCA2364C4A /* PredictionVerdictEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionVerdictEngine.swift; sourceTree = "<group>"; };
 		AB16F524F28FEB59FDDE3039 /* OnboardingV2Foundation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Foundation.swift; sourceTree = "<group>"; };
+		AB234C0335F57B5C4F4C3812 /* ExploreDaySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreDaySheet.swift; sourceTree = "<group>"; };
 		AB6EC0D3B23B332FF109D674 /* Copy+Strain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Strain.swift"; sourceTree = "<group>"; };
 		AB7100A86FE84DF728F2303E /* CircadianAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircadianAnalyzer.swift; sourceTree = "<group>"; };
 		ABADFB768D9AA25EA2D32F26 /* NotificationFatigueTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationFatigueTracker.swift; sourceTree = "<group>"; };
@@ -881,6 +885,7 @@
 		BE727A3DE25980A4AFDEA71C /* View+WritingTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+WritingTools.swift"; sourceTree = "<group>"; };
 		BF86987B6B0814201D9BB63B /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		C012846D9977EE0DE8FB08B3 /* LiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewModel.swift; sourceTree = "<group>"; };
+		C0566D7CAB7A16F90364F54C /* PersonalBand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalBand.swift; sourceTree = "<group>"; };
 		C0D3CD31C134826D06EC4CA7 /* HealthRisk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRisk.swift; sourceTree = "<group>"; };
 		C1AEC2AF73AD9B3739033C85 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C22377E64ABD3F3590B33625 /* Copy+Explore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Explore.swift"; sourceTree = "<group>"; };
@@ -966,6 +971,7 @@
 		FB5F3A0F4CD90E01AAF02501 /* LogWaterIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWaterIntent.swift; sourceTree = "<group>"; };
 		FB744221E93490FCED008BD6 /* InviteFriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFriendsView.swift; sourceTree = "<group>"; };
 		FBBED20450BD34227306217B /* OnboardingV2Screens1to7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Screens1to7.swift; sourceTree = "<group>"; };
+		FC58BA694A808A84C0C8BAB8 /* TrendSparkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendSparkCard.swift; sourceTree = "<group>"; };
 		FC70D2ED7C8A604B374C7B87 /* Copy+BrainHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+BrainHealth.swift"; sourceTree = "<group>"; };
 		FC79ED8A50F93F40BED373A0 /* WebExportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebExportViewModel.swift; sourceTree = "<group>"; };
 		FC809FB75555302A82EC9770 /* AppAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAnalytics.swift; sourceTree = "<group>"; };
@@ -1230,6 +1236,7 @@
 				E48A81F37075D7FBB01F687D /* MetricVerdict.swift */,
 				06D3EDF028E737A253244644 /* MultiMetricClusterAnalyzer.swift */,
 				FE0DF92F32206A9FE3B6D7DC /* NutritionCorrelationAnalyzer.swift */,
+				C0566D7CAB7A16F90364F54C /* PersonalBand.swift */,
 				3611EA7F38DF789E99949407 /* PersonalRecordAnalyzer.swift */,
 				D5AF3056B11384BB1F143500 /* PredictionBuilder.swift */,
 				A9A065E46C9925CCA2364C4A /* PredictionVerdictEngine.swift */,
@@ -1311,6 +1318,7 @@
 			children = (
 				5191829FC28306EE5A291C59 /* ExploreCategoriesSection.swift */,
 				55A95945AF21EDEE44F85BC7 /* ExploreDataSummarySection.swift */,
+				AB234C0335F57B5C4F4C3812 /* ExploreDaySheet.swift */,
 				27203E8DFA1F805CBAADB7AB /* ExploreDecliningTrendsSection.swift */,
 				AFBC1CA22A49CBC03ED7B766 /* ExploreEmptyStateSection.swift */,
 				60EEBCBC7F8B24E469CA038E /* ExploreHealthStateLinkSection.swift */,
@@ -1640,6 +1648,7 @@
 				6C84630810398937B2D0431D /* TimeRangeSelector.swift */,
 				8B0D5AF7D4B32933D7746F23 /* TrainingZoneColor.swift */,
 				F146D4D2C2479583F8A44699 /* TrendBadge.swift */,
+				FC58BA694A808A84C0C8BAB8 /* TrendSparkCard.swift */,
 				7A5915EA6DF7CFFB17243357 /* WatchComplicationSteps.swift */,
 				B77CE5FA8601EAC1B9F63D8E /* WeeklyBarChart.swift */,
 			);
@@ -2721,6 +2730,7 @@
 				9BD1B50C5D53BC137F465840 /* EngagementSequenceScheduler.swift in Sources */,
 				8B079806005F278D357FEE59 /* ExploreCategoriesSection.swift in Sources */,
 				643DA777B822CE5EA776F9CF /* ExploreDataSummarySection.swift in Sources */,
+				1A5B4C51BD1A30EB25E10584 /* ExploreDaySheet.swift in Sources */,
 				9447006E48B4B43ABE1F560A /* ExploreDecliningTrendsSection.swift in Sources */,
 				8A7598077F7A35B4E5A56F3B /* ExploreEmptyStateSection.swift in Sources */,
 				798E03F9AC503056A480D212 /* ExploreHealthStateLinkSection.swift in Sources */,
@@ -2859,6 +2869,7 @@
 				D4CC97BC86A094EB57E139BF /* PatternMiner.swift in Sources */,
 				D61B2149FA43147D6B3F1855 /* PaywallView.swift in Sources */,
 				FB08B62C51EB64755B11BAA3 /* PersistenceManager.swift in Sources */,
+				CA93E83027713D4757804642 /* PersonalBand.swift in Sources */,
 				EF7B83B980E7F3DD1DA44495 /* PersonalHealthForecastCard.swift in Sources */,
 				9B59184BF23ADD2FEF80FDBD /* PersonalOptimizer.swift in Sources */,
 				795285976B887225AFD93F20 /* PersonalRecordAnalyzer.swift in Sources */,
@@ -2948,6 +2959,7 @@
 				DFDA3B5351E9DF6819BAAF8A /* TrendAnalyzer.swift in Sources */,
 				FC01487DA0967420FFEA146A /* TrendBadge.swift in Sources */,
 				7DC1B74F4A5D692F80A0EE81 /* TrendDirection.swift in Sources */,
+				84914D0704052F0EFF3C6F05 /* TrendSparkCard.swift in Sources */,
 				4A7148732AA16A0359E322B0 /* TrialScheduler.swift in Sources */,
 				E06408E4F41104D3E3E824CD /* UITestMode.swift in Sources */,
 				52FA5D94467B202F7B2FD6F2 /* UncertaintyEstimator.swift in Sources */,
@@ -3120,7 +3132,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 84;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3139,7 +3151,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.75;
+				MARKETING_VERSION = 1.2.76;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3209,7 +3221,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 84;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3222,7 +3234,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.75;
+				MARKETING_VERSION = 1.2.76;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

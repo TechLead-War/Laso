@@ -43,9 +43,9 @@ final class StoredAnalysisSnapshot {
     /// Vitality age as it was actually computed on this day. Optional so the
     /// field is a lightweight migration, and so days recorded before this
     /// existed stay honestly empty instead of being back-filled with a guess.
-    var vitalityAge: Int?
+    var vitalityAge: Double?
 
-    init(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data, vitalityAge: Int? = nil) {
+    init(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data, vitalityAge: Double? = nil) {
         self.date = date
         self.overallScore = overallScore
         self.categoryScoresJSON = categoryScoresJSON
@@ -541,7 +541,7 @@ final class HealthDataStore {
     /// Deliberately does not create a snapshot: inserting one here would put a
     /// row with `overallScore` 0 into the score history every caller reads.
     /// The daily analysis pass writes the snapshot first, so this lands on it.
-    func saveVitalityAge(_ age: Int) {
+    func saveVitalityAge(_ age: Double) {
         guard age > 0 else { return }
         let today = Date.cal.startOfDay(for: Date())
         guard let tomorrow = Date.cal.date(byAdding: .day, value: 1, to: today) else { return }
@@ -554,7 +554,7 @@ final class HealthDataStore {
 
     /// Vitality ages actually recorded in the window, oldest first.
     /// Days with no recorded age are omitted rather than interpolated.
-    func loadVitalityAgeHistory(days: Int) -> [(date: Date, age: Int)] {
+    func loadVitalityAgeHistory(days: Int) -> [(date: Date, age: Double)] {
         let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= cutoff && $0.vitalityAge != nil }
         let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\StoredAnalysisSnapshot.date)])

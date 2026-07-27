@@ -230,10 +230,15 @@ final class DashboardViewModel {
     enum RecoveryState: String, CaseIterable {
         case green, yellow, red
 
+        /// Delegates to `DS.recoveryTier`, the app's only readiness threshold
+        /// table. This used to carry its own 75/50 split, which is why a 55
+        /// could paint amber here while the explainer sheet called it decent.
         init(score: Int) {
-            if score > 75 { self = .green }
-            else if score >= 50 { self = .yellow }
-            else { self = .red }
+            switch DS.recoveryTier(for: score) {
+            case .optimal: self = .green
+            case .fair:    self = .yellow
+            case .poor:    self = .red
+            }
         }
 
         /// Single source of truth for the recovery state colour. Mirrors the
@@ -1389,7 +1394,9 @@ final class DashboardViewModel {
     ) {
         var tiles: [MetricTile] = []
 
-        // Vitality
+        // Vitality. Gated on the scorer being ready: unguarded, a brand new
+        // user's first impression was a body age of 0.
+        if vitalityScorer.isReady {
         let vDelta = vitalityScorer.delta
         let vBadge: String
         if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
@@ -1401,6 +1408,7 @@ final class DashboardViewModel {
             value: "\(vitalityScorer.vitalityAge)",
             badge: vBadge, color: vColor, route: .vitalityDetail
         ))
+        }
 
         // Sleep
         // Use the live values when LiveViewModel has them, otherwise fall
@@ -1429,13 +1437,16 @@ final class DashboardViewModel {
             ))
         }
 
-        // Strain
+        // Strain. A flat 0.0 means nothing was recorded, not an easy day, so the
+        // tile stays away rather than reporting a reading the app does not have.
         let strain = strainScorer
-        tiles.append(MetricTile(
-            id: "strain_detail", icon: "flame.fill", label: "Strain",
-            value: String(format: "%.1f", strain.currentStrain),
-            badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
-        ))
+        if strain.currentStrain > 0 {
+            tiles.append(MetricTile(
+                id: "strain_detail", icon: "flame.fill", label: "Strain",
+                value: String(format: "%.1f", strain.currentStrain),
+                badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
+            ))
+        }
 
         // Brain Health
         if let brain = brainHealthScorer.currentScore {
@@ -1518,7 +1529,6 @@ final class DashboardViewModel {
         /// Where the reading sits inside the person's own recent range, for the
         /// bar. Nil when there is no baseline to place it against.
         let fraction: Double?
-        let isBelowUsual: Bool
 
         var id: String { title }
     }
@@ -1551,20 +1561,20 @@ final class DashboardViewModel {
         var missing: [HealthMetric] = []
 
         for metric in Self.daySignalMetrics {
-            guard let raw = dayValue(of: metric, on: dayStart) else {
+            // Values are stored in the unit `HealthMetric.unit` advertises, sleep
+            // included, so nothing is converted on the way out.
+            guard let value = dayValue(of: metric, on: dayStart) else {
                 missing.append(metric)
                 continue
             }
-            let value = Self.displayValue(raw, of: metric)
-            let baseline = snapshot?.baselines[metric].map { Self.displayValue($0.mean, of: metric) }
+            let baseline = snapshot?.baselines[metric]?.mean
             signals.append(DaySignal(
                 title: metric.displayName,
                 metric: metric,
                 valueText: Self.dayValueText(value, of: metric),
                 gapText: baseline.map { Self.gapToUsual(current: value, baseline: $0, unit: metric.unit) }
                     ?? Copy.Explore.dayNoBaseline,
-                fraction: baseline.map { Self.signalFraction(value: value, baseline: $0) },
-                isBelowUsual: baseline.map { value < $0 } ?? false
+                fraction: baseline.map { Self.signalFraction(value: value, baseline: $0) }
             ))
         }
 
@@ -1574,8 +1584,7 @@ final class DashboardViewModel {
                 metric: nil,
                 valueText: Copy.Explore.dayStrainValue(String(format: "%.1f", strain.strain), strain.level),
                 gapText: Copy.Explore.dayStrainCaption,
-                fraction: min(1, max(0, strain.strain / StrainScorerConfig.strainScaleMax)),
-                isBelowUsual: false
+                fraction: min(1, max(0, strain.strain / StrainScorerConfig.strainScaleMax))
             ))
         }
 
@@ -1598,24 +1607,17 @@ final class DashboardViewModel {
         guard !samples.isEmpty else { return nil }
 
         let total = samples.reduce(0.0) { $0 + $1.value }
+        let value: Double
         switch metric {
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .steps,
              .activeCalories, .exerciseMinutes, .standHours:
-            return total
+            value = total
         default:
-            return total / Double(samples.count)
+            value = total / Double(samples.count)
         }
-    }
-
-    /// Converts a stored value into the unit `HealthMetric.unit` advertises.
-    /// Sleep is stored in seconds but reads in hours.
-    private static func displayValue(_ raw: Double, of metric: HealthMetric) -> Double {
-        switch metric {
-        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
-            return raw / 3600
-        default:
-            return raw
-        }
+        // A stored zero means the watch recorded nothing that day, not that the
+        // person slept for zero hours. Printing "0h 0m" reads as a finding.
+        return value > 0 ? value : nil
     }
 
     private static func dayValueText(_ value: Double, of metric: HealthMetric) -> String {
@@ -2351,21 +2353,32 @@ final class DashboardViewModel {
     /// unit. A row that said only "Good" gave nothing to act on; a row that says
     /// "6 bpm above usual" does. Gaps under 3% read as at-usual, since a rounded
     /// "0 bpm above usual" is noise, not a finding.
-    private static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
+    static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
         let gap = current - baseline
         guard baseline > 0, abs(gap) / baseline >= 0.03 else { return Copy.Home.whyValueAtUsual }
-        let amount = String(Int(abs(gap).rounded()))
+        // A gap that rounds away is at usual. On an hours metric the 3% floor
+        // above still lets a 0.4 hour gap through, which printed the nonsense
+        // "0 hrs below usual".
+        let rounded = Int(abs(gap).rounded())
+        guard rounded > 0 else { return Copy.Home.whyValueAtUsual }
+        let agreeing = (rounded == 1 && unit == HealthMetric.sleepDuration.unit)
+            ? Copy.Home.unitHourSingular
+            : unit
         return gap > 0
-            ? Copy.Home.whyValueAboveUsual(amount, unit)
-            : Copy.Home.whyValueBelowUsual(amount, unit)
+            ? Copy.Home.whyValueAboveUsual(String(rounded), agreeing)
+            : Copy.Home.whyValueBelowUsual(String(rounded), agreeing)
     }
 
     /// Plain-English summary under the score as a bold heading + a lighter sub
     /// line, keyed to the 3-band model.
+    /// Reads the same band as the ring colour. It used to carry its own 60/75
+    /// split, so a 55 painted amber while this sentence called it low.
     func readinessSummary(score: Int) -> (head: String, sub: String) {
-        if score < 60 { return (Copy.Home.scoreSummaryLowHead, Copy.Home.scoreSummaryLowSub) }
-        if score <= 75 { return (Copy.Home.scoreSummaryModerateHead, Copy.Home.scoreSummaryModerateSub) }
-        return (Copy.Home.scoreSummaryHighHead, Copy.Home.scoreSummaryHighSub)
+        switch RecoveryState(score: score) {
+        case .red:    return (Copy.Home.scoreSummaryLowHead, Copy.Home.scoreSummaryLowSub)
+        case .yellow: return (Copy.Home.scoreSummaryModerateHead, Copy.Home.scoreSummaryModerateSub)
+        case .green:  return (Copy.Home.scoreSummaryHighHead, Copy.Home.scoreSummaryHighSub)
+        }
     }
 
     /// Build the recovery signals snapshot from current live values and personal baselines.

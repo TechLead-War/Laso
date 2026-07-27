@@ -6,6 +6,7 @@ extension Copy {
         // MARK: - Navigation
 
         static var title: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_stress_monitor_title", default: "Stress Monitor") }
+        static var trendCardTitle: String { RemoteConfigManager.shared.copyString("copy_stress_monitor_trend_card_title", default: "Stress Score") }
 
         // MARK: - Level Display Names
 

@@ -141,6 +141,52 @@ final class LasoUITests: XCTestCase {
                        "Unticked on second tap; it must stay locked for the day")
     }
 
+    /// The month calendar is only worth having if a day opens. Taps a scored
+    /// cell and checks the day sheet actually comes up with its signal list,
+    /// then pages back a month and returns with Today.
+    @MainActor
+    func testMonthCalendarDayOpensTheDaySheet() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode", "--ui-test-initial-tab=explore"]
+        app.launch()
+
+        let calendar = app.descendants(matching: .any)["explore.monthCalendar"].firstMatch
+        XCTAssertTrue(calendar.waitForExistence(timeout: 30), "Month calendar never appeared on Explore")
+
+        let days = app.buttons.matching(identifier: "explore.monthCalendar.day")
+        XCTAssertTrue(days.firstMatch.waitForExistence(timeout: 20), "No day cells rendered")
+
+        // Mid-month, so the cell is past (tappable) and likely to carry a score.
+        let day = days.element(boundBy: min(14, days.count - 1))
+        XCTAssertTrue(day.waitForExistence(timeout: 10))
+        day.tap()
+
+        let sheet = app.descendants(matching: .any)["explore.daySheet"].firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 10), "Tapping a day did not open the day sheet")
+        saveScreenshot(name: "explore-day-sheet")
+
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(calendar.waitForExistence(timeout: 10), "Closing the sheet did not return to the calendar")
+
+        let thisMonth = Date().formatted(.dateTime.month(.wide).year())
+        app.buttons["Previous month"].firstMatch.tap()
+        calendar.swipeUp()
+
+        let header = app.staticTexts.matching(identifier: "explore.monthCalendar").firstMatch
+        XCTAssertTrue(header.waitForExistence(timeout: 10))
+        XCTAssertNotEqual(header.label, thisMonth, "The back arrow did not move the calendar off this month")
+        saveScreenshot(name: "explore-previous-month")
+
+        // Scoped by identifier so the tab bar's own "Today" cannot match.
+        let todayButton = app.buttons.matching(
+            NSPredicate(format: "label == %@ AND identifier == %@", "Today", "explore.monthCalendar")
+        ).firstMatch
+        XCTAssertTrue(todayButton.waitForExistence(timeout: 10), "Paging back did not offer a way home")
+        todayButton.tap()
+        XCTAssertEqual(app.staticTexts.matching(identifier: "explore.monthCalendar").firstMatch.label, thisMonth,
+                       "Today did not bring the calendar back to this month")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()

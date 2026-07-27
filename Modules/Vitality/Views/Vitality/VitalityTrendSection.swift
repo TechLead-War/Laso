@@ -13,7 +13,7 @@ struct VitalityTrendSection: View {
     /// under that to stay instant without stealing a vertical page scroll.
     private static let scrubMinimumDrag: CGFloat = 8
 
-    private var selectedTrendPoint: (date: Date, age: Int)? {
+    private var selectedTrendPoint: (date: Date, age: Double)? {
         guard let selectedTrendDate, !scorer.history.isEmpty else { return nil }
         return scorer.history.min(by: { lhs, rhs in
             abs(lhs.date.timeIntervalSince(selectedTrendDate)) < abs(rhs.date.timeIntervalSince(selectedTrendDate))
@@ -38,7 +38,7 @@ struct VitalityTrendSection: View {
                         AreaMark(
                             x: .value("Date", point.date),
                             yStart: .value("Baseline", Double(scorer.chronologicalAge)),
-                            yEnd: .value("Age", Double(point.age))
+                            yEnd: .value("Age", point.age)
                         )
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(historyFillColor)
@@ -46,7 +46,7 @@ struct VitalityTrendSection: View {
 
                         LineMark(
                             x: .value("Date", point.date),
-                            y: .value("Age", Double(point.age))
+                            y: .value("Age", point.age)
                         )
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(historyLineColor)
@@ -56,7 +56,7 @@ struct VitalityTrendSection: View {
                     if let latest = scorer.history.last {
                         PointMark(
                             x: .value("Latest Date", latest.date),
-                            y: .value("Latest Age", Double(latest.age))
+                            y: .value("Latest Age", latest.age)
                         )
                         .symbolSize(42)
                         .foregroundStyle(historyLineColor)
@@ -69,14 +69,14 @@ struct VitalityTrendSection: View {
 
                         PointMark(
                             x: .value("Selected", selected.date),
-                            y: .value("Age", Double(selected.age))
+                            y: .value("Age", selected.age)
                         )
                         .foregroundStyle(.white)
                         .symbolSize(70)
 
                         PointMark(
                             x: .value("Selected", selected.date),
-                            y: .value("Age", Double(selected.age))
+                            y: .value("Age", selected.age)
                         )
                         .foregroundStyle(historyLineColor)
                         .symbolSize(28)
@@ -155,16 +155,16 @@ struct VitalityTrendSection: View {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                Text(Copy.Vitality.xText2(selected.age))
+                                Text(Copy.Vitality.xText2(Int(selected.age.rounded())))
                                     .font(.callout.weight(.bold).monospacedDigit())
                                     .foregroundStyle(historyLineColor)
                                 Text(Copy.Vitality.yrs)
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(.secondary)
                             }
-                            let delta = selected.age - scorer.chronologicalAge
+                            let delta = Int(selected.age.rounded()) - scorer.chronologicalAge
                             if delta != 0 {
-                                Text(delta > 0 ? "+\(delta) vs actual" : "\(delta) vs actual")
+                                Text(Copy.Vitality.deltaVsActual(delta))
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(delta < 0 ? AppColour.success : AppColour.danger)
                             }
@@ -219,7 +219,7 @@ struct VitalityTrendSection: View {
             return Double(scorer.chronologicalAge - 8)...Double(scorer.chronologicalAge + 8)
         }
 
-        let values = scorer.history.map { Double($0.age) } + [Double(scorer.chronologicalAge)]
+        let values = scorer.history.map(\.age) + [Double(scorer.chronologicalAge)]
         let minValue = (values.min() ?? Double(scorer.chronologicalAge)) - 2
         let maxValue = (values.max() ?? Double(scorer.chronologicalAge)) + 2
         return minValue...maxValue
@@ -233,32 +233,31 @@ struct VitalityTrendSection: View {
         paceTint.opacity(0.16)
     }
 
+    /// One decimal, because the whole point of the fix is that a quarter's
+    /// drift is a fraction of a year and rounding it away hides the trend.
     private var historyChangeText: String {
         guard let first = scorer.history.first?.age,
               let last = scorer.history.last?.age else {
-            return "--"
+            return Copy.Vitality.noValue
         }
-
-        let change = last - first
-        if change > 0 { return "+\(change)y" }
-        if change < 0 { return "\(change)y" }
-        return "0y"
+        return Copy.Vitality.yearChange(last - first)
     }
 
     private var vitalityChartAccessibilityValue: String {
         guard let latest = scorer.history.last?.age else {
-            return "No history available"
+            return Copy.Vitality.noHistoryAvailable
         }
-        let delta = latest - scorer.chronologicalAge
+        let latestAge = Int(latest.rounded())
+        let delta = latestAge - scorer.chronologicalAge
         let comparison: String
         if delta > 0 {
-            comparison = "\(delta) years older than chronological age"
+            comparison = Copy.Vitality.yearsOlderThanActual(delta)
         } else if delta < 0 {
-            comparison = "\(-delta) years younger than chronological age"
+            comparison = Copy.Vitality.yearsYoungerThanActual(-delta)
         } else {
-            comparison = "matches chronological age"
+            comparison = Copy.Vitality.matchesActualAge
         }
-        return "Latest vitality age \(latest), \(comparison)"
+        return Copy.Vitality.chartAccessibilityValue(age: latestAge, comparison: comparison)
     }
 
     private var historyChangeColor: Color {
@@ -266,6 +265,6 @@ struct VitalityTrendSection: View {
               let last = scorer.history.last?.age else {
             return .secondary
         }
-        return vitalityDeltaColor(for: last - first)
+        return vitalityDeltaColor(for: Int((last - first).rounded()))
     }
 }
