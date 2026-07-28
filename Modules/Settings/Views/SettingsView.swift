@@ -260,7 +260,10 @@ struct SettingsView: View {
         Section {
             Picker(Copy.Settings.appearance, selection: Binding(
                 get: { themeManager.preference },
-                set: { themeManager.set($0) }
+                set: {
+                    AppAnalytics.shared.trackSettingChanged(name: "appearance", value: $0.rawValue)
+                    themeManager.set($0)
+                }
             )) {
                 ForEach(ThemePreference.allCases) { option in
                     Label(option.title, systemImage: option.symbol).tag(option)
@@ -313,6 +316,14 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("settings.row.subscription.top")
+                .simultaneousGesture(TapGesture().onEnded {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Manage Subscription",
+                        type: .appStoreLink,
+                        screen: .settings,
+                        metadata: ["destination": "app_store_subscriptions"]
+                    )
+                })
             }
         }
     }
@@ -470,6 +481,20 @@ struct SettingsView: View {
                 )
             }
             .accessibilityIdentifier("settings.row.notifications")
+            // Bound to the tap, not the destination's onAppear: NotificationsSettingsView
+            // pushes the metric alert picker, so popping back re-ran onAppear and
+            // counted a navigation the user never made from Settings.
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Notifications",
+                    type: .settingsNotifications,
+                    screen: .settings,
+                    metadata: [
+                        "destination": "notifications_settings",
+                        "active_summary": notificationsSummary
+                    ]
+                )
+            })
         } footer: {
             Text(Copy.Settings.notificationsHint)
         }
@@ -542,6 +567,14 @@ struct SettingsView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .simultaneousGesture(TapGesture().onEnded {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Terms of Use",
+                        type: .settingsTermsLink,
+                        screen: .settings,
+                        metadata: ["destination": "terms_of_use_web"]
+                    )
+                })
             }
             NavigationLink {
                 AcknowledgementsView()
@@ -554,6 +587,14 @@ struct SettingsView: View {
                 )
             }
             .accessibilityIdentifier("settings.row.acknowledgements")
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Acknowledgements",
+                    type: .settingsAcknowledgements,
+                    screen: .settings,
+                    metadata: ["destination": "acknowledgements"]
+                )
+            })
         } header: {
             Text(Copy.Settings.about)
         }
@@ -572,6 +613,14 @@ struct SettingsView: View {
                 subtitle: nil
             )
         }
+        .simultaneousGesture(TapGesture().onEnded {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Siri and Shortcuts",
+                type: .settingsSiri,
+                screen: .settings,
+                metadata: ["destination": "siri_detail"]
+            )
+        })
     }
 
     private var siriDetailView: some View {
@@ -584,7 +633,23 @@ struct SettingsView: View {
             }
             Section {
                 ShortcutsLink()
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Open Shortcuts App",
+                            type: .siriShortcutsLink,
+                            screen: .settings,
+                            metadata: ["destination": "shortcuts_app"]
+                        )
+                    })
                 SiriTipView(intent: HealthScoreIntent())
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Siri Tip",
+                            type: .siriTip,
+                            screen: .settings,
+                            metadata: ["intent": "health_score"]
+                        )
+                    })
             } footer: {
                 Text(Copy.Settings.siriFooter)
             }
@@ -720,6 +785,15 @@ struct SettingsView: View {
     private var dangerZoneSection: some View {
         Section {
             Button(role: .destructive) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: Copy.Settings.deleteAllMyData,
+                    type: .settingsDeleteData,
+                    screen: .settings,
+                    metadata: [
+                        "destination": "delete_data_confirm_alert",
+                        "stored_samples": healthDataStore.totalStoredSamples
+                    ]
+                )
                 showDeleteDataAlert = true
             } label: {
                 HStack(spacing: 12) {

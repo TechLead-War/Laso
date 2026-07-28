@@ -138,6 +138,7 @@ struct MorningCheckInView: View {
             HStack(spacing: 0) {
                 ForEach(1...5, id: \.self) { value in
                     Button {
+                        AppAnalytics.shared.trackBlockTap(title: "Morning Check-In Rating", type: .smartAction, screen: .home, metadata: ["source": "morning_checkin", "question": label, "rating": value])
                         withAnimation(.snappy(duration: 0.15)) {
                             selection.wrappedValue = value
                         }

@@ -62,6 +62,7 @@ struct AskYourDataView: View {
                     .controlSize(.small)
             } else if !query.isEmpty {
                 Button {
+                    AppAnalytics.shared.trackBlockTap(title: "Query Cleared", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data_clear", "query_length": query.count, "had_result": result != nil])
                     query = ""
                     result = nil
                 } label: {

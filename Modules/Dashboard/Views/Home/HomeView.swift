@@ -297,7 +297,18 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("home.streakMilestoneCard.share")
 
-                Button { closeStreakMilestone(milestone) } label: {
+                Button {
+                    // Same card_id as the Share button above so the offer has a
+                    // decline rate; without it a dismiss is indistinguishable
+                    // from never seeing the card.
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Dismiss",
+                        type: .shareCard,
+                        screen: .home,
+                        metadata: ["source": "streak_milestone", "milestone_days": milestone]
+                    )
+                    closeStreakMilestone(milestone)
+                } label: {
                     Text(Copy.Home.streakMilestoneDismiss)
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textTertiary)

@@ -52,7 +52,15 @@ struct DailyActionResultCard: View {
                 Spacer(minLength: 0)
             }
 
-            Button(action: onDismiss) {
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Daily Action Result Dismissed",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["source": "daily_action_result", "delta": result.delta]
+                )
+                onDismiss()
+            } label: {
                 Text(Copy.Home.dailyResultDismiss)
                     .font(DS.Typography.caption)
                     .foregroundStyle(tint)

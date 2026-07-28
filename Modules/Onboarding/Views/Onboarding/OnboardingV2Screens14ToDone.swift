@@ -490,6 +490,11 @@ struct OnbV2Screen16Paywall: View {
                                         .foregroundStyle(OnbV2.rose)
                                         .multilineTextAlignment(.center)
                                     Button {
+                                        AppAnalytics.shared.trackBlockTap(
+                                            title: "Retry Plans",
+                                            type: .paywallRetryPlans,
+                                            screen: .paywall
+                                        )
                                         Task { @MainActor in await SubscriptionManager.shared.loadProducts() }
                                     } label: {
                                         Text(Copy.Buttons.retry)
@@ -554,6 +559,11 @@ struct OnbV2Screen16Paywall: View {
                         }
 
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Terms",
+                                type: .paywallTermsLink,
+                                screen: .paywall
+                            )
                             if let url = URL(string: "https://laso.ai/terms") {
                                 openURL(url)
                             }
@@ -564,6 +574,11 @@ struct OnbV2Screen16Paywall: View {
                         }
 
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Privacy Policy",
+                                type: .paywallPrivacyLink,
+                                screen: .paywall
+                            )
                             if let url = URL(string: "https://laso.ai/privacy") {
                                 openURL(url)
                             }

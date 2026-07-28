@@ -676,6 +676,12 @@ struct ShareWinSheet: View {
             // Camera capture, hidden where no camera exists (simulator).
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Take Photo",
+                        type: .shareCard,
+                        screen: .home,
+                        metadata: ["source": "camera", "is_change": photo != nil]
+                    )
                     showCamera = true
                 } label: {
                     Label(Copy.Common.shareTakePhoto, systemImage: "camera")

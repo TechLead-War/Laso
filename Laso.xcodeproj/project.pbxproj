@@ -939,7 +939,6 @@
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
 		DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
-		DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
 		E020657065005DF616545BF6 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCoverageCard.swift; sourceTree = "<group>"; };
@@ -970,6 +969,7 @@
 		F32A5C595D4BC361D4EFE49C /* Copy+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Notifications.swift"; sourceTree = "<group>"; };
 		F4453E2C8E37235B90525F4F /* PatternMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternMiner.swift; sourceTree = "<group>"; };
 		F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthSnapshot.swift; sourceTree = "<group>"; };
+		F663987C1393C94A4A7611C6 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		F7901D4D2355FF56E578ED1E /* FoundationModelQueryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelQueryEngine.swift; sourceTree = "<group>"; };
 		F87A76DA46FCC55AB12B2B0E /* AppColour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColour.swift; sourceTree = "<group>"; };
 		F9E6BE3FD18FC543590A76EB /* InsightCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCoordinator.swift; sourceTree = "<group>"; };
@@ -1578,6 +1578,15 @@
 			path = LasoWatchWidgets;
 			sourceTree = "<group>";
 		};
+		536EAD06F7CA2BE9F75A98A9 /* track-wt */ = {
+			isa = PBXGroup;
+			children = (
+				F663987C1393C94A4A7611C6 /* Secrets.xcconfig */,
+			);
+			name = "track-wt";
+			path = .;
+			sourceTree = "<group>";
+		};
 		53CCE31CF6A15F16DA081F2E /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -2158,15 +2167,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		E539D755BFE39275A3539FF3 /* HealthPulse */ = {
-			isa = PBXGroup;
-			children = (
-				DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */,
-			);
-			name = HealthPulse;
-			path = .;
-			sourceTree = "<group>";
-		};
 		E54850172D124017E5E661ED /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -2269,7 +2269,6 @@
 				245B633267003874872B05C6 /* App */,
 				53CCE31CF6A15F16DA081F2E /* Common */,
 				A8E5CFB21D057A5EF7F1E794 /* Core */,
-				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				10E335CB2A1EC93FFBDE7284 /* LasoTests */,
 				0FBA80065D66CD82E801C536 /* LasoUITests */,
 				1378C2BDE03C2BBE4D993A19 /* LasoWatch */,
@@ -2277,6 +2276,7 @@
 				08ACFB443AD621527464CB1D /* LasoWidgets */,
 				39C809F6F509B49421DA1671 /* Modules */,
 				8449F3E35F7EFCCA08D74F29 /* Shared */,
+				536EAD06F7CA2BE9F75A98A9 /* track-wt */,
 				0F193B27229451D5075546FB /* WatchShared */,
 				85D693CEA74B6AE4E9169174 /* Products */,
 			);
@@ -3148,7 +3148,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 92;
+				CURRENT_PROJECT_VERSION = 93;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3167,7 +3167,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.84;
+				MARKETING_VERSION = 1.2.85;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3181,7 +3181,7 @@
 		};
 		1FD22930FF81F2E3F11E35EB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */;
+			baseConfigurationReference = F663987C1393C94A4A7611C6 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -3238,7 +3238,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 92;
+				CURRENT_PROJECT_VERSION = 93;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3251,7 +3251,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.84;
+				MARKETING_VERSION = 1.2.85;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3286,7 +3286,7 @@
 		};
 		54E525B1609CEFA42BE641F2 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */;
+			baseConfigurationReference = F663987C1393C94A4A7611C6 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

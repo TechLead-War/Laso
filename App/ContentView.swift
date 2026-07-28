@@ -980,6 +980,17 @@ struct ContentView: View {
                     Link("Update", destination: url)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(AppColour.warning)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Update Payment Method",
+                                type: .appStoreLink,
+                                screen: .home,
+                                metadata: [
+                                    "destination": "app_store_subscriptions",
+                                    "billing_grace_days": days
+                                ]
+                            )
+                        })
                 }
             }
             .padding(.horizontal, 16)

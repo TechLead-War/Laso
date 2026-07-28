@@ -170,6 +170,15 @@ struct JournalEntryView: View {
     private func stepperInput(for category: JournalCategory) -> some View {
         HStack(spacing: DS.space4) {
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Decrease \(category.displayName)",
+                    type: .valueInputAdjusted,
+                    screen: .journalEntry,
+                    metadata: [
+                        "category": category.rawValue,
+                        "direction": "decrease"
+                    ]
+                )
                 let newValue = value - category.step
                 if newValue >= category.valueRange.lowerBound {
                     value = newValue
@@ -193,6 +202,15 @@ struct JournalEntryView: View {
             Spacer()
 
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Increase \(category.displayName)",
+                    type: .valueInputAdjusted,
+                    screen: .journalEntry,
+                    metadata: [
+                        "category": category.rawValue,
+                        "direction": "increase"
+                    ]
+                )
                 let newValue = value + category.step
                 if newValue <= category.valueRange.upperBound {
                     value = newValue
@@ -215,7 +233,20 @@ struct JournalEntryView: View {
             Slider(
                 value: $value,
                 in: category.valueRange,
-                step: category.step
+                step: category.step,
+                onEditingChanged: { editing in
+                    // Only on release, so one drag is one event instead of one per frame.
+                    guard !editing else { return }
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Adjust \(category.displayName)",
+                        type: .valueInputAdjusted,
+                        screen: .journalEntry,
+                        metadata: [
+                            "category": category.rawValue,
+                            "value": value
+                        ]
+                    )
+                }
             )
             .tint(categoryColor(category))
             .accessibilityLabel(Copy.Journal.amountLabel(category.displayName))

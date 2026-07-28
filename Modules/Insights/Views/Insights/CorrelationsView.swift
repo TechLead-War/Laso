@@ -445,6 +445,17 @@ struct CausalChainCard: View {
                 Divider().opacity(0.5)
 
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: Copy.Insights.Correlations.evidenceLabel,
+                        type: .correlationsExpandAll,
+                        // Evidence only renders when the parent passes correlations, which
+                        // today is Correlations only. TodaysActionDetail leaves it empty.
+                        screen: .correlations,
+                        metadata: [
+                            "expanded": !showEvidence,
+                            "evidence_count": evidence.count
+                        ]
+                    )
                     withAnimation(DS.Motion.toast) { showEvidence.toggle() }
                 } label: {
                     HStack(spacing: DS.space2) {

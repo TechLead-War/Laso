@@ -137,6 +137,12 @@ private struct BriefingCardView: View {
         .sensoryFeedback(.impact(flexibility: .soft), trigger: tapped)
         .contentShape(Rectangle())
         .onTapGesture {
+            AppAnalytics.shared.trackBlockTap(
+                title: card.label,
+                type: .headlineInsight,
+                screen: .explore,
+                metadata: ["card_type": card.type.rawValue, "confidence": card.confidence]
+            )
             tapped.toggle()
             onTap()
         }
@@ -239,7 +245,15 @@ private struct BriefingDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Copy.Buttons.done) { dismiss() }
+                    Button(Copy.Buttons.done) {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Done",
+                            type: .briefingDetailDone,
+                            screen: .explore,
+                            metadata: ["card_type": card.type.rawValue]
+                        )
+                        dismiss()
+                    }
                 }
             }
         }

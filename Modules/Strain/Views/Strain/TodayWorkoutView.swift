@@ -121,6 +121,15 @@ struct WorkoutPlanSheet: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(Copy.Strain.done) {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Done",
+                        type: .workoutPlanDone,
+                        screen: .todaysActionDetail,
+                        metadata: [
+                            "zone": plan.zone.rawValue,
+                            "recovery_band": recoveryBand.rawValue
+                        ]
+                    )
                     dismiss()
                 }
             }

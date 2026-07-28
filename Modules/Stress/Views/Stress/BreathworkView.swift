@@ -463,6 +463,18 @@ struct BreathworkView: View {
         HStack(spacing: 32) {
             // Stop button
             Button {
+                // Intent to stop, not the stop itself: the abandoned event only
+                // fires if the user confirms in the alert.
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Stop Breathwork Session",
+                    type: .smartAction,
+                    screen: .breathwork,
+                    metadata: [
+                        "source": "breathwork_controls",
+                        "action": "stop_tapped",
+                        "phase": currentPhase.rawValue
+                    ]
+                )
                 showStopConfirmation = true
             } label: {
                 Image(systemName: "stop.fill")

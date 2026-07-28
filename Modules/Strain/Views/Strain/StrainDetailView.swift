@@ -381,6 +381,11 @@ struct StrainDetailView: View {
                                     .onEnded { _ in isScrubbing = false }
                             )
                             .onTapGesture { location in
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Strain History Chart",
+                                    type: .chartTouch,
+                                    screen: .strainDetail
+                                )
                                 guard let plotFrame = proxy.plotFrame else { return }
                                 let origin = geometry[plotFrame].origin
                                 let x = location.x - origin.x

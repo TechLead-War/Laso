@@ -209,6 +209,23 @@ enum BlockType: String {
 
     // Siri Shortcuts
     case siriShortcutPerformed = "siri_shortcut_performed"
+    case siriShortcutsLink = "siri_shortcuts_link"
+    case siriTip = "siri_tip"
+
+    // Settings rows that leave the screen. Each was previously untracked, so a
+    // push into Notifications, Acknowledgements or Siri was invisible and the
+    // destination screens had no denominator.
+    case settingsNotifications = "settings_notifications"
+    case settingsTermsLink = "settings_terms_link"
+    case settingsAcknowledgements = "settings_acknowledgements"
+    case settingsSiri = "settings_siri"
+    case settingsDeleteData = "settings_delete_data"
+    case acknowledgementSourceLink = "acknowledgement_source_link"
+
+    // Sheet dismissals and value entry
+    case briefingDetailDone = "briefing_detail_done"
+    case valueInputAdjusted = "value_input_adjusted"
+    case workoutPlanDone = "workout_plan_done"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

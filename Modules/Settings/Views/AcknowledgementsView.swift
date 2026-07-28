@@ -118,6 +118,17 @@ struct AcknowledgementsView: View {
                             }
                             .font(DS.Typography.caption)
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "View Source",
+                                type: .acknowledgementSourceLink,
+                                screen: .settings,
+                                metadata: [
+                                    "library": library.name,
+                                    "license": library.license
+                                ]
+                            )
+                        })
                     }
                     .padding(.vertical, 4)
                     .accessibilityElement(children: .combine)

@@ -221,9 +221,16 @@ struct PMFSurveySheet: View {
                 .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
             Spacer()
-            Button(Copy.Common.doneButton) { dismiss() }
-                .buttonStyle(.borderedProminent)
-                .padding(.bottom, DS.space6)
+            Button(Copy.Common.doneButton) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "PMF Survey Done",
+                    type: .feedbackDoneAfterSubmit,
+                    screen: .feedback
+                )
+                dismiss()
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.bottom, DS.space6)
         }
         .padding()
     }

@@ -106,7 +106,20 @@ struct MetricLogSheet: View {
                     .font(DS.Typography.displayM)
                     .monospacedDigit()
 
-                Slider(value: $weightKg, in: 30...250, step: 0.1)
+                Slider(value: $weightKg, in: 30...250, step: 0.1) { editing in
+                    // Only on release, so one drag is one event instead of one per frame.
+                    guard !editing else { return }
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Weight Slider",
+                        type: .valueInputAdjusted,
+                        screen: .metricLog,
+                        metadata: [
+                            "metric_id": HealthMetric.weight.rawValue,
+                            "value": weightKg
+                        ]
+                    )
+                    formTracker.tapped(target: "weight_slider")
+                }
             }
             .padding(.vertical, DS.space2)
         } header: {
@@ -147,7 +160,20 @@ struct MetricLogSheet: View {
                     }
                 }
 
-                Slider(value: $waterMl, in: 50...2000, step: 50)
+                Slider(value: $waterMl, in: 50...2000, step: 50) { editing in
+                    // Only on release, so one drag is one event instead of one per frame.
+                    guard !editing else { return }
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Water Slider",
+                        type: .valueInputAdjusted,
+                        screen: .metricLog,
+                        metadata: [
+                            "metric_id": HealthMetric.waterIntake.rawValue,
+                            "value": waterMl
+                        ]
+                    )
+                    formTracker.tapped(target: "water_slider")
+                }
             }
             .padding(.vertical, DS.space2)
         } header: {
@@ -164,7 +190,20 @@ struct MetricLogSheet: View {
                     .font(DS.Typography.displayM)
                     .monospacedDigit()
 
-                Slider(value: $mindfulMinutes, in: 1...120, step: 1)
+                Slider(value: $mindfulMinutes, in: 1...120, step: 1) { editing in
+                    // Only on release, so one drag is one event instead of one per frame.
+                    guard !editing else { return }
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Mindful Minutes Slider",
+                        type: .valueInputAdjusted,
+                        screen: .metricLog,
+                        metadata: [
+                            "metric_id": HealthMetric.mindfulMinutes.rawValue,
+                            "value": mindfulMinutes
+                        ]
+                    )
+                    formTracker.tapped(target: "mindful_slider")
+                }
             }
             .padding(.vertical, DS.space2)
         } header: {

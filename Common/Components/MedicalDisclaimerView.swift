@@ -37,6 +37,11 @@ struct MedicalDisclaimerView: View {
                 Spacer()
 
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Medical Disclaimer Acknowledge",
+                        type: .onboardingGetStarted,
+                        screen: .onboarding
+                    )
                     onAcknowledge()
                 } label: {
                     Text(Copy.Disclaimer.acknowledge)

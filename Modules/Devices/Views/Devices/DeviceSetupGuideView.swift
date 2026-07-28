@@ -38,6 +38,14 @@ struct DeviceSetupGuideView: View {
                             .font(DS.Typography.subheadlineMedium)
                     }
                     .buttonStyle(.borderedProminent)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Open App Store",
+                            type: .appStoreLink,
+                            screen: .deviceSetupGuide,
+                            metadata: ["device": device.rawValue]
+                        )
+                    })
                 }
             }
         }

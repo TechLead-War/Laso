@@ -31,6 +31,14 @@ struct ForceUpdateView: View {
                         .foregroundStyle(AppColour.textOnAccent)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
+                .simultaneousGesture(TapGesture().onEnded {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Update Now",
+                        type: .updateApp,
+                        screen: .home,
+                        metadata: ["destination": "app_store"]
+                    )
+                })
                 .padding(.horizontal, DS.space7)
             }
 

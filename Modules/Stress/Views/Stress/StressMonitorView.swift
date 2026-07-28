@@ -473,6 +473,18 @@ struct StressMonitorView: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityLabel(Copy.StressMonitor.startBreathingA11y)
+        .simultaneousGesture(TapGesture().onEnded {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Start Breathing Exercise",
+                type: .smartAction,
+                screen: .stressMonitor,
+                metadata: [
+                    "source": "stress_monitor_cta",
+                    "destination": "breathwork",
+                    "stress_level": normalizedLevel
+                ]
+            )
+        })
     }
 }
 

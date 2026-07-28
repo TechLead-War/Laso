@@ -342,6 +342,15 @@ struct SleepCoachView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Sleep History Day",
+                    type: .chartTouch,
+                    screen: .sleepCoach,
+                    metadata: [
+                        "action": isExpanded ? "collapse" : "expand",
+                        "sleep_hours": day.bedToWakeHours
+                    ]
+                )
                 withAnimation(.easeInOut(duration: 0.22)) {
                     expandedDayId = isExpanded ? nil : day.id
                 }
@@ -564,6 +573,15 @@ struct SleepCoachView: View {
                 if !showAllTips && currentTips.count > 2 {
                     Divider().padding(.leading, 44)
                     Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Show More Sleep Tips",
+                            type: .smartAction,
+                            screen: .sleepCoach,
+                            metadata: [
+                                "source": "sleep_coach_tips",
+                                "hidden_tips_count": currentTips.count - 2
+                            ]
+                        )
                         withAnimation(.easeInOut(duration: 0.25)) { showAllTips = true }
                     } label: {
                         Text(Copy.SleepCoach.showMoreTips(currentTips.count - 2))

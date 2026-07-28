@@ -388,7 +388,14 @@ struct OnbV2SelectRow: View {
     @State private var pressed = false
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: title,
+                type: .onboardingFocusChip,
+                screen: .onboarding
+            )
+            action()
+        } label: {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -450,7 +457,14 @@ struct OnbV2Chip: View {
     @State private var pressed = false
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: .onboardingFocusChip,
+                screen: .onboarding
+            )
+            action()
+        } label: {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .semibold))

@@ -35,13 +35,29 @@ struct LifeContextChipRow: View {
 
             Spacer(minLength: 8)
 
-            Button(Copy.Home.contextStillYes) { store.confirm(context) }
-                .font(DS.Typography.footnoteMedium)
-                .foregroundStyle(AppColour.accent)
+            Button(Copy.Home.contextStillYes) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context Confirmed",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["life_context": context.rawValue, "still_on": true]
+                )
+                store.confirm(context)
+            }
+            .font(DS.Typography.footnoteMedium)
+            .foregroundStyle(AppColour.accent)
 
-            Button(Copy.Home.contextStillNo) { store.toggle(context) }
-                .font(DS.Typography.footnoteMedium)
-                .foregroundStyle(AppColour.textSecondary)
+            Button(Copy.Home.contextStillNo) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context Confirmed",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["life_context": context.rawValue, "still_on": false]
+                )
+                store.toggle(context)
+            }
+            .font(DS.Typography.footnoteMedium)
+            .foregroundStyle(AppColour.textSecondary)
         }
         .buttonStyle(.plain)
         .padding(.horizontal, DS.space3)
