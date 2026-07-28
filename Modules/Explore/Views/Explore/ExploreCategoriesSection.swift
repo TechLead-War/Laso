@@ -90,7 +90,10 @@ struct ExploreCategoryRow: View {
                     score: score,
                     label: "",
                     size: 36,
-                    lineWidth: 4
+                    lineWidth: 4,
+                    // Nine of these live in a lazily recycled row: without this
+                    // they all replay their intro trim on every scroll back.
+                    animatesOnAppear: false
                 )
             } else {
                 Text(Copy.Explore.x)
@@ -119,12 +122,12 @@ struct ExploreCategoryRow: View {
     }
 
     private var scoreStatusColor: Color {
-        guard let score else { return .secondary }
+        guard let score else { return AppColour.textSecondary }
         switch HealthScoreBand.from(score: score) {
-        case .excellent: return .green
-        case .good: return .secondary
-        case .fair: return .orange
-        case .needsAttention, .critical: return .red
+        case .excellent: return AppColour.success
+        case .good: return AppColour.textSecondary
+        case .fair: return AppColour.warning
+        case .needsAttention, .critical: return AppColour.danger
         }
     }
 }

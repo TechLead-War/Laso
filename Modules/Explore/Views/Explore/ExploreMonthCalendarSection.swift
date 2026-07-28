@@ -204,7 +204,7 @@ struct ExploreMonthCalendarSection: View, Equatable {
             .frame(height: Self.cellHeight)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.md)
-                    .fill(isToday ? AppColour.surfaceRaised : Color.clear)
+                    .fill(isToday ? AppColour.surfaceSubtle : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -219,8 +219,18 @@ struct ExploreMonthCalendarSection: View, Equatable {
         return AppColour.textPrimary
     }
 
+    /// Cached because `Date.formatted(_:)` re-resolves an ICU format style on every
+    /// call, and this label is built for all 31 cells on every grid build whether
+    /// or not VoiceOver is running. The template gives the same weekday/day/month
+    /// as the format style did, ordered for the user's locale.
+    private static var accessibilityDateFormatter: DateFormatter {
+        Date.FormatterCache.formatter(key: "Laso.Explore.calendarDayAccessibility") { formatter in
+            formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
+        }
+    }
+
     private func accessibilityLabel(day: Date, score: Int?, contexts: [LifeContextStore.Context]) -> String {
-        let date = day.formatted(.dateTime.weekday(.wide).day().month(.wide))
+        let date = Self.accessibilityDateFormatter.string(from: day)
         var parts = [date]
         if let score {
             parts.append(Copy.Explore.monthDayScore(score, DashboardViewModel.RecoveryState(score: score).plainName))
@@ -272,44 +282,61 @@ struct ExploreMonthCalendarSection: View, Equatable {
     }
 }
 
+/// Every tick in `range` batched into a single `Path`. A `Shape` folds into the
+/// parent's display list, where a `Canvas` needs a drawing surface of its own —
+/// 31 of those, each issuing 20 separate strokes, is what made this card the
+/// most expensive draw in the app. Same geometry, 2 strokes per dial instead of 20.
+private struct TickArc: Shape {
+    static let tickCount = 20
+
+    let range: Range<Int>
+
+    func path(in rect: CGRect) -> Path {
+        let centreX: Double = rect.width / 2
+        let centreY: Double = rect.height / 2
+        let inner: Double = rect.width * 0.30
+        let outer: Double = rect.width * 0.48
+
+        var path = Path()
+        for index in range {
+            let angle: Double = (Double(index) / Double(Self.tickCount)) * 2 * .pi - .pi / 2
+            let cosine: Double = cos(angle)
+            let sine: Double = sin(angle)
+            path.move(to: CGPoint(x: centreX + inner * cosine, y: centreY + inner * sine))
+            path.addLine(to: CGPoint(x: centreX + outer * cosine, y: centreY + outer * sine))
+        }
+        return path
+    }
+}
+
 /// A ring of ticks, filled in proportion to the day's score and tinted by its
 /// band. An empty dial means the day was never scored, which is a different
 /// thing from a low score and has to look different.
 private struct DayScoreDial: View {
     let score: Int?
 
-    private static let tickCount = 20
+    private static let tickStroke = StrokeStyle(lineWidth: 1.8, lineCap: .round)
 
-    private static func litTickCount(for score: Int?) -> Int {
+    private var litTickCount: Int {
         guard let score else { return 0 }
         let fraction = Double(score) / 100
-        return Int((Double(tickCount) * fraction).rounded())
-    }
-
-    private static func tickPath(index: Int, in size: CGSize) -> Path {
-        let angle: Double = (Double(index) / Double(tickCount)) * 2 * .pi - .pi / 2
-        let centreX: Double = size.width / 2
-        let centreY: Double = size.height / 2
-        let inner: Double = size.width * 0.30
-        let outer: Double = size.width * 0.48
-        let cosine: Double = cos(angle)
-        let sine: Double = sin(angle)
-
-        var path = Path()
-        path.move(to: CGPoint(x: centreX + inner * cosine, y: centreY + inner * sine))
-        path.addLine(to: CGPoint(x: centreX + outer * cosine, y: centreY + outer * sine))
-        return path
+        let ticks = Int((Double(TickArc.tickCount) * fraction).rounded())
+        // A score outside 0...100 would build a reversed Range and trap.
+        return min(TickArc.tickCount, max(0, ticks))
     }
 
     var body: some View {
-        Canvas { context, size in
-            let lit: Int = Self.litTickCount(for: score)
-            let tint: Color = score.map { DashboardViewModel.RecoveryState(score: $0).color } ?? AppColour.borderLow
+        let lit = litTickCount
+        let tint: Color = score.map { DashboardViewModel.RecoveryState(score: $0).color } ?? AppColour.trackNeutral
 
-            for index in 0..<Self.tickCount {
-                let path = Self.tickPath(index: index, in: size)
-                let colour: Color = index < lit ? tint : AppColour.borderLow
-                context.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+        // Disjoint ranges, so the two strokes never overlap and the result is
+        // pixel-identical to colouring each tick individually.
+        ZStack {
+            TickArc(range: lit..<TickArc.tickCount)
+                .stroke(AppColour.trackNeutral, style: Self.tickStroke)
+            if lit > 0 {
+                TickArc(range: 0..<lit)
+                    .stroke(tint, style: Self.tickStroke)
             }
         }
         .accessibilityHidden(true)

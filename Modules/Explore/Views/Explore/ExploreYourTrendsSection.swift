@@ -90,7 +90,6 @@ struct ExploreYourTrendsSection: View {
                     .font(DS.Typography.caption2Semibold)
                 Text(TrendAnalyzer.formattedPercentChange(item.trend.weekOverWeekChange))
                     .font(DS.Typography.captionSemibold.monospacedDigit())
-                    .postHogMask()
             }
             .foregroundStyle(item.trendColor)
             .frame(minWidth: 64, alignment: .trailing)

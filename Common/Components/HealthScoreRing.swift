@@ -8,6 +8,10 @@ struct HealthScoreRing: View {
     let lineWidth: CGFloat
     let showScore: Bool
     let tint: Color?
+    /// Turn off for rings inside a lazily recycled list. The row is torn down when
+    /// it scrolls away, so `animatedProgress` resets to 0 and the one-second trim
+    /// replays on every scroll back — nine of them at once in the Biology tab.
+    let animatesOnAppear: Bool
 
     @State private var animatedProgress: Double = 0
 
@@ -19,20 +23,21 @@ struct HealthScoreRing: View {
         tint ?? DS.scoreColor(score)
     }
 
-    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true, tint: Color? = nil) {
+    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true, tint: Color? = nil, animatesOnAppear: Bool = true) {
         self.score = score
         self.label = label
         self.size = size
         self.lineWidth = lineWidth
         self.showScore = showScore
         self.tint = tint
+        self.animatesOnAppear = animatesOnAppear
     }
 
     var body: some View {
         ZStack {
             // Background ring
             Circle()
-                .stroke(ringColor.opacity(0.15), lineWidth: lineWidth)
+                .stroke(AppColour.trackNeutral, lineWidth: lineWidth)
 
             // Progress ring
             Circle()
@@ -42,7 +47,7 @@ struct HealthScoreRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut(duration: 1.0), value: animatedProgress)
+                .animation(animatesOnAppear ? .easeInOut(duration: 1.0) : nil, value: animatedProgress)
 
             // Center text. always perfectly centered regardless of 1 or 2 lines
             centerContent
@@ -81,7 +86,7 @@ struct HealthScoreRing: View {
             if !label.isEmpty {
                 Text(label)
                     .font(.system(size: showScore ? size * 0.12 : size * 0.15, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
             }

@@ -54,7 +54,7 @@ struct ExploreScoreHeroSection: View {
                                 .font(.caption.weight(.medium))
                                 .postHogMask()
                         }
-                        .foregroundStyle(delta > 0 ? .green : .red)
+                        .foregroundStyle(delta > 0 ? AppColour.success : AppColour.danger)
                     } else {
                         Text(scoreLabel)
                             .font(.caption)
@@ -76,11 +76,14 @@ struct ExploreScoreHeroSection: View {
                     Spacer()
                 }
                 .padding(DS.space3)
-                .background(AppColour.textSecondary.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
             }
         }
         .padding(DS.space4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        // Opaque, not a material: a material re-samples and blurs whatever sits
+        // behind it on every frame of a scroll, and the backdrop here is one flat
+        // colour, so the blurred result is indistinguishable from a solid fill.
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     private var displayScore: String {

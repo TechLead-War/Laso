@@ -133,7 +133,6 @@ private struct BriefingCardView: View {
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(accent.opacity(DS.strokeAlpha), lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .sensoryFeedback(.impact(flexibility: .soft), trigger: tapped)
         .contentShape(Rectangle())
