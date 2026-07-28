@@ -152,7 +152,15 @@ struct LasoApp: App {
                 WatchMonitor.shared.stopMonitoring()
                 PhoneWatchSession.shared.clearForAccountWipe()
             }
-            .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
+            // Appearance is applied to the window by ThemeManager, not with
+            // .preferredColorScheme — see ThemeManager for why "System" cannot
+            // be built on the SwiftUI modifier. UI tests still pin a style so
+            // snapshots stay deterministic.
+            .task {
+                ThemeManager.shared.apply(
+                    override: isUITestMode ? UITestMode.requestedAppearance : nil
+                )
+            }
         }
     }
 

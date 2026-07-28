@@ -20,10 +20,10 @@ enum StressLevel: String, CaseIterable, Codable {
 
     var color: Color {
         switch self {
-        case .low: return .green
-        case .mild: return .yellow
-        case .moderate: return .orange
-        case .high: return .red
+        case .low: return AppColour.scoreOptimal
+        case .mild: return AppColour.scoreGood
+        case .moderate: return AppColour.scoreFair
+        case .high: return AppColour.scorePoor
         }
     }
 

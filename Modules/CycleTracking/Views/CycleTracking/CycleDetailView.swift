@@ -22,10 +22,10 @@ enum CyclePhase: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .menstrual:  return .red
-        case .follicular: return .pink
-        case .ovulatory:  return .orange
-        case .luteal:     return .purple
+        case .menstrual:  return AppColour.danger
+        case .follicular: return AppColour.success
+        case .ovulatory:  return AppColour.warning
+        case .luteal:     return AppColour.categoryStress
         }
     }
 
@@ -147,6 +147,7 @@ struct CycleDetailView: View {
         }
         .background(AppColour.surfaceBase)
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .cycleDetail)
             await onRefresh?()
         }
         .navigationTitle(Copy.CycleTracking.title)
@@ -218,9 +219,9 @@ struct CycleDetailView: View {
             let y = center.y + radius * sin(angle.radians)
 
             Circle()
-                .fill(.white)
+                .fill(AppColour.markerOnSurface)
                 .frame(width: 14, height: 14)
-                .shadow(color: currentPhase.color.opacity(0.5), radius: 4, y: 0)
+                .shadow(color: AppColour.shadowAmbient, radius: 4, y: 0)
                 .overlay(
                     Circle()
                         .fill(currentPhase.color)
@@ -237,7 +238,7 @@ struct CycleDetailView: View {
             HStack(spacing: DS.itemSpacing) {
                 Image(systemName: currentPhase.icon)
                     .font(DS.Typography.title3)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(currentPhase.color, in: Circle())
 
@@ -287,28 +288,28 @@ struct CycleDetailView: View {
                 icon: "bolt.fill",
                 title: Copy.CycleTracking.energyAndPerformance,
                 description: currentPhase.energyImpact,
-                color: .orange
+                color: AppColour.warning
             )
 
             impactCard(
                 icon: "arrow.counterclockwise.circle.fill",
                 title: Copy.CycleTracking.recovery,
                 description: currentPhase.recoveryImpact,
-                color: .green
+                color: AppColour.success
             )
 
             impactCard(
                 icon: "moon.fill",
                 title: Copy.CycleTracking.sleep,
                 description: currentPhase.sleepImpact,
-                color: .indigo
+                color: AppColour.categorySleep
             )
 
             impactCard(
                 icon: "carrot.fill",
                 title: Copy.CycleTracking.nutritionTips,
                 description: currentPhase.nutritionTips,
-                color: .teal
+                color: AppColour.accent
             )
         }
     }
@@ -317,7 +318,7 @@ struct CycleDetailView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(DS.Typography.bodySemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: DS.iconSize, height: DS.iconSize)
                 .background(color, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
@@ -349,7 +350,7 @@ struct CycleDetailView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "figure.run")
                     .font(DS.Typography.title3)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 44, height: 44)
                     .background(currentPhase.color.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
@@ -457,7 +458,7 @@ struct CycleDetailView: View {
             // Cycle number indicator
             Text("\(cycleHistory.count - entryIndex)")
                 .font(DS.Typography.captionSemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 28, height: 28)
                 .background(cycleLengthColor(entry.length), in: Circle())
 
@@ -516,12 +517,12 @@ struct CycleDetailView: View {
                 // Countdown circle
                 ZStack {
                     Circle()
-                        .stroke(Color.red.opacity(0.15), lineWidth: 6)
+                        .stroke(AppColour.trackNeutral, lineWidth: 6)
                         .frame(width: 64, height: 64)
 
                     Circle()
                         .trim(from: 0, to: countdownProgress)
-                        .stroke(Color.red, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .stroke(AppColour.danger, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                         .frame(width: 64, height: 64)
                         .rotationEffect(.degrees(-90))
 
@@ -561,7 +562,7 @@ struct CycleDetailView: View {
                 Spacer()
             }
             .padding(DS.cardPadding)
-            .cardStyle(tint: .red)
+            .cardStyle(tint: AppColour.danger)
             .padding(.horizontal)
         }
         .padding(.bottom, DS.space2)

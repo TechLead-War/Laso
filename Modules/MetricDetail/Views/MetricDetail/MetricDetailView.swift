@@ -269,7 +269,7 @@ struct MetricDetailView: View {
                 if let verdict = latestVerdict {
                     Text(verdict.label)
                         .font(DS.Typography.caption2Semibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
                         .background(verdict.color, in: Capsule())
@@ -502,7 +502,7 @@ struct MetricDetailView: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.tint)
+                .foregroundStyle(AppColour.primary)
             Text(title)
                 .font(DS.Typography.headline)
         }

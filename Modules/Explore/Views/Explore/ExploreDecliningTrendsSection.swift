@@ -111,9 +111,9 @@ struct ExploreDecliningTrendsSection: View {
         HStack(spacing: 12) {
             Image(systemName: highlight.icon)
                 .font(.body)
-                .foregroundStyle(.orange)
+                .foregroundStyle(AppColour.warning)
                 .frame(width: DS.iconSize, height: DS.iconSize)
-                .background(Color.orange.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
@@ -122,10 +122,10 @@ struct ExploreDecliningTrendsSection: View {
 
                     Text(highlight.typeLabel)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColour.warning)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
-                        .background(Color.orange.opacity(DS.badgeBg), in: Capsule())
+                        .background(AppColour.surfaceSubtle, in: Capsule())
                 }
 
                 Text(highlight.title)
@@ -134,7 +134,7 @@ struct ExploreDecliningTrendsSection: View {
 
                 Text(canExpand ? Copy.Explore.whyTapToExplain : highlight.recommendation)
                     .font(.caption)
-                    .foregroundStyle(canExpand ? .purple : .secondary)
+                    .foregroundStyle(canExpand ? AppColour.categoryStress : AppColour.textSecondary)
                     .lineLimit(2)
             }
 
@@ -166,7 +166,7 @@ struct ExploreDecliningTrendsSection: View {
                     }
                     Image(systemName: "arrow.right")
                         .font(DS.Typography.caption2.weight(.bold))
-                        .foregroundStyle(.purple.opacity(0.5))
+                        .foregroundStyle(AppColour.categoryStress)
                     Image(systemName: link.effectMetric.systemImageName)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(link.effectMetric.category.color)

@@ -99,7 +99,7 @@ struct SleepBankCard: View {
                     barHalf(height: night.deficit < 0 ? magnitude(night) : 0,
                             colour: AppColour.success, alignment: .bottom)
                     Rectangle()
-                        .fill(AppColour.borderLow)
+                        .fill(AppColour.chartZeroLine)
                         .frame(height: 1)
                     barHalf(height: night.deficit > 0 ? magnitude(night) : 0,
                             colour: AppColour.warning, alignment: .top)
@@ -166,7 +166,7 @@ struct SleepBankCard: View {
         }
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+        .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: DS.Radius.md))
         .accessibilityElement(children: .combine)
     }
 }

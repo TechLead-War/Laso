@@ -78,8 +78,11 @@ struct VitalityMetricContributionSection: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(
+                        // Opaque stops: at 28% alpha the three hues composite into
+                        // near-identical pastels on a light card and the red-to-green
+                        // ramp stops reading as a ramp.
                         LinearGradient(
-                            colors: [AppColour.danger.opacity(0.28), AppColour.warning.opacity(0.28), vitalityWhoopGreen.opacity(0.28)],
+                            colors: [AppColour.danger, AppColour.warning, vitalityWhoopGreen],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -89,7 +92,7 @@ struct VitalityMetricContributionSection: View {
                 Circle()
                     .fill(tint)
                     .frame(width: 8, height: 8)
-                    .overlay(Circle().stroke(.white.opacity(0.9), lineWidth: 1))
+                    .overlay(Circle().stroke(AppColour.markerOnSurface, lineWidth: 1))
                     .offset(x: markerX, y: -1.5)
             }
         }

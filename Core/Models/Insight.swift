@@ -98,32 +98,32 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
 
     var color: Color {
         switch self {
-        case .anomaly: return .red
-        case .trend: return .blue
-        case .correlation: return .purple
-        case .recovery: return .green
-        case .workoutEffectiveness: return .orange
-        case .sleepPerformance: return .indigo
-        case .weeklyPattern: return .teal
-        case .personalRecord: return .yellow
-        case .scoreTrajectory: return .mint
-        case .baselineDrift: return .cyan
-        case .multiMetricCluster: return AppColour.danger.opacity(0.8)
-        case .watchSignal: return .red
-        case .causalChain: return .indigo
-        case .crossMetricAnomaly: return .purple
-        case .cognitiveEnergy: return .orange
-        case .brainHealth: return .purple
-        case .cyclePhase: return .pink
-        case .mlPattern: return .teal
-        case .mlState: return .mint
-        case .mlPrediction: return .indigo
-        case .simulation: return .cyan
-        case .adherenceFeedback: return .green
-        case .circadian: return .orange
-        case .clinicalTrajectory: return .red
-        case .ecgIntelligence: return .red
-        case .nutritionCorrelation: return .green
+        case .anomaly: return AppColour.danger
+        case .trend: return AppColour.info
+        case .correlation: return AppColour.categoryStress
+        case .recovery: return AppColour.success
+        case .workoutEffectiveness: return AppColour.categoryActivity
+        case .sleepPerformance: return AppColour.categorySleep
+        case .weeklyPattern: return AppColour.accent
+        case .personalRecord: return AppColour.achievementGold
+        case .scoreTrajectory: return AppColour.info
+        case .baselineDrift: return AppColour.warning
+        case .multiMetricCluster: return AppColour.danger
+        case .watchSignal: return AppColour.danger
+        case .causalChain: return AppColour.categoryStress
+        case .crossMetricAnomaly: return AppColour.danger
+        case .cognitiveEnergy: return AppColour.categoryStress
+        case .brainHealth: return AppColour.categoryStress
+        case .cyclePhase: return AppColour.categoryHeart
+        case .mlPattern: return AppColour.accent
+        case .mlState: return AppColour.info
+        case .mlPrediction: return AppColour.info
+        case .simulation: return AppColour.accent
+        case .adherenceFeedback: return AppColour.success
+        case .circadian: return AppColour.categorySleep
+        case .clinicalTrajectory: return AppColour.categoryHeart
+        case .ecgIntelligence: return AppColour.categoryHeart
+        case .nutritionCorrelation: return AppColour.success
         }
     }
 }

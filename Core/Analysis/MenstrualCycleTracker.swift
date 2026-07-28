@@ -27,10 +27,10 @@ final class MenstrualCycleTracker {
 
         var color: Color {
             switch self {
-            case .menstrual:  return .red
-            case .follicular: return .pink
-            case .ovulation:  return .orange
-            case .luteal:     return .purple
+            case .menstrual:  return AppColour.danger
+            case .follicular: return AppColour.success
+            case .ovulation:  return AppColour.warning
+            case .luteal:     return AppColour.categoryStress
             }
         }
 

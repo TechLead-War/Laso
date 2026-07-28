@@ -96,24 +96,26 @@ enum OnbV2Flow {
 
 enum OnbV2 {
 
-    // Colors (hex from design handoff)
-    static let bg       = Color(red: 0,    green: 0,    blue: 0)
-    static let bg2      = Color(red: 0.075, green: 0.075, blue: 0.090)
-    static let bg3      = Color(red: 0.110, green: 0.110, blue: 0.133)
-    static let line     = Color.white.opacity(0.08)
-    static let fg       = Color.white
-    static let fg2      = Color.white.opacity(0.72)
-    static let fg3      = Color.white.opacity(0.48)
-    static let fg4      = Color.white.opacity(0.28)
+    // Colors. Aliases onto AppColour so the whole V2 flow follows the theme.
+    static let bg       = AppColour.surfaceBase
+    static let bg2      = AppColour.surfaceRaised
+    static let bg3      = AppColour.surfaceElevated
+    static let line     = AppColour.borderLow
+    static let fg       = AppColour.textPrimary
+    static let fg2      = AppColour.textSecondary
+    static let fg3      = AppColour.textTertiary
+    static let fg4      = AppColour.textQuaternary
 
-    static let blue     = Color(red: 0.039, green: 0.518, blue: 1.0)    // #0A84FF
-    static let blueGlow = Color(red: 0.039, green: 0.518, blue: 1.0).opacity(0.55)
-    static let blueLight = Color(red: 0.353, green: 0.784, blue: 0.98)  // #5AC8FA
-    static let rose     = Color(red: 1.0,   green: 0.357, blue: 0.420)  // #FF5B6B
-    static let green    = Color(red: 0.204, green: 0.780, blue: 0.349)  // #34C759
-    static let purple   = Color(red: 0.749, green: 0.353, blue: 0.949)  // #BF5AF2
-    static let amber    = Color(red: 1.0,   green: 0.624, blue: 0.039)  // #FF9F0A
-    static let teal     = Color(red: 0.361, green: 0.878, blue: 0.847)  // #5CE0D8
+    static let blue     = AppColour.primary
+    static let blueGlow = AppColour.glowTint
+    static let blueLight = AppColour.accent
+    static let rose     = AppColour.danger
+    static let green    = AppColour.success
+    /// Computed, not stored: categorySleep reads Remote Config on every access, so a
+    /// `let` would freeze whichever value happened to be live at first use.
+    static var purple: Color { AppColour.categorySleep }
+    static let amber    = AppColour.warning
+    static let teal     = AppColour.vitalityDeltaNegative
 
     // Radii
     static let rMd: CGFloat   = 16
@@ -160,7 +162,6 @@ struct OnbV2ScreenContainer<Content: View>: View {
             }
         }
         .onAppear { appeared = true }
-        .preferredColorScheme(.dark)
     }
 
     @ViewBuilder
@@ -272,7 +273,7 @@ struct OnbV2TopBar: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(OnbV2.fg2)
                         .frame(width: 36, height: 36)
-                        .background(Circle().fill(Color.white.opacity(0.06)))
+                        .background(Circle().fill(AppColour.surfaceRaised))
                         .overlay(Circle().stroke(OnbV2.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
@@ -283,7 +284,7 @@ struct OnbV2TopBar: View {
             if !hideProgress {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.08))
+                        Capsule().fill(AppColour.trackNeutral)
                         Capsule()
                             .fill(LinearGradient(
                                 colors: [tint.opacity(0.75), tint],
@@ -330,12 +331,12 @@ struct OnbV2PrimaryCTA: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(isEnabled ? Color.white : OnbV2.fg3)
+                .foregroundStyle(isEnabled ? AppColour.textOnAccent : OnbV2.fg3)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background(
                     RoundedRectangle(cornerRadius: OnbV2.rMd, style: .continuous)
-                        .fill(isEnabled ? tint : Color.white.opacity(0.08))
+                        .fill(isEnabled ? tint : AppColour.surfaceRaised)
                 )
                 .scaleEffect(pressed ? 0.985 : 1)
                 .opacity(pressed ? 0.9 : 1)
@@ -492,21 +493,24 @@ struct OnbV2HeartHero: View {
 
             Circle()
                 // Bright glossy hotspot off-center, fading to the base colour, so
-                // the disc reads as a lit orb instead of a flat fill.
+                // the disc reads as a lit orb instead of a flat fill. Stays white in
+                // both modes: it is a specular highlight on a saturated fill, so it
+                // must not flip dark the way textOnAccent does.
                 .fill(RadialGradient(
                     colors: [Color.white.opacity(0.6), color],
                     center: UnitPoint(x: 0.36, y: 0.30),
                     startRadius: 0, endRadius: size * 0.26
                 ))
                 .frame(width: size * 0.4, height: size * 0.4)
-                // Two layers like the mockup: a soft even halo that bleeds light
-                // into the dark field, plus a grounded downward glow.
-                .shadow(color: color.opacity(0.5), radius: size * 0.12, x: 0, y: 0)
-                .shadow(color: color.opacity(0.5), radius: size * 0.08, x: 0, y: size * 0.05)
+                // Two layers like the mockup: a soft even halo, plus a grounded
+                // downward glow. glowTint emits light on dark and degrades to a
+                // neutral ambient lift on light, where a coloured bloom smears.
+                .shadow(color: AppColour.glowTint, radius: size * 0.12, x: 0, y: 0)
+                .shadow(color: AppColour.glowTint, radius: size * 0.08, x: 0, y: size * 0.05)
                 .overlay(
                     Image(systemName: "heart.fill")
                         .font(.system(size: size * 0.18, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                 )
                 .scaleEffect(beat ? 1.18 : 1.0)
                 .animation(

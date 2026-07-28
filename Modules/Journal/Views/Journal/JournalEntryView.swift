@@ -111,12 +111,12 @@ struct JournalEntryView: View {
             VStack(spacing: DS.space2) {
                 Image(systemName: category.icon)
                     .font(DS.Typography.mediumIcon)
-                    .foregroundStyle(selectedCategory == category ? .white : categoryColor(category))
+                    .foregroundStyle(selectedCategory == category ? AppColour.textOnAccent : categoryColor(category))
                     .frame(width: DS.iconSize, height: DS.iconSize)
 
                 Text(category.displayName)
                     .font(DS.Typography.captionMedium)
-                    .foregroundStyle(selectedCategory == category ? .white : AppColour.textPrimary)
+                    .foregroundStyle(selectedCategory == category ? AppColour.textOnAccent : AppColour.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
@@ -133,7 +133,7 @@ struct JournalEntryView: View {
                     .strokeBorder(
                         selectedCategory == category
                             ? categoryColor(category).opacity(0.5)
-                            : .primary.opacity(0.06),
+                            : AppColour.borderLow,
                         lineWidth: 0.5
                     )
             )
@@ -279,7 +279,7 @@ struct JournalEntryView: View {
                 Text(Copy.Journal.logEntry(displayName: category.displayName))
                     .font(DS.Typography.headline)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColour.textOnAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.space4)
             .background(categoryColor(category), in: RoundedRectangle(cornerRadius: DS.cardRadius))
@@ -299,7 +299,12 @@ struct JournalEntryView: View {
                 .font(DS.Typography.title3)
         }
         .padding(DS.space7)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.xl)
+                .stroke(AppColour.borderLow, lineWidth: 1)
+        )
+        .shadow(color: AppColour.shadowFloating, radius: 14, y: 8)
     }
 
     // MARK: - Helpers
@@ -313,7 +318,9 @@ struct JournalEntryView: View {
 
     private func categoryColor(_ category: JournalCategory) -> Color {
         switch category {
-        case .caffeine: return .brown
+        // Color.brown is 2.9:1 on white, and this colour is also drawn as the value
+        // text. achievementBronze is the palette's only AA-tuned brown.
+        case .caffeine: return AppColour.achievementBronze
         case .alcohol: return AppColour.categoryStress   // soft purple
         case .stress: return AppColour.danger
         case .supplements: return AppColour.success

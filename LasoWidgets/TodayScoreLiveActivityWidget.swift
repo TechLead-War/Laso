@@ -7,11 +7,12 @@ struct TodayScoreLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TodayScoreActivityAttributes.self) { context in
             CoachLockScreenView(state: context.state)
-                // Fixed dark chrome — matches AppColour.surfaceBase so the Live
-                // Activity feels carved out of the lock screen and never flips to
-                // a white card in light mode (Apple-Music vibe).
-                .activityBackgroundTint(AppColour.surfaceBase)
-                .activitySystemActionForegroundColor(AppColour.textPrimary)
+                // Fixed dark chrome. The widget target does not inherit the app's
+                // colour scheme and all the activity art is low-alpha strokes on a
+                // dark ground, so the canvas is pinned with liveActivityCanvas and
+                // every foreground on it uses the fixed-polarity inverse tokens.
+                .activityBackgroundTint(AppColour.liveActivityCanvas)
+                .activitySystemActionForegroundColor(AppColour.textOnInverse)
         } dynamicIsland: { context in
             DynamicIsland {
                 // The top slots flank the TrueDepth camera and are NARROW — a wide pill
@@ -92,7 +93,7 @@ private struct CoachLockScreenView: View {
                             .font(.caption2.weight(.semibold))
                             .textCase(.uppercase)
                             .tracking(0.8)
-                            .foregroundStyle(AppColour.textSecondary)
+                            .foregroundStyle(AppColour.textOnInverseSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                         if let stale = staleAgePhrase(state) {
@@ -100,7 +101,7 @@ private struct CoachLockScreenView: View {
                                 .font(.caption2.weight(.semibold))
                                 .textCase(.uppercase)
                                 .tracking(0.8)
-                                .foregroundStyle(AppColour.textTertiary)
+                                .foregroundStyle(AppColour.textOnInverseSecondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.6)
                         }
@@ -108,7 +109,7 @@ private struct CoachLockScreenView: View {
                     // Hero insight — promoted to headline so it carries real weight.
                     Text(state.insight)
                         .font(.headline.weight(.semibold))
-                        .foregroundStyle(AppColour.textPrimary)
+                        .foregroundStyle(AppColour.textOnInverse)
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                         .fixedSize(horizontal: false, vertical: true)
@@ -117,7 +118,7 @@ private struct CoachLockScreenView: View {
                         if let hrv = state.hrvMs {
                             Text("HRV \(hrv) ms")
                                 .font(.caption2.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(AppColour.textSecondary)
+                                .foregroundStyle(AppColour.textOnInverseSecondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                         }
@@ -145,11 +146,12 @@ private struct CoachLockScreenView: View {
             DayProgressStrip()
         }
         .padding(14)
-        .background(AppColour.surfaceBase)
+        .background(AppColour.liveActivityCanvas)
         .overlay(alignment: .top) {
-            // 1px score-tint hairline at the top — the only chrome accent.
+            // 1px score-tint hairline at the top — the only chrome accent, so it
+            // runs at full band tint rather than fading out against the canvas.
             Rectangle()
-                .fill(tint.opacity(0.55))
+                .fill(tint)
                 .frame(height: 1)
         }
     }
@@ -203,7 +205,7 @@ private struct CoachOrbRing: View {
 
         ZStack {
             Circle()
-                .fill(AppColour.surfaceOverlay.opacity(0.55))
+                .fill(AppColour.surfaceInverseRaised)
 
             if showDayTrack {
                 // OUTER day track — faint full circle + a self-advancing fill that
@@ -211,14 +213,14 @@ private struct CoachOrbRing: View {
                 // `.circular` is the only self-advancing ring primitive in a Live
                 // Activity; a static `.trim` would freeze until the next push.
                 Circle()
-                    .stroke(Color.white.opacity(0.06), lineWidth: 2)
+                    .stroke(AppColour.trackOnInverse, lineWidth: 2)
                 ProgressView(timerInterval: dayStart...dayEnd, countsDown: false) {
                     EmptyView()
                 } currentValueLabel: {
                     EmptyView()
                 }
                 .progressViewStyle(.circular)
-                .tint(AppColour.textTertiary)
+                .tint(AppColour.textOnInverseSecondary)
                 .accessibilityHidden(true)
             }
 
@@ -226,7 +228,7 @@ private struct CoachOrbRing: View {
             // radius when the day track is hidden, so the expanded island reads as one
             // clean, prominent ring instead of two thin concentric strokes.
             Circle()
-                .stroke(Color.white.opacity(0.08), lineWidth: arcWidth)
+                .stroke(AppColour.trackOnInverse, lineWidth: arcWidth)
                 .padding(inset)
             Circle()
                 .trim(from: 0, to: progress)
@@ -243,7 +245,7 @@ private struct CoachOrbRing: View {
                     .font(.system(size: max(7, size * 0.12), weight: .semibold))
                     .textCase(.uppercase)
                     .tracking(0.6)
-                    .foregroundStyle(AppColour.textSecondary)
+                    .foregroundStyle(AppColour.textOnInverseSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -275,7 +277,7 @@ private struct CoachModePill: View {
                 .foregroundStyle(tint)
             Text(state.mode.headline)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -297,7 +299,7 @@ private struct CoachStamp: View {
     var body: some View {
         Text(staleAgePhrase(state) ?? WidgetStyle.timeString(from: state.lastUpdated))
             .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(AppColour.textTertiary)
+            .foregroundStyle(AppColour.textOnInverseSecondary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .padding(.trailing, 4)
@@ -322,7 +324,7 @@ private struct CoachExpandedCard: View {
                     CoachModePill(state: state)
                     Text(state.insight)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppColour.textPrimary)
+                        .foregroundStyle(AppColour.textOnInverse)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     CoachStatRow(state: state)
@@ -394,7 +396,7 @@ private struct CoachStatRow: View {
                 if index > 0 {
                     // Hairline rule, inset top/bottom so it never spans full height.
                     Rectangle()
-                        .fill(Color.white.opacity(0.10))
+                        .fill(AppColour.borderOnInverse)
                         .frame(width: 1)
                         .padding(.vertical, 3)
                 }
@@ -423,21 +425,21 @@ private struct StatCell: View {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
                     .font(.system(size: 13, weight: .bold).monospacedDigit())
-                    .foregroundStyle(AppColour.textPrimary)
+                    .foregroundStyle(AppColour.textOnInverse)
                     .contentTransition(.numericText())
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 if let unit {
                     Text(unit)
                         .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(AppColour.textTertiary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                 }
             }
             Text(caption)
                 .font(.system(size: 9, weight: .semibold))
                 .textCase(.uppercase)
                 .tracking(0.4)
-                .foregroundStyle(AppColour.textTertiary)
+                .foregroundStyle(AppColour.textOnInverseSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -460,9 +462,9 @@ private struct CoachWeakChip: View {
                 .fill(AppColour.warning)
                 .frame(width: 7, height: 7)
             Text(pillar)
-                .foregroundStyle(AppColour.textSecondary)
+                .foregroundStyle(AppColour.textOnInverseSecondary)
             Text("\(score)")
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .monospacedDigit()
         }
         .font(.system(size: 12, weight: .semibold))
@@ -470,7 +472,7 @@ private struct CoachWeakChip: View {
         .minimumScaleFactor(0.7)
         .padding(.horizontal, 10)
         .frame(height: 30)
-        .background(Color.white.opacity(0.06), in: Capsule())
+        .background(AppColour.surfaceInverseRaised, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(pillar) \(score)")
     }
@@ -490,9 +492,9 @@ private struct CompactLeadingRing: View {
         let progress = max(0, min(1, Double(state.overallScore) / 100.0))
         ZStack {
             Circle()
-                .fill(AppColour.surfaceOverlay.opacity(0.55))
+                .fill(AppColour.surfaceInverseRaised)
             Circle()
-                .stroke(Color.white.opacity(0.08), lineWidth: 2.5)
+                .stroke(AppColour.trackOnInverse, lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
@@ -511,7 +513,7 @@ private struct MinimalModeBadge: View {
         let progress = max(0, min(1, Double(state.overallScore) / 100.0))
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.08), lineWidth: 1.8)
+                .stroke(AppColour.trackOnInverse, lineWidth: 1.8)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(tint, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
@@ -570,7 +572,7 @@ private struct CoachActionBar: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColour.textOnInverse)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .frame(maxWidth: fullWidth ? .infinity : nil)
@@ -594,7 +596,7 @@ private func bandColor(for state: TodayScoreActivityAttributes.ContentState) -> 
 /// frozen ring never keeps showing a confident "green" hours after the last
 /// push. Drives the score arc + centre number everywhere the band colour reads.
 private func scoreTint(for state: TodayScoreActivityAttributes.ContentState) -> Color {
-    isStale(state) ? AppColour.textTertiary : bandColor(for: state)
+    isStale(state) ? AppColour.textOnInverseSecondary : bandColor(for: state)
 }
 
 private func scoreAccessibilityLabel(for state: TodayScoreActivityAttributes.ContentState) -> String {

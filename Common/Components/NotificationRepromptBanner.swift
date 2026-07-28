@@ -10,14 +10,14 @@ struct NotificationRepromptBanner: View {
             HStack(spacing: 12) {
                 Image(systemName: "bell.badge.fill")
                     .font(.title2)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColour.warning)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Notifications.repromptTitle)
                         .font(.subheadline.weight(.semibold))
                     Text(Copy.Notifications.repromptBody)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -55,7 +55,7 @@ struct NotificationRepromptBanner: View {
         .glassChrome(in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.orange.opacity(0.3), lineWidth: 1)
+                .strokeBorder(AppColour.warning.opacity(0.3), lineWidth: 1)
         )
         .padding(.horizontal)
         .transition(.move(edge: .top).combined(with: .opacity))

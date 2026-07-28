@@ -4,8 +4,8 @@ import SwiftUI
 ///
 /// - Spacing: clean 4pt grid (4, 8, 12, 16, 20, 24, 32, 48).
 /// - Typography: SF Pro — semantic Dynamic Type for text, monospacedDigit rounded for numerics.
-/// - Color: use `AppColour.*` tokens; the app is force-locked to dark mode.
-/// - Elevation: surface lightening + low-alpha borders beat drop shadows in dark UI.
+/// - Color: use `AppColour.*` tokens; every token resolves for light and dark.
+/// - Elevation: opaque surface steps carry depth in dark, `AppColour.shadowAmbient` in light.
 /// - Motion: spring for user-triggered interactions, duration-based for data reveals.
 enum DS {
 
@@ -115,11 +115,12 @@ enum DS {
 
     // MARK: - Elevation
     //
-    // In forced-dark UI, drop shadows against black are near-invisible. Elevation is
-    // expressed primarily through surface lightening (use AppColour.surfaceBase /
-    // surfaceRaised / surfaceElevated / surfaceOverlay) + low-alpha borders
-    // (AppColour.borderLow / borderMedium / borderHigh). Shadows below are reserved
-    // for floating overlays (sheets, alerts, toasts) where ambient glow is meaningful.
+    // In dark, drop shadows against near-black are near-invisible, so elevation is
+    // carried by surface steps (AppColour.surfaceBase / surfaceRaised /
+    // surfaceElevated / surfaceOverlay) + borders (AppColour.borderLow /
+    // borderMedium / borderHigh). In light the ramp cannot separate a card from the
+    // page on its own, so the shadow does the work. AppColour.shadowAmbient and
+    // shadowFloating already flip between the two; never use a raw .black alpha.
 
     enum Elevation {
         struct Shadow {
@@ -203,13 +204,18 @@ enum DS {
 
 extension View {
     /// Tinted card — colored background, matching stroke, and subtle shadow.
+    ///
+    /// The tint wash rides on an opaque `surfaceRaised` base. Without the base the
+    /// card is a 4% tint over the page, which is white-on-white in light mode.
     func cardStyle(tint: Color) -> some View {
         self
             .background {
                 RoundedRectangle(cornerRadius: DS.cardRadius)
-                    .fill(tint.opacity(DS.tintBg))
-                    .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity),
+                    .fill(AppColour.surfaceRaised)
+                    .shadow(color: AppColour.shadowAmbient,
                             radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
+                RoundedRectangle(cornerRadius: DS.cardRadius)
+                    .fill(tint.opacity(DS.tintBg))
             }
             .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(tint.opacity(DS.strokeAlpha), lineWidth: 1.0))
     }
@@ -225,11 +231,11 @@ extension View {
         self
             .background {
                 RoundedRectangle(cornerRadius: DS.cardRadius)
-                    .fill(.background)
-                    .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity),
+                    .fill(AppColour.surfaceRaised)
+                    .shadow(color: AppColour.shadowAmbient,
                             radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
             }
-            .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(.primary.opacity(0.10), lineWidth: 1.0))
+            .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1.0))
     }
 }
 
@@ -254,7 +260,12 @@ extension View {
         if #available(iOS 26.0, *) {
             self.glassEffect(.regular.tint(color.opacity(0.35)), in: shape)
         } else {
-            self.background(color.opacity(0.08), in: shape)
+            // Opaque base under the wash: an 8% tint alone has no visible container
+            // on a light page.
+            self.background {
+                shape.fill(AppColour.surfaceElevated)
+                shape.fill(color.opacity(0.12))
+            }
         }
     }
 }

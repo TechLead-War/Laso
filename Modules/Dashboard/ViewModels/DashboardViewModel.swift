@@ -1561,7 +1561,7 @@ final class DashboardViewModel {
         if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
         else if vDelta > 0 { vBadge = "\(vDelta)y older" }
         else { vBadge = "On track" }
-        let vColor: Color = vDelta <= 0 ? .green : (vDelta <= 3 ? .orange : .red)
+        let vColor: Color = vDelta <= 0 ? AppColour.vitalityWhoopGreen : (vDelta <= 3 ? AppColour.vitalityPaceYellow : AppColour.vitalityPaceRed)
         tiles.append(MetricTile(
             id: "vitality_detail", icon: "figure.run", label: "Vitality",
             value: "\(vitalityScorer.vitalityAge)",
@@ -1591,7 +1591,7 @@ final class DashboardViewModel {
             let h = Int(sleepHours)
             let m = Int((sleepHours - Double(h)) * 60)
             let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
-            let sleepTileColor: Color = sleep.quality == "Great" || sleep.quality == "Good" ? .indigo : .orange
+            let sleepTileColor: Color = sleep.quality == "Great" || sleep.quality == "Good" ? AppColour.categorySleep : AppColour.warning
             tiles.append(MetricTile(
                 id: "sleep_coach", icon: "moon.fill", label: "Sleep",
                 value: sleepValue, badge: sleep.quality, color: sleepTileColor, route: .sleepCoach
@@ -1611,7 +1611,7 @@ final class DashboardViewModel {
 
         // Brain Health
         if let brain = brainHealthScorer.currentScore {
-            let brainColor: Color = brain.score >= 80 ? .green : brain.score >= 65 ? .blue : brain.score >= 45 ? .gray : .orange
+            let brainColor: Color = brain.score >= 80 ? AppColour.scoreOptimal : brain.score >= 65 ? AppColour.info : brain.score >= 45 ? AppColour.stateDefault : AppColour.warning
             tiles.append(MetricTile(
                 id: "brain_health", icon: "brain", label: "Brain",
                 value: "\(brain.score)", badge: brain.state.displayName, color: brainColor, route: .brainHealth

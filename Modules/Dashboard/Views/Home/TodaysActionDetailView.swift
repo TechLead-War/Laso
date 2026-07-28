@@ -55,7 +55,7 @@ struct TodaysActionDetailView: View {
 
                     Text(Copy.Analysis.RiskDetail.disclaimer)
                         .font(.system(size: 13.2))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal, DS.screenPadding)
                         .padding(.top, DS.space6)
@@ -66,7 +66,7 @@ struct TodaysActionDetailView: View {
             }
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceSunken.ignoresSafeArea())
         .accessibilityIdentifier("screen.todaysAction")
         .navigationTitle(Copy.Home.todaysAction)
         .navigationBarTitleDisplayMode(.inline)
@@ -105,10 +105,10 @@ struct TodaysActionDetailView: View {
         return HStack(alignment: .top, spacing: DS.space4) {
             Image(systemName: action.icon)
                 .font(DS.Typography.mediumIcon)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 72, height: 72)
                 .background(tint.gradient, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
-                .shadow(color: tint.opacity(0.35), radius: 10, y: 4)
+                .shadow(color: AppColour.shadowAmbient, radius: 10, y: 4)
 
             VStack(alignment: .leading, spacing: DS.space2) {
                 Text(action.title)
@@ -140,7 +140,7 @@ struct TodaysActionDetailView: View {
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(tint.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
-        .shadow(color: tint.opacity(0.15), radius: 12, y: 4)
+        .shadow(color: AppColour.shadowAmbient, radius: 12, y: 4)
         .padding(.horizontal, DS.screenPadding)
         .padding(.top, DS.space4)
     }
@@ -310,7 +310,7 @@ struct TodaysActionDetailView: View {
         HStack(alignment: .top, spacing: DS.space3) {
             Image(systemName: icon)
                 .font(DS.Typography.calloutSemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 24, height: 24)
                 .background(DS.scoreColor(readinessScore), in: Circle())
 
@@ -388,7 +388,7 @@ struct TodaysActionDetailView: View {
         return HStack(spacing: DS.space3) {
             Image(systemName: metric.systemImageName)
                 .font(DS.Typography.calloutSemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 32, height: 32)
                 .background(metric.category.color, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
@@ -499,7 +499,7 @@ struct TodaysActionDetailView: View {
         HStack(spacing: DS.space3) {
             Image(systemName: insight.metric.systemImageName)
                 .font(DS.Typography.calloutSemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 32, height: 32)
                 .background(insight.metric.category.color, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 

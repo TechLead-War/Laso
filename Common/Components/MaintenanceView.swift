@@ -13,14 +13,14 @@ struct MaintenanceView: View {
 
             Image(systemName: "wrench.and.screwdriver.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(.orange)
+                .foregroundStyle(AppColour.warning)
 
             Text(Copy.Common.underMaintenance)
                 .font(.title.bold())
 
             Text(message)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space7)
 

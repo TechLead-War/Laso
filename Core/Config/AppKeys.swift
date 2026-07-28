@@ -14,6 +14,8 @@ enum AppKeys {
         static let pendingCalibrationHydration = "healthpulse.pendingCalibrationHydration"
         static let disclaimerAcknowledged      = "healthpulse.disclaimerAcknowledged"
         static let paywallDeclined             = "healthpulse.paywallDeclined"
+        /// Raw value of `ThemePreference`. Absent means follow the device.
+        static let themePreference             = "healthpulse.themePreference"
     }
 
     // MARK: - Session & Lifecycle

@@ -170,20 +170,23 @@ struct OnbV2Screen15SignIn: View {
                                 // "working" state while Apple's sheet resolves.
                                 ProgressView()
                                     .controlSize(.small)
-                                    .tint(.black)
+                                    .tint(AppColour.textOnAccent)
                             } else {
                                 Image(systemName: "applelogo")
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(AppColour.textOnAccent)
                                 Text(Copy.OnboardingV2.s15CTA)
                                     .font(.system(size: 17, weight: .semibold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(AppColour.textOnAccent)
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
+                        // Apple requires the button to invert with the scheme:
+                        // black-on-white in dark, white-on-black in light. These two
+                        // tokens are the only pair that flips that way.
                         .background(
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.white)
+                                .fill(AppColour.textPrimary)
                         )
                         .scaleEffect(pressed && !reduceMotion ? 0.985 : 1)
                         .opacity(isAuthing ? 0.6 : (pressed ? 0.9 : 1))
@@ -799,10 +802,10 @@ struct OnbV2ScreenDone: View {
                             )
                         )
                         .frame(width: 84, height: 84)
-                        .shadow(color: OnbV2.green.opacity(0.4), radius: 14, x: 0, y: 6)
+                        .shadow(color: AppColour.glowTint, radius: 14, x: 0, y: 6)
 
                     Image(systemName: "checkmark")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .font(.system(size: 36, weight: .bold))
                 }
                 // Badge keeps its celebratory pop as the first beat; the spring

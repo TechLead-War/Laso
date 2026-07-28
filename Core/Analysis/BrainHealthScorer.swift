@@ -20,10 +20,10 @@ enum BrainHealthState: String, CaseIterable, Codable {
 
     var color: Color {
         switch self {
-        case .sharp: return .green
-        case .focused: return .blue
-        case .baseline: return .gray
-        case .foggy: return .orange
+        case .sharp: return AppColour.success
+        case .focused: return AppColour.info
+        case .baseline: return AppColour.stateDefault
+        case .foggy: return AppColour.warning
         }
     }
 

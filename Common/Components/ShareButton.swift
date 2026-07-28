@@ -21,7 +21,9 @@ struct ShareButton: View {
             if let title {
                 Label(title, systemImage: "square.and.arrow.up")
                     .font(DS.Typography.bodySemibold)
-                    .foregroundStyle(.white)
+                    // White on the dark-mode info blue is only 2.63:1. textOnAccent
+                    // flips with the fill and clears 5.7:1 light / 6.9:1 dark.
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(AppColour.info, in: RoundedRectangle(cornerRadius: 14))
@@ -74,7 +76,10 @@ struct ShareButton: View {
             metadata: ["card_type": cardTypeLabel]
         )
 
-        let renderer = ImageRenderer(content: cardView)
+        // The share cards are always-dark artwork, so the render is pinned to the
+        // dark scheme. Without this a light-mode user gets light-variant tokens
+        // drawn on a dark card.
+        let renderer = ImageRenderer(content: cardView.environment(\.colorScheme, .dark))
         renderer.scale = UIScreen.main.scale
 
         guard let image = renderer.uiImage else {

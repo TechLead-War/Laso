@@ -81,7 +81,7 @@ struct MorningCheckInView: View {
                     HStack(spacing: DS.space1) {
                         if isSubmitting {
                             ProgressView()
-                                .tint(.white)
+                                .tint(AppColour.textOnAccent)
                                 .controlSize(.small)
                         }
                         Text(Copy.Home.MorningCheckIn.done)
@@ -89,8 +89,8 @@ struct MorningCheckInView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space2)
-                    .background(.tint, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
-                    .foregroundStyle(.white)
+                    .background(AppColour.primary, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+                    .foregroundStyle(AppColour.textOnAccent)
                 }
                 .disabled(isSubmitting)
                 .accessibilityLabel(Copy.Home.submitMorningCheckInLabel)
@@ -148,7 +148,7 @@ struct MorningCheckInView: View {
                             .padding(.vertical, DS.space1)
                             .background(
                                 selection.wrappedValue == value
-                                    ? Color.accentColor.opacity(DS.badgeBg)
+                                    ? AppColour.primary.opacity(DS.badgeBg)
                                     : Color.clear,
                                 in: RoundedRectangle(cornerRadius: DS.Radius.sm)
                             )
@@ -156,7 +156,7 @@ struct MorningCheckInView: View {
                                 RoundedRectangle(cornerRadius: DS.Radius.sm)
                                     .strokeBorder(
                                         selection.wrappedValue == value
-                                            ? Color.accentColor.opacity(0.3)
+                                            ? AppColour.primary.opacity(0.3)
                                             : Color.clear,
                                         lineWidth: 1
                                     )

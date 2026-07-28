@@ -46,7 +46,7 @@ struct OnbV2Screen8Bridge: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Capsule().fill(Color.white.opacity(0.04)))
+                .background(Capsule().fill(AppColour.surfaceRaised))
                 .overlay(Capsule().stroke(OnbV2.line, lineWidth: 1))
 
                 Spacer(minLength: 0)
@@ -108,7 +108,7 @@ struct OnbV2Screen8Bridge: View {
             .frame(maxWidth: 264)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
+                    .fill(AppColour.surfaceRaised)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -133,11 +133,11 @@ struct OnbV2Screen8Bridge: View {
 
     private func togglePill(on: Bool) -> some View {
         Capsule()
-            .fill(on ? OnbV2.blue : Color.white.opacity(0.12))
+            .fill(on ? OnbV2.blue : AppColour.trackNeutral)
             .frame(width: 28, height: 17)
             .overlay(alignment: on ? .trailing : .leading) {
                 Circle()
-                    .fill(Color.white.opacity(on ? 0.95 : 0.5))
+                    .fill(AppColour.textOnAccent)
                     .frame(width: 13, height: 13)
                     .padding(2)
             }
@@ -254,7 +254,7 @@ struct OnbV2Screen10Scan: View {
                 VStack(spacing: 8) {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
-                            Capsule().fill(Color.white.opacity(0.08))
+                            Capsule().fill(AppColour.trackNeutral)
                             Capsule()
                                 .fill(LinearGradient(
                                     colors: [OnbV2.blue, OnbV2.blueLight],
@@ -297,7 +297,7 @@ struct OnbV2Screen10Scan: View {
                 .shadow(color: OnbV2.blueGlow, radius: 24, x: 0, y: 0)
                 .overlay(
                     Image(systemName: "heart.fill")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .font(.system(size: 30, weight: .bold))
                 )
                 // Reduce Motion: hold the core at rest size with no repeating
@@ -365,7 +365,7 @@ struct OnbV2Screen10Scan: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(visible && hasData ? OnbV2.blue.opacity(0.08) : Color.white.opacity(0.03))
+                .fill(visible && hasData ? OnbV2.blue.opacity(0.08) : AppColour.surfaceRaised)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -848,7 +848,7 @@ struct OnbV2Screen12Sleep: View {
                 }
                 // Brightens to the sleep accent once the average number lands,
                 // visually tying the 7h target to the value just revealed.
-                .stroke(targetLineEmphasis ? OnbV2.purple.opacity(0.7) : Color.white.opacity(0.25),
+                .stroke(targetLineEmphasis ? OnbV2.purple.opacity(0.7) : AppColour.chartZeroLine,
                         style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
                 .frame(height: 80)
 
@@ -1135,7 +1135,7 @@ struct OnbV2Screen13HRV: View {
                         .animation(barAnimation(idx), value: barsRevealed)
                 } else {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(AppColour.trackNeutral)
                         .frame(maxWidth: .infinity)
                         .frame(height: 12)
                 }
@@ -1368,7 +1368,7 @@ struct OnbV2ScreenVerdict: View {
                         .animation(barAnimation(idx), value: phase)
                 } else {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(AppColour.trackNeutral)
                         .frame(maxWidth: .infinity)
                         .frame(height: 16)
                 }
@@ -1664,7 +1664,7 @@ struct OnbV2ScreenCliffhanger: View {
             // banner reads as the top card rather than a floating tooltip.
             ForEach(0..<2, id: \.self) { _ in
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
+                    .fill(AppColour.borderLow)
                     .frame(height: 32)
             }
         }
@@ -1685,8 +1685,8 @@ struct OnbV2ScreenCliffhanger: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// iOS renders banners on a light card, so the text colours here are fixed
-    /// dark values rather than OnbV2's on-dark tokens.
+    /// iOS renders banners on a light card in both themes, so this uses the
+    /// fixed-polarity pair rather than the adaptive surface/text tokens.
     private func pushBanner(phrase: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image("LaunchIcon")
@@ -1698,20 +1698,20 @@ struct OnbV2ScreenCliffhanger: View {
                 HStack(spacing: 6) {
                     Text(Copy.Labels.appName)
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.black.opacity(0.85))
+                        .foregroundStyle(AppColour.textOnLightFixed.opacity(0.85))
                     Spacer(minLength: 0)
                     Text(Copy.OnboardingV2.cliffhangerPushTime)
                         .font(.system(size: 11))
-                        .foregroundStyle(Color.black.opacity(0.5))
+                        .foregroundStyle(AppColour.textOnLightFixed.opacity(0.5))
                 }
 
                 Text(Copy.Notifications.answerReadyTitle(phrase: phrase))
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.black.opacity(0.9))
+                    .foregroundStyle(AppColour.textOnLightFixed)
 
                 Text(Copy.Notifications.answerReadyBody(phrase: phrase))
                     .font(.system(size: 12))
-                    .foregroundStyle(Color.black.opacity(0.62))
+                    .foregroundStyle(AppColour.textOnLightFixed.opacity(0.62))
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -1720,7 +1720,7 @@ struct OnbV2ScreenCliffhanger: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.92))
+                .fill(AppColour.surfaceFixedLight)
         )
     }
 }
@@ -1809,8 +1809,9 @@ struct OnbV2ScreenJournalFirst: View {
                             startPoint: .top, endPoint: .bottom))
                         .frame(maxWidth: .infinity)
                         .frame(height: 28 + bars[i].h * 92)
-                        // Colored glow so the bars read lit, not flat.
-                        .shadow(color: (bars[i].red ? OnbV2.rose : OnbV2.blue).opacity(bars[i].dim ? 0 : 0.45), radius: 8, x: 0, y: 0)
+                        // Neutral glow so the bars read lit, not flat. A tinted
+                        // zero-offset shadow smears into a coloured halo on light.
+                        .shadow(color: bars[i].dim ? .clear : AppColour.glowTint, radius: 8, x: 0, y: 0)
                         .scaleEffect(y: appeared ? 1 : 0, anchor: .bottom)
                         .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.7).delay(Double(i) * 0.06), value: appeared)
                 }

@@ -61,6 +61,14 @@ struct LiveView: View {
                         primaryDevice: primaryLiveDevice,
                         hasLiveSource: hasLiveSource
                     )
+                    .onAppear {
+                        // No live source at all is a device-setup problem; a source
+                        // that is present but silent is a streaming problem.
+                        AppAnalytics.shared.trackEmptyStateShown(
+                            screen: .live,
+                            reason: hasLiveSource ? "waiting_for_data" : "no_live_source"
+                        )
+                    }
                     if hasSupplementalSections {
                         LiveActivitySection(
                             activity: viewModel.activity,

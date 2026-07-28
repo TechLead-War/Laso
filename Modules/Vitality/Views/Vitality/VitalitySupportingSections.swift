@@ -37,7 +37,7 @@ struct VitalityImprovementSection: View {
 
                 Text(Copy.Vitality.yText(impact))
                     .font(.caption.weight(.bold).monospacedDigit())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .padding(.horizontal, DS.badgeH + 2)
                     .padding(.vertical, DS.badgeV + 1)
                     .background(AppColour.warning, in: Capsule())
@@ -84,7 +84,7 @@ struct VitalityDataMaturityBanner: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: DS.Radius.xs)
-                        .fill(AppColour.borderMedium)
+                        .fill(AppColour.trackNeutral)
                         .frame(height: 6)
                     RoundedRectangle(cornerRadius: DS.Radius.xs)
                         .fill(vitalityWhoopGreen)

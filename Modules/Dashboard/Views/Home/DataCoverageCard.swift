@@ -25,7 +25,7 @@ struct DataCoverageCard: View {
                 ForEach(Array(coverage.enumerated()), id: \.element.id) { index, signal in
                     row(signal)
                     if index < coverage.count - 1 {
-                        Divider().overlay(AppColour.borderLow.opacity(0.6))
+                        Divider().overlay(AppColour.borderLow)
                     }
                 }
 

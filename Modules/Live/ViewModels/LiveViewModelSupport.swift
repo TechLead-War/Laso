@@ -22,12 +22,12 @@ extension LiveViewModel {
 
         var color: Color {
             switch self {
-            case .rest: return .gray
-            case .warmUp: return .blue
-            case .fatBurn: return .green
-            case .cardio: return .yellow
-            case .peak: return .orange
-            case .extreme: return .red
+            case .rest: return AppColour.surfaceMuted
+            case .warmUp: return AppColour.info
+            case .fatBurn: return AppColour.success
+            case .cardio: return AppColour.scoreFair
+            case .peak: return AppColour.categoryActivity
+            case .extreme: return AppColour.danger
             }
         }
 
@@ -48,11 +48,11 @@ extension LiveViewModel {
 
         var color: Color {
             switch self {
-            case .normal: return .green
-            case .elevated: return .orange
-            case .low: return .yellow
-            case .critical: return .red
-            case .unknown: return .gray
+            case .normal: return AppColour.success
+            case .elevated: return AppColour.categoryActivity
+            case .low: return AppColour.warning
+            case .critical: return AppColour.danger
+            case .unknown: return AppColour.stateDefault
             }
         }
     }

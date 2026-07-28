@@ -81,7 +81,7 @@ struct ActivationProgressBanner: View {
                         let lineX = dotSize * CGFloat(i + 1) + gapWidth * CGFloat(i)
                         let filled = i < state.currentDay
                         RoundedRectangle(cornerRadius: DS.Radius.xs)
-                            .fill(filled ? Color.accentColor : AppColour.borderLow)
+                            .fill(filled ? Color.accentColor : AppColour.trackNeutral)
                             .frame(width: gapWidth, height: 2)
                             .offset(x: lineX)
                     }
@@ -90,7 +90,7 @@ struct ActivationProgressBanner: View {
                     ForEach(1...8, id: \.self) { day in
                         let dotX = dotSize * CGFloat(day - 1) + gapWidth * CGFloat(day - 1)
                         Circle()
-                            .fill(day <= state.currentDay ? Color.accentColor : AppColour.borderLow)
+                            .fill(day <= state.currentDay ? Color.accentColor : AppColour.trackNeutral)
                             .frame(width: dotSize, height: dotSize)
                             .offset(x: dotX)
                     }
@@ -110,7 +110,7 @@ struct ActivationProgressBanner: View {
         HStack(spacing: DS.space3) {
             Image(systemName: event.milestone.icon)
                 .font(DS.Typography.bodySemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 40, height: 40)
                 .background(.tint, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
@@ -145,7 +145,7 @@ struct ActivationProgressBanner: View {
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.lg)
                 .fill(AppColour.surfaceRaised)
-                .shadow(color: .accentColor.opacity(0.15), radius: 8, y: 2)
+                .shadow(color: AppColour.shadowAmbient, radius: 8, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.lg)

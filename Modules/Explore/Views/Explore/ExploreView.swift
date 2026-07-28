@@ -303,7 +303,7 @@ struct ExploreView: View {
                                     Spacer()
                                     Text(Copy.Explore.pro)
                                         .font(.caption2.weight(.bold))
-                                        .foregroundStyle(AppColour.textPrimary)
+                                        .foregroundStyle(AppColour.textOnAccent)
                                         .padding(.horizontal, DS.space2)
                                         .padding(.vertical, DS.space1)
                                         .background(AppColour.primary, in: Capsule())

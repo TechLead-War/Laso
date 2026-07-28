@@ -132,7 +132,7 @@ struct ExploreDaySheet: View {
             if let fraction = signal.fraction {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(AppColour.borderLow)
+                        Capsule().fill(AppColour.trackNeutral)
                         // One neutral tint on purpose: below usual is bad for
                         // HRV and good for resting heart rate, so a good/bad
                         // colour here would be wrong half the time. The bar

@@ -175,7 +175,7 @@ struct InviteFriendsView: View {
             } label: {
                 Label(Copy.Referral.shareInviteCTA, systemImage: "square.and.arrow.up")
                     .font(DS.Typography.bodySemibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(AppColour.info, in: RoundedRectangle(cornerRadius: 14))

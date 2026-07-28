@@ -9,7 +9,7 @@ struct InsightCard: View {
             // Metric icon
             Image(systemName: insight.metric.systemImageName)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 36, height: 36)
                 .background(insight.metric.category.color, in: Circle())
 

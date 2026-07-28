@@ -12,19 +12,19 @@ enum IntentSnippetViews {
 
         private var scoreColor: Color {
             switch score {
-            case 80...100: return .green
-            case 60..<80: return .yellow
-            case 40..<60: return .orange
-            default: return .red
+            case 80...100: return AppColour.scoreOptimal
+            case 60..<80: return AppColour.scoreGood
+            case 40..<60: return AppColour.scoreFair
+            default: return AppColour.scorePoor
             }
         }
 
         private var readinessColor: Color {
             switch readinessScore ?? 0 {
-            case 80...100: return .green
-            case 60..<80: return .blue
-            case 40..<60: return .yellow
-            default: return .orange
+            case 80...100: return AppColour.scoreOptimal
+            case 60..<80: return AppColour.scoreGood
+            case 40..<60: return AppColour.scoreFair
+            default: return AppColour.scorePoor
             }
         }
 
@@ -64,7 +64,7 @@ enum IntentSnippetViews {
             VStack(spacing: 4) {
                 ZStack {
                     Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                        .stroke(AppColour.trackNeutral, lineWidth: 6)
                     Circle()
                         .trim(from: 0, to: Double(value) / 100.0)
                         .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -91,10 +91,10 @@ enum IntentSnippetViews {
 
         private var qualityColor: Color {
             switch qualityLabel {
-            case "Great": return .green
-            case "Good": return .blue
-            case "Fair": return .yellow
-            default: return .orange
+            case "Great": return AppColour.scoreOptimal
+            case "Good": return AppColour.scoreGood
+            case "Fair": return AppColour.scoreFair
+            default: return AppColour.scorePoor
             }
         }
 
@@ -105,7 +105,7 @@ enum IntentSnippetViews {
                     VStack(spacing: 4) {
                         Image(systemName: "bed.double.fill")
                             .font(DS.Typography.title2)
-                            .foregroundStyle(.indigo)
+                            .foregroundStyle(AppColour.categorySleep)
                         Text(formatHours(totalHours))
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                         Text(qualityLabel)
@@ -124,8 +124,8 @@ enum IntentSnippetViews {
 
                         if deepHours > 0 || remHours > 0 {
                             HStack(spacing: 12) {
-                                sleepStageItem(label: "Deep", hours: deepHours, color: .indigo)
-                                sleepStageItem(label: "REM", hours: remHours, color: .cyan)
+                                sleepStageItem(label: "Deep", hours: deepHours, color: AppColour.categorySleep)
+                                sleepStageItem(label: "REM", hours: remHours, color: AppColour.accent)
                             }
                         }
                     }
@@ -138,10 +138,10 @@ enum IntentSnippetViews {
                         let fillRatio = min(totalHours / 9.0, 1.0)
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.gray.opacity(0.15))
+                                .fill(AppColour.trackNeutral)
                                 .frame(height: 8)
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(.indigo)
+                                .fill(AppColour.categorySleep)
                                 .frame(width: targetWidth * fillRatio, height: 8)
                         }
                     }
@@ -181,20 +181,20 @@ enum IntentSnippetViews {
 
         private var readinessColor: Color {
             switch readinessScore {
-            case 80...100: return .green
-            case 60..<80: return .blue
-            case 40..<60: return .yellow
-            default: return .orange
+            case 80...100: return AppColour.scoreOptimal
+            case 60..<80: return AppColour.scoreGood
+            case 40..<60: return AppColour.scoreFair
+            default: return AppColour.scorePoor
             }
         }
 
         private var stressColor: Color {
             switch stressLevel {
-            case 0..<20: return .green
-            case 20..<40: return .green
-            case 40..<60: return .yellow
-            case 60..<80: return .orange
-            default: return .red
+            case 0..<20: return AppColour.scoreOptimal
+            case 20..<40: return AppColour.scoreGood
+            case 40..<60: return AppColour.scoreFair
+            case 60..<80: return AppColour.scorePoor
+            default: return AppColour.scorePoor
             }
         }
 
@@ -205,7 +205,7 @@ enum IntentSnippetViews {
                     VStack(spacing: 4) {
                         ZStack {
                             Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                                .stroke(AppColour.trackNeutral, lineWidth: 6)
                             Circle()
                                 .trim(from: 0, to: Double(readinessScore) / 100.0)
                                 .stroke(readinessColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -223,7 +223,7 @@ enum IntentSnippetViews {
                     VStack(spacing: 4) {
                         ZStack {
                             Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                                .stroke(AppColour.trackNeutral, lineWidth: 6)
                             Circle()
                                 .trim(from: 0, to: Double(stressLevel) / 100.0)
                                 .stroke(stressColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -270,11 +270,11 @@ enum IntentSnippetViews {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.15))
+                        .fill(AppColour.surfaceSubtle)
                         .frame(width: 56, height: 56)
                     Image(systemName: "drop.fill")
                         .font(DS.Typography.title2)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(AppColour.info)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -285,7 +285,7 @@ enum IntentSnippetViews {
                         .foregroundStyle(.secondary)
                     Text(Copy.Common.savedToAppleHealth)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColour.success)
                 }
             }
             .padding()
@@ -302,11 +302,11 @@ enum IntentSnippetViews {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(Color.green.opacity(0.15))
+                        .fill(AppColour.surfaceSubtle)
                         .frame(width: 56, height: 56)
                     Image(systemName: workoutType.systemImageName)
                         .font(DS.Typography.title2)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColour.success)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -317,7 +317,7 @@ enum IntentSnippetViews {
                         .foregroundStyle(.secondary)
                     Text(Copy.Common.savedToAppleHealth2)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColour.success)
                 }
             }
             .padding()
@@ -345,7 +345,7 @@ enum IntentSnippetViews {
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(DS.Typography.title3)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColour.warning)
                 Text(message)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)

@@ -11,14 +11,14 @@ struct HealthKitRepromptBanner: View {
             HStack(spacing: 12) {
                 Image(systemName: "heart.text.clipboard")
                     .font(.title2)
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(AppColour.categoryHeart)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Home.HealthKitReprompt.title)
                         .font(.subheadline.weight(.semibold))
                     Text(Copy.Home.HealthKitReprompt.body)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -58,7 +58,7 @@ struct HealthKitRepromptBanner: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.pink)
+                .tint(AppColour.categoryHeart)
                 .accessibilityLabel(Copy.Home.HealthKitReprompt.action)
                 .accessibilityHint(Copy.Common.opensTheSystemSettingsAppToHint)
             }
@@ -67,7 +67,7 @@ struct HealthKitRepromptBanner: View {
         .glassChrome(in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.pink.opacity(0.3), lineWidth: 1)
+                .strokeBorder(AppColour.borderMedium, lineWidth: 1)
         )
         .padding(.horizontal)
         .transition(.move(edge: .top).combined(with: .opacity))

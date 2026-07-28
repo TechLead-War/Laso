@@ -37,7 +37,7 @@ struct TrendBadge: View {
         .foregroundStyle(direction.color)
         .padding(.horizontal, DS.badgeH)
         .padding(.vertical, DS.badgeV)
-        .background(direction.color.opacity(DS.badgeBg), in: Capsule())
+        .background(AppColour.surfaceSubtle, in: Capsule())
     }
 }
 

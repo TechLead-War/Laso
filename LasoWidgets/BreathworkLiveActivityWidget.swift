@@ -7,9 +7,10 @@ struct BreathworkLiveActivityWidget: Widget {
         ActivityConfiguration(for: BreathworkActivityAttributes.self) { context in
             BreathworkLiveActivityView(context: context)
                 // Fixed dark chrome — the activity is tuned for dark surfaces and
-                // must not flip to white in light mode behind the lock screen.
-                .activityBackgroundTint(AppColour.surfaceBase)
-                .activitySystemActionForegroundColor(AppColour.textPrimary)
+                // must not flip to white in light mode behind the lock screen, so
+                // the canvas and every foreground on it use fixed-polarity tokens.
+                .activityBackgroundTint(AppColour.liveActivityCanvas)
+                .activitySystemActionForegroundColor(AppColour.textOnInverse)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -66,7 +67,7 @@ private struct BreathworkModePill: View {
                 .foregroundStyle(AppColour.accent)
             Text(context.attributes.title)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
@@ -85,7 +86,7 @@ private struct BreathworkStamp: View {
     var body: some View {
         Text(context.state.protocolType.subtitle)
             .font(.system(size: 12))
-            .foregroundStyle(AppColour.textTertiary)
+            .foregroundStyle(AppColour.textOnInverseSecondary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
     }
@@ -107,7 +108,7 @@ private struct BreathworkExpandedBody: View {
 
             Text(context.state.activePhase.label)
                 .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
@@ -148,7 +149,7 @@ private struct BreathworkMetaLine: View {
             }
         }
         .font(.system(size: 12))
-        .foregroundStyle(AppColour.textTertiary)
+        .foregroundStyle(AppColour.textOnInverseSecondary)
     }
 }
 
@@ -195,17 +196,18 @@ private struct BreathworkLiveActivityView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.protocolType.subtitle)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppColour.textSecondary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                         .textCase(.uppercase)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Text(phase.label)
                         .font(.headline)
+                        .foregroundStyle(AppColour.textOnInverse)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Text(statusText)
                         .font(.caption)
-                        .foregroundStyle(AppColour.textSecondary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
@@ -214,9 +216,10 @@ private struct BreathworkLiveActivityView: View {
 
                 VStack(alignment: .trailing, spacing: 4) {
                     timerLabel(at: timeline.date)
+                        .foregroundStyle(AppColour.textOnInverse)
                     Text(context.state.status == .paused ? BreathworkCopy.paused : BreathworkCopy.remaining)
                         .font(.caption2)
-                        .foregroundStyle(AppColour.textSecondary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }

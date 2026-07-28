@@ -16,9 +16,11 @@ struct LiveHeaderSection: View {
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(hasFreshData ? AppColour.success : (isAging ? AppColour.warning : (isStale ? AppColour.danger : Color.gray)))
+                        .fill(hasFreshData ? AppColour.success : (isAging ? AppColour.warning : (isStale ? AppColour.danger : AppColour.stateDefault)))
                         .frame(width: 8, height: 8)
-                        .shadow(color: hasFreshData ? AppColour.success.opacity(0.6) : .clear, radius: 4)
+                        // glowTint, not a green bloom: a coloured zero-offset shadow
+                        // reads as light on dark and as a smudge on light.
+                        .shadow(color: hasFreshData ? AppColour.glowTint : .clear, radius: 4)
 
                     Text(liveStatusLabel)
                         .font(DS.Typography.caption)

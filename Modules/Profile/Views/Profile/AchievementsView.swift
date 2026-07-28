@@ -194,7 +194,7 @@ struct AchievementsView: View {
             ZStack {
                 // Track
                 Circle()
-                    .stroke(levelInfo.level.color.opacity(0.15), lineWidth: 10)
+                    .stroke(AppColour.trackNeutral, lineWidth: 10)
                     .frame(width: 120, height: 120)
 
                 // Fill
@@ -240,7 +240,7 @@ struct AchievementsView: View {
                         .foregroundStyle(next.color)
                     Text(Copy.Achievements.daysToText(daysRemaining, next.name))
                         .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
@@ -262,12 +262,12 @@ struct AchievementsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, DS.space6)
         .padding(.horizontal, DS.cardPadding)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(levelInfo.level.color.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
-        .shadow(color: levelInfo.level.color.opacity(0.1), radius: 12, y: 4)
+        .shadow(color: AppColour.shadowAmbient, radius: 12, y: 4)
         .padding(.horizontal)
         .padding(.top, DS.space2)
     }
@@ -295,7 +295,7 @@ struct AchievementsView: View {
         VStack(spacing: DS.space2) {
             ZStack {
                 Circle()
-                    .fill(streak.isHot ? AppColour.warning.opacity(0.12) : AppColour.surfaceElevated)
+                    .fill(streak.isHot ? AppColour.warning.opacity(0.12) : AppColour.surfaceSubtle)
                     .frame(width: 48, height: 48)
 
                 Image(systemName: streak.icon)
@@ -315,7 +315,7 @@ struct AchievementsView: View {
             VStack(spacing: 2) {
                 Text(streak.name)
                     .font(DS.Typography.caption2Semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .textCase(.uppercase)
 
                 Text(Copy.Achievements.xText2(streak.current))
@@ -325,7 +325,7 @@ struct AchievementsView: View {
 
                 Text(Copy.Achievements.days)
                     .font(DS.Typography.caption2Medium)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
             }
 
             // All-time best
@@ -340,7 +340,7 @@ struct AchievementsView: View {
         }
         .frame(width: 100)
         .padding(.vertical, 14)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(
@@ -348,7 +348,7 @@ struct AchievementsView: View {
                     lineWidth: 0.5
                 )
         )
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+        .shadow(color: AppColour.shadowAmbient, radius: 6, y: 2)
     }
 
     // MARK: - Stats Row
@@ -368,12 +368,12 @@ struct AchievementsView: View {
             statItem(value: "\(stats.longestStreakEver)", label: "Best Streak", icon: "flame.fill")
         }
         .padding(.vertical, DS.cardPadding)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+        .shadow(color: AppColour.shadowAmbient, radius: 6, y: 2)
         .padding(.horizontal)
     }
 
@@ -381,7 +381,7 @@ struct AchievementsView: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(DS.Typography.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             Text(value)
                 .font(DS.Typography.subheadlineSemibold)
@@ -389,7 +389,7 @@ struct AchievementsView: View {
 
             Text(label)
                 .font(DS.Typography.caption2Medium)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -406,7 +406,7 @@ struct AchievementsView: View {
 
                 Text(Copy.Achievements.countOfText(sortedAchievements.filter(\.isUnlocked).count, sortedAchievements.count))
                     .font(DS.Typography.captionMedium)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             .padding(.horizontal)
 
@@ -447,10 +447,10 @@ struct AchievementsView: View {
         } label: {
             Text(label)
                 .font(DS.Typography.captionSemibold)
-                .foregroundStyle(isSelected ? .white : .secondary)
+                .foregroundStyle(isSelected ? AppColour.textOnAccent : AppColour.textSecondary)
                 .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : AppColour.surfaceElevated, in: Capsule())
+                .background(isSelected ? Color.accentColor : AppColour.surfaceSubtle, in: Capsule())
         }
         .buttonStyle(.dsPress)
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -475,7 +475,7 @@ struct AchievementsView: View {
                     .fill(
                         achievement.isUnlocked
                             ? achievement.category.color.opacity(DS.badgeBg)
-                            : AppColour.surfaceElevated
+                            : AppColour.surfaceSubtle
                     )
                     .frame(width: 48, height: 48)
 
@@ -493,7 +493,7 @@ struct AchievementsView: View {
             VStack(spacing: 3) {
                 Text(achievement.title)
                     .font(DS.Typography.captionSemibold)
-                    .foregroundStyle(achievement.isUnlocked ? .primary : .secondary)
+                    .foregroundStyle(achievement.isUnlocked ? AppColour.textPrimary : AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -501,11 +501,11 @@ struct AchievementsView: View {
                 if achievement.isUnlocked, let date = achievement.unlockDate {
                     Text(date, format: .dateTime.month(.abbreviated).day())
                         .font(DS.Typography.caption2Medium)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppColour.textTertiary)
                 } else {
                     Text(achievement.requirement)
                         .font(DS.Typography.caption2Medium)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppColour.textTertiary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                 }
@@ -514,7 +514,7 @@ struct AchievementsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .padding(.horizontal, DS.space2)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(
@@ -524,7 +524,7 @@ struct AchievementsView: View {
                     lineWidth: 0.5
                 )
         )
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+        .shadow(color: AppColour.shadowAmbient, radius: 6, y: 2)
         .opacity(achievement.isUnlocked ? 1.0 : 0.7)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(

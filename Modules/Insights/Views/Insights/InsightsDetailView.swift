@@ -134,6 +134,14 @@ struct InsightsDetailView: View {
                     )
                     .frame(maxWidth: .infinity)
                     .padding(.top, DS.space7)
+                    .onAppear {
+                        // Filtered-empty and genuinely-empty are different product
+                        // problems, so the active filter is the reason.
+                        AppAnalytics.shared.trackEmptyStateShown(
+                            screen: .insightsDetail,
+                            reason: selectedFilter == .all ? "no_insights" : "filtered_out"
+                        )
+                    }
                 }
 
                 Text(Copy.Analysis.RiskDetail.disclaimer)
@@ -235,7 +243,7 @@ struct InsightsDetailView: View {
                         .font(DS.Typography.caption2Semibold.monospacedDigit())
                 }
             }
-            .foregroundStyle(selectedFilter == filter ? .white : AppColour.textPrimary)
+            .foregroundStyle(selectedFilter == filter ? AppColour.textOnAccent : AppColour.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, DS.space2)
             .background(selectedFilter == filter ? filter.chipColor : AppColour.surfaceRaised, in: Capsule())
@@ -256,7 +264,7 @@ private struct EnrichedInsightCard: View {
             HStack(spacing: DS.space3) {
                 Image(systemName: insight.metric.systemImageName)
                     .font(DS.Typography.bodySemibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(insight.metric.category.color, in: Circle())
 

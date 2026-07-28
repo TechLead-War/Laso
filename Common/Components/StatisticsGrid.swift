@@ -17,13 +17,13 @@ struct StatisticsGrid: View {
 
                     Text(stat.label)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
             }
         }
         .padding()
-        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: 12))
     }
 }
 

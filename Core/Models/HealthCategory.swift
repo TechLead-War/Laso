@@ -45,15 +45,15 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
 
     var color: Color {
         switch self {
-        case .heart: return .red
-        case .sleep: return .indigo
-        case .activity: return .green
-        case .body: return .orange
-        case .respiratory: return .teal
-        case .mindfulness: return .cyan
-        case .mobility: return .purple
-        case .nutrition: return .brown
-        case .hearing: return .blue
+        case .heart: return AppColour.categoryHeart
+        case .sleep: return AppColour.categorySleep
+        case .activity: return AppColour.categoryActivity
+        case .body: return AppColour.primary
+        case .respiratory: return AppColour.accent
+        case .mindfulness: return AppColour.categoryStress
+        case .mobility: return AppColour.success
+        case .nutrition: return AppColour.warning
+        case .hearing: return AppColour.stateDefault
         }
     }
 

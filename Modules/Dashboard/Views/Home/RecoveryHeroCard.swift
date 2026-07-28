@@ -91,7 +91,7 @@ struct RecoveryHeroCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColour.surfaceRaised.opacity(0.6))
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
-        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.textTertiary.opacity(0.18), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Copy.Home.wearAppleWatchForRecovery)
         .accessibilityIdentifier("home.recoveryCard.wearWatch")
@@ -132,7 +132,7 @@ struct RecoveryHeroCard: View {
                                 .accessibilityHint(Copy.Home.viewDetailsHint(reason.kind.displayName))
 
                             if index < whyReasons.count - 1 {
-                                Divider().overlay(AppColour.borderLow.opacity(0.6))
+                                Divider().overlay(AppColour.borderLow)
                             }
                         }
                     }
@@ -247,7 +247,7 @@ struct RecoveryHeroCard: View {
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(AppColour.textTertiary.opacity(0.22))
+                        Capsule().fill(AppColour.trackNeutral)
                         Capsule()
                             .fill(certaintyTint(fraction))
                             .frame(width: max(4, geo.size.width * fraction))

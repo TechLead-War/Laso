@@ -13,12 +13,12 @@ struct LoadingView: View {
     let message: String
 
     private let phases: [(icon: String, text: String, color: Color)] = [
-        ("antenna.radiowaves.left.and.right", "Connecting to Apple Health", .blue),
-        ("heart.fill", "Syncing heart data", .red),
-        ("bed.double.fill", "Reading sleep patterns", .indigo),
-        ("figure.run", "Loading activity data", .orange),
-        ("brain.head.profile", "Analyzing recovery", .purple),
-        ("sparkles", "Almost ready", .green),
+        ("antenna.radiowaves.left.and.right", "Connecting to Apple Health", AppColour.primary),
+        ("heart.fill", "Syncing heart data", AppColour.categoryHeart),
+        ("bed.double.fill", "Reading sleep patterns", AppColour.categorySleep),
+        ("figure.run", "Loading activity data", AppColour.categoryActivity),
+        ("brain.head.profile", "Analyzing recovery", AppColour.categoryStress),
+        ("sparkles", "Almost ready", AppColour.success),
     ]
 
     /// When true, repeating animations are suppressed to reduce GPU load.
@@ -65,13 +65,13 @@ struct LoadingView: View {
             VStack(spacing: 8) {
                 Text(phases[currentPhase].text + animatedDots)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.3), value: currentPhase)
 
                 Text(message)
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
             }
 
             // Progress dots. fills up 1→2→3→4→5→6 then resets
@@ -79,7 +79,7 @@ struct LoadingView: View {
                 ForEach(0..<phases.count, id: \.self) { index in
                     let isActive = index < activeDots
                     Circle()
-                        .fill(isActive ? currentColor : Color.secondary.opacity(0.2))
+                        .fill(isActive ? currentColor : AppColour.borderHigh)
                         .frame(width: isActive && index == activeDots - 1 ? 8 : 6,
                                height: isActive && index == activeDots - 1 ? 8 : 6)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: activeDots)

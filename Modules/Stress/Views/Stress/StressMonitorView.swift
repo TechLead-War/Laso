@@ -115,14 +115,14 @@ struct StressMonitorView: View {
                 VStack(spacing: 2) {
                     Text("\(Int(stressScore.rounded()))")
                         .font(DS.Typography.displayM)
-                        .foregroundStyle(levelColor)
+                        .foregroundStyle(levelTint)
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
                         .postHogMask()
 
                     Text(displayLevel)
                         .font(DS.Typography.footnoteMedium)
-                        .foregroundStyle(levelColor)
+                        .foregroundStyle(levelTint)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                 }
@@ -136,7 +136,7 @@ struct StressMonitorView: View {
                 .foregroundStyle(.tertiary)
         }
         .padding(DS.cardPadding)
-        .cardStyle(tint: levelColor)
+        .cardStyle(tint: levelTint)
     }
 
     // MARK: - Reading Sentence
@@ -183,9 +183,9 @@ struct StressMonitorView: View {
         let angle = 240 + scoreFraction * 240
 
         return Circle()
-            .fill(.primary)
+            .fill(AppColour.textPrimary)
             .frame(width: 10, height: 10)
-            .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+            .shadow(color: AppColour.shadowAmbient, radius: 2, y: 1)
             .offset(y: -80)
             .rotationEffect(.degrees(angle))
     }
@@ -290,7 +290,7 @@ struct StressMonitorView: View {
                 WeeklyBarChart(
                     points: weeklyScores,
                     value: { StressScale.barFill(for: $0.score) },
-                    color: { barColor(for: $0.score) },
+                    color: { tint(for: $0.score) },
                     label: { $0.dayLabel },
                     tooltipLines: { point in
                         [
@@ -298,7 +298,7 @@ struct StressMonitorView: View {
                             "\(Int(point.score.rounded())) \(Copy.StressMonitor.scaleSuffix(max: Int(StressScale.maxScore)))"
                         ]
                     },
-                    tooltipColor: { barColor(for: $0.score) },
+                    tooltipColor: { tint(for: $0.score) },
                     // The person's own weekly average, so a bar can be read as
                     // high or low for them rather than against nothing. Drawn
                     // only once it rounds to a real value: a line captioned
@@ -325,11 +325,22 @@ struct StressMonitorView: View {
         .cardStyle()
     }
 
+    /// The gauge numeral, card tint, tips glyphs and trend card all take this.
+    private var levelTint: Color { tint(for: stressScore) }
+
     /// Bars take their colour from the same level the gauge uses. A second copy of
     /// the thresholds lived here and was missed when the scale changed, so every bar
     /// read as high stress while the gauge said calm.
-    private func barColor(for score: Double) -> Color {
-        StressLevel(score: score).color
+    ///
+    /// The ramp is the same one the gauge arc and the driver tiles already use.
+    /// `StressLevel.color` is a raw system hue and is unreadable on a light card.
+    private func tint(for score: Double) -> Color {
+        switch StressLevel(score: score) {
+        case .low:      return AppColour.success
+        case .mild:     return AppColour.warning
+        case .moderate: return AppColour.scoreFair
+        case .high:     return AppColour.danger
+        }
     }
 
     // MARK: - Trends
@@ -342,7 +353,7 @@ struct StressMonitorView: View {
                 value: "\(Int(stressScore.rounded()))",
                 points: trendPoints,
                 band: PersonalBand.make(from: trendPoints.map(\.value)),
-                tint: levelColor
+                tint: levelTint
             )
         }
     }
@@ -409,9 +420,9 @@ struct StressMonitorView: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: tipIcon)
                         .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(levelColor)
+                        .foregroundStyle(levelTint)
                         .frame(width: 20, height: 20)
-                        .background(levelColor.opacity(DS.badgeBg), in: Circle())
+                        .background(levelTint.opacity(DS.badgeBg), in: Circle())
 
                     Text(tip)
                         .font(DS.Typography.subheadline)
@@ -456,9 +467,9 @@ struct StressMonitorView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.space4)
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColour.textOnAccent)
             .background(AppColour.accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
-            .shadow(color: AppColour.accent.opacity(0.3), radius: 8, y: 4)
+            .shadow(color: AppColour.shadowAmbient, radius: 8, y: 4)
         }
         .buttonStyle(.dsPress)
         .accessibilityLabel(Copy.StressMonitor.startBreathingA11y)

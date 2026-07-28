@@ -90,7 +90,7 @@ struct MetricChartView: View {
                     yStart: .value("Low", verdict.low),
                     yEnd: .value("High", verdict.high)
                 )
-                .foregroundStyle(AppColour.success.opacity(0.08))
+                .foregroundStyle(AppColour.chartBandFill)
             }
 
             // Data line + area under curve (single pass)
@@ -121,12 +121,12 @@ struct MetricChartView: View {
             // Baseline reference line
             if let baseline {
                 RuleMark(y: .value("Baseline", baseline))
-                    .foregroundStyle(.secondary.opacity(0.5))
+                    .foregroundStyle(AppColour.chartZeroLine)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
                     .annotation(position: .top, alignment: .trailing) {
                         Text(Copy.Common.baseline)
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.chartAxisLabel)
                     }
             }
 
@@ -138,7 +138,7 @@ struct MetricChartView: View {
                         y: .value("Trend", point.value),
                         series: .value("Series", "trend")
                     )
-                    .foregroundStyle(.orange.opacity(0.7))
+                    .foregroundStyle(AppColour.warning.opacity(0.7))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     .interpolationMethod(.catmullRom)
                 }
@@ -202,7 +202,7 @@ struct MetricChartView: View {
                     x: .value("Selected", sample.date),
                     y: .value(metric.displayName, sample.value)
                 )
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.markerOnSurface)
                 .symbolSize(30)
             }
         }
@@ -327,7 +327,7 @@ struct MetricChartView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(sample.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
 
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(formattedValue(sample.value))
@@ -336,7 +336,7 @@ struct MetricChartView: View {
 
                     Text(metric.unit)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 // Show how far from baseline
@@ -345,13 +345,13 @@ struct MetricChartView: View {
                     let sign = devPercent >= 0 ? "+" : ""
                     Text("\(sign)\(String(format: "%.1f", devPercent))% from baseline")
                         .font(.caption2)
-                        .foregroundStyle(abs(devPercent) > 10 ? .orange : .secondary)
+                        .foregroundStyle(abs(devPercent) > 10 ? AppColour.warning : AppColour.textSecondary)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-            .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
+            .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
             .padding(DS.space1)
         }
     }

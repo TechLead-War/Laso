@@ -27,12 +27,12 @@ struct ProFeatureOverlay: View {
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
                         .background(.tint, in: Capsule())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                 }
 
                 Text(description)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
             }
@@ -61,7 +61,7 @@ struct ProFeatureOverlay: View {
 
             Spacer()
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceSunken.ignoresSafeArea())
         .accessibilityIdentifier("screen.proFeatureOverlay")
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared, source: "pro_feature_overlay")

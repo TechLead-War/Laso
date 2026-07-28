@@ -76,7 +76,7 @@ struct AskYourDataView: View {
         .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(AppColour.borderMedium, lineWidth: 1)
+                .strokeBorder(AppColour.borderFocus, lineWidth: 1)
         )
     }
 

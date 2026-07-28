@@ -110,7 +110,7 @@ struct BrainHealthDetailView: View {
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(brainScore.state.color.opacity(0.42), lineWidth: 1)
         )
-        .shadow(color: brainScore.state.color.opacity(0.22), radius: 16, y: 8)
+        .shadow(color: AppColour.shadowAmbient, radius: 16, y: 8)
     }
 
     // MARK: - 7-Day Chart
@@ -292,9 +292,9 @@ struct BrainHealthDetailView: View {
             HStack(spacing: DS.itemSpacing) {
                 Image(systemName: "book.closed.fill")
                     .font(DS.Typography.subheadlineSemibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: DS.iconSize, height: DS.iconSize)
-                    .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+                    .background(AppColour.surfaceMuted.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Copy.BrainHealth.learnMore)

@@ -51,6 +51,9 @@ struct OrganicParticleOrbView: View {
                 blobShape
                     .stroke(tint.opacity(0.45), lineWidth: 14)
                     .blur(radius: 12)
+                    // Kept dark-only on purpose: .screen is an arithmetic no-op
+                    // against a light destination, so the orb's canvas is pinned to
+                    // AppColour.surfaceInverse in both themes.
                     .blendMode(BlendMode.screen)
             )
             .shadow(color: tint.opacity(0.38), radius: 18, y: 4)
@@ -72,6 +75,7 @@ struct OrganicParticleOrbView: View {
             blobShape
                 .stroke(tint.opacity(glowPulse ? 0.65 : 0.38), lineWidth: 16)
                 .blur(radius: 14)
+                // Dark-only, same reason as staticOrb above.
                 .blendMode(BlendMode.screen)
         )
         .shadow(color: tint.opacity(glowPulse ? 0.5 : 0.3), radius: Self.glowShadowRadius, y: 4)
@@ -143,7 +147,8 @@ private struct OrbParticleCanvas: View {
     }
 
     /// Subtle dark orb body behind the particles. Keeps the center near black like the Whoop reference
-    /// while letting the parent card tint bleed through at the edges.
+    /// while letting the parent card tint bleed through at the edges. Black in both
+    /// themes because it darkens the pinned AppColour.surfaceInverse canvas.
     private func drawDarkCore(context: GraphicsContext, size: CGSize) {
         let radius = min(size.width, size.height) * 0.5
         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
@@ -183,7 +188,7 @@ private struct OrbParticleCanvas: View {
 
             let color: Color = particle.tintMix < 0.44
                 ? tint.opacity(particle.alpha)
-                : Color.white.opacity(particle.alpha)
+                : AppColour.markerOnInverse.opacity(particle.alpha)
 
             context.fill(Path(ellipseIn: dotRect), with: .color(color))
 

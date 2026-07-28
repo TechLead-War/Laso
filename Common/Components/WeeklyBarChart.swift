@@ -59,14 +59,14 @@ struct WeeklyBarChart<Point: Identifiable>: View {
             let clamped = min(max(referenceFraction, 0), 1)
             HStack(spacing: 6) {
                 Rectangle()
-                    .fill(Color.primary.opacity(0.30))
+                    .fill(AppColour.chartZeroLine)
                     .frame(height: 1)
                 if let referenceLabel {
                     // Caption rides at the end of the line rather than above it,
                     // so a low average cannot drop its text onto the bars.
                     Text(referenceLabel)
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppColour.textTertiary)
                         .fixedSize()
                 }
             }
@@ -95,7 +95,7 @@ struct WeeklyBarChart<Point: Identifiable>: View {
                 .fill(barColor)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)
-                        .stroke(isSelected ? Color.primary.opacity(0.85) : .clear, lineWidth: 1.5)
+                        .stroke(isSelected ? AppColour.textPrimary.opacity(0.85) : .clear, lineWidth: 1.5)
                 )
                 .frame(height: max(CGFloat(min(max(value(point), 0), 1.0)) * maxBarHeight, 4))
                 .scaleEffect(isSelected ? 1.05 : 1.0)
@@ -103,7 +103,7 @@ struct WeeklyBarChart<Point: Identifiable>: View {
 
             Text(label(point))
                 .font(.caption2.weight(isSelected ? .semibold : .medium))
-                .foregroundStyle(isSelected ? Color.primary : .secondary)
+                .foregroundStyle(isSelected ? AppColour.textPrimary : AppColour.textSecondary)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -127,7 +127,7 @@ struct WeeklyBarChart<Point: Identifiable>: View {
                 if index == 0 {
                     Text(line)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 } else if index == 1 {
                     Text(line)
                         .font(.callout.weight(.bold).monospacedDigit())
@@ -141,7 +141,7 @@ struct WeeklyBarChart<Point: Identifiable>: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
+        .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
     }
 }

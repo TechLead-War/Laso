@@ -22,7 +22,7 @@ struct DataSourceBadge: View {
         }
         .padding(.horizontal, DS.badgeH)
         .padding(.vertical, DS.badgeV)
-        .background(device.iconColor.opacity(DS.badgeBg), in: Capsule())
+        .background(AppColour.surfaceSubtle, in: Capsule())
     }
 }
 

@@ -17,9 +17,9 @@ enum Severity: String, Codable, Comparable {
 
     var color: Color {
         switch self {
-        case .info: return .blue
-        case .warning: return .orange
-        case .critical: return .red
+        case .info: return AppColour.info
+        case .warning: return AppColour.warning
+        case .critical: return AppColour.danger
         }
     }
 

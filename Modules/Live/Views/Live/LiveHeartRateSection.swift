@@ -34,13 +34,13 @@ struct LiveHeartRateSection: View {
                 // Animated pulsing heart. stops pulsing when stale
                 ZStack {
                     Circle()
-                        .fill(.red.opacity(isHeartRateStale ? 0.05 : 0.1))
+                        .fill(AppColour.categoryHeart.opacity(isHeartRateStale ? 0.05 : 0.1))
                         .frame(width: 64, height: 64)
                         .scaleEffect(isHeartRateStale ? 1.0 : pulseScale)
 
                     Image(systemName: "heart.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(.red.opacity(isHeartRateStale ? 0.4 : 1.0))
+                        .foregroundStyle(AppColour.categoryHeart.opacity(isHeartRateStale ? 0.4 : 1.0))
                         .scaleEffect(isHeartRateStale ? 1.0 : pulseScale)
                 }
                 .onChange(of: vitals.currentHeartRate) {
@@ -81,10 +81,10 @@ struct LiveHeartRateSection: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(Copy.Live.lastReading)
                                 .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(.white.opacity(0.8))
+                                .foregroundStyle(AppColour.textOnAccent)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
-                                .background(.gray, in: Capsule())
+                                .background(AppColour.surfaceMuted, in: Capsule())
 
                             if let ts = vitals.heartRateTimestamp {
                                 HStack(spacing: 4) {
@@ -103,7 +103,7 @@ struct LiveHeartRateSection: View {
                         HStack(spacing: 6) {
                             Text(currentHeartRateZone.rawValue)
                                 .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppColour.textOnAccent)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
                                 .background(currentHeartRateZone.color, in: Capsule())
@@ -157,7 +157,7 @@ struct LiveHeartRateSection: View {
                     .padding(.bottom, DS.space3)
             }
         }
-        .cardStyle(tint: .red)
+        .cardStyle(tint: AppColour.categoryHeart)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
         .sensoryFeedback(.warning, trigger: vitals.heartRateStatus == .elevated)
@@ -182,22 +182,15 @@ struct LiveHeartRateSection: View {
     private var zoneProgressBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Background gradient bar
+                // Background track
                 Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue, .green, .yellow, .orange, .red],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .opacity(0.2)
+                    .fill(AppColour.trackNeutral)
 
                 // Active fill
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [.blue, currentHeartRateZone.color],
+                            colors: [AppColour.info, currentHeartRateZone.color],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -206,9 +199,9 @@ struct LiveHeartRateSection: View {
 
                 // Indicator dot
                 Circle()
-                    .fill(.white)
+                    .fill(AppColour.markerOnSurface)
                     .frame(width: 10, height: 10)
-                    .shadow(color: currentHeartRateZone.color.opacity(0.5), radius: 3)
+                    .shadow(color: AppColour.shadowAmbient, radius: 3)
                     .offset(x: max(0, geo.size.width * heartRateZonePercent - 5))
             }
         }
@@ -246,7 +239,7 @@ struct LiveHeartRateSection: View {
                     x: .value("Time", entry.date),
                     y: .value("BPM", entry.value)
                 )
-                .foregroundStyle(.red.opacity(0.8))
+                .foregroundStyle(AppColour.categoryHeart)
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 // Per-point VoiceOver readout. Note the parent
@@ -262,7 +255,7 @@ struct LiveHeartRateSection: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.red.opacity(0.2), .red.opacity(0.02)],
+                        colors: [AppColour.categoryHeart.opacity(0.3), AppColour.chartAreaFill],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -282,7 +275,7 @@ struct LiveHeartRateSection: View {
                     }
                 }
                 AxisGridLine()
-                    .foregroundStyle(.white.opacity(0.05))
+                    .foregroundStyle(AppColour.chartGridline)
             }
         }
         .chartYAxis {
@@ -295,7 +288,7 @@ struct LiveHeartRateSection: View {
                     }
                 }
                 AxisGridLine()
-                    .foregroundStyle(.white.opacity(0.05))
+                    .foregroundStyle(AppColour.chartGridline)
             }
         }
         .frame(height: 90)

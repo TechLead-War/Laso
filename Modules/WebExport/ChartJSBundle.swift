@@ -43,8 +43,10 @@ struct ChartJSBundle {
             const plotW = w - padding * 2;
             const plotH = h - padding * 2;
 
-            // Grid
-            ctx.strokeStyle = '#e0e0e0';
+            // Grid. Canvas cannot inherit the stylesheet, so the gridline
+            // follows the reader's colour scheme the same way the CSS does.
+            const darkScheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            ctx.strokeStyle = darkScheme ? '#3a3a3c' : '#e0e0e0';
             ctx.lineWidth = 0.5;
             for (let i = 0; i <= 4; i++) {
                 const y = padding + (plotH / 4) * i;

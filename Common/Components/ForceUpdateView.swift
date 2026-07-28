@@ -27,8 +27,8 @@ struct ForceUpdateView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.blue)
-                        .foregroundStyle(.white)
+                        .background(AppColour.primary)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .padding(.horizontal, DS.space7)

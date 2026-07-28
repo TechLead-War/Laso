@@ -7,29 +7,29 @@ struct MedicalDisclaimerView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            AppColour.surfaceBase.ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Spacer()
 
                 Image(systemName: "cross.case")
                     .font(DS.Typography.heroIcon)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(AppColour.primary)
 
                 Text(Copy.Disclaimer.title)
                     .font(.title2.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textPrimary)
                     .multilineTextAlignment(.center)
 
                 VStack(spacing: 16) {
                     Text(Copy.Disclaimer.body)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.center)
 
                     Text(Copy.Disclaimer.secondaryBody)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, DS.space7)
@@ -41,10 +41,10 @@ struct MedicalDisclaimerView: View {
                 } label: {
                     Text(Copy.Disclaimer.acknowledge)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, DS.space4)
-                        .background(.blue, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(AppColour.primary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .accessibilityLabel(Copy.Disclaimer.acknowledge)
                 .accessibilityHint(Copy.Common.acknowledgesTheMedicalDisclaimerAndContinuesHint)

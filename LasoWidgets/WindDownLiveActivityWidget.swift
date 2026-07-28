@@ -17,8 +17,8 @@ struct WindDownLiveActivityWidget: Widget {
             WindDownLockScreenView(state: context.state)
                 // Fixed dark chrome — the activity is tuned for dark surfaces and
                 // must not flip to white in light mode behind the lock screen.
-                .activityBackgroundTint(AppColour.surfaceOverlay.opacity(0.82))
-                .activitySystemActionForegroundColor(AppColour.textPrimary)
+                .activityBackgroundTint(AppColour.liveActivityCanvas.opacity(0.82))
+                .activitySystemActionForegroundColor(AppColour.textOnInverse)
         } dynamicIsland: { context in
             DynamicIsland {
                 // EXPANDED — the HTML "type: count" card mapped onto the four
@@ -80,7 +80,7 @@ private struct WindDownLockScreenView: View {
                         .font(.caption2.weight(.semibold))
                         .textCase(.uppercase)
                         .tracking(0.8)
-                        .foregroundStyle(AppColour.textSecondary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
@@ -88,7 +88,7 @@ private struct WindDownLockScreenView: View {
                 if let hint = hrvHint(state: state) {
                     Text(hint)
                         .font(.caption2)
-                        .foregroundStyle(AppColour.textSecondary)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
@@ -125,7 +125,7 @@ private struct WindDownModePill: View {
                 .foregroundStyle(windDownTint)
             Text(WindDownCopy.header)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
@@ -146,7 +146,7 @@ private struct WindDownStampLabel: View {
             .font(.system(size: 12, weight: .medium))
             .textCase(.uppercase)
             .tracking(0.6)
-            .foregroundStyle(AppColour.textTertiary)
+            .foregroundStyle(AppColour.textOnInverseSecondary)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .accessibilityHidden(true)
@@ -178,12 +178,12 @@ private struct WindDownExpandedBody: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(timerInterval: WidgetStyle.timerRange(to: state.targetBedtime), countsDown: true)
                             .font(.system(size: 30, weight: .bold).monospacedDigit())
-                            .foregroundStyle(AppColour.textPrimary)
+                            .foregroundStyle(AppColour.textOnInverse)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                         Text(WindDownCopy.toBed)
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppColour.textSecondary)
+                            .foregroundStyle(AppColour.textOnInverseSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -199,7 +199,7 @@ private struct WindDownExpandedBody: View {
                     if let hint = hrvHint(state: state) {
                         Text(hint)
                             .font(.system(size: 11))
-                            .foregroundStyle(AppColour.textTertiary)
+                            .foregroundStyle(AppColour.textOnInverseSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -236,7 +236,7 @@ private struct WindDownMoonArc: View {
 
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.12), lineWidth: 4)
+                .stroke(AppColour.trackOnInverse, lineWidth: 4)
             ProgressView(timerInterval: start...end, countsDown: false) {
                 EmptyView()
             } currentValueLabel: {
@@ -328,12 +328,12 @@ private struct WindDownCountdownStack: View {
                 .font(.caption2.weight(.semibold))
                 .textCase(.uppercase)
                 .tracking(0.8)
-                .foregroundStyle(AppColour.textSecondary)
+                .foregroundStyle(AppColour.textOnInverseSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(timerInterval: WidgetStyle.timerRange(to: state.targetBedtime), countsDown: true)
                 .font(font.monospacedDigit())
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .multilineTextAlignment(.trailing)
                 .frame(minWidth: 80, alignment: .trailing)
         }
@@ -364,7 +364,7 @@ private struct WindDownPhraseLine: View {
         TimelineView(.periodic(from: .now, by: 60)) { timeline in
             Text(currentStage(now: timeline.date, bedtime: state.targetBedtime).phrase)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(AppColour.textPrimary)
+                .foregroundStyle(AppColour.textOnInverse)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .contentTransition(.opacity)
@@ -397,7 +397,7 @@ private struct WindDownBreatheButton: View {
                     .foregroundStyle(windDownTint)
                 Text(WindDownCopy.breatheButton)
                     .font(labelFont)
-                    .foregroundStyle(AppColour.textPrimary)
+                    .foregroundStyle(AppColour.textOnInverse)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -413,7 +413,13 @@ private struct WindDownBreatheButton: View {
 
 // MARK: - Shared helpers
 
-private let windDownTint = AppColour.windDownTint
+/// Pinned to the dark variant. Every surface in this widget is
+/// `liveActivityCanvas`, which never follows the device theme, so the light
+/// variant of the token would paint light indigo on near-black.
+private let windDownTint = Color(
+    uiColor: UIColor(AppColour.windDownTint)
+        .resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+)
 
 private func currentStage(now: Date, bedtime: Date) -> WindDownStage {
     let minutes = Int((bedtime.timeIntervalSince(now) / 60).rounded(.down))

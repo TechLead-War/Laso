@@ -49,11 +49,11 @@ enum RiskGrade: String {
 
     var color: Color {
         switch self {
-        case .low: return .green
-        case .moderate: return .yellow
-        case .elevated: return .orange
-        case .high: return .red
-        case .veryHigh: return .red
+        case .low: return AppColour.scoreOptimal
+        case .moderate: return AppColour.scoreGood
+        case .elevated: return AppColour.scoreFair
+        case .high: return AppColour.scorePoor
+        case .veryHigh: return AppColour.scorePoor
         }
     }
 
@@ -108,13 +108,13 @@ enum HealthRiskType: String, CaseIterable, Identifiable, Hashable {
 
     var color: Color {
         switch self {
-        case .cardiac: return .red
-        case .sleepDeficit: return .indigo
-        case .overtraining: return .orange
-        case .respiratory: return .teal
-        case .metabolic: return .yellow
-        case .stress: return .purple
-        case .mobilityDecline: return .cyan
+        case .cardiac: return AppColour.categoryHeart
+        case .sleepDeficit: return AppColour.categorySleep
+        case .overtraining: return AppColour.categoryActivity
+        case .respiratory: return AppColour.accent
+        case .metabolic: return AppColour.warning
+        case .stress: return AppColour.categoryStress
+        case .mobilityDecline: return AppColour.info
         }
     }
 
@@ -183,11 +183,13 @@ enum RiskFactorStatus: String {
 
     var color: Color {
         switch self {
-        case .optimal: return .green
-        case .borderline: return .yellow
-        case .concerning: return .orange
-        case .critical: return .red
-        case .unmeasured: return .secondary
+        case .optimal: return AppColour.success
+        case .borderline: return AppColour.warning
+        // stateFatigued is the palette's AA-tuned orange; warning is the gold one
+        // step below it, so the two keep their old caution/concern separation.
+        case .concerning: return AppColour.stateFatigued
+        case .critical: return AppColour.danger
+        case .unmeasured: return AppColour.textSecondary
         }
     }
 
@@ -229,9 +231,9 @@ enum FocusImpact: String {
 
     var color: Color {
         switch self {
-        case .high: return .red
-        case .medium: return .orange
-        case .low: return .blue
+        case .high: return AppColour.danger
+        case .medium: return AppColour.warning
+        case .low: return AppColour.info
         }
     }
 

@@ -121,7 +121,7 @@ struct OnbV2Screen3About: View {
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(OnbV2.fg)
                                         .frame(width: 36, height: 36)
-                                        .background(Circle().fill(Color.white.opacity(0.06)))
+                                        .background(Circle().fill(AppColour.surfaceSubtle))
                                         .overlay(Circle().stroke(OnbV2.line, lineWidth: 1))
                                 }
                                 .buttonStyle(.plain)
@@ -151,7 +151,7 @@ struct OnbV2Screen3About: View {
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(OnbV2.fg)
                                         .frame(width: 36, height: 36)
-                                        .background(Circle().fill(Color.white.opacity(0.06)))
+                                        .background(Circle().fill(AppColour.surfaceSubtle))
                                         .overlay(Circle().stroke(OnbV2.line, lineWidth: 1))
                                 }
                                 .buttonStyle(.plain)

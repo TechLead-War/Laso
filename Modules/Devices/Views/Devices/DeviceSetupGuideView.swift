@@ -17,9 +17,12 @@ struct DeviceSetupGuideView: View {
                 HStack(alignment: .top, spacing: DS.itemSpacing) {
                     Text(Copy.Devices.xText(index + 1))
                         .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .frame(width: 24, height: 24)
-                        .background(device.iconColor, in: Circle())
+                        // Step number, not device identity: the brand tints in
+                        // SupportedDevice are raw system hues (yellow, mint) that
+                        // cannot carry textOnAccent in light mode.
+                        .background(AppColour.primary, in: Circle())
 
                     Text(step.instruction)
                         .font(DS.Typography.subheadline)

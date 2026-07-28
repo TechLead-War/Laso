@@ -171,6 +171,13 @@ extension Copy {
         static var setsTheDailyCapOnHealthHint: String { RemoteConfigManager.shared.copyString("copy_settings_sets_the_daily_cap_on_health_hint", default: "Sets the daily cap on health notifications") }
         static var adjustTheHeartRateThresholdForHint: String { RemoteConfigManager.shared.copyString("copy_settings_adjust_the_heart_rate_threshold_for_hint", default: "Adjust the heart rate threshold for alerts") }
 
+        // MARK: - Appearance
+        static var appearance: String { RemoteConfigManager.shared.copyString("copy_settings_appearance", default: "Appearance") }
+        static var themeLight: String { RemoteConfigManager.shared.copyString("copy_settings_theme_light", default: "Light") }
+        static var themeDark: String { RemoteConfigManager.shared.copyString("copy_settings_theme_dark", default: "Dark") }
+        static var themeSystem: String { RemoteConfigManager.shared.copyString("copy_settings_theme_system", default: "System") }
+        static var themeFooter: String { RemoteConfigManager.shared.copyString("copy_settings_theme_footer", default: "System follows your device setting, including its light and dark schedule.") }
+
         // MARK: - Lifted interpolated view literals
         static func xText(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_settings_x_text", default: "%@ %@"), p0, p1) }
         static func perDayValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_settings_per_day_value", default: "%d per day"), p0) }

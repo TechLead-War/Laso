@@ -108,13 +108,13 @@ struct PMFSurveySheet: View {
                 Spacer()
                 if disappointmentAnswer == value {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(AppColour.primary)
                 }
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(disappointmentAnswer == value ? Color.accentColor.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+                    .fill(disappointmentAnswer == value ? AppColour.primarySoft : AppColour.surfaceSubtle)
             )
         }
         .buttonStyle(.plain)
@@ -131,7 +131,7 @@ struct PMFSurveySheet: View {
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
                 .padding(DS.space3)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 12))
 
             Button {
                 AppAnalytics.shared.trackPMFSurveyStep(
@@ -160,7 +160,7 @@ struct PMFSurveySheet: View {
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
                 .padding(DS.space3)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 12))
 
             Button {
                 AppAnalytics.shared.trackPMFSurveyStep(
@@ -189,7 +189,7 @@ struct PMFSurveySheet: View {
                 .textFieldStyle(.plain)
                 .lineLimit(2...6)
                 .padding(DS.space3)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 12))
 
             Button {
                 AppAnalytics.shared.trackPMFSurveyStep(
@@ -213,12 +213,12 @@ struct PMFSurveySheet: View {
             Spacer()
             Image(systemName: "heart.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.pink)
+                .foregroundStyle(AppColour.categoryHeart)
             Text(Copy.Common.thankYou)
                 .font(.title2.weight(.bold))
             Text(Copy.Common.yourFeedbackShapesWhatWeBuild)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
             Spacer()
             Button(Copy.Common.doneButton) { dismiss() }

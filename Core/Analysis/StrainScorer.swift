@@ -43,12 +43,12 @@ enum StrainLevel: String, CaseIterable {
 
     var color: Color {
         switch self {
-        case .low:          return .blue
-        case .light:        return .green
-        case .moderate:     return .yellow
-        case .high:         return .orange
-        case .overreaching: return .red
-        case .allOut:       return .red
+        case .low:          return AppColour.info
+        case .light:        return AppColour.scoreOptimal
+        case .moderate:     return AppColour.scoreFair
+        case .high:         return AppColour.scorePoor
+        case .overreaching: return AppColour.scorePoor
+        case .allOut:       return AppColour.scorePoor
         }
     }
 }

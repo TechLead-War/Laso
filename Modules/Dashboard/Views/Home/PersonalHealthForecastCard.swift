@@ -138,8 +138,8 @@ struct MetricForecast: Identifiable {
     }
 
     var directionColor: Color {
-        if direction == .stable { return .secondary }
-        return isFavorable ? .green : .orange
+        if direction == .stable { return AppColour.textSecondary }
+        return isFavorable ? AppColour.success : AppColour.warning
     }
 
     var predictedValueFormatted: String {

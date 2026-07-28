@@ -95,6 +95,20 @@ struct AskDataOrbView: View {
             }
         }
         .frame(width: size, height: size)
+        // The orb is additive art: every glow, particle and ring is drawn with
+        // .plusLighter, which is an arithmetic no-op against a light destination.
+        // So it carries its own dark canvas in both themes and fades that canvas
+        // out at the rim instead of stamping a black square on the page.
+        .background {
+            Circle().fill(
+                RadialGradient(
+                    colors: [AppColour.surfaceInverse, AppColour.surfaceInverse.opacity(0)],
+                    center: .center,
+                    startRadius: size * 0.30,
+                    endRadius: size * 0.5
+                )
+            )
+        }
         .accessibilityHidden(true)
         .onAppear { isVisible = true }
         .onDisappear { isVisible = false }

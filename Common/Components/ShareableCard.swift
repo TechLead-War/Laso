@@ -346,6 +346,10 @@ struct ShareableRingsCard: View {
         }
         .frame(width: 390, height: 693)
         .clipShape(RoundedRectangle(cornerRadius: 24))
+        // The card ground is always one of the dark share gradients, so every
+        // theme-dynamic token inside it must resolve its dark variant even when
+        // the app is in light mode.
+        .environment(\.colorScheme, .dark)
     }
 
     private func statRing(value: String, label: String, progress: Double, tint: Color) -> some View {
@@ -464,6 +468,9 @@ struct ShareableTemplateCard: View {
         }
         .frame(width: 390, height: 693)
         .clipShape(RoundedRectangle(cornerRadius: 24))
+        // Statically dark artwork: pin the scheme so the accent headline keeps
+        // its dark variant for a light-mode user.
+        .environment(\.colorScheme, .dark)
     }
 }
 
@@ -625,12 +632,11 @@ struct ShareWinSheet: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textPrimary)
                         .padding(.horizontal, DS.space1)
                         .frame(width: 68, height: 82)
                         .background(
-                            LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
-                                           startPoint: .topLeading, endPoint: .bottomTrailing),
+                            AppColour.surfaceSubtle,
                             in: RoundedRectangle(cornerRadius: DS.Radius.md)
                         )
                         .overlay(
@@ -826,6 +832,9 @@ struct ShareableScoreCard: View {
         }
         .frame(width: 390, height: 520)
         .clipShape(RoundedRectangle(cornerRadius: 24))
+        // Statically dark artwork: pin the scheme so the score ring keeps its
+        // dark variant for a light-mode user.
+        .environment(\.colorScheme, .dark)
     }
 
     // Locale-aware. `.dateTime.day().month().year()` resolves the
@@ -953,6 +962,9 @@ struct ShareableInsightCard: View {
         }
         .frame(width: 390, height: 520)
         .clipShape(RoundedRectangle(cornerRadius: 24))
+        // Statically dark artwork: pin the scheme so the category tint keeps its
+        // dark variant for a light-mode user.
+        .environment(\.colorScheme, .dark)
     }
 
     // Locale-aware (see notes on the score-card formatter above).

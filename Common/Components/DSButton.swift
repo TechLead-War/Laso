@@ -16,13 +16,15 @@ struct DSPrimaryButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(DS.Typography.bodySemibold)
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColour.textOnAccent)
             .padding(.horizontal, DS.space6)
             .padding(.vertical, DS.space3)
             .frame(minHeight: 44)
             .frame(maxWidth: .infinity)
+            // AppColour.primary rather than .systemBlue: white on systemBlue is
+            // 4.02:1 light and 3.65:1 dark, both under AA for a 17pt label.
             .background(
-                Color(uiColor: .systemBlue),
+                AppColour.primary,
                 in: RoundedRectangle(cornerRadius: DS.Radius.md)
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)

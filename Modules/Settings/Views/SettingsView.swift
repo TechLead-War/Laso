@@ -103,11 +103,13 @@ struct SettingsView: View {
     }
 
     @State private var deepLinkPath: [SettingsRoute] = []
+    private var themeManager: ThemeManager { ThemeManager.shared }
 
     var body: some View {
         NavigationStack(path: $deepLinkPath) {
             Form {
                 profileSection
+                appearanceSection
                 referralSection
                 subscriptionSection
                 dataSection
@@ -252,6 +254,27 @@ struct SettingsView: View {
         )
     }
 
+    // MARK: - Appearance Section
+
+    private var appearanceSection: some View {
+        Section {
+            Picker(Copy.Settings.appearance, selection: Binding(
+                get: { themeManager.preference },
+                set: { themeManager.set($0) }
+            )) {
+                ForEach(ThemePreference.allCases) { option in
+                    Label(option.title, systemImage: option.symbol).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("settings.appearance")
+        } header: {
+            Text(Copy.Settings.appearance)
+        } footer: {
+            Text(Copy.Settings.themeFooter)
+        }
+    }
+
     // MARK: - Referral Section
 
     @ViewBuilder
@@ -263,7 +286,7 @@ struct SettingsView: View {
                 } label: {
                     settingsRow(
                         icon: "gift.fill",
-                        iconColor: .blue,
+                        iconColor: AppColour.primary,
                         title: Copy.Referral.inviteRowTitle,
                         subtitle: Copy.Referral.inviteRowSubtitle
                     )
@@ -282,7 +305,7 @@ struct SettingsView: View {
                 Link(destination: manageURL) {
                     settingsRow(
                         icon: "creditcard.fill",
-                        iconColor: .orange,
+                        iconColor: AppColour.warning,
                         title: Copy.Settings.manageSubscription,
                         subtitle: Copy.Settings.manageSubscriptionSubtitle,
                         trailing: "arrow.up.right"
@@ -308,7 +331,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "heart.text.square.fill",
-                    iconColor: .blue,
+                    iconColor: AppColour.primary,
                     title: Copy.Settings.manageDevices,
                     subtitle: devicesStatusText
                 )
@@ -346,7 +369,7 @@ struct SettingsView: View {
 
     private var storageRow: some View {
         HStack(spacing: 12) {
-            iconBadge(icon: "internaldrive.fill", color: .green)
+            iconBadge(icon: "internaldrive.fill", color: AppColour.success)
             VStack(alignment: .leading, spacing: 2) {
                 Text(Copy.Settings.onDeviceData)
                     .font(DS.Typography.subheadlineMedium)
@@ -382,7 +405,7 @@ struct SettingsView: View {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    iconBadge(icon: "square.and.arrow.up.fill", color: .indigo)
+                    iconBadge(icon: "square.and.arrow.up.fill", color: AppColour.categorySleep)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Settings.generateWebReport)
                             .font(DS.Typography.subheadlineMedium)
@@ -390,7 +413,7 @@ struct SettingsView: View {
                         if let error = webExportViewModel.error {
                             Text(error)
                                 .font(DS.Typography.caption)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(AppColour.danger)
                         }
                     }
                     Spacer()
@@ -407,7 +430,7 @@ struct SettingsView: View {
             .accessibilityIdentifier("settings.row.dataExport")
         } else {
             HStack(spacing: 12) {
-                iconBadge(icon: "square.and.arrow.up.fill", color: .gray)
+                iconBadge(icon: "square.and.arrow.up.fill", color: AppColour.surfaceMuted)
                 Text(Copy.Settings.generateWebReport)
                     .font(DS.Typography.subheadlineMedium)
                     .foregroundStyle(.secondary)
@@ -420,11 +443,11 @@ struct SettingsView: View {
     private var proBadge: some View {
         Text(Copy.Labels.pro)
             .font(.caption2.weight(.bold))
-            .foregroundStyle(AppColour.textPrimary)
+            .foregroundStyle(AppColour.textOnAccent)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background(
-                LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing),
+                LinearGradient(colors: [AppColour.primary, AppColour.categoryStress], startPoint: .leading, endPoint: .trailing),
                 in: Capsule()
             )
     }
@@ -441,7 +464,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "bell.badge.fill",
-                    iconColor: .orange,
+                    iconColor: AppColour.warning,
                     title: Copy.Settings.notifications,
                     subtitle: notificationsSummary
                 )
@@ -497,7 +520,7 @@ struct SettingsView: View {
                 Link(destination: privacyURL) {
                     settingsRow(
                         icon: "hand.raised.fill",
-                        iconColor: .blue,
+                        iconColor: AppColour.primary,
                         title: Copy.Privacy.privacyPolicy,
                         subtitle: nil,
                         trailing: "arrow.up.right"
@@ -512,7 +535,7 @@ struct SettingsView: View {
                 Link(destination: termsURL) {
                     settingsRow(
                         icon: "doc.text.fill",
-                        iconColor: .indigo,
+                        iconColor: AppColour.categorySleep,
                         title: Copy.Privacy.termsOfUse,
                         subtitle: nil,
                         trailing: "arrow.up.right"
@@ -525,7 +548,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "doc.badge.gearshape.fill",
-                    iconColor: .gray,
+                    iconColor: AppColour.surfaceMuted,
                     title: Copy.Settings.acknowledgements,
                     subtitle: Copy.Settings.acknowledgementsSubtitle
                 )
@@ -544,7 +567,7 @@ struct SettingsView: View {
         } label: {
             settingsRow(
                 icon: "mic.fill",
-                iconColor: .purple,
+                iconColor: AppColour.categoryStress,
                 title: Copy.Settings.siriAndShortcuts,
                 subtitle: nil
             )
@@ -590,7 +613,7 @@ struct SettingsView: View {
             _ = checker.openAppStoreForUpdate(using: { openURL($0) })
         } label: {
             HStack(spacing: 12) {
-                iconBadge(icon: "arrow.down.circle.fill", color: .green)
+                iconBadge(icon: "arrow.down.circle.fill", color: AppColour.success)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(Copy.Settings.updateApp)
@@ -599,7 +622,7 @@ struct SettingsView: View {
                         if updateAvailable {
                             Text(Copy.Settings.updateAvailableBadge)
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(AppColour.textPrimary)
+                                .foregroundStyle(AppColour.textOnAccent)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
                                 .background(AppColour.success, in: Capsule())
@@ -642,7 +665,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "star.fill",
-                    iconColor: .yellow,
+                    iconColor: AppColour.warning,
                     title: Copy.Settings.rateOnAppStore,
                     subtitle: Copy.Settings.rateOnAppStoreSubtitle,
                     trailing: "arrow.up.right"
@@ -663,7 +686,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "ladybug.fill",
-                    iconColor: .red,
+                    iconColor: AppColour.danger,
                     title: Copy.Settings.reportABug,
                     subtitle: Copy.Settings.reportABugSubtitle
                 )
@@ -682,7 +705,7 @@ struct SettingsView: View {
             } label: {
                 settingsRow(
                     icon: "questionmark.bubble.fill",
-                    iconColor: .blue,
+                    iconColor: AppColour.primary,
                     title: Copy.Settings.contactUs,
                     subtitle: Copy.Settings.contactUsSubtitle
                 )
@@ -771,7 +794,7 @@ struct SettingsView: View {
     private func iconBadge(icon: String, color: Color) -> some View {
         Image(systemName: icon)
             .font(DS.Typography.subheadline)
-            .foregroundStyle(AppColour.textPrimary)
+            .foregroundStyle(AppColour.textOnAccent)
             .frame(width: 34, height: 34)
             .background(color.gradient, in: RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous))
     }

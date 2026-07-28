@@ -141,32 +141,19 @@ extension RemoteConfigManager {
         RC.workoutZoneBuildingCeiling:        90   as NSNumber,
         RC.workoutDefaultMaxHR:               190  as NSNumber,
 
-        // Color tokens (hex strings; mirror the bundled #colorLiteral values).
-        RC.colorScoreOptimal:                 "#10B981" as NSString,
-        RC.colorScoreGood:                    "#34D399" as NSString,
-        RC.colorScoreFair:                    "#F59E0B" as NSString,
-        RC.colorScorePoor:                    "#E5484D" as NSString,
-        RC.colorCategoryHeart:                "#F87171" as NSString,
-        RC.colorCategorySleep:                "#818CF8" as NSString,
-        RC.colorCategoryActivity:             "#FBBF24" as NSString,
-        RC.colorCategoryStress:               "#A78BFA" as NSString,
-        RC.colorStateRecovery:                "#34D399" as NSString,
-        RC.colorStatePeakPerformance:         "#0071E3" as NSString,
-        RC.colorStateStressed:                "#E5484D" as NSString,
-        RC.colorStateUnderSlept:              "#A78BFA" as NSString,
-        RC.colorStateActive:                  "#10B981" as NSString,
-        RC.colorStateFatigued:                "#F59E0B" as NSString,
-        RC.colorStateResting:                 "#4DA3FF" as NSString,
-        RC.colorAchievementBronze:            "#CC8033" as NSString,
-        RC.colorAchievementSilver:            "#BFBFC7" as NSString,
-        RC.colorAchievementGold:              "#FFD600" as NSString,
-        RC.colorAchievementPlatinum:          "#E6E8FA" as NSString,
-        RC.colorAchievementDiamond:           "#B8F2FF" as NSString,
-        RC.colorPremiumGradientTop:           "#FFD972" as NSString,
-        RC.colorPremiumGradientBottom:        "#F5A32E" as NSString,
-        RC.colorVitalityGreen:                "#34D399" as NSString,
-        RC.colorVitalityYellow:               "#F59E0B" as NSString,
-        RC.colorVitalityRed:                  "#E5484D" as NSString,
+        // Colour tokens deliberately have NO in-app default.
+        //
+        // `setDefaults` makes a default indistinguishable from a published value,
+        // so any default here permanently wins over the bundled palette and
+        // `AppColour`'s fallback can never fire. That is what made the app render
+        // #F59E0B while the widget — which does not link Firebase — rendered
+        // #E3B45A for the same token.
+        //
+        // With no default, `color(forKey:)` returns nil until someone actually
+        // publishes an override, and the light/dark pair in AppColour is what
+        // ships. Publishing an override still works; it just collapses that
+        // token to a single colour in both modes, which is a conscious tradeoff
+        // documented on `AppColour.remote(_:light:dark:)`.
 
         // Onboarding flow shape.
         RC.onboardingSkipScreensCsv:          "" as NSString,

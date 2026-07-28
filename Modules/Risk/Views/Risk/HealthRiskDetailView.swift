@@ -288,7 +288,7 @@ struct FocusAreaCard: View {
             }
             .padding(DS.cardPadding)
             .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
-            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .shadow(color: AppColour.shadowAmbient, radius: 6, y: 2)
             .padding(.horizontal)
         }
         .buttonStyle(.dsPress)

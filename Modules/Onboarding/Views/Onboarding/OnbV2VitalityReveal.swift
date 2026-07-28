@@ -177,8 +177,8 @@ private struct OnbV2MetricChip: View {
                         Capsule().fill(barGradient)
                         Image(systemName: "arrowtriangle.down.fill")
                             .font(.system(size: 9))
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 1)
+                            .foregroundStyle(AppColour.markerOnInverse)
+                            .shadow(color: AppColour.shadowFloating, radius: 1)
                             .position(x: x, y: 0)
                     }
                 }
@@ -205,9 +205,9 @@ private struct OnbV2MetricChip: View {
         .padding(.horizontal, 15)
         .padding(.vertical, 13)
         .frame(width: 250)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color(white: 0.10).opacity(0.92)))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.white.opacity(0.10)))
-        .shadow(color: .black.opacity(0.5), radius: 14, y: 8)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(AppColour.surfaceInverseRaised.opacity(0.92)))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(AppColour.borderOnInverse))
+        .shadow(color: AppColour.shadowFloating, radius: 14, y: 8)
     }
 }
 
@@ -342,7 +342,7 @@ struct OnbV2VitalityRevealScreen: View {
                         VStack(spacing: 8) {
                             Text(String(format: "%.1f", age))
                                 .font(.system(size: 64, weight: .heavy).monospacedDigit())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppColour.textOnInverse)
                                 .shadow(color: orbTint.opacity(0.5), radius: 18)
                             Text(label)
                                 .font(.system(size: 12, weight: .bold)).tracking(3.2)
@@ -423,6 +423,7 @@ struct OnbV2VitalityRevealScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(
                 ZStack {
+                    AppColour.surfaceInverse
                     RadialGradient(colors: [orbTint.opacity(0.22), Color.clear],
                                    center: .topLeading, startRadius: 0, endRadius: 360)
                     RadialGradient(colors: [orbTint.opacity(0.12), Color.clear],
@@ -434,6 +435,13 @@ struct OnbV2VitalityRevealScreen: View {
                 .ignoresSafeArea()
             )
         }
+        // Pinned dark in both themes. The orb Canvas composites its 720 particles
+        // with .plusLighter, which is additive and a no-op against a light
+        // destination: on a light page every particle clamps out and the orb, the
+        // centrepiece of the reveal, disappears. Pinning the scheme (not just the
+        // background) also keeps every tint on this screen on its dark-variant
+        // side, so the amber/blue/rose verdict colours stay legible on the canvas.
+        .environment(\.colorScheme, .dark)
         .task { await runSequence() }
     }
 

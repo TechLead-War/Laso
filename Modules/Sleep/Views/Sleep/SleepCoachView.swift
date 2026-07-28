@@ -130,6 +130,7 @@ struct SleepCoachView: View {
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .sleepCoach)
             await onRefresh?()
         }
         .navigationTitle(Copy.SleepCoach.title)
@@ -176,7 +177,7 @@ struct SleepCoachView: View {
         }
         .padding(DS.space5)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
         .padding(.horizontal)
     }
 
@@ -281,7 +282,7 @@ struct SleepCoachView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(AppColour.borderLow)
+                            .fill(AppColour.trackNeutral)
                             .frame(height: 6)
 
                         Capsule()
@@ -467,7 +468,7 @@ struct SleepCoachView: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(AppColour.borderLow)
+                    .fill(AppColour.trackNeutral)
                     .frame(width: geo.size.width, height: 4)
 
                 Capsule()
@@ -483,7 +484,7 @@ struct SleepCoachView: View {
                         )
                     )
                     .frame(width: max(2, geo.size.width * actualFrac), height: 8)
-                    .shadow(color: accent.opacity(goalMet ? 0.55 : 0.35),
+                    .shadow(color: AppColour.shadowAmbient,
                             radius: goalMet ? 5 : 3, x: 0, y: 1)
 
                 Rectangle()
@@ -513,7 +514,7 @@ struct SleepCoachView: View {
                 // Ring
                 ZStack {
                     Circle()
-                        .stroke(AppColour.borderLow, lineWidth: 6)
+                        .stroke(AppColour.trackNeutral, lineWidth: 6)
                         .frame(width: 72, height: 72)
 
                     Circle()

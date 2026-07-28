@@ -71,7 +71,7 @@ struct VitalityTrendSection: View {
                             x: .value("Selected", selected.date),
                             y: .value("Age", selected.age)
                         )
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.markerOnSurface)
                         .symbolSize(70)
 
                         PointMark(
@@ -92,20 +92,20 @@ struct VitalityTrendSection: View {
                     // Six or so labels whatever the span. A fixed 15 day stride
                     // printed a single tick once the chart stopped assuming 90 days.
                     AxisMarks(values: .stride(by: .day, count: max(1, scorer.historySpanDays / 6))) { _ in
-                        AxisGridLine().foregroundStyle(.secondary.opacity(0.15))
+                        AxisGridLine().foregroundStyle(AppColour.chartGridline)
                         AxisValueLabel(format: .dateTime.month(.abbreviated).day(), centered: true)
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.chartAxisLabel)
                     }
                 }
                 .chartYAxis {
                     AxisMarks { value in
-                        AxisGridLine().foregroundStyle(.secondary.opacity(0.12))
+                        AxisGridLine().foregroundStyle(AppColour.chartGridline)
                         AxisValueLabel {
                             if let y = value.as(Double.self) {
                                 Text(Copy.Vitality.xText(Int(y)))
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColour.chartAxisLabel)
                             }
                         }
                     }
@@ -153,14 +153,14 @@ struct VitalityTrendSection: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(selected.date, format: .dateTime.month(.abbreviated).day().year())
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                             HStack(alignment: .firstTextBaseline, spacing: 3) {
                                 Text(Copy.Vitality.xText2(Int(selected.age.rounded())))
                                     .font(.callout.weight(.bold).monospacedDigit())
                                     .foregroundStyle(historyLineColor)
                                 Text(Copy.Vitality.yrs)
                                     .font(.caption.weight(.medium))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
                             let delta = Int(selected.age.rounded()) - scorer.chronologicalAge
                             if delta != 0 {
@@ -171,8 +171,8 @@ struct VitalityTrendSection: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
+                        .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
                         .padding(DS.space1)
                     }
                 }
@@ -205,7 +205,7 @@ struct VitalityTrendSection: View {
             Text(title)
                 .font(.caption2.weight(.semibold))
                 .textCase(.uppercase)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
             Text(value)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(color)
@@ -263,7 +263,7 @@ struct VitalityTrendSection: View {
     private var historyChangeColor: Color {
         guard let first = scorer.history.first?.age,
               let last = scorer.history.last?.age else {
-            return .secondary
+            return AppColour.textSecondary
         }
         return vitalityDeltaColor(for: Int((last - first).rounded()))
     }

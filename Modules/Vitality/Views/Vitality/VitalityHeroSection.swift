@@ -24,13 +24,13 @@ struct VitalityHeroSection: View {
                         Text(scorer.vitalityAge > 0 ? "\(scorer.vitalityAge)" : "—")
                             .font(DS.Typography.displayXL)
                             .monospacedDigit()
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppColour.textOnInverse)
                             .postHogMask()
 
                         Text(Copy.Vitality.vitalityAgeLabel)
                             .font(DS.Typography.caption.weight(.semibold))
                             .tracking(2)
-                            .foregroundStyle(.white.opacity(0.8))
+                            .foregroundStyle(AppColour.textOnInverseSecondary)
 
                         if scorer.personalizationStatus != .buildingProfile {
                             Text(deltaBadgeText)
@@ -87,7 +87,7 @@ struct VitalityHeroSection: View {
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
                     if scorer.chronologicalAge > 0 {
-                        badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
+                        badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: AppColour.surfaceInverseRaised, foreground: AppColour.textOnInverse)
                     }
 
                     if scorer.personalizationStatus == .personalized && scorer.hasPaceEstimate {
@@ -111,7 +111,7 @@ struct VitalityHeroSection: View {
                     // The waiting-for-history tint is tuned for the light trend
                     // card, and it disappears against this dark hero. On here it
                     // reads as white like the sibling badge instead.
-                    let stateTint = scorer.hasPaceEstimate ? paceTint : Color.white.opacity(0.8)
+                    let stateTint = scorer.hasPaceEstimate ? paceTint : AppColour.textOnInverse
                     badge(
                         text: vitalityPaceStateText(for: scorer),
                         tint: stateTint.opacity(0.26),
@@ -122,18 +122,20 @@ struct VitalityHeroSection: View {
 
             Text(heroNarrative)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(AppColour.textOnInverseSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, DS.space2)
         }
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity)
-        // Pure-black base lets the OrganicParticleOrbView pop, plus a soft
-        // radial pace-tint glow at the edges so the card feels lit, not pale.
+        // Stays dark in light mode too: the orb inside paints with .plusLighter /
+        // .screen, which are arithmetic no-ops against a light destination, and every
+        // label on this card is an on-inverse token. Hence surfaceInverse, not a
+        // theme-following surface.
         .background(
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
-                .fill(Color.black)
+                .fill(AppColour.surfaceInverse)
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                         .fill(
@@ -150,7 +152,7 @@ struct VitalityHeroSection: View {
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(paceTint.opacity(0.42), lineWidth: 1)
         )
-        .shadow(color: paceTint.opacity(0.22), radius: 16, y: 8)
+        .shadow(color: AppColour.shadowAmbient, radius: 16, y: 8)
         .padding(.horizontal)
     }
 
@@ -234,14 +236,14 @@ struct OrbMetricChip: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(component.metric.uppercased())
                 .font(DS.Typography.caption2.weight(.bold))
-                .foregroundStyle(.white.opacity(0.82))
+                .foregroundStyle(AppColour.textOnInverseSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
 
             HStack(spacing: 6) {
                 Text(valueText)
                     .font(DS.Typography.caption2.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(AppColour.textOnInverse)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .postHogMask()
@@ -262,13 +264,15 @@ struct OrbMetricChip: View {
         .padding(.horizontal, DS.space3)
         .padding(.vertical, DS.space2)
         .frame(width: chipWidth)
+        // The chip floats on the always-dark hero, so its surface and hairline are
+        // the fixed-polarity pair, not the theme-following ones.
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.md, style: .continuous)
-                .fill(AppColour.surfaceOverlay.opacity(0.72))
+                .fill(AppColour.surfaceInverseRaised.opacity(0.72))
         )
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md, style: .continuous)
-                .strokeBorder(AppColour.borderMedium, lineWidth: 0.5)
+                .strokeBorder(AppColour.borderOnInverse, lineWidth: 0.5)
         )
     }
 
@@ -289,7 +293,7 @@ struct OrbMetricChip: View {
                     .frame(height: 4)
 
                 Circle()
-                    .fill(.white.opacity(0.92))
+                    .fill(AppColour.markerOnInverse)
                     .frame(width: 6, height: 6)
                     .offset(x: markerX, y: -1)
             }

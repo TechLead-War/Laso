@@ -91,14 +91,14 @@ struct DeviceDetailView: View {
             if let info = deviceInfo {
                 Text(info.isActive ? "Active" : "Inactive")
                     .font(DS.Typography.captionSemibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .padding(.horizontal, DS.space3)
                     .padding(.vertical, DS.space1)
                     .background(info.isActive ? AppColour.success : AppColour.warning, in: Capsule())
             } else {
                 Text(Copy.Devices.setupGuide)
                     .font(DS.Typography.captionSemibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .padding(.horizontal, DS.space3)
                     .padding(.vertical, DS.space1)
                     .background(AppColour.info, in: Capsule())

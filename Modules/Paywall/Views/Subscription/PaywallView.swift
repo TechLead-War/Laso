@@ -286,7 +286,7 @@ struct PaywallView: View {
                         if let badge {
                             Text(badge)
                                 .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppColour.textOnAccent)
                                 .padding(.horizontal, DS.space2)
                                 .padding(.vertical, DS.space1)
                                 .background(AppColour.success, in: Capsule())
@@ -356,7 +356,7 @@ struct PaywallView: View {
             } label: {
                 if subscriptionManager.isPurchasing {
                     ProgressView()
-                        .tint(.white)
+                        .tint(AppColour.textOnAccent)
                 } else {
                     Text(callToActionTitle)
                 }

@@ -33,7 +33,7 @@ struct DailyActionResultCard: View {
             HStack(spacing: 12) {
                 Image(systemName: result.record.actionIcon)
                     .font(DS.Typography.title3)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 40, height: 40)
                     .background(tint, in: RoundedRectangle(cornerRadius: 10))
 

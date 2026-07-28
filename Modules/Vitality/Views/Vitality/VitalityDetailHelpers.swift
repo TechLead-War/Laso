@@ -76,8 +76,8 @@ func vitalityPersonalizationIcon(for scorer: VitalityScorer) -> String {
 
 func vitalityPersonalizationTint(for scorer: VitalityScorer) -> Color {
     switch scorer.personalizationStatus {
-    case .buildingProfile: return .white.opacity(0.8)
-    case .earlyEstimate: return .cyan
+    case .buildingProfile: return AppColour.textSecondary
+    case .earlyEstimate: return AppColour.accent
     case .personalized: return vitalityWhoopGreen
     }
 }

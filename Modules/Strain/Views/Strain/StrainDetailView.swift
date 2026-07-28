@@ -231,7 +231,7 @@ struct StrainDetailView: View {
             RoundedRectangle(cornerRadius: DS.Radius.xl)
                 .strokeBorder(strainLevel.color.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
-        .shadow(color: strainLevel.color.opacity(0.15), radius: 12, y: 4)
+        .shadow(color: AppColour.shadowAmbient, radius: 12, y: 4)
         .padding(.horizontal)
     }
 
@@ -322,7 +322,7 @@ struct StrainDetailView: View {
                                 x: .value("Selected Day", selected.date, unit: .day),
                                 y: .value("Strain", selected.strain)
                             )
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppColour.markerOnSurface)
                             .symbolSize(60)
 
                             PointMark(
@@ -421,8 +421,8 @@ struct StrainDetailView: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
+                        .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
                         .padding(DS.space1)
                     }
                 }
@@ -565,7 +565,7 @@ struct StrainDetailView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(DS.Typography.bodySemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: DS.iconSize, height: DS.iconSize)
                 .background(iconColor.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
@@ -600,9 +600,9 @@ struct StrainDetailView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "book.closed.fill")
                         .font(DS.Typography.subheadlineSemibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+                        .background(AppColour.surfaceMuted.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Strain.learnMore)
@@ -647,7 +647,7 @@ struct StrainDetailView: View {
         return HStack(spacing: 10) {
             Text(Copy.Strain.zoneShort(zone))
                 .font(DS.Typography.captionSemibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 28, height: 28)
                 .background(TrainingZoneColor.color(for: zone), in: Circle())
 

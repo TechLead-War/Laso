@@ -26,7 +26,7 @@ struct LockedInsightsCTA: View {
                     .font(DS.Typography.body)
                     .foregroundStyle(.tint)
                     .frame(width: DS.iconSize, height: DS.iconSize)
-                    .background(Color.accentColor.opacity(DS.badgeBg), in: Circle())
+                    .background(AppColour.surfaceSubtle, in: Circle())
 
                 VStack(alignment: .leading, spacing: DS.space1) {
                     Text("\(hiddenCount) more insight\(hiddenCount == 1 ? "" : "s") with Pro")
@@ -42,7 +42,7 @@ struct LockedInsightsCTA: View {
 
                 Image(systemName: "chevron.right")
                     .font(DS.Typography.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
             }
             .padding(DS.cardPadding)
             .frame(maxWidth: .infinity)

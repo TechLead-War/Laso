@@ -10,7 +10,7 @@ struct SectionHeaderView: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.subheadline)
-                .foregroundStyle(.tint)
+                .foregroundStyle(AppColour.primary)
             Text(title)
                 .font(.headline)
 

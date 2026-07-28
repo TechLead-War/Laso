@@ -151,11 +151,11 @@ struct FeedbackSheet: View {
                                     .padding(.vertical, 6)
                                     .background(
                                         selectedCategory == category
-                                            ? Color.blue
-                                            : Color(.systemGray5),
+                                            ? AppColour.primary
+                                            : AppColour.surfaceSubtle,
                                         in: Capsule()
                                     )
-                                    .foregroundStyle(selectedCategory == category ? .white : .primary)
+                                    .foregroundStyle(selectedCategory == category ? AppColour.textOnAccent : AppColour.textPrimary)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -249,7 +249,7 @@ struct FeedbackSheet: View {
 
             Image(systemName: "heart.circle.fill")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColour.success)
 
             Text(thankYouTitle)
                 .font(.title2.weight(.bold))

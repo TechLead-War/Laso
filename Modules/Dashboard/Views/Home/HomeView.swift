@@ -55,7 +55,7 @@ struct HomeView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.home")
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceSunken.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         // UI-test only: zero-size accessible triggers for sheets that otherwise
         // lack a stable, always-visible entry point (ScoreGuideSheet is not
@@ -261,7 +261,7 @@ struct HomeView: View {
             HStack(spacing: 12) {
                 Image(systemName: "flame.fill")
                     .font(DS.Typography.title3)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 40, height: 40)
                     .background(AppColour.success, in: RoundedRectangle(cornerRadius: 10))
 
@@ -756,7 +756,7 @@ struct HomeView: View {
 
                             Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
                                 .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppColour.textOnAccent)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
                                 .background(warning.severity == .critical ? AppColour.danger : warning.severity == .warning ? AppColour.warning : AppColour.scoreFair, in: Capsule())
@@ -931,7 +931,7 @@ struct HomeView: View {
                 Text(actionDoneToday ? Copy.Home.nextUpMarkedDone : Copy.Home.nextUpMarkDone)
                     .font(DS.Typography.subheadlineSemibold)
             }
-            .foregroundStyle(actionDoneToday ? Color.white : AppColour.scoreGood)
+            .foregroundStyle(actionDoneToday ? AppColour.textOnAccent : AppColour.scoreGood)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
             .background(
@@ -974,7 +974,7 @@ struct HomeView: View {
             .foregroundStyle(AppColour.textSecondary)
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
-            .background(AppColour.borderLow, in: RoundedRectangle(cornerRadius: 13))
+            .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home.action.remind")
@@ -990,15 +990,15 @@ struct HomeView: View {
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
         switch viewModel.ui.syncPhase {
         case .idle, .importing:
-            return ("brain.head.profile", Copy.Home.syncingHealthData, .purple)
+            return ("brain.head.profile", Copy.Home.syncingHealthData, AppColour.info)
         case .analyzing:
             let points = viewModel.analysis.dataDepth.totalDataPoints
             let label = points > 0 ? Copy.Home.analyzingDataPoints(points) : Copy.Home.analyzingYourData
-            return ("brain.head.profile", label, .purple)
+            return ("brain.head.profile", label, AppColour.info)
         case .discovering:
-            return ("sparkles", Copy.Home.discoveringPatterns, .orange)
+            return ("sparkles", Copy.Home.discoveringPatterns, AppColour.info)
         case .complete:
-            return ("checkmark.circle.fill", Copy.Home.ready, .green)
+            return ("checkmark.circle.fill", Copy.Home.ready, AppColour.success)
         }
     }
 

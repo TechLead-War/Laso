@@ -118,7 +118,7 @@ struct TrendSparkCard: View {
                     yStart: .value("Usual low", band.low),
                     yEnd: .value("Usual high", band.high)
                 )
-                .foregroundStyle(tint.opacity(0.14))
+                .foregroundStyle(AppColour.chartBandFill)
             }
 
             ForEach(points) { point in

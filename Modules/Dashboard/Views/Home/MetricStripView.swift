@@ -46,7 +46,7 @@ private struct MetricTileView: View {
             VStack(spacing: 6) {
                 Image(systemName: tile.icon)
                     .font(DS.Typography.body)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 30, height: 30)
                     .background(tile.color, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
@@ -82,7 +82,7 @@ private struct MetricTileView: View {
             .background {
                 RoundedRectangle(cornerRadius: DS.cardRadius)
                     .fill(AppColour.surfaceRaised)
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
+                    .shadow(color: AppColour.shadowAmbient, radius: 4, y: 2)
             }
             .overlay(
                 RoundedRectangle(cornerRadius: DS.cardRadius)

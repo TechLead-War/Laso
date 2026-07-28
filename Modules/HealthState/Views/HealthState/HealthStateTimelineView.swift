@@ -96,7 +96,7 @@ struct HealthStateTimelineView: View {
                     .overlay {
                         Image(systemName: iconFor(state.label))
                             .font(DS.Typography.title3.weight(.bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppColour.textOnAccent)
                     }
 
                 VStack(alignment: .leading, spacing: DS.space1) {
@@ -155,7 +155,7 @@ struct HealthStateTimelineView: View {
             }
         }
         .padding(DS.space4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .cardStyle()
     }
 
     // MARK: - 2. Calendar Grid
@@ -257,8 +257,10 @@ struct HealthStateTimelineView: View {
                 Text(Copy.HealthState.xText(day.dayNumber))
                     .font(DS.Typography.caption2.weight(.medium).monospacedDigit())
                     .frame(maxWidth: .infinity, minHeight: 28)
-                    .background(viewModel.color(for: label).opacity(0.7), in: RoundedRectangle(cornerRadius: DS.Radius.xs))
-                    .foregroundStyle(.white)
+                    // Opaque fill, not .opacity(0.7): on a light card the faded state
+                    // colour drops the day number to about 1.4:1.
+                    .background(viewModel.color(for: label), in: RoundedRectangle(cornerRadius: DS.Radius.xs))
+                    .foregroundStyle(AppColour.textOnAccent)
             } else if day.dayNumber > 0 {
                 Text(Copy.HealthState.xText2(day.dayNumber))
                     .font(DS.Typography.caption2.monospacedDigit())
@@ -407,7 +409,7 @@ struct HealthStateTimelineView: View {
         VStack(spacing: DS.itemSpacing) {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             Text(Copy.HealthStateTimeline.emptyTitle)
                 .font(DS.Typography.headline)
@@ -415,7 +417,7 @@ struct HealthStateTimelineView: View {
 
             Text(Copy.HealthStateTimeline.emptyBody)
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)

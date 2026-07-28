@@ -75,6 +75,12 @@ struct CorrelationsView: View {
                 // Empty state when nothing at all
                 if !hasIntelligence && correlations.isEmpty {
                     emptyState
+                        .onAppear {
+                            AppAnalytics.shared.trackEmptyStateShown(
+                                screen: .correlations,
+                                reason: "no_correlations_yet"
+                            )
+                        }
                 }
             }
             .padding(.vertical)
@@ -131,7 +137,7 @@ struct CorrelationsView: View {
 
     private var causalChainsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: Copy.Insights.Correlations.whyThingsChanged, icon: "arrow.triangle.branch", color: .purple)
+            sectionHeader(title: Copy.Insights.Correlations.whyThingsChanged, icon: "arrow.triangle.branch", color: AppColour.categoryStress)
                 .padding(.horizontal)
 
             ForEach(causalChains.prefix(4)) { chain in
@@ -157,7 +163,7 @@ struct CorrelationsView: View {
 
     private var interactionEffectsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: Copy.Insights.Correlations.howMuchMatters, icon: "chart.line.uptrend.xyaxis", color: .cyan)
+            sectionHeader(title: Copy.Insights.Correlations.howMuchMatters, icon: "chart.line.uptrend.xyaxis", color: AppColour.accent)
                 .padding(.horizontal)
 
             ForEach(Array(interactionEffects.prefix(4).enumerated()), id: \.offset) { _, effect in
@@ -281,7 +287,7 @@ private struct CompoundInsightCard: View {
                 HStack(spacing: DS.space2) {
                     Image(systemName: categoryIcon)
                         .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .frame(width: 22, height: 22)
                         .background(categoryColor, in: Circle())
 
@@ -444,7 +450,7 @@ struct CausalChainCard: View {
                     HStack(spacing: DS.space2) {
                         Image(systemName: "list.bullet.rectangle")
                             .font(DS.Typography.captionSemibold)
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(AppColour.categoryStress)
                         Text(Copy.Insights.Correlations.evidenceLabel)
                             .font(DS.Typography.subheadlineSemibold)
                             .foregroundStyle(.primary)
@@ -471,7 +477,7 @@ struct CausalChainCard: View {
             }
         }
         .padding(DS.cardPadding)
-        .cardStyle(tint: .purple)
+        .cardStyle(tint: AppColour.categoryStress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Copy.Insights.causalChainAffectingLabel(chain.affectedMetric.displayName))
         .accessibilityValue(chain.narrative)
@@ -509,13 +515,13 @@ private struct InteractionEffectCard: View {
                 HStack(spacing: 8) {
                     Image(systemName: effectTypeIcon)
                         .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColour.textOnAccent)
                         .frame(width: 22, height: 22)
-                        .background(.cyan, in: Circle())
+                        .background(AppColour.accent, in: Circle())
 
                     Text(effectTypeLabel)
                         .font(DS.Typography.caption2Semibold)
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(AppColour.accent)
                         .textCase(.uppercase)
 
                     Spacer()
@@ -551,7 +557,7 @@ private struct InteractionEffectCard: View {
                     if let condition = effect.condition {
                         Text(condition)
                             .font(DS.Typography.caption2)
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(AppColour.accent)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -564,7 +570,7 @@ private struct InteractionEffectCard: View {
                 }
             }
             .padding(DS.cardPadding)
-            .cardStyle(tint: .cyan)
+            .cardStyle(tint: AppColour.accent)
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)

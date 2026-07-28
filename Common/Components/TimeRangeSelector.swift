@@ -51,7 +51,7 @@ struct TimeRangeSelector: View {
                     }
                     .foregroundStyle(
                         isSelected
-                            ? Color.white
+                            ? AppColour.textOnAccent
                             : (isAllowed ? AppColour.textPrimary : AppColour.textSecondary)
                     )
                     .frame(maxWidth: .infinity)

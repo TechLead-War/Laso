@@ -727,14 +727,14 @@ struct ContentView: View {
                 Divider().padding(.leading, 44)
                 sleepCoachEmptyTipRow(
                     icon: "thermometer.snowflake",
-                    color: .cyan,
+                    color: AppColour.accent,
                     title: Copy.SleepCoach.tipCoolBedroomTitle,
                     detail: Copy.SleepCoach.tipCoolBedroomDetail
                 )
                 Divider().padding(.leading, 44)
                 sleepCoachEmptyTipRow(
                     icon: "sun.max.fill",
-                    color: .orange,
+                    color: AppColour.warning,
                     title: Copy.SleepCoach.tipMorningSunlightTitle,
                     detail: Copy.SleepCoach.tipMorningSunlightDetail
                 )
@@ -968,7 +968,7 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "creditcard.trianglebadge.exclamationmark")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppColour.warning)
 
                 Text(Copy.Common.updateYourPaymentMethodToKeep)
                     .font(.caption2)
@@ -979,12 +979,12 @@ struct ContentView: View {
                 if let url = URL(string: AppSecrets.URLs.manageSubscriptions) {
                     Link("Update", destination: url)
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColour.warning)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .glassChrome(tinted: .orange, in: Rectangle())
+            .glassChrome(tinted: AppColour.warning, in: Rectangle())
         }
     }
 }

@@ -267,9 +267,9 @@ struct BreathworkView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space4)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
-                    .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
+                    .shadow(color: AppColour.shadowAmbient, radius: 8, y: 4)
                 }
                 .buttonStyle(.dsPress)
                 .padding(.top, DS.space1)
@@ -353,7 +353,7 @@ struct BreathworkView: View {
         }
         .padding(.horizontal, DS.space3)
         .padding(.vertical, DS.space2)
-        .background(.ultraThinMaterial, in: Capsule())
+        .background(AppColour.surfaceRaised, in: Capsule())
     }
 
     private var cycleDescription: String {
@@ -441,7 +441,7 @@ struct BreathworkView: View {
                 .scaleEffect(circleScale)
 
             Circle()
-                .strokeBorder(accent.opacity(0.5), lineWidth: 2)
+                .strokeBorder(accent, lineWidth: 2)
                 .frame(width: 200, height: 200)
                 .scaleEffect(circleScale)
 
@@ -469,7 +469,7 @@ struct BreathworkView: View {
                     .font(DS.Typography.title3)
                     .foregroundStyle(.primary.opacity(0.7))
                     .frame(width: 56, height: 56)
-                    .background(.ultraThinMaterial, in: Circle())
+                    .background(AppColour.surfaceRaised, in: Circle())
             }
             .buttonStyle(.dsPress)
 
@@ -479,10 +479,10 @@ struct BreathworkView: View {
             } label: {
                 Image(systemName: sessionState == .paused ? "play.fill" : "pause.fill")
                     .font(DS.Typography.title2)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 72, height: 72)
                     .background(accent, in: Circle())
-                    .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
+                    .shadow(color: AppColour.shadowAmbient, radius: 8, y: 4)
             }
             .buttonStyle(.dsPress)
 
@@ -541,9 +541,9 @@ struct BreathworkView: View {
                     .font(DS.Typography.bodySemibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space4)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppColour.textOnAccent)
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
-                    .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
+                    .shadow(color: AppColour.shadowAmbient, radius: 8, y: 4)
             }
             .buttonStyle(.dsPress)
             .padding(.horizontal)
