@@ -51,6 +51,11 @@ final class OnboardingHealthSnapshot {
     // is mean SDNN in ms — matching PredictionMetric's documented units.
     private(set) var rhrDailySamples: [MetricSample] = []
     private(set) var sleepDurationDailySamples: [MetricSample] = []
+    /// One wake instant per night, from the same query as the durations.
+    /// The samples above are dated at a midnight night-anchor, so they
+    /// cannot supply a wake time; this is captured alongside them rather
+    /// than by running a second sleep fetch during the flow.
+    private(set) var sleepWakeTimes: [Date] = []
     private(set) var hrvDailySamples: [MetricSample] = []
 
     /// Per-metric history for PredictionVerdictEngine.evaluate / .segment.
@@ -115,6 +120,14 @@ final class OnboardingHealthSnapshot {
         hrvDailySamples = (0..<28).map { i in
             MetricSample(date: now.addingTimeInterval(-Double(i) * day), value: 62)
         }
+        // Wake times drift a little around 07:00 so the onboarding anchor ask
+        // renders with a realistic suggestion instead of its hidden state.
+        sleepWakeTimes = (0..<28).compactMap { i in
+            var c = Date.cal.dateComponents([.year, .month, .day], from: now.addingTimeInterval(-Double(i) * day))
+            c.hour = 7
+            c.minute = 0
+            return Date.cal.date(from: c)?.addingTimeInterval(Double((i % 5) - 2) * 600)
+        }
 
         isLoaded = true
     }
@@ -167,7 +180,8 @@ final class OnboardingHealthSnapshot {
         hrvWeekdayMeans = hrv.weekdayMeans
 
         rhrDailySamples = rhrDaily
-        sleepDurationDailySamples = sleepDaily
+        sleepDurationDailySamples = sleepDaily.daily
+        sleepWakeTimes = sleepDaily.wakeTimes
         hrvDailySamples = hrvDaily
 
         stepsDailyAvg = (await stepsV).map { $0 / 30.0 }
@@ -278,6 +292,7 @@ final class OnboardingHealthSnapshot {
                 }
 
                 var perNight: [Date: TimeInterval] = [:]
+                var wakePerNight: [Date: Date] = [:]
                 for sample in cats {
                     let asleep =
                         sample.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue ||
@@ -445,11 +460,11 @@ final class OnboardingHealthSnapshot {
     /// One sample per night = total minutes asleep, grouped by the same 6-hour
     /// shifted night anchor the sleep aggregate uses so a single night is never
     /// split across two calendar days.
-    private func dailySleepDurationSamples() async -> [MetricSample] {
+    private func dailySleepDurationSamples() async -> (daily: [MetricSample], wakeTimes: [Date]) {
         let calendar = Date.cal
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -Self.verdictWindowDays, to: endDate) else {
-            return []
+            return (daily: [], wakeTimes: [])
         }
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
 
@@ -461,10 +476,11 @@ final class OnboardingHealthSnapshot {
                 sortDescriptors: nil
             ) { _, samples, _ in
                 guard let cats = samples as? [HKCategorySample], !cats.isEmpty else {
-                    continuation.resume(returning: [])
+                    continuation.resume(returning: (daily: [], wakeTimes: []))
                     return
                 }
                 var perNight: [Date: TimeInterval] = [:]
+                var wakePerNight: [Date: Date] = [:]
                 for sample in cats {
                     let asleep =
                         sample.value == HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue ||
@@ -474,11 +490,18 @@ final class OnboardingHealthSnapshot {
                     guard asleep else { continue }
                     let nightAnchor = calendar.startOfDay(for: sample.startDate.addingTimeInterval(-6 * 3600))
                     perNight[nightAnchor, default: 0] += sample.endDate.timeIntervalSince(sample.startDate)
+                    // Latest asleep-stage end of the night is the wake moment.
+                    if (wakePerNight[nightAnchor] ?? .distantPast) < sample.endDate {
+                        wakePerNight[nightAnchor] = sample.endDate
+                    }
                 }
                 let daily = perNight.map { night, seconds in
                     MetricSample(date: night, value: seconds / 60.0)  // minutes asleep
                 }
-                continuation.resume(returning: daily.sorted { $0.date < $1.date })
+                continuation.resume(returning: (
+                    daily: daily.sorted { $0.date < $1.date },
+                    wakeTimes: Array(wakePerNight.values)
+                ))
             }
             store.execute(q)
         }

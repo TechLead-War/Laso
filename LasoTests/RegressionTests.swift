@@ -85,6 +85,91 @@ struct RegressionTests {
         #expect(real.hour == 7 && real.minute == 15, "a sane wake time passes through untouched")
     }
 
+    // MARK: - Wake anchor
+
+    /// A user-set wake time outranks detection, and it has to outrank it in
+    /// `detectAndPersist` too. That function only routed through
+    /// `persistedWakeTime` on its TTL-hit branch, so a TTL-expired refresh
+    /// would re-detect, overwrite the stored keys, and silently revert the
+    /// anchor for every scheduler reading them.
+    @Test func userAnchorOutranksDetection() {
+        let defaults = UserDefaults.standard
+        let previous = WakeUpTimeDetector.userAnchor
+        defer { WakeUpTimeDetector.userAnchor = previous }
+
+        defaults.set(9, forKey: AppKeys.Engagement.detectedWakeHour)
+        defaults.set(30, forKey: AppKeys.Engagement.detectedWakeMinute)
+        defaults.set("detected", forKey: AppKeys.Engagement.wakeTimeSource)
+
+        WakeUpTimeDetector.userAnchor = (hour: 6, minute: 30)
+        #expect(WakeUpTimeDetector.persistedWakeTime == (hour: 6, minute: 30),
+                "the anchor wins over a detected wake time")
+
+        WakeUpTimeDetector.userAnchor = nil
+        #expect(WakeUpTimeDetector.persistedWakeTime == (hour: 9, minute: 30),
+                "clearing the anchor falls back to detection, not to the 7:00 default")
+    }
+
+    /// An anchor outside 5-11 would make the morning reminder a repeating
+    /// trigger inside quiet hours, which `NotificationManager` drops rather
+    /// than defers. The setter clamps so that can never be stored.
+    @Test func userAnchorCannotBeStoredOutsideTheDeliverableBand() {
+        let previous = WakeUpTimeDetector.userAnchor
+        defer { WakeUpTimeDetector.userAnchor = previous }
+
+        WakeUpTimeDetector.userAnchor = (hour: 3, minute: 15)
+        #expect(WakeUpTimeDetector.userAnchor?.hour == WakeUpTimeDetector.earliestWakeHour)
+
+        WakeUpTimeDetector.userAnchor = (hour: 14, minute: 0)
+        #expect(WakeUpTimeDetector.userAnchor?.hour == WakeUpTimeDetector.latestWakeHour)
+    }
+
+    /// Drift is signed minutes around the anchor, and it has to take the nearer
+    /// side of the clock. Measured naively, a 23:40 wake against an 06:00
+    /// anchor reads as +1060 minutes late instead of 380 minutes early, which
+    /// renders as a full-height "late" mark on the wrong side of the line.
+    @Test func wakeDriftWrapsToTheNearerSideOfTheClock() {
+        func wake(_ hour: Int, _ minute: Int, daysAgo: Int) -> Date {
+            var comps = Date.cal.dateComponents(
+                [.year, .month, .day],
+                from: Date().addingTimeInterval(-Double(daysAgo) * 86_400)
+            )
+            comps.hour = hour
+            comps.minute = minute
+            return Date.cal.date(from: comps) ?? Date()
+        }
+
+        let points = WakeAnchorAnalyzer.drift(
+            from: [wake(23, 40, daysAgo: 1), wake(6, 20, daysAgo: 2), wake(5, 45, daysAgo: 3)],
+            anchor: (hour: 6, minute: 0),
+            days: 30
+        )
+
+        #expect(points.count == 3)
+        let drifts = points.map(\.driftMinutes).sorted()
+        #expect(drifts == [-380, -15, 20], "late-night wake reads as early, not as +1060")
+    }
+
+    /// A band label off four nights is a number pretending to be a finding, so
+    /// it stays nil until the minimum is met.
+    @Test func wakeConsistencyWithholdsItsBandUntilEnoughNights() {
+        func point(_ driftMinutes: Int, daysAgo: Int) -> WakeDriftPoint {
+            WakeDriftPoint(
+                date: Date().addingTimeInterval(-Double(daysAgo) * 86_400),
+                driftMinutes: driftMinutes
+            )
+        }
+
+        let sparse = (1...3).map { point(5, daysAgo: $0) }
+        #expect(WakeAnchorAnalyzer.consistency(from: sparse, windowDays: 28).band == nil)
+
+        let enough = (1...WakeAnchorConfig.consistencyMinNights).map { point(5, daysAgo: $0) }
+        let result = WakeAnchorAnalyzer.consistency(from: enough, windowDays: 28)
+        #expect(result.band == .steady)
+        #expect(result.medianAbsDriftMinutes == 5)
+        #expect(result.nightsInWindow == result.totalNights)
+    }
+
     // MARK: - Sample storage
 
     /// The dedupe key divided epoch seconds by 86400, a UTC bucket applied to

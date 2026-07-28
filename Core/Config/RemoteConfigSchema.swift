@@ -183,6 +183,17 @@ extension RemoteConfigManager {
         RC.energyLabelStrainThreshold:                 5.0    as NSNumber,
         RC.recoveryWeeklyTrendMinDays:                 4      as NSNumber,
         RC.recoveryWeeklyTrendThresholdSDMultiplier:   0.3    as NSNumber,
+
+        // Wake anchor. SOURCE: Windred et al., SLEEP 47(1) 2024 (N=60,977) —
+        // the lowest-mortality quintile woke inside roughly a 1-hour window,
+        // i.e. about +/-30 min, which sets the loose band. The tight band is
+        // the stricter half of that, not a separate finding.
+        RC.killWakeAnchor:                             false  as NSNumber,
+        RC.wakeAnchorDriftTightMinutes:                15     as NSNumber,
+        RC.wakeAnchorDriftLooseMinutes:                30     as NSNumber,
+        RC.wakeAnchorConsistencyWindowDays:            28     as NSNumber,
+        RC.wakeAnchorConsistencyMinNights:             14     as NSNumber,
+        RC.wakeAnchorHistoryWindowDays:                90     as NSNumber,
     ]
 }
 
@@ -379,4 +390,14 @@ extension RemoteConfigManager {
     var energyLabelStrainThreshold: Double              { double(forKey: RC.energyLabelStrainThreshold) }
     var recoveryWeeklyTrendMinDays: Int                 { int(forKey: RC.recoveryWeeklyTrendMinDays) }
     var recoveryWeeklyTrendThresholdSDMultiplier: Double { double(forKey: RC.recoveryWeeklyTrendThresholdSDMultiplier) }
+
+    // MARK: Wake Anchor
+
+    /// True → the Sleep Coach wake-window section is hidden entirely.
+    var killWakeAnchor: Bool                            { bool(forKey: RC.killWakeAnchor) }
+    var wakeAnchorDriftTightMinutes: Int                { int(forKey: RC.wakeAnchorDriftTightMinutes) }
+    var wakeAnchorDriftLooseMinutes: Int                { int(forKey: RC.wakeAnchorDriftLooseMinutes) }
+    var wakeAnchorConsistencyWindowDays: Int            { int(forKey: RC.wakeAnchorConsistencyWindowDays) }
+    var wakeAnchorConsistencyMinNights: Int             { int(forKey: RC.wakeAnchorConsistencyMinNights) }
+    var wakeAnchorHistoryWindowDays: Int                { int(forKey: RC.wakeAnchorHistoryWindowDays) }
 }

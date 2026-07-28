@@ -663,9 +663,18 @@ struct OnbV2Screen12Sleep: View {
     @State private var phase: RevealPhase = .hidden
     @State private var numberLanded = false
     @State private var targetLineEmphasis = false
+    @State private var anchorKept = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let dayLetters = ["M", "T", "W", "T", "F", "S", "S"]
+
+    /// The wake time we offer to keep. Nil when there are too few nights to
+    /// call it a pattern, in which case the ask is not shown at all — guessing
+    /// a wake time and asking the user to commit to it is worse than silence.
+    private var suggestedAnchor: (hour: Int, minute: Int)? {
+        WakeUpTimeDetector.medianWakeTime(from: snapshot.sleepWakeTimes)
+            .map { WakeUpTimeDetector.clamped(hour: $0.hour, minute: $0.minute, origin: "onboarding") }
+    }
 
     private var hasData: Bool { snapshot.sleepAvgHours != nil }
     private var nightlyHours: [Double] { snapshot.sleepLast7Nights }
@@ -801,6 +810,12 @@ struct OnbV2Screen12Sleep: View {
                                 .multilineTextAlignment(.center)
                                 .onbV2StaggerIn(index: 1, appeared: phase.hasReached(.body))
                         }
+
+                        if let suggested = suggestedAnchor {
+                            anchorAsk(suggested)
+                                .padding(.top, 4)
+                                .onbV2StaggerIn(index: 2, appeared: phase.hasReached(.body))
+                        }
                     }
                     .padding(.horizontal, OnbV2.bodyPadH)
                     .padding(.bottom, 16)
@@ -826,6 +841,60 @@ struct OnbV2Screen12Sleep: View {
                 targetLineEmphasis = true
             }
         }
+    }
+
+    /// One tap that turns the screen's promise into a commitment. The screen
+    /// already says we will watch the gap; without this it asks for nothing and
+    /// the wake anchor stays empty for everyone who never finds Sleep Coach.
+    private func anchorAsk(_ suggested: (hour: Int, minute: Int)) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Copy.WakeAnchor.onboardingEyebrow)
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.4)
+                .foregroundStyle(OnbV2.purple)
+
+            Text(Copy.WakeAnchor.onboardingUsually(anchorLabel(suggested)))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(OnbV2.fg)
+
+            Text(anchorKept ? Copy.WakeAnchor.onboardingKept : Copy.WakeAnchor.onboardingBody)
+                .font(.system(size: 13))
+                .foregroundStyle(OnbV2.fg2)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !anchorKept {
+                Button(Copy.WakeAnchor.onboardingConfirm) {
+                    WakeUpTimeDetector.userAnchor = suggested
+                    anchorKept = true
+                    AppAnalytics.shared.trackWakeAnchorSet(
+                        hour: suggested.hour,
+                        isFirstSet: true,
+                        source: "onboarding"
+                    )
+                }
+                .buttonStyle(.dsTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(OnbV2.purple.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(OnbV2.purple.opacity(anchorKept ? 0.4 : 0.18), lineWidth: 1)
+        )
+        .animation(.easeOut(duration: 0.25), value: anchorKept)
+    }
+
+    private func anchorLabel(_ anchor: (hour: Int, minute: Int)) -> String {
+        var comps = DateComponents()
+        comps.hour = anchor.hour
+        comps.minute = anchor.minute
+        guard let date = Date.cal.date(from: comps) else { return "--:--" }
+        return date.formatted(date: .omitted, time: .shortened)
     }
 
     private var sleepCard: some View {

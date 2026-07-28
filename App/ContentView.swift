@@ -657,11 +657,18 @@ struct ContentView: View {
                 wakeTime: need.recommendedWakeTime,
                 debtHours: debt?.totalDebtHours ?? 0,
                 dailyHistory: dailyHistory,
-                consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore),
+                // Live overnight wake times, not stored sample dates: the
+                // boundary query excludes naps and is re-run on open, so a
+                // corrected night shows the corrected wake time.
+                wakeTimes: boundaries.values.map(\.wakeTime),
                 onRefresh: { await dashboardViewModel.refresh() }
             )
             .task {
-                await healthKitManager.refreshSleepBoundaries(days: 14)
+                // Covers both consumers: the 14-day history section and the
+                // wake window's 28-night consistency readout.
+                await healthKitManager.refreshSleepBoundaries(
+                    days: max(14, WakeAnchorConfig.consistencyWindowDays)
+                )
             }
         } else {
             sleepCoachEmptyState

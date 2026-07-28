@@ -50,19 +50,6 @@ extension Copy {
 
         static var fourteenDayHistory: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_fourteen_day_history", default: "14-Day History") }
 
-        // MARK: - Consistency
-
-        static var consistency: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_consistency", default: "Consistency") }
-        static var excellent: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_excellent", default: "Excellent") }
-        static var good: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_good", default: "Good") }
-        static var needsWork: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_needs_work", default: "Building") }
-        static var irregular: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_irregular", default: "Irregular") }
-
-        static var consistencyExcellent: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_consistency_excellent", default: "Your sleep schedule is very steady. Great for your body clock.") }
-        static var consistencyGood: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_consistency_good", default: "Pretty steady schedule. Try to keep weekends closer to your weekday timing.") }
-        static var consistencyNeedsWork: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_consistency_needs_work", default: "Your sleep timing jumps around. Even small steps here can help you sleep better.") }
-        static var consistencyIrregular: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_consistency_irregular", default: "Your sleep timing changes a lot. Waking up at the same time every day is the best place to start.") }
-
         // MARK: - Tips
 
         static var payingOffDebtTitle: String { RemoteConfigManager.shared.copyString("copy_sleep_coach_paying_off_debt_title", default: "Restoring Balance") }
@@ -108,6 +95,5 @@ extension Copy {
         static func sleepInBedLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_sleep_in_bed_label", default: "%@ sleep: %@ in bed"), p0, p1) }
         static func mNapText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_m_nap_text", default: "+%dm nap"), p0) }
         static func daytimeNapMinutesCountedInLabel(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_daytime_nap_minutes_counted_in_label", default: "Daytime nap %d minutes, counted in sleep balance"), p0) }
-        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_x_text", default: "%d"), p0) }
     }
 }

@@ -290,9 +290,32 @@ struct ExploreView: View {
                         .onDisappear { decliningTrendsTracker.disappeared(); correlationsTracker.disappeared() }
                     }
 
-                    // 9. Free tier upsell for advanced analytics. Pro users see the
-                    // explanation inline inside section 8 above.
-                    if !FeatureGate.canAccess(.advancedAnalytics) {
+                    // 9. Connections entry.
+                    //
+                    // Pro gets a permanent header link. Section 8's "See all"
+                    // is the only other route to `correlationsDetail`, and it
+                    // renders only when `causalChains` is non-empty and the
+                    // section itself has declining highlights and 30+ days of
+                    // data — so a paying user with none of those could not
+                    // reach the screen at all, while free users always saw the
+                    // upsell for it.
+                    if FeatureGate.canAccess(.advancedAnalytics) {
+                        SectionHeaderView(
+                            icon: "link",
+                            title: Copy.Explore.connections,
+                            trailingTitle: Copy.Explore.seeAll,
+                            trailingAction: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: Copy.Explore.seeAll,
+                                    type: .exploreSeeAllCorrelations,
+                                    screen: .explore,
+                                    metadata: ["destination": "correlations_detail", "source": "connections_header"]
+                                )
+                                navigationPath.append(Route.correlationsDetail)
+                            }
+                        )
+                        .onAppear { scrollDepth.record(90) }
+                    } else {
                         VStack(alignment: .leading, spacing: DS.itemSpacing) {
                             SectionHeaderView(icon: "link", title: Copy.Explore.connections)
 

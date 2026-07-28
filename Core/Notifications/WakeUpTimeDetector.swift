@@ -74,26 +74,28 @@ enum WakeUpTimeDetector {
                     wakeUpTimesByNight[night] = session.end
                 }
 
-                guard wakeUpTimesByNight.count >= minimumSessions else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                // Extract hour+minute from each wake-up time and find the median
-                let wakeMinutes: [Int] = wakeUpTimesByNight.values.map { date in
-                    let components = calendar.dateComponents([.hour, .minute], from: date)
-                    return (components.hour ?? 7) * 60 + (components.minute ?? 0)
-                }.sorted()
-
-                let medianMinutes = wakeMinutes[wakeMinutes.count / 2]
-                let hour = medianMinutes / 60
-                let minute = medianMinutes % 60
-
-                continuation.resume(returning: (hour: hour, minute: minute))
+                continuation.resume(returning: medianWakeTime(from: Array(wakeUpTimesByNight.values)))
             }
 
             healthStore.execute(query)
         }
+    }
+
+    /// The user's typical wake time across a set of nights, or nil below
+    /// `minimumSessions` nights — a median of two mornings is not a schedule.
+    ///
+    /// Shared so onboarding and the background detector agree on one answer.
+    /// Onboarding cannot reuse `detect` directly: it already runs its own sleep
+    /// query, and a second full 14-day fetch during the flow is wasted work.
+    static func medianWakeTime(from wakeTimes: [Date]) -> (hour: Int, minute: Int)? {
+        guard wakeTimes.count >= minimumSessions else { return nil }
+        let minutes = wakeTimes.map { date -> Int in
+            let components = Date.cal.dateComponents([.hour, .minute], from: date)
+            return (components.hour ?? fallbackHour) * 60 + (components.minute ?? 0)
+        }.sorted()
+        // Upper median on an even count, matching the original behaviour.
+        let median = minutes[minutes.count / 2]
+        return (hour: median / 60, minute: median % 60)
     }
 
     /// Merge consecutive sleep-stage samples into whole sessions, so a night is
@@ -160,6 +162,12 @@ enum WakeUpTimeDetector {
     static func detectAndPersist(healthStore: HKHealthStore) async -> (hour: Int, minute: Int) {
         let defaults = UserDefaults.standard
 
+        // A user-set anchor short-circuits before the query AND before the
+        // writes. Detecting here would overwrite the persisted keys with the
+        // detected time, silently reverting the anchor for every scheduler that
+        // reads them through `persistedWakeTime`.
+        if let anchor = userAnchor { return anchor }
+
         // Gated at the choke point so both callers inherit it. Without this the
         // detector re-ran its 14-day HealthKit query on every refresh.
         if let last = defaults.object(forKey: AppKeys.Engagement.lastWakeDetection) as? Date,
@@ -186,10 +194,45 @@ enum WakeUpTimeDetector {
         return (hour: fallbackHour, minute: fallbackMinute)
     }
 
+    /// The wake time the user chose for themselves, or nil if they never did.
+    ///
+    /// Clamped to the same 5–11 band as detection, and for the same reason:
+    /// `NotificationManager.summaryMayBreakQuietHours` grants the daily summary
+    /// its quiet-hours exemption only inside that band, so an anchor outside it
+    /// would produce a repeating trigger that is dropped, not deferred — a
+    /// morning reminder that silently never arrives.
+    static var userAnchor: (hour: Int, minute: Int)? {
+        get {
+            let defaults = UserDefaults.standard
+            guard defaults.object(forKey: AppKeys.Engagement.userWakeAnchorHour) != nil else {
+                return nil
+            }
+            return (
+                hour: defaults.integer(forKey: AppKeys.Engagement.userWakeAnchorHour),
+                minute: defaults.integer(forKey: AppKeys.Engagement.userWakeAnchorMinute)
+            )
+        }
+        set {
+            let defaults = UserDefaults.standard
+            guard let newValue else {
+                defaults.removeObject(forKey: AppKeys.Engagement.userWakeAnchorHour)
+                defaults.removeObject(forKey: AppKeys.Engagement.userWakeAnchorMinute)
+                return
+            }
+            let safe = clamped(hour: newValue.hour, minute: newValue.minute, origin: "anchor")
+            defaults.set(safe.hour, forKey: AppKeys.Engagement.userWakeAnchorHour)
+            defaults.set(safe.minute, forKey: AppKeys.Engagement.userWakeAnchorMinute)
+        }
+    }
+
     /// Read the persisted wake-up time (or fallback if not yet detected).
     /// Clamped on read too, so a value written by an older build cannot
     /// schedule a night-time push.
     static var persistedWakeTime: (hour: Int, minute: Int) {
+        // The anchor is a promise: once the user picks a wake time, nothing
+        // detected moves it.
+        if let anchor = userAnchor { return anchor }
+
         let defaults = UserDefaults.standard
         // No source key means detection never ran, so the stored zeros are not
         // a real time.
@@ -201,5 +244,18 @@ enum WakeUpTimeDetector {
             minute: defaults.integer(forKey: AppKeys.Engagement.detectedWakeMinute),
             origin: "persisted"
         )
+    }
+
+    /// The anchor as a `Date` on the given day, for the bedtime pipeline.
+    /// `SleepNeedCalculator` takes a `targetWakeTime: Date?`, and without this
+    /// the wind-down push keeps computing bedtime off a separate wake estimate —
+    /// so "we move your bedtime, not your mornings" would not be true.
+    static func anchorDate(on day: Date = Date()) -> Date? {
+        guard let anchor = userAnchor else { return nil }
+        var comps = Date.cal.dateComponents([.year, .month, .day], from: day)
+        comps.hour = anchor.hour
+        comps.minute = anchor.minute
+        comps.calendar = Date.cal
+        return Date.cal.date(from: comps)
     }
 }

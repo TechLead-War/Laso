@@ -58,22 +58,5 @@ enum SleepNeedConfig {
     static let qualityTrendDecliningGapHours: Double = 0.5
     static let qualityTrendAdjustment: Double = 0.25
 
-    // MARK: - Consistency Score
-
-    /// Coefficient of variation that maps to a 0% consistency score.
-    static let consistencyCVZeroScoreThreshold: Double = 0.3
-    static let consistencyMaxScore: Double = 100
-    static let consistencyMinScore: Double = 0
-
-    /// Bedtime standard deviation (minutes) that maps to a 0% timing score.
-    static let timingStdDevZeroScoreMinutes: Double = 90
-
-    /// Blend weights for the duration vs timing component of the consistency score.
-    static let consistencyDurationWeight: Double = 0.4
-    static let consistencyTimingWeight: Double = 0.6
-
-    /// Threshold (minutes from midnight) above which a bedtime is treated as
-    /// "before midnight yesterday" so the value normalises to a negative offset.
-    static let bedtimeWrapAroundThresholdMinutes: Double = 1080
     static let minutesPerDay: Double = 1440
 }

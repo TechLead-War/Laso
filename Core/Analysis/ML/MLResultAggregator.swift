@@ -367,8 +367,11 @@ final class MLResultAggregator {
             ))
         }
 
-        // ML correlation insights (novel discoveries not in the hardcoded 35)
-        for corr in mlCorrelations.prefix(3) where corr.grangerCausal {
+        // ML correlation insights (novel discoveries not in the hardcoded 35).
+        // `survivedFDR` is not optional here: without it this was the one
+        // user-facing surface showing uncorrected multiple-comparison results,
+        // while CompoundInsightEngine and TodayIntelligenceEngine both check it.
+        for corr in mlCorrelations.prefix(3) where corr.grangerCausal && corr.survivedFDR {
             let effectLabel: String
             if corr.grangerEffectSize > 0.35 { effectLabel = "strong" }
             else if corr.grangerEffectSize > 0.15 { effectLabel = "moderate" }
@@ -417,7 +420,7 @@ final class MLResultAggregator {
         focusCategories: Set<HealthCategory>,
         timingRecommendations: [CircadianAnalyzer.TimingRecommendation]
     ) -> PolicyDecision? {
-        let causalCorrelations = mlCorrelations.filter { $0.grangerCausal }
+        let causalCorrelations = mlCorrelations.filter { $0.grangerCausal && $0.survivedFDR }
         let candidates = components.decisionPolicyEngine.generateCandidates(
             currentState: currentHealthState,
             tomorrowRisk: tomorrowRiskPrediction,

@@ -237,6 +237,17 @@ enum RC {
     static let energyLabelStrainThreshold        = "energy_label_strain_threshold"
     static let recoveryWeeklyTrendMinDays        = "recovery_weekly_trend_min_days"
     static let recoveryWeeklyTrendThresholdSDMultiplier = "recovery_weekly_trend_threshold_sd_multiplier"
+
+    // MARK: Wake Anchor
+    //
+    // Bands and windows for the Sleep Coach wake-window section. Consumer:
+    // Core/Analysis/Config/WakeAnchorConfig.swift.
+    static let killWakeAnchor                    = "kill_wake_anchor"
+    static let wakeAnchorDriftTightMinutes       = "wake_anchor_drift_tight_minutes"
+    static let wakeAnchorDriftLooseMinutes       = "wake_anchor_drift_loose_minutes"
+    static let wakeAnchorConsistencyWindowDays   = "wake_anchor_consistency_window_days"
+    static let wakeAnchorConsistencyMinNights    = "wake_anchor_consistency_min_nights"
+    static let wakeAnchorHistoryWindowDays       = "wake_anchor_history_window_days"
 }
 
 // MARK: - Hex → Color

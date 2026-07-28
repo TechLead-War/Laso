@@ -233,6 +233,11 @@ enum AppKeys {
         static let detectedWakeMinute = "laso.engagement.detected_wake_minute"
         static let wakeTimeSource    = "laso.engagement.wake_time_source"
         static let lastWakeDetection = "laso.engagement.last_wake_detection"
+        // A wake time the user chose. Outranks detection everywhere; absence of
+        // the hour key is the "never set" signal, because `integer(forKey:)`
+        // cannot tell an unset key from a stored midnight.
+        static let userWakeAnchorHour   = "laso.engagement.user_wake_anchor_hour"
+        static let userWakeAnchorMinute = "laso.engagement.user_wake_anchor_minute"
 
         // Activation gates (Headspace pattern: 0 to 1 activation moment, not calendar).
         // Day 2 gate: user has opened the app and seen their first real Recovery score.

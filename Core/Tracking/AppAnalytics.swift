@@ -1354,6 +1354,29 @@ final class AppAnalytics {
         ])
     }
 
+    /// Wake anchor chosen. `hour_bucket` rather than the raw hour so the event
+    /// does not carry a routine that pinpoints when someone is at home.
+    func trackWakeAnchorSet(hour: Int, isFirstSet: Bool, source: String = "sleep_coach") {
+        let bucket: String
+        if hour < 6 { bucket = "early" } else if hour < 8 { bucket = "mid" } else { bucket = "late" }
+        logEvent("wake_anchor_set", parameters: [
+            "hour_bucket": bucket,
+            "is_first_set": isFirstSet,
+            "source": source
+        ])
+    }
+
+    /// Fired once per Sleep Coach open so the drift distribution is visible
+    /// without shipping per-night times. Success is this median falling
+    /// within-user between week 1 and week 8.
+    func trackWakeAnchorDriftSnapshot(medianDriftMinutes: Int, nightsInWindow: Int, nightsTracked: Int) {
+        logEvent("wake_anchor_drift_snapshot", parameters: [
+            "median_drift_minutes": medianDriftMinutes,
+            "nights_in_window": nightsInWindow,
+            "nights_tracked": nightsTracked
+        ])
+    }
+
     func trackTimeRangeChanged(screen: AppFeature, context: String, fromDays: Int, toDays: Int) {
         logEvent("time_range_changed", parameters: [
             "screen": screen.rawValue,

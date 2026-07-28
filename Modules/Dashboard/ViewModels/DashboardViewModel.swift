@@ -1448,12 +1448,19 @@ final class DashboardViewModel {
             return calendar.date(bySettingHour: rec.optimalWindowEnd, minute: 0, second: 0, of: base)
         }()
 
+        // A wake time the user set outranks the circadian estimate. Without
+        // this the wind-down push keeps computing bedtime off a separate wake
+        // estimate, and "we move your bedtime, not your mornings" is not true.
+        let targetWakeTime = WakeUpTimeDetector.anchorDate(
+            on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        ) ?? circadianWakeTime
+
         if let age = resolvedAge {
             let need = sleepNeedCalculator.compute(
                 from: store,
                 currentStrain: strainScorer.currentStrain,
                 sleepDebt: debtHours,
-                targetWakeTime: circadianWakeTime,
+                targetWakeTime: targetWakeTime,
                 age: age,
                 recoveryScore: Double(scores.overallScore.score),
                 sleepSeries: sleepSeries

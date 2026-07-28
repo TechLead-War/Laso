@@ -34,7 +34,6 @@ final class SleepNeedCalculator {
 
     private(set) var currentNeed: SleepNeed?
     private(set) var isReady: Bool = false
-    private(set) var sleepConsistencyScore: Double = 0
 
     // MARK: - Constants
 
@@ -115,9 +114,6 @@ final class SleepNeedCalculator {
             recommendedBedtime = nil
         }
 
-        // Consistency score
-        sleepConsistencyScore = computeConsistencyScore(from: sleepSeries)
-
         let need = SleepNeed(
             totalHoursNeeded: totalHoursNeeded,
             recommendedBedtime: recommendedBedtime,
@@ -168,55 +164,6 @@ final class SleepNeedCalculator {
             return nil
         }
         return calendar.date(bySettingHour: avgHour, minute: avgMinute, second: 0, of: tomorrow)
-    }
-
-    private func computeConsistencyScore(from sleepSeries: MetricTimeSeries) -> Double {
-        let samples = sleepSeries.samples(lastDays: Cfg.baselineWindowDays)
-        guard samples.count >= Cfg.minimumDaysRequired else { return 0 }
-
-        // Duration consistency: lower standard deviation = higher score
-        let values = samples.map(\.value)
-        let mean = values.mean(of: \.self)
-        guard mean > 0 else { return 0 }
-
-        let variance = values.reduce(0.0) { sum, val in
-            let delta = val - mean
-            return sum + delta * delta
-        } / Double(values.count)
-        let stdDev = variance.squareRoot()
-
-        let cv = stdDev / mean
-        let score = max(Cfg.consistencyMinScore, min(Cfg.consistencyMaxScore, (1.0 - cv / Cfg.consistencyCVZeroScoreThreshold) * Cfg.consistencyMaxScore))
-
-        // Timing consistency from sample dates
-        let calendar = Date.cal
-        var bedtimeMinutes: [Double] = []
-
-        for sample in samples {
-            // Estimate bedtime by subtracting sleep duration from sample date
-            let sleepHours = sample.value
-            let estimatedBedtime = sample.date.addingTimeInterval(-sleepHours * 3600)
-            let components = calendar.dateComponents([.hour, .minute], from: estimatedBedtime)
-            var minutesFromMidnight = Double(components.hour ?? 0) * 60 + Double(components.minute ?? 0)
-            // Bedtimes after 6 PM are treated as a negative offset from midnight.
-            if minutesFromMidnight > Cfg.bedtimeWrapAroundThresholdMinutes {
-                minutesFromMidnight -= Cfg.minutesPerDay
-            }
-            bedtimeMinutes.append(minutesFromMidnight)
-        }
-
-        guard !bedtimeMinutes.isEmpty else { return score }
-
-        let bedtimeMean = bedtimeMinutes.reduce(0, +) / Double(bedtimeMinutes.count)
-        let bedtimeVariance = bedtimeMinutes.reduce(0.0) { sum, val in
-            let delta = val - bedtimeMean
-            return sum + delta * delta
-        } / Double(bedtimeMinutes.count)
-        let bedtimeStdDev = bedtimeVariance.squareRoot()
-
-        let timingScore = max(Cfg.consistencyMinScore, min(Cfg.consistencyMaxScore, (1.0 - bedtimeStdDev / Cfg.timingStdDevZeroScoreMinutes) * Cfg.consistencyMaxScore))
-
-        return score * Cfg.consistencyDurationWeight + timingScore * Cfg.consistencyTimingWeight
     }
 
     private func fallbackNeed(performanceLevel: PerformanceLevel) -> SleepNeed {

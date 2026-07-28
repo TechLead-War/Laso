@@ -215,7 +215,12 @@ final class BackgroundRefreshCoordinator {
             from: store,
             currentStrain: 0,
             sleepDebt: 0,
-            targetWakeTime: nil
+            // Background pass has no circadian analyzer, so without the anchor
+            // this falls back to averaging raw sample dates and the wind-down
+            // reminder drifts away from the wake time the user chose.
+            targetWakeTime: WakeUpTimeDetector.anchorDate(
+                on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+            )
         )
         let defaults = UserDefaults.standard
         let lastHRV = defaults.integer(forKey: AppKeys.Notifications.lastHRVValue)

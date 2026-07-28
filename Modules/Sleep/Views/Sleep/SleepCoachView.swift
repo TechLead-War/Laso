@@ -1,14 +1,18 @@
 import SwiftUI
 
 /// Full Sleep Coach detail view showing tonight's sleep recommendation,
-/// sleep debt tracking, 14-day history, consistency score, and tips.
+/// sleep debt tracking, 14-day history, the wake window, and tips.
 struct SleepCoachView: View {
     let baseHoursNeeded: Double
     let bedtime: Date?
     let wakeTime: Date?
     let debtHours: Double
     let dailyHistory: [DayEntry]
-    let consistencyScore: Int
+    /// Overnight wake instants from HealthKit, any order. Drift is derived
+    /// here rather than passed in, because it depends on `anchor`, which this
+    /// view owns — computing it upstream leaves the strip empty until the
+    /// parent happens to re-render.
+    let wakeTimes: [Date]
     /// Pull-to-refresh hook wired by the route destination
     /// to `dashboardViewModel.refresh()`. Defaults to a no-op so existing
     /// previews and unit consumers continue to compile unchanged.
@@ -16,6 +20,19 @@ struct SleepCoachView: View {
 
     @State private var showAllTips = false
     @State private var expandedDayId: Date? = nil
+    @State private var showWakeAnchorSetter = false
+    /// Mirrors `WakeUpTimeDetector.userAnchor` so the card redraws the moment
+    /// the sheet writes it. UserDefaults is not observable.
+    @State private var anchor: (hour: Int, minute: Int)? = WakeUpTimeDetector.userAnchor
+
+    private var wakeDrift: [WakeDriftPoint] {
+        guard let anchor else { return [] }
+        return WakeAnchorAnalyzer.drift(
+            from: wakeTimes,
+            anchor: anchor,
+            days: WakeAnchorConfig.consistencyWindowDays
+        )
+    }
 
     /// A single day's sleep record for the 14-day history chart.
     struct DayEntry: Identifiable {
@@ -123,12 +140,27 @@ struct SleepCoachView: View {
                 scheduleSection
                 debtSection
                 historySection
-                consistencySection
+                if !WakeAnchorConfig.isKilled {
+                    wakeWindowSection
+                }
                 tipsSection
             }
             .padding(.bottom, DS.space6)
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
+        .sheet(isPresented: $showWakeAnchorSetter) {
+            WakeAnchorSetterSheet(
+                initial: anchor ?? WakeUpTimeDetector.persistedWakeTime,
+                // The adjusted need, not the base one, so the sheet's bedtime
+                // preview agrees with the "tonight" figure in the hero above.
+                hoursNeeded: adjustedNeed
+            ) { chosen in
+                let isFirstSet = anchor == nil
+                WakeUpTimeDetector.userAnchor = chosen
+                anchor = WakeUpTimeDetector.userAnchor
+                AppAnalytics.shared.trackWakeAnchorSet(hour: chosen.hour, isFirstSet: isFirstSet)
+            }
+        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .sleepCoach)
             await onRefresh?()
@@ -137,6 +169,17 @@ struct SleepCoachView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.sleepCoach)
+            if anchor != nil, !WakeAnchorConfig.isKilled {
+                let consistency = WakeAnchorAnalyzer.consistency(
+                    from: wakeDrift,
+                    windowDays: WakeAnchorConfig.consistencyWindowDays
+                )
+                AppAnalytics.shared.trackWakeAnchorDriftSnapshot(
+                    medianDriftMinutes: consistency.medianAbsDriftMinutes,
+                    nightsInWindow: consistency.nightsInWindow,
+                    nightsTracked: consistency.totalNights
+                )
+            }
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.sleepCoach)
@@ -513,45 +556,127 @@ struct SleepCoachView: View {
         return formatter
     }()
 
-    // MARK: - 6. Consistency Score
+    // MARK: - 6. Wake Window
+    //
+    // Replaced a 0–100 "consistency score": an undisclosed composite of
+    // duration CV and bedtime stddev, banded at 80/60/40, where 0 also meant
+    // "not enough data". Minutes against a wake time the user chose are a
+    // measurement they can check against their own clock.
 
-    private var consistencySection: some View {
+    private var wakeWindowSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(icon: "target", title: Copy.SleepCoach.consistency)
+            sectionHeader(icon: "clock", title: Copy.WakeAnchor.sectionTitle)
 
-            HStack(spacing: DS.space5) {
-                // Ring
-                ZStack {
-                    Circle()
-                        .stroke(AppColour.trackNeutral, lineWidth: 6)
-                        .frame(width: 72, height: 72)
-
-                    Circle()
-                        .trim(from: 0, to: Double(consistencyScore) / 100.0)
-                        .stroke(consistencyColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                        .frame(width: 72, height: 72)
-                        .rotationEffect(.degrees(-90))
-
-                    Text(Copy.SleepCoach.xText(consistencyScore))
-                        .font(DS.Typography.title3.weight(.bold).monospacedDigit())
+            Group {
+                if let anchor {
+                    wakeWindowCard(anchor: anchor)
+                } else {
+                    DSEmptyState(
+                        icon: "clock",
+                        title: Copy.WakeAnchor.emptyTitle,
+                        message: Copy.WakeAnchor.emptyMessage,
+                        ctaTitle: Copy.WakeAnchor.emptyCTA
+                    ) {
+                        showWakeAnchorSetter = true
+                    }
+                    .padding(DS.cardPadding)
+                    .cardStyle()
                 }
-
-                VStack(alignment: .leading, spacing: DS.space1) {
-                    Text(consistencyLabel)
-                        .font(DS.Typography.subheadlineSemibold)
-
-                    Text(consistencyDescription)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(AppColour.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
             }
-            .padding(DS.cardPadding)
-            .cardStyle()
             .padding(.horizontal)
         }
+    }
+
+    private func wakeWindowCard(anchor: (hour: Int, minute: Int)) -> some View {
+        let consistency = WakeAnchorAnalyzer.consistency(
+            from: wakeDrift,
+            windowDays: WakeAnchorConfig.consistencyWindowDays
+        )
+        let band = WakeAnchorConfig.driftLooseMinutes
+
+        return VStack(alignment: .leading, spacing: DS.space3) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: DS.space1) {
+                    Text(anchorLabel(anchor))
+                        .font(DS.Typography.displayM)
+                    Text(Copy.WakeAnchor.everyDay)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
+                }
+                Spacer()
+                Button(Copy.WakeAnchor.changeAction) { showWakeAnchorSetter = true }
+                    .buttonStyle(.dsTertiary)
+            }
+
+            if consistency.totalNights > 0 {
+                WakeDriftStrip(points: wakeDrift, bandMinutes: band)
+
+                if let readout = consistency.band {
+                    HStack(spacing: DS.space1) {
+                        Text(bandLabel(readout))
+                            .font(DS.Typography.subheadlineSemibold)
+                        Text(driftSummary(consistency))
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+                    Text(Copy.WakeAnchor.landedWithin(
+                        minutes: band,
+                        hits: consistency.nightsInWindow,
+                        total: consistency.totalNights
+                    ))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(Copy.WakeAnchor.nightsTracked(
+                        consistency.totalNights,
+                        of: WakeAnchorConfig.consistencyMinNights
+                    ))
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
+                }
+            } else {
+                Text(Copy.WakeAnchor.nightsTracked(0, of: WakeAnchorConfig.consistencyMinNights))
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
+            }
+
+            Text(Copy.WakeAnchor.evidenceNote)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DS.cardPadding)
+        .cardStyle(tint: AppColour.categorySleep)
+    }
+
+    private func anchorLabel(_ anchor: (hour: Int, minute: Int)) -> String {
+        var comps = DateComponents()
+        comps.hour = anchor.hour
+        comps.minute = anchor.minute
+        guard let date = Date.cal.date(from: comps) else { return "--:--" }
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    private func bandLabel(_ band: WakeAnchorBand) -> String {
+        switch band {
+        case .steady:   return Copy.WakeAnchor.bandSteady
+        case .close:    return Copy.WakeAnchor.bandClose
+        case .variable: return Copy.WakeAnchor.bandVariable
+        }
+    }
+
+    private func driftSummary(_ consistency: WakeConsistency) -> String {
+        let nights = Copy.plural(
+            consistency.totalNights,
+            one: Copy.WakeAnchor.nightsOneFormat,
+            many: Copy.WakeAnchor.nightsManyFormat
+        )
+        return Copy.WakeAnchor.variedBy(
+            driftMinutes: Copy.WakeAnchor.minutes(consistency.medianAbsDriftMinutes),
+            nights: nights
+        )
     }
 
     // MARK: - 7. Tips Section
@@ -740,32 +865,6 @@ struct SleepCoachView: View {
         return AppColour.textSecondary
     }
 
-    private var consistencyColor: Color {
-        if consistencyScore >= 80 { return AppColour.success }
-        if consistencyScore >= 60 { return AppColour.info }
-        if consistencyScore >= 40 { return AppColour.warning }
-        return AppColour.danger
-    }
-
-    private var consistencyLabel: String {
-        if consistencyScore >= 80 { return Copy.SleepCoach.excellent }
-        if consistencyScore >= 60 { return Copy.SleepCoach.good }
-        if consistencyScore >= 40 { return Copy.SleepCoach.needsWork }
-        return Copy.SleepCoach.irregular
-    }
-
-    private var consistencyDescription: String {
-        if consistencyScore >= 80 {
-            return Copy.SleepCoach.consistencyExcellent
-        }
-        if consistencyScore >= 60 {
-            return Copy.SleepCoach.consistencyGood
-        }
-        if consistencyScore >= 40 {
-            return Copy.SleepCoach.consistencyNeedsWork
-        }
-        return Copy.SleepCoach.consistencyIrregular
-    }
 
     // MARK: - Formatting Helpers
 

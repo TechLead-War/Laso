@@ -45,6 +45,7 @@ Boolean flags. Default OFF; flip ON in Firebase Console for live incidents. Keep
 | `kill_anomaly_alerts` | `false` | `AlertEvaluator.evaluate()` | False-positive alert flood |
 | `ai_narrative_enabled` | `true` | `DailyNarrativeCard.loadNarrative()` | iOS 26 LLM regression — flip OFF to silence |
 | `onboarding_force_skip_to_paywall` | `false` | `OnboardingV2View` | Mid-flow screen crash; jump to paywall |
+| `kill_wake_anchor` | `false` | `SleepCoachView.wakeWindowSection` | Wake window section misbehaving; hides it without a release |
 
 ---
 
@@ -307,6 +308,24 @@ Consumer: `Core/Notifications/*`.
 | `notification_conversion_window_hours` | Int | 24 | Hours after a notification tap within which a goal counts as a conversion |
 | `weekly_summary_fire_hour` | Int | 10 | Local hour the weekly summary fires. Set to 10 (not 9) to avoid colliding with the morning daily summary near wake time |
 | `weekly_summary_fire_minute` | Int | 0 | Local minute the weekly summary fires |
+
+---
+
+## 11. Wake anchor
+
+Bands and windows for the Sleep Coach wake-window section. SOURCE: Windred et al., *SLEEP* 47(1) 2024 (N=60,977) — the lowest-mortality quintile woke inside roughly a 1-hour window, which sets the loose band at +/-30 min. Not a tested threshold: no study randomises a drift width, so these are descriptive labels, never a risk claim.
+
+The anchor time itself is bounded at 5-11 by `WakeUpTimeDetector`, not here. That band is load-bearing for delivery, not sleep science: outside it the morning reminder is a repeating trigger that quiet hours drops silently.
+
+Consumer: `Core/Analysis/Config/WakeAnchorConfig.swift`.
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `wake_anchor_drift_tight_minutes` | Int | 15 | Median absolute drift at or below this reads as "Steady" |
+| `wake_anchor_drift_loose_minutes` | Int | 30 | Half-width of the band drawn behind the drift strip, and the "Close" / "Variable" cutoff |
+| `wake_anchor_consistency_window_days` | Int | 28 | Window the headline readout is computed over. Also sets how many days of sleep boundaries Sleep Coach queries on open |
+| `wake_anchor_consistency_min_nights` | Int | 14 | Below this many tracked nights, show counts instead of a band label |
+| `wake_anchor_history_window_days` | Int | 90 | Longest window the drift strip will render |
 
 ---
 
