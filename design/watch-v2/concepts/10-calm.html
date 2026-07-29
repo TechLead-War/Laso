@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concept 10 — Autonomic (calm) — Laso Watch v2</title>
+<style>
+:root{
+  --bg:#000000;
+  --raised:#1B1B21;
+  --elev:#26262D;
+  --subtle:#17171C;
+  --t1:#F2F2F6;
+  --t2:#C9C9D2;
+  --t3:#ADADB8;
+  --border:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+  --zoom:1.75;
+  --dev-w:236;
+  --dev-h:276;
+  --sw:208px;
+  --sh:248px;
+  --pad:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0c;color:var(--t2);
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;}
+body{padding:22px 16px 90px;display:flex;flex-direction:column;align-items:center;gap:14px}
+a{color:var(--primary)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+
+.pagehead{max-width:760px;text-align:center}
+.pagehead h1{font-size:15px;font-weight:600;color:var(--t1);letter-spacing:.2px}
+.pagehead p{font-size:12px;color:var(--t3);margin-top:4px;line-height:1.45}
+
+/* ---------- device ---------- */
+.stage{position:relative;
+  width:calc(var(--dev-w) * var(--zoom) * 1px);
+  height:calc(var(--dev-h) * var(--zoom) * 1px);
+  transition:width .22s cubic-bezier(.22,.61,.36,1),height .22s cubic-bezier(.22,.61,.36,1)}
+.watch{position:absolute;top:0;left:0;
+  width:calc(var(--dev-w) * 1px);height:calc(var(--dev-h) * 1px);
+  transform:scale(var(--zoom));transform-origin:top left}
+.bezel{position:absolute;left:14px;top:14px;
+  width:calc(var(--sw) + 0px);height:calc(var(--sh) + 0px);
+  background:#000;border-radius:38px;
+  box-shadow:0 0 0 14px #17171a,0 0 0 15px #303035,0 14px 34px rgba(0,0,0,.8);
+  transition:width .22s,height .22s}
+.screen{position:absolute;inset:0;width:100%;height:100%;background:var(--bg);
+  border-radius:38px;overflow:hidden;color:var(--t1)}
+/* crown + side button on the right edge */
+.crown{position:absolute;z-index:5;right:2px;top:76px;width:11px;height:34px;border-radius:4px;
+  background:linear-gradient(90deg,#3a3a40,#6a6a72 40%,#2c2c31);
+  box-shadow:inset 0 0 0 1px #17171a}
+.crown .grooves{position:absolute;inset:2px 1px;border-radius:3px;
+  background:repeating-linear-gradient(0deg,#4a4a52 0 1.5px,#26262b 1.5px 3px);
+  transform:translateY(var(--crownshift,0px));transition:transform .06s linear}
+.crown .detent{position:absolute;left:-9px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;
+  background:var(--accent);opacity:0;transition:opacity .18s}
+.crown.tick .detent{opacity:1;transition:opacity 0s}
+.sidebtn{position:absolute;z-index:5;right:4px;top:124px;width:7px;height:24px;border-radius:3px;
+  background:linear-gradient(90deg,#33333a,#55555d,#26262b);box-shadow:inset 0 0 0 1px #17171a}
+
+/* ---------- generic surface ---------- */
+.surface{position:absolute;left:var(--pad);top:var(--pad);
+  width:calc(var(--sw) - var(--pad) * 2);height:calc(var(--sh) - var(--pad) * 2);
+  overflow:visible}
+.surface.full{left:0;top:0;width:100%;height:100%}
+[hidden]{display:none !important}
+.el{position:absolute;left:0}
+
+/* text roles (pt == px inside the scaled device) */
+.hero{font-size:52px;font-weight:600;line-height:1}
+.heroS{font-size:40px;font-weight:600;line-height:1}
+.title{font-size:22px;font-weight:600;line-height:1}
+.headline{font-size:17px;font-weight:600;line-height:1.1}
+.body{font-size:16px;font-weight:400}
+.footnote{font-size:13px;font-weight:400;line-height:1.2}
+.caption{font-size:12px;font-weight:400;line-height:1.2}
+.caption2{font-size:11px;font-weight:500;line-height:1.2}
+.t1{color:var(--t1)}.t2{color:var(--t2)}.t3{color:var(--t3)}
+.cOptimal{color:var(--optimal)}.cFair{color:var(--fair)}.cPoor{color:var(--poor)}
+.cPrimary{color:var(--primary)}.cAccent{color:var(--accent)}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--raised);border:1px solid var(--border);border-radius:10px;
+  color:var(--t1);width:100%;font:inherit;font-size:17px;font-weight:600;
+  cursor:pointer;transition:transform .08s ease-out}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:transparent}
+.rowbtn{display:flex;align-items:center;justify-content:space-between;
+  background:transparent;border:0;color:var(--t3);width:100%;font:inherit;
+  cursor:pointer;padding:0;transition:transform .08s ease-out}
+.rowbtn:active{transform:scale(.96)}
+
+/* haptic marker */
+.pulse{position:absolute;inset:0;border-radius:38px;border:2px solid var(--accent);
+  opacity:0;pointer-events:none}
+.pulse.go{animation:pulsering .5s cubic-bezier(.22,.61,.36,1)}
+@keyframes pulsering{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(.955)}}
+.hapchip{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:9px;
+  font-weight:600;color:var(--accent);opacity:0;pointer-events:none;transition:opacity .2s}
+.hapchip.go{opacity:1;transition:opacity 0s}
+
+/* ---------- watch face ---------- */
+.face{background:#000}
+.facetime{position:absolute;right:12px;top:8px;font-size:26px;font-weight:600;color:#ffffff;letter-spacing:.5px}
+.facedate{position:absolute;left:44px;top:14px;font-size:10px;font-weight:600;color:#5AC8FA;letter-spacing:1px}
+.slot{position:absolute;cursor:pointer;border:0;background:transparent;padding:0;color:inherit;
+  font:inherit;text-align:left;transition:transform .08s ease-out}
+.slot:active{transform:scale(.96)}
+.slot.laso{outline:1px dashed rgba(77,163,255,.45);outline-offset:2px;border-radius:6px}
+.pin{position:absolute;left:-6px;top:-8px;width:12px;height:12px;border-radius:50%;
+  background:var(--primary);color:#000;font-size:8px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.sysc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.ringstack{position:relative;width:100%;height:100%}
+
+/* ---------- smart stack ---------- */
+.stackview{position:absolute;inset:0;overflow:hidden}
+.stackrail{position:absolute;left:var(--pad);right:var(--pad);top:0;
+  transition:transform .22s cubic-bezier(.22,.61,.36,1)}
+.wcard{border-radius:14px;background:var(--raised);padding:4px 6px;margin-bottom:8px;
+  border:1px solid var(--border);overflow:hidden;position:relative;cursor:pointer;
+  transition:transform .08s ease-out,opacity .22s}
+.wcard:active{transform:scale(.96)}
+.wcard.dim{opacity:.42}
+.stackhint{position:absolute;left:50%;transform:translateX(-50%);bottom:3px;text-align:center;
+  font-size:9px;color:var(--t3);background:rgba(0,0,0,.86);border-radius:9999px;padding:2px 8px;white-space:nowrap}
+
+/* ---------- notifications ---------- */
+.sash{display:flex;align-items:center;gap:5px;padding:5px 10px;background:#101014;
+  border-bottom:1px solid var(--border)}
+.appicon{width:16px;height:16px;border-radius:50%;background:#0d2a3a;color:var(--accent);
+  display:flex;align-items:center;justify-content:center}
+.notifscroll{position:absolute;left:0;right:0;top:26px;bottom:0;overflow:hidden}
+.notifinner{padding:8px 10px 10px;transition:transform .22s cubic-bezier(.22,.61,.36,1)}
+.nbtn{width:100%;height:44px;border-radius:10px;background:var(--raised);border:1px solid var(--border);
+  color:var(--t1);font:inherit;font-size:15px;font-weight:600;margin-top:8px;cursor:pointer;
+  transition:transform .08s ease-out}
+.nbtn:active{transform:scale(.96)}
+.nbtn.first{border-color:#3a5a80}
+
+/* ---------- S2 ---------- */
+.breathwrap{position:absolute;left:0;width:100%;display:flex;align-items:center;justify-content:center}
+.bcircle{border-radius:50%;background:rgba(34,211,238,.22);border:2px solid var(--accent);
+  width:60px;height:60px;transition:width .1s linear,height .1s linear,opacity .1s linear}
+.track{width:100%;height:4px;border-radius:9999px;background:var(--subtle);overflow:hidden}
+.trackfill{height:100%;background:var(--primary);width:0%;border-radius:9999px}
+
+/* ---------- S4 band ---------- */
+.posband{position:relative;height:8px;border-radius:9999px;background:var(--subtle);width:100%}
+.posband .usual{position:absolute;top:0;height:8px;border-radius:9999px;background:var(--elev)}
+.posband .mark{position:absolute;top:-3px;width:3px;height:14px;border-radius:1px;background:var(--t1)}
+
+/* ---------- switcher + captions ---------- */
+.caption-line{max-width:720px;min-height:34px;text-align:center;font-size:11.5px;line-height:1.5;color:var(--t3)}
+.caption-line b{color:var(--accent);font-weight:600}
+.switcher{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:760px}
+.switcher button{background:#131318;border:1px solid #26262d;color:var(--t2);
+  border-radius:8px;padding:6px 9px;font:inherit;font-size:11px;cursor:pointer}
+.switcher button[aria-current="true"]{background:var(--primary);border-color:var(--primary);color:#04101d;font-weight:600}
+.legend{max-width:720px;font-size:11px;color:var(--t3);text-align:center;line-height:1.6}
+.legend .k{display:inline-flex;align-items:center;gap:4px;margin:0 6px}
+.legend .n{width:12px;height:12px;border-radius:50%;background:var(--primary);color:#000;
+  font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{position:fixed;right:14px;bottom:14px;z-index:40;background:#15151a;color:var(--t2);
+  border:1px solid #2e2e36;border-radius:9999px;padding:8px 13px;font:inherit;font-size:11px;cursor:pointer}
+.devpanel{position:fixed;right:14px;bottom:52px;z-index:41;width:264px;background:#0e0e12;
+  border:1px solid #2e2e36;border-radius:12px;padding:11px;font-size:11px;color:var(--t2);
+  box-shadow:0 12px 40px rgba(0,0,0,.7);max-height:78vh;overflow:auto}
+.devpanel h3{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--t3);
+  margin:9px 0 5px;font-weight:600}
+.devpanel h3:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{flex:1 1 auto;background:#17171c;border:1px solid #2e2e36;color:var(--t2);
+  border-radius:6px;padding:5px 6px;font:inherit;font-size:10.5px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#04101d;font-weight:600}
+.devnote{font-size:10px;color:#6b6b78;margin-top:8px;line-height:1.5}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important}
+  .pulse.go{animation:none;opacity:.9}
+}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <h1>Concept 10 — Autonomic <span class="t3">(calm)</span></h1>
+  <p>Is my stress increasing? Alex, Tuesday 14:32. Stress 41/100, moderate, rising since 11:00.
+     Crown = mousewheel or ↑/↓. Every state-changing tap renders a haptic pulse and names the <code>WKHapticType</code>.</p>
+</div>
+
+<div class="stage" id="stage">
+  <div class="watch">
+    <div class="crown" id="crown"><div class="grooves"></div><div class="detent"></div></div>
+    <div class="sidebtn"></div>
+    <div class="bezel">
+      <div class="screen" id="screen">
+
+        <!-- ============ WATCH FACE ============ -->
+        <div class="surface full face" data-screen="face" hidden>
+          <div class="facedate">TUE 29</div>
+          <div class="facetime" id="faceTime">14:32</div>
+
+          <button class="slot" style="left:10px;top:8px;width:26px;height:26px" aria-label="Activity rings complication, system">
+            <div class="ringstack" id="faceRings"></div>
+          </button>
+
+          <button class="slot laso" style="left:10px;top:44px;width:188px;height:20px"
+                  data-go="s2-from-inline" aria-label="Laso inline complication, stress 41 rising, opens a breathing session">
+            <span class="pin">1</span>
+            <div id="faceInline"></div>
+          </button>
+
+          <button class="slot laso" style="left:10px;top:72px;width:188px;height:66px"
+                  data-go="s1-from-rect" aria-label="Laso rectangular complication, moderate 41, rising since 11:00">
+            <span class="pin">2</span>
+            <div id="faceRect"></div>
+          </button>
+
+          <button class="slot laso" style="left:10px;top:150px;width:52px;height:52px"
+                  data-go="s4-from-circ" aria-label="Laso circular complication, stress 41, opens why">
+            <span class="pin">3</span>
+            <div id="faceCirc"></div>
+          </button>
+
+          <button class="slot" style="left:78px;top:150px;width:52px;height:52px" aria-label="Weather complication, system">
+            <div class="sysc" style="height:100%">
+              <div style="font-size:15px">☁︎</div>
+              <div class="caption2 t3">18°</div>
+            </div>
+          </button>
+
+          <button class="slot" style="left:146px;top:150px;width:52px;height:52px" aria-label="Heart rate complication, system">
+            <div class="sysc" style="height:100%">
+              <div style="font-size:13px;color:var(--poor)">♥</div>
+              <div class="caption2 t1">74</div>
+              <div style="font-size:8px" class="t3">BPM</div>
+            </div>
+          </button>
+
+          <div style="position:absolute;left:10px;top:216px;width:188px;white-space:nowrap" class="caption2 t3" id="faceFoot">Crown down for the Smart Stack</div>
+        </div>
+
+        <!-- ============ SMART STACK ============ -->
+        <div class="surface full stackview" data-screen="stack" hidden>
+          <div class="stackrail" id="stackRail"></div>
+          <div class="stackhint" id="stackHint">Crown to scroll · 1 of 4</div>
+        </div>
+
+        <!-- ============ NOTIFICATION — SHORT LOOK ============ -->
+        <div class="surface full" data-screen="notif-short" hidden
+             style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 18px;text-align:center">
+          <div class="appicon" style="width:38px;height:38px">
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 6h9a2.5 2.5 0 1 0-2.5-2.5"></path><path d="M2 10h12a2.5 2.5 0 1 1-2.5 2.5"></path><path d="M2 14h7a2 2 0 1 1-2 2"></path></svg>
+          </div>
+          <div class="headline t1">Laso</div>
+          <div class="body t2">A minute if you want it</div>
+          <div class="caption2 t3" style="margin-top:6px">14:32</div>
+        </div>
+
+        <!-- ============ NOTIFICATION — LONG LOOK ============ -->
+        <div class="surface full" data-screen="notif-long" hidden>
+          <div class="sash">
+            <div class="appicon">
+              <svg viewBox="0 0 20 20" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 6h9a2.5 2.5 0 1 0-2.5-2.5"></path><path d="M2 10h12a2.5 2.5 0 1 1-2.5 2.5"></path><path d="M2 14h7a2 2 0 1 1-2 2"></path></svg>
+            </div>
+            <div class="caption2 t1" style="flex:1">Laso</div>
+            <div class="caption2 t3">now</div>
+          </div>
+          <div class="notifscroll">
+            <div class="notifinner" id="notifInner">
+              <div class="footnote t2" style="line-height:1.35">Higher than your usual 2 pm,<br>for the last 20 minutes.</div>
+              <div style="display:flex;align-items:flex-end;gap:8px;margin-top:10px">
+                <div id="notifSpark"></div>
+                <div style="font-size:15px;font-weight:600;white-space:nowrap"><span id="notifWord" class="cFair">Moderate</span> <span class="t1" id="notifNum">41</span></div>
+              </div>
+              <button class="nbtn first" data-go="s2-from-notif">Breathe 60s</button>
+              <button class="nbtn" data-notif-mute="today">Mute today</button>
+              <button class="nbtn" data-notif-mute="3days">Mute 3 days</button>
+              <div class="caption t3" style="text-align:center;margin-top:10px">Dismiss</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ APP LAUNCH / LOADING ============ -->
+        <!-- launch reuses the S1 surface with appState = loading -->
+
+        <!-- ============ S1 NOW ============ -->
+        <div class="surface" data-screen="s1" hidden id="s1"></div>
+
+        <!-- ============ S2 SESSION ============ -->
+        <div class="surface" data-screen="s2" hidden id="s2">
+          <div class="el headline t1" id="s2Phase" style="top:0;width:100%;text-align:center;height:18px">In</div>
+          <div class="breathwrap" id="s2Wrap" style="top:30px;height:150px">
+            <div class="bcircle" id="s2Circle"></div>
+          </div>
+          <div class="el" id="s2Track" style="top:194px;width:100%">
+            <div class="track"><div class="trackfill" id="s2Fill"></div></div>
+          </div>
+          <div class="el caption2 t3" id="s2Left" style="top:204px;width:100%;text-align:right;height:14px">1:00</div>
+        </div>
+
+        <!-- ============ S3 AFTER ============ -->
+        <div class="surface" data-screen="s3" hidden id="s3"></div>
+
+        <!-- ============ S4 WHY ============ -->
+        <div class="surface" data-screen="s4" hidden id="s4"></div>
+
+        <!-- ============ S5 QUIET ============ -->
+        <div class="surface" data-screen="s5" hidden id="s5"></div>
+
+        <div class="pulse" id="pulse"></div>
+        <div class="hapchip" id="hapchip"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="caption-line" id="captionLine"></div>
+
+<nav class="switcher" id="switcher" aria-label="Screen switcher"></nav>
+
+<div class="legend">
+  <span class="k"><span class="n">1</span> <code>accessoryInline</code> → <code>laso://stress/breathe</code></span>
+  <span class="k"><span class="n">2</span> <code>accessoryRectangular</code> → <code>laso://stress/now</code></span>
+  <span class="k"><span class="n">3</span> <code>accessoryCircular</code> → <code>laso://stress/why</code></span>
+  <br>Dashed outline marks a Laso complication. Unmarked slots are system complications.
+  <code>accessoryCorner</code> is deliberately not shipped.
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel">Dev</button>
+<div class="devpanel" id="devpanel" hidden>
+  <h3>Canvas</h3>
+  <div class="seg" data-group="size">
+    <button data-v="46" aria-pressed="true">46mm · 208×248</button>
+    <button data-v="40" aria-pressed="false">40mm · 162×197</button>
+  </div>
+  <h3>State</h3>
+  <div class="seg" data-group="appState">
+    <button data-v="loaded" aria-pressed="true">loaded</button>
+    <button data-v="loading" aria-pressed="false">loading</button>
+    <button data-v="cold" aria-pressed="false">cold start</button>
+    <button data-v="empty" aria-pressed="false">empty</button>
+    <button data-v="err-hk" aria-pressed="false">error · HealthKit off</button>
+    <button data-v="err-sensor" aria-pressed="false">error · off wrist</button>
+    <button data-v="err-phone" aria-pressed="false">error · no phone</button>
+    <button data-v="stale" aria-pressed="false">stale</button>
+  </div>
+  <h3>Always-On (isLuminanceReduced)</h3>
+  <div class="seg" data-group="aod">
+    <button data-v="off" aria-pressed="true">off</button>
+    <button data-v="on" aria-pressed="false">redacted</button>
+  </div>
+  <h3>Key variable — stress band</h3>
+  <div class="seg" data-group="band">
+    <button data-v="calm" aria-pressed="false">Calm 22</button>
+    <button data-v="moderate" aria-pressed="true">Moderate 41</button>
+    <button data-v="high" aria-pressed="false">High 64</button>
+  </div>
+  <h3>Session speed</h3>
+  <div class="seg" data-group="speed">
+    <button data-v="1" aria-pressed="false">1× real</button>
+    <button data-v="10" aria-pressed="true">10× fast</button>
+  </div>
+  <h3>Gesture</h3>
+  <div class="seg">
+    <button id="dtap" style="flex:1 1 100%">Fire Double Tap</button>
+  </div>
+  <div class="devnote">Not part of the design being judged. Alex's numbers stay fixed; the band control
+    shifts the whole 8-hour line so all three colour bands are reviewable.</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var T = {
+  bg:"#000000", raised:"#1B1B21", elev:"#26262D", subtle:"#17171C",
+  t1:"#F2F2F6", t2:"#C9C9D2", t3:"#ADADB8", border:"#2E2E36",
+  primary:"#4DA3FF", accent:"#22D3EE",
+  optimal:"#33C48D", fair:"#E3B45A", poor:"#E05C64"
+};
+
+/* ---------------------------------------------------------------
+   1a. THE ONE NUMBER SYSTEM — three inverted bands, one table.
+   0-33 Calm optimal | 34-55 Moderate fair | 56-100 High poor
+   score(HR) = 17.16 + 1.4545 * (HR - 55)
+------------------------------------------------------------------ */
+var BANDS = [
+  {max:33,  word:"Calm",     color:T.optimal, key:"optimal"},
+  {max:55,  word:"Moderate", color:T.fair,    key:"fair"},
+  {max:100, word:"High",     color:T.poor,    key:"poor"}
+];
+function bandIdx(s){ for(var i=0;i<BANDS.length;i++){ if(s<=BANDS[i].max) return i; } return 2; }
+/* Band on the UNROUNDED score, round only to display. 11:40 is 33.16 — Moderate —
+   and would flip to Calm if the band were read off the rounded 33, which would move
+   the trend sentence to "Rising since 11:40". Rounding at the display boundary only. */
+function bScore(b){ return b.raw!==undefined ? b.raw : b.s; }
+function bandOfBucket(b){ return BANDS[bandIdx(bScore(b))]; }
+
+/* 24 buckets, 20 min, 06:32 -> 14:32. hr = bucket mean heart rate. */
+var B20 = [
+  {t:"06:40", k:"asleep"},
+  {t:"07:00", s:22, hr:58},
+  {t:"07:20", k:"gap"},
+  {t:"07:40", s:31, hr:64.5},
+  {t:"08:00", s:26, hr:61},
+  {t:"08:20", s:24, hr:60},
+  {t:"08:40", s:29, hr:63},
+  {t:"09:00", s:25, hr:60},
+  {t:"09:20", s:23, hr:59},
+  {t:"09:40", s:30, hr:64},
+  {t:"10:00", s:27, hr:62},
+  {t:"10:20", s:24, hr:60},
+  {t:"10:40", s:26, hr:61},
+  {t:"11:00", s:29, hr:63},
+  {t:"11:20", s:34, hr:66.6},
+  {t:"11:40", s:33, hr:66},
+  {t:"12:00", s:38, hr:69},
+  {t:"12:20", k:"moving"},
+  {t:"12:40", s:40, hr:71},
+  {t:"13:00", s:37, hr:69},
+  {t:"13:20", s:42, hr:72},
+  {t:"13:40", s:39, hr:70},
+  {t:"14:00", s:44, hr:73},
+  {t:"14:20", s:41, hr:71.4, now:true}
+];
+/* 16 buckets, 30 min — the 40mm and Smart Stack aggregation of the same day.
+   12:00 becomes a movement stub because the 12:20 peak (HR 141) falls inside it. */
+var B30 = [
+  {t:"06:30", k:"asleep"},
+  {t:"07:00", s:22, hr:58},
+  {t:"07:30", s:31, hr:64.5},
+  {t:"08:00", s:25, hr:60.5},
+  {t:"08:30", s:29, hr:63},
+  {t:"09:00", s:24, hr:59.5},
+  {t:"09:30", s:30, hr:64},
+  {t:"10:00", s:26, hr:61},
+  {t:"10:30", s:26, hr:61},
+  {t:"11:00", s:32, hr:65},
+  {t:"11:30", s:33, hr:66},
+  {t:"12:00", k:"moving"},
+  {t:"12:30", s:40, hr:71},
+  {t:"13:00", s:40, hr:70.5},
+  {t:"13:30", s:39, hr:70},
+  {t:"14:00", s:41, hr:71.4, now:true}
+];
+
+var BAND_OFFSET = { calm:-19, moderate:0, high:23 };
+
+var S = {
+  size:46, screen:"face", appState:"loaded", aod:false, bandVar:"moderate",
+  scrub:null, scrubTimer:null, stackIdx:0, s3variant:"down", speed:10,
+  hushed:false, session:null, launchedFrom:""
+};
+
+function reduceMotion(){
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+function buckets(){
+  var src = (S.size===46) ? B20 : B30;
+  var off = BAND_OFFSET[S.bandVar];
+  return src.map(function(b){
+    var o = {t:b.t, k:b.k||"ok", now:!!b.now, hr:b.hr};
+    if(b.s!==undefined){
+      o.s = clamp(Math.round(b.s+off),0,100);
+      /* score(HR) = 17.16 + 1.4545 * (HR - 55) — the intra-day line collapses to this
+         because last night's HRV is fixed for the day. This is the raw value we band on. */
+      if(b.hr!==undefined) o.raw = clamp(17.16 + 1.4545*(b.hr-55) + off, 0, 100);
+    }
+    return o;
+  });
+}
+function nowBucket(){ var l=buckets(); for(var i=l.length-1;i>=0;i--){ if(l[i].s!==undefined) return l[i]; } return null; }
+
+/* trend sentence — a rule, not hand-written copy */
+function trendSentence(list){
+  var cur = null, curIdx = -1;
+  for(var i=list.length-1;i>=0;i--){ if(list[i].s!==undefined){ cur=list[i]; curIdx=i; break; } }
+  if(!cur) return "";
+  var cb = bandIdx(bScore(cur));
+  for(var j=curIdx-1;j>=0;j--){
+    if(list[j].s===undefined) continue;
+    if(bandIdx(bScore(list[j])) < cb){
+      if(cur.s - list[j].s >= 8) return "Rising since " + list[j].t;
+      break;
+    }
+  }
+  if(cb === 0){
+    for(var m=curIdx-1;m>=0;m--){
+      if(list[m].s===undefined) continue;
+      if(bandIdx(bScore(list[m])) > cb){
+        if(list[m].s - cur.s >= 8) return "Easing since " + list[m].t;
+        break;
+      }
+    }
+  }
+  return "Steady since " + list[0].t;
+}
+
+/* ---------------- chart -------------------------------------- */
+function chartSVG(cfg){
+  var w=cfg.w, h=cfg.h, list=cfg.list, bw=cfg.bw, gap=cfg.gap;
+  var tick = cfg.tick===undefined ? 4 : cfg.tick;
+  var n=list.length, total=n*bw+(n-1)*gap, x0=(w-total)/2;
+  var H=h+tick+1;
+  var out = '<svg width="'+w+'" height="'+H+'" viewBox="0 0 '+w+' '+H+'" role="img" aria-label="'+(cfg.label||"")+'">';
+  if(cfg.rules!==false){
+    [34,56].forEach(function(v){
+      var y=h*(1-v/100);
+      out += '<rect x="0" y="'+(y-0.5)+'" width="'+w+'" height="1" fill="'+T.border+'"></rect>';
+    });
+  }
+  for(var i=0;i<n;i++){
+    var b=list[i], x=x0+i*(bw+gap), cx=x+bw/2;
+    if(cfg.mode==="aod"){
+      out += '<rect x="'+x+'" y="'+(h-1)+'" width="'+bw+'" height="1" fill="'+T.border+'"></rect>';
+      continue;
+    }
+    if(cfg.mode==="skeleton"){
+      out += '<rect x="'+x+'" y="'+(h-8)+'" width="'+bw+'" height="8" fill="'+T.subtle+'"></rect>';
+      continue;
+    }
+    if(cfg.mode==="none") continue;
+    if(b.k==="gap"){
+      out += '<rect x="'+(cx-0.5)+'" y="'+h+'" width="1" height="'+tick+'" fill="'+T.border+'"></rect>';
+      continue;
+    }
+    if(b.k==="moving"||b.k==="asleep"){
+      out += '<rect x="'+x+'" y="'+(h-3)+'" width="'+bw+'" height="3" fill="'+T.t3+'"></rect>';
+      continue;
+    }
+    var val, fill;
+    if(cfg.mode==="hr"){
+      val = clamp((b.hr-40)/80,0,1); fill = T.t2;
+    } else {
+      val = b.s/100; fill = bandOfBucket(b).color;
+    }
+    var bh = Math.max(1, h*val), by = h-bh;
+    out += '<rect x="'+x+'" y="'+by+'" width="'+bw+'" height="'+bh+'" fill="'+fill+'"></rect>';
+    var capH = cfg.capH || 2;
+    if(b.now && cfg.mode!=="hr"){
+      var capC = (cfg.scrub!==null && cfg.scrub!==undefined && cfg.scrub!==i) ? T.t3 : T.t1;
+      out += '<rect x="'+x+'" y="'+by+'" width="'+bw+'" height="'+capH+'" fill="'+capC+'"></rect>';
+    }
+    if(cfg.scrub===i && !b.now){
+      out += '<rect x="'+x+'" y="'+by+'" width="'+bw+'" height="'+capH+'" fill="'+T.t1+'"></rect>';
+    }
+  }
+  if(cfg.scrub!==null && cfg.scrub!==undefined){
+    var sx = x0+cfg.scrub*(bw+gap)+bw/2;
+    out += '<rect x="'+(sx-0.5)+'" y="0" width="1" height="'+h+'" fill="'+T.t1+'"></rect>';
+  }
+  out += "</svg>";
+  return out;
+}
+
+/* ---------------- haptics ------------------------------------ */
+var pulseEl, chipEl, capEl;
+function haptic(type, why){
+  pulseEl.classList.remove("go");
+  void pulseEl.offsetWidth;
+  pulseEl.classList.add("go");
+  chipEl.textContent = type;
+  chipEl.classList.add("go");
+  clearTimeout(haptic._t);
+  haptic._t = setTimeout(function(){ chipEl.classList.remove("go"); }, 900);
+  note("<b>Haptic " + type + "</b> — " + why);
+}
+function note(html){ capEl.innerHTML = html; }
+
+/* ---------------- icons -------------------------------------- */
+var ICON = {
+  wind: function(px,c){ return '<svg viewBox="0 0 20 20" width="'+px+'" height="'+px+'" fill="none" stroke="'+(c||"currentColor")+'" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M2 6h9a2.5 2.5 0 1 0-2.5-2.5"></path><path d="M2 10h12a2.5 2.5 0 1 1-2.5 2.5"></path><path d="M2 14h7a2 2 0 1 1-2 2"></path></svg>'; },
+  chevron: function(px){ return '<svg viewBox="0 0 10 16" width="'+(px*0.62)+'" height="'+px+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2l5.5 6-5.5 6"></path></svg>'; },
+  arrow: function(px){ return '<svg viewBox="0 0 16 12" width="'+px+'" height="'+(px*0.75)+'" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M1 6h12M9.5 2.5L13 6l-3.5 3.5"></path></svg>'; },
+  triDown: function(px,c){ return '<svg viewBox="0 0 10 10" width="'+px+'" height="'+px+'" aria-hidden="true"><polygon points="1,3 9,3 5,9" fill="'+c+'"></polygon></svg>'; },
+  dash: function(px,c){ return '<svg viewBox="0 0 10 10" width="'+px+'" height="'+px+'" aria-hidden="true"><rect x="1" y="4.2" width="8" height="1.6" rx="0.8" fill="'+c+'"></rect></svg>'; }
+};
+
+/* ---------------- geometry per size --------------------------- */
+function G(){
+  if(S.size===46){
+    return {sw:208, sh:248, pad:10, W:188, H:228,
+      s1:{headY:0,headH:20,chartY:26,chartH:96,trendY:128,trendH:16,btnY:150,btnH:44,whyY:189,whyH:44,whyLabelY:0},
+      bars:{bw:6,gap:1.8,tick:4}, headline:17, num:22, trendSize:13,
+      s2:{phaseH:18,wrapY:30,wrapH:150,minD:60,maxD:140,endD:62,trackY:194,leftY:204},
+      s3:{row1Y:0,row1H:44,unitY:52,outY:76,logY:102,btnY:150,hero:52,sec:22},
+      s4:{r1:0,r2:60,rowH:52,srcY:124,quietY:150},
+      s5:{stateY:0,b1:26,b2:78,b3:130},
+      widget:{w:184,h:80.5,bars:24,bw:6,gap:1.7,plotH:38}
+    };
+  }
+  return {sw:162, sh:197, pad:8, W:146, H:181,
+    s1:{headY:0,headH:18,chartY:22,chartH:70,trendY:96,trendH:15,btnY:115,btnH:44,whyY:137,whyH:44,whyLabelY:13},
+    bars:{bw:6.5,gap:2.6,tick:3}, headline:16, num:20, trendSize:12,
+    s2:{phaseH:18,wrapY:26,wrapH:116,minD:48,maxD:108,endD:50,trackY:150,leftY:158},
+    s3:{row1Y:0,row1H:40,unitY:46,outY:66,logY:88,btnY:115,hero:40,sec:18},
+    s4:{r1:0,r2:54,rowH:46,srcY:108,quietY:130},
+    s5:{stateY:0,b1:22,b2:74,b3:126},
+    widget:{w:152,h:69.5,bars:16,bw:7,gap:2.6,plotH:32}
+  };
+}
+
+/* ---------------- S1 ----------------------------------------- */
+function renderS1(){
+  var g=G(), st=S.appState, list=buckets(), el=document.getElementById("s1");
+  var cur = nowBucket();
+  var b = cur ? bandOfBucket(cur) : null;
+  var headWord, headNum, headColor, trend, chartCfg, btnLabelColor=T.primary, btnFill=true, dot="none";
+  var freshHollow = (st==="stale");
+
+  chartCfg = {w:g.W, h:g.s1.chartH, list:list, bw:g.bars.bw, gap:g.bars.gap, tick:g.bars.tick,
+              mode:"score", rules:true, scrub:S.scrub,
+              label:"Chart. Stress over the last 8 hours. " + trendSentence(list) + ". Now " + (cur?cur.s:"") + ". Adjustable, turn the Digital Crown to hear each reading."};
+
+  if(S.aod){
+    headWord="Stress"; headColor=T.t3; headNum="––"; trend="Raise to view";
+    chartCfg.mode="aod"; btnFill=false; btnLabelColor=T.t3; dot="none";
+  } else if(st==="loading"){
+    headWord="Stress"; headColor=T.t3; headNum=""; trend="Reading your last 8 hours.";
+    chartCfg.mode="skeleton";
+  } else if(st==="cold"){
+    headWord="Heart rate today"; headColor=T.t2; headNum="";
+    trend = (S.size===46) ? "Learning your normal. First stress reading after 3 nights."
+                          : "Learning your normal. First reading in 3 nights.";
+    chartCfg.mode="hr"; chartCfg.rules=false;
+  } else if(st==="empty"){
+    headWord="Stress"; headColor=T.t3; headNum="";
+    trend = (S.size===46) ? "No readings yet today. Wear the watch for 20 minutes."
+                          : "No readings yet. Wear the watch for 20 minutes.";
+    chartCfg.mode="none";
+  } else if(st==="err-hk"){
+    headWord="Stress"; headColor=T.t3; headNum="";
+    trend = (S.size===46) ? "Heart rate access is off, so this line is empty. Allow Health access for Laso to fill it."
+                          : "Heart rate access is off. Allow it for Laso.";
+    chartCfg.mode="none";
+  } else if(st==="err-sensor"){
+    headWord="Stress"; headColor=T.t3; headNum="";
+    trend = (S.size===46) ? "Watch has been off your wrist. Put it on and this fills in 20 minutes."
+                          : "Off your wrist. This fills in 20 minutes.";
+    chartCfg.mode="none";
+  } else if(st==="err-phone"){
+    headWord=b.word; headColor=b.color; headNum=String(cur.s); trend="Using 7 days from your watch."; dot="hollow";
+  } else {
+    headWord=b.word; headColor=b.color; headNum=String(cur.s); trend=trendSentence(list);
+    dot = freshHollow ? "hollow" : "filled";
+  }
+
+  /* crown scrub overrides the header and the trend row */
+  if(S.scrub!==null && !S.aod && (st==="loaded"||st==="stale"||st==="err-phone")){
+    var sb = list[S.scrub];
+    if(sb.s!==undefined){
+      var sbb=bandOfBucket(sb); headWord=sbb.word; headColor=sbb.color; headNum=String(sb.s);
+      trend = sb.t + " · " + sb.s;
+    } else {
+      headWord="—"; headColor=T.t3; headNum="—";
+      trend = sb.t + " · " + (sb.k==="moving" ? "moving" : sb.k==="asleep" ? "asleep" : "no reading");
+    }
+  }
+  if(S.hushed && !S.aod && st==="loaded" && S.scrub===null) trend = "Quiet until Friday";
+
+  var dotHTML = "";
+  if(dot==="filled") dotHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+T.optimal+'"></span>';
+  if(dot==="hollow") dotHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;border:1.5px solid '+T.t3+'"></span>';
+
+  /* states whose copy runs to two lines get a taller trend slot, taken from the
+     empty plot area above it — the plot is band-rules-only in every one of them */
+  var longCopy = (st==="err-hk"||st==="err-sensor"||st==="empty"||st==="cold");
+  if(longCopy) chartCfg.h = g.s1.chartH - 16;
+  var trendTop = longCopy ? (g.s1.chartY + g.s1.chartH - 16 + 6) : g.s1.trendY;
+  var trendSize = longCopy ? (S.size===46 ? 12.5 : 11.5) : g.trendSize;
+
+  var html = ""
+    + '<div class="el" style="top:'+g.s1.headY+'px;height:'+g.s1.headH+'px;width:100%;display:flex;align-items:baseline;gap:4px">'
+    +   '<span style="font-size:'+g.headline+'px;font-weight:600;color:'+headColor+'">'+headWord+'</span>'
+    +   '<span style="font-size:'+g.num+'px;font-weight:600;color:'+(S.aod?T.t3:T.t1)+'">'+headNum+'</span>'
+    +   '<span style="margin-left:auto;align-self:center">'+dotHTML+'</span>'
+    + '</div>'
+    + '<div class="el" id="s1chart" style="top:'+g.s1.chartY+'px;width:'+g.W+'px">'+chartSVG(chartCfg)+'</div>'
+    + '<div class="el" style="top:'+trendTop+'px;width:100%;font-size:'+trendSize+'px;line-height:1.2;color:'+T.t2+'">'+trend+'</div>'
+    + '<button class="btn" id="s1btn" style="position:absolute;left:0;top:'+g.s1.btnY+'px;height:'+g.s1.btnH+'px;'
+    +   'background:'+(btnFill?T.raised:"transparent")+';border-color:'+T.border+';color:'+btnLabelColor+';font-size:'+g.headline+'px">'
+    +   ICON.wind(14) + '<span>Breathe · 60s</span></button>'
+    + '<button class="rowbtn" id="s1why" style="position:absolute;left:0;top:'+g.s1.whyY+'px;height:'+g.s1.whyH+'px;color:'+T.t3+'" aria-label="Why this number">'
+    +   '<span style="font-size:13px;transform:translateY('+g.s1.whyLabelY+'px)">Why</span>'
+    +   '<span style="transform:translateY('+g.s1.whyLabelY+'px)">'+ICON.chevron(10)+'</span>'
+    + '</button>';
+
+  el.innerHTML = html;
+  el.querySelector("#s1btn").addEventListener("click", startSession);
+  el.querySelector("#s1why").addEventListener("click", function(){
+    go("s4"); note("Push to <b>S4 Why</b> — NavigationStack depth 1. No haptic: navigation is not a state change.");
+  });
+}
+
+/* ---------------- S3 ----------------------------------------- */
+function renderS3(){
+  var g=G(), el=document.getElementById("s3"), v=S.s3variant;
+  var before="74", after="68", heroColor=T.optimal, outText="Down 6", glyph=ICON.triDown(10,T.optimal);
+  if(v==="nochange"){ after="76"; heroColor=T.t1; outText="No change yet. Normal."; glyph=ICON.dash(10,T.t3); }
+  if(v==="fail"){ before="––"; after="––"; heroColor=T.t3; outText="Could not read your heart rate"; glyph=""; }
+  if(S.aod){ before="––"; after="––"; heroColor=T.t3; outText="––"; glyph=""; }
+
+  el.innerHTML = ""
+    + '<div class="el" style="top:'+g.s3.row1Y+'px;height:'+g.s3.row1H+'px;width:100%;display:flex;align-items:baseline;justify-content:center;gap:8px">'
+    +   '<span style="font-size:'+g.s3.sec+'px;font-weight:600;color:'+T.t3+'">'+before+'</span>'
+    +   '<span style="color:'+T.t3+';transform:translateY(-3px)">'+ICON.arrow(12)+'</span>'
+    +   '<span style="font-size:'+g.s3.hero+'px;font-weight:600;color:'+heroColor+'">'+after+'</span>'
+    + '</div>'
+    + '<div class="el caption t3" style="top:'+g.s3.unitY+'px;width:100%;text-align:center">beats per minute</div>'
+    + '<div class="el" style="top:'+g.s3.outY+'px;width:100%;display:flex;align-items:center;gap:5px;font-size:13px;color:'+T.t2+'">'
+    +   glyph + '<span>'+outText+'</span></div>'
+    + '<div class="el caption t3" style="top:'+g.s3.logY+'px;width:100%">1 mindful minute saved to Health</div>'
+    + '<button class="btn" id="s3done" style="position:absolute;left:0;top:'+g.s3.btnY+'px;height:44px;font-size:'+g.headline+'px">Done</button>';
+
+  el.querySelector("#s3done").addEventListener("click", function(){
+    go("s1"); note("Done — back to <b>S1 Now</b>. The 20-minute bucket covering the session is computed from samples outside [t0, t0+60s], so the line loses nothing.");
+  });
+}
+
+/* ---------------- S4 ----------------------------------------- */
+function posBand(min,max,lo,hi,val,w){
+  var x=function(v){ return (clamp(v,min,max)-min)/(max-min)*w; };
+  return '<div class="posband" style="width:'+w+'px">'
+    + '<div class="usual" style="left:'+x(lo)+'px;width:'+(x(hi)-x(lo))+'px"></div>'
+    + (S.aod ? "" : '<div class="mark" style="left:'+(x(val)-1.5)+'px"></div>')
+    + '</div>';
+}
+function renderS4(){
+  var g=G(), el=document.getElementById("s4");
+  var hrv = S.aod ? "––" : "48", hrvU = S.aod ? "––" : "56";
+  var rhr = S.aod ? "––" : "58", rhrU = S.aod ? "––" : "55";
+  var src = (S.appState==="stale") ? "Baselines from iPhone · Sunday" : "Baselines from iPhone · 14:12";
+  if(S.appState==="err-phone") src = "Baselines from your watch · last 7 days";
+  if(S.size===40) src = src.replace("Baselines from iPhone","Baselines").replace("Baselines from your watch","Baselines · watch");
+
+  el.innerHTML = ""
+    + '<div class="el" style="top:'+g.s4.r1+'px;height:'+g.s4.rowH+'px;width:100%">'
+    +   '<div style="display:flex;align-items:baseline"><span style="font-size:'+g.headline+'px;font-weight:600;color:'+T.t1+'">HRV '+hrv+' ms</span>'
+    +   '<span class="caption2 t3" style="margin-left:auto">usual '+hrvU+'</span></div>'
+    +   '<div style="margin-top:12px">'+posBand(30,80,47,65,48,g.W)+'</div>'
+    + '</div>'
+    + '<div class="el" style="top:'+g.s4.r2+'px;height:'+g.s4.rowH+'px;width:100%">'
+    +   '<div style="display:flex;align-items:baseline"><span style="font-size:'+g.headline+'px;font-weight:600;color:'+T.t1+'">Resting HR '+rhr+'</span>'
+    +   '<span class="caption2 t3" style="margin-left:auto">usual '+rhrU+'</span></div>'
+    +   '<div style="margin-top:12px">'+posBand(45,75,53,57,58,g.W)+'</div>'
+    + '</div>'
+    + '<div class="el caption2 t3" style="top:'+g.s4.srcY+'px;width:100%">'+src+'</div>'
+    + '<button class="rowbtn" id="s4quiet" style="position:absolute;left:0;top:'+g.s4.quietY+'px;height:44px;color:'+T.t2+'">'
+    +   '<span style="font-size:13px">Quiet stress alerts</span><span>'+ICON.chevron(10)+'</span></button>';
+
+  el.querySelector("#s4quiet").addEventListener("click", function(){
+    go("s5"); note("Sheet from S4 → <b>S5 Quiet</b>. Reachable in two taps from S1, forever.");
+  });
+}
+
+/* ---------------- S5 ----------------------------------------- */
+function renderS5(){
+  var g=G(), el=document.getElementById("s5");
+  var stateLine = S.hushed ? "Quiet until Friday" : "Stress alerts are on";
+  if(S.aod) stateLine = "Stress alerts";
+  var mk=function(id,label,color,top){
+    return '<button class="btn" id="'+id+'" style="position:absolute;left:0;top:'+top+'px;height:44px;color:'+color+';font-size:'+g.headline+'px">'+label+'</button>';
+  };
+  el.innerHTML = ""
+    + '<div class="el footnote t2" style="top:'+g.s5.stateY+'px;width:100%">'+stateLine+'</div>'
+    + mk("q1","Mute today",T.t1,g.s5.b1)
+    + mk("q2","Mute 3 days",T.t1,g.s5.b2)
+    + mk("q3","Turn off stress alerts",T.t2,g.s5.b3);
+  ["q1","q2","q3"].forEach(function(id){
+    el.querySelector("#"+id).addEventListener("click", function(){
+      S.hushed=true; haptic(".success","hush accepted — WatchCommand.hushStressAlerts sent, the phone silences its own stress notifications too");
+      setTimeout(function(){ go("s1"); },420);
+      render();
+    });
+  });
+}
+
+/* ---------------- complications ------------------------------ */
+function renderComplications(){
+  var list = buckets(), cur = nowBucket(), b = bandOfBucket(cur);
+  var redact = S.aod;
+
+  /* inline */
+  document.getElementById("faceInline").innerHTML =
+    '<div style="display:flex;align-items:center;gap:5px;height:20px;color:'+(redact?T.t3:"#ffffff")+';font-size:14px;font-weight:500">'
+    + ICON.wind(11, redact?T.t3:b.color)
+    + '<span>Stress ' + (redact ? "––" : (cur.s + " " + (trendSentence(list).indexOf("Rising")===0 ? "rising" : trendSentence(list).indexOf("Easing")===0 ? "easing" : "steady"))) + '</span></div>';
+
+  /* rectangular — last 4 hours, 12 buckets, bar 5 gap 2 */
+  var last12 = list.slice(-12);
+  var spark = chartSVG({w:110,h:26,list:last12,bw:5,gap:2,tick:3,mode:redact?"aod":"score",rules:true,capH:1.5,label:""});
+  document.getElementById("faceRect").innerHTML =
+      '<div style="height:66px;display:flex;flex-direction:column;justify-content:center;gap:3px">'
+    + '<div style="font-size:17.5px;font-weight:500"><span style="color:'+(redact?T.t3:b.color)+'">'+(redact?"Stress":b.word)+'</span> <span style="color:#fff">'+(redact?"––":cur.s)+'</span></div>'
+    + spark
+    + '<div style="font-size:12px;color:'+T.t3+'">'+(redact?"Raise to view":trendSentence(list))+'</div>'
+    + '</div>';
+
+  /* circular — closed gauge, ticks etched at 34 and 56 */
+  var r=22, c=2*Math.PI*r, frac=redact?0:cur.s/100;
+  var tickAt=function(v){
+    var a=(v/100)*360-90, ra=a*Math.PI/180;
+    var x1=26+Math.cos(ra)*(r-4), y1=26+Math.sin(ra)*(r-4);
+    var x2=26+Math.cos(ra)*(r+4), y2=26+Math.sin(ra)*(r+4);
+    return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+T.bg+'" stroke-width="2"></line>';
+  };
+  document.getElementById("faceCirc").innerHTML =
+      '<svg width="52" height="52" viewBox="0 0 52 52" role="img" aria-label="Stress '+(redact?"hidden":cur.s)+' out of 100">'
+    + '<circle cx="26" cy="26" r="'+r+'" fill="none" stroke="'+T.subtle+'" stroke-width="6"></circle>'
+    + '<circle cx="26" cy="26" r="'+r+'" fill="none" stroke="'+(redact?T.border:b.color)+'" stroke-width="6" stroke-linecap="round"'
+    + ' stroke-dasharray="'+(c*frac)+' '+(c*(1-frac))+'" transform="rotate(-90 26 26)"></circle>'
+    + tickAt(34) + tickAt(56)
+    + '<text x="26" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="'+(redact?T.t3:"#fff")+'" font-family="inherit">'+(redact?"––":cur.s)+'</text>'
+    + '</svg>';
+
+  /* system activity rings */
+  document.getElementById("faceRings").innerHTML =
+      '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">'
+    + '<circle cx="13" cy="13" r="10" fill="none" stroke="#3a1420" stroke-width="3"></circle>'
+    + '<circle cx="13" cy="13" r="10" fill="none" stroke="#FA114F" stroke-width="3" stroke-linecap="round" stroke-dasharray="29 34" transform="rotate(-90 13 13)"></circle>'
+    + '<circle cx="13" cy="13" r="6.5" fill="none" stroke="#12321f" stroke-width="3"></circle>'
+    + '<circle cx="13" cy="13" r="6.5" fill="none" stroke="#92E82A" stroke-width="3" stroke-linecap="round" stroke-dasharray="16 25" transform="rotate(-90 13 13)"></circle>'
+    + '<circle cx="13" cy="13" r="3" fill="none" stroke="#0d2a33" stroke-width="3"></circle>'
+    + '<circle cx="13" cy="13" r="3" fill="none" stroke="#1AD3F0" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 10" transform="rotate(-90 13 13)"></circle>'
+    + '</svg>';
+
+  document.getElementById("faceFoot").textContent = redact
+    ? "Always-On: health values redacted"
+    : "Crown down for the Smart Stack";
+  document.getElementById("faceTime").style.color = redact ? "#8a8a92" : "#ffffff";
+
+  /* notification sparkline — 8 bars */
+  document.getElementById("notifSpark").innerHTML =
+    chartSVG({w:88,h:22,list:list.slice(-8),bw:8,gap:3,tick:0,mode:"score",rules:true,capH:1.5,label:""});
+  document.getElementById("notifWord").textContent = b.word;
+  document.getElementById("notifWord").style.color = b.color;
+  document.getElementById("notifNum").textContent = cur.s;
+}
+
+/* ---------------- Smart Stack --------------------------------- */
+function renderStack(){
+  var g=G(), list=buckets(), cur=nowBucket(), b=bandOfBucket(cur), redact=S.aod;
+  var w=g.widget, plotList = (S.size===46) ? list : list;
+  var tint = redact ? "rgba(46,46,54,.35)" : "rgba("+hexRGB(b.color)+",.14)";
+  var lasoWidget =
+      '<div style="font-size:17px;font-weight:500;line-height:1.05">'
+    + '<span style="color:'+(redact?T.t3:b.color)+'">'+(redact?"Stress":b.word)+'</span> '
+    + '<span style="color:'+(redact?T.t3:T.t1)+'">'+(redact?"––":cur.s)+'</span></div>'
+    + '<div style="margin-top:3px">'
+    + chartSVG({w:w.w-16,h:w.plotH,list:plotList,bw:w.bw,gap:w.gap,tick:3,mode:redact?"aod":"score",rules:true,capH:1.5,label:""})
+    + '</div>'
+    + '<div style="display:flex;margin-top:2px"><span style="font-size:12px;color:'+T.t3+'">'
+    + (redact?"Raise to view":trendSentence(list))+'</span>'
+    + '<span style="margin-left:auto;font-size:11px;color:'+T.t3+'">14:28</span></div>';
+
+  var cards = [
+    {id:"laso", tint:tint, html:lasoWidget, go:"s1", label:"Laso stress widget, accessoryRectangular"},
+    {id:"weather", tint:"rgba(90,200,250,.10)", html:
+        '<div style="font-size:17px;font-weight:500;color:'+T.t1+'">18° Cloudy</div>'
+      + '<div style="font-size:12px;color:'+T.t3+';margin-top:4px">H:21 L:11 · Rain 20%</div>'
+      + '<div style="font-size:12px;color:'+T.t3+';margin-top:2px">Wind 12 km/h</div>', go:null, label:"Weather widget, system"},
+    {id:"activity", tint:"rgba(146,232,42,.10)", html:
+        '<div style="font-size:17px;font-weight:500;color:'+T.t1+'">Activity</div>'
+      + '<div style="font-size:12px;color:'+T.t3+';margin-top:4px">284 of 620 KCAL · 12 of 30 MIN</div>'
+      + '<div style="font-size:12px;color:'+T.t3+';margin-top:2px">6 of 12 hours stood</div>', go:null, label:"Activity widget, system"},
+    {id:"now", tint:"rgba(255,255,255,.05)", html:
+        '<div style="font-size:17px;font-weight:500;color:'+T.t1+'">Now Playing</div>'
+      + '<div style="font-size:12px;color:'+T.t3+';margin-top:4px">Nothing playing</div>', go:null, label:"Now Playing widget, system"}
+  ];
+
+  var rail = document.getElementById("stackRail");
+  rail.innerHTML = cards.map(function(c,i){
+    return '<div class="wcard'+(i===S.stackIdx?"":" dim")+'" data-idx="'+i+'" data-go="'+(c.go||"")+'" '
+      + 'style="background:'+c.tint+';min-height:'+w.h+'px" role="button" tabindex="0" aria-label="'+c.label+'">'+c.html+'</div>';
+  }).join("");
+  /* measure rather than assume: the widget canvas is a floor, not a fixed height */
+  var first = rail.querySelector(".wcard");
+  var cardH = (first ? first.offsetHeight : w.h) + 8;
+  rail.style.transform = "translateY(" + (g.pad + 4 - S.stackIdx*cardH) + "px)";
+  document.getElementById("stackHint").textContent = "Crown to scroll · " + (S.stackIdx+1) + " of " + cards.length;
+
+  Array.prototype.forEach.call(rail.querySelectorAll(".wcard"), function(node){
+    node.addEventListener("click", function(){
+      var i = +node.getAttribute("data-idx");
+      if(i!==S.stackIdx){ S.stackIdx=i; renderStack(); haptic(".click","Smart Stack detent"); return; }
+      if(node.getAttribute("data-go")){
+        go("s1"); note("Tapped the Laso Smart Stack widget → <b>laso://stress/now</b> → S1 at depth 0.");
+      }
+    });
+  });
+}
+function hexRGB(h){
+  return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)].join(",");
+}
+
+/* ---------------- S2 session ---------------------------------- */
+var PHASES = [{w:"In",d:3.5},{w:"In again",d:1},{w:"Out",d:5.5}];
+function startSession(fromDoubleTap){
+  go("s2");
+  haptic(".start", fromDoubleTap
+    ? "Double Tap took the primary action — handGestureShortcut(.primaryAction). HR sampling suspended for 60 s"
+    : "session begins. HR sampling for the line is SUSPENDED for the whole 60 s");
+  runSession();
+}
+function runSession(){
+  var g=G(), circle=document.getElementById("s2Circle"), phaseEl=document.getElementById("s2Phase"),
+      fill=document.getElementById("s2Fill"), leftEl=document.getElementById("s2Left"),
+      wrap=document.getElementById("s2Wrap"), track=document.getElementById("s2Track");
+  wrap.style.top=g.s2.wrapY+"px"; wrap.style.height=g.s2.wrapH+"px";
+  track.style.top=g.s2.trackY+"px"; leftEl.style.top=g.s2.leftY+"px";
+
+  if(S.session) cancelAnimationFrame(S.session.raf);
+  var rm = reduceMotion();
+  var t0 = performance.now();
+  /* phase 0 is already announced by the .start haptic, so it must not also fire a .click */
+  var lastPhase = 0;
+  var measuring = false;
+  var sess = {raf:0};
+  S.session = sess;
+
+  function d(){ return (performance.now()-t0)/1000*S.speed; }
+
+  function frame(){
+    if(S.screen!=="s2"){ S.session=null; return; }
+    var t = d();
+    if(t < 60){
+      var inCycle = t % 10, acc = 0, pi = 0;
+      for(var i=0;i<PHASES.length;i++){ if(inCycle < acc+PHASES[i].d){ pi=i; break; } acc+=PHASES[i].d; }
+      var pStart = 0; for(var j=0;j<pi;j++) pStart += PHASES[j].d;
+      var frac = (inCycle - pStart)/PHASES[pi].d;
+      if(pi!==lastPhase){
+        lastPhase=pi;
+        haptic(".click","breath phase → " + PHASES[pi].w + " (18 per session, ≥1 s apart, far above the 100 ms floor)");
+      }
+      phaseEl.textContent = PHASES[pi].w;
+      leftEl.textContent = "0:" + String(Math.max(0,Math.ceil(60-t))).padStart(2,"0");
+      if(S.aod){
+        phaseEl.textContent = "Breathing";
+        var mid = (g.s2.minD+g.s2.maxD)/2;
+        circle.style.width=mid+"px"; circle.style.height=mid+"px";
+        circle.style.background="transparent"; circle.style.borderColor=T.t3; circle.style.opacity=1;
+      } else if(rm){
+        circle.style.width=g.s2.maxD+"px"; circle.style.height=g.s2.maxD+"px";
+        circle.style.background="transparent";
+        circle.style.opacity = (pi===2) ? (1 - 0.65*frac) : (0.35 + 0.65*frac);
+        circle.style.borderColor=T.accent;
+      } else {
+        var from = (pi===0) ? (t<10?g.s2.minD:g.s2.endD) : (pi===1 ? g.s2.maxD : g.s2.maxD);
+        var to   = (pi===0) ? g.s2.maxD : (pi===1 ? g.s2.maxD : g.s2.endD);
+        var e = 1 - Math.pow(1-frac,3);
+        var dia = from + (to-from)*e;
+        circle.style.width=dia+"px"; circle.style.height=dia+"px";
+        circle.style.background="rgba(34,211,238,.22)"; circle.style.borderColor=T.accent; circle.style.opacity=1;
+      }
+      fill.style.width = Math.min(100,t/60*100) + "%";
+      sess.raf = requestAnimationFrame(frame);
+      return;
+    }
+    if(!measuring){
+      measuring = true;
+      haptic(".stop","session complete — last haptic before the measurement window. HR anchored query starts 100 ms later");
+      phaseEl.textContent = "Hold still";
+      circle.style.background="transparent"; circle.style.borderColor=T.t3;
+      circle.style.width=g.s2.endD+"px"; circle.style.height=g.s2.endD+"px";
+      fill.style.width="100%";
+      note("<b>t = 60.1s</b> haptic engine idle → HR anchored query starts. 45 s of sampling, <b>zero haptics fired</b>. This is R8 enforced as a sequence.");
+    }
+    if(t < 105){
+      leftEl.textContent = "Reading · " + Math.max(0,Math.ceil(105-t)) + "s";
+      sess.raf = requestAnimationFrame(frame);
+      return;
+    }
+    S.session = null;
+    S.s3variant = "down";
+    go("s3");
+    haptic(".directionDown","heart rate fell 6 bpm, below a significant threshold. Sampling already finished");
+  }
+  sess.raf = requestAnimationFrame(frame);
+}
+
+/* ---------------- navigation ---------------------------------- */
+var SCREENS = [
+  ["face","Watch face"],
+  ["stack","Smart Stack"],
+  ["notif-short","Notif · short look"],
+  ["notif-long","Notif · long look"],
+  ["launch","App launch"],
+  ["s1","S1 Now"],
+  ["s2","S2 Session"],
+  ["s3","S3 After"],
+  ["s3n","S3 · no change"],
+  ["s3f","S3 · sensor fail"],
+  ["s4","S4 Why"],
+  ["s5","S5 Quiet"],
+  ["raise","Wrist-raise return"]
+];
+var NOTES = {
+  "face":"Watch face. Three Laso complications in real slots, three system complications competing for the same face. Each Laso family has its own deep link (R15). Crown down opens the Smart Stack.",
+  "stack":"Smart Stack. Only accessoryRectangular and accessoryCircular reach it (R3); Laso ships rectangular only, because the Stack is the slope surface and a ring cannot carry a slope. Tint is 14% alpha of the band colour — the word stays the meaning-carrier (R18).",
+  "notif-short":"Short look. The title carries zero health data — not a score, not a band, not the word stress (R17). Someone glancing at a raised wrist in a meeting discloses nothing.",
+  "notif-long":"Long look. Three custom actions, max is four. Breathe 60s is first because Double Tap takes the first nondestructive action (R17). Crown scrolls the notification body.",
+  "launch":"App launch, before the first HealthKit query returns. Skeleton bars, no spinner (R13). The button is enabled — breathing needs no data.",
+  "s1":"S1 Now — the entry screen. One question: is my stress going up right now, and do I want to do something about it? Crown scrubs time along the line; each bucket is a .click detent.",
+  "s2":"S2 Session — 60 s cyclic sighing, 6 cycles of 10 s. No close button: crown press is system-reserved (R10) and swipe-down dismisses the cover. No extended runtime session is used (R16).",
+  "s3":"S3 After — before and after heart rate. The triangle, not the colour, carries direction (R18).",
+  "s3n":"S3 no-change variant. Hero number in textPrimary, never a band colour: an unchanged heart rate is not a failure. Haptic is .success, never .failure.",
+  "s3f":"S3 sensor-failure variant. Fewer than 10 HR samples in the 45 s window. Row 4 still reads 1 mindful minute saved to Health — because that part is true regardless.",
+  "s4":"S4 Why — the two weighted contributors, each against its own baseline. Position band with a marker, not a ring. Phone-sourced values are visibly sourced.",
+  "s5":"S5 Quiet — three 44pt full-width targets, the maximum this screen may ever hold. Sends WatchCommand.hushStressAlerts so the phone stops its own stress notifications too.",
+  "raise":"Wrist-raise return to a frontmost app. The layout is already correct from Always-On, so only the redacted elements restore, with a 220 ms opacity crossfade. No count-up, no gauge sweep."
+};
+
+function go(name){
+  if(name==="launch"){ S.appState="loading"; syncSeg("appState","loading"); name="s1"; S.screen="launch"; }
+  else if(name==="s3n"){ S.s3variant="nochange"; S.screen="s3n"; }
+  else if(name==="s3f"){ S.s3variant="fail"; S.screen="s3f"; }
+  else if(name==="s3"){ if(S.screen!=="s3n"&&S.screen!=="s3f") S.s3variant="down"; S.screen="s3"; }
+  else if(name==="raise"){ S.screen="raise"; }
+  else S.screen=name;
+  if(name!=="s2" && S.session){ cancelAnimationFrame(S.session.raf); S.session=null; }
+  if(name!=="s1") S.scrub=null;
+  render();
+  if(NOTES[S.screen]) note(NOTES[S.screen]);
+  if(S.screen==="raise") doWristRaise();
+}
+function visibleScreen(){
+  var s=S.screen;
+  if(s==="launch"||s==="raise") return "s1";
+  if(s==="s3n"||s==="s3f") return "s3";
+  return s;
+}
+function doWristRaise(){
+  S.aod = true; syncSeg("aod","on"); render();
+  var scr=document.getElementById("screen");
+  setTimeout(function(){
+    S.aod=false; syncSeg("aod","off");
+    scr.style.transition="opacity .22s cubic-bezier(.22,.61,.36,1)";
+    scr.style.opacity="0.55";
+    render();
+    setTimeout(function(){ scr.style.opacity="1"; setTimeout(function(){ scr.style.transition=""; },240); },20);
+    note("Wrist raised. Redacted elements restored with a 220 ms opacity crossfade. <b>Nothing jumped</b> — the Always-On layout is byte-identical to the active one.");
+  }, 1100);
+}
+
+/* ---------------- crown --------------------------------------- */
+var crownEl, crownShift=0;
+function crownStep(dir){
+  crownShift = (crownShift + dir*3) % 30;
+  crownEl.querySelector(".grooves").style.setProperty("--crownshift", crownShift+"px");
+  crownEl.classList.add("tick");
+  setTimeout(function(){ crownEl.classList.remove("tick"); }, 140);
+
+  var vs = visibleScreen();
+  if(vs==="s1" && !S.aod && ["loaded","stale","err-phone"].indexOf(S.appState)>=0){
+    var list=buckets();
+    var i = (S.scrub===null) ? list.length-1 : S.scrub;
+    i = clamp(i + (dir>0 ? -1 : 1), 0, list.length-1);
+    S.scrub = i;
+    renderS1();
+    var b=list[i];
+    haptic(".click","crown detent · bucket " + b.t + " — S1 shows no live BPM, which is exactly what makes detents legal here (R8)");
+    clearTimeout(S.scrubTimer);
+    S.scrubTimer = setTimeout(function(){ S.scrub=null; renderS1();
+      note("Idle 2 s → snapped back to <b>now</b> with a 220 ms crossfade. A past value is always stamped with its time and can never be mistaken for now."); }, 2000);
+    return;
+  }
+  if(vs==="stack"){
+    var n=4, ni=clamp(S.stackIdx + (dir>0?1:-1),0,n-1);
+    if(ni!==S.stackIdx){ S.stackIdx=ni; renderStack(); haptic(".click","Smart Stack detent"); }
+    return;
+  }
+  if(vs==="face"){
+    if(dir>0){ go("stack"); note("Crown down from the watch face → <b>Smart Stack</b>. Crown navigation anchored per R10."); }
+    return;
+  }
+  if(vs==="notif-long"){
+    var inner=document.getElementById("notifInner");
+    var y = (inner._y||0) + (dir>0 ? -22 : 22);
+    y = clamp(y, -110, 0); inner._y = y;
+    inner.style.transform = "translateY(" + y + "px)";
+    return;
+  }
+  note("Digital Crown turned. <b>No bound value on this screen</b> — S2 is hands-free by design; S4 and S5 are a single screen height at both canvas sizes, so nothing scrolls.");
+}
+
+/* ---------------- render -------------------------------------- */
+function render(){
+  var g=G();
+  document.documentElement.style.setProperty("--sw", g.sw+"px");
+  document.documentElement.style.setProperty("--sh", g.sh+"px");
+  document.documentElement.style.setProperty("--pad", g.pad+"px");
+  document.documentElement.style.setProperty("--dev-w", (g.sw+28));
+  document.documentElement.style.setProperty("--dev-h", (g.sh+28));
+
+  var vs = visibleScreen();
+  Array.prototype.forEach.call(document.querySelectorAll("[data-screen]"), function(n){
+    n.hidden = (n.getAttribute("data-screen") !== vs);
+  });
+  renderComplications();
+  renderStack();
+  renderS1();
+  renderS3();
+  renderS4();
+  renderS5();
+  document.getElementById("screen").style.filter = S.aod ? "brightness(.62) saturate(.35)" : "none";
+
+  Array.prototype.forEach.call(document.querySelectorAll("#switcher button"), function(btn){
+    btn.setAttribute("aria-current", btn.getAttribute("data-s")===S.screen ? "true" : "false");
+  });
+}
+
+/* ---------------- wiring -------------------------------------- */
+function syncSeg(group,val){
+  var box=document.querySelector('[data-group="'+group+'"]');
+  if(!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll("button"), function(b){
+    b.setAttribute("aria-pressed", b.getAttribute("data-v")===String(val) ? "true":"false");
+  });
+}
+
+function init(){
+  pulseEl=document.getElementById("pulse");
+  chipEl=document.getElementById("hapchip");
+  capEl=document.getElementById("captionLine");
+  crownEl=document.getElementById("crown");
+
+  var sw=document.getElementById("switcher");
+  sw.innerHTML = SCREENS.map(function(s){
+    return '<button data-s="'+s[0]+'" aria-current="false">'+s[1]+'</button>';
+  }).join("");
+  sw.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    go(b.getAttribute("data-s"));
+  });
+
+  /* face + notification deep links */
+  document.getElementById("screen").addEventListener("click", function(e){
+    var b=e.target.closest("[data-go]"); if(!b) return;
+    var v=b.getAttribute("data-go");
+    if(v==="s1-from-rect"){ go("s1"); note("<b>accessoryRectangular</b> → laso://stress/now → S1 at depth 0. The flagship: it visibly changes every 30 minutes, which is what a checking habit needs."); }
+    if(v==="s4-from-circ"){ go("s4"); note("<b>accessoryCircular</b> → laso://stress/why → S4 at depth 0. A bare ring provokes one question — why is it that — so the tap answers that question."); }
+    if(v==="s2-from-inline"){ note("<b>accessoryInline</b> → laso://stress/breathe → S2, session already running. Honest risk: a user who taps a number expecting a detail screen gets a breathing session."); startSession(false); }
+    if(v==="s2-from-notif"){ note("First nondestructive action fired from the long look → S2."); startSession(false); }
+  });
+  document.getElementById("screen").addEventListener("click", function(e){
+    var b=e.target.closest("[data-notif-mute]"); if(!b) return;
+    S.hushed=true; haptic(".success","hush accepted from the notification — no second push announcing it, because a push saying I will stop pushing you is self-refuting");
+    setTimeout(function(){ go("s1"); }, 420);
+  });
+
+  /* dev toolbar */
+  var panel=document.getElementById("devpanel"), dbtn=document.getElementById("devbtn");
+  dbtn.addEventListener("click", function(){
+    panel.hidden=!panel.hidden;
+    dbtn.setAttribute("aria-expanded", String(!panel.hidden));
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".seg[data-group]"), function(box){
+    box.addEventListener("click", function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      var group=box.getAttribute("data-group"), v=b.getAttribute("data-v");
+      if(group==="size"){ S.size=+v; S.scrub=null; }
+      if(group==="appState"){ S.appState=v; if(S.screen==="launch"&&v!=="loading") S.screen="s1"; }
+      if(group==="aod"){ S.aod=(v==="on"); }
+      if(group==="band"){ S.bandVar=v; }
+      if(group==="speed"){ S.speed=+v; }
+      syncSeg(group,v);
+      render();
+      if(group==="aod" && S.aod) note("<b>Always-On redacted.</b> Heights destroyed, colour destroyed, 41 → ––, trend row → Raise to view, button fill → stroke. Layout geometry is byte-identical so nothing moves on wake (R7).");
+      else if(group==="band") note("Band variable → <b>"+v+"</b>. The whole 8-hour line shifts; the trend sentence is recomputed by rule, not rewritten by hand.");
+      else if(group==="size") note("Canvas → <b>"+v+"mm</b>. 46mm plots 24 buckets at 20 min; 40mm plots 16 buckets at 30 min. Nothing scrolls at either size, which is what keeps S1's Double Tap legal (R11).");
+      else if(group==="appState") note(NOTES[visibleScreen()]||"");
+    });
+  });
+  document.getElementById("dtap").addEventListener("click", fireDoubleTap);
+
+  /* crown input */
+  var stageEl = document.getElementById("stage");
+  window.addEventListener("wheel", function(e){
+    if(panel.contains(e.target)) return;
+    /* crown only turns while the pointer is over the device, so the page still scrolls elsewhere */
+    if(!stageEl.contains(e.target)) return;
+    e.preventDefault();
+    crownEl._acc = (crownEl._acc||0) + e.deltaY;
+    while(Math.abs(crownEl._acc) >= 40){
+      var dir = crownEl._acc > 0 ? 1 : -1;
+      crownEl._acc -= dir*40;
+      crownStep(dir);
+    }
+  }, {passive:false});
+  window.addEventListener("keydown", function(e){
+    if(e.key==="ArrowDown"){ e.preventDefault(); crownStep(1); }
+    if(e.key==="ArrowUp"){ e.preventDefault(); crownStep(-1); }
+  });
+
+  render();
+  go("face");
+  selfCheck();
+}
+
+/* One runnable check: if the band table, the score formula or the trend rule breaks,
+   this throws in the console instead of silently rendering a wrong day. */
+function selfCheck(){
+  var keep={size:S.size,bandVar:S.bandVar};
+  function run(size,bv){
+    S.size=size; S.bandVar=bv;
+    var l=buckets(), cur=null;
+    for(var i=l.length-1;i>=0;i--){ if(l[i].s!==undefined){ cur=l[i]; break; } }
+    return {n:l.length, cur:cur.s, word:bandOfBucket(cur).word, trend:trendSentence(l)};
+  }
+  function must(c,m){ if(!c) throw new Error("selfCheck: "+m); }
+  var a=run(46,"moderate");
+  must(a.n===24 && a.cur===41 && a.word==="Moderate" && a.trend==="Rising since 11:00", "Alex 46mm");
+  var b=run(40,"moderate");
+  must(b.n===16 && b.cur===41 && b.trend==="Rising since 11:00", "Alex 40mm");
+  must(run(46,"calm").trend==="Steady since 06:40", "calm variant");
+  must(run(46,"high").word==="High", "high variant");
+  must(Math.round(17.16+1.4545*(71.4-55))===41, "score(HR) formula");
+  S.size=keep.size; S.bandVar=keep.bandVar; render();
+}
+
+function fireDoubleTap(){
+  var vs=visibleScreen();
+  if(vs==="s1" && !S.aod){ startSession(true); return; }
+  if(vs==="notif-long" || vs==="notif-short"){
+    note("Double Tap on a notification selects the <b>first nondestructive action</b> — Breathe 60s. Zero taps, no screen read.");
+    startSession(true); return;
+  }
+  if(vs==="s3"){ go("s1"); haptic(".success","Double Tap took the primary action — Done"); return; }
+  if(vs==="face"){ go("stack"); note("Double Tap on the watch face opens the <b>Smart Stack</b> — system behaviour, not Laso's."); return; }
+  note("<b>Double Tap fired — no primary action on this screen.</b> S2 is hands-free by design; S4 and S5 set no primaryAction, per R11.");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>

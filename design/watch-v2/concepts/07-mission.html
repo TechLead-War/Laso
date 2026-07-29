@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concept 07 — Daily Mission — Laso Watch</title>
+<style>
+:root{
+  --bg:#000000;
+  --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D;
+  --surfaceSubtle:#17171C;
+  --textPrimary:#F2F2F6;
+  --textSecondary:#C9C9D2;
+  --textTertiary:#ADADB8;
+  --borderLow:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --scale:1.7;
+  --font:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0c;color:var(--textSecondary);font-family:var(--font);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:20px 16px 80px}
+a{color:var(--primary)}
+
+/* ---------- page chrome (not the design under review) ---------- */
+.page{max-width:1180px;margin:0 auto}
+.pagehead{margin-bottom:16px}
+.pagehead h1{font-size:17px;font-weight:600;color:var(--textPrimary);letter-spacing:.2px}
+.pagehead p{font-size:12px;color:var(--textTertiary);margin-top:4px;max-width:70ch;line-height:1.5}
+.layout{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+
+.switcher{width:196px;flex:0 0 auto;display:flex;flex-direction:column;gap:4px}
+.switcher .grouplabel{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:#5f5f6b;margin:10px 0 2px}
+.switcher button{appearance:none;border:1px solid var(--borderLow);background:#101014;color:var(--textSecondary);
+  font:inherit;font-size:12px;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;min-height:34px;transition:background 120ms,border-color 120ms}
+.switcher button:hover{background:#16161b}
+.switcher button[aria-current="true"]{background:#12233a;border-color:var(--primary);color:var(--textPrimary)}
+.switcher button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.stagecol{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.stage{display:flex;align-items:flex-start;gap:14px}
+.caption{font-size:11px;color:var(--textTertiary);max-width:420px;text-align:center;line-height:1.5;min-height:32px}
+.caption b{color:var(--textSecondary);font-weight:600}
+
+/* ---------- watch bezel ---------- */
+.bezel{position:relative;background:#0d0d10;border-radius:58px;padding:14px;
+  box-shadow:0 0 0 2px #23232a, 0 0 0 8px #131317, 0 26px 50px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.06)}
+.screenport{position:relative;overflow:hidden;border-radius:44px;background:var(--bg);
+  box-shadow:inset 0 0 0 1px #1a1a20}
+.screenscaler{transform-origin:top left}
+.screen{background:var(--bg);color:var(--textPrimary);position:relative;overflow:hidden}
+.screen *{font-variant-numeric:tabular-nums}
+
+/* crown + side button */
+.crown{position:absolute;right:-11px;top:82px;width:15px;height:52px;border-radius:5px;
+  background:linear-gradient(90deg,#3a3a42,#6a6a76 40%,#2c2c33);box-shadow:0 1px 3px rgba(0,0,0,.7)}
+.crownridges{position:absolute;inset:2px 3px;border-radius:3px;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.55) 0 1px,rgba(255,255,255,.1) 1px 3px)}
+.crowndot{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;
+  background:#d33;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.sidebtn{position:absolute;right:-8px;top:158px;width:9px;height:44px;border-radius:4px;
+  background:linear-gradient(90deg,#33333b,#55555f);box-shadow:0 1px 3px rgba(0,0,0,.7)}
+
+/* crown readout (dev chrome) */
+.crownpanel{width:168px;font-size:11px;color:var(--textTertiary);line-height:1.5}
+.crownpanel h3{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:#5f5f6b;margin-bottom:6px;font-weight:600}
+.crowndial{width:74px;height:74px;border-radius:50%;border:1px solid var(--borderLow);position:relative;margin:6px 0 8px;background:#101014}
+.crowndial .needle{position:absolute;left:50%;top:6px;width:2px;height:26px;margin-left:-1px;background:var(--primary);border-radius:1px;transform-origin:50% 100%}
+.crowndial .ticks{position:absolute;inset:4px;border-radius:50%;
+  background:conic-gradient(from 0deg, var(--borderLow) 0 2deg, transparent 2deg 30deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 26px, #000 26px);mask:radial-gradient(circle, transparent 0 26px, #000 26px)}
+.crowndial .detent{position:absolute;left:50%;top:-4px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--optimal);opacity:0;transition:opacity 90ms}
+.crowndial .detent.on{opacity:1}
+.crownval{color:var(--textPrimary);font-size:13px;font-weight:600}
+.crownbind{color:var(--textSecondary)}
+
+/* haptic marker */
+.hapticring{position:absolute;inset:0;border-radius:44px;border:2px solid var(--optimal);opacity:0;pointer-events:none;z-index:40}
+.hapticring.fire{animation:hpulse 700ms ease-out}
+@keyframes hpulse{0%{opacity:0;transform:scale(1.02)}18%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.hapticcap{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:41;
+  background:rgba(10,10,12,.92);border:1px solid var(--borderLow);color:var(--optimal);
+  font-size:10px;letter-spacing:.4px;padding:3px 8px;border-radius:9999px;opacity:0;transition:opacity 160ms;pointer-events:none;white-space:nowrap}
+.hapticcap.show{opacity:1}
+
+/* ---------- dev toolbar ---------- */
+.devtoggle{position:fixed;left:14px;bottom:14px;z-index:60;appearance:none;border:1px solid var(--borderLow);
+  background:#101014;color:var(--textTertiary);font:inherit;font-size:11px;padding:7px 11px;border-radius:8px;cursor:pointer;min-height:32px}
+.devtoggle:hover{color:var(--textPrimary)}
+.devtoggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.devpanel{position:fixed;left:14px;bottom:56px;z-index:60;width:262px;background:#0d0d11;border:1px solid var(--borderLow);
+  border-radius:12px;padding:12px;display:none;box-shadow:0 18px 40px rgba(0,0,0,.7)}
+.devpanel.open{display:block}
+.devpanel h3{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:#5f5f6b;margin:10px 0 5px;font-weight:600}
+.devpanel h3:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{appearance:none;border:1px solid var(--borderLow);background:#131318;color:var(--textTertiary);
+  font:inherit;font-size:11px;padding:6px 8px;border-radius:7px;cursor:pointer;min-height:30px}
+.seg button[aria-pressed="true"]{background:#12233a;border-color:var(--primary);color:var(--textPrimary)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.devnote{font-size:10px;color:#5f5f6b;line-height:1.5;margin-top:6px}
+.wide{width:100%;justify-content:center;text-align:center}
+
+/* ---------- inside-watch primitives ---------- */
+.col{display:flex;flex-direction:column;align-items:center}
+.navbar{height:28px;display:flex;align-items:center;justify-content:center;position:relative;width:100%}
+.navbar .t{font-size:15px;font-weight:600;color:var(--textPrimary)}
+.navbar .back{position:absolute;left:0;top:0;height:28px;width:34px;display:flex;align-items:center;justify-content:flex-start;
+  background:none;border:0;color:var(--primary);font:inherit;font-size:15px;cursor:pointer;padding:0}
+.navbar .back:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:6px}
+
+button.tap{appearance:none;border:0;background:none;font:inherit;color:inherit;cursor:pointer;display:block;padding:0}
+button.tap:active{transform:scale(.96)}
+button.tap{transition:transform 80ms ease-out}
+button.tap:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+
+.pbtn{display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border-radius:10px;
+  background:var(--surfaceRaised);box-shadow:inset 0 0 0 1px var(--borderLow);color:var(--textPrimary);
+  font-size:17px;font-weight:600;line-height:1}
+.pbtn.done{background:rgba(51,196,141,.18);box-shadow:inset 0 0 0 1px var(--optimal)}
+.pbtn.confirm{background:rgba(77,163,255,.22);box-shadow:inset 0 0 0 1px var(--primary)}
+.pbtn.secondary{color:var(--textSecondary)}
+.pbtn.unavailable{background:var(--surfaceSubtle);box-shadow:inset 0 0 0 1px var(--borderLow);color:var(--textTertiary)}
+.pbtn .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.missionline{font-size:17px;font-weight:600;color:var(--textPrimary);line-height:20px;height:20px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;text-align:center}
+.reasonrow{height:15px;display:flex;align-items:center;justify-content:center;gap:4px;width:100%}
+.reasonrow .dot{width:6px;height:6px;border-radius:50%;background:var(--optimal);flex:0 0 auto}
+.reasonrow .dot.hollow{background:transparent;box-shadow:inset 0 0 0 2px var(--textTertiary)}
+.reasonrow .txt{font-size:12px;color:var(--textTertiary);line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.chaintap{width:100%;padding:10px 0;background:none;border:0;cursor:pointer;display:block}
+.chaintap:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
+.chainrow{display:flex;align-items:flex-end;width:100%}
+.bar{border-radius:4px;flex:0 0 auto;box-sizing:border-box}
+.bar.closed{background:var(--optimal)}
+.bar.missed{background:transparent;border:2px solid var(--borderLow)}
+.bar.today{background:transparent;border:2px solid var(--primary)}
+.bar.paused{background:var(--textTertiary)}
+.bar.redact{background:transparent;border:2px solid var(--textTertiary)}
+.chaincount{margin-left:auto;font-size:11px;font-weight:500;color:var(--textTertiary);line-height:1}
+
+.arcwrap{position:relative}
+.arcwrap .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.arcwrap .ic{display:block}
+.arcglyph{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:center}
+.arctarget{position:absolute;left:0;right:0;text-align:center;font-weight:600;color:var(--textPrimary);line-height:1}
+.arclaso{position:absolute;left:0;right:0;text-align:center;font-size:11px;font-weight:500;letter-spacing:2px;color:var(--textTertiary)}
+
+/* watch face */
+.face{position:relative;width:100%;height:100%;padding:10px}
+.facegrid{display:flex;flex-direction:column;height:100%;gap:6px}
+.facerow{display:flex;align-items:center;gap:8px}
+.faceslot{border-radius:8px;position:relative}
+.faceslot.lab{outline:1px dashed rgba(34,211,238,.5);outline-offset:2px}
+.slottag{position:absolute;right:0;top:-11px;font-size:8px;letter-spacing:.2px;color:var(--accent);white-space:nowrap}
+.facetime{font-size:40px;font-weight:600;color:var(--textPrimary);line-height:1;letter-spacing:-1px}
+.sysc{font-size:11px;color:var(--textTertiary);line-height:1.2}
+.sysc b{color:var(--textPrimary);font-weight:600;font-size:13px}
+.rings{position:relative;width:34px;height:34px;flex:0 0 auto}
+.rings svg{display:block}
+.rectcomp{width:100%;border-radius:8px;padding:0}
+.rectrow1{display:flex;align-items:center;gap:5px}
+.rectrow1 .t{font-size:15px;font-weight:600;color:var(--textPrimary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rectrow2{font-size:13px;color:var(--textSecondary);line-height:16px}
+.circcomp{width:44px;height:44px;position:relative;flex:0 0 auto}
+
+/* smart stack */
+.stackview{position:relative;width:100%;height:100%;overflow:hidden}
+.stacktrack{position:absolute;left:0;right:0;top:0;transition:transform 220ms cubic-bezier(.22,.61,.36,1);padding:0 10px}
+.widget{border-radius:12px;background:var(--surfaceRaised);box-shadow:inset 0 0 0 1px var(--borderLow);
+  padding:8px 9px;margin-bottom:8px;width:100%;text-align:left;display:block}
+.widget.sys{background:#141419}
+.wsurface{background:none;border:0;padding:0;display:block}
+.wtitle{display:flex;align-items:center;gap:5px;font-size:15px;font-weight:600;color:var(--textPrimary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:16px;line-height:16px}
+.wsub{font-size:13px;color:var(--textSecondary);height:14px;line-height:14px;margin-top:3px}
+.wrow{display:flex;align-items:center;gap:8px;margin-top:3px}
+.donebtn{width:42px;height:42px;border-radius:21px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--surfaceElevated);box-shadow:inset 0 0 0 1px var(--borderLow);color:var(--textPrimary)}
+.donebtn.done{background:rgba(51,196,141,.22);box-shadow:inset 0 0 0 1px var(--optimal);color:var(--optimal)}
+.stackbar{position:absolute;right:2px;top:8px;bottom:8px;width:2px;border-radius:1px;background:#1c1c22}
+.stackbar i{position:absolute;left:0;width:2px;border-radius:1px;background:#3a3a44;transition:top 200ms}
+
+/* notifications */
+.notif{width:100%;height:100%;display:flex;flex-direction:column;padding:10px}
+.sash{display:flex;align-items:center;gap:6px;height:22px;flex:0 0 auto}
+.applogo{width:16px;height:16px;border-radius:4px;background:linear-gradient(140deg,#4DA3FF,#22D3EE);flex:0 0 auto}
+.sash .nm{font-size:12px;font-weight:600;color:var(--textPrimary)}
+.notifbody{flex:1 1 auto;overflow:hidden}
+.nhead{font-size:17px;font-weight:600;color:var(--textPrimary);line-height:20px;margin-top:8px}
+.nbody{font-size:16px;color:var(--textSecondary);line-height:19px;margin-top:4px}
+.nfoot{font-size:13px;color:var(--textTertiary);line-height:16px;margin-top:4px}
+.nactions{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.naction{height:36px;border-radius:9px;background:var(--surfaceRaised);box-shadow:inset 0 0 0 1px var(--borderLow);
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--textPrimary)}
+.naction.first{box-shadow:inset 0 0 0 1px var(--optimal);background:rgba(51,196,141,.14)}
+.naction.dismiss{color:var(--textTertiary);font-weight:400}
+.shortlook{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
+.shortlook .big{width:48px;height:48px;border-radius:13px;background:linear-gradient(140deg,#4DA3FF,#22D3EE)}
+.shortlook .nm{font-size:15px;font-weight:600;color:var(--textPrimary)}
+.shortlook .msg{font-size:16px;color:var(--textSecondary);text-align:center;line-height:19px}
+
+/* chain screen */
+.chainhero{display:flex;align-items:baseline;gap:6px}
+.chainhero .n{font-weight:600;color:var(--textPrimary);line-height:1}
+.chainhero .u{font-size:12px;color:var(--textTertiary)}
+.daycol{display:flex;flex-direction:column;align-items:center;gap:3px}
+.dayletter{font-size:11px;font-weight:500;color:var(--textTertiary);line-height:11px}
+.dayletter.today{color:var(--textPrimary)}
+.nextdist{font-size:13px;color:var(--textSecondary);line-height:16px;height:16px;width:100%}
+.assure{font-size:13px;color:var(--textSecondary);line-height:17px;text-align:center;width:100%}
+.crownacc{position:absolute;right:0;top:64px;width:3px;height:44px;border-radius:2px;background:var(--primary);opacity:.9}
+.crownacc i{position:absolute;right:0;width:3px;height:14px;border-radius:2px;background:var(--textPrimary);transition:top 120ms}
+
+.aodnote{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:9px;color:#3d3d46;letter-spacing:.4px}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="pagehead">
+    <h1>Concept 07 — Daily Mission <span style="color:#5f5f6b;font-weight:400">· laso-watch prototype · Alex, Tuesday 14:32</span></h1>
+    <p>One job a day, closed with a tap, tracked as a chain a rest day cannot break. Dark only, 46mm design target with a 40mm floor. Mousewheel or the up and down arrow keys turn the Digital Crown. Everything below the watch is review chrome and is not part of the design.</p>
+  </div>
+
+  <div class="layout">
+    <nav class="switcher" id="switcher" aria-label="Screen switcher"></nav>
+
+    <div class="stagecol">
+      <div class="stage">
+        <div class="bezel" id="bezel">
+          <div class="screenport" id="screenport">
+            <div class="screenscaler" id="screenscaler">
+              <div class="screen" id="screen"></div>
+            </div>
+            <div class="hapticring" id="hapticring"></div>
+            <div class="hapticcap" id="hapticcap" role="status" aria-live="polite"></div>
+          </div>
+          <div class="crown" id="crown"><div class="crownridges"></div><div class="crowndot"></div></div>
+          <div class="sidebtn"></div>
+        </div>
+
+        <div class="crownpanel">
+          <h3>Digital Crown</h3>
+          <div class="crowndial" aria-hidden="true">
+            <div class="ticks"></div>
+            <div class="needle" id="needle"></div>
+            <div class="detent" id="detentdot"></div>
+          </div>
+          <div class="crownval" id="crownval">—</div>
+          <div class="crownbind" id="crownbind"></div>
+          <div style="margin-top:8px;color:#5f5f6b">Green dot marks where <span style="color:var(--textSecondary)">.click</span> fires.</div>
+        </div>
+      </div>
+      <div class="caption" id="caption"></div>
+    </div>
+  </div>
+</div>
+
+<button class="devtoggle" id="devtoggle" aria-expanded="false" aria-controls="devpanel">Dev toolbar</button>
+<aside class="devpanel" id="devpanel" aria-label="Prototype dev toolbar">
+  <h3>Canvas</h3>
+  <div class="seg" id="segsize"></div>
+  <h3>State</h3>
+  <div class="seg" id="segstate"></div>
+  <h3>Always-On dimmed</h3>
+  <div class="seg" id="segaod"></div>
+  <h3>Mission state <span style="text-transform:none;letter-spacing:0;color:#4a4a55">(key variable)</span></h3>
+  <div class="seg" id="segvariant"></div>
+  <div class="devnote">This concept has no score, so it has no high / medium / low bands. Its key variable is the mission's own three states, plus the Class A arc rule. There is no red anywhere in the design by choice.</div>
+  <h3>Actions</h3>
+  <div class="seg">
+    <button class="wide" id="btndoubletap" type="button">Fire Double Tap</button>
+    <button class="wide" id="btnlabels" type="button" aria-pressed="true">Toggle slot labels</button>
+    <button class="wide" id="btnreset" type="button">Reset prototype</button>
+  </div>
+</aside>
+
+<script>
+"use strict";
+
+/* ============================ tokens ============================ */
+const T = {
+  bg:"#000000", surfaceRaised:"#1B1B21", surfaceElevated:"#26262D", surfaceSubtle:"#17171C",
+  textPrimary:"#F2F2F6", textSecondary:"#C9C9D2", textTertiary:"#ADADB8",
+  borderLow:"#2E2E36", primary:"#4DA3FF", accent:"#22D3EE", optimal:"#33C48D"
+};
+
+/* ============================ icons ============================ */
+const ICON = {
+  bed:'<path d="M2.6 6.4a1.1 1.1 0 0 1 2.2 0V12h14.6a2.6 2.6 0 0 1 2.6 2.6v3.4a1.1 1.1 0 0 1-2.2 0v-1.3H4.8v1.3a1.1 1.1 0 0 1-2.2 0Z"/><circle cx="8.2" cy="9.5" r="2.5"/><path d="M12.5 7h5.3a2.5 2.5 0 0 1 2.5 2.5V11h-7.8Z"/>',
+  check:'<path d="M4.6 12.6 9.4 17.4 19.4 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  checkcircle:'<circle cx="12" cy="12" r="10"/><path d="M7.4 12.3 10.6 15.5 16.7 9" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  bell:'<path d="M12 2.6a5.2 5.2 0 0 0-5.2 5.2v3.4L5.2 14.7h13.6l-1.6-3.5V7.8A5.2 5.2 0 0 0 12 2.6Z"/><path d="M9.5 16.5a2.5 2.5 0 0 0 5 0Z"/>',
+  pause:'<rect x="6.8" y="4.6" width="3.6" height="14.8" rx="1.5"/><rect x="13.6" y="4.6" width="3.6" height="14.8" rx="1.5"/>',
+  hourglass:'<path d="M6.6 3.2h10.8v3.1L13 12l4.4 5.7v3.1H6.6v-3.1L11 12 6.6 6.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  dashed:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 3.4"/>',
+  drop:'<path d="M12 2.6s6.4 7.4 6.4 11.5a6.4 6.4 0 1 1-12.8 0C5.6 10 12 2.6 12 2.6Z"/>',
+  chevron:'<path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  sun:'<circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M1.6 12h3M19.4 12h3M4.7 4.7l2.1 2.1M17.2 17.2l2.1 2.1M19.3 4.7l-2.1 2.1M6.8 17.2l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  bolt:'<path d="M13.4 2 5 13.4h5.2L9.8 22 19 10.2h-5.4Z"/>'
+};
+function icon(name,size,color){
+  const c = color || "currentColor";
+  return '<svg class="ic" viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="'+c+'" style="color:'+c+'" aria-hidden="true" focusable="false">'+ICON[name]+'</svg>';
+}
+
+/* ============================ the shared fictional user ============================
+   Alex, 34. Tuesday 14:32. Only values traced to PROTOTYPE-SPEC or to the
+   sleep-bank rule in DashboardSmartActionAdvisor appear here.
+=================================================================================== */
+const ALEX = {
+  clock:"14:32",
+  chain:12,
+  best:19,
+  last7:[1,1,1,1,1,1,-1]   // 1 closed · 0 missed · 2 paused · -1 today, open
+};
+
+/* Mission variants. Class B is Alex's real Tuesday (rule 0b, source sleep_bank).
+   Class A is the same person on a hydration-mission day, using Alex's real water numbers. */
+const VARIANTS = {
+  out:{
+    kind:"moment", glyph:"bed", clock:"14:32",
+    mission:"Get to bed early", reason:"4h 20m behind, 5 nights",
+    target:"22:35", pct:0.64, countdown:"in 8h 03m",
+    btn:{icon:"bell", label:"Remind me at 21:35", act:"remind"},
+    va:"Today's mission. Get to bed early. Target 22:35. 64 percent of the way there. Not yet closed."
+  },
+  inwindow:{
+    kind:"moment", glyph:"bed", clock:"21:40",
+    mission:"Get to bed early", reason:"4h 20m behind, 5 nights",
+    target:"22:35", pct:0.96, countdown:"in 0h 55m",
+    btn:{icon:"check", label:"Done", act:"close"},
+    va:"Today's mission. Get to bed early. Target 22:35. 96 percent of the way there. Not yet closed."
+  },
+  closed:{
+    kind:"moment", glyph:"bed", clock:"21:52",
+    mission:"Get to bed early", reason:"4h 20m behind, 5 nights",
+    target:"22:35", pct:1, countdown:"in 0h 43m",
+    btn:{icon:"checkcircle", label:"Closed", act:null},
+    va:"Today's mission. Get to bed early. Closed."
+  },
+  classA:{
+    kind:"measured", glyph:"drop", clock:"14:32",
+    mission:"Drink two more glasses", reason:"4 of 8 glasses today",
+    target:"4/8", pct:0.5, countdown:"4 of 8",
+    btn:{icon:"check", label:"Done", act:"close"},
+    va:"Today's mission. Drink two more glasses. 4 of 8 glasses. 50 percent of the way there. Not yet closed."
+  }
+};
+
+/* ============================ canvas sizes ============================ */
+const SIZES = {
+  46:{w:208,h:248,pad:10,cw:188,arc:96,stroke:8,glyph:24,target:22,mission:17,missionBlock:20,
+      showReason:true, bar:20,barH:24,barGap:6, chainCount:true, hero:52, barH2:26,
+      insetTop:6,gapArc:6,gapMission:2,gapReason:8,insetBottom:6},
+  40:{w:162,h:197,pad:8,cw:146,arc:68,stroke:6,glyph:18,target:17,mission:16,missionBlock:18,
+      showReason:false, bar:16,barH:22,barGap:5, chainCount:false, hero:40, barH2:22,
+      insetTop:4,gapArc:4,gapMission:0,gapReason:6,insetBottom:5}
+};
+
+/* ============================ prototype state ============================ */
+const S = {
+  size:46,
+  screen:"face",
+  state:"loaded",          // loaded | loading | cold | empty | errsync | errreject | stale | hkdenied
+  aod:false,
+  variant:"out",
+  closedLocal:false,       // set by any real close action
+  reminderSet:false,
+  pauseDays:3,
+  paused:false,
+  stackIndex:0,
+  labels:true,
+  crownDeg:0,
+  pendingDeep:null,
+  launchTimer:null
+};
+
+const SCREENS = [
+  {id:"face",   group:"Off-app",    label:"Watch face"},
+  {id:"stack",  group:"Off-app",    label:"Smart Stack"},
+  {id:"nshort", group:"Off-app",    label:"Notification · short look"},
+  {id:"nlong",  group:"Off-app",    label:"Notification · long look"},
+  {id:"nbest",  group:"Off-app",    label:"Notification · personal best"},
+  {id:"launch", group:"App",        label:"Launch / wrist raise"},
+  {id:"s1",     group:"App",        label:"1 · Mission"},
+  {id:"s2",     group:"App",        label:"2 · Chain"},
+  {id:"s3",     group:"App",        label:"3 · Pause"}
+];
+
+const CAPTIONS = {
+  face:"Modular-style face. Laso <b>accessoryCircular</b> sits in the bottom-left sub-dial and <b>accessoryRectangular</b> in the large middle slot. Both are tappable and open different destinations, never a shared deep link.",
+  stack:"Crown-down Smart Stack. Turn the crown or use the arrow keys to move through the widgets. In the mission window the Laso widget carries a real 42pt Done button, so the mission closes without opening the app.",
+  nshort:"Short look. The title is the app name only, because the notification title must not carry sensitive information.",
+  nlong:"Long look, packaged static interface so it renders with the phone unreachable. Done is first and nondestructive, so a Double Tap selects it.",
+  nbest:"Fires at most once per personal best, the morning after, never at night. Dismiss only.",
+  launch:"No spinner, ever. The cached mission renders at full opacity, the freshness dot becomes a hollow ring and the reason line reads Updating. The arc is already correct because it comes from the watch clock.",
+  s1:"Entry screen. One arc, one verb, one reason, one button, one chain. It answers have I done my thing today from shape alone. It does not scroll, because the primary action has to survive Double Tap.",
+  s2:"Chain detail, one tap deep. Bars, never a second ring. The next-distance line is the goal-gradient mechanism and is never omitted.",
+  s3:"Pause, two taps deep. The crown drives the days value from 1 to 14 with a click detent at every integer. This is the one genuine crown-driven value in the app."
+};
+
+/* ============================ helpers ============================ */
+const $ = (id) => document.getElementById(id);
+function sz(){ return SIZES[S.size]; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function variant(){
+  const base = VARIANTS[S.variant];
+  if (S.closedLocal && base.kind === VARIANTS.closed.kind && S.variant !== "classA") return VARIANTS.closed;
+  if (S.closedLocal && S.variant === "classA") {
+    return Object.assign({}, VARIANTS.classA, {pct:1, btn:{icon:"checkcircle", label:"Closed", act:null},
+      va:"Today's mission. Drink two more glasses. Closed."});
+  }
+  return base;
+}
+function isClosed(){ return S.closedLocal || S.variant === "closed" || S.state === "errsync"; }
+function chainNow(){
+  if (S.state === "cold") return 0;
+  return isClosed() ? ALEX.chain + 1 : ALEX.chain;
+}
+function last7Now(){
+  const a = ALEX.last7.slice();
+  if (S.state === "cold") return [0,0,0,0,0,0,0].map(()=>0);
+  if (S.state === "empty") a[6] = 2;
+  else if (isClosed()) a[6] = 1;
+  return a;
+}
+function nextDistance(){
+  const c = chainNow(), b = ALEX.best;
+  if (c === 0) return "Close today to start a new chain.";
+  if (c < b) return (b - c) + " to your longest";
+  if (c === b) return "Longest chain yet. Next: 30 days.";
+  const rounds = [30,50,100,200,365];
+  const next = rounds.find(r => r > c) || 365;
+  return (next - c) + " to " + next;
+}
+
+/* ============================ haptics ============================ */
+let hapticTimer = null;
+function haptic(type){
+  const ring = $("hapticring"), cap = $("hapticcap");
+  ring.classList.remove("fire");
+  void ring.offsetWidth;
+  ring.classList.add("fire");
+  cap.textContent = "WKHapticType " + type;
+  cap.classList.add("show");
+  clearTimeout(hapticTimer);
+  hapticTimer = setTimeout(()=>cap.classList.remove("show"), 1400);
+}
+
+/* ============================ arc ============================ */
+function arcSVG(size, stroke, pct, opts){
+  opts = opts || {};
+  const r = (size - stroke) / 2, c = size / 2;
+  const C = 2 * Math.PI * r;
+  const track = C * 0.75;                 // 270 degrees of sweep
+  const rot = 'rotate(135 ' + c + ' ' + c + ')';
+  const trackColor = opts.redact ? T.textTertiary : T.surfaceSubtle;
+  const trackWidth = opts.redact ? 2 : stroke;
+  let out = '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" aria-hidden="true" focusable="false">';
+  if (opts.full && !opts.redact){
+    out += '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+T.optimal+'" stroke-width="'+stroke+'"/>';
+    out += '</svg>';
+    return out;
+  }
+  out += '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+trackColor+'" stroke-width="'+trackWidth+
+         '" stroke-linecap="round" stroke-dasharray="'+track.toFixed(2)+' '+C.toFixed(2)+'" transform="'+rot+'"/>';
+  if (!opts.redact && !opts.trackOnly && pct > 0){
+    const len = track * Math.max(0, Math.min(1, pct));
+    out += '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+T.primary+'" stroke-width="'+stroke+
+           '" stroke-linecap="round" stroke-dasharray="'+len.toFixed(2)+' '+C.toFixed(2)+'" transform="'+rot+'"/>';
+  }
+  out += '</svg>';
+  return out;
+}
+
+/* ============================ chain bars ============================ */
+function barsHTML(states, w, h, gap, opts){
+  opts = opts || {};
+  let out = '';
+  states.forEach((st, i) => {
+    let cls = "bar ";
+    let style = 'width:'+w+'px;height:'+h+'px;';
+    if (opts.redact){ cls += "redact"; }
+    else if (st === 1) cls += "closed";
+    else if (st === 0) cls += "missed";
+    else if (st === 2){ cls += "paused"; style = 'width:'+w+'px;height:'+Math.round(h/2)+'px;'; }
+    else cls += "today";
+    if (i) style += 'margin-left:'+gap+'px;';
+    out += '<span class="'+cls+'" style="'+style+'"></span>';
+  });
+  return out;
+}
+
+/* ============================ SCREEN 1 — MISSION ============================ */
+function renderMission(forceLoading){
+  const z = sz(), v = variant();
+  const st = forceLoading ? "loading" : S.state;
+  const aod = S.aod;
+  const closed = isClosed();
+
+  // resolve every content slot for this state
+  let glyph = v.glyph, target = v.target, mission = v.mission, reason = v.reason;
+  let dotHollow = false, trackOnly = false, full = false, pct = v.pct;
+  let btn = Object.assign({}, v.btn);
+  let chain = chainNow(), last7 = last7Now(), reasonIsAge = false;
+
+  if (closed){ glyph = "check"; full = true; pct = 1; btn = {icon:"checkcircle", label:"Closed", act:null, done:true}; }
+  if (S.reminderSet && st === "loaded" && !closed && btn.act === "remind"){ btn = {icon:"bell", label:"Reminder set for 21:35", act:"remind"}; }
+
+  if (st === "loading"){ dotHollow = true; reason = "Updating"; }
+  else if (st === "stale"){ dotHollow = true; reason = "Mission from 09:12"; reasonIsAge = true; }
+  else if (st === "errsync"){ dotHollow = true; reason = "Saved here. Will sync."; }
+  else if (st === "errreject"){
+    dotHollow = true; reason = "Not saved. Tap to try again.";
+    btn = {icon:"check", label:"Done", act:"retry"}; full = false; pct = v.pct; glyph = v.glyph;
+  }
+  else if (st === "hkdenied"){
+    trackOnly = true; full = false; glyph = v.kind === "measured" ? "drop" : "bed";
+    reason = "Progress needs Health access";
+    btn = {icon:"check", label:"Allow Health access", act:"allowhealth"};
+    target = v.kind === "measured" ? "—" : v.target;
+  }
+  else if (st === "cold"){
+    trackOnly = true; full = false; glyph = "hourglass"; target = "";
+    mission = "First mission in 3 nights"; reason = "Laso is learning your sleep";
+    btn = {icon:"bell", label:"Set your reminder time", act:"setreminder"};
+    chain = 0; last7 = [0,0,0,0,0,0,0];
+  }
+  else if (st === "empty"){
+    trackOnly = true; full = false; glyph = "dashed"; target = "";
+    mission = "No mission set for today"; reason = "Your chain is safe";
+    btn = {icon:"check", label:"See the chain", act:"seechain"};
+  }
+
+  // Always-On redaction — health values genuinely removed, layout byte-for-byte stable
+  if (aod){
+    mission = "Mission hidden";
+    btn = {icon:null, label:"Done", act:"close", unavailable:true};
+  }
+
+  const arcTop = z.insetTop;
+  const glyphY = z.arc/2 - 13 * (z.arc/96);
+  const targetY = z.arc/2 + 14 * (z.arc/96);
+
+  let arcInner = '';
+  if (aod){
+    arcInner += '<div class="arclaso" style="top:'+(glyphY - 6)+'px">LASO</div>';
+    arcInner += '<div class="arctarget" style="top:'+(targetY - z.target*0.5)+'px;font-size:'+z.target+'px;color:'+T.textTertiary+'">– – : – –</div>';
+  } else {
+    arcInner += '<div class="arcglyph" style="top:'+(glyphY - z.glyph/2)+'px">'+
+                icon(glyph, z.glyph, (st==="cold"||st==="empty") ? T.textTertiary : T.textPrimary)+'</div>';
+    if (target){
+      arcInner += '<div class="arctarget" style="top:'+(targetY - z.target*0.55)+'px;font-size:'+z.target+'px">'+esc(target)+'</div>';
+    }
+  }
+
+  const showReason = z.showReason && !aod;
+  const reasonBlock = z.showReason
+    ? (aod
+        ? '<div class="reasonrow" aria-hidden="true"></div>'
+        : '<div class="reasonrow"><span class="dot'+(dotHollow?" hollow":"")+'"></span><span class="txt">'+esc(reason)+'</span></div>')
+    : '';
+
+  const btnLabel = btn.label;
+  const btnGlyph = btn.icon && !aod ? icon(btn.icon, 15, btn.done ? T.optimal : T.textPrimary) : '';
+  const btnClass = "pbtn" + (btn.done ? " done" : "") + (btn.unavailable ? " unavailable" : "");
+  const btnTag = btn.act
+    ? '<button class="tap '+btnClass+'" style="width:'+z.cw+'px" data-act="'+btn.act+'" aria-label="'+esc(btnAria(btn, st))+'">'
+    : '<div class="'+btnClass+'" style="width:'+z.cw+'px" role="img" aria-label="'+esc(btnAria(btn, st))+'">';
+  const btnEnd = btn.act ? '</button>' : '</div>';
+
+  const chainAria = aod
+    ? "Chain hidden."
+    : "Chain. " + chain + " days. " + last7.filter(x=>x===1).length + " of the last 7 days closed" +
+      (last7[6] === -1 ? ", today still open" : "") + ". Button. Opens chain detail.";
+
+  const arcAria = aod ? "Mission hidden in the Always-On state."
+    : (st === "cold" ? "Today's mission. First mission in 3 nights. Laso is learning your sleep."
+    : (st === "empty" ? "No mission set for today. Your chain is safe."
+    : (closed ? v.va.replace(/Target.*$/, "Closed.") : v.va)));
+
+  let html = '';
+  html += '<div class="col" style="width:'+z.w+'px;height:'+z.h+'px;padding:0 '+z.pad+'px">';
+  html += '<div style="height:'+arcTop+'px"></div>';
+  html += '<div class="arcwrap" style="width:'+z.arc+'px;height:'+z.arc+'px" role="img" aria-label="'+esc(arcAria)+'">';
+  html += arcSVG(z.arc, z.stroke, pct, {redact:aod, trackOnly:trackOnly, full:full});
+  html += arcInner;
+  html += '</div>';
+  html += '<div style="height:'+z.gapArc+'px"></div>';
+  html += '<div class="missionline" style="font-size:'+z.mission+'px;line-height:'+z.missionBlock+'px;height:'+z.missionBlock+'px;'+
+          (aod?'color:'+T.textTertiary:'')+'" aria-hidden="true">'+esc(mission)+'</div>';
+  if (z.gapMission) html += '<div style="height:'+z.gapMission+'px"></div>';
+  html += reasonBlock;
+  html += '<div style="height:'+z.gapReason+'px"></div>';
+  html += btnTag + btnGlyph + '<span class="lbl">' + esc(btnLabel) + '</span>' + btnEnd;
+  html += '<button class="tap chaintap" data-act="chain" style="width:'+z.cw+'px" aria-label="'+esc(chainAria)+'">';
+  html += '<span class="chainrow" style="width:'+z.cw+'px">';
+  html += barsHTML(last7, z.bar, z.barH, z.barGap, {redact:aod});
+  if (z.chainCount) html += '<span class="chaincount">'+(aod ? "—" : chain)+'</span>';
+  html += '</span></button>';
+  html += '<div style="height:'+z.insetBottom+'px"></div>';
+  if (aod) html += '<div class="aodnote">always-on · redacted</div>';
+  html += '</div>';
+
+  // reason line dropped below 42mm — record it for the reviewer, outside the watch
+  if (!showReason && z.showReason === false && !aod) { /* intentional: no reason line at 40mm */ }
+  return html;
+}
+function btnAria(btn, st){
+  if (btn.label === "Remind me at 21:35") return "Remind me at 9:35 PM. Button.";
+  if (btn.label === "Done") return "Done. Button. Marks today's mission closed.";
+  if (btn.label === "Closed") return "Today's mission is closed.";
+  return btn.label + ". Button.";
+}
+
+/* ============================ SCREEN 2 — CHAIN ============================ */
+function renderChain(){
+  const z = sz(), aod = S.aod;
+  const chain = chainNow(), last7 = last7Now();
+  const letters = ["W","T","F","S","S","M","T"];
+  const heroSize = z.hero;
+
+  let strip = '';
+  last7.forEach((st, i) => {
+    let cls = "bar ";
+    let style = 'width:'+z.bar+'px;height:'+z.barH2+'px;';
+    if (aod) cls += "redact";
+    else if (st === 1) cls += "closed";
+    else if (st === 0) cls += "missed";
+    else if (st === 2){ cls += "paused"; style = 'width:'+z.bar+'px;height:'+Math.round(z.barH2/2)+
+      'px;margin-top:'+Math.round(z.barH2/2)+'px;'; }
+    else cls += "today";
+    strip += '<span class="daycol" style="'+(i?'margin-left:'+z.barGap+'px':'')+'">'+
+             '<span class="'+cls+'" style="'+style+'"></span>'+
+             '<span class="dayletter'+(i===6?" today":"")+'">'+letters[i]+'</span></span>';
+  });
+
+  const dayAria = "Last 7 days. Wednesday closed. Thursday closed. Friday closed. Saturday closed. Sunday closed. Monday closed. Tuesday, today, " +
+                  (last7[6] === 1 ? "closed." : (last7[6] === 2 ? "paused." : "still open."));
+
+  let html = '';
+  html += '<div class="col" style="width:'+z.w+'px;height:'+z.h+'px;padding:0 '+z.pad+'px">';
+  html += '<div class="navbar"><button class="back tap" data-act="back" aria-label="Back to mission">'+icon("chevron",16,T.primary)+'</button><span class="t">Chain</span></div>';
+  html += '<div style="width:100%;height:'+(S.size===46?56:44)+'px;display:flex;align-items:center">';
+  html += '<span class="chainhero" aria-label="Chain. '+(aod?"hidden":chain+" days")+'."><span class="n" style="font-size:'+heroSize+'px">'+
+          (aod ? "– –" : chain)+'</span><span class="u">days</span></span></div>';
+  html += '<div style="height:6px"></div>';
+  html += '<div style="width:100%;height:'+(S.size===46?42:37)+'px;display:flex;align-items:flex-start" role="img" aria-label="'+esc(aod?"Chain days hidden.":dayAria)+'">'+strip+'</div>';
+  html += '<div style="height:8px"></div>';
+  html += '<div class="nextdist" aria-label="'+esc(aod ? "Hidden." : (chain < ALEX.best ? (ALEX.best-chain)+" days to your longest chain of "+ALEX.best+"." : nextDistance()))+'">'+
+          (aod ? "" : esc(nextDistance()))+'</div>';
+  html += '<div style="height:8px"></div>';
+  html += '<button class="tap pbtn secondary" data-act="pause" style="width:'+z.cw+'px" aria-label="Pause the chain. Button.">'+
+          icon("pause",15,T.textSecondary)+'<span class="lbl">Pause the chain</span></button>';
+  if (aod) html += '<div class="aodnote">always-on · redacted</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ============================ SCREEN 3 — PAUSE ============================ */
+function renderPause(){
+  const z = sz();
+  const d = S.pauseDays;
+  const knobTop = 64 + (44 - 14) * (1 - (d - 1) / 13);
+  let html = '';
+  html += '<div class="col" style="width:'+z.w+'px;height:'+z.h+'px;padding:0 '+z.pad+'px;position:relative">';
+  html += '<div class="navbar"><button class="back tap" data-act="backchain" aria-label="Back to chain">'+icon("chevron",16,T.primary)+'</button><span class="t">Pause</span></div>';
+  html += '<div style="width:100%;height:'+(S.size===46?60:50)+'px;display:flex;flex-direction:column;align-items:center;justify-content:center"'+
+          ' role="slider" aria-valuemin="1" aria-valuemax="14" aria-valuenow="'+d+'"'+
+          ' aria-label="Pause for '+d+' days. Adjustable. Turn the Digital Crown or swipe up and down to change, 1 to 14 days.">';
+  html += '<span style="font-size:'+z.hero+'px;font-weight:600;color:'+T.textPrimary+';line-height:1">'+d+'</span>';
+  html += '<span style="font-size:12px;color:'+T.textTertiary+';margin-top:2px">days</span></div>';
+  html += '<div style="height:10px"></div>';
+  html += '<div class="assure" style="height:'+(S.size===46?34:28)+'px">Chain holds. Nothing breaks.</div>';
+  html += '<div style="height:10px"></div>';
+  html += '<button class="tap pbtn confirm" data-act="confirmpause" style="width:'+z.cw+'px" aria-label="Pause '+d+' days. Button.">'+
+          '<span class="lbl">Pause '+d+' days</span></button>';
+  html += '<div class="crownacc" style="right:2px"><i style="top:'+(knobTop-64)+'px"></i></div>';
+  html += '</div>';
+  return html;
+}
+
+/* ============================ WATCH FACE ============================ */
+function renderFace(){
+  const z = sz(), aod = S.aod;
+  const v = variant();
+  const closed = isClosed();
+  const pct = closed ? 1 : v.pct;
+  const chain = chainNow(), last7 = last7Now();
+  const lab = S.labels ? " lab" : "";
+  const circSize = S.size === 46 ? 46 : 40;
+  const cStroke = 4;
+
+  let ring = '';
+  if (aod){
+    ring = arcSVG(circSize, cStroke, 0, {redact:true});
+  } else if (closed){
+    ring = '<svg width="'+circSize+'" height="'+circSize+'" viewBox="0 0 '+circSize+' '+circSize+'" aria-hidden="true" focusable="false">'+
+           '<circle cx="'+circSize/2+'" cy="'+circSize/2+'" r="'+(circSize-cStroke)/2+'" fill="none" stroke="'+T.optimal+'" stroke-width="'+cStroke+'"/></svg>';
+  } else {
+    const r = (circSize - cStroke)/2, C = 2*Math.PI*r;
+    ring = '<svg width="'+circSize+'" height="'+circSize+'" viewBox="0 0 '+circSize+' '+circSize+'" aria-hidden="true" focusable="false">'+
+      '<circle cx="'+circSize/2+'" cy="'+circSize/2+'" r="'+r+'" fill="none" stroke="'+T.surfaceSubtle+'" stroke-width="'+cStroke+'"/>'+
+      '<circle cx="'+circSize/2+'" cy="'+circSize/2+'" r="'+r+'" fill="none" stroke="'+T.primary+'" stroke-width="'+cStroke+
+      '" stroke-linecap="round" stroke-dasharray="'+(C*pct).toFixed(2)+' '+C.toFixed(2)+'" transform="rotate(-90 '+circSize/2+' '+circSize/2+')"/></svg>';
+  }
+
+  const barW = S.size === 46 ? 14 : 11, barH = 10, barGap = 4;
+  const rectBars = barsHTML(last7, barW, barH, barGap, {redact:aod});
+
+  let html = '';
+  html += '<div class="face" style="width:'+z.w+'px;height:'+z.h+'px">';
+  html += '<div class="facegrid">';
+
+  // row 1 — system complications
+  html += '<div class="facerow" style="justify-content:space-between;align-items:flex-start">';
+  html += '<span class="rings">'+activityRings()+'</span>';
+  html += '<span class="sysc" style="text-align:center"><b>TUE 12</b><br>June</span>';
+  html += '<span class="sysc" style="display:flex;align-items:center;gap:3px">'+icon("sun",13,"#E3B45A")+'<b>21°</b></span>';
+  html += '</div>';
+
+  // time
+  html += '<div class="facetime">'+(aod ? v.clock : v.clock)+'</div>';
+
+  // large middle slot — accessoryRectangular
+  html += '<div class="faceslot'+lab+'" style="margin-top:2px">';
+  if (S.labels) html += '<span class="slottag">accessoryRectangular → laso-watch://chain</span>';
+  html += '<button class="tap rectcomp" data-act="deep" data-dest="s2" style="width:100%" aria-label="Laso. '+
+          (aod?"Hidden.":esc(v.mission)+'. '+esc(v.target)+', '+esc(v.countdown)+'. Chain '+chain+' days.')+' Opens the chain.">';
+  html += '<span class="rectrow1">'+icon(aod?"bed":v.glyph,13,aod?T.textTertiary:T.textPrimary)+
+          '<span class="t"'+(aod?' style="color:'+T.textTertiary+'"':'')+'>'+(aod ? "Mission hidden" : esc(v.mission))+'</span></span>';
+  html += '<span class="rectrow2" style="display:block">'+(aod ? "– – : – –" : esc(v.target)+' · '+esc(v.countdown))+'</span>';
+  html += '<span class="chainrow" style="margin-top:3px;width:100%">'+rectBars+
+          '<span class="chaincount">'+(aod ? "—" : chain)+'</span></span>';
+  html += '</button></div>';
+
+  // bottom row — accessoryCircular + battery
+  html += '<div class="facerow" style="margin-top:auto;justify-content:space-between;align-items:flex-end">';
+  html += '<span class="faceslot'+lab+'" style="position:relative">';
+  if (S.labels) html += '<span class="slottag" style="left:0;right:auto;top:-11px">accessoryCircular → laso-watch://mission</span>';
+  html += '<button class="tap circcomp" data-act="deep" data-dest="s1" style="width:'+circSize+'px;height:'+circSize+'px;position:relative" aria-label="Laso mission. '+
+          (aod ? "Hidden." : (closed ? "Closed." : Math.round(pct*100)+" percent of the way to "+esc(v.target)+".")) +' Opens the mission.">';
+  html += ring;
+  html += '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">'+
+          (aod ? '<span style="font-size:9px;letter-spacing:1.4px;color:'+T.textTertiary+'">LASO</span>'
+               : icon(closed ? "check" : v.glyph, 14, closed ? T.optimal : T.textPrimary))+'</span>';
+  html += '</button></span>';
+  html += '<span class="sysc" style="display:flex;align-items:center;gap:4px">'+icon("bolt",12,"#33C48D")+'<b>78%</b></span>';
+  html += '</div>';
+
+  html += '</div>';
+  if (aod) html += '<div class="aodnote">always-on · redacted</div>';
+  html += '</div>';
+  return html;
+}
+function activityRings(){
+  const rs = [[15,"#FA114F",0.62],[11,"#92E82A",0.5],[7,"#1EE7E7",0.4]];
+  let out = '<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true" focusable="false">';
+  rs.forEach(([r,c,p])=>{
+    const C = 2*Math.PI*r;
+    out += '<circle cx="17" cy="17" r="'+r+'" fill="none" stroke="'+c+'" stroke-opacity=".22" stroke-width="4"/>';
+    out += '<circle cx="17" cy="17" r="'+r+'" fill="none" stroke="'+c+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(C*p).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 17 17)"/>';
+  });
+  return out + '</svg>';
+}
+
+/* ============================ SMART STACK ============================ */
+function renderStack(){
+  const z = sz();
+  const v = variant();
+  const closed = isClosed();
+  const chain = chainNow(), last7 = last7Now();
+  const inWindow = (S.variant === "inwindow" || S.variant === "classA" || closed);
+  const barW = 12, barH = 12, barGap = 4;
+
+  // The deep-link surface and the Done button are siblings, never nested — a button
+  // inside a button is invalid and swallows the inner tap.
+  const title = closed ? ("Closed. " + nextDistance()).replace(/\.?$/, ".") : esc(v.mission);
+  let laso = '';
+  laso += '<div class="widget" style="height:69.5px">';
+  laso += '<button class="tap wsurface" data-act="deep" data-dest="s1" style="width:100%;text-align:left" aria-label="Laso mission. '+
+          esc(title)+' Opens the mission.">';
+  laso += '<span class="wtitle">'+icon(closed ? "check" : v.glyph, 13, closed ? T.optimal : T.textPrimary)+
+          '<span>'+title+'</span></span>';
+  if (!inWindow){
+    laso += '<span class="wsub" style="display:block">'+esc(v.target)+' · '+esc(v.countdown)+'</span>';
+    laso += '<span class="chainrow" style="margin-top:3px">'+barsHTML(last7, barW, barH, barGap, {})+
+            '<span class="chaincount">'+chain+'</span></span>';
+  }
+  laso += '</button>';
+  if (inWindow){
+    laso += '<div class="wrow">';
+    laso += '<span class="chainrow" style="flex:1 1 auto">'+barsHTML(last7.slice(2), barW, barH, barGap, {})+
+            '<span class="chaincount" style="margin-left:8px">'+chain+'</span></span>';
+    laso += '<button class="tap donebtn'+(closed?" done":"")+'" data-act="widgetdone" aria-label="'+(closed?"Mission closed":"Done. Closes today\'s mission.")+'">'+
+            icon(closed ? "checkcircle" : "check", 20, closed ? T.optimal : T.textPrimary)+'</button>';
+    laso += '</div>';
+  }
+  laso += '</div>';
+
+  const widgets = [
+    laso,
+    '<div class="widget sys" style="height:69.5px"><div class="wtitle">'+icon("sun",13,"#E3B45A")+'<span>Weather</span></div>'+
+      '<div class="wsub">21° · Clear</div><div class="wsub" style="color:'+T.textTertiary+'">H 24° L 14°</div></div>',
+    '<div class="widget sys" style="height:69.5px"><div class="wtitle">'+activityMini()+'<span>Activity</span></div>'+
+      '<div class="wsub">Move 284 / 620 kcal</div><div class="wsub" style="color:'+T.textTertiary+'">Exercise 12 / 30 min</div></div>',
+    '<div class="widget sys" style="height:69.5px"><div class="wtitle"><span style="width:13px;height:13px;border-radius:3px;background:#E05C64;display:inline-block"></span><span>Calendar</span></div>'+
+      '<div class="wsub">15:30 Design review</div><div class="wsub" style="color:'+T.textTertiary+'">in 58 min</div></div>'
+  ];
+
+  const cardH = 69.5 + 8;
+  const offset = -S.stackIndex * cardH;
+  const trackH = widgets.length * cardH;
+  const viewH = z.h - 24;
+  const thumbH = Math.max(18, viewH * (viewH / trackH));
+  const thumbTop = (S.stackIndex / (widgets.length - 1)) * (viewH - thumbH);
+
+  let html = '';
+  html += '<div class="stackview" style="width:'+z.w+'px;height:'+z.h+'px">';
+  html += '<div style="position:absolute;left:0;right:0;top:4px;text-align:center;font-size:10px;color:'+T.textTertiary+';letter-spacing:.6px;z-index:2">SMART STACK</div>';
+  html += '<div class="stacktrack" style="transform:translateY('+(20 + offset)+'px)">'+widgets.join("")+'</div>';
+  html += '<div class="stackbar" style="top:20px;bottom:6px"><i style="top:'+thumbTop+'px;height:'+thumbH+'px"></i></div>';
+  html += '</div>';
+  return html;
+}
+function activityMini(){
+  return '<svg width="13" height="13" viewBox="0 0 34 34" aria-hidden="true" focusable="false">'+
+    '<circle cx="17" cy="17" r="14" fill="none" stroke="#FA114F" stroke-width="5"/>'+
+    '<circle cx="17" cy="17" r="8" fill="none" stroke="#92E82A" stroke-width="5"/></svg>';
+}
+
+/* ============================ NOTIFICATIONS ============================ */
+function renderShortLook(){
+  const z = sz();
+  return '<div class="shortlook" style="width:'+z.w+'px;height:'+z.h+'px">'+
+    '<div class="big"></div><div class="nm">Laso</div>'+
+    '<div class="msg">Your mission window is open.</div></div>';
+}
+function renderLongLook(){
+  const z = sz(), chain = chainNow();
+  let html = '';
+  html += '<div class="notif" style="width:'+z.w+'px;height:'+z.h+'px">';
+  html += '<div class="sash"><span class="applogo"></span><span class="nm">Laso</span></div>';
+  html += '<div class="notifbody">';
+  html += '<div class="nhead">Get to bed early</div>';
+  html += '<div class="nbody">Lights out by 22:35.</div>';
+  html += '<div class="nfoot">Chain: '+chain+' days.</div>';
+  html += '<div class="nactions">';
+  html += '<button class="tap naction first" data-act="notifdone" aria-label="Done. Closes today\'s mission.">Done</button>';
+  html += '<button class="tap naction" data-act="notifsnooze" aria-label="Snooze 30 minutes.">Snooze 30 min</button>';
+  html += '<button class="tap naction" data-act="notifpause" aria-label="Pause chain.">Pause chain</button>';
+  html += '<button class="tap naction dismiss" data-act="notifdismiss" aria-label="Dismiss.">Dismiss</button>';
+  html += '</div></div></div>';
+  return html;
+}
+function renderBestLook(){
+  const z = sz();
+  let html = '';
+  html += '<div class="notif" style="width:'+z.w+'px;height:'+z.h+'px">';
+  html += '<div class="sash"><span class="applogo"></span><span class="nm">Laso</span></div>';
+  html += '<div class="notifbody">';
+  html += '<div class="nhead">20 days. Your longest yet.</div>';
+  html += '<div class="nbody">Next: 30 days.</div>';
+  html += '<div class="nactions"><button class="tap naction dismiss" data-act="notifdismiss" aria-label="Dismiss.">Dismiss</button></div>';
+  html += '</div></div>';
+  return html;
+}
+
+/* ============================ render ============================ */
+function render(){
+  const z = sz();
+  const port = $("screenport"), scaler = $("screenscaler"), screen = $("screen");
+  const scale = 1.7;
+  port.style.width  = (z.w * scale) + "px";
+  port.style.height = (z.h * scale) + "px";
+  scaler.style.transform = "scale(" + scale + ")";
+  screen.style.width = z.w + "px";
+  screen.style.height = z.h + "px";
+
+  let html = "";
+  switch (S.screen){
+    case "face":   html = renderFace(); break;
+    case "stack":  html = renderStack(); break;
+    case "nshort": html = renderShortLook(); break;
+    case "nlong":  html = renderLongLook(); break;
+    case "nbest":  html = renderBestLook(); break;
+    case "launch": html = renderMission(true); break;
+    case "s1":     html = renderMission(false); break;
+    case "s2":     html = renderChain(); break;
+    case "s3":     html = renderPause(); break;
+  }
+  screen.innerHTML = html;
+  screen.style.opacity = S.aod ? "0.62" : "1";
+
+  // switcher + caption + crown readout
+  document.querySelectorAll("#switcher button").forEach(b => {
+    b.setAttribute("aria-current", b.dataset.screen === S.screen ? "true" : "false");
+  });
+  let cap = CAPTIONS[S.screen] || "";
+  if (!sz().showReason && (S.screen === "s1" || S.screen === "launch")){
+    cap += " At 40mm the reason line and its dot are dropped entirely, and the chain count moves to screen 2 — there is no room and a truncated reason is worse than none.";
+  }
+  if (S.aod) cap += " <b>Always-On:</b> the target, the verb, the chain count and every bar state are gone, not dimmed. The layout has not moved by a pixel.";
+  $("caption").innerHTML = cap;
+  updateCrownPanel();
+}
+
+/* ============================ crown ============================ */
+const CROWN_BINDING = {
+  face:   {label:"No app running. Crown opens the Smart Stack.", value:()=>"—"},
+  stack:  {label:"Scrolls the Smart Stack.", value:()=>"widget " + (S.stackIndex+1) + " of 4"},
+  nshort: {label:"Scrolls to the long look.", value:()=>"—"},
+  nlong:  {label:"Scrolls the long look.", value:()=>"—"},
+  nbest:  {label:"Scrolls the long look.", value:()=>"—"},
+  launch: {label:"Nothing. No crown accessory is shown, and that is deliberate.", value:()=>"—"},
+  s1:     {label:"Nothing. No crown accessory is shown — the price of a Double-Tappable primary action.", value:()=>"—"},
+  s2:     {label:"Would scroll, but the screen fits one screen height, so it does not.", value:()=>"—"},
+  s3:     {label:"Drives the pause days, 1 to 14. .click at every integer.", value:()=>S.pauseDays + " days"}
+};
+function updateCrownPanel(){
+  const b = CROWN_BINDING[S.screen];
+  $("crownval").textContent = b.value();
+  $("crownbind").textContent = b.label;
+  $("needle").style.transform = "rotate(" + S.crownDeg + "deg)";
+}
+let detentTimer = null;
+function crownDetent(){
+  const d = $("detentdot");
+  d.classList.add("on");
+  clearTimeout(detentTimer);
+  detentTimer = setTimeout(()=>d.classList.remove("on"), 140);
+}
+function crown(dir){
+  S.crownDeg += dir * 18;
+  if (S.screen === "s3"){
+    const next = Math.max(1, Math.min(14, S.pauseDays + dir));
+    if (next !== S.pauseDays){
+      S.pauseDays = next;
+      crownDetent();
+      haptic(".click");
+    }
+    render();
+    return;
+  }
+  if (S.screen === "stack"){
+    const next = Math.max(0, Math.min(3, S.stackIndex + dir));
+    if (next !== S.stackIndex){ S.stackIndex = next; }
+    render();
+    return;
+  }
+  if (S.screen === "face" && dir > 0){ go("stack"); return; }
+  if (S.screen === "nshort" && dir > 0){ go("nlong"); return; }
+  updateCrownPanel();
+}
+
+/* ============================ navigation + actions ============================ */
+function go(id){
+  clearTimeout(S.launchTimer);
+  S.screen = id;
+  if (id === "stack") S.stackIndex = 0;
+  render();
+  if (id === "launch"){
+    S.launchTimer = setTimeout(()=>{
+      S.screen = S.pendingDeep || "s1";
+      S.pendingDeep = null;
+      render();
+    }, 1100);
+  }
+}
+function closeMission(source){
+  if (S.state === "errreject" && source !== "retry"){ haptic(".failure"); render(); return; }
+  if (isClosed()) return;
+  S.closedLocal = true;
+  if (S.state === "errreject") S.state = "loaded";
+  haptic(".success");
+  render();
+}
+document.addEventListener("click", (e)=>{
+  const t = e.target.closest("[data-act]");
+  if (!t) return;
+  const act = t.dataset.act;
+  switch (act){
+    case "close": case "widgetdone": case "retry":
+      closeMission(act); break;
+    case "notifdone":
+      closeMission("notif"); S.pendingDeep = "s1"; setTimeout(()=>go("launch"), 420); break;
+    case "notifsnooze":
+      haptic(".click"); break;
+    case "notifpause":
+      S.pendingDeep = "s3"; go("launch"); break;
+    case "notifdismiss":
+      go("face"); break;
+    case "remind":
+      S.reminderSet = true; haptic(".success"); render(); break;
+    case "setreminder":
+      S.reminderSet = true; haptic(".success"); go("s3"); break;
+    case "allowhealth":
+      S.state = "loaded"; haptic(".success"); render(); break;
+    case "seechain": case "chain":
+      go("s2"); break;
+    case "pause":
+      go("s3"); break;
+    case "confirmpause":
+      S.paused = true; haptic(".stop"); go("s1"); break;
+    case "back":
+      go("s1"); break;
+    case "backchain":
+      go("s2"); break;
+    case "deep":
+      S.pendingDeep = t.dataset.dest; go("launch"); break;
+  }
+});
+
+/* ============================ dev toolbar + switcher ============================ */
+function buildSwitcher(){
+  const n = $("switcher");
+  let group = "";
+  SCREENS.forEach(s => {
+    if (s.group !== group){
+      group = s.group;
+      const h = document.createElement("div");
+      h.className = "grouplabel";
+      h.textContent = group === "Off-app" ? "Off-app surfaces" : "App surfaces";
+      n.appendChild(h);
+    }
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.screen = s.id;
+    b.textContent = s.label;
+    b.addEventListener("click", ()=>go(s.id));
+    n.appendChild(b);
+  });
+}
+function seg(hostId, options, getter, setter){
+  const host = $(hostId);
+  host.innerHTML = "";
+  options.forEach(o => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = o.label;
+    b.addEventListener("click", ()=>{ setter(o.value); refreshSegs(); render(); });
+    b.dataset.val = String(o.value);
+    host.appendChild(b);
+  });
+}
+const SEGS = [];
+function defineSeg(hostId, options, getter, setter){
+  seg(hostId, options, getter, setter);
+  SEGS.push({hostId, getter});
+}
+function refreshSegs(){
+  SEGS.forEach(({hostId, getter}) => {
+    const cur = String(getter());
+    document.querySelectorAll("#"+hostId+" button").forEach(b => {
+      b.setAttribute("aria-pressed", b.dataset.val === cur ? "true" : "false");
+    });
+  });
+}
+function buildDev(){
+  defineSeg("segsize", [{label:"46mm",value:46},{label:"40mm",value:40}], ()=>S.size, v=>{S.size=v;});
+  defineSeg("segstate", [
+    {label:"loaded",value:"loaded"},
+    {label:"loading",value:"loading"},
+    {label:"cold start",value:"cold"},
+    {label:"empty",value:"empty"},
+    {label:"error · saved here",value:"errsync"},
+    {label:"error · rejected",value:"errreject"},
+    {label:"stale",value:"stale"},
+    {label:"health denied",value:"hkdenied"}
+  ], ()=>S.state, v=>{
+    S.state=v;
+    if (v === "errsync") S.closedLocal = true;
+    if (v === "cold" || v === "empty") S.closedLocal = false;
+    if (S.screen === "face" || S.screen === "stack") return;
+    S.screen = "s1";
+  });
+  defineSeg("segaod", [{label:"off",value:false},{label:"on",value:true}], ()=>S.aod, v=>{S.aod=v;});
+  defineSeg("segvariant", [
+    {label:"Out of window · 14:32",value:"out"},
+    {label:"In window · 21:40",value:"inwindow"},
+    {label:"Closed",value:"closed"},
+    {label:"Class A · measured",value:"classA"}
+  ], ()=>S.variant, v=>{
+    S.variant=v;
+    S.closedLocal = (v === "closed");
+    if (S.state === "errsync") S.closedLocal = true;
+  });
+  refreshSegs();
+
+  $("devtoggle").addEventListener("click", ()=>{
+    const p = $("devpanel"), open = p.classList.toggle("open");
+    $("devtoggle").setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  $("btndoubletap").addEventListener("click", ()=>{
+    if (S.screen === "nlong"){ closeMission("notif"); return; }
+    if (S.screen !== "s1" && S.screen !== "launch") go("s1");
+    setTimeout(()=>{
+      const v = variant();
+      if (isClosed()){ haptic(".success"); render(); return; }
+      if (S.state === "cold" || S.state === "empty" || S.state === "hkdenied"){
+        haptic(".click"); return;
+      }
+      if (v.btn.act === "remind" && !isClosed()){ S.reminderSet = true; haptic(".success"); render(); return; }
+      closeMission("doubletap");
+    }, S.screen === "s1" ? 0 : 60);
+  });
+  $("btnlabels").addEventListener("click", ()=>{
+    S.labels = !S.labels;
+    $("btnlabels").setAttribute("aria-pressed", S.labels ? "true" : "false");
+    render();
+  });
+  $("btnreset").addEventListener("click", ()=>{
+    S.size=46; S.state="loaded"; S.aod=false; S.variant="out"; S.closedLocal=false;
+    S.reminderSet=false; S.pauseDays=3; S.paused=false; S.stackIndex=0; S.crownDeg=0;
+    refreshSegs(); go("face");
+  });
+}
+
+/* ============================ input bindings ============================ */
+let wheelAcc = 0;
+window.addEventListener("wheel", (e)=>{
+  wheelAcc += e.deltaY;
+  const step = 46;
+  while (Math.abs(wheelAcc) >= step){
+    crown(wheelAcc > 0 ? 1 : -1);
+    wheelAcc += wheelAcc > 0 ? -step : step;
+  }
+}, {passive:true});
+window.addEventListener("keydown", (e)=>{
+  if (e.key === "ArrowDown"){ crown(1); e.preventDefault(); }
+  else if (e.key === "ArrowUp"){ crown(-1); e.preventDefault(); }
+  else if (e.key === "Escape"){
+    if (S.screen === "s3") go("s2");
+    else if (S.screen === "s2") go("s1");
+    else if (S.screen === "s1") go("face");
+  }
+});
+
+/* ============================ boot ============================ */
+buildSwitcher();
+buildDev();
+go("face");
+</script>
+</body>
+</html>

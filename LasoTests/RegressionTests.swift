@@ -234,7 +234,10 @@ struct RegressionTests {
             WatchPayload(
                 dayKey: dayKey, readinessScore: 72, readinessGrade: "B", dayType: "Maintain",
                 actionHeadline: nil, actionDetail: nil, actionIcon: nil, actionDone: false,
-                checkInAvailable: false, updatedAt: Date().addingTimeInterval(-age)
+                checkInAvailable: false, updatedAt: Date().addingTimeInterval(-age),
+                schemaVersion: WatchBridge.schemaVersion, bodyStressElevated: nil,
+                restingHeartRateBaseline: nil, hrvBaselineFloor: nil, hoursSinceHardDay: nil,
+                exerciseCeilingMinutes: nil, bedtimeTarget: nil, nightsOfHistory: nil
             )
         }
 

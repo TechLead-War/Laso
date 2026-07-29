@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laso Watch · Concept 09 — Fourth Ring</title>
+<style>
+:root{
+  --bg:#000000;
+  --raised:#1B1B21;
+  --elev:#26262D;
+  --subtle:#17171C;
+  --t1:#F2F2F6;
+  --t2:#C9C9D2;
+  --t3:#ADADB8;
+  --border:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+  --meta:#7E7E8A;
+  --z:1.8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#08080A;
+  color:var(--t2);
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+  padding:22px 22px 92px;
+}
+h1{font-size:19px;font-weight:600;color:var(--t1);margin:0 0 3px}
+.sub{font-size:12.5px;color:var(--t3);margin:0 0 16px;max-width:960px;line-height:1.5}
+.sub b{color:var(--t2);font-weight:600}
+
+/* ---------- screen switcher strip ---------- */
+.strip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 14px;max-width:1140px}
+.strip .grp{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin:0 4px 0 12px}
+.strip .grp:first-child{margin-left:0}
+.chip{
+  background:var(--raised);border:1px solid var(--border);color:var(--t2);
+  font:inherit;font-size:12px;padding:7px 11px;border-radius:9px;cursor:pointer;
+  font-variant-numeric:tabular-nums;
+}
+.chip:hover{background:var(--elev)}
+.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#000;font-weight:600}
+.chip.ghost{background:transparent;border-style:dashed;color:var(--t3)}
+.chip:focus-visible,.tgl:focus-visible,.devbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- layout ---------- */
+.wrap{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+.rig{display:flex;flex-direction:column;align-items:center;gap:10px}
+
+/* ---------- watch hardware ---------- */
+.watch{position:relative;padding:0 30px 0 8px}
+.case{
+  position:relative;
+  background:linear-gradient(160deg,#2C2C31,#141416 42%,#0B0B0D);
+  padding:13px;
+  border-radius:calc(34px * var(--z) + 13px);
+  box-shadow:0 0 0 1px #313136, 0 18px 44px rgba(0,0,0,.8);
+}
+.viewport{position:relative;overflow:hidden;background:#000;border-radius:calc(34px * var(--z))}
+.screen{position:relative;background:#000;transform-origin:0 0;color:var(--t1);overflow:hidden}
+.screen [data-act]{transition:transform 80ms ease}
+.screen [data-act]:active{transform:scale(0.96)}
+.wbtn{font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;transition:transform 80ms ease}
+.wbtn:active{transform:scale(0.96)}
+.wbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.crown{
+  position:absolute;right:-7px;top:25%;width:16px;height:54px;border-radius:5px;
+  background:linear-gradient(90deg,#3C3C42,#171719);
+  box-shadow:0 0 0 1px #46464D;overflow:hidden;
+}
+.crown-in{position:absolute;inset:0;background:repeating-linear-gradient(0deg,#4C4C55 0 1.5px,#232329 1.5px 4px)}
+.crown-dot{position:absolute;left:2px;width:12px;height:3px;border-radius:2px;background:var(--primary);top:50%;margin-top:-1.5px}
+.sidebtn{
+  position:absolute;right:-4px;top:56%;width:10px;height:36px;border-radius:4px;
+  background:linear-gradient(90deg,#34343B,#18181C);box-shadow:0 0 0 1px #46464D;
+}
+.detent{
+  position:absolute;right:14px;top:calc(25% - 15px);font-size:10.5px;color:var(--fair);
+  opacity:0;transition:opacity .1s linear;white-space:nowrap;font-weight:600;
+}
+.detent.on{opacity:1}
+.crownlabel{font-size:10.5px;color:var(--meta);text-align:center;max-width:430px;line-height:1.55}
+.pulse{
+  position:absolute;inset:0;border-radius:calc(34px * var(--z));pointer-events:none;opacity:0;
+}
+.pulse.fire{animation:pulse .42s ease-out 1}
+@keyframes pulse{
+  0%{opacity:1;box-shadow:inset 0 0 0 5px rgba(77,163,255,.9)}
+  100%{opacity:0;box-shadow:inset 0 0 0 15px rgba(77,163,255,0)}
+}
+@keyframes sweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.sweep{animation:sweep .6s cubic-bezier(.16,1,.3,1) 1}
+.haptic{min-height:36px;font-size:12px;color:var(--t3);text-align:center;max-width:430px;line-height:1.5}
+.haptic b{color:var(--fair);font-weight:600}
+.haptic i{font-style:normal;color:var(--meta)}
+
+/* ---------- info panel ---------- */
+.info{flex:1 1 340px;max-width:440px;font-size:12.5px;line-height:1.5}
+.info h2{font-size:14.5px;color:var(--t1);margin:0 0 3px;font-weight:600}
+.info .kicker{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-bottom:9px}
+.info dl{margin:0 0 12px;padding:0}
+.info dt{color:var(--t1);font-weight:600;font-size:12px;margin-top:10px}
+.info dd{margin:2px 0 0;color:var(--t3)}
+.info .rule{border-left:2px solid var(--border);padding:3px 0 3px 10px;margin:10px 0;color:var(--t3)}
+.info code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--t2);background:#121216;padding:1px 4px;border-radius:4px}
+.cite{font-size:11px;color:var(--meta);word-break:break-all;line-height:1.5;margin-top:12px}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{
+  position:fixed;right:16px;bottom:16px;z-index:40;
+  background:var(--raised);border:1px solid var(--border);color:var(--t2);
+  font:inherit;font-size:12px;padding:9px 14px;border-radius:10px;cursor:pointer;
+}
+.dev{
+  position:fixed;right:16px;bottom:58px;z-index:41;width:272px;
+  background:#0E0E12;border:1px solid var(--border);border-radius:12px;padding:12px;
+  display:none;box-shadow:0 18px 40px rgba(0,0,0,.75);
+}
+.dev.open{display:block}
+.dev h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin:11px 0 6px;font-weight:600}
+.dev h3:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;gap:5px}
+.tgl{
+  background:var(--subtle);border:1px solid var(--border);color:var(--t2);
+  font:inherit;font-size:11.5px;padding:6px 9px;border-radius:8px;cursor:pointer;
+}
+.tgl[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#000;font-weight:600}
+.tgl.wide{width:100%;text-align:left}
+.dev .note{font-size:10.5px;color:var(--meta);margin-top:11px;line-height:1.5}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+</head>
+<body>
+
+<h1>Concept 09 — Fourth Ring <span style="color:var(--t3);font-weight:400;font-size:14px">· rings</span></h1>
+<p class="sub">
+Apple's three rings tell you how far you are from your goal; Laso tells you whether that goal is a good idea today.
+<b>The fourth thing is not a ring — it is a ceiling.</b> The Move ring's own axis, unrolled into a horizontal bar, with a
+notch marking where today's recovery says the wise amount stops. No fourth arc is drawn anywhere, in any surface, in any state,
+and Laso ships no rings complication in any family.
+Shared fictional user: <b>Alex, 34 · Tuesday 14:32 · recovery 62</b>.
+</p>
+
+<div class="strip" id="strip"></div>
+
+<div class="wrap">
+  <div class="rig">
+    <div class="watch">
+      <div class="case">
+        <div class="viewport" id="viewport">
+          <div class="screen" id="screen"></div>
+          <div class="pulse" id="pulse"></div>
+        </div>
+        <div class="crown" id="crown" title="Digital Crown"><div class="crown-in" id="crownIn"></div><div class="crown-dot"></div></div>
+        <div class="sidebtn" title="Side button"></div>
+        <div class="detent" id="detent">&#8226; .click</div>
+      </div>
+    </div>
+    <div class="haptic" id="haptic"></div>
+    <div class="crownlabel">
+      Digital Crown: mousewheel over the watch, or &#8593; / &#8595;. Back: drag right across the screen, or &#8592;.
+      Crown detents render a <span style="color:var(--fair)">&#8226; .click</span> marker beside the crown.
+    </div>
+  </div>
+
+  <div class="info" id="info"></div>
+</div>
+<div id="probe" aria-hidden="true" style="position:absolute;left:-9999px;top:0;white-space:nowrap;visibility:hidden"></div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="dev">Dev</button>
+<div class="dev" id="dev" role="group" aria-label="Prototype dev toolbar">
+  <h3>Canvas</h3>
+  <div class="row" id="devCanvas"></div>
+  <h3>State</h3>
+  <div class="row" id="devState"></div>
+  <h3>Always-On (isLuminanceReduced)</h3>
+  <div class="row" id="devAod"></div>
+  <h3>Recovery band &#8594; ceiling</h3>
+  <div class="row" id="devBand"></div>
+  <h3>Gesture</h3>
+  <div class="row" id="devDT"></div>
+  <p class="note">Not part of the design being judged. Alex's true value is the fair band, recovery 62, ceiling = full Move goal.</p>
+</div>
+
+<script>
+/* ============================================================
+   Concept 09 — Fourth Ring. Single file, no network, dark only.
+   Every number is the shared fictional user in PROTOTYPE-SPEC.md.
+   ============================================================ */
+
+var REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+var TOK = {
+  bg:'#000000', raised:'#1B1B21', elev:'#26262D', subtle:'#17171C',
+  t1:'#F2F2F6', t2:'#C9C9D2', t3:'#ADADB8', border:'#2E2E36',
+  primary:'#4DA3FF', accent:'#22D3EE',
+  optimal:'#33C48D', fair:'#E3B45A', poor:'#E05C64',
+  meta:'#7E7E8A'
+};
+
+/* Alex, Tuesday 14:32 */
+var ALEX = {
+  move:284, moveGoal:620,            /* NATIVE  HKActivitySummary */
+  exercise:12, exerciseGoal:30,      /* NATIVE */
+  stand:6, standGoal:12,             /* NATIVE */
+  sleepMin:372, sleepNeedMin:460,    /* sleep NATIVE · need NEW-P */
+  rhr:58, rhrBaseline:55,            /* rhr NATIVE · baseline NEW-P */
+  readiness7d:68,                    /* NEW-P */
+  updatedMin:6,                      /* EXISTS  updatedAt */
+  ceilingReadyNights:14,             /* NEW-P — the phone owns this, never hardcoded on the watch */
+  nightsDone:3,
+  restHR:74,                         /* NATIVE, sitting — face complication */
+  walkHR:88                          /* NATIVE  HKLiveWorkoutBuilder, during the walk */
+};
+
+/* Bands. fair = Alex. The other two exist so a reviewer can see all three colour bands.
+   headline / subline are NEW-P strings resolved on the phone from Remote Config and shipped finished. */
+var BANDS = {
+  optimal:{ key:'optimal', score:78, hex:TOK.optimal, name:'Optimal',  fraction:1.15,
+            headline:'Go hard. You have room.',        subline:'Ceiling: above your goal' },
+  fair:   { key:'fair',    score:62, hex:TOK.fair,    name:'Moderate', fraction:1.00,
+            headline:'Room to close them.',            subline:'Ceiling: full goal' },
+  poor:   { key:'poor',    score:38, hex:TOK.poor,    name:'Low',      fraction:0.60,
+            headline:'Ease off. Stop at the mark.',    subline:'Ceiling: 60% of goal' }
+};
+
+var CANVAS = {
+  46:{ w:208,h:248,pad:10,
+       barW:188,barH:14, ring:92, ringX:58, ringY:28,
+       statusY:8, barY:130, verdictY:152, subY:174, btnY:194, btnH:44, btnW:188,
+       s2:{ headY:8, rows:[34,76,118], barW:130, footY:166, short:false },
+       s3:{ titleY:40, subY:72, railY:118, btnY:150, btnH:56, hintY:216 },
+       s4:{ labY:16, elY:44, elSize:52, hrY:112, barY:140, btnY:180, btnH:56 },
+       face:{ timeY:24, timeSize:44, inlineY:78, inlineH:18, rectY:100, rectH:78, circY:184, circ:46, annY:232 },
+       stackH:84 },
+  40:{ w:162,h:197,pad:8,
+       barW:146,barH:12, ring:60, ringX:51, ringY:20,
+       statusY:6, barY:86, verdictY:102, subY:null, btnY:145, btnH:44, btnW:146,
+       s2:{ headY:6, rows:[28,62,96], barW:96, footY:140, short:true },
+       s3:{ titleY:30, subY:60, railY:96, btnY:118, btnH:52, hintY:null },
+       s4:{ labY:12, elY:34, elSize:40, hrY:null, barY:110, btnY:140, btnH:48 },
+       face:{ timeY:14, timeSize:32, inlineY:56, inlineH:17, rectY:78, rectH:64, circY:146, circ:38, annY:186 },
+       stackH:76 }
+};
+
+var S = {
+  screen:'face',
+  canvas:46,
+  state:'loaded',       /* loaded | loading | cold | empty | hkdenied | nophone | stale */
+  aod:false,
+  band:'fair',
+  stack:0,
+  duration:10,
+  notif:'n1', look:'short', notifScroll:0, notifMax:0,
+  ceilingLifted:false,
+  animate:true,
+  crownAngle:0,
+  walk:{ running:false, elapsed:252, kcal:322, crossed:false }
+};
+
+/* ---------- helpers ---------- */
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function band(){ return BANDS[S.band]; }
+function C(){ return CANVAS[S.canvas]; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function mmss(sec){ var m=Math.floor(sec/60), s=Math.floor(sec%60); return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
+
+/* The live model. Everything NATIVE stays true even with no phone payload at all. */
+function M(){
+  var b = band(), goal = ALEX.moveGoal;
+  var kcal = ALEX.move, ex = ALEX.exercise, st = ALEX.stand;
+  if (S.state==='empty'){ kcal=0; ex=0; st=0; }
+  /* HealthKit denied on this watch: no native energy at all, so no progress fill. */
+  if (S.state==='hkdenied'){ kcal=0; ex=0; st=0; }
+  if (S.screen==='s4'){ kcal = Math.round(S.walk.kcal); }
+  var noPayload = (S.state==='cold' || S.state==='nophone' || S.state==='loading');
+  var fraction = (noPayload || S.ceilingLifted) ? null : b.fraction;
+  var ceilKcal = fraction ? Math.round(goal*fraction) : null;
+  return {
+    b:b, goal:goal, kcal:kcal, ex:ex, st:st,
+    fraction:fraction, ceilKcal:ceilKcal,
+    headroom: (ceilKcal!==null) ? ceilKcal-kcal : null,
+    pct: Math.round(kcal/goal*100),
+    stale: (S.state==='stale'),
+    ageLabel: (S.state==='stale') ? '3h' : (ALEX.updatedMin+'m'),
+    noPayload: noPayload
+  };
+}
+
+/* ============================================================
+   THE CEILING BAR — the concept. Bars, not rings.
+   mode: full | outline | dashedGoal | noCap
+   ============================================================ */
+var uid = 0;
+function ceilingBar(o){
+  var id='cb'+(++uid), w=o.w, h=o.h, r=h/2;
+  var axisMax = Math.max(1, o.fraction||1);
+  var capX  = o.fraction ? (o.fraction/axisMax)*w : null;
+  var progX = clamp((o.kcal/(o.goal*axisMax))*w, 0, w);
+  var col = o.hex, svgH = h+16;
+  var out = '<svg width="'+w+'" height="'+svgH+'" viewBox="-4 -11 '+(w+8)+' '+svgH+'" aria-hidden="true" focusable="false">';
+  out += '<defs>';
+  out += '<clipPath id="'+id+'c"><rect x="0" y="0" width="'+w+'" height="'+h+'" rx="'+r+'"></rect></clipPath>';
+  out += '<pattern id="'+id+'h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">';
+  out += '<line x1="0" y1="0" x2="0" y2="4" stroke="'+TOK.border+'" stroke-width="1"></line></pattern>';
+  out += '</defs>';
+
+  if (o.mode==='outline' || o.mode==='dashedGoal'){
+    out += '<rect x="0.5" y="0.5" width="'+(w-1)+'" height="'+(h-1)+'" rx="'+r+'" fill="none" stroke="'+TOK.border+'" stroke-width="1"></rect>';
+    if (o.mode==='dashedGoal'){
+      out += '<line x1="'+(w-1.5)+'" y1="-3" x2="'+(w-1.5)+'" y2="'+(h+3)+'" stroke="'+TOK.t3+'" stroke-width="1" stroke-dasharray="2 2"></line>';
+    }
+    return out+'</svg>';
+  }
+
+  out += '<rect x="0" y="0" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+TOK.subtle+'"></rect>';
+  out += '<g clip-path="url(#'+id+'c)">';
+  if (capX!==null && capX < w-0.5){                      /* over-ceiling: texture, never colour */
+    out += '<rect x="'+capX+'" y="0" width="'+(w-capX)+'" height="'+h+'" fill="url(#'+id+'h)"></rect>';
+  }
+  if (capX!==null && capX > progX){                      /* headroom */
+    out += '<rect x="'+progX+'" y="0" width="'+(capX-progX)+'" height="'+h+'" fill="'+col+'" fill-opacity="0.22"></rect>';
+  }
+  if (progX > 0){                                        /* progress: neutral, a fact not a verdict */
+    out += '<rect x="0" y="0" width="'+progX+'" height="'+h+'" fill="'+TOK.t2+'"></rect>';
+  }
+  out += '</g>';
+  if (capX!==null && axisMax>1){                         /* the standing Move goal, when the ceiling is past it */
+    var gx=(1/axisMax)*w;
+    out += '<line x1="'+gx+'" y1="-2" x2="'+gx+'" y2="'+(h+2)+'" stroke="'+TOK.t3+'" stroke-width="1" stroke-dasharray="2 2"></line>';
+  }
+  if (capX!==null && o.mode!=='noCap'){                  /* cap mark + notch: the non-colour carriers */
+    var cx = clamp(capX, 2, w-2);
+    out += '<rect x="'+(cx-1.5)+'" y="-4" width="3" height="'+(h+8)+'" fill="'+col+'"></rect>';
+    out += '<polygon points="'+(cx-3.5)+',-10 '+(cx+3.5)+',-10 '+cx+',-4" fill="'+col+'"></polygon>';
+  }
+  return out+'</svg>';
+}
+
+/* Apple's Activity rings. HealthKitUI.ActivityRingsView on device — Apple owns colour and geometry. */
+function ringsSVG(size, mono, m){
+  var rs=[39.5,27,14.5], sw=11, cols=['#FA114F','#92E82A','#1EEAEF'];
+  var vals=[ m.kcal/m.goal, m.ex/ALEX.exerciseGoal, m.st/ALEX.standGoal ];
+  var out='<svg width="'+size+'" height="'+size+'" viewBox="0 0 92 92" aria-hidden="true" focusable="false">';
+  for (var i=0;i<3;i++){
+    var r=rs[i], c=2*Math.PI*r, v=clamp(vals[i],0,1);
+    if (mono){
+      out += '<circle cx="46" cy="46" r="'+r+'" fill="none" stroke="'+TOK.t3+'" stroke-width="6" stroke-linecap="round" '+
+             'stroke-dasharray="'+(v*c)+' '+c+'" transform="rotate(-90 46 46)" opacity="0.9"></circle>';
+    } else {
+      out += '<circle cx="46" cy="46" r="'+r+'" fill="none" stroke="'+cols[i]+'" stroke-opacity="0.22" stroke-width="'+sw+'"></circle>';
+      out += '<circle cx="46" cy="46" r="'+r+'" fill="none" stroke="'+cols[i]+'" stroke-width="'+sw+'" stroke-linecap="round" '+
+             'stroke-dasharray="'+(v*c)+' '+c+'" transform="rotate(-90 46 46)"></circle>';
+    }
+  }
+  return out+'</svg>';
+}
+function dashedCircle(size){
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 92 92" aria-hidden="true" focusable="false">'+
+    '<circle cx="46" cy="46" r="44" fill="none" stroke="'+TOK.t3+'" stroke-width="2" stroke-dasharray="5 5"></circle></svg>';
+}
+
+/* accessoryCircular: same axis as the bar, plus a radial ceiling tick outside the stroke. */
+function circGauge(size, m, mono){
+  var axisMax = Math.max(1, m.fraction||1);
+  var frac = clamp(m.kcal/(m.goal*axisMax),0,1);
+  var capFrac = m.fraction ? (m.fraction/axisMax) : 1;
+  var r=17, c=2*Math.PI*r, col = mono ? TOK.t3 : m.b.hex;
+  var out='<svg width="'+size+'" height="'+size+'" viewBox="0 0 42 42" aria-hidden="true" focusable="false">';
+  out+='<circle cx="21" cy="21" r="'+r+'" fill="none" stroke="'+TOK.subtle+'" stroke-width="4"></circle>';
+  if (capFrac<0.999){
+    out+='<circle cx="21" cy="21" r="'+r+'" fill="none" stroke="'+TOK.border+'" stroke-width="4" '+
+         'stroke-dasharray="'+((1-capFrac)*c)+' '+c+'" stroke-dashoffset="'+(-capFrac*c)+'" transform="rotate(-90 21 21)"></circle>';
+  }
+  out+='<circle cx="21" cy="21" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="4" stroke-linecap="round" '+
+       'stroke-dasharray="'+(frac*c)+' '+c+'" transform="rotate(-90 21 21)"></circle>';
+  var a=(capFrac*360-90)*Math.PI/180;
+  out+='<line x1="'+(21+Math.cos(a)*(r+2.5))+'" y1="'+(21+Math.sin(a)*(r+2.5))+
+       '" x2="'+(21+Math.cos(a)*(r+5.5))+'" y2="'+(21+Math.sin(a)*(r+5.5))+
+       '" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round"></line>';
+  return out+'</svg>';
+}
+
+/* ---------- layout helpers (px == pt inside the canvas) ---------- */
+function box(style, inner, attrs){
+  return '<div style="position:absolute;'+style+'"'+(attrs?' '+attrs:'')+'>'+inner+'</div>';
+}
+function t(x,y,w,size,weight,color,align,html,extra){
+  return box('left:'+x+'px;top:'+y+'px;width:'+w+'px;font-size:'+size+'px;font-weight:'+weight+
+    ';color:'+color+';text-align:'+(align||'left')+';line-height:'+Math.round(size*1.2)+'px;'+(extra||''), html);
+}
+function btn(x,y,w,h,label,act,o){
+  o=o||{};
+  return '<button class="wbtn" data-act="'+act+'" style="position:absolute;left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+
+    'border-radius:'+(o.r||10)+'px;background:'+(o.bg||TOK.raised)+';border:'+(o.border||('1px solid '+TOK.border))+';'+
+    'color:'+(o.fg||TOK.t1)+';font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;">'+label+'</button>';
+}
+/* Real measurement, not a character-count guess: the canvas is transform-scaled,
+   so layout px at 1x are exactly the pt inside the watch. */
+function fitsOneLine(text, px, weight, width){
+  var p=el('probe');
+  if (!p) return true;
+  p.style.fontSize=px+'px'; p.style.fontWeight=weight;
+  p.textContent=text;
+  return p.offsetWidth <= width;
+}
+function freshDot(size, stale){
+  return stale
+    ? '<span style="width:'+size+'px;height:'+size+'px;border-radius:50%;border:1px solid '+TOK.t3+';display:inline-block;vertical-align:middle"></span>'
+    : '<span style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+TOK.t3+';display:inline-block;vertical-align:middle"></span>';
+}
+
+/* ============================================================
+   S1 — TODAY   (entry screen, page 1 of 2)
+   ============================================================ */
+function screenS1(){
+  var c=C(), m=M(), st=S.state, aod=S.aod, h='';
+
+  /* status row */
+  if (aod){
+    h += t(c.pad, c.statusY, 90, 12, 400, TOK.t3, 'left', 'Laso');
+  } else {
+    h += t(c.pad, c.statusY, 90, 12, 400, TOK.t3, 'left', 'Today');
+    if (!m.noPayload){
+      h += box('right:'+c.pad+'px;top:'+(c.statusY+1)+'px;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:'+TOK.t3+';',
+        freshDot(5, m.stale)+'<span>'+m.ageLabel+'</span>');
+    }
+  }
+
+  /* Apple's rings — native, live, correct with the phone in another room */
+  var ringHTML = (st==='hkdenied') ? dashedCircle(c.ring) : ringsSVG(c.ring, aod, m);
+  var ringLabel = (st==='hkdenied')
+    ? 'Activity rings unavailable. Health access is off on this watch.'
+    : 'Activity. Move, '+m.kcal+' of '+m.goal+' calories. Exercise, '+m.ex+' of '+ALEX.exerciseGoal+
+      ' minutes. Stand, '+m.st+' of '+ALEX.standGoal+' hours.';
+  h += box('left:'+c.ringX+'px;top:'+c.ringY+'px;width:'+c.ring+'px;height:'+c.ring+'px;',
+      '<span role="img" aria-label="'+esc(ringLabel)+'">'+ringHTML+'</span>');
+
+  /* the Ceiling bar */
+  var mode='full';
+  if (aod || st==='loading') mode='outline';
+  if (st==='cold' || st==='nophone') mode='dashedGoal';
+  if (S.ceilingLifted) mode='noCap';
+  var barLabel;
+  if (aod) barLabel='Ceiling hidden while the display is dimmed.';
+  else if (m.ceilKcal===null) barLabel='No ceiling yet. Your standing Move goal is '+m.goal+' calories.';
+  else barLabel="Today's ceiling is "+(m.fraction===1?'your full Move goal':(m.fraction>1?'above your Move goal':(Math.round(m.fraction*100)+' percent of your Move goal')))+
+       '. You are at '+m.pct+' percent of it, with '+m.headroom+' calories of headroom.';
+  var sweep = (S.animate && !REDUCE && mode==='full') ? ' class="sweep"' : '';
+  h += box('left:'+(c.pad-4)+'px;top:'+(c.barY-11)+'px;',
+      '<span'+sweep+' role="img" aria-label="'+esc(barLabel)+'" style="display:block">'+
+      ceilingBar({w:c.barW,h:c.barH,fraction:m.fraction,kcal:m.kcal,goal:m.goal,hex:m.b.hex,mode:mode})+'</span>');
+
+  /* verdict + sub-line — resolved on the phone, shipped as finished strings */
+  var verdict=m.b.headline, sub=m.b.subline+' · recovery '+m.b.score, subAlt=m.b.subline;
+  if (st==='loading'){ verdict='Rings are live. Ceiling in a moment.'; sub=null; subAlt=null; }
+  if (st==='cold'){ verdict='No ceiling yet.'; sub='Needs '+ALEX.ceilingReadyNights+' nights. '+ALEX.nightsDone+' done.'; subAlt=null; }
+  if (st==='empty'){ verdict='Day just started.'; }
+  if (st==='hkdenied'){ verdict='Health access is off.'; sub='Turn on Health for Laso in Settings on this watch.'; subAlt=null; }
+  if (st==='nophone'){ verdict='Rings are live.'; sub='Ceiling not synced yet.'; subAlt=null; }
+  if (st==='stale'){ sub=m.b.subline+' · 3h old'; subAlt=m.b.subline; }
+  if (S.ceilingLifted){ verdict='Ceiling lifted for today.'; sub='Back tomorrow morning.'; subAlt=null; }
+
+  /* The text block is measured, not guessed. Documented drop order when a string does not fit:
+     1) drop the recovery tail from the sub-line  2) drop the sub-line  3) let the verdict wrap to 2 lines.
+     The button is never shrunk and never dropped. */
+  var btnShown = (st!=='hkdenied');
+  var tw = c.w-c.pad*2;
+  var top = c.verdictY-2, bottom = btnShown ? (c.btnY-4) : (c.h-8);
+  var body;
+  if (aod){
+    body = '<div style="font-size:16px;color:'+TOK.t3+';letter-spacing:2px;line-height:19px">———</div>';
+  } else {
+    var oneLine = fitsOneLine(verdict,16,400,tw);
+    body = '<div style="font-size:16px;font-weight:400;color:'+TOK.t1+';line-height:19px">'+esc(verdict)+'</div>';
+    if (sub && c.subY!==null && (oneLine || !btnShown)){
+      var use = fitsOneLine(sub,12,400,tw) ? sub
+              : (subAlt && fitsOneLine(subAlt,12,400,tw)) ? subAlt
+              : (btnShown ? null : sub);
+      if (use) body += '<div style="font-size:12px;color:'+TOK.t3+';line-height:14px;margin-top:3px">'+esc(use)+'</div>';
+    }
+  }
+  h += box('left:'+c.pad+'px;top:'+top+'px;width:'+tw+'px;height:'+(bottom-top)+
+      'px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;', body);
+
+  if (btnShown) h += btn(c.pad, c.btnY, c.btnW, c.btnH, 'Move 10 min', 'toS3');
+  h += pageDots(0);
+  return h;
+}
+function pageDots(active){
+  var c=C(), y=c.h/2-8, out='';
+  for (var i=0;i<2;i++){
+    out += box('right:3px;top:'+(y+i*9)+'px;width:4px;height:4px;border-radius:50%;background:'+(i===active?TOK.t1:TOK.border)+';','');
+  }
+  return out;
+}
+
+/* ============================================================
+   S2 — CEILING   (page 2 of 2, crown-down)
+   ============================================================ */
+function screenS2(){
+  var c=C(), L=c.s2, m=M(), aod=S.aod, cold=(S.state==='cold'), h='';
+  var dot='<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:'+TOK.t3+';vertical-align:middle;margin-right:4px"></span>';
+  var head = aod ? 'Why' : (L.short ? ('Why · '+dot+'iPhone '+m.ageLabel) : ('Why · '+dot+'from iPhone, '+m.ageLabel+' ago'));
+  h += t(c.pad, L.headY, c.w-c.pad*2, 12, 400, TOK.t3, 'left', head);
+
+  var rows=[
+    { label:dot+'Recovery', value:(cold?'—':(m.b.score+' ↓')), frac:(cold?null:m.b.score/100), tick:0.68, neutral:false,
+      aria:'Recovery '+m.b.score+', down from a 7-day average of 68. From iPhone.' },
+    { label:'Sleep', value:'6h 12m ↓', frac:ALEX.sleepMin/ALEX.sleepNeedMin, tick:1, neutral:true,
+      aria:'Sleep 6 hours 12 minutes, below your 7 hour 40 minute need. Read by this watch.' },
+    { label:'Resting HR', value:'58 ↑', frac:null, dev:{base:0.5,to:0.62}, neutral:true,
+      aria:'Resting heart rate 58, up from your usual 55. Read by this watch.' }
+  ];
+  for (var i=0;i<3;i++){
+    var r=rows[i], y=L.rows[i], bw=L.barW;
+    h += t(c.pad, y, c.w-c.pad*2-46, 12, 400, TOK.t2, 'left', r.label);
+    h += box('right:'+c.pad+'px;top:'+y+'px;font-size:11px;font-weight:500;color:'+TOK.t1+';', aod?'———':esc(r.value));
+    var g='<svg width="'+bw+'" height="6" viewBox="0 0 '+bw+' 6" aria-hidden="true" focusable="false">'+
+          '<rect x="0" y="0" width="'+bw+'" height="6" rx="3" fill="'+TOK.subtle+'"></rect>';
+    if (!aod){
+      if (r.dev){
+        var bx=r.dev.base*bw, tx2=r.dev.to*bw;
+        g += '<rect x="'+bx+'" y="0" width="'+(tx2-bx)+'" height="6" rx="3" fill="'+TOK.t2+'"></rect>';
+        g += '<rect x="'+(bx-1)+'" y="-2" width="2" height="10" fill="'+TOK.t3+'"></rect>';
+      } else if (r.frac!==null){
+        g += '<rect x="0" y="0" width="'+clamp(r.frac*bw,0,bw)+'" height="6" rx="3" fill="'+(r.neutral?TOK.t2:m.b.hex)+'"></rect>';
+        var tx=clamp(r.tick*bw,1,bw-1);
+        g += '<rect x="'+(tx-1)+'" y="-2" width="2" height="10" fill="'+TOK.t3+'"></rect>';
+      } else if (cold && i===0){
+        g += '<rect x="'+(0.68*bw-1)+'" y="-2" width="2" height="10" fill="'+TOK.t3+'"></rect>';
+      }
+    }
+    g += '</svg>';
+    h += box('left:'+c.pad+'px;top:'+(y+18)+'px;',
+        '<span role="img" aria-label="'+esc(aod?'Value hidden while the display is dimmed.':r.aria)+'">'+g+'</span>');
+  }
+  h += t(c.pad, L.footY, c.w-c.pad*2, 11, 400, TOK.t3, 'left',
+      esc(cold ? ('Recovery needs '+ALEX.ceilingReadyNights+' nights of sleep.') : 'Updates about 4 times an hour.'));
+  h += pageDots(1);
+  return h;
+}
+
+/* ============================================================
+   S3 — MOVE   (pushed · crown value · Double Tap primary action)
+   ============================================================ */
+function screenS3(){
+  var c=C(), L=c.s3, h='';
+  h += t(0, L.titleY, c.w, 22, 600, TOK.t1, 'center', S.duration+' min walk');
+  h += t(c.pad, L.subY, c.w-c.pad*2, 12, 400, TOK.t3, 'center', 'Ends itself. Counts to Exercise.');
+
+  var steps=[5,10,15,20,25,30], railW=6*6+5*8, x0=Math.round((c.w-railW)/2), rail='';
+  for (var i=0;i<6;i++){
+    var on=(steps[i]===S.duration);
+    rail += box('left:'+(x0+i*14)+'px;top:'+L.railY+'px;width:6px;height:6px;border-radius:50%;background:'+
+      (on?TOK.t1:TOK.elev)+';'+(on?('box-shadow:0 0 0 2px '+TOK.primary+';'):''),'');
+  }
+  h += '<span role="img" aria-label="'+esc('Duration '+S.duration+' minutes. Step '+(steps.indexOf(S.duration)+1)+' of 6. Turn the crown to change.')+'">'+rail+'</span>';
+  h += btn(c.pad, L.btnY, c.btnW, L.btnH, 'Start', 'start', {r:14,bg:TOK.primary,border:'none',fg:'#000000'});
+  if (L.hintY!==null) h += t(c.pad, L.hintY, c.w-c.pad*2, 11, 400, TOK.t3, 'center', 'Turn the crown to change.');
+
+  /* digitalCrownAccessory — current value rendered at the crown edge */
+  h += box('right:0;top:'+Math.round(c.h*0.38)+'px;padding:3px 5px;border-radius:6px 0 0 6px;background:'+TOK.raised+
+      ';border:1px solid '+TOK.border+';border-right:none;font-size:11px;font-weight:600;color:'+TOK.t1+';',
+      S.duration+'<span style="color:'+TOK.t3+';font-weight:400">m</span>');
+  return h;
+}
+
+/* ============================================================
+   S4 — WALKING   (the ceiling is enforced, not displayed)
+   ============================================================ */
+function screenS4(){
+  var c=C(), L=c.s4, m=M(), aod=S.aod, h='';
+  h += t(0, L.labY, c.w, 12, 400, TOK.t3, 'center', 'Walking');
+  h += box('left:0;top:'+L.elY+'px;width:'+c.w+'px;text-align:center;font-size:'+L.elSize+
+      'px;font-weight:600;color:'+TOK.t1+';line-height:'+Math.round(L.elSize*1.1)+'px;',
+      mmss(S.walk.elapsed), 'id="s4el" role="text" aria-label="'+esc('Walking, '+Math.floor(S.walk.elapsed/60)+' minutes '+(S.walk.elapsed%60)+' seconds elapsed.')+'"');
+  if (L.hrY!==null) h += t(0, L.hrY, c.w, 11, 400, TOK.t3, 'center', aod ? '— bpm' : (ALEX.walkHR+' bpm'));
+
+  var mode = aod ? 'outline' : (S.ceilingLifted?'noCap':'full');
+  h += box('left:'+(c.pad-4)+'px;top:'+(L.barY-11)+'px;', s4BarHTML(m, mode), 'id="s4bar"');
+  h += btn(c.pad, L.btnY, c.btnW, L.btnH, 'End', 'end', {r:14,bg:TOK.raised,fg:TOK.poor});
+  return h;
+}
+function s4BarHTML(m, mode){
+  var c=C();
+  var lab = S.aod ? 'Ceiling hidden while the display is dimmed.'
+    : ('Ceiling: '+Math.round(m.kcal/m.goal*100)+' percent'+(m.headroom!==null?(', '+m.headroom+' calories of headroom'):'')+'.');
+  return '<span role="img" aria-label="'+esc(lab)+'" style="display:block">'+
+    ceilingBar({w:c.barW,h:c.barH,fraction:m.fraction,kcal:m.kcal,goal:m.goal,hex:m.b.hex,mode:mode})+'</span>';
+}
+
+/* ============================================================
+   WATCH FACE — Laso beside Apple, never instead of it
+   ============================================================ */
+function screenFace(){
+  var c=C(), F=c.face, m=M(), h='';
+  h += box('left:0;top:0;width:'+c.w+'px;height:'+c.h+'px;background:radial-gradient(120% 90% at 50% 0%,#0A0E15,#000 70%);','');
+  h += t(c.pad, 8, 80, 12, 500, TOK.t3, 'left', 'TUE 29');
+  h += box('right:'+c.pad+'px;top:8px;font-size:12px;font-weight:500;color:'+TOK.t3+';','&#9728; 24°');
+  h += t(c.pad, F.timeY, c.w-c.pad*2, F.timeSize, 600, '#7FD4FF', 'right', '14:32');
+
+  /* Laso accessoryInline */
+  var inlineText = m.noPayload ? 'Rings are live' : m.b.headline.replace(/\.$/,'');
+  h += box('left:'+c.pad+'px;top:'+F.inlineY+'px;width:'+(c.w-c.pad*2)+'px;height:'+F.inlineH+
+      'px;border:1px dashed rgba(77,163,255,.38);border-radius:5px;display:flex;align-items:center;padding:0 4px;cursor:pointer;',
+      '<span style="font-size:13px;color:'+TOK.t2+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
+      '<span style="color:'+(m.noPayload?TOK.t3:m.b.hex)+'">&#8599;</span> '+esc(inlineText)+'</span>',
+      'data-act="dlMove" role="button" tabindex="0" aria-label="'+esc('Laso inline complication. '+inlineText+'. Opens Move.')+'"');
+
+  /* Laso accessoryRectangular */
+  h += box('left:'+c.pad+'px;top:'+F.rectY+'px;width:'+(c.w-c.pad*2)+'px;height:'+F.rectH+
+      'px;border:1px dashed rgba(77,163,255,.38);border-radius:8px;padding:3px 5px;cursor:pointer;overflow:hidden;',
+      rectWidget(c.w-c.pad*2-10, m, S.canvas===40),
+      'data-act="dlCeiling" role="button" tabindex="0" aria-label="'+esc('Laso rectangular complication. '+(m.noPayload?'Rings are live':m.b.headline)+' '+m.kcal+' of '+m.goal+' calories. Opens the ceiling detail.')+'"');
+
+  /* bottom row: Apple's Activity · Laso circular · system heart rate */
+  var cw=F.circ, gap=(c.w-c.pad*2-cw*3)/2;
+  h += box('left:'+c.pad+'px;top:'+F.circY+'px;width:'+cw+'px;height:'+cw+'px;', ringsSVG(cw,false,m));
+  var headroom = (m.headroom!==null) ? m.headroom : (m.goal-m.kcal);
+  h += box('left:'+(c.pad+cw+gap)+'px;top:'+F.circY+'px;width:'+cw+'px;height:'+cw+
+      'px;border:1px dashed rgba(77,163,255,.38);border-radius:50%;cursor:pointer;',
+      '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">'+circGauge(cw-2,m,false)+'</span>'+
+      '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:'+TOK.t1+'">'+headroom+'</span>',
+      'data-act="dlToday" role="button" tabindex="0" aria-label="'+esc('Laso circular complication. '+headroom+' calories to your ceiling. Opens Today.')+'"');
+  h += box('left:'+(c.pad+(cw+gap)*2)+'px;top:'+F.circY+'px;width:'+cw+'px;height:'+cw+
+      'px;border-radius:50%;background:'+TOK.subtle+';display:flex;flex-direction:column;align-items:center;justify-content:center;',
+      '<span style="font-size:10px;color:'+TOK.poor+'">&#9829;</span>'+
+      '<span style="font-size:13px;font-weight:600;color:'+TOK.t1+'">'+ALEX.restHR+'</span>');
+
+  h += t(c.pad, F.annY, c.w-c.pad*2, 9, 400, TOK.t3, 'center',
+      S.canvas===40 ? 'dashed = Laso' : 'dashed = Laso · prototype annotation');
+  return h;
+}
+
+/* accessoryRectangular content — the 152 × 69.5pt box. Same kind, two surfaces (face + Smart Stack). */
+function rectWidget(w, m, compact){
+  var barW = Math.min(152, w);
+  var head = m.noPayload ? 'Rings are live' : m.b.headline.replace(/\.$/,'');
+  var mode = m.noPayload ? 'dashedGoal' : (S.ceilingLifted?'noCap':'full');
+  var age = m.stale ? '3h' : (ALEX.updatedMin+'m');
+  var out='';
+  out += '<div style="font-size:13px;font-weight:600;color:'+TOK.t1+';line-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(head)+'</div>';
+  out += '<div style="height:2px"></div>';
+  out += '<div style="margin-left:-4px">'+ceilingBar({w:barW,h:10,fraction:m.fraction,kcal:m.kcal,goal:m.goal,hex:m.b.hex,mode:mode})+'</div>';
+  if (compact){
+    /* 40mm: the 11pt line is the first to go — merge it into the data line (R15) */
+    out += '<div style="font-size:11px;color:'+TOK.t2+';line-height:13px">'+m.kcal+'/'+m.goal+' kcal · '+freshDot(4,m.stale)+' '+age+'</div>';
+  } else {
+    out += '<div style="font-size:12px;color:'+TOK.t2+';line-height:14px">'+m.kcal+'/'+m.goal+' kcal · '+m.ex+' of '+ALEX.exerciseGoal+' min</div>';
+    out += '<div style="font-size:11px;color:'+TOK.t3+';line-height:13px">'+freshDot(4,m.stale)+' iPhone '+age+'</div>';
+  }
+  return out;
+}
+
+/* ============================================================
+   SMART STACK — crown-down from the face
+   ============================================================ */
+var STACK=['weather','laso','activity','calendar'];
+function screenStack(){
+  var c=C(), m=M(), h='';
+  var cardW=c.w-c.pad*2, cardH=c.stackH, gap=8;
+  h += box('left:0;top:0;width:'+c.w+'px;height:22px;display:flex;align-items:center;justify-content:flex-end;padding-right:'+
+      c.pad+'px;font-size:12px;font-weight:600;color:'+TOK.t3+';','14:32');
+  var inner='';
+  for (var i=0;i<STACK.length;i++){
+    var k=STACK[i], y=i*(cardH+gap), isLaso=(k==='laso');
+    var style='left:'+c.pad+'px;top:'+y+'px;width:'+cardW+'px;height:'+cardH+'px;border-radius:14px;background:'+
+      (isLaso?TOK.raised:'#111116')+';border:1px '+(isLaso?'dashed rgba(77,163,255,.38)':('solid '+TOK.border))+
+      ';padding:6px 8px;overflow:hidden;'+(isLaso?'cursor:pointer;':'');
+    var attrs = isLaso ? ('data-act="dlCeiling" role="button" tabindex="0" aria-label="'+
+      esc('Laso rectangular Smart Stack widget. '+(m.noPayload?'Rings are live':m.b.headline)+' Opens the ceiling detail.')+'"') : null;
+    inner += box(style, stackCard(k, cardW-16, m), attrs);
+  }
+  h += box('left:0;top:'+(26-S.stack*(cardH+gap))+'px;width:'+c.w+'px;', inner);
+  for (var j=0;j<STACK.length;j++){
+    h += box('right:3px;top:'+(c.h/2-(STACK.length*9)/2+j*9)+'px;width:4px;height:4px;border-radius:50%;background:'+
+      (j===S.stack?TOK.t1:TOK.border)+';','');
+  }
+  return h;
+}
+function stackCard(k, w, m){
+  if (k==='laso') return rectWidget(w, m, S.canvas===40);
+  if (k==='weather') return '<div style="font-size:13px;font-weight:600;color:'+TOK.t1+'">Weather</div>'+
+    '<div style="font-size:26px;font-weight:600;color:'+TOK.t1+';margin-top:4px">24°</div>'+
+    '<div style="font-size:11px;color:'+TOK.t3+'">Clear · H 26 L 14</div>';
+  if (k==='activity') return '<div style="font-size:13px;font-weight:600;color:'+TOK.t1+'">Activity</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-top:2px">'+ringsSVG(44,false,m)+
+    '<div style="font-size:11px;color:'+TOK.t3+';line-height:1.45">'+m.kcal+'/'+m.goal+' kcal<br>'+m.ex+'/'+ALEX.exerciseGoal+' min<br>'+m.st+'/'+ALEX.standGoal+' h</div></div>';
+  return '<div style="font-size:13px;font-weight:600;color:'+TOK.t1+'">Calendar</div>'+
+    '<div style="font-size:12px;color:'+TOK.t2+';margin-top:6px">15:00 · Standup</div>'+
+    '<div style="font-size:11px;color:'+TOK.t3+'">in 28 min</div>';
+}
+
+/* ============================================================
+   NOTIFICATIONS — short look, then long look
+   ============================================================ */
+var NOTIFS={
+  n1:{ title:"Today's ceiling",
+       l1:'Ease off today.',
+       l2:'Short sleep and a high resting heart rate. Stop around 60% of your Move goal.',
+       bar:true, barBand:'poor', barFrac:0.60, barKcal:284,
+       actions:[{label:'Got it',act:'notifDismiss'},{label:'Why',act:'notifWhy'}] },
+  n2:{ title:'Ceiling reached',
+       l1:"That's today's ceiling.",
+       l2:"You've done the amount today's recovery supports. Going further is your call.",
+       bar:true, barBand:'poor', barFrac:0.60, barKcal:372,
+       actions:[{label:'Got it',act:'notifDismiss'},{label:'Lift it for today',act:'notifLift'}] },
+  n3:{ title:'Your ceiling is ready',
+       l1:'Laso can read your day now.',
+       l2:'Your rings now have a ceiling on them.',
+       bar:false,
+       actions:[{label:'See it',act:'notifSee'}] }
+};
+function screenNotif(){
+  var c=C(), n=NOTIFS[S.notif];
+  if (S.look==='short'){
+    var h = box('left:0;top:0;width:'+c.w+'px;height:'+c.h+
+      'px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:0 '+c.pad+'px;',
+      '<span style="width:46px;height:46px;border-radius:12px;background:'+TOK.raised+';border:1px solid '+TOK.border+
+      ';display:flex;align-items:center;justify-content:center">'+
+      ceilingBar({w:30,h:8,fraction:1,kcal:284,goal:620,hex:TOK.fair,mode:'full'})+'</span>'+
+      '<span style="font-size:12px;color:'+TOK.t3+'">Laso</span>'+
+      '<span style="font-size:17px;font-weight:600;color:'+TOK.t1+';text-align:center">'+esc(n.title)+'</span>'+
+      '<span style="font-size:11px;color:'+TOK.t3+';text-align:center;line-height:14px">no value in the title (R17)<br>tap or crown down for the long look</span>');
+    h += box('left:0;top:0;width:'+c.w+'px;height:'+c.h+'px;cursor:pointer;','',
+      'data-act="toLong" role="button" tabindex="0" aria-label="Show the long look"');
+    return h;
+  }
+  var out = '<div id="nlong" style="position:absolute;left:0;top:'+(-S.notifScroll)+'px;width:'+c.w+'px;">';
+  out += '<div style="height:22px;display:flex;align-items:center;justify-content:center;background:'+TOK.raised+
+         ';font-size:12px;font-weight:600;color:'+TOK.t2+'">Laso</div>';
+  out += '<div style="padding:10px '+c.pad+'px 10px">';
+  out += '<div style="font-size:17px;font-weight:600;color:'+TOK.t1+';line-height:21px">'+esc(n.l1)+'</div>';
+  out += '<div style="font-size:16px;font-weight:400;color:'+TOK.t2+';line-height:20px;margin-top:6px">'+esc(n.l2)+'</div>';
+  if (n.bar){
+    out += '<div style="margin:20px 0 10px -4px">'+
+      ceilingBar({w:c.barW,h:14,fraction:n.barFrac,kcal:n.barKcal,goal:620,hex:BANDS[n.barBand].hex,mode:'full'})+'</div>';
+  }
+  for (var i=0;i<n.actions.length;i++){
+    var a=n.actions[i];
+    out += '<button class="wbtn" data-act="'+a.act+'" style="display:block;width:100%;height:44px;margin-top:8px;border-radius:10px;background:'+
+      (i===0?TOK.elev:TOK.raised)+';border:1px solid '+TOK.border+';color:'+TOK.t1+';font-size:15px;font-weight:600;">'+esc(a.label)+'</button>';
+  }
+  out += '<button class="wbtn" data-act="notifDismiss" style="display:block;width:100%;height:44px;margin-top:8px;border-radius:10px;background:transparent;border:1px solid '+
+    TOK.border+';color:'+TOK.t3+';font-size:15px;font-weight:600;">Dismiss</button>';
+  out += '<div style="font-size:11px;color:'+TOK.t3+';margin-top:10px;line-height:14px">Double Tap takes the first nondestructive action.</div>';
+  out += '</div></div>';
+  return out;
+}
+
+/* ============================================================
+   render + navigation
+   ============================================================ */
+var SCREENS={
+  face:{name:'Watch face',render:screenFace},
+  stack:{name:'Smart Stack',render:screenStack},
+  n1:{name:'Notif · Ceiling moved',render:screenNotif},
+  n2:{name:'Notif · Ceiling reached',render:screenNotif},
+  n3:{name:'Notif · Ceiling ready',render:screenNotif},
+  s1:{name:'S1 Today',render:screenS1},
+  s2:{name:'S2 Ceiling',render:screenS2},
+  s3:{name:'S3 Move',render:screenS3},
+  s4:{name:'S4 Walking',render:screenS4}
+};
+function render(){
+  var c=C(), z=1.8, sc=el('screen'), vp=el('viewport');
+  sc.style.width=c.w+'px'; sc.style.height=c.h+'px'; sc.style.transform='scale('+z+')';
+  vp.style.width=(c.w*z)+'px'; vp.style.height=(c.h*z)+'px';
+  sc.innerHTML=SCREENS[S.screen].render();
+  sc.style.filter = S.aod ? 'brightness(.6)' : 'none';
+  var nl=el('nlong');
+  S.notifMax = nl ? Math.max(0, nl.offsetHeight - c.h) : 0;
+  paintStrip(); paintInfo();
+  S.animate=false;
+}
+function go(id, o){
+  o=o||{};
+  S.screen=id;
+  if (id==='n1'||id==='n2'||id==='n3'){ S.notif=id; S.look=o.look||'short'; S.notifScroll=0; }
+  if (id==='s4'){
+    if (o.fresh) S.walk={running:true, elapsed:0, kcal:ALEX.move, crossed:false};
+    else if (!S.walk.running) S.walk={running:true, elapsed:252, kcal:322, crossed:false};
+  } else {
+    S.walk.running=false;
+  }
+  S.animate = (o.animate!==false) && !REDUCE;
+  render();
+}
+
+/* ---------- haptic markers ---------- */
+var hapTimer=null;
+function haptic(type, why){
+  var p=el('pulse');
+  p.classList.remove('fire'); void p.offsetWidth; p.classList.add('fire');
+  el('haptic').innerHTML='<b>'+esc(type)+'</b> — '+esc(why);
+  clearTimeout(hapTimer);
+  hapTimer=setTimeout(function(){ el('haptic').innerHTML=''; }, 5000);
+}
+function noHaptic(why){
+  el('haptic').innerHTML='<i>no haptic</i> — '+esc(why);
+  clearTimeout(hapTimer);
+  hapTimer=setTimeout(function(){ el('haptic').innerHTML=''; }, 5000);
+}
+
+/* ---------- actions ---------- */
+function act(a){
+  if (a==='toS3'){ noHaptic('navigation, not a state change — push to S3'); go('s3'); return; }
+  if (a==='start'){
+    haptic('.start','walk begins — fired before HKLiveWorkoutBuilder starts collecting (R8)');
+    go('s4',{fresh:true}); return;
+  }
+  if (a==='end'){
+    haptic('.stop','session ended');
+    setTimeout(function(){ haptic('.success','endCollection returned — +120 ms after .stop'); },120);
+    go('s1',{animate:false}); return;
+  }
+  if (a==='dlToday'){ noHaptic('complication deep link laso-watch://today'); go('s1'); return; }
+  if (a==='dlCeiling'){ noHaptic('complication deep link laso-watch://ceiling'); go('s2'); return; }
+  if (a==='dlMove'){ noHaptic('complication deep link laso-watch://move'); go('s3'); return; }
+  if (a==='toLong'){ S.look='long'; S.notifScroll=0; render(); return; }
+  if (a==='notifDismiss'){ noHaptic('notification dismissed'); go('face'); return; }
+  if (a==='notifWhy'){ noHaptic('notification action → S2'); go('s2'); return; }
+  if (a==='notifSee'){ noHaptic('notification action → S1'); go('s1'); return; }
+  if (a==='notifLift'){
+    S.ceilingLifted=true;
+    haptic('.success','ceiling lifted until midnight — the bar now renders with no cap');
+    go('s1'); return;
+  }
+}
+
+/* ---------- Digital Crown ---------- */
+function crownStep(dir){
+  S.crownAngle += dir*16;
+  el('crownIn').style.transform='rotate('+S.crownAngle+'deg)';
+  var s=S.screen;
+  if (s==='face'){ if (dir>0) go('stack'); return; }
+  if (s==='stack'){
+    var n=S.stack+dir;
+    if (n<0){ go('face'); return; }
+    S.stack=clamp(n,0,STACK.length-1); render(); return;
+  }
+  if (s==='s1'){ if (dir>0) go('s2',{animate:false}); return; }
+  if (s==='s2'){ if (dir<0) go('s1',{animate:false}); return; }
+  if (s==='s3'){
+    var steps=[5,10,15,20,25,30], i=steps.indexOf(S.duration)+dir;
+    if (i<0||i>5) return;
+    S.duration=steps[i];
+    detentFlash();
+    haptic('.click','crown detent — '+S.duration+' min (fired manually per integer step; the detent API signature is unresolved in the research)');
+    render(); return;
+  }
+  if (s==='s4'){
+    noHaptic('crown disabled on S4 — a detent would stop HealthKit gathering heart rate (R8)');
+    return;
+  }
+  if (s==='n1'||s==='n2'||s==='n3'){
+    if (S.look==='short'){ if (dir>0){ S.look='long'; S.notifScroll=0; render(); } return; }
+    S.notifScroll = clamp(S.notifScroll + dir*26, 0, S.notifMax);
+    render(); return;
+  }
+}
+function detentFlash(){
+  var d=el('detent'); d.classList.add('on');
+  setTimeout(function(){ d.classList.remove('on'); },170);
+}
+
+/* ---------- back: the watchOS edge swipe ---------- */
+function back(){
+  var s=S.screen;
+  if (s==='s3'||s==='s4'||s==='s2'){ go('s1',{animate:false}); return; }
+  go('face');
+}
+
+/* ---------- S4 live tick ---------- */
+setInterval(function(){
+  if (S.screen!=='s4' || !S.walk.running || S.aod) return;
+  S.walk.elapsed+=1;
+  S.walk.kcal+=0.15;                      /* ~9 kcal/min — a brisk walk */
+  var m=M(), e=el('s4el'), b=el('s4bar');
+  if (e) e.textContent=mmss(S.walk.elapsed);
+  if (b) b.innerHTML=s4BarHTML(m, S.ceilingLifted?'noCap':'full');
+  if (m.ceilKcal!==null && !S.walk.crossed && m.kcal>=m.ceilKcal){
+    S.walk.crossed=true;
+    haptic('.directionUp','Move crossed the ceiling while the app is frontmost');
+  }
+  if (S.walk.elapsed>=S.duration*60){
+    S.walk.running=false;
+    haptic('.stop','session auto-ended at '+S.duration+' min');
+    setTimeout(function(){ haptic('.success','endCollection returned — +120 ms after .stop'); },120);
+    setTimeout(function(){ go('s1',{animate:false}); },500);
+  }
+},1000);
+
+/* ============================================================
+   chrome
+   ============================================================ */
+var STRIP=[
+  {grp:'Off-app'},{id:'face'},{id:'stack'},{id:'n1'},{id:'n2'},{id:'n3'},
+  {grp:'App'},{id:'launch',name:'Launch (cold)'},{id:'s1'},{id:'s2'},{id:'s3'},{id:'s4'},
+  {grp:'Return'},{id:'raise',name:'Wrist-raise return'}
+];
+function paintStrip(){
+  var out='';
+  for (var i=0;i<STRIP.length;i++){
+    var it=STRIP[i];
+    if (it.grp){ out+='<span class="grp">'+it.grp+'</span>'; continue; }
+    var name=it.name||SCREENS[it.id].name;
+    var on=(it.id===S.screen);
+    var ghost=(it.id==='launch'||it.id==='raise')?' ghost':'';
+    out+='<button class="chip'+ghost+'" data-go="'+it.id+'" aria-pressed="'+(on?'true':'false')+'">'+name+'</button>';
+  }
+  el('strip').innerHTML=out;
+}
+
+var INFO={
+  face:{ k:'Off-app surface 1 of 3', h:'Watch face — Laso beside Apple, never instead of it',
+    body:[
+      ['Laso complications (dashed outline)',
+       '<b>accessoryInline</b> — the verdict, 18 characters, glyph carries direction. &#8594; <code>laso-watch://move</code><br>'+
+       '<b>accessoryRectangular</b> — "Day": headline, ceiling bar, 284/620 kcal, freshness. &#8594; <code>laso-watch://ceiling</code><br>'+
+       '<b>accessoryCircular</b> — "Headroom": 336 kcal to the ceiling, ceiling tick outside the stroke. &#8594; <code>laso-watch://today</code>'],
+      ['Three kinds, three deep links','"If all the complications you support open the same area in your app, they can seem less useful." Each is its own Widget struct so widgetURL differs per family.'],
+      ['System slots','Date, weather, live heart rate, and <b>Apple’s own Activity complication</b> bottom-left. Laso ships no rings complication in any family, ever: it would be a strictly worse copy, capped at ~4 updates/hour against a system-live original, and misuse of a restricted Apple element.'],
+      ['Never blank','With no phone payload the ceiling falls back to the standing Move goal and the centre number stays true and native. The <code>--</code> state is structurally impossible.'],
+      ['accessoryCorner','Deliberately not shipped: a curved gauge would be a fourth radial encoding on a face that already carries the rings, and shipping a fourth kind for coverage forces a shared deep link.']],
+    cite:['https://developer.apple.com/design/human-interface-guidelines/widgets','https://developer.apple.com/design/human-interface-guidelines/complications'] },
+  stack:{ k:'Off-app surface 2 of 3', h:'Smart Stack — one widget, accessoryRectangular only',
+    body:[
+      ['Why only one','Only <b>accessoryRectangular</b> and <b>accessoryCircular</b> reach the Smart Stack (R3), and a circular widget here would duplicate the face complication with none of the extra room.'],
+      ['Content box','152 × 69.5 pt: one 13 pt title, the ceiling bar, one 12 pt data line, one 11 pt freshness line. At 40 mm the 11 pt line merges into the data line — it is the first thing to drop.'],
+      ['Relevance','<code>TimelineProvider.relevance()</code> &#8594; <code>WidgetRelevance</code>. Never <code>TimelineEntry.relevance</code> (does nothing on watchOS) and never <code>RelevanceConfiguration</code> — widgets using it cannot be pinned, and earning a permanent place is the entire strategy.'],
+      ['Three windows a day','wake &#8594; wake+60 via <code>RelevantContext.sleep</code> · headroom &gt; 40% while exercise is behind pace via <code>RelevantContext.fitness</code> (the Alex 14:32 moment) · 18:00–20:00 while headroom is still &gt; 30%.']],
+    cite:['https://developer.apple.com/documentation/widgetkit/widget-suggestions-in-smart-stacks','https://developer.apple.com/documentation/relevancekit/relevantcontext','https://developer.apple.com/documentation/widgetkit/keeping-a-widget-up-to-date'] },
+  n1:{ k:'Off-app surface 3 of 3', h:'N1 — Ceiling moved (wake, delta-triggered)',
+    body:[['Trigger','Fires at wake only if today’s ceiling fraction differs from yesterday’s by ≥ 0.15. <b>For Alex this Tuesday it does not fire</b> — the ceiling is full goal, same as yesterday. What you see is a low-recovery morning.'],
+      ['Cadence ceiling','Max 2 delivered per day, at most 1 before noon, none between 21:30 and wake. Every Laso notification fires on a change or a crossing, never on an absolute state — absolute-threshold alerts are what drew the request for "a big friendly toggle to hush stress for a while".'],
+      ['Short look','No number, no band, no verdict in the title. The short look is not treated as a channel.'],
+      ['Actions','"Got it" is first and nondestructive, so Double Tap takes it. "Why" opens S2.']],
+    cite:['https://developer.apple.com/design/human-interface-guidelines/notifications','https://researchonline.lshtm.ac.uk/id/eprint/4670198/1/Bell-etal-2023-How-notifications-affect-engagement-with.pdf'] },
+  n2:{ k:'Off-app surface 3 of 3', h:'N2 — Ceiling reached (crossing-triggered)',
+    body:[['Why this one justifies the concept','Apple tells you when a ring closes. Nothing on the wrist has ever told you when you reached the amount that is <i>wise</i>.'],
+      ['Suppression','On a full-goal day (Alex’s) it would coincide with Apple’s Move-ring close, so it is suppressed. It fires only when the ceiling is under 95% of the goal.'],
+      ['"Lift it for today"','A ceiling with no override is a rule, and a health app handing out rules it cannot justify is a black box with a lock on it. Tap it — the bar then renders with no cap until midnight, and N2 cannot re-fire.'],
+      ['Haptics','<code>.notification</code> on arrival; <code>.directionUp</code> if the user opens the app and the bar animates past the cap.']],
+    cite:['https://docs.gentler.app/using-gentler-streak-on-your-apple-watch/overview-of-the-apple-watch-app-interface'] },
+  n3:{ k:'Off-app surface 3 of 3', h:'N3 — Your ceiling is ready (once per lifetime)',
+    body:[['Trigger','The first day the phone’s baseline completes and the ceiling fraction becomes non-nil.'],
+      ['Why spend a push here','&gt;50% of health-app users discontinue in week 1, and the sub-cohort still engaged at day 8 gained +25 days median retention. This is the one push worth spending on the cold-start cohort.'],
+      ['One action','"See it" &#8594; S1.']],
+    cite:['https://arxiv.org/pdf/1910.01165'] },
+  s1:{ k:'App · entry screen, page 1 of 2', h:'S1 Today — the whole product in one screen',
+    body:[['The one decision','Do I move more in the next hour, or not?'],
+      ['Top half is Apple’s','<code>HealthKitUI.ActivityRingsView</code>, native and live: Move 284/620, Exercise 12/30, Stand 6/12. Apple owns stroke, colour and geometry — nothing is added, nothing is tinted.'],
+      ['Bottom half is the Ceiling','The Move ring’s axis unrolled: left edge 0 kcal, right edge the standing Move goal. Neutral fill = how far you have moved (a fact). Band-coloured cap + <b>notch</b> = where today’s recovery says to stop (the verdict). Hatch = beyond the ceiling. <b>No new scale, and the 0–21 strain scale never touches the wrist.</b>'],
+      ['Why not a fourth ring','A ring means "fill me to 100%". Recovery is not a thing to fill — a recovery ring at 62 reads as "38% still to go", which is advice nobody should follow. And a bar takes 159–285 ms to compare against 1548–1772 ms for a radial bar, inside a 5.0 s median session.'],
+      ['Four text lines','status · verdict · sub-line · button label. At 40 mm the sub-line is dropped.'],
+      ['Motion','600 ms left-to-right sweep on first appear only. Use "Wrist-raise return" in the strip: values snap, no sweep, no count-up.']],
+    cite:['https://www.microsoft.com/en-us/research/wp-content/uploads/2018/08/GlanceableVis-InfoVis2018.pdf','https://www.kostakos.org/papers/chi17.pdf'] },
+  s2:{ k:'App · page 2 of 2 (crown-down)', h:'S2 Ceiling — why the ceiling is where it is',
+    body:[['The one decision','Do I trust this ceiling enough to obey it?'],
+      ['5-second test','<b>FAIL, by design.</b> Three labelled rows with baseline ticks is a comparison task — realistically 8–12 s. It is reached only by a deliberate crown-down and exists solely to stop "the scores are a black box".'],
+      ['The dot is a legend','A row carrying ● is phone-computed. A row without it is read by this watch. Recovery is phone-only; sleep and resting HR are native.'],
+      ['Ticks and arrows','Each bar carries a baseline tick — 7-day recovery average 68, sleep need 7h 40m, resting HR baseline 55 — and ↑ ↓ arrows so direction survives greyscale.'],
+      ['Footer','"Updates about 4 times an hour." Published in-product as Athlytic does; Bevel’s omission produced a live public bug thread.'],
+      ['Not interactive','No row is tappable, so the tap-target rule never applies and the shipping check-in’s 5-targets-in-162pt mistake cannot recur.']],
+    cite:['https://athlytic.github.io/athlyticapp/troubleshooting/','https://feedback.bevel.health/bug-reports/p/bevel-phone-app-and-watch-app-values-dont-match'] },
+  s3:{ k:'App · pushed, depth 1', h:'S3 Move — the verdict becomes the action',
+    body:[['Crown','The one genuine crown-driven value in the app: 5–30 min in 5-minute steps. <code>.click</code> is fired manually per integer step because the research could not resolve the haptic-detent API signature — verify on device.'],
+      ['Double Tap','<code>handGestureShortcut(.primaryAction)</code> on Start is legal <i>here and only here</i>: no list, no scroll view, no vertical tab. The NavigationStack wraps the TabView, so pushing this screen fully replaces the paged container.'],
+      ['Position, not colour','The 6-dot rail carries the value by position; the ring on the filled dot is a second non-colour channel.'],
+      ['If scope must be cut','S3 and S4 go first, and the S1 button becomes a deep link into Apple’s Workout app. The concept survives without the walk; it does not survive without the ceiling.']],
+    cite:['https://developer.apple.com/design/human-interface-guidelines/gestures','https://developer.apple.com/documentation/swiftui/view/handgestureshortcut(_:isenabled:)','https://developer.apple.com/design/human-interface-guidelines/digital-crown'] },
+  s4:{ k:'App · pushed, replaces S3', h:'S4 Walking — the ceiling is enforced, not displayed',
+    body:[['Live','Elapsed from <code>HKWorkoutSession</code>, heart rate from <code>HKLiveWorkoutBuilder</code>, and the bar fills from the builder’s active energy. Watch it move.'],
+      ['Crown disabled','Engaging the haptic engine stops HealthKit gathering heart-rate data, so a detent would punch a hole in the HR stream every step. Try the crown here — it refuses and says why.'],
+      ['Two haptics only','<code>.start</code> before collection begins, then <code>.stop</code> + <code>.success</code> after endCollection returns. No milestone taps, no per-minute buzz, no halfway buzz.'],
+      ['Crossing the cap','If Move crosses the ceiling while the app is frontmost, <code>.directionUp</code> fires once. Switch the band to Low in the dev toolbar, then start a walk to watch it happen.'],
+      ['No full-screen colour','HIG Color: avoid a full-screen background colour in long-lived views such as a workout.']],
+    cite:['https://developer.apple.com/documentation/watchkit/wkinterfacedevice/play(_:)'] }
+};
+function paintInfo(){
+  var d=INFO[S.screen]; if(!d) return;
+  var out='<div class="kicker">'+d.k+'</div><h2>'+d.h+'</h2><dl>';
+  for (var i=0;i<d.body.length;i++){ out+='<dt>'+d.body[i][0]+'</dt><dd>'+d.body[i][1]+'</dd>'; }
+  out+='</dl>';
+  var n=[];
+  if (S.state==='loading') n.push('<b>Loading:</b> the rings render immediately at full fidelity — a local HealthKit query has nothing to wait for. The ceiling bar is a bare track. <b>No spinner, at any point.</b>');
+  if (S.state==='cold') n.push('<b>Cold start:</b> named, never a fake number. The dashed line is the standing Move goal, the only ceiling we can honestly name yet. The night count arrives from the phone in <code>ceilingReadyNights</code> and is never hardcoded on the watch.');
+  if (S.state==='empty') n.push('<b>Empty, 00:05:</b> rings at zero, headroom spans the whole bar, cap and notch already placed.');
+  if (S.state==='hkdenied') n.push('<b>HealthKit denied on this watch:</b> the rings become a dashed circle of the same footprint so nothing jumps, and the ceiling still renders from the cached phone payload. There is no progress fill because active energy is exactly what was denied — showing one would be a lie.');
+  if (S.state==='nophone') n.push('<b>Phone never reachable:</b> rings live and correct, ceiling not synced. Nothing in this state asks the user to go and do something on another device.');
+  if (S.state==='stale') n.push('<b>Stale, over 60 min:</b> everything renders at its last known value; the freshness dot becomes a hollow ring — a shape change, not a colour change — and the sub-line appends the age.');
+  if (S.aod) n.push('<b>Always-On:</b> the rings stay but go monochrome and stroked (goal progress is not a health verdict); the ceiling bar is an outline with no fill, no headroom, no hatch, no cap and no notch; the verdict becomes ——— at the same y so nothing jumps. The glyph row is identical in all three bands, so it discloses nothing.');
+  if (S.ceilingLifted) n.push('<b>Ceiling lifted for today:</b> cap and notch are gone until midnight.');
+  for (var j=0;j<n.length;j++){ out+='<div class="rule">'+n[j]+'</div>'; }
+  if (d.cite) out+='<div class="cite">Sources: '+d.cite.join('<br>')+'</div>';
+  el('info').innerHTML=out;
+}
+
+/* ---------- dev toolbar ---------- */
+function paintDev(){
+  function mk(host, items, cur, attr){
+    var out='';
+    for (var i=0;i<items.length;i++){
+      out+='<button class="tgl'+(items[i].wide?' wide':'')+'" data-'+attr+'="'+items[i].v+'" aria-pressed="'+
+        (String(items[i].v)===String(cur)?'true':'false')+'">'+items[i].l+'</button>';
+    }
+    el(host).innerHTML=out;
+  }
+  mk('devCanvas',[{v:46,l:'46 mm'},{v:40,l:'40 mm'}],S.canvas,'canvas');
+  mk('devState',[{v:'loaded',l:'Loaded'},{v:'loading',l:'Loading'},{v:'cold',l:'Cold start'},{v:'empty',l:'Empty'},
+    {v:'hkdenied',l:'HealthKit denied'},{v:'nophone',l:'No phone ever'},{v:'stale',l:'Stale 3h'}],S.state,'state');
+  mk('devAod',[{v:'off',l:'Off'},{v:'on',l:'On — redacted'}],S.aod?'on':'off','aod');
+  mk('devBand',[{v:'optimal',l:'78 Optimal · ceiling above goal',wide:true},
+    {v:'fair',l:'62 Moderate · full goal (Alex)',wide:true},
+    {v:'poor',l:'38 Low · 60% of goal',wide:true}],S.band,'band');
+  el('devDT').innerHTML='<button class="tgl wide" data-dt="1">Fire Double Tap</button>'+
+    '<button class="tgl wide" data-reset="1">Reset ceiling lift</button>';
+}
+function doubleTap(){
+  if (S.screen==='s3'){
+    haptic('.start','Double Tap → primary action (Start). Legal here: no list, no scroll view, no vertical tab.');
+    go('s4',{fresh:true}); return;
+  }
+  if ((S.screen==='n1'||S.screen==='n2'||S.screen==='n3') && S.look==='long'){
+    var a=NOTIFS[S.notif].actions[0];
+    haptic('.success','Double Tap took the first nondestructive action: "'+a.label+'"');
+    act(a.act); return;
+  }
+  noHaptic('no primary action on this screen — R11 forbids one on lists, scroll views and vertical tabs. Open S3.');
+}
+
+/* ---------- launch + wrist raise ---------- */
+function launch(){
+  S.state='loading'; S.screen='s1'; S.animate=false; render(); paintDev();
+  setTimeout(function(){
+    S.state='loaded'; S.animate=!REDUCE; render(); paintDev();
+    noHaptic('cold launch: the rings were live instantly and the ceiling resolved from cache — no spinner at any point');
+  },800);
+}
+function wristRaise(){
+  S.screen='s1'; S.animate=false; render();
+  noHaptic('wrist-raise return inside the 2-minute frontmost window — values snap, no sweep, no count-up');
+}
+
+/* ---------- events ---------- */
+function delegate(root, handler){
+  root.addEventListener('click', function(e){
+    var n=e.target;
+    while(n && n!==root){ if (n.dataset && n.dataset.act){ handler(n.dataset.act); return; } n=n.parentNode; }
+  });
+  root.addEventListener('keydown', function(e){
+    if (e.key!=='Enter' && e.key!==' ') return;
+    var n=e.target;
+    while(n && n!==root){ if (n.dataset && n.dataset.act){ e.preventDefault(); handler(n.dataset.act); return; } n=n.parentNode; }
+  });
+}
+delegate(el('screen'), act);
+
+el('strip').addEventListener('click', function(e){
+  var n=e.target;
+  while(n && n!==this){
+    if (n.dataset && n.dataset.go){
+      var id=n.dataset.go;
+      if (id==='launch') launch();
+      else if (id==='raise') wristRaise();
+      else go(id);
+      return;
+    }
+    n=n.parentNode;
+  }
+});
+el('devbtn').addEventListener('click', function(){
+  var open=el('dev').classList.toggle('open');
+  this.setAttribute('aria-expanded', open?'true':'false');
+});
+el('dev').addEventListener('click', function(e){
+  var n=e.target;
+  while(n && n!==this && n.tagName!=='BUTTON'){ n=n.parentNode; }
+  if (!n || n.tagName!=='BUTTON') return;
+  var d=n.dataset;
+  if (d.canvas) S.canvas=parseInt(d.canvas,10);
+  else if (d.state){ S.state=d.state; S.ceilingLifted=false; }
+  else if (d.aod) S.aod=(d.aod==='on');
+  else if (d.band) S.band=d.band;
+  else if (d.dt){ doubleTap(); paintDev(); return; }
+  else if (d.reset) S.ceilingLifted=false;
+  paintDev(); S.animate=false; render();
+});
+
+/* crown: mousewheel + arrow keys */
+var wheelAcc=0;
+document.querySelector('.case').addEventListener('wheel', function(e){
+  e.preventDefault();
+  wheelAcc+=e.deltaY;
+  var guard=0;
+  while (Math.abs(wheelAcc)>=42 && guard++<8){
+    crownStep(wheelAcc>0?1:-1);
+    wheelAcc -= (wheelAcc>0?42:-42);
+  }
+}, {passive:false});
+document.addEventListener('keydown', function(e){
+  if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+  if (e.key==='ArrowDown'){ e.preventDefault(); crownStep(1); }
+  else if (e.key==='ArrowUp'){ e.preventDefault(); crownStep(-1); }
+  else if (e.key==='ArrowLeft'){ e.preventDefault(); back(); }
+});
+/* watchOS edge swipe back */
+(function(){
+  var x0=null, v=el('viewport');
+  v.addEventListener('pointerdown', function(e){ x0=e.clientX; });
+  v.addEventListener('pointerup', function(e){
+    if (x0!==null && (e.clientX-x0)>44) back();
+    x0=null;
+  });
+  v.addEventListener('pointerleave', function(){ x0=null; });
+})();
+
+/* ---------- boot ---------- */
+paintDev();
+go('face');
+</script>
+</body>
+</html>

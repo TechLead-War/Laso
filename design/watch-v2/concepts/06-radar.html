@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 — Health Radar · Laso Watch prototype</title>
+<style>
+:root{
+  /* DESIGN-TOKENS.md — dark values only, exact hex */
+  --bg:#000000;
+  --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D;
+  --surfaceSubtle:#17171C;
+  --t1:#F2F2F6;   /* textPrimary   */
+  --t2:#C9C9D2;   /* textSecondary */
+  --t3:#ADADB8;   /* textTertiary  */
+  --borderLow:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;      /* deliberately unused by this concept — see rationale §10 */
+  --z:1.75;            /* desktop zoom of the 1pt = 1px watch canvas */
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#0a0a0c;color:var(--t2);
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+
+/* ───────────────────────── page chrome (not the design under review) ───────── */
+.page{display:flex;min-height:100vh;align-items:stretch}
+.rail{width:196px;flex:0 0 196px;background:#08080a;border-right:1px solid #17171c;padding:14px 10px 40px;overflow:auto}
+.rail h1{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--t3);margin:0 0 2px;font-weight:600}
+.rail .sub{font-size:11px;color:#6b6b77;margin:0 0 16px;line-height:1.35}
+.rail h2{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#5d5d68;margin:14px 0 6px;font-weight:600}
+.rail button{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--t2);
+  font:inherit;font-size:11.5px;padding:6px 8px;border-radius:7px;cursor:pointer;margin-bottom:2px;line-height:1.25}
+.rail button:hover{background:#141419}
+.rail button[aria-current="true"]{background:#1d2733;border-color:#2c4c72;color:#cfe4ff}
+.rail button .k{display:block;font-size:9px;color:#5d5d68;letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
+
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:26px 20px 60px;gap:16px}
+.stagehead{font-size:12px;color:#6b6b77;letter-spacing:.05em;text-transform:uppercase}
+.stagehead b{color:var(--t2);font-weight:600}
+
+/* ───────────────────────── watch bezel ───────────────────────── */
+.watchwrap{position:relative;padding-right:26px}
+.watch{position:relative;filter:drop-shadow(0 22px 46px rgba(0,0,0,.72))}
+.watch{--r:30px}
+.case{position:relative;background:linear-gradient(158deg,#3a3a41 0%,#1b1b20 34%,#101014 62%,#2c2c33 100%);
+  border-radius:calc((var(--r) + 11px) * var(--z));padding:calc(9px * var(--z));}
+.case::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(255,255,255,.06)}
+.glass{background:#000;border-radius:calc(var(--r) * var(--z));overflow:hidden;position:relative}
+.screen{position:relative;background:var(--bg);overflow:hidden;border-radius:calc(var(--r) * var(--z));
+  width:calc(208px * var(--z));height:calc(248px * var(--z));}
+.screen .canvas{position:absolute;left:0;top:0;width:208px;height:248px;transform:scale(var(--z));transform-origin:0 0}
+.screen[data-size="40"]{width:calc(162px * var(--z));height:calc(197px * var(--z))}
+.screen[data-size="40"] .canvas{width:162px;height:197px}
+
+/* Digital Crown + side button drawn on the right edge */
+.crown{position:absolute;right:calc(-11px * var(--z));top:calc(62px * var(--z));width:calc(13px * var(--z));height:calc(38px * var(--z));
+  background:linear-gradient(90deg,#4a4a52,#2a2a30 55%,#3d3d45);border-radius:calc(4px * var(--z));
+  box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.crown .ridges{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
+.crown .ridges i{position:absolute;left:0;right:0;height:2px;background:rgba(0,0,0,.55);display:block}
+.crown .cap{position:absolute;right:calc(-3px * var(--z));top:38%;width:calc(4px * var(--z));height:24%;background:#5a5a63;border-radius:2px}
+.sidebtn{position:absolute;right:calc(-8px * var(--z));top:calc(124px * var(--z));width:calc(9px * var(--z));height:calc(30px * var(--z));
+  background:linear-gradient(90deg,#43434a,#26262c);border-radius:calc(3px * var(--z));box-shadow:0 2px 5px rgba(0,0,0,.6)}
+
+/* crown read-out */
+.crownhud{position:absolute;right:calc(-116px * var(--z));top:calc(56px * var(--z));width:104px;font-size:10px;color:#6b6b77;line-height:1.35}
+.crownhud .role{color:var(--primary);font-weight:600;font-size:10px;letter-spacing:.03em}
+.crownhud .detents{display:flex;gap:2px;margin-top:5px}
+.crownhud .detents i{width:3px;height:9px;background:#22222a;border-radius:1px;display:block}
+.crownhud .detents i.on{background:var(--primary)}
+.detentflash{margin-top:5px;font-size:9px;color:#33333c;letter-spacing:.05em}
+.detentflash.fire{color:var(--primary)}
+
+/* haptic marker */
+.hapring{position:absolute;inset:0;border-radius:calc(var(--r) * var(--z));pointer-events:none;opacity:0;
+  box-shadow:inset 0 0 0 3px var(--optimal), inset 0 0 22px rgba(51,196,141,.35)}
+.hapring.go{animation:hap 620ms ease-out 1}
+.hapring[data-k="failure"]{box-shadow:inset 0 0 0 3px var(--poor), inset 0 0 22px rgba(224,92,100,.35)}
+.hapring[data-k="notification"],.hapring[data-k="click"]{box-shadow:inset 0 0 0 3px var(--primary), inset 0 0 22px rgba(77,163,255,.3)}
+.hapring[data-k="directionDown"],.hapring[data-k="directionUp"]{box-shadow:inset 0 0 0 3px var(--fair), inset 0 0 22px rgba(227,180,90,.3)}
+@keyframes hap{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.hapcap{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(-30px * var(--z));white-space:nowrap;
+  font-size:11px;letter-spacing:.04em;color:var(--t3);background:#111117;border:1px solid #23232b;border-radius:9999px;
+  padding:4px 10px;opacity:0;transition:opacity 180ms}
+.hapcap.go{opacity:1}
+.hapcap b{color:var(--primary);font-weight:600}
+
+.caption{max-width:620px;font-size:12px;line-height:1.5;color:#7c7c88;text-align:center}
+.caption b{color:var(--t3);font-weight:600}
+.caption .warn{color:var(--fair)}
+
+/* ───────────────────────── dev toolbar ───────────────────────── */
+.devbtn{position:fixed;right:14px;bottom:14px;z-index:40;background:#15151b;border:1px solid #2b2b34;color:var(--t3);
+  font:inherit;font-size:11px;letter-spacing:.1em;padding:8px 12px;border-radius:9px;cursor:pointer}
+.devbtn:hover{color:var(--t1)}
+.devpanel{position:fixed;right:14px;bottom:52px;z-index:41;width:292px;background:#0e0e13;border:1px solid #26262f;
+  border-radius:12px;padding:12px;display:none;max-height:80vh;overflow:auto}
+.devpanel.open{display:block}
+.devpanel h3{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#5d5d68;margin:10px 0 5px;font-weight:600}
+.devpanel h3:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{background:#17171d;border:1px solid #26262f;color:var(--t3);font:inherit;font-size:11px;padding:5px 8px;
+  border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#1d2733;border-color:#2c4c72;color:#cfe4ff}
+.devnote{font-size:10px;color:#5d5d68;line-height:1.45;margin-top:6px}
+.swatches{display:flex;gap:6px;margin-top:6px;align-items:center}
+.swatches span{font-size:9.5px;color:#5d5d68}
+.sw{width:16px;height:16px;border-radius:4px;border:1px solid #2b2b34}
+.sw.off{opacity:.28;position:relative}
+.sw.off::after{content:"";position:absolute;inset:-1px;border-radius:4px;background:linear-gradient(45deg,transparent 46%,#6b6b77 46%,#6b6b77 54%,transparent 54%)}
+
+/* ───────────────────────── watch canvas primitives ───────────────────────── */
+.canvas{color:var(--t1)}
+.abs{position:absolute}
+.tnum{font-variant-numeric:tabular-nums}
+.title22{font-size:22px;font-weight:600;line-height:26px;letter-spacing:-.2px}
+.title20{font-size:20px;font-weight:600;line-height:24px;letter-spacing:-.2px}
+.head17{font-size:17px;font-weight:600;line-height:20px}
+.head15{font-size:15px;font-weight:600;line-height:18px}
+.foot13{font-size:13px;font-weight:400;line-height:16px}
+.cap12{font-size:12px;font-weight:400;line-height:14px}
+.cap11{font-size:11px;font-weight:500;line-height:13px}
+.cap10{font-size:10px;font-weight:500;line-height:12px}
+.hero52{font-size:52px;font-weight:600;line-height:56px;letter-spacing:-1px}
+.hero40{font-size:40px;font-weight:600;line-height:44px;letter-spacing:-.8px}
+.t1{color:var(--t1)}.t2{color:var(--t2)}.t3{color:var(--t3)}
+.cOpt{color:var(--optimal)}.cFair{color:var(--fair)}.cPri{color:var(--primary)}
+.right{text-align:right}.center{text-align:center}
+
+.btn{display:flex;align-items:center;justify-content:center;background:var(--surfaceRaised);border:1px solid var(--borderLow);
+  border-radius:10px;color:var(--t1);font-size:17px;font-weight:600;cursor:pointer;padding:0 8px;
+  transition:transform 80ms ease,background 120ms ease,color 120ms ease;font-family:inherit;text-align:center;line-height:1.1}
+.btn:active{transform:scale(.96)}
+.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.btn[disabled]{cursor:default;color:var(--optimal)}
+.btn.quiet{color:var(--t2)}
+.btn.aod{background:var(--surfaceSubtle);color:var(--t3);border-color:#1e1e24}
+
+/* vertical TabView page dots, right edge next to the crown */
+.dots{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:5}
+.dots button{width:5px;height:5px;border-radius:9999px;background:#3a3a44;border:0;padding:0;cursor:pointer}
+.dots button[aria-current="true"]{background:var(--t1)}
+.dots button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* enter animations */
+.bar{display:block}
+.canvas.anim .bar{animation:sweep 600ms cubic-bezier(.22,.61,.36,1) 1}
+@keyframes sweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.canvas.anim .fadein{animation:fade 220ms cubic-bezier(.22,.61,.36,1) 1}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  .canvas.anim .bar{animation:none}
+  .btn{transition:none}
+  .hapring.go{animation:hap 620ms steps(2,end) 1}
+}
+
+/* face */
+.faceTag{position:absolute;font-size:7.5px;letter-spacing:.06em;color:var(--primary);background:rgba(77,163,255,.09);
+  border:1px solid rgba(77,163,255,.32);border-radius:4px;padding:1px 3px;white-space:nowrap;z-index:6}
+.slot{position:absolute;cursor:pointer;border-radius:10px;transition:transform 80ms ease}
+.slot:active{transform:scale(.96)}
+.slot:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.sysdim{color:var(--t2)}
+
+/* smart stack */
+.stackview{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.stacktrack{position:absolute;left:10px;width:188px;transition:transform 220ms cubic-bezier(.22,.61,.36,1)}
+.wcard{width:188px;height:82px;border-radius:14px;padding:8px 10px;position:relative;overflow:hidden;margin-bottom:8px;
+  border:1px solid var(--borderLow);background:var(--surfaceRaised)}
+.wcard.laso{background:var(--bg);border-color:#23232b}
+.wcard .wtag{position:absolute;right:7px;bottom:5px;font-size:7.5px;color:var(--primary);letter-spacing:.05em}
+
+/* notification */
+.sash{height:30px;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:12px;font-weight:600;letter-spacing:.02em}
+.nbody{background:rgba(255,255,255,.18);border-radius:14px}
+.nact{width:100%;height:44px;border-radius:10px;background:var(--surfaceElevated);border:1px solid var(--borderLow);
+  color:var(--t1);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform 80ms ease}
+.nact:active{transform:scale(.96)}
+.nact:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.nact.dismiss{background:var(--surfaceRaised);color:var(--t2);font-weight:400}
+.nact.dt{position:relative}
+.nact.dt::after{content:"double tap";position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:8px;
+  letter-spacing:.06em;color:var(--primary);font-weight:500}
+.scroller{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.scrollinner{position:absolute;left:0;top:0;width:100%;transition:transform 160ms linear}
+
+.aoddim{filter:brightness(.62)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <aside class="rail">
+    <h1>06 · Health Radar</h1>
+    <p class="sub">A sentinel that stays silent 93% of the year and shows its guard rails while it is silent.<br>Alex, Tuesday 14:32.</p>
+
+    <h2>Off-app surfaces</h2>
+    <div id="navA"></div>
+    <h2>App</h2>
+    <div id="navB"></div>
+    <h2>Reference</h2>
+    <div id="navC"></div>
+  </aside>
+
+  <main class="stage">
+    <div class="stagehead" id="stagehead"></div>
+
+    <div class="watchwrap">
+      <div class="watch">
+        <div class="case">
+          <div class="glass">
+            <div class="screen" id="screen" data-size="46">
+              <div class="canvas" id="canvas"></div>
+            </div>
+            <div class="hapring" id="hapring"></div>
+          </div>
+        </div>
+        <div class="crown" id="crown" aria-hidden="true">
+          <div class="ridges" id="ridges"></div>
+          <div class="cap"></div>
+        </div>
+        <div class="sidebtn" aria-hidden="true"></div>
+        <div class="hapcap" id="hapcap"></div>
+      </div>
+      <div class="crownhud" aria-hidden="true">
+        <div class="role" id="crownrole">crown</div>
+        <div id="crownwhat">—</div>
+        <div class="detents" id="detents"></div>
+        <div class="detentflash" id="detentflash">.click</div>
+      </div>
+    </div>
+
+    <p class="caption" id="caption"></p>
+  </main>
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel">DEV</button>
+<div class="devpanel" id="devpanel" role="region" aria-label="Developer toolbar">
+  <h3>Canvas</h3>
+  <div class="seg" id="segSize"></div>
+  <h3>State</h3>
+  <div class="seg" id="segState"></div>
+  <h3>Always-On (isLuminanceReduced)</h3>
+  <div class="seg" id="segAod"></div>
+  <h3>Key variable — radar state</h3>
+  <div class="seg" id="segRadar"></div>
+  <p class="devnote" id="radarnote"></p>
+  <div class="swatches">
+    <span class="sw" style="background:var(--optimal)"></span><span>optimal #33C48D</span>
+  </div>
+  <div class="swatches">
+    <span class="sw" style="background:var(--fair)"></span><span>fair #E3B45A</span>
+  </div>
+  <div class="swatches">
+    <span class="sw off" style="background:var(--poor)"></span><span>poor #E05C64 — unused by design</span>
+  </div>
+  <p class="devnote">This concept escalates by glyph fill and bar solidity, never by going red. Clear = <b>optimal</b>, Watching and Flagged = <b>fair</b>. Rationale §10.</p>
+  <h3>Phone answers the write</h3>
+  <div class="seg" id="segAck"></div>
+  <p class="devnote">Off = the phone never replies. The button re-enables itself and says "Not saved · tap again". Timeout is 10s in shipping, 2s here so you can watch it happen.</p>
+  <h3>Gestures</h3>
+  <div class="seg">
+    <button id="btnDT">fire Double Tap</button>
+    <button id="btnLabels" aria-pressed="true">complication family tags</button>
+  </div>
+  <p class="devnote">In-app, Double Tap advances the vertical tab (watchOS 11 default) because R11 forbids a primary action on vertical tabs. On the long look it takes the first non-destructive action.</p>
+  <h3>Crown</h3>
+  <p class="devnote">Mouse wheel over the watch, or ↑ / ↓. Detent marker fires where <b>.click</b> would. Sensitivity page: 1.0σ → 2.0σ in 0.1 steps.</p>
+</div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   06 — HEALTH RADAR
+   All health values are Alex, Tuesday 14:32, from PROTOTYPE-SPEC.md.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ILLUSTRATIVE: SDs for resting HR, respiratory rate and sleep are NOT specified
+   in the shared fiction. These sigma positions drive bar fills only and are never
+   printed on screen. HRV is fully derived: 48 vs 56 +/- 9 = -0.89 sigma. */
+const SIG = [
+  {k:'rhr',   name:'Resting HR', value:'58',     unit:'bpm',  base:'55',   dev:1.30, dir:'up',
+   chip:'+3',  vo:'Resting heart rate 58 beats per minute. 3 above your usual 55.'},
+  {k:'rr',    name:'Breathing',  value:'15.2',   unit:'/min', base:'14.6', dev:1.20, dir:'up',
+   chip:'+0.6',vo:'Breathing rate 15.2 per minute. 0.6 above your usual 14.6.'},
+  {k:'hrv',   name:'HRV',        value:'48',     unit:'ms',   base:'56',   dev:0.89, dir:'down',
+   chip:'8',   vo:'Heart rate variability 48 milliseconds. 8 under your usual 56.'},
+  {k:'sleep', name:'Sleep',      value:'6h 12m', unit:'',     base:'',     dev:0.60, dir:'flat',
+   chip:'',    vo:'Sleep 6 hours 12 minutes.'},
+  {k:'steps', name:'Steps',      value:'5,240',  unit:'',     base:'',     dev:0,    dir:'none',
+   unjudged:true, chip:'reads at midnight', vo:'Steps 5,240. Not yet judged, reads at midnight.'}
+];
+
+const LIVE_HR = '74';
+const SYNC_TIME = '07:04';
+
+const SCREENS = [
+  {id:'face',    grp:'A', label:'Watch face',                key:'complications in real slots'},
+  {id:'stack',   grp:'A', label:'Smart Stack',               key:'crown-down, 4 widgets'},
+  {id:'n1short', grp:'A', label:'Notification · flag',       key:'short look'},
+  {id:'n1long',  grp:'A', label:'Notification · flag',       key:'long look + 3 actions'},
+  {id:'n2short', grp:'A', label:'Notification · all clear',  key:'short look'},
+  {id:'n2long',  grp:'A', label:'Notification · all clear',  key:'long look, no actions'},
+  {id:'launch',  grp:'B', label:'App launch',                key:'cached state, no spinner'},
+  {id:'p1',      grp:'B', label:'1 · Status',                key:'entry, page 1 of 3'},
+  {id:'p2',      grp:'B', label:'2 · Signals',               key:'page 2 of 3'},
+  {id:'p3',      grp:'B', label:'3 · Sensitivity',           key:'page 3 of 3, crown dial'},
+  {id:'states',  grp:'C', label:'State index',               key:'every state, side by side'}
+];
+
+const STATES = [
+  ['loaded','loaded'],['loading','loading'],['cold','cold start'],['empty','empty'],
+  ['errhk','error · Health denied'],['errphone','error · phone away'],['stale','stale']
+];
+
+const S = {
+  screen:'face', size:46, state:'loaded', aod:false,
+  radar:'watching',       /* clear | watching | flagged */
+  sigma:1.0, page:0, stack:1, notifScroll:0,
+  btn:'idle',             /* idle | done | failed */
+  ack:true, tags:true, metaReading:false, focusRow:null
+};
+
+/* ── derived state ─────────────────────────────────────────────────────────── */
+function outsideCount(sig){
+  return SIG.filter(s=>!s.unjudged && s.dev >= sig - 1e-9).length;
+}
+function derived(){
+  const n = outsideCount(S.sigma);
+  if(S.state==='cold')  return 'cold';
+  if(S.state==='empty') return 'empty';
+  if(S.state==='errhk') return 'errhk';
+  if(S.radar==='flagged' && n>=2) return 'flagged';
+  return n>=2 ? 'watching' : 'clear';
+}
+function stateWord(d){
+  return d==='clear' ? 'All clear' : d==='flagged' ? 'Flagged' : 'Watching';
+}
+function stateColour(d){ return d==='clear' ? 'var(--optimal)' : 'var(--fair)'; }
+function glyphKind(d){ return d==='clear' ? 'clear' : d==='flagged' ? 'flagged' : 'watching'; }
+/* The two rows page 1 shows: closest signal to its line first. */
+function topTwo(){
+  const judged = SIG.filter(s=>!s.unjudged);
+  return judged.slice().sort((a,b)=>(S.sigma-a.dev)-(S.sigma-b.dev)).slice(0,2);
+}
+function freshKind(){
+  if(S.state==='errphone') return 'slash';        /* > 7 days */
+  if(S.state==='stale' || S.state==='loading') return 'ring';
+  return 'fresh';
+}
+
+/* ── svg primitives ────────────────────────────────────────────────────────── */
+let clipN = 0;
+function tick(x, pad, h){
+  return '<rect x="'+(x-1)+'" y="'+(pad-3)+'" width="2" height="'+(h+6)+'" rx="1" fill="var(--t2)"/>';
+}
+/* Margin bar. x-axis is 0 sigma (left) to 2.0 sigma (right). Tick sits at the
+   sensitivity line. Fill left of the tick is textTertiary, right of it is fair. */
+function bar(w,h,dev,sig,o){
+  o = o||{};
+  const pad = 4, H = h + pad*2, r = h/2;
+  const tx = Math.max(1.5, Math.min(w-1.5, (sig/2.0)*w));
+  const fw = Math.min(1, Math.abs(dev)/2.0) * w;
+  let s = '<svg class="bar'+(o.nosweep?' nosweep':'')+'" width="'+w+'" height="'+H+'" viewBox="0 0 '+w+' '+H+'" aria-hidden="true">';
+  if(o.hollow){
+    /* unjudged: a reading with no line applied to it yet */
+    s += '<rect x="0.75" y="'+(pad+0.75)+'" width="'+(w-1.5)+'" height="'+(h-1.5)+'" rx="'+r+'" fill="none" stroke="var(--t3)" stroke-width="1.5" opacity="0.8"/>';
+    return s + '</svg>';
+  }
+  if(o.aod){
+    s += '<rect x="0.75" y="'+(pad+0.75)+'" width="'+(w-1.5)+'" height="'+(h-1.5)+'" rx="'+r+'" fill="none" stroke="var(--t3)" stroke-width="1.5"/>';
+    s += tick(tx,pad,h);
+    return s + '</svg>';
+  }
+  s += '<rect x="0" y="'+pad+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="var(--surfaceSubtle)"/>';
+  const id = 'clp'+(clipN++);
+  s += '<defs><clipPath id="'+id+'"><rect x="0" y="'+pad+'" width="'+w+'" height="'+h+'" rx="'+r+'"/></clipPath></defs>';
+  s += '<g clip-path="url(#'+id+')">';
+  s += '<rect x="0" y="'+pad+'" width="'+Math.min(fw,tx)+'" height="'+h+'" fill="var(--t3)"/>';
+  if(fw > tx){
+    s += '<rect x="'+tx+'" y="'+pad+'" width="'+(fw-tx)+'" height="'+h+'" fill="var(--fair)" opacity="'+(o.solid?1:0.9)+'"/>';
+  }
+  s += '</g>';
+  s += tick(tx,pad,h);
+  return s + '</svg>';
+}
+/* State glyph. Shape carries the verdict, colour is the fourth channel. */
+function glyph(kind, px, colour, sw){
+  sw = sw || 2.5;
+  let i = '';
+  if(kind==='clear')
+    i = '<circle cx="14" cy="14" r="11.4" fill="none" stroke="'+colour+'" stroke-width="'+sw+'"/>'
+      + '<polyline points="8.4,14.4 12.4,18.4 19.6,10.2" fill="none" stroke="'+colour+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  else if(kind==='watching')
+    i = '<path d="M14 2.6 L25.4 14 L14 25.4 L2.6 14 Z" fill="none" stroke="'+colour+'" stroke-width="'+sw+'" stroke-linejoin="round"/>';
+  else if(kind==='flagged')
+    i = '<path fill-rule="evenodd" d="M14 2.4 L26.6 24.8 L1.4 24.8 Z M14 12.2 L18.2 24.8 L9.8 24.8 Z" fill="'+colour+'"/>';
+  else if(kind==='hollow')
+    i = '<circle cx="14" cy="14" r="11.4" fill="none" stroke="'+colour+'" stroke-width="'+sw+'"/>';
+  else if(kind==='slash')
+    i = '<circle cx="14" cy="14" r="11.4" fill="none" stroke="'+colour+'" stroke-width="'+sw+'"/>'
+      + '<line x1="6.2" y1="21.8" x2="21.8" y2="6.2" stroke="'+colour+'" stroke-width="2" stroke-linecap="round"/>';
+  return '<svg width="'+px+'" height="'+px+'" viewBox="0 0 28 28" aria-hidden="true">'+i+'</svg>';
+}
+/* Unicode glyph used inline in text rows and complications. */
+function tinyGlyph(d){ return d==='clear' ? '✓' : d==='flagged' ? '▲' : '◇'; }
+
+/* Freshness dot: filled / ring / ring + slash. Shape carries all three. */
+function freshDot(px, kind){
+  let i;
+  if(kind==='fresh') i = '<circle cx="6" cy="6" r="5" fill="'+(S.aod?'var(--t3)':'var(--optimal)')+'"/>';
+  else if(kind==='ring') i = '<circle cx="6" cy="6" r="4.2" fill="none" stroke="var(--t3)" stroke-width="1.5"/>';
+  else i = '<circle cx="6" cy="6" r="4.2" fill="none" stroke="var(--t3)" stroke-width="1.5"/>'
+         + '<line x1="2.4" y1="9.6" x2="9.6" y2="2.4" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round"/>';
+  return '<svg width="'+px+'" height="'+px+'" viewBox="0 0 12 12" aria-hidden="true">'+i+'</svg>';
+}
+function dashes(v){ return '–'.repeat(String(v).replace(/[^0-9a-zA-Z]/g,'').length || 2); }
+
+/* accessoryCircular gauge: closed ring, fill = margin on the closest signal,
+   0 = at or past its line, 1.0 = 2 sigma inside. Overshoot drawn outside. */
+function radarRing(px, d){
+  const judged = SIG.filter(s=>!s.unjudged);
+  const closest = judged.slice().sort((a,b)=>(S.sigma-a.dev)-(S.sigma-b.dev))[0];
+  const margin = S.sigma - closest.dev;                  /* sigma inside the line */
+  const frac = Math.max(0, Math.min(1, margin / 2.0));
+  const over = Math.max(0, -margin);
+  const sw = 2.5, r = (px - sw)/2, cx = px/2, C = 2*Math.PI*r;
+  const col = d==='clear' ? 'var(--optimal)' : 'var(--fair)';
+  let s = '<svg width="'+px+'" height="'+px+'" viewBox="0 0 '+px+' '+px+'" aria-hidden="true">';
+  s += '<g transform="rotate(-90 '+cx+' '+cx+')">';
+  s += '<circle cx="'+cx+'" cy="'+cx+'" r="'+r+'" fill="none" stroke="var(--surfaceSubtle)" stroke-width="'+sw+'"/>';
+  if(frac > 0.004)
+    s += '<circle cx="'+cx+'" cy="'+cx+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+(C*frac)+' '+C+'"/>';
+  if(over > 0.004){
+    const R2 = r + 3.2, C2 = 2*Math.PI*R2, f2 = Math.min(1, over) * 0.34;
+    s += '<circle cx="'+cx+'" cy="'+cx+'" r="'+R2+'" fill="none" stroke="var(--fair)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="'+(C2*f2)+' '+C2+'"/>';
+  }
+  s += '</g></svg>';
+  return s;
+}
+
+/* ── layout metrics per canvas size ───────────────────────────────────────── */
+function M(){
+  return S.size===46
+    ? {W:208,H:248,pad:10,cw:188,dot:6,gl:28,barH:6,p2pitch:34,p2top:28,p2cap:200,p2barH:4,
+       word:'title22', hero:'hero52', p3bars:[104,115,126,137,148], p3barH:3,
+       p1:{hdr:10,word:44,r1:76,b1:100,r2:112,b2:136,meta:150,btn:176},
+       p3:{hero:28,cap:84,count:158,btn:180},
+       /* row columns — name | value(+unit) | delta chip. See rationale §3 note on the
+          spec's x160/x164/x198 columns, which overlap at real glyph widths. */
+       r1:{nameW:66,nameFS:12,valW:76,valFS:17,unit:true,unitFS:11,chipW:42,chipFS:11},
+       r2:{nameW:64,nameFS:12,valW:66,valFS:17,chipW:54,chipFS:11},
+       face:{date:8,inline:22,circ:54,label:100,time:110,tsize:40,rect:162,rh:74},
+       stack:{cw:188,ch:82}}
+    : {W:162,H:197,pad:8,cw:146,dot:5,gl:24,barH:5,p2pitch:28,p2top:24,p2cap:170,p2barH:3,
+       word:'title20', hero:'hero40', p3bars:[84,93,102,111,120], p3barH:2.5,
+       p1:{hdr:8,word:36,r1:64,b1:86,r2:94,b2:116,meta:-1,btn:132},
+       p3:{hero:20,cap:64,count:130,btn:146},
+       r1:{nameW:62,nameFS:12,valW:42,valFS:15,unit:false,unitFS:10,chipW:40,chipFS:10},
+       r2:{nameW:56,nameFS:11,valW:46,valFS:14,chipW:42,chipFS:10},
+       face:{date:6,inline:18,circ:46,label:86,time:100,tsize:26,rect:138,rh:50},
+       stack:{cw:152,ch:70}};
+}
+/* One signal row, shared by page 1 and page 2. */
+function sigRow(s, col, aod, opts){
+  opts = opts || {};
+  const gap = 4;
+  const nameX = 0, valX = col.nameW, chipX = col.nameW + col.valW + gap;
+  const total = chipX + col.chipW;
+  let h = '';
+  h += '<span class="abs t'+(opts.nameTone||3)+'" style="left:'+nameX+'px;top:'+(S.size===46?4:2)+'px;width:'+col.nameW
+     + 'px;font-size:'+col.nameFS+'px;line-height:13px;overflow:hidden;white-space:nowrap">'+s.name+'</span>';
+  const val = aod ? dashes(s.value) : s.value;
+  h += '<span class="abs right" style="left:'+valX+'px;top:0;width:'+col.valW+'px;display:flex;align-items:baseline;'
+     + 'justify-content:flex-end;gap:3px;white-space:nowrap">'
+     + '<b style="font-size:'+col.valFS+'px;font-weight:600;color:'+(aod?'var(--t3)':'var(--t1)')+';line-height:20px">'+val+'</b>'
+     + (col.unit && s.unit && !aod ? '<i class="t3" style="font-size:'+col.unitFS+'px;font-style:normal;line-height:14px">'+s.unit+'</i>' : '')
+     + '</span>';
+  if(!aod){
+    h += '<span class="abs right" style="left:'+chipX+'px;top:'+(s.unjudged?-2:5)+'px;width:'+col.chipW
+       + 'px;font-size:'+col.chipFS+'px;line-height:'+(s.unjudged?12:13)+'px">'+chipText(s, col.chipFS)+'</span>';
+  }
+  return {html:h, width:total};
+}
+function chipText(s, fs){
+  if(s.unjudged) return '<span class="t3">reads&nbsp;at<br>midnight</span>';
+  if(s.dir==='flat') return '<span class="t3">– inside</span>';
+  const arrow = s.dir==='up' ? '▲' : '▼';
+  const on = s.dev >= S.sigma - 1e-9;
+  return '<span class="'+(on?'cFair':'t3')+'">'+arrow+' '+s.chip+'</span>';
+}
+
+/* ═══════════════════════════ SURFACE: WATCH FACE ═══════════════════════════ */
+function renderFace(){
+  const m = M(), d = derived(), aod = S.aod;
+  const big = m.W===208;
+  const n = outsideCount(S.sigma);
+  const g = big ? 32 : 28;
+  const tagsOn = S.tags && !aod;
+  const inlineTxt = d==='clear'
+    ? tinyGlyph(d)+' Radar: clear, RHR closest'
+    : tinyGlyph(d)+' Radar: '+n+' signals out';
+  /* vertical rhythm, per size, so nothing overruns the shorter canvas */
+  const F = m.face;
+
+  let h = '';
+  h += '<div class="abs cap11 t3" style="left:'+m.pad+'px;top:'+F.date+'px;letter-spacing:.06em">TUE 29</div>';
+
+  /* accessoryInline — one row of text, one tap target */
+  h += '<button class="slot" data-link="signalrow" aria-label="'+inlineTxt+'. Opens the closest signal."'
+     + ' style="left:'+m.pad+'px;top:'+F.inline+'px;width:'+m.cw+'px;height:16px;background:transparent;border:0;padding:0;text-align:left">'
+     + '<span class="cap12 '+(aod?'t3':(d==='clear'?'cOpt':'cFair'))+'" style="font-weight:600">'+inlineTxt+'</span></button>';
+  if(tagsOn) h += '<div class="faceTag" style="left:'+m.pad+'px;top:'+(F.inline+15)+'px">accessoryInline</div>';
+
+  /* three circular slots — Activity (system) · Laso · Weather (system) */
+  const x1 = m.pad, x2 = Math.round((m.W-g)/2), x3 = m.W - m.pad - g;
+  h += '<div class="abs" style="left:'+x1+'px;top:'+F.circ+'px">'+sysRings(g)+'</div>';
+  h += '<button class="slot" data-link="status" aria-label="Laso Radar. '+(aod?'Redacted.':stateWord(d)+'. '+n+' of 5 signals outside.')+'"'
+     + ' style="left:'+x2+'px;top:'+F.circ+'px;width:'+g+'px;height:'+g+'px;background:transparent;border:0;padding:0">'
+     + '<span class="abs" style="left:0;top:0">'+(aod?ringAod(g):radarRing(g,d))+'</span>'
+     + '<span class="abs" style="left:'+((g-11)/2)+'px;top:'+((g-11)/2)+'px">'
+     +   glyph(aod?'hollow':glyphKind(d), 11, aod?'var(--t3)':stateColour(d), 2) + '</span></button>';
+  h += '<div class="abs" style="left:'+x3+'px;top:'+F.circ+'px">'+sysWeather(g)+'</div>';
+  if(tagsOn) h += '<div class="faceTag" style="left:'+(x2-14)+'px;top:'+(F.circ+g+1)+'px">accessoryCircular</div>';
+
+  /* widgetLabel — the Infograph bezel string */
+  h += '<div class="abs cap10 t3 center" style="left:0;top:'+F.label+'px;width:'+m.W+'px;letter-spacing:.04em">'
+     + (aod ? 'Radar' : (d==='clear' ? 'Clear · RHR' : stateWord(d)+' · RHR')) + '</div>';
+  /* the widgetLabel string has no room for a dev tag beside it at either size —
+     it is named in the caption under the bezel instead */
+
+  /* the time */
+  h += '<div class="abs right" style="right:'+m.pad+'px;top:'+F.time+'px;font-size:'+F.tsize+'px;font-weight:600;color:'
+     + (aod?'var(--t3)':'var(--t1)')+';letter-spacing:-1px;line-height:1">14:32</div>';
+
+  /* accessoryRectangular */
+  h += '<button class="slot" data-link="signals" aria-label="Laso Radar, five margins. Opens the signals page."'
+     + ' style="left:'+m.pad+'px;top:'+F.rect+'px;width:'+m.cw+'px;height:'+F.rh+'px;background:transparent;border:0;padding:0;text-align:left">'
+     + rectComplication(m.cw, d, n, aod) + '</button>';
+  if(tagsOn) h += '<div class="faceTag" style="left:'+m.pad+'px;top:'+(F.rect-11)+'px">accessoryRectangular</div>';
+
+  return h;
+}
+function ringAod(px){
+  const sw=2.5, r=(px-sw)/2, cx=px/2;
+  return '<svg width="'+px+'" height="'+px+'" viewBox="0 0 '+px+' '+px+'" aria-hidden="true">'
+       + '<circle cx="'+cx+'" cy="'+cx+'" r="'+r+'" fill="none" stroke="var(--t3)" stroke-width="1.5" opacity=".55"/></svg>';
+}
+function rectComplication(w, d, n, aod){
+  /* 193 × 82pt at 45/49mm; the 41mm box is 171.5 × 73, so 40mm steps the type down */
+  const cmp = w < 170;                      /* compact = 40mm */
+  const rowH = cmp ? 4 : 5, tFS = cmp ? 13 : 15, cFS = cmp ? 10 : 11, gFS = cmp ? 11 : 12;
+  const rows = SIG.map(s=>{
+    if(s.unjudged) return '<div style="height:'+rowH+'px">'+bar(w,3,0,S.sigma,{hollow:true,nosweep:true})+'</div>';
+    return '<div style="height:'+rowH+'px">'+bar(w,3,s.dev,S.sigma,{aod:aod,solid:d==='flagged',nosweep:true})+'</div>';
+  }).join('');
+  const title = aod ? 'Radar' : (d==='clear' ? 'All clear · 0 of 5' : stateWord(d)+' · '+n+' of 5');
+  return '<div style="width:'+w+'px">'
+    + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
+    +   '<span style="display:inline-flex">'+glyph(aod?'hollow':glyphKind(d),gFS,aod?'var(--t3)':stateColour(d),2.4)+'</span>'
+    +   '<span class="'+(aod?'t3':'t1')+'" style="font-size:'+tFS+'px;font-weight:600;line-height:'+(tFS+3)+'px">'+title+'</span></div>'
+    + '<div style="margin-top:-2px">'+rows+'</div>'
+    + '<div class="t3" style="margin-top:2px;font-size:'+cFS+'px;line-height:'+(cFS+2)+'px">'
+    +   (aod?'checked '+SYNC_TIME:'heart '+LIVE_HR+' now')+'</div>'
+    + '</div>';
+}
+function sysRings(px){
+  const c=px/2, sw=px>30?3.4:3, R=[c-sw/2-1, c-sw/2-1-sw-1.4, c-sw/2-1-2*(sw+1.4)];
+  const vals=[0.46,0.40,0.50], cols=['#FF2D55','#A6FF00','#04C7DD'];
+  let s='<svg width="'+px+'" height="'+px+'" viewBox="0 0 '+px+' '+px+'" aria-hidden="true"><g transform="rotate(-90 '+c+' '+c+')">';
+  R.forEach((r,i)=>{const C=2*Math.PI*r;
+    s+='<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+cols[i]+'" stroke-width="'+sw+'" opacity=".22"/>';
+    s+='<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+cols[i]+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+(C*vals[i])+' '+C+'"/>';});
+  return s+'</g></svg>';
+}
+function sysWeather(px){
+  return '<div style="width:'+px+'px;height:'+px+'px;border-radius:9999px;background:var(--surfaceSubtle);display:flex;'
+    + 'flex-direction:column;align-items:center;justify-content:center;line-height:1">'
+    + '<span class="cap11 t2" style="font-size:13px;font-weight:600">18°</span>'
+    + '<span class="cap10 t3" style="font-size:8px">Clear</span></div>';
+}
+
+/* ═══════════════════════════ SURFACE: SMART STACK ══════════════════════════ */
+function renderStack(){
+  /* HIG widget canvas: 152 × 69.5pt at 40mm rising to 191 × 81.5pt at 49mm.
+     Apple publishes no row for 46mm, so 46mm is treated as ≈45mm — 188 × 82. */
+  const m = M(), d = derived(), aod = S.aod, n = outsideCount(S.sigma);
+  const cw = m.stack.cw, ch = m.stack.ch;
+  const cards = [
+    {t:'sys', html:sysWidget('Weather', '18°  Clear', 'Rain 21:00 · 44% chance')},
+    {t:'laso', html:lasoWidget(cw, d, n, aod)},
+    {t:'sys', html:sysWidget('Activity', 'Move 284 / 620', 'Exercise 12 / 30 · Stand 6 / 12')},
+    {t:'sys', html:sysWidget('World Clock', 'London 09:32', 'New York 04:32')}
+  ];
+  let track = '';
+  cards.forEach((c,i)=>{
+    track += '<div class="wcard'+(c.t==='laso'?' laso':'')+'" style="width:'+cw+'px;height:'+ch+'px;padding:'
+      + (cw<170?'7px 8px':'8px 10px')+';'+ (i===S.stack?'':'opacity:.5')+'">'
+      + (c.t==='laso' && S.tags && !aod && cw>=170 ? '<span class="wtag">accessoryRectangular</span>' : '')
+      + c.html + '</div>';
+  });
+  const off = 34 - S.stack*(ch+8);
+  const lx = Math.round((m.W - cw)/2);
+  let h = '<div class="abs right cap11" style="right:'+m.pad+'px;top:8px;font-size:13px;font-weight:600;color:var(--t2);z-index:3">14:32</div>';
+  h += '<div class="stackview"><div class="stacktrack" style="left:'+lx+'px;top:'+off+'px;width:'+cw+'px">'+track+'</div></div>';
+  return h;
+}
+function sysWidget(name, big, sub){
+  const c = M().stack.cw < 170;
+  return '<div class="t3" style="font-size:'+(c?9:10)+'px;letter-spacing:.06em;text-transform:uppercase">'+name+'</div>'
+    + '<div class="t1" style="margin-top:4px;font-size:'+(c?15:17)+'px;font-weight:600;line-height:20px">'+big+'</div>'
+    + '<div class="t3" style="margin-top:5px;font-size:'+(c?10:11)+'px;line-height:13px">'+sub+'</div>';
+}
+function lasoWidget(w, d, n, aod){
+  const cmp = w < 170;                       /* 40mm: 152 × 69.5pt, 8pt padding */
+  const cw = w - (cmp ? 16 : 20);
+  const tFS = cmp ? 13 : 15, bFS = cmp ? 11 : 12, cFS = cmp ? 10 : 11, gPX = cmp ? 11 : 12;
+  const chipW = cmp ? 28 : 40, barW = cmp ? 26 : 36, gap = 4;
+  const nameW = cw - chipW - barW - gap*2;
+  const title = (t,g,col)=>'<div style="display:flex;align-items:center;gap:5px">'
+    + glyph(g,gPX,col,2.4)
+    + '<span class="'+(aod?'t3':'t1')+'" style="font-size:'+tFS+'px;font-weight:600;line-height:'+(tFS+3)
+    + 'px;white-space:nowrap">'+t+'</span></div>';
+  if(aod){
+    return title('Radar','hollow','var(--t3)')
+      + '<div class="t3" style="margin-top:6px;font-size:'+bFS+'px">Resting HR '+dashes('58')+'</div>'
+      + '<div class="t3" style="margin-top:4px;font-size:'+bFS+'px">Breathing '+dashes('152')+'</div>'
+      + '<div class="t3" style="margin-top:6px;font-size:'+cFS+'px">Checked '+SYNC_TIME+'</div>';
+  }
+  if(d==='clear'){
+    const c = topTwo()[0];
+    return title('All clear','clear','var(--optimal)')
+      + '<div style="display:flex;align-items:center;gap:6px;margin-top:6px">'
+      +   '<span class="t2" style="width:'+(cw-barW-6)+'px;font-size:'+bFS+'px;white-space:nowrap">Closest: resting HR</span>'
+      +   '<span style="width:'+barW+'px">'+bar(barW,3,c.dev,S.sigma,{nosweep:true})+'</span></div>'
+      + '<div class="t3" style="margin-top:7px;font-size:'+cFS+'px;white-space:nowrap">5 of 5 inside · checked '+SYNC_TIME+'</div>';
+  }
+  const two = topTwo();
+  /* name+value · delta chip · 3pt margin bar with the tick · pitch 17 */
+  const row = (s)=>'<div style="display:flex;align-items:center;gap:'+gap+'px;margin-top:4px;height:14px">'
+    + '<span class="t2" style="width:'+nameW+'px;font-size:'+bFS+'px;overflow:hidden;white-space:nowrap">'+s.name+' '+s.value+'</span>'
+    + '<span style="width:'+chipW+'px;text-align:right;font-size:'+(cmp?10:11)+'px;line-height:13px">'+chipText(s,11)+'</span>'
+    + '<span style="width:'+barW+'px">'+bar(barW,3,s.dev,S.sigma,{solid:d==='flagged',nosweep:true})+'</span></div>';
+  return title(stateWord(d)+' · '+n+' signals', glyphKind(d), stateColour(d))
+    + row(two[0]) + row(two[1]);
+}
+
+/* ═══════════════════════════ SURFACE: NOTIFICATIONS ════════════════════════ */
+function renderShort(which){
+  const m = M();
+  const title = 'Laso Radar';
+  const body = which==='n1'
+    ? 'Two signals moved together last night.'
+    : 'Your signals are back inside their lines.';
+  const col = which==='n1' ? 'var(--fair)' : 'var(--optimal)';
+  let h = '<div class="abs" style="left:0;top:'+(m.W===208?46:34)+'px;width:'+m.W+'px;display:flex;justify-content:center">'
+    + '<div style="width:46px;height:46px;border-radius:12px;background:var(--surfaceRaised);border:1px solid var(--borderLow);display:flex;align-items:center;justify-content:center">'
+    + glyph(which==='n1'?'watching':'clear',24,col,2.5) + '</div></div>';
+  h += '<div class="abs center head17 t1" style="left:'+m.pad+'px;top:'+(m.W===208?106:88)+'px;width:'+m.cw+'px">'+title+'</div>';
+  h += '<div class="abs center foot13 t2" style="left:'+m.pad+'px;top:'+(m.W===208?132:112)+'px;width:'+m.cw+'px;line-height:17px">'+body+'</div>';
+  h += '<div class="abs center cap11 t3" style="left:'+m.pad+'px;bottom:14px;width:'+m.cw+'px">now</div>';
+  return h;
+}
+function renderLong(which){
+  const m = M();
+  const col = which==='n1' ? 'var(--fair)' : 'var(--optimal)';
+  const kind = which==='n1' ? 'watching' : 'clear';
+  let c = '';
+  c += '<div class="sash" style="background:'+(which==='n1'?'rgba(227,180,90,.22)':'rgba(51,196,141,.22)')+';color:'+col+'">'
+     + glyph(kind,16,col,2.5) + '<span>Laso</span><span style="margin-left:auto;font-weight:400;opacity:.8">now</span></div>';
+  c += '<div class="nbody" style="margin:8px '+m.pad+'px 0;padding:10px 10px 12px;width:'+m.cw+'px">';
+
+  if(which==='n1'){
+    c += '<div class="t1" style="font-size:16px;font-weight:600;line-height:19px">Two signals moved together</div>';
+    c += '<div class="t2" style="font-size:12.5px;line-height:15px;margin-top:7px">Resting HR 58, up 3 from 55</div>';
+    c += '<div style="margin-top:1px">'+bar(m.cw-20,3,1.30,S.sigma,{})+'</div>';
+    c += '<div class="t2" style="font-size:12.5px;line-height:15px;margin-top:3px">Breathing 15.2, up 0.6 from 14.6</div>';
+    c += '<div style="margin-top:1px">'+bar(m.cw-20,3,1.20,S.sigma,{})+'</div>';
+    c += '<div class="cap11 t3" style="margin-top:7px;line-height:13px">'
+       + 'Second night at these levels · confidence low</div>';
+    c += '<div style="margin-top:5px;display:flex;gap:3px">'
+       + '<i style="display:block;width:'+((m.cw-26)/3)+'px;height:3px;border-radius:2px;background:var(--fair)"></i>'
+       + '<i style="display:block;width:'+((m.cw-26)/3)+'px;height:3px;border-radius:2px;background:var(--surfaceSubtle)"></i>'
+       + '<i style="display:block;width:'+((m.cw-26)/3)+'px;height:3px;border-radius:2px;background:var(--surfaceSubtle)"></i></div>';
+  } else {
+    c += '<div class="head17 t1" style="line-height:21px">Back to clear</div>';
+    c += '<div class="foot13 t2" style="margin-top:8px">Resting HR 55, back at baseline</div>';
+    c += '<div class="foot13 t2" style="margin-top:5px">Breathing 14.5, back at baseline</div>';
+    c += '<div class="cap11 t3" style="margin-top:10px">Flagged for 2 days</div>';
+  }
+  c += '</div>';
+
+  if(which==='n1'){
+    c += '<div style="margin:10px '+m.pad+'px 0;width:'+m.cw+'px;display:flex;flex-direction:column;gap:6px">'
+      + '<button class="nact dt" data-act="easyDay">Take it easy today</button>'
+      + '<button class="nact" data-act="doesNotMatch">Doesn’t match</button>'
+      + '<button class="nact" data-act="mute7d">Mute 7 days</button>'
+      + '<button class="nact dismiss" data-act="dismiss">Dismiss</button></div>';
+  } else {
+    c += '<div style="margin:10px '+m.pad+'px 0;width:'+m.cw+'px">'
+      + '<button class="nact dismiss" data-act="dismiss">Dismiss</button></div>';
+  }
+  c += '<div style="height:16px"></div>';
+  return '<div class="scroller"><div class="scrollinner" id="ninner" style="transform:translateY(-'+S.notifScroll+'px)">'+c+'</div></div>';
+}
+
+/* ═══════════════════════════ APP · PAGE 1 — STATUS ═════════════════════════ */
+function renderP1(){
+  const m = M(), L = m.p1, d = derived(), aod = S.aod;
+
+  if(aod)   return p1Aod();
+  if(d==='cold')  return p1Cold();
+  if(d==='empty') return p1Empty();
+  if(d==='errhk') return p1ErrHK();
+
+  const two = topTwo();
+  const n = outsideCount(S.sigma);
+  let h = '';
+
+  /* freshness dot, top right */
+  h += '<div class="abs" style="right:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+freshDot(m.dot, freshKind())+'</div>';
+  /* state glyph */
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+glyph(glyphKind(d), m.gl, stateColour(d))+'</div>';
+  /* state word — combined with the glyph as one VoiceOver header */
+  h += '<div class="abs '+m.word+' fadein" role="heading" aria-level="1" style="left:'+m.pad+'px;top:'+L.word+'px;color:'+stateColour(d)+'" '
+     + 'aria-label="Radar. '+stateWord(d)+'. '+(n===0?'Nothing outside its usual range.':n+' signal'+(n>1?'s':'')+' outside their usual range.')+'">'
+     + stateWord(d)+'</div>';
+
+  /* two signal rows + margin bars */
+  const rowY = [L.r1, L.r2], barY = [L.b1, L.b2];
+  two.forEach((s,i)=>{
+    const on = s.dev >= S.sigma - 1e-9;
+    const r = sigRow(s, m.r1, false, {});
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+rowY[i]+'px;width:'+m.cw+'px;height:20px" '
+       + 'aria-label="'+s.vo+' '+(on?'Outside the line.':'Inside the line.')+'">' + r.html + '</div>';
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+(barY[i]-4)+'px">'+bar(m.cw, m.barH, s.dev, S.sigma, {solid:d==='flagged'})+'</div>';
+  });
+
+  /* meta line — dropped at 40mm, moves into the VoiceOver label */
+  const metaTxt = metaLine(d);
+  if(L.meta > 0){
+    h += '<div class="abs cap11 t3" style="left:'+m.pad+'px;top:'+L.meta+'px;width:'+m.cw+'px">'+metaTxt+'</div>';
+  }
+
+  /* the one action */
+  h += actionButton(d, m, L.btn, metaTxt);
+
+  /* freshness read last, despite sitting top-right */
+  h += '<div class="abs" style="left:-9999px;top:0" aria-label="Lines synced today at 7:04.">Lines synced today at '+SYNC_TIME+'.</div>';
+  return h;
+}
+function metaLine(d){
+  if(S.state==='loading') return 'First night · reading now';
+  if(S.btn==='rejected')  return 'Noted. This one won’t flag again for 3 days.';
+  if(d==='clear')   return 'Closest: resting HR · heart '+LIVE_HR+' now';
+  if(d==='flagged') return 'Second night · heart '+LIVE_HR+' now';
+  return 'First night · heart '+LIVE_HR+' now';
+}
+function actionButton(d, m, top, metaTxt){
+  let label, cls = 'btn', dis = '', act = 'easyDay';
+  if(d==='clear'){ label='Mute for 7 days'; cls='btn quiet'; act='mute7d'; }
+  else label='Take it easy today';
+  if(S.btn==='done'){ label='Easy day set ✓'; dis=' disabled'; }
+  if(S.btn==='failed'){ label='Not saved · tap again'; }
+  const h = m.W===208 ? 44 : 44;
+  return '<button class="'+cls+' abs" data-act="'+act+'"'+dis+' style="left:'+m.pad+'px;top:'+top+'px;width:'+m.cw+'px;height:'+h+'px'
+    + (S.btn==='done'?';color:var(--optimal)':'')+'" aria-label="'+label+'. Button.">'+label+'</button>';
+}
+
+function p1Aod(){
+  const m = M(), L = m.p1;
+  const two = topTwo();
+  let h = '';
+  h += '<div class="abs" style="right:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+freshDot(m.dot, freshKind())+'</div>';
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+glyph('hollow', m.gl, 'var(--t3)')+'</div>';
+  h += '<div class="abs '+m.word+' t3" style="left:'+m.pad+'px;top:'+L.word+'px">Radar</div>';
+  const rowY=[L.r1,L.r2], barY=[L.b1,L.b2];
+  two.forEach((s,i)=>{
+    const r = sigRow(s, m.r1, true, {});
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+rowY[i]+'px;width:'+m.cw+'px;height:20px">'+r.html+'</div>';
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+(barY[i]-4)+'px">'+bar(m.cw, m.barH, s.dev, S.sigma, {aod:true,nosweep:true})+'</div>';
+  });
+  if(L.meta>0) h += '<div class="abs cap11 t3" style="left:'+m.pad+'px;top:'+L.meta+'px">Checked '+SYNC_TIME+'</div>';
+  h += '<button class="btn aod abs" data-act="noop" style="left:'+m.pad+'px;top:'+L.btn+'px;width:'+m.cw+'px;height:44px">Take it easy today</button>';
+  return h;
+}
+function p1Cold(){
+  const m = M(), L = m.p1, big = m.W===208;
+  const Y = big ? {word:44,l2:78,bar:100,l3:116} : {word:32,l2:84,bar:100,l3:112};
+  let h = '';
+  h += '<div class="abs" style="right:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+freshDot(m.dot,'ring')+'</div>';
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+glyph('hollow', m.gl, 'var(--t3)')+'</div>';
+  h += '<div class="abs '+m.word+' t2" style="left:'+m.pad+'px;top:'+Y.word+'px;width:'+m.cw+'px;line-height:'+(big?26:22)+'px">Learning your lines</div>';
+  h += '<div class="abs t2" style="left:'+m.pad+'px;top:'+Y.l2+'px;width:'+m.cw+'px;font-size:'+(big?12:11)+'px;line-height:14px">Radar needs 14 nights. 6 done.</div>';
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+Y.bar+'px">'
+     + '<svg width="'+m.cw+'" height="'+m.barH+'" viewBox="0 0 '+m.cw+' '+m.barH+'" aria-hidden="true">'
+     + '<rect x="0" y="0" width="'+m.cw+'" height="'+m.barH+'" rx="'+(m.barH/2)+'" fill="var(--surfaceSubtle)"/>'
+     + '<rect x="0" y="0" width="'+(m.cw*6/14)+'" height="'+m.barH+'" rx="'+(m.barH/2)+'" fill="var(--primary)"/></svg></div>';
+  h += '<div class="abs t3" style="left:'+m.pad+'px;top:'+Y.l3+'px;width:'+m.cw+'px;font-size:'+(big?12:11)+'px;line-height:14px">It starts watching on 12 Aug.</div>';
+  h += '<button class="btn quiet abs" data-act="goSignals" style="left:'+m.pad+'px;top:'+L.btn+'px;width:'+m.cw+'px;height:44px">See what it watches</button>';
+  return h;
+}
+function p1Empty(){
+  const m = M(), L = m.p1, big = m.W===208;
+  const Y = big ? {word:44,l2:78,l3:112,l4:134} : {word:32,l2:84,l3:-1,l4:112};
+  let h = '';
+  h += '<div class="abs" style="right:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+freshDot(m.dot,'ring')+'</div>';
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+glyph('hollow', m.gl, 'var(--t3)')+'</div>';
+  h += '<div class="abs '+m.word+' t2" style="left:'+m.pad+'px;top:'+Y.word+'px;width:'+m.cw+'px;line-height:'+(big?26:22)+'px">No night to read</div>';
+  h += '<div class="abs t2" style="left:'+m.pad+'px;top:'+Y.l2+'px;width:'+m.cw+'px;font-size:'+(big?13:11)+'px;line-height:15px">Your watch wasn’t worn last night.</div>';
+  /* 40mm drops the reassurance line, the same trade the meta line takes on the loaded screen */
+  if(Y.l3>0) h += '<div class="abs t3" style="left:'+m.pad+'px;top:'+Y.l3+'px;width:'+m.cw+'px;font-size:12px;line-height:14px">Daytime signals still watched.</div>';
+  h += '<div class="abs t2" style="left:'+m.pad+'px;top:'+Y.l4+'px;width:'+m.cw+'px;font-size:12px;line-height:14px">Heart '+LIVE_HR+' now · steps 5,240</div>';
+  h += '<button class="btn quiet abs" data-act="mute7d" style="left:'+m.pad+'px;top:'+L.btn+'px;width:'+m.cw+'px;height:44px">Mute for 7 days</button>';
+  return h;
+}
+function p1ErrHK(){
+  const m = M(), L = m.p1;
+  let h = '';
+  h += '<div class="abs" style="right:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+freshDot(m.dot,'ring')+'</div>';
+  h += '<div class="abs" style="left:'+m.pad+'px;top:'+L.hdr+'px" aria-hidden="true">'+glyph('slash', m.gl, 'var(--t3)')+'</div>';
+  h += '<div class="abs '+m.word+' t2" style="left:'+m.pad+'px;top:'+L.word+'px;width:'+m.cw+'px">Radar can’t read</div>';
+  h += '<div class="abs foot13 t2" style="left:'+m.pad+'px;top:'+(L.r1+(m.W===208?14:8))+'px;width:'+m.cw+'px;line-height:16px">Health access is off for Laso on this watch.</div>';
+  h += '<div class="abs cap11 t3" style="left:'+m.pad+'px;top:'+(L.r2+(m.W===208?18:22))+'px;width:'+m.cw+'px;line-height:14px">Settings › Privacy &amp; Security › Health › Laso</div>';
+  const lbl = S.btn==='failed' ? 'Already asked · use Settings' : 'Ask again';
+  h += '<button class="btn quiet abs" data-act="askAgain" style="left:'+m.pad+'px;top:'+L.btn+'px;width:'+m.cw+'px;height:44px">'+lbl+'</button>';
+  return h;
+}
+
+/* ═══════════════════════════ APP · PAGE 2 — SIGNALS ════════════════════════ */
+function renderP2(){
+  const m = M(), d = derived(), aod = S.aod;
+  let h = '';
+  h += '<div class="abs cap12 t3" style="left:'+m.pad+'px;top:8px" role="heading" aria-level="1" aria-label="Watched signals. Checked 7:04.">Watched signals</div>';
+  h += '<div class="abs cap11 t3 right" style="right:'+m.pad+'px;top:9px">'+SYNC_TIME+'</div>';
+
+  SIG.forEach((s,i)=>{
+    const y = m.p2top + i*m.p2pitch;
+    const on = !s.unjudged && s.dev >= S.sigma - 1e-9;
+    const focus = S.focusRow === s.k;
+    const vo = s.vo + ' ' + (s.unjudged ? '' : (on?'Outside the line.':'Inside the line.'));
+    const r = sigRow(s, m.r2, aod, {nameTone:2});
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+y+'px;width:'+m.cw+'px;height:20px'
+       + (focus?';outline:2px solid var(--primary);outline-offset:3px;border-radius:6px':'')+'" aria-label="'+vo+'">'
+       + r.html + '</div>';
+    /* the unjudged steps note runs to two lines, so its bar drops clear of it */
+    const by = y + (m.W===208 ? 22 : 19) - 4 + (s.unjudged && !aod ? (m.W===208?8:6) : 0);
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+by+'px">'
+       + bar(m.cw, m.p2barH, s.dev, S.sigma,
+             {hollow: s.unjudged || S.state==='cold', aod:aod, solid:d==='flagged'})+'</div>';
+  });
+
+  h += '<div class="abs t3" style="left:'+m.pad+'px;top:'+m.p2cap+'px;width:'+m.cw+'px;font-size:'
+     + (m.W===208?11:10)+'px;line-height:12px">'+p2Caption()+'</div>';
+  return h;
+}
+function p2Caption(){
+  if(S.state==='cold')     return 'Readings only. No lines yet — 6 of 14 nights done.';
+  if(S.state==='errphone') return 'Lines are over a week old. Still watching with them.';
+  if(S.state==='stale')    return 'Lines from your last 60 days, synced '+SYNC_TIME
+    + '<br><span style="opacity:.85">The wrist updates about 4 times an hour, so it can trail the phone.</span>';
+  if(S.aod)                return 'Checked '+SYNC_TIME;
+  return 'Lines from your last 60 days';
+}
+
+/* ═══════════════════════════ APP · PAGE 3 — SENSITIVITY ════════════════════ */
+function renderP3(){
+  const m = M(), L = m.p3, d = derived(), aod = S.aod;
+  const n = outsideCount(S.sigma);
+  let h = '';
+  h += '<div class="abs cap12 t3" style="left:'+m.pad+'px;top:8px" role="heading" aria-level="1">Sensitivity</div>';
+  h += '<div class="abs center '+m.hero+' '+(aod?'t3':'t1')+'" style="left:0;top:'+L.hero+'px;width:'+m.W+'px" '
+     + 'role="slider" tabindex="0" aria-valuemin="1.0" aria-valuemax="2.0" aria-valuenow="'+S.sigma.toFixed(1)+'" '
+     + 'aria-label="Trigger distance '+S.sigma.toFixed(1).replace('.',' point ')+' of your usual swing. Adjustable with the Digital Crown." id="dial">'
+     + (aod ? '–.–' : S.sigma.toFixed(1)) + '</div>';
+  h += '<div class="abs center cap12 t3" style="left:0;top:'+L.cap+'px;width:'+m.W+'px">of your usual swing</div>';
+
+  SIG.forEach((s,i)=>{
+    h += '<div class="abs" style="left:'+m.pad+'px;top:'+m.p3bars[i]+'px" aria-hidden="true">'
+       + bar(m.cw, m.p3barH, s.dev, S.sigma, {hollow:s.unjudged, aod:aod, solid:d==='flagged', nosweep:true})+'</div>';
+  });
+
+  h += '<div class="abs foot13 t2" style="left:'+m.pad+'px;top:'+L.count+'px;width:'+m.cw+'px" aria-live="polite" '
+     + 'aria-label="'+n+' of 5 signals outside today.">'+(aod?'– of 5 outside today':n+' of 5 outside today')+'</div>';
+  h += '<button class="btn quiet abs'+(aod?' aod':'')+'" data-act="mute7d" style="left:'+m.pad+'px;top:'+L.btn+'px;width:'+m.cw+'px;height:44px" '
+     + 'aria-label="Mute for 7 days. Button.">Mute for 7 days</button>';
+  return h;
+}
+
+/* ═══════════════════════════ REFERENCE: STATE INDEX ════════════════════════ */
+function renderStates(){
+  const m = M();
+  const rows = [
+    ['loaded',   'Watching · 2 of 5 · full colour'],
+    ['loading',  'cached state at full opacity, meta reads "reading now"'],
+    ['cold',     '"Learning your lines" · 6 of 14 · starts 12 Aug'],
+    ['empty',    '"No night to read" · daytime signals still watched'],
+    ['errhk',    '"Radar can’t read" · Settings path · Ask again'],
+    ['errphone', 'page 1 is fully normal · dot slashed · caption ages'],
+    ['stale',    'dot ringed · caption names the exact sync time']
+  ];
+  let h = '<div class="abs cap12 t3" style="left:'+m.pad+'px;top:8px">States</div>';
+  rows.forEach((r,i)=>{
+    const on = S.state===r[0];
+    h += '<button class="abs" data-setstate="'+r[0]+'" style="left:'+m.pad+'px;top:'+(26+i*30)+'px;width:'+m.cw+'px;height:28px;'
+      + 'background:'+(on?'var(--surfaceElevated)':'var(--surfaceRaised)')+';border:1px solid '+(on?'var(--primary)':'var(--borderLow)')
+      + ';border-radius:8px;color:var(--t1);font-family:inherit;font-size:11px;font-weight:600;text-align:left;padding:0 8px;cursor:pointer">'
+      + r[0] + '</button>';
+  });
+  h += '<div class="abs cap11 t3" style="left:'+m.pad+'px;top:'+(26+rows.length*30+4)+'px;width:'+m.cw+'px;line-height:13px">Tap one, then open page 1.</div>';
+  return h;
+}
+
+/* ═══════════════════════════ RENDER ROOT ═══════════════════════════════════ */
+const canvas = document.getElementById('canvas');
+const screenEl = document.getElementById('screen');
+let lastScreen = null;
+
+function render(){
+  const m = M();
+  screenEl.dataset.size = String(S.size);
+  /* display corner radius scales with the case: 30pt at 46mm, 24pt at 40mm */
+  document.querySelector('.watch').style.setProperty('--r', S.size===46 ? '30px' : '24px');
+  let inner = '';
+  const sc = S.screen;
+
+  if(sc==='face')        inner = renderFace();
+  else if(sc==='stack')  inner = renderStack();
+  else if(sc==='n1short')inner = renderShort('n1');
+  else if(sc==='n1long') inner = renderLong('n1');
+  else if(sc==='n2short')inner = renderShort('n2');
+  else if(sc==='n2long') inner = renderLong('n2');
+  else if(sc==='states') inner = renderStates();
+  else {                                   /* launch + p1..p3 share the TabView */
+    inner = S.page===0 ? renderP1() : S.page===1 ? renderP2() : renderP3();
+    inner += '<div class="dots" role="tablist" aria-label="Radar pages">'
+      + [0,1,2].map(i=>'<button role="tab" data-page="'+i+'" aria-current="'+(S.page===i)+'" aria-label="Page '+(i+1)+' of 3"></button>').join('')
+      + '</div>';
+  }
+
+  canvas.innerHTML = inner;
+  canvas.classList.toggle('aoddim', S.aod && (sc==='face' || sc==='stack'));
+  if(lastScreen !== sc + '|' + S.page){
+    canvas.classList.remove('anim'); void canvas.offsetWidth; canvas.classList.add('anim');
+    lastScreen = sc + '|' + S.page;
+  }
+  paintChrome();
+}
+
+/* ── page chrome ───────────────────────────────────────────────────────────── */
+function paintChrome(){
+  const sc = SCREENS.find(x=>x.id===S.screen) || SCREENS[0];
+  const isApp = ['launch','p1','p2','p3'].includes(S.screen);
+  document.getElementById('stagehead').innerHTML =
+    (isApp ? '<b>Laso Radar</b> · app · page '+(S.page+1)+' of 3' : '<b>'+sc.label+'</b> · '+sc.key)
+    + ' &nbsp;·&nbsp; ' + S.size + 'mm ' + M().W + '×' + M().H + 'pt'
+    + ' &nbsp;·&nbsp; state: ' + S.state + (S.aod ? ' · always-on' : '');
+
+  document.querySelectorAll('#navA button,#navB button,#navC button').forEach(b=>{
+    const id = b.dataset.screen;
+    const cur = (id===S.screen) || (isApp && id===S.screen);
+    b.setAttribute('aria-current', String(cur));
+  });
+
+  /* crown role */
+  let role = 'crown', what = 'no effect on this surface';
+  if(S.screen==='face'){ role='crown ↓'; what='opens the Smart Stack'; }
+  else if(S.screen==='stack'){ role='crown'; what='scrolls the widget stack'; }
+  else if(isApp && S.page===2){ role='crown → σ'; what='sensitivity 1.0 → 2.0, .click per 0.1'; }
+  else if(isApp){ role='crown → page'; what='vertical TabView, 3 pages'; }
+  else if(S.screen==='n1long'||S.screen==='n2long'){ role='crown'; what='scrolls the long look'; }
+  document.getElementById('crownrole').textContent = role;
+  document.getElementById('crownwhat').textContent = what;
+
+  /* detent strip = the 11 sigma positions */
+  const det = document.getElementById('detents');
+  det.innerHTML = '';
+  for(let i=0;i<11;i++){
+    const on = (isApp && S.page===2) && Math.abs((1.0 + i*0.1) - S.sigma) < 0.049;
+    det.innerHTML += '<i class="'+(on?'on':'')+'"></i>';
+  }
+  document.getElementById('caption').innerHTML = captionFor();
+  document.getElementById('radarnote').innerHTML = radarNote();
+}
+
+function radarNote(){
+  const n = outsideCount(S.sigma);
+  const d = derived();
+  return 'Sensitivity <b>'+S.sigma.toFixed(1)+'σ</b> → <b>'+n+' of 5</b> outside → state <b>'+stateWord(d)+'</b>. '
+    + 'Clear sets the dial to 1.4σ, which is Alex’s own night read at a wider line — no new health figures are invented.';
+}
+
+function captionFor(){
+  const d = derived(), n = outsideCount(S.sigma);
+  const c = {
+    face: 'Three Laso complications, three different destinations (R15): '
+        + '<b>circular → laso://radar/status</b>, <b>rectangular → laso://radar/signals</b>, '
+        + '<b>inline → laso://radar/signal/restingHeartRate</b> (page 2 with that row focused). Tap any Laso slot to follow it. '
+        + '<b>accessoryCorner is deliberately not shipped</b> — 10.5–12pt and 2–4 characters forces an abbreviation code, which is the "Progressive Overload" failure the shipping app already has. '
+        + 'The line under the circular slot is its <b>widgetLabel</b>, which Infograph renders on the bezel.',
+    stack:'Only <b>accessoryRectangular</b> and <b>accessoryCircular</b> reach the Smart Stack; Radar ships the rectangular one only. '
+        + 'Background stays true black — a coloured card broadcasts a health verdict at arm’s length and cannot be redacted in Always-On. '
+        + 'Relevance clues: <b>RelevantContext.sleep(.wakeup)</b> and <b>.fitness</b>, via <b>TimelineProvider.relevance()</b>, never TimelineEntry.relevance (R12).',
+    n1short:'No numbers, no metric names, no verdict word. Someone reading over a shoulder learns nothing (R17). '
+        + 'The short look is never the only channel — the long look carries the evidence.',
+    n1long:'Sash is <b>fair</b> amber, never red. Four lines exactly. <b>Turn the crown to reach the three actions</b> — a long look is a scrolling lean-in surface by definition, which is why R14’s no-scroll rule applies to the app pages and not here. '
+        + 'Three custom actions under the 4 cap, plus system Dismiss. "Take it easy today" is first and non-destructive, so it is the <b>Double Tap</b> target (R17). '
+        + 'There is no "Open app" action — the evidence is already here.',
+    n2short:'The all-clear. An alert with no all-clear is the thing that generates the anxiety, not the alert.',
+    n2long:'Zero custom actions. An all-clear needs no decision, so the shortest possible interaction is the correct one.',
+    launch:'No spinner (R13). The cached state renders <b>fully, at full opacity</b>, with the freshness dot in its ringed form. '
+        + 'Only the meta line changes — "First night · reading now" — and it reverts the moment the HealthKit query returns. Nothing jumps.',
+    p1:'The one decision: look further, or drop the wrist. '+(d==='clear'
+        ? 'Clear day — glyph is a check, both bars stop short of the tick, and the button becomes a mute rather than a prescription.'
+        : 'Verdict carried by four channels: the word, the glyph shape, the bar crossing the tick, and colour fourth. '
+          + 'The bars cross the tick at '+S.sigma.toFixed(1)+'σ, so '+n+' of 5 signals are outside.'),
+    p2:'A labelled chart, not prose. Fixed height, never scrolls — that is the precondition for crown paging (R10, anti-pattern 14). '
+        + '<span class="warn">Steps is drawn as a hollow outline with no line applied</span>: at 14:32 today’s count is a partial day, and the radar judges completed days. It fills in at local midnight.',
+    p3:'Turn the crown. The hero number, the tick on all five bars and the count line all move on every detent — visual feedback is mandatory (R10). '
+        + 'The word "sigma" appears nowhere on screen.',
+    states:'Every state, one tap away. Then open page 1.'
+  };
+  const isApp = ['launch','p1','p2','p3'].includes(S.screen);
+  let base = isApp ? (S.screen==='launch' ? c.launch : c['p'+(S.page+1)]) : c[S.screen];
+  /* the state screens replace the page-1 caption entirely */
+  if(isApp && S.page===0 && !S.aod){
+    if(S.state==='cold') base = 'Cold start, named with a date and no fabricated number — the Garmin "No Status" / Fitbit "7 nights" pattern. '
+      + 'The <b>14</b> is <b>IllnessEarlyWarning.minimumDataDays</b> (line 60), not invented. A fourth glyph shape, the hollow circle, keeps it distinct from all three verdicts, '
+      + 'and the state word is <b>textSecondary</b> rather than a band colour because this is not a verdict.';
+    if(S.state==='empty') base = 'Authorised, but there was no night to read. The wrist still has two things that are natively true with the phone in another room: '
+      + 'live heart rate and today’s steps. Nothing here asks the user to go and use a phone.';
+    if(S.state==='errhk') base = 'HealthKit denied on this watch. Named, with the exact Settings path. '
+      + '<b>"Ask again" fails loudly</b> — if the system silently no-ops because access is already denied, the label swaps to "Already asked · use Settings" and a <b>.failure</b> haptic fires. Tap it twice.';
+    if(S.state==='loading') base = c.launch;
+    if(S.state==='stale') base = 'Freshness is a property of <b>the lines, never the readings</b> — the readings are always today’s, read locally. '
+      + 'So staleness degrades precision, not function. The dot becomes a ring; page 2 names the exact sync time and publishes the update rule.';
+  }
+  if(S.aod) base = '<b>Always-On, isLuminanceReduced.</b> Values become en-dash rows of matching glyph count, delta chips are removed entirely, '
+    + 'bars become stroked outlines, the state word becomes "Radar" and no colour survives. Layout is identical, so nothing jumps on wake. '
+    + 'The button stays interactive in an unavailable appearance rather than disappearing.';
+  if(S.state==='errphone' && isApp) base += ' <span class="warn">Phone unreachable:</span> page 1 is fully normal. '
+    + 'The wrist read every value itself; only the lines are old. That is the whole concept.';
+  return base;
+}
+
+/* ── haptics ───────────────────────────────────────────────────────────────── */
+const hapring = document.getElementById('hapring');
+const hapcap  = document.getElementById('hapcap');
+let hapT = null;
+function haptic(kind, note){
+  hapring.dataset.k = kind;
+  hapring.classList.remove('go'); void hapring.offsetWidth; hapring.classList.add('go');
+  hapcap.innerHTML = 'haptic <b>.'+kind+'</b>' + (note ? ' · '+note : '');
+  hapcap.classList.add('go');
+  clearTimeout(hapT);
+  hapT = setTimeout(()=>hapcap.classList.remove('go'), 1500);
+}
+const dflash = document.getElementById('detentflash');
+let dT=null;
+function detent(){
+  dflash.classList.add('fire');
+  clearTimeout(dT); dT = setTimeout(()=>dflash.classList.remove('fire'), 160);
+}
+
+/* ── crown ─────────────────────────────────────────────────────────────────── */
+const crownEl = document.getElementById('crown');
+const ridges  = document.getElementById('ridges');
+for(let i=0;i<9;i++){ const b=document.createElement('i'); b.style.top=(i*11)+'%'; ridges.appendChild(b); }
+let crownAngle = 0;
+function spinCrown(dir){
+  crownAngle += dir*9;
+  ridges.style.transform = 'translateY('+((crownAngle%22)-11)+'%)';
+}
+
+function crown(dir){          /* dir: +1 = scroll down / value up */
+  spinCrown(dir);
+  const isApp = ['launch','p1','p2','p3'].includes(S.screen);
+  if(S.screen==='face'){
+    if(dir>0){ go('stack'); }
+    return;
+  }
+  if(S.screen==='stack'){
+    const next = Math.max(0, Math.min(3, S.stack + dir));
+    if(next !== S.stack){ S.stack = next; detent(); haptic('click','Smart Stack detent'); render(); }
+    return;
+  }
+  if(S.screen==='n1long' || S.screen==='n2long'){
+    const inner = document.getElementById('ninner');
+    const max = Math.max(0, (inner ? inner.scrollHeight : 0) - M().H + 10);
+    S.notifScroll = Math.max(0, Math.min(max, S.notifScroll + dir*22));
+    if(inner) inner.style.transform = 'translateY(-'+S.notifScroll+'px)';
+    return;
+  }
+  if(isApp && S.page===2){
+    const next = Math.round((S.sigma + dir*0.1)*10)/10;
+    if(next >= 1.0 && next <= 2.0 && next !== S.sigma){
+      const before = derived();
+      S.sigma = next;
+      detent(); haptic('click','crown detent · 0.1 step');
+      const after = derived();
+      if(before!==after && !S.aod){
+        setTimeout(()=>haptic(after==='clear' ? 'directionUp' : 'directionDown',
+          'state → '+stateWord(after)+' (frontmost only)'), 180);
+      }
+      render();
+    }
+    return;
+  }
+  if(isApp){
+    const next = Math.max(0, Math.min(2, S.page + dir));
+    if(next !== S.page){ S.page = next; detent(); haptic('click','page detent'); render(); }
+    return;
+  }
+}
+
+/* wheel + arrow keys drive the crown */
+let wheelAcc = 0;
+document.querySelector('.watchwrap').addEventListener('wheel', e=>{
+  e.preventDefault();
+  wheelAcc += e.deltaY;
+  while(Math.abs(wheelAcc) >= 26){ crown(wheelAcc>0?1:-1); wheelAcc -= Math.sign(wheelAcc)*26; }
+}, {passive:false});
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowDown'){ e.preventDefault(); crown(1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); crown(-1); }
+  else if(e.key==='d' || e.key==='D'){ doubleTap(); }
+});
+
+/* ── actions ───────────────────────────────────────────────────────────────── */
+let ackT = null;
+function doAction(act){
+  if(act==='noop'){ return; }
+  if(act==='goSignals'){ go('p2'); return; }
+  if(act==='askAgain'){
+    if(S.btn==='failed'){ haptic('failure','requestAuthorization no-oped · already denied'); }
+    else { S.btn='failed'; haptic('failure','system silently no-oped · label swapped'); render(); }
+    return;
+  }
+  if(act==='dismiss'){ haptic('click','notification dismissed'); go('face'); return; }
+  if(act==='doesNotMatch'){
+    S.btn='rejected';
+    haptic('success','radarFeedback(kind: "doesNotMatch") sent');
+    go('p1');
+    setTimeout(()=>{ S.btn='idle'; render(); }, 4000);
+    return;
+  }
+  if(act==='mute7d'){
+    haptic('success','radarFeedback(kind: "mute7d") sent');
+    return;
+  }
+  if(act==='easyDay'){
+    S.btn='done';
+    haptic('success','radarFeedback(kind: "easyDay") sent, optimistic');
+    if(S.screen!=='p1' && S.screen!=='launch'){ go('p1'); } else { render(); }
+    clearTimeout(ackT);
+    if(!S.ack){
+      ackT = setTimeout(()=>{ S.btn='failed'; haptic('failure','no reply in 10s · button re-enabled'); render(); }, 2000);
+    }
+    return;
+  }
+}
+function doubleTap(){
+  if(S.screen==='n1long'){
+    haptic('success','Double Tap → first non-destructive action');
+    doAction('easyDay');
+    return;
+  }
+  if(S.screen==='n2long'){ doAction('dismiss'); return; }
+  const isApp = ['launch','p1','p2','p3'].includes(S.screen);
+  if(isApp){
+    S.page = (S.page + 1) % 3;
+    haptic('click','Double Tap → next vertical tab (watchOS 11 default)');
+    render();
+    return;
+  }
+  haptic('click','Double Tap → system default on this surface');
+}
+
+canvas.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act],[data-page],[data-link],[data-setstate]');
+  if(!b) return;
+  if(b.dataset.page !== undefined){ S.page = +b.dataset.page; render(); return; }
+  if(b.dataset.setstate){ S.state = b.dataset.setstate; S.btn='idle'; go('p1'); return; }
+  if(b.dataset.link){
+    const map = {status:['p1',0], signals:['p2',1], signalrow:['p2',1]};
+    const t = map[b.dataset.link];
+    if(b.dataset.link==='signalrow'){ S.focusRow = 'rhr'; setTimeout(()=>{S.focusRow=null;render();}, 2600); }
+    go(t[0]);
+    return;
+  }
+  doAction(b.dataset.act);
+});
+
+/* ── navigation ────────────────────────────────────────────────────────────── */
+function go(id){
+  S.screen = id;
+  S.notifScroll = 0;
+  if(id==='p1'){ S.page=0; }
+  if(id==='p2'){ S.page=1; }
+  if(id==='p3'){ S.page=2; }
+  if(id==='launch'){
+    S.page=0;
+    S.state='loading'; S.btn='idle';
+    render();
+    setTimeout(()=>{ if(S.screen==='launch'){ S.state='loaded'; render(); } }, 1100);
+    return;
+  }
+  render();
+}
+
+/* rail */
+function buildRail(){
+  const put = (grp, host)=>{
+    SCREENS.filter(s=>s.grp===grp).forEach(s=>{
+      const b = document.createElement('button');
+      b.dataset.screen = s.id;
+      b.innerHTML = s.label + '<span class="k">' + s.key + '</span>';
+      b.addEventListener('click', ()=>{ S.btn='idle'; go(s.id); });
+      host.appendChild(b);
+    });
+  };
+  put('A', document.getElementById('navA'));
+  put('B', document.getElementById('navB'));
+  put('C', document.getElementById('navC'));
+}
+buildRail();
+
+/* ── dev toolbar ───────────────────────────────────────────────────────────── */
+function seg(host, items, isOn, onPick){
+  host.innerHTML = '';
+  items.forEach(it=>{
+    const b = document.createElement('button');
+    b.textContent = it[1];
+    b.setAttribute('aria-pressed', String(isOn(it[0])));
+    b.addEventListener('click', ()=>{ onPick(it[0]); buildDev(); render(); });
+    host.appendChild(b);
+  });
+}
+function buildDev(){
+  seg(document.getElementById('segSize'), [[46,'46mm 208×248'],[40,'40mm 162×197']],
+      v=>S.size===v, v=>{S.size=v;});
+  seg(document.getElementById('segState'), STATES, v=>S.state===v, v=>{S.state=v;S.btn='idle';});
+  seg(document.getElementById('segAod'), [[false,'off'],[true,'on — redacted']],
+      v=>S.aod===v, v=>{S.aod=v;});
+  seg(document.getElementById('segRadar'),
+      [['clear','Clear (1.4σ)'],['watching','Watching (1.0σ)'],['flagged','Flagged (1.0σ, night 2)']],
+      v=>derived()===v,
+      v=>{ S.radar=v; S.sigma = (v==='clear') ? 1.4 : 1.0;
+           if(['cold','empty','errhk'].includes(S.state)) S.state='loaded'; S.btn='idle'; });
+  seg(document.getElementById('segAck'), [[true,'answers'],[false,'never answers']],
+      v=>S.ack===v, v=>{S.ack=v;});
+}
+buildDev();
+document.getElementById('devbtn').addEventListener('click', ()=>{
+  const p = document.getElementById('devpanel');
+  const open = p.classList.toggle('open');
+  document.getElementById('devbtn').setAttribute('aria-expanded', String(open));
+});
+document.getElementById('btnDT').addEventListener('click', doubleTap);
+document.getElementById('btnLabels').addEventListener('click', e=>{
+  S.tags = !S.tags; e.currentTarget.setAttribute('aria-pressed', String(S.tags)); render();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laso Watch — Concept 02 · One Word (verdict)</title>
+<style>
+:root{
+  --bg:#000000; --surfaceRaised:#1B1B21; --surfaceElevated:#26262D; --surfaceSubtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8; --borderLow:#2E2E36;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --optimal:#33C48D; --fair:#E3B45A; --poor:#E05C64;
+  --aodStroke:#5A5A63; --aodText:#8A8A93;
+  --hbg:#08080A; --hpanel:#101014; --hline:#1E1E24; --hdim:#7C7C88;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--hbg);color:var(--t2)}
+body{
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased; min-height:100vh;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+
+/* ---------- harness shell ---------- */
+.shell{display:grid;grid-template-columns:224px minmax(560px,1fr) 300px;gap:0;min-height:100vh}
+.col{border-right:1px solid var(--hline);padding:16px 14px}
+.col:last-child{border-right:none;border-left:1px solid var(--hline)}
+.brand{font-size:13px;font-weight:600;color:var(--t1);letter-spacing:.2px}
+.brand small{display:block;font-size:11px;font-weight:400;color:var(--hdim);margin-top:3px;letter-spacing:0}
+.grp{margin-top:16px}
+.grp h3{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--hdim);font-weight:600;margin-bottom:6px}
+.navbtn{display:block;width:100%;text-align:left;padding:8px 9px;border-radius:7px;font-size:12px;color:var(--t2);min-height:34px;line-height:1.25;border:1px solid transparent}
+.navbtn:hover{background:#16161b}
+.navbtn[aria-current="true"]{background:#1c2432;color:var(--t1);border-color:#28405c}
+.navbtn .k{display:block;font-size:9.5px;color:var(--hdim);margin-top:2px}
+
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:22px 16px 40px;gap:14px}
+.stageTitle{font-size:12px;color:var(--hdim);text-align:center}
+.stageTitle b{color:var(--t1);font-weight:600}
+
+/* ---------- watch hardware ---------- */
+/* the watch renders at 1px = 1pt then scales 2x, so every number in the screen CSS is a real point value */
+.watchwrap{position:relative;display:flex;justify-content:center;align-items:flex-start;height:562px;width:100%}
+.watch{position:relative;transform:scale(2);transform-origin:top center}
+.case{position:relative;padding:13px;border-radius:44px;
+  background:linear-gradient(150deg,#3a3a40,#141416 42%,#0b0b0d 60%,#2c2c31);
+  box-shadow:0 0 0 1px #000, 0 18px 34px rgba(0,0,0,.75);}
+.caseInner{border-radius:33px;background:#000;padding:0;overflow:hidden;
+  box-shadow:inset 0 0 0 1.5px #0a0a0c}
+.crown{position:absolute;right:-6px;top:66px;width:8px;height:36px;border-radius:3px;
+  background:linear-gradient(90deg,#4a4a52,#26262b);overflow:hidden;box-shadow:0 0 0 1px #000}
+.crown .ridges{position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,#63636d 0 1.4px,#232328 1.4px 2.8px);opacity:.85}
+.crown .cap{position:absolute;left:0;right:2px;top:12px;height:12px;border-radius:2px;background:linear-gradient(90deg,#71717c,#3b3b42)}
+.sidebtn{position:absolute;right:-4px;top:118px;width:5px;height:28px;border-radius:2px;
+  background:linear-gradient(90deg,#45454c,#232328);box-shadow:0 0 0 1px #000}
+.crownMark{position:absolute;right:6px;top:66px;width:0;height:0;
+  border-top:4px solid transparent;border-bottom:4px solid transparent;border-right:5px solid var(--primary);
+  opacity:0;transition:opacity .12s ease, top .12s ease}
+.crownMark.on{opacity:1}
+.detent{position:absolute;right:-16px;top:80px;width:6px;height:6px;border-radius:50%;background:var(--t1);opacity:0}
+.detent.fire{animation:detentPop .28s ease-out}
+@keyframes detentPop{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(2.2)}}
+
+/* haptic pulse ring at screen edge */
+.pulse{position:absolute;inset:13px;border-radius:33px;border:2px solid var(--t1);opacity:0;pointer-events:none}
+.pulse.fire{animation:pulseRing .42s ease-out}
+@keyframes pulseRing{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.045)}}
+
+.hapcap{min-height:34px;text-align:center;font-size:12px;color:var(--hdim);max-width:460px}
+.hapcap b{color:var(--t1);font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.hint{font-size:11px;color:#8A8A93;text-align:center;max-width:460px;line-height:1.5}
+
+/* ---------- notes column ---------- */
+.notes h3{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--hdim);font-weight:600;margin:14px 0 6px}
+.notes p{font-size:11.5px;line-height:1.55;color:var(--t2);margin-bottom:7px}
+.notes .kv{font-size:11px;line-height:1.5;color:var(--hdim)}
+.notes .kv b{color:var(--t2);font-weight:500}
+.tag{display:inline-block;font-size:9.5px;padding:2px 6px;border-radius:5px;background:#16161b;border:1px solid var(--hline);color:var(--t3);margin:0 4px 4px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.pass{color:var(--optimal)} .fail{color:var(--poor)}
+.log{list-style:none;font-size:10.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--hdim);line-height:1.7}
+.log b{color:var(--t2);font-weight:500}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{position:fixed;right:12px;bottom:12px;z-index:40;background:#16161b;border:1px solid var(--hline);
+  border-radius:9px;padding:9px 13px;font-size:11.5px;color:var(--t2);min-height:36px}
+.devbtn:hover{background:#1d1d24;color:var(--t1)}
+.dev{position:fixed;right:12px;bottom:56px;z-index:40;width:296px;background:var(--hpanel);
+  border:1px solid var(--hline);border-radius:12px;padding:12px;display:none;box-shadow:0 14px 40px rgba(0,0,0,.7)}
+.dev.open{display:block}
+.dev h4{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--hdim);margin:10px 0 5px;font-weight:600}
+.dev h4:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--hline);background:#141419;border-radius:7px;padding:6px 8px;font-size:11px;color:var(--t3);min-height:30px}
+.seg button[aria-pressed="true"]{background:#22303f;border-color:#33506e;color:var(--t1)}
+.dev .wide{width:100%;margin-top:8px;border:1px solid #33506e;background:#1b2836;border-radius:8px;padding:9px;font-size:11.5px;color:var(--t1);min-height:36px}
+.dev .note{font-size:10px;color:#8A8A93;line-height:1.5;margin-top:6px}
+.dev .check{font-size:10.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:8px;color:var(--optimal)}
+
+/* ================= WATCH SCREEN ================= */
+.screen{position:relative;width:208px;height:248px;background:#000;color:var(--t1);overflow:hidden;
+  --pad:10px; --inTop:14px; --inBot:12px; --g1:14px; --g2:6px; --g3:10px;
+  --segW:58px; --segGap:4px; --hero:52px; --heroS:40px; --btnW:188px; --track:120px;
+  --ttl:22px; --bdy:16px; --ftn:13px; --cap:12px; --cap2:11px; --hl:17px;}
+.screen.s40{width:162px;height:197px;
+  --pad:8px; --inTop:12px; --inBot:10px; --g1:10px; --g2:4px; --g3:8px;
+  --segW:44px; --hero:40px; --heroS:32px; --btnW:146px; --track:88px;}
+.screen *{font-variant-numeric:tabular-nums}
+.surface{position:absolute;inset:0;display:flex;flex-direction:column}
+.pad{padding:var(--inTop) var(--pad) var(--inBot)}
+
+/* band rail */
+.rail{display:flex;gap:var(--segGap);justify-content:center;flex:none}
+.rseg{position:relative;width:var(--segW);height:6px;border-radius:3px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow)}
+.rseg.on{border-color:transparent}
+.rseg.outline{background:transparent}
+.rseg.stale{background:transparent;border:1.5px dashed currentColor}
+.rseg.aod{background:transparent;border:1.5px solid var(--aodStroke)}
+.tick{position:absolute;left:50%;margin-left:-3px;top:-9px;width:6px;height:3px;background:var(--t1);border-radius:1px}
+
+/* page 1 */
+.heroGroup{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:var(--g1)}
+.word{font-size:var(--hero);font-weight:600;letter-spacing:1px;line-height:1;white-space:nowrap;text-transform:uppercase}
+.word.long{font-size:var(--heroS)}
+/* RECOVERING is 10 characters. At 46mm the .long rung still touches both edges and at
+   40mm it clips, so words of 9+ take a third rung. Measured, not guessed. */
+.word.xlong{font-size:calc(var(--heroS) - 8px);letter-spacing:0}
+.screen.s40 .word.xlong{font-size:calc(var(--heroS) - 12px)}
+.imper{font-size:var(--bdy);font-weight:400;color:var(--t2);margin-top:var(--g2);white-space:nowrap;line-height:1.15}
+/* two of the eight fixed imperatives are longer than the 22-char budget; they drop one rung,
+   which at 40mm lands them on the 12pt HIG minimum with nothing left below it */
+.imper.long2{font-size:14px}
+.screen.s40 .imper.long2{font-size:12px}
+.evid{font-size:var(--ftn);font-weight:400;color:var(--t3);margin-top:var(--g3);white-space:nowrap;line-height:1.15}
+.evid.hidden{visibility:hidden}
+.fresh{flex:none;display:flex;align-items:center;justify-content:center;gap:5px;font-size:var(--cap2);font-weight:500;color:var(--t3);white-space:nowrap}
+.fdot{width:5px;height:5px;border-radius:50%;flex:none}
+.aodBox{width:120px;height:34px;border-radius:9px;border:1.5px solid var(--aodStroke)}
+.screen.s40 .aodBox{width:96px;height:28px}
+.stateTitle{font-size:var(--ttl);font-weight:600;line-height:1.1;text-align:center}
+.stateSub{font-size:var(--ftn);color:var(--t2);margin-top:var(--g2);text-align:center;line-height:1.25}
+.stateSub2{font-size:var(--cap2);color:var(--t3);margin-top:6px;text-align:center;line-height:1.25}
+
+/* page 2 */
+.titleRow{display:flex;justify-content:space-between;align-items:baseline;flex:none}
+.titleRow .l{font-size:var(--cap);color:var(--t3)}
+.titleRow .r{font-size:var(--cap2);color:var(--t3)}
+.bigNum{font-size:var(--hero);font-weight:600;color:var(--t1);line-height:1.05;margin-top:4px;text-align:left}
+.barBlock{margin-top:var(--g3);border-radius:6px;padding:2px 0}
+.barBlock.focused{box-shadow:0 0 0 1.5px var(--primary)}
+.barRow{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.screen.s40 .barRow{margin-bottom:5px}
+.barRow:last-child{margin-bottom:0}
+.barRow .lab{width:28px;font-size:var(--cap2);color:var(--t3);white-space:nowrap}
+.barTrack{width:var(--track);height:8px;border-radius:4px;background:var(--surfaceSubtle);overflow:hidden}
+.barFill{height:100%;border-radius:4px}
+.barRow .val{width:24px;font-size:var(--cap2);color:var(--t2);text-align:right}
+.spark7{display:flex;align-items:flex-end;gap:3px;height:34px;width:var(--track)}
+.spark7 .b{width:4px;background:var(--t3);border-radius:1px;opacity:.55;position:relative}
+.spark7 .b.sel{opacity:1;background:var(--t1)}
+.spark7 .b.nil{background:transparent;border:1px dashed var(--borderLow)}
+.spark7 .b.sel::after{content:"";position:absolute;left:1px;right:1px;top:-6px;height:2px;background:var(--t1)}
+.driver{flex:none;font-size:var(--cap2);color:var(--t3);text-align:center;white-space:nowrap}
+.crownChip{position:absolute;right:2px;top:96px;font-size:9px;font-weight:600;color:var(--primary);
+  background:#0d1a29;border:1px solid #24425f;border-radius:4px;padding:2px 3px;letter-spacing:.3px}
+
+/* page 3 */
+.actHead{display:flex;align-items:center;gap:6px;flex:none}
+.actHead span{font-size:var(--hl);font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actDetail{font-size:var(--ftn);color:var(--t2);margin-top:6px;line-height:1.28;flex:none}
+.btnPrimary{width:var(--btnW);height:48px;border-radius:10px;background:var(--surfaceElevated);
+  border:1px solid var(--borderLow);display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:var(--hl);font-weight:600;color:var(--t1);flex:none}
+.btnPrimary:active{transform:scale(.96)}
+.btnPrimary.done{background:#092319;border-color:#14402f}
+.btnPrimary[disabled]{cursor:default}
+.btnSave{width:var(--btnW);height:44px;border-radius:10px;background:var(--surfaceElevated);
+  border:1px solid var(--borderLow);display:flex;align-items:center;justify-content:center;
+  font-size:var(--hl);font-weight:600;color:var(--t1);flex:none}
+.btnSave:active{transform:scale(.96)}
+
+/* check-in */
+.ciRail{position:relative;width:164px;height:10px;border-radius:5px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow);margin:0 auto}
+.screen.s40 .ciRail{width:130px}
+.ciMark{position:absolute;top:-3px;width:16px;height:16px;border-radius:50%;background:var(--primary);margin-left:-8px;
+  transition:left .12s ease}
+.ciDot{position:absolute;top:4px;width:2px;height:2px;border-radius:1px;background:var(--t3);margin-left:-1px}
+
+/* ---------- watch face ---------- */
+.face{position:absolute;inset:0;padding:10px;display:flex;flex-direction:column}
+.screen.s40 .face{padding:8px}
+.faceTop{display:flex;justify-content:space-between;align-items:baseline}
+.faceDate{font-size:12px;font-weight:600;color:#E3B45A;letter-spacing:.6px}
+.faceTime{font-size:34px;font-weight:600;color:var(--t1);line-height:1;letter-spacing:-.5px}
+.screen.s40 .faceTime{font-size:27px}
+.slot{position:relative;border-radius:8px}
+.slot.lab::after{content:attr(data-fam);position:absolute;left:0;top:-8px;font-size:7px;letter-spacing:.2px;
+  color:var(--accent);background:#04141a;border:1px solid #0d2f3a;border-radius:3px;padding:0 2px;white-space:nowrap;z-index:3}
+.slot.laso{outline:1px dashed #1f4a5a;outline-offset:2px}
+.faceBottom{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;padding-bottom:9px}
+.circSlot{width:50px;height:50px;border-radius:50%;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.screen.s40 .circSlot{width:44.5px;height:44.5px}
+.bezelLabel{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:600;
+  color:var(--t2);letter-spacing:.4px;white-space:nowrap}
+.microRail{display:flex;gap:1.5px}
+.microRail i{width:7px;height:3px;border-radius:1.5px;background:var(--surfaceSubtle);border:.5px solid var(--borderLow);position:relative}
+.microRail i.on{border-color:transparent}
+.microRail i .mt{position:absolute;left:50%;margin-left:-2px;top:-4px;width:4px;height:2px;background:var(--t1)}
+.rectSlot{width:178.5px;height:56px;padding:2px 0}
+.screen.s40 .rectSlot{width:146px;height:50px}
+.cornSlot{width:38px;height:38px;position:relative}
+.screen.s40 .cornSlot{width:34px;height:34px}
+.infoGrid{position:absolute;inset:0;padding:6px}
+.corner{position:absolute}
+.tl{left:9px;top:12px}.tr{right:6px;top:11px}.bl{left:6px;bottom:12px}.br{right:6px;bottom:12px}
+.dial{width:44px;height:44px;border-radius:50%;border:1px solid #1c1c22;display:flex;align-items:center;
+  justify-content:center;font-size:9px;color:var(--t3)}
+.infoTime{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:30px;font-weight:600;color:var(--t1)}
+.screen.s40 .infoTime{font-size:24px}
+
+/* ---------- smart stack ---------- */
+.ssWrap{position:absolute;inset:0;overflow:hidden;background:#000}
+.ssTime{position:absolute;top:6px;right:12px;font-size:12px;font-weight:600;color:var(--t1);z-index:3}
+.ssList{position:absolute;left:0;right:0;top:26px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  transition:transform .22s cubic-bezier(.22,.61,.36,1)}
+.wcard{width:184px;height:80.5px;border-radius:14px;padding:6px;position:relative;overflow:hidden}
+.screen.s40 .wcard{width:152px;height:69.5px}
+.wcard.sys{background:#131318;border:1px solid var(--borderLow)}
+.wRow1{display:flex;align-items:center;gap:4px;height:22px}
+.wWord{font-size:19px;font-weight:600;letter-spacing:.5px}
+.wImper{font-size:13px;color:var(--t2);height:16px;line-height:16px;white-space:nowrap;overflow:hidden}
+.wBtn{width:100%;height:28px;border-radius:8px;background:var(--surfaceElevated);border:1px solid var(--borderLow);
+  display:flex;align-items:center;justify-content:center;gap:4px;font-size:15px;font-weight:600;color:var(--t1)}
+.wBtn:active{transform:scale(.96)}
+.wBtn.done{background:#092319;border-color:#14402f}
+.wcard.lasoslot{outline:1px dashed #1f4a5a;outline-offset:2px}
+.ssTag{position:absolute;left:6px;bottom:-11px;font-size:7px;color:var(--accent);background:#04141a;
+  border:1px solid #0d2f3a;border-radius:3px;padding:0 2px;z-index:3}
+.wslot{position:relative}
+
+/* ---------- notifications ---------- */
+.nShort{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 12px;text-align:center;gap:6px}
+.appIcon{width:26px;height:26px;border-radius:8px;background:linear-gradient(150deg,#4DA3FF,#22D3EE);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#04121e}
+.nApp{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.3px}
+.nTitle{font-size:17px;font-weight:600;color:var(--t1)}
+.nBody{font-size:13px;color:var(--t2);line-height:1.3}
+.nLong{position:absolute;inset:0;overflow:hidden}
+.nSash{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;gap:5px;padding:0 10px;z-index:3;
+  backdrop-filter:blur(6px)}
+.nSash .nm{font-size:12px;font-weight:600;color:var(--t1)}
+.nScroll{position:absolute;left:0;right:0;top:26px;padding:8px 10px 12px;transition:transform .18s ease}
+.nAct{width:100%;min-height:38px;border-radius:9px;background:var(--surfaceElevated);border:1px solid var(--borderLow);
+  font-size:14px;font-weight:600;color:var(--t1);margin-top:6px;padding:8px 6px}
+.nAct:active{transform:scale(.96)}
+.nAct.dismiss{background:#131318;color:var(--t2)}
+.spark5{display:flex;align-items:flex-end;gap:4px;height:26px;position:relative}
+.spark5 .b{width:8px;background:var(--primary);border-radius:1px;opacity:.7}
+.spark5 .need{position:absolute;left:0;right:0;border-top:1px dashed var(--t3);opacity:.7}
+
+/* toast inside watch */
+.toast{position:absolute;left:10px;right:10px;bottom:10px;background:#141419;border:1px solid var(--borderLow);
+  border-radius:8px;padding:6px 8px;font-size:11px;color:var(--t2);text-align:center;z-index:6}
+
+.aodDim{filter:brightness(.42) saturate(.5)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .pulse.fire{animation:none;opacity:.8}
+  .btnPrimary:active,.btnSave:active,.wBtn:active,.nAct:active{transform:none;opacity:.7}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ============ LEFT: screen switcher ============ -->
+  <nav class="col" aria-label="Screen switcher">
+    <div class="brand">Concept 02 · One Word
+      <small>Alex, Tuesday 14:32 · <span id="brandWord">WALK</span></small>
+    </div>
+
+    <div class="grp">
+      <h3>Off-app surfaces</h3>
+      <div id="navA"></div>
+    </div>
+    <div class="grp">
+      <h3>Notifications</h3>
+      <div id="navB"></div>
+    </div>
+    <div class="grp">
+      <h3>App</h3>
+      <div id="navC"></div>
+    </div>
+  </nav>
+
+  <!-- ============ CENTRE: the watch ============ -->
+  <main class="col stage">
+    <div class="stageTitle" id="stageTitle"></div>
+    <div class="watchwrap">
+      <div class="watch" id="watch">
+        <div class="case">
+          <div class="caseInner">
+            <div class="screen" id="screen"></div>
+          </div>
+          <div class="pulse" id="pulse"></div>
+        </div>
+        <div class="crown" aria-hidden="true"><div class="ridges" id="ridges"></div><div class="cap"></div></div>
+        <div class="sidebtn" aria-hidden="true"></div>
+        <div class="crownMark" id="crownMark" aria-hidden="true"></div>
+        <div class="detent" id="detent" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="hapcap" id="hapcap"></div>
+    <div class="hint">Digital Crown: mouse wheel over the watch, or <b>&uarr;</b>/<b>&darr;</b>. Crown press is never handled &mdash; Apple: &ldquo;Apps don&rsquo;t respond to presses on the Digital Crown.&rdquo;</div>
+  </main>
+
+  <!-- ============ RIGHT: notes ============ -->
+  <aside class="col notes" id="notes"></aside>
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="dev">Dev</button>
+<div class="dev" id="dev" role="group" aria-label="Developer toolbar">
+  <h4>Canvas</h4>
+  <div class="seg" id="devCanvas"></div>
+  <h4>State</h4>
+  <div class="seg" id="devState"></div>
+  <h4>Always-On (isLuminanceReduced)</h4>
+  <div class="seg" id="devAod"></div>
+  <h4>Key variable &mdash; readiness band</h4>
+  <div class="seg" id="devBand"></div>
+  <div class="note">The band selector also moves the phone&rsquo;s body-stress flag, because the two move together on the phone. poor&nbsp;&rarr;&nbsp;REST, fair&nbsp;&rarr;&nbsp;WALK (Alex&rsquo;s real Tuesday), optimal&nbsp;&rarr;&nbsp;TRAIN.</div>
+  <h4>Alex&rsquo;s Tuesday &mdash; same ladder, other hours</h4>
+  <div class="seg" id="devTime"></div>
+  <h4>Face slot labels</h4>
+  <div class="seg" id="devLabels"></div>
+  <button class="wide" id="devDouble">Fire Double Tap</button>
+  <div class="check" id="devCheck"></div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Concept 02 — ONE WORD (verdict).  Single file, no network, dark only.
+   All values are Alex, Tuesday 14:32, from PROTOTYPE-SPEC.md.
+   ===================================================================== */
+
+var C = {
+  t1:"#F2F2F6", t2:"#C9C9D2", t3:"#ADADB8",
+  primary:"#4DA3FF", optimal:"#33C48D", fair:"#E3B45A", poor:"#E05C64",
+  subtle:"#17171C", elevated:"#26262D", border:"#2E2E36",
+  aodStroke:"#5A5A63", aodText:"#8A8A93"
+};
+var BANDBG = { poor:"#250F10", fair:"#251F14", optimal:"#082017" };
+var BANDIDX = { poor:0, fair:1, optimal:2 };
+
+/* ---------- glyphs (inline SVG, no icon font) ---------- */
+function svg(inner, size, color, sw){
+  return '<svg viewBox="0 0 16 16" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+
+    '" stroke-width="'+(sw||1.6)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+inner+'</svg>';
+}
+var PATHS = {
+  walk: function(c){ return '<circle cx="9.2" cy="3" r="1.5" fill="'+c+'" stroke="none"/>'+
+    '<path d="M9 5.2 L7.8 9.2 M7.8 9.2 L5.8 13.8 M7.8 9.2 L10.4 10.8 L10.2 14 M8.8 6.4 L11.4 8.2 M8.6 6.2 L6.2 7.6"/>'; },
+  run: function(c){ return '<circle cx="10.4" cy="2.9" r="1.5" fill="'+c+'" stroke="none"/>'+
+    '<path d="M10.2 5 L7.6 8.4 M7.6 8.4 L4.6 11.6 M7.6 8.4 L10.6 10.2 L11.8 13.6 M9.4 6 L12.6 5.4"/>'; },
+  stand: function(c){ return '<circle cx="8" cy="2.9" r="1.5" fill="'+c+'" stroke="none"/>'+
+    '<path d="M8 5 L8 10 M8 10 L6.4 14 M8 10 L9.6 14 M5.6 7 L10.4 7"/>'; },
+  moon: function(){ return '<path d="M11.4 2.6a5.6 5.6 0 1 0 1.7 8.6A6.2 6.2 0 0 1 11.4 2.6z"/>'+
+    '<path d="M11.6 1.4h2.6l-2.6 2.6h2.6"/>'; },
+  wind: function(){ return '<path d="M1.6 5.4h6.2a1.9 1.9 0 1 0-1.9-2M1.6 8.6h8.4a2.1 2.1 0 1 1-2.1 2.1M1.6 11.8h5"/>'; },
+  bed: function(){ return '<path d="M1.8 12.4V7.2h12.4v5.2M1.8 9.6h12.4M1.8 12.4v1.4M14.2 12.4v1.4M3.4 7.2V5.4h3.2v1.8M9.4 7.2V5.4h3.2v1.8"/>'; },
+  drop: function(){ return '<path d="M8 1.8s-4.4 5.4-4.4 8.1a4.4 4.4 0 0 0 8.8 0C12.4 7.2 8 1.8 8 1.8z"/>'; },
+  arrow: function(){ return '<path d="M2.6 8h10M9.2 4.6 12.6 8l-3.4 3.4"/>'; },
+  check: function(){ return '<path d="M3 8.4 6.4 12 13 4.4"/>'; },
+  sun: function(){ return '<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"/>'; },
+  clock: function(){ return '<circle cx="8" cy="8" r="6.2"/><path d="M8 4.4V8l2.6 1.6"/>'; },
+  rings: function(){ return '<circle cx="8" cy="8" r="6" stroke="#E05C64"/><circle cx="8" cy="8" r="4" stroke="#33C48D"/><circle cx="8" cy="8" r="2" stroke="#4DA3FF"/>'; },
+  note: function(){ return '<circle cx="5" cy="12" r="2"/><path d="M7 12V3.4l6-1.2V10"/><circle cx="11" cy="10" r="2"/>'; }
+};
+function g(name, size, color, sw){ return svg(PATHS[name](color), size, color, sw); }
+
+/* ---------- the closed vocabulary ---------- */
+/* Two tiers. An IMPERATIVE only fires when Laso knows something the user cannot
+   already know from their own body or from Apple's own rings. Everything else is a
+   STATE: a fact about the body measured against this user's own baseline, never an
+   order. STAND / DRINK / WALK / COAST were removed from the headline entirely —
+   Apple's stand reminders and Activity rings already say those, so spending the one
+   line the wrist has on them wastes it. */
+var WORDS = {
+  REST:       { cls:"verdict", tier:"imperative", sub:"No training today",           glyph:"moon"  },
+  BREATHE:    { cls:"upkeep",  tier:"imperative", sub:"One minute, slow out-breath", glyph:"wind"  },
+  SLEEP:      { cls:"upkeep",  tier:"imperative", sub:"Lights out by 23:20",         glyph:"bed"   },
+  TRAIN:      { cls:"verdict", tier:"imperative", sub:"A hard session is on",        glyph:"run"   },
+  RECOVERING: { cls:"verdict", tier:"state",      sub:"2 days after your hard run",  glyph:"clock" },
+  WARM:       { cls:"verdict", tier:"state",      sub:"Resting HR 3 above normal",   glyph:"sun"   },
+  STEADY:     { cls:"verdict", tier:"state",      sub:"Everything in your range",    glyph:"check" }
+};
+
+/* ---------- Alex's Tuesday: nine ladder evaluations ---------- */
+/* Every ctx value below is Alex's data from PROTOTYPE-SPEC.md or derived from it. */
+var TUESDAY = [
+  { time:"07:05", exp:["RECOVERING",5], ev:"Room for 30 more minutes",  fresh:["Fresh","4 min","optimal"],
+    ctx:{ liveHR:62, steps10:0,  exercise:0,  standCredit:true,  minute:5,  water:0, hoursAwake:0.1,  minsToBed:975 } },
+  { time:"09:40", exp:["RECOVERING",5], ev:"Room for 28 more minutes",  fresh:["Ageing","23 min","fair"],
+    ctx:{ liveHR:68, steps10:14, exercise:2,  standCredit:false, minute:40, water:1, hoursAwake:2.7,  minsToBed:820 } },
+  { time:"11:15", exp:["RECOVERING",5], ev:"Room for 26 more minutes",  fresh:["Fresh","9 min","optimal"],
+    ctx:{ liveHR:71, steps10:31, exercise:4,  standCredit:true,  minute:15, water:2, hoursAwake:4.25, minsToBed:725 } },
+  { time:"13:05", exp:["BREATHE",2],    ev:"HR 79, 21 above resting",   fresh:["Fresh","11 min","optimal"],
+    ctx:{ liveHR:79, steps10:12, exercise:9,  standCredit:true,  minute:5,  water:3, hoursAwake:6.1,  minsToBed:615 } },
+  { time:"14:32", exp:["RECOVERING",5], ev:"Room for 18 more minutes",  fresh:["Fresh","6 min","optimal"],
+    ctx:{ liveHR:74, steps10:22, exercise:12, standCredit:false, minute:32, water:4, hoursAwake:7.53, minsToBed:528 } },
+  { time:"14:40", exp:["RECOVERING",5], ev:"Room for 18 more minutes",  fresh:["Fresh","14 min","optimal"],
+    ctx:{ liveHR:73, steps10:18, exercise:12, standCredit:false, minute:40, water:4, hoursAwake:7.67, minsToBed:520 } },
+  { time:"18:30", exp:["RECOVERING",5], ev:"Ceiling reached, 37 min",   fresh:["Ageing","31 min","fair"],
+    ctx:{ liveHR:70, steps10:40, exercise:37, standCredit:true,  minute:30, water:4, hoursAwake:11.5, minsToBed:290 } },
+  { time:"20:10", exp:["RECOVERING",5], ev:"Ceiling reached, 37 min",   fresh:["Fresh","8 min","optimal"],
+    ctx:{ liveHR:66, steps10:6,  exercise:37, standCredit:true,  minute:10, water:4, hoursAwake:13.2, minsToBed:190 } },
+  { time:"22:20", exp:["SLEEP",3],      ev:"Debt 4h 20m, 5 nights",     fresh:["Ageing","22 min","fair"],
+    ctx:{ liveHR:61, steps10:2,  exercise:37, standCredit:true,  minute:20, water:6, hoursAwake:15.3, minsToBed:60 } }
+];
+var NOW_INDEX = 4;                    /* 14:32 */
+var RESTING_HR = 58, EXERCISE_GOAL = 30;
+
+/* readiness bands the dev toolbar can select. The body-stress flag moves with the band
+   because both come from the same phone-side pass. */
+var BANDS = {
+  poor:    { name:"poor",    score:38, stress:"elevated", driver46:"4h48m sleep · HRV 39 · RHR +7", driver40:"4h48m · HRV 39 · RHR +7" },
+  fair:    { name:"fair",    score:62, stress:"low",      driver46:"6h12m sleep · HRV 48 · RHR +3", driver40:"6h12m · HRV 48 · RHR +3" },
+  optimal: { name:"optimal", score:78, stress:"none",     driver46:"7h44m sleep · HRV 57 · RHR −1", driver40:"7h44m · HRV 57 · RHR −1" }
+};
+
+/* readiness history: index 0 = today. null = no value that day. mean of non-nil = 68. */
+var LAST7      = [62, 71, 65, 74, null, 70, 66];
+var LAST7_DAYS = ["Tue","Mon","Sun","Sat","Fri","Thu","Wed"];
+var LAST7_FULL = { Tue:"Tuesday", Mon:"Monday", Sun:"Sunday", Sat:"Saturday", Fri:"Friday", Thu:"Thursday", Wed:"Wednesday" };
+/* exercise minutes, oldest left. Sunday = the hard 10 km run; Monday = nothing. */
+var EX7 = [24, 31, 8, 35, 62, 0, 12];
+/* last five nights of sleep, minutes. Deficits vs a 460 min need sum to 260 = 4h 20m. */
+var SLEEP5 = [408, 425, 390, 445, 372];
+var SLEEP_NEED = 460;
+
+/* ---------- app state ---------- */
+var S = {
+  screen:"face-duo", canvas:"46", state:"loaded", aod:false, band:"fair",
+  instance:NOW_INDEX, page:0, ss:1, labels:true,
+  chartFocus:false, chartDay:6, checkin:3,
+  doneAt:null, widgetDone:null, waterLogged:0, toast:"", muted:false
+};
+var chartTimer = null, toastTimer = null;
+
+/* ---------- derived truths ---------- */
+function phoneAware(){ return S.state === "loaded"; }          /* rules 1 and 4 need a fresh payload */
+function bandKnown(){ return S.state === "loaded" || S.state === "stale"; }
+function bandName(){ return BANDS[S.band].name; }
+function bandColor(){ return C[bandName()]; }
+function score(){ return BANDS[S.band].score; }
+function inst(){ return TUESDAY[S.instance]; }
+function clock(){ return inst().time; }
+function coldStart(){ return S.state === "coldstart"; }
+
+/* ---------- THE LADDER (runs on the wrist, first match wins) ---------- */
+function ladder(o){
+  if (o.hkDenied) return { state:"accessDenied" };
+  var pa = o.phoneAware, cold = o.coldStart;
+  var pace = Math.ceil(8 * o.hoursAwake / 16);
+  if (!cold && pa && (o.band === "poor" || o.stress === "elevated"))                       return R("REST",1);
+  if ((o.liveHR - RESTING_HR) >= 20 && o.steps10 < 50 && !o.workout && o.hrAgeMin < 5)     return R("BREATHE",2);
+  if (o.minsToBed <= 60 && o.minsToBed > -90)                                              return R("SLEEP",3);
+  if (!cold && pa && o.payloadAge <= 60 && o.band === "optimal" && o.stress === "none"
+      && o.exercise < 0.5 * EXERCISE_GOAL)                                                 return R("TRAIN",4);
+  /* Rules 1-4 are imperatives and all four are earned: each rests on something the
+     user cannot feel or count for themselves. Below here nothing is an order. */
+  if (!cold && pa && o.hrsSinceHardDay <= 72 && o.hrvBelowBase)                            return R("RECOVERING",5);
+  if (!cold && pa && o.rhrDelta >= 2)                                                      return R("WARM",6);
+  return R("STEADY",7);
+  function R(w,r){ return { word:w, rule:r, pace:pace }; }
+}
+function ladderInput(){
+  var t = inst(), b = BANDS[S.band], o = {};
+  for (var k in t.ctx) o[k] = t.ctx[k];
+  o.band = b.name; o.stress = b.stress;
+  o.phoneAware = phoneAware(); o.coldStart = coldStart();
+  o.hkDenied = (S.state === "errHK");
+  o.payloadAge = (S.state === "stale") ? 107 : 6;
+  o.hrAgeMin = 1; o.workout = false;
+  /* Both are phone-side facts: a 60-day baseline and the last high-strain day. The wrist
+     cannot derive either from its own ~7 day HealthKit window. */
+  o.rhrDelta        = (b.name === "optimal") ? -1 : (b.name === "poor" ? 7 : 3);
+  o.hrvBelowBase    = (b.name !== "optimal");
+  o.hrsSinceHardDay = 54;
+  return o;
+}
+function verdict(){ return ladder(ladderInput()); }
+/* With HealthKit read denied the ladder returns no word at all. Every surface must cope
+   without inventing one — this is the only state in the design with no word. */
+function noWordFallback(){ return S.state === "errHK"; }
+
+/* word colour: verdict words take the band colour, but only when a band may honestly
+   be claimed. With no phone payload no band exists, so verdict words fall back to primary. */
+function wordColor(w){
+  var meta = WORDS[w];
+  if (!meta) return C.t1;
+  if (meta.cls === "upkeep") return C.primary;
+  return bandKnown() ? bandColor() : C.primary;
+}
+function subFor(w){ return WORDS[w].sub; }
+function evidence(){
+  if (coldStart() || S.state === "errPhone") return "Room for 18 more minutes";
+  return inst().ev;
+}
+
+/* ---------- haptics + detents ---------- */
+var hapLog = [];
+var pulseTimer = null;
+function haptic(type, why){
+  var p = document.getElementById("pulse");
+  p.classList.remove("fire"); void p.offsetWidth; p.classList.add("fire");
+  clearTimeout(pulseTimer);
+  pulseTimer = setTimeout(function(){ p.classList.remove("fire"); }, 440);
+  var cap = document.getElementById("hapcap");
+  cap.innerHTML = 'Haptic fired &mdash; <b>' + type + '</b><br><span>' + why + '</span>';
+  hapLog.unshift({ t: clock(), type: type, why: why });
+  if (hapLog.length > 6) hapLog.pop();
+  renderNotes();
+}
+function detent(label){
+  var d = document.getElementById("detent");
+  d.classList.remove("fire"); void d.offsetWidth; d.classList.add("fire");
+  if (label) haptic(".click", label);
+}
+function noHapticNote(msg){
+  document.getElementById("hapcap").innerHTML = '<span>' + msg + '</span>';
+}
+function toast(msg){
+  S.toast = msg; render();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ S.toast = ""; render(); }, 2200);
+}
+
+/* ---------- shared fragments ---------- */
+function rail(mode){
+  /* mode: "normal" | "outline" | "stale" | "aod" */
+  var idx = BANDIDX[bandName()], out = '<div class="rail">';
+  for (var i = 0; i < 3; i++){
+    var on = (i === idx);
+    if (mode === "aod"){ out += '<div class="rseg aod"></div>'; continue; }
+    if (mode === "outline"){ out += '<div class="rseg outline"></div>'; continue; }
+    if (on && mode === "stale"){
+      out += '<div class="rseg stale" style="color:' + bandColor() + '"><i class="tick"></i></div>';
+    } else if (on){
+      out += '<div class="rseg on" style="background:' + bandColor() + '"><i class="tick"></i></div>';
+    } else {
+      out += '<div class="rseg"></div>';
+    }
+  }
+  return out + '</div>';
+}
+function railMode(){
+  if (S.aod) return "aod";
+  if (S.state === "stale") return "stale";
+  if (!bandKnown()) return "outline";
+  return "normal";
+}
+function freshDot(tone){ return '<i class="fdot" style="background:' + C[tone] + '"></i>'; }
+function freshFooter(){
+  if (S.aod) return '<div class="fresh" style="color:' + C.aodText + '">' + clock() + '</div>';
+  if (coldStart())        return '<div class="fresh">Recovery verdict: 3 more nights</div>';
+  if (S.state==="errPhone") return '<div class="fresh">Wrist only · recovery verdict paused</div>';
+  if (S.state==="stale")  return '<div class="fresh">' + freshDot("poor") + 'Stale · 1h 47m · wrist data live</div>';
+  var f = inst().fresh;
+  return '<div class="fresh">' + freshDot(f[2]) + f[0] + ' · ' + f[1] + '</div>';
+}
+function barsBlock(todayVal, trackPx, barH){
+  var rows = [["Today", todayVal, bandColor()], ["Yest", 71, C.t3], ["7-day", 68, C.t3]];
+  var out = "";
+  for (var i = 0; i < rows.length; i++){
+    var v = rows[i][1], w = (v === null) ? 0 : (v / 100 * trackPx);
+    out += '<div class="barRow"><div class="lab">' + rows[i][0] + '</div>' +
+      '<div class="barTrack" style="width:' + trackPx + 'px;height:' + barH + 'px">' +
+      '<div class="barFill" style="width:' + w.toFixed(1) + 'px;background:' + rows[i][2] + '"></div></div>' +
+      '<div class="val">' + (v === null ? "—" : v) + '</div></div>';
+  }
+  return out;
+}
+function microRail(scale){
+  var out = '<div class="microRail" style="transform:scale(' + (scale||1) + ');transform-origin:right center">';
+  for (var i = 0; i < 3; i++){
+    if (S.aod){ out += '<i style="border-color:' + C.aodStroke + '"></i>'; continue; }
+    if (!bandKnown()){ out += '<i></i>'; continue; }
+    out += (i === BANDIDX[bandName()])
+      ? '<i class="on" style="background:' + bandColor() + '"><span class="mt"></span></i>'
+      : '<i></i>';
+  }
+  return out + '</div>';
+}
+
+/* =====================================================================
+   APP PAGE 1 — VERDICT
+   ===================================================================== */
+function pageVerdict(){
+  var v = verdict();
+  var st = S.state;
+
+  if (S.aod){
+    return '<div class="surface pad">' + rail("aod") +
+      '<div class="heroGroup"><div class="aodBox"></div>' +
+      '<div class="imper" style="color:' + C.aodText + ';font-size:13px">Laso</div>' +
+      '<div class="evid hidden">&nbsp;</div></div>' + freshFooter() + '</div>';
+  }
+  if (st === "loading"){
+    return '<div class="surface pad">' + rail("outline") +
+      '<div class="heroGroup"><div class="stateTitle" style="color:' + C.t2 + '">One moment</div>' +
+      '<div class="stateSub" style="color:' + C.t3 + '">Reading last night</div></div>' +
+      '<div class="fresh">&nbsp;</div></div>';
+  }
+  if (st === "empty"){
+    return '<div class="surface pad">' + rail("outline") +
+      '<div class="heroGroup"><div class="stateTitle" style="color:' + C.t2 + '">Nothing yet today</div>' +
+      '<div class="stateSub">An hour of wear gives the first call</div>' +
+      '<div class="stateSub2">Last night: no sleep recorded</div></div>' +
+      '<div class="fresh">&nbsp;</div></div>';
+  }
+  if (st === "errHK"){
+    return '<div class="surface pad">' +
+      '<div class="heroGroup" style="margin-top:0"><div class="stateTitle">Health access is off</div>' +
+      '<div class="stateSub">Settings › Privacy › Health › Laso</div>' +
+      '<div class="stateSub2" style="font-size:13px">Turn on Steps, Heart, Sleep</div></div>' +
+      '<div class="fresh">&nbsp;</div></div>';
+  }
+
+  var w = v.word, col = wordColor(w);
+  var longWord = (w.length >= 9) ? " xlong" : (w.length >= 6 ? " long" : "");
+  return '<div class="surface pad">' + rail(railMode()) +
+    '<div class="heroGroup">' +
+      '<div class="word' + longWord + '" style="color:' + col + '">' + w + '</div>' +
+      '<div class="imper' + (subFor(w).length > 22 ? " long2" : "") + '">' + subFor(w) + '</div>' +
+      '<div class="evid">' + evidence() + '</div>' +
+    '</div>' + freshFooter() + '</div>';
+}
+
+/* =====================================================================
+   APP PAGE 2 — WHY
+   ===================================================================== */
+function pageWhy(){
+  var track = (S.canvas === "40") ? 88 : 120;
+  var b = BANDS[S.band];
+  var known = bandKnown();
+
+  if (S.aod){
+    return '<div class="surface pad">' +
+      '<div class="titleRow"><div class="l" style="color:' + C.aodText + '">Readiness</div>' +
+      '<div class="r" style="color:' + C.aodText + '">from iPhone</div></div>' +
+      '<div class="aodBox" style="margin-top:6px"></div>' +
+      '<div style="margin-top:12px">' + aodBars(track) + '</div>' +
+      '<div style="flex:1"></div><div class="driver" style="color:' + C.aodText + '">' + clock() + '</div></div>';
+  }
+
+  var focused = S.chartFocus;
+  var dayVal  = LAST7[6 - S.chartDay];
+  var dayName = LAST7_DAYS[6 - S.chartDay];
+  var headNum = focused ? (dayVal === null ? "—" : dayVal) : (known ? b.score : "—");
+  var headLab = focused ? ("Readiness · " + dayName) : "Readiness";
+  var src     = known ? ("from iPhone · 14:26") : "from iPhone · not yet";
+  var driver  = known ? (S.canvas === "40" ? b.driver40 : b.driver46)
+                      : (S.canvas === "40" ? "6h12m · HRV 48 · RHR 58" : "6h12m sleep · HRV 48 · RHR 58");
+  if (S.state === "errHK") driver = "Health access is off";
+
+  var block = focused ? spark7(track) : barsBlock(known ? b.score : null, track, 8);
+
+  return '<div class="surface pad">' +
+    '<div class="titleRow"><div class="l">' + headLab + '</div><div class="r">' + src + '</div></div>' +
+    '<div class="bigNum">' + headNum + '</div>' +
+    '<div class="barBlock' + (focused ? " focused" : "") + '" id="barBlock" role="button" tabindex="0" ' +
+      'aria-label="' + (focused ? "Seven day readiness, crown focused" : "Comparison. Today " + (known ? b.score : "unknown") + ". Yesterday 71. Seven-day average 68.") + '">' +
+      block + '</div>' +
+    '<div style="flex:1"></div>' +
+    '<div class="driver">' + driver + '</div>' +
+    (focused ? '<div class="crownChip">7d</div>' : '') +
+    '</div>';
+}
+function aodBars(track){
+  var out = "";
+  for (var i = 0; i < 3; i++){
+    out += '<div class="barRow"><div class="lab" style="color:' + C.aodText + '">&nbsp;</div>' +
+      '<div class="barTrack" style="width:' + track + 'px;background:transparent;border:1.5px solid ' + C.aodStroke + '"></div>' +
+      '<div class="val">&nbsp;</div></div>';
+  }
+  return out;
+}
+function spark7(track){
+  var out = '<div class="spark7" style="width:' + track + 'px">';
+  var max = 80;
+  for (var i = 0; i < 7; i++){
+    var v = LAST7[6 - i];
+    var sel = (i === S.chartDay) ? " sel" : "";
+    if (v === null){ out += '<div class="b nil' + sel + '" style="height:32px"></div>'; continue; }
+    out += '<div class="b' + sel + '" style="height:' + (v / max * 32).toFixed(1) + 'px"></div>';
+  }
+  out += '</div><div style="font-size:11px;color:' + C.t3 + ';margin-top:4px">' +
+    LAST7_DAYS.slice().reverse().join("&nbsp;&nbsp;") + '</div>';
+  return out;
+}
+
+/* =====================================================================
+   APP PAGE 3 — DO
+   ===================================================================== */
+function pageDo(){
+  if (S.aod){
+    return '<div class="surface pad"><div class="aodBox" style="width:150px;height:20px"></div>' +
+      '<div style="flex:1"></div>' +
+      '<div class="aodBox" style="width:100%;height:48px;border-radius:10px"></div></div>';
+  }
+  var known = phoneAware() || S.state === "stale";
+  if (!known){
+    return '<div class="surface pad">' +
+      '<div class="actHead"><span>No move yet today</span></div>' +
+      '<div class="actDetail">The wrist keeps its own call on page 1 until the phone sends one.</div>' +
+      '<div style="flex:1"></div></div>';
+  }
+  var done = !!S.doneAt;
+  return '<div class="surface pad" style="padding-top:16px">' +
+    '<div class="actHead">' + g("walk", 16, C.t1) + '<span>Zone 2 walk, 20 min</span></div>' +
+    '<div class="actDetail">Keeps you inside your 8-12 strain window</div>' +
+    '<div style="flex:1"></div>' +
+    '<button class="btnPrimary' + (done ? " done" : "") + '" data-act="markdone"' + (done ? " disabled" : "") +
+      ' aria-label="' + (done ? "Done at " + S.doneAt : "Mark done") + '">' +
+      g("check", 16, done ? C.optimal : C.t1) + (done ? "Done " + S.doneAt : "Mark done") + '</button>' +
+    '</div>';
+}
+
+/* =====================================================================
+   CHECK-IN MODAL (reachable only from N1 action 2)
+   ===================================================================== */
+var CI_WORDS = ["Poor","Rough","OK","Good","Great"];
+function pageCheckIn(){
+  var railW = (S.canvas === "40") ? 130 : 164;
+  var pos = ((S.checkin - 1) / 4) * railW;
+  var dots = "";
+  for (var i = 0; i < 5; i++) dots += '<div class="ciDot" style="left:' + ((i / 4) * railW) + 'px"></div>';
+  return '<div class="surface pad" style="padding-top:16px;align-items:center">' +
+    '<div class="stateTitle" style="width:100%">How rested?</div>' +
+    '<div style="flex:1"></div>' +
+    '<div class="ciRail">' + dots + '<div class="ciMark" style="left:' + pos + 'px"></div></div>' +
+    '<div style="font-size:17px;font-weight:600;margin-top:10px">' + CI_WORDS[S.checkin - 1] + '</div>' +
+    '<div style="flex:1"></div>' +
+    '<button class="btnSave" data-act="checkinsave">Save</button></div>';
+}
+
+/* =====================================================================
+   WATCH FACES
+   ===================================================================== */
+function rectComplication(){
+  var v = verdict(), w = v.word, col = w ? wordColor(w) : C.t3;
+  if (noWordFallback()){
+    return '<div class="rectSlot"><div style="display:flex;align-items:center;height:22px">' +
+      '<div style="font-size:15px;font-weight:600;color:' + C.t2 + '">Health access is off</div>' +
+      '<div style="flex:1"></div>' + microRail(1) + '</div>' +
+      '<div style="font-size:13px;color:' + C.t3 + '">Settings › Privacy › Health</div></div>';
+  }
+  if (S.aod){
+    return '<div class="rectSlot" style="display:flex;flex-direction:column;justify-content:center;gap:6px">' +
+      '<div style="height:20px;width:120px;border:1.5px solid ' + C.aodStroke + ';border-radius:6px"></div>' +
+      '<div style="height:12px;width:96px;border:1.5px solid ' + C.aodStroke + ';border-radius:4px"></div></div>';
+  }
+  var maxEx = 62, bars = '<div style="display:flex;align-items:flex-end;gap:2px;height:14px">';
+  for (var i = 0; i < 7; i++){
+    var h = Math.max(1.5, EX7[i] / maxEx * 14);
+    var isToday = (i === 6);
+    bars += '<div style="width:3px;height:' + h.toFixed(1) + 'px;border-radius:1px;background:' +
+      (isToday ? C.t1 : C.t3) + ';opacity:' + (isToday ? 1 : .5) + '"></div>';
+  }
+  bars += '</div>';
+  return '<div class="rectSlot">' +
+    '<div style="display:flex;align-items:center;gap:4px;height:22px">' + g(WORDS[w].glyph, 14, col) +
+      '<div style="font-size:19.5px;font-weight:500;color:' + col + ';letter-spacing:.3px">' + w + '</div>' +
+      '<div style="flex:1"></div>' + microRail(1) + '</div>' +
+    '<div style="height:15px;font-size:13px;color:' + C.t2 + ';line-height:15px;overflow:hidden;white-space:nowrap">' + subFor(w) + '</div>' +
+    bars + '</div>';
+}
+function circComplication(){
+  var v = verdict(), w = v.word, col = w ? wordColor(w) : C.t3;
+  if (S.aod){
+    return '<div class="circSlot" style="border:1.5px solid ' + C.aodStroke + '"></div>';
+  }
+  if (noWordFallback()){
+    return '<div class="circSlot"><div style="font-size:13px;color:' + C.t2 + '">Health</div>' +
+      '<div style="margin-top:4px">' + microRail(0.92) + '</div>' +
+      '<div class="bezelLabel" style="color:' + C.t3 + '">ACCESS OFF</div></div>';
+  }
+  return '<div class="circSlot">' +
+    '<div style="margin-top:-5px">' + g(WORDS[w].glyph, 18, col) + '</div>' +
+    '<div style="margin-top:5px">' + microRail(0.92) + '</div>' +
+    '<div class="bezelLabel" style="color:' + col + '">' + w + '</div></div>';
+}
+function cornerComplication(){
+  var v = verdict(), w = v.word, col = w ? wordColor(w) : C.t3;
+  var idx = BANDIDX[bandName()];
+  var seg = 26;
+  var a0 = 180 + idx * (seg + 6);
+  if (S.aod){
+    return '<div class="cornSlot"><svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true">' +
+      '<path d="' + cornerArc(180, 270) + '" stroke="' + C.aodStroke + '" stroke-width="3" fill="none" stroke-linecap="round"/></svg></div>';
+  }
+  return '<div class="cornSlot">' +
+    '<svg viewBox="0 0 38 38" width="38" height="38" aria-hidden="true">' +
+      '<path d="' + cornerArc(180, 270) + '" stroke="' + C.subtle + '" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="' + cornerArc(a0, a0 + seg) + '" stroke="' + col + '" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+      '<path d="' + cornerTick(a0 + seg) + '" stroke="' + C.t1 + '" stroke-width="2" fill="none"/>' +
+    '</svg>' +
+    '<div style="position:absolute;left:62%;top:62%;transform:translate(-50%,-50%)">' +
+      (w ? g(WORDS[w].glyph, 18, col) : '<div style="font-size:10px;color:' + C.t3 + '">off</div>') + '</div>' +
+    '</div>';
+}
+/* The open corner gauge is a 90° arc of radius 32 centred on the slot's inner corner (35,35),
+   running 180° (bottom-left) → 270° (top-right). Bands sit at 26° each with 6° gaps. */
+function polarC(a, r){ var rad = a * Math.PI / 180; return [35 + r * Math.cos(rad), 35 + r * Math.sin(rad)]; }
+function cornerArc(a0, a1){
+  var p0 = polarC(a0, 32), p1 = polarC(a1, 32);
+  return "M" + p0[0].toFixed(1) + " " + p0[1].toFixed(1) + " A32 32 0 0 1 " + p1[0].toFixed(1) + " " + p1[1].toFixed(1);
+}
+function cornerTick(a){
+  var i = polarC(a, 29), o = polarC(a, 34.5);
+  return "M" + i[0].toFixed(1) + " " + i[1].toFixed(1) + " L" + o[0].toFixed(1) + " " + o[1].toFixed(1);
+}
+function sysCirc(icon, label, val){
+  return '<div class="circSlot"><div>' + g(icon, 18, C.t3) + '</div>' +
+    '<div style="font-size:10px;color:' + C.t2 + ';margin-top:2px">' + val + '</div>' +
+    '<div class="bezelLabel" style="color:' + C.t3 + ';font-weight:400">' + label + '</div></div>';
+}
+function faceDuo(){
+  var lab = S.labels ? " lab" : "";
+  return '<div class="face' + (S.aod ? " aodDim" : "") + '">' +
+    '<div class="faceTop"><div class="faceDate">TUE 29</div><div class="faceTime">' + clock() + '</div></div>' +
+    '<div style="height:8px"></div>' +
+    '<div class="slot laso' + lab + '" data-fam="accessoryRectangular">' + rectComplication() + '</div>' +
+    '<div style="flex:1"></div>' +
+    '<div class="faceBottom">' +
+      '<div class="slot laso' + lab + '" data-fam="accessoryCircular">' + circComplication() + '</div>' +
+      '<div class="slot">' + sysCirc("sun", "Weather", "21°") + '</div>' +
+    '</div></div>';
+}
+function faceInfograph(){
+  var lab = S.labels ? " lab" : "";
+  return '<div class="face' + (S.aod ? " aodDim" : "") + '" style="padding:6px">' +
+    '<div class="infoGrid">' +
+      '<div class="corner tl slot laso' + lab + '" data-fam="accessoryCorner">' + cornerComplication() + '</div>' +
+      '<div class="corner tr" style="text-align:right">' + g("rings", 22, C.t3) +
+        '<div style="font-size:9px;color:' + C.t3 + '">284</div></div>' +
+      '<div class="corner bl">' + g("sun", 22, C.t3) + '<div style="font-size:9px;color:' + C.t3 + '">21°</div></div>' +
+      '<div class="corner br" style="text-align:right">' + g("clock", 22, C.t3) +
+        '<div style="font-size:9px;color:' + C.t3 + '">Timer</div></div>' +
+      '<div class="infoTime">' + clock() + '</div>' +
+      '<div style="position:absolute;left:50%;top:22px;transform:translateX(-50%)">' + sysCirc("note", "Now Playing", "—") + '</div>' +
+      '<div style="position:absolute;left:50%;bottom:38px;transform:translateX(-50%)">' + sysCirc("clock", "World Clock", "09:32") + '</div>' +
+    '</div></div>';
+}
+
+/* =====================================================================
+   SMART STACK
+   ===================================================================== */
+function lasoWidget(){
+  var v = verdict(), w = v.word, col = w ? wordColor(w) : C.t3;
+  var wide = (S.canvas !== "40");
+  var slotCls = S.labels ? " lasoslot" : "";
+  if (noWordFallback()){
+    return '<div class="wcard' + slotCls + '" style="background:#131318;border:1px solid ' + C.border + '">' +
+      '<div class="wRow1"><div style="font-size:15px;font-weight:600;color:' + C.t2 + '">Health access is off</div>' +
+      '<div style="flex:1"></div>' + microRail(1) + '</div>' +
+      '<div class="wImper">Settings › Privacy › Health › Laso</div></div>';
+  }
+  var bg = S.aod ? "#000" : (bandKnown() ? BANDBG[bandName()] : "#0D1421");
+  var done = !!S.widgetDone;
+  var trailing = microRail(1);
+  if (S.aod){
+    return '<div class="wcard' + slotCls + '" style="background:#000;border:1.5px solid ' + C.aodStroke + '">' +
+      '<div style="height:20px;width:70px;border:1.5px solid ' + C.aodStroke + ';border-radius:5px"></div>' +
+      '<div style="height:28px;margin-top:8px;border:1.5px solid ' + C.aodStroke + ';border-radius:8px"></div></div>';
+  }
+  return '<div class="wcard' + slotCls + '" style="background:' + bg + '">' +
+    '<div class="wRow1">' + g(WORDS[w].glyph, 16, col) +
+      '<div class="wWord" style="color:' + col + '">' + w + '</div>' +
+      '<div style="flex:1"></div>' + trailing + '</div>' +
+    (wide ? '<div class="wImper">' + shortImper(w) + '</div>' : '<div style="height:6px"></div>') +
+    '<button class="wBtn' + (done ? " done" : "") + '" data-act="widgetdone" aria-label="' +
+      (done ? "Done at " + S.widgetDone : "Done") + '">' +
+      g("check", 14, done ? C.optimal : C.t1) + (done ? "Done " + S.widgetDone : "Done") + '</button>' +
+    '</div>';
+}
+function shortImper(w){
+  if (w === "REST") return "No training today";
+  if (w === "TRAIN") return "A hard session is on";
+  if (w === "SLEEP") return "Lights out by 23:20";
+  if (w === "BREATHE") return "One minute, slow out";
+  return evidence();   /* states carry the live headroom, not an order */
+}
+function sysWidget(title, icon, line1, line2){
+  return '<div class="wcard sys">' +
+    '<div style="display:flex;align-items:center;gap:5px;height:20px">' + g(icon, 14, C.t3) +
+    '<div style="font-size:12px;color:' + C.t3 + '">' + title + '</div></div>' +
+    '<div style="font-size:17px;font-weight:600;color:' + C.t1 + ';margin-top:2px">' + line1 + '</div>' +
+    '<div style="font-size:12px;color:' + C.t2 + '">' + line2 + '</div></div>';
+}
+function smartStack(){
+  var cards = [
+    sysWidget("Weather", "sun", "21° Clear", "H 24°  L 14°"),
+    lasoWidget(),
+    sysWidget("Activity", "rings", "284 / 620", "Move · 12 exercise min"),
+    sysWidget("Now Playing", "note", "Paused", "Nothing playing")
+  ];
+  var h = (S.canvas === "40") ? 69.5 : 80.5;
+  var off = -(S.ss * (h + 8));
+  return '<div class="ssWrap' + (S.aod ? " aodDim" : "") + '"><div class="ssTime">' + clock() + '</div>' +
+    '<div class="ssList" style="transform:translateY(' + off + 'px)">' + cards.join("") + '</div></div>';
+}
+
+/* =====================================================================
+   NOTIFICATIONS
+   ===================================================================== */
+function n1Word(){
+  var save = S.instance; S.instance = 0;                 /* 07:05 morning evaluation */
+  var v = verdict(); S.instance = save; return v.word;
+}
+function deltaPhrase(){
+  var d = score() - 71;
+  if (d === 0) return "level with yesterday";
+  return (d < 0 ? "down " + Math.abs(d) : "up " + d) + " from yesterday";
+}
+var NOTIFS = {
+  n1: {
+    title: "Today's call",
+    body: function(){ var w = n1Word(); return w + " — " + subFor(w).toLowerCase() + ". Readiness " + score() + ", " + deltaPhrase() + "."; },
+    word: n1Word,
+    actions: ["Got it", "How do you feel?", "Show why"],
+    extra: null,
+    when: "07:05 · 20 min after sleep end"
+  },
+  n2: {
+    title: "The call changed",
+    body: function(){ return "REST — no training today. Resting heart rate is 3 above your normal."; },
+    word: function(){ return "REST"; },
+    actions: ["Got it", "Show why", "Mute today"],
+    extra: "Was RECOVERING at 09:12",
+    when: "15:40 · body-stress flag crossed to elevated"
+  },
+  n3: {
+    title: "Wind-down",
+    body: function(){ return "SLEEP — lights out by 23:20. You are 4h 20m short across 5 nights."; },
+    word: function(){ return "SLEEP"; },
+    actions: ["Got it", "Remind me at 23:00", "Mute today"],
+    extra: null,
+    when: "22:20 · 60 min before bedtime target"
+  }
+};
+function notifCannotFire(){
+  return '<div class="nShort"><div class="appIcon">L</div><div class="nApp">LASO</div>' +
+    '<div class="nBody">All three notifications are built on watch-native HealthKit reads, so none of them can fire while Health access is off.</div></div>';
+}
+function notifShort(key){
+  if (noWordFallback()) return notifCannotFire();
+  var n = NOTIFS[key];
+  return '<div class="nShort"><div class="appIcon">L</div><div class="nApp">LASO</div>' +
+    '<div class="nTitle">' + n.title + '</div><div class="nBody">' + n.body() + '</div></div>';
+}
+function notifLong(key){
+  if (noWordFallback()) return notifCannotFire();
+  var n = NOTIFS[key], w = n.word(), col = wordColor(w);
+  if (key === "n3") col = C.primary;
+  var track = (S.canvas === "40") ? 88 : 110;
+  var body = "";
+  if (key === "n3"){
+    var bars = '<div class="spark5" style="margin-top:8px">';
+    var maxS = 500;
+    for (var i = 0; i < 5; i++){
+      bars += '<div class="b" style="height:' + (SLEEP5[i] / maxS * 26).toFixed(1) + 'px"></div>';
+    }
+    bars += '<div class="need" style="bottom:' + (SLEEP_NEED / maxS * 26).toFixed(1) + 'px"></div></div>';
+    body = '<div style="font-size:13px;color:' + C.t2 + ';margin-top:6px">Debt 4h 20m across 5 nights</div>' + bars +
+      '<div style="font-size:10px;color:' + C.t3 + ';margin-top:3px">5 nights vs a 7h 40m need</div>';
+  } else {
+    body = '<div style="margin-top:10px">' + barsBlock(bandKnown() ? score() : null, track, 6) + '</div>' +
+      '<div style="font-size:11px;color:' + C.t3 + ';margin-top:6px">' +
+      (S.canvas === "40" ? BANDS[S.band].driver40 : BANDS[S.band].driver46) + '</div>' +
+      (n.extra ? '<div style="font-size:11px;color:' + C.t3 + ';margin-top:4px">' + n.extra + '</div>' : "");
+  }
+  var acts = "";
+  for (var a = 0; a < n.actions.length; a++){
+    acts += '<button class="nAct" data-act="notifact" data-n="' + key + '" data-i="' + a + '">' + n.actions[a] + '</button>';
+  }
+  acts += '<button class="nAct dismiss" data-act="notifact" data-n="' + key + '" data-i="-1">Dismiss</button>';
+  return '<div class="nLong">' +
+    '<div class="nSash" style="background:' + col + '22;border-bottom:1px solid ' + col + '44">' +
+      '<div class="appIcon" style="width:16px;height:16px;border-radius:5px;font-size:9px">L</div><div class="nm">Laso</div></div>' +
+    '<div class="nScroll" id="nScroll" style="transform:translateY(' + (-S.ss * 0) + 'px)">' +
+      rail(bandKnown() ? "normal" : "outline") +
+      '<div style="font-size:40px;font-weight:600;letter-spacing:1px;color:' + col + ';margin-top:10px;text-align:center">' + w + '</div>' +
+      '<div style="font-size:16px;color:' + C.t2 + ';text-align:center;margin-top:4px">' + subFor(w) + '</div>' +
+      body + acts +
+    '</div></div>';
+}
+
+/* =====================================================================
+   SCREEN REGISTRY
+   ===================================================================== */
+var SCREENS = [
+  { id:"face-duo",    grp:"A", name:"Watch face · Modular Duo", key:"accessoryRectangular + accessoryCircular" },
+  { id:"face-info",   grp:"A", name:"Watch face · Infograph",   key:"accessoryCorner" },
+  { id:"smartstack",  grp:"A", name:"Smart Stack",                   key:"crown-down, 4 widgets" },
+  { id:"n1-short",    grp:"B", name:"N1 Morning verdict · short", key:"07:05" },
+  { id:"n1-long",     grp:"B", name:"N1 Morning verdict · long",  key:"3 actions + Dismiss" },
+  { id:"n2-short",    grp:"B", name:"N2 The call changed · short", key:"delta trigger" },
+  { id:"n2-long",     grp:"B", name:"N2 The call changed · long",  key:"+ Was RECOVERING at 09:12" },
+  { id:"n3-short",    grp:"B", name:"N3 Wind-down · short",       key:"22:20" },
+  { id:"n3-long",     grp:"B", name:"N3 Wind-down · long",        key:"5-night sparkline" },
+  { id:"launch",      grp:"C", name:"Launch / wrist raise",           key:"cached word, no spinner" },
+  { id:"app",         grp:"C", name:"App · 3 vertical pages",      key:"crown 1 ↔ 2 ↔ 3" },
+  { id:"checkin",     grp:"C", name:"Check-in modal",                 key:"crown 1–5, from N1" }
+];
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function screenBody(){
+  switch (S.screen){
+    case "face-duo":   return faceDuo();
+    case "face-info":  return faceInfograph();
+    case "smartstack": return smartStack();
+    case "n1-short":   return notifShort("n1");
+    case "n1-long":    return notifLong("n1");
+    case "n2-short":   return notifShort("n2");
+    case "n2-long":    return notifLong("n2");
+    case "n3-short":   return notifShort("n3");
+    case "n3-long":    return notifLong("n3");
+    case "checkin":    return pageCheckIn();
+    case "launch":
+    case "app":
+    default:
+      if (S.page === 1) return pageWhy();
+      if (S.page === 2) return pageDo();
+      return pageVerdict();
+  }
+}
+function pageDots(){
+  if (S.screen !== "app" && S.screen !== "launch") return "";
+  var out = '<div style="position:absolute;right:3px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;z-index:5">';
+  for (var i = 0; i < 3; i++){
+    out += '<div style="width:4px;height:4px;border-radius:50%;background:' +
+      (i === S.page ? C.t1 : "#3A3A42") + '"></div>';
+  }
+  return out + '</div>';
+}
+function render(){
+  var sc = document.getElementById("screen");
+  sc.className = "screen" + (S.canvas === "40" ? " s40" : "");
+  sc.innerHTML = screenBody() + pageDots() +
+    (S.toast ? '<div class="toast">' + S.toast + '</div>' : "");
+  fitLines(sc);
+  document.getElementById("brandWord").textContent = verdict().word || "—";
+  var scr = null;
+  for (var i = 0; i < SCREENS.length; i++) if (SCREENS[i].id === S.screen) scr = SCREENS[i];
+  document.getElementById("stageTitle").innerHTML = '<b>' + scr.name + '</b> · ' + scr.key +
+    ' · ' + (S.canvas === "46" ? "46mm 208×248pt" : "40mm 162×197pt") + (S.aod ? " · Always-On" : "");
+  renderNav(); renderNotes(); renderDev();
+}
+
+/* SwiftUI .lineLimit(1) + .minimumScaleFactor in CSS. Two of the fixed imperative strings
+   ("One minute, slow out-breath", "You have done enough today") are longer than the 22-character
+   budget the spec states, and the freshness footer's stale variant is longer still at 40mm.
+   Rather than truncate copy the spec fixes, single-line text shrinks to a floor, exactly as
+   minimumScaleFactor(0.8) would on device. */
+function fitLines(root){
+  var sel = ".word,.imper,.evid,.driver,.fresh,.actHead span,.wImper,.wWord";
+  var nodes = root.querySelectorAll ? root.querySelectorAll(sel) : [];
+  for (var i = 0; i < nodes.length; i++){
+    var n = nodes[i], parent = n.parentElement;
+    if (!parent || !n.scrollWidth) continue;
+    n.style.transform = ""; n.style.transformOrigin = "center";
+    var avail = parent.clientWidth || root.clientWidth;
+    if (avail && n.scrollWidth > avail - 2){
+      var k = Math.max(0.8, (avail - 2) / n.scrollWidth);
+      n.style.transform = "scale(" + k.toFixed(3) + ")";
+    }
+  }
+}
+
+/* ---------- nav ---------- */
+function renderNav(){
+  var groups = { A:"navA", B:"navB", C:"navC" };
+  for (var k in groups) document.getElementById(groups[k]).innerHTML = "";
+  for (var i = 0; i < SCREENS.length; i++){
+    var s = SCREENS[i];
+    var b = document.createElement("button");
+    b.className = "navbtn"; b.type = "button";
+    b.setAttribute("aria-current", String(S.screen === s.id));
+    b.innerHTML = s.name + '<span class="k">' + s.key + '</span>';
+    b.dataset.screen = s.id;
+    b.addEventListener("click", function(ev){ goScreen(ev.currentTarget.dataset.screen); });
+    document.getElementById(groups[s.grp]).appendChild(b);
+  }
+}
+function goScreen(id){
+  S.screen = id;
+  if (id === "app" || id === "launch") S.page = 0;
+  if (id === "smartstack") S.ss = 1;
+  S.chartFocus = false; crownAccum = 0;
+  if (id === "launch"){
+    render();
+    var el = document.querySelector(".surface");
+    if (el){ el.style.opacity = "0"; el.style.transition = "opacity 220ms cubic-bezier(.22,.61,.36,1)";
+      requestAnimationFrame(function(){ el.style.opacity = "1"; }); }
+    noHapticNote("Wrist raise into a frontmost app: the last cached word renders immediately, with its own freshness footer. No spinner (HIG: Feedback).");
+    return;
+  }
+  render();
+  noHapticNote(screenHint());
+}
+function screenHint(){
+  if (S.screen === "face-duo" || S.screen === "face-info") return "Turn the crown down to open the Smart Stack.";
+  if (S.screen === "smartstack") return "Crown scrolls the stack. The Laso card’s Done button is the Double-Tap target.";
+  if (S.screen === "app") return "Crown moves between the three vertical pages. On page 2, tap the bars to give the crown a 7-day scrub.";
+  if (S.screen === "checkin") return "Crown steps 1–5 with a .click detent at each position.";
+  if (S.screen.indexOf("-long") > 0) return "Crown scrolls the long look. Actions are live.";
+  return "Short look: title plus a body whose first word is the instruction.";
+}
+
+/* ---------- notes column ---------- */
+var FIVE_SEC = {
+  "face-duo":   ["PASS", "Word plus micro-rail read in ~1 s. The 7-bar sparkline is a second-order read most glances will not perform."],
+  "face-info":  ["PASS", "Glyph plus corner gauge. No reading required."],
+  "smartstack": ["PASS", "Word plus one button."],
+  "n1-short":   ["PASS", "Title plus a body whose first word is the instruction."],
+  "n1-long":    ["FAIL", "Carries the bar comparison and the driver line by design. The wrist is already raised and the user chose to look."],
+  "n2-short":   ["PASS", "Same shape as N1."],
+  "n2-long":    ["FAIL", "Deliberate, same reason as N1 long."],
+  "n3-short":   ["PASS", "Same shape as N1."],
+  "n3-long":    ["FAIL", "Deliberate, same reason as N1 long."],
+  "launch":     ["PASS", "The cached word is on screen before the HealthKit read returns."],
+  "checkin":    ["N/A",  "Not a glance surface. It is a deliberate 10-second input reached from one notification action."],
+  "app":        ["PASS", "Page 1 only. Page 2 is a 7–9 s read and fails by design; page 3 passes marginally."]
+};
+function renderNotes(){
+  var v = verdict();
+  var five = FIVE_SEC[S.screen] || ["—",""];
+  var famBits = "";
+  if (S.screen === "face-duo")   famBits = '<span class="tag">accessoryRectangular → laso://watch/why</span><span class="tag">accessoryCircular → laso://watch/verdict</span><span class="tag">system Weather</span><span class="tag">system Date</span>';
+  if (S.screen === "face-info")  famBits = '<span class="tag">accessoryCorner → laso://watch/do</span><span class="tag">system Activity</span><span class="tag">system Weather</span><span class="tag">system Timer</span>';
+  if (S.screen === "smartstack") famBits = '<span class="tag">accessoryRectangular only</span><span class="tag">no accessoryCircular in the stack</span>';
+
+  var ladderTrace = "";
+  if (S.state === "errHK"){
+    ladderTrace = "Guard: HealthKit read denied → state accessDenied. No word, because with no sensor reads there is nothing honest to say.";
+  } else if (S.state === "loading" || S.state === "empty"){
+    ladderTrace = "The ladder has not produced a word yet in this state.";
+  } else {
+    ladderTrace = "Rule " + v.rule + " fired → <b>" + v.word + "</b>. phoneAware = " + phoneAware() +
+      " (rules 1 and 4 " + (phoneAware() ? "live" : "skipped") + "), band = " + bandName() +
+      ", body-stress flag = " + BANDS[S.band].stress + ", water pace = " + v.pace + ".";
+  }
+
+  var logHtml = "";
+  for (var i = 0; i < hapLog.length; i++){
+    logHtml += '<li>' + hapLog[i].t + ' &nbsp;<b>' + hapLog[i].type + '</b> &nbsp;' + hapLog[i].why + '</li>';
+  }
+  if (!logHtml) logHtml = '<li>nothing yet</li>';
+
+  document.getElementById("notes").innerHTML =
+    '<h3>The ladder, right now</h3><p class="kv">' + ladderTrace + '</p>' +
+    (famBits ? '<h3>Slots on this surface</h3><div>' + famBits + '</div>' : "") +
+    '<h3>5-second test</h3><p class="kv"><b class="' + (five[0] === "PASS" ? "pass" : (five[0] === "FAIL" ? "fail" : "")) + '">' +
+      five[0] + '</b> &mdash; ' + five[1] + '</p>' +
+    '<h3>What the wrist computed</h3><p class="kv">' +
+      'Word, imperative and evidence line: <b>native HealthKit on watchOS</b>. Band, readiness number and today’s move: <b>phone payload</b>, labelled <i>from iPhone · 14:26</i> on page 2.</p>' +
+    '<h3>Haptic log</h3><ul class="log">' + logHtml + '</ul>' +
+    '<h3>Always-On</h3><p class="kv">' + (S.aod
+      ? "Redacted: rail stroked with no fill and no tick, the word replaced by an empty stroked rectangle, evidence hidden with its space preserved. Footprint identical so nothing jumps on wake."
+      : "Toggle it in the dev panel. Every word is redacted, including the blue upkeep words — stand hours and hydration are HealthKit data too.") + '</p>';
+}
+
+/* ---------- dev toolbar ---------- */
+function segButtons(hostId, items, current, cb){
+  var host = document.getElementById(hostId);
+  host.innerHTML = "";
+  items.forEach(function(it){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = it.label;
+    b.setAttribute("aria-pressed", String(it.value === current));
+    b.addEventListener("click", function(){ cb(it.value); });
+    host.appendChild(b);
+  });
+}
+function renderDev(){
+  segButtons("devCanvas", [{label:"46mm",value:"46"},{label:"40mm",value:"40"}], S.canvas,
+    function(v){ S.canvas = v; render(); });
+  segButtons("devState", [
+    {label:"loaded",value:"loaded"},{label:"loading",value:"loading"},{label:"cold start",value:"coldstart"},
+    {label:"empty",value:"empty"},{label:"phone unreachable",value:"errPhone"},
+    {label:"HealthKit denied",value:"errHK"},{label:"stale",value:"stale"}], S.state,
+    function(v){ S.state = v; S.chartFocus = false; render(); });
+  segButtons("devAod", [{label:"off",value:false},{label:"on",value:true}], S.aod,
+    function(v){ S.aod = v; render(); });
+  segButtons("devBand", [
+    {label:"poor 38",value:"poor"},{label:"fair 62 (Alex)",value:"fair"},{label:"optimal 78",value:"optimal"}], S.band,
+    function(v){ S.band = v; render(); });
+  var times = TUESDAY.map(function(t, i){ return { label:t.time, value:i }; });
+  segButtons("devTime", times, S.instance, function(v){ S.instance = v; render(); });
+  segButtons("devLabels", [{label:"labels on",value:true},{label:"labels off",value:false}], S.labels,
+    function(v){ S.labels = v; render(); });
+}
+
+/* ---------- ladder self-check (runs once, shown in the dev panel) ---------- */
+function selfCheck(){
+  var saveI = S.instance, saveB = S.band, saveS = S.state, ok = 0, bad = [];
+  S.band = "fair"; S.state = "loaded";
+  for (var i = 0; i < TUESDAY.length; i++){
+    S.instance = i;
+    var v = verdict();
+    if (v.word === TUESDAY[i].exp[0] && v.rule === TUESDAY[i].exp[1]) ok++;
+    else bad.push(TUESDAY[i].time + " got " + v.word + "/" + v.rule);
+  }
+  S.instance = saveI; S.band = saveB; S.state = saveS;
+  return { ok: ok, total: TUESDAY.length, bad: bad };
+}
+
+/* =====================================================================
+   INTERACTION
+   ===================================================================== */
+document.getElementById("screen").addEventListener("click", function(ev){
+  var t = ev.target.closest("[data-act]");
+  if (!t) return;
+  var act = t.dataset.act;
+
+  if (act === "markdone"){
+    S.doneAt = "14:33";
+    haptic(".success", "Mark done tapped → WatchCommand.markActionDone enqueued");
+    render(); return;
+  }
+  if (act === "widgetdone"){
+    S.widgetDone = "14:33";
+    haptic(".success", "Widget AppIntent → WatchCommand.markActionDone");
+    render(); return;
+  }
+  if (act === "checkinsave"){
+    haptic(".success", "Save tapped → WatchCommand.checkIn(" + S.checkin + ") enqueued, sheet dismisses");
+    S.screen = "app"; S.page = 0; render(); return;
+  }
+  if (act === "notifact"){
+    handleNotifAction(t.dataset.n, parseInt(t.dataset.i, 10)); return;
+  }
+});
+/* page 2 bar block takes crown focus on tap */
+document.getElementById("screen").addEventListener("click", function(ev){
+  var bb = ev.target.closest("#barBlock");
+  if (bb) toggleChartFocus();
+});
+document.getElementById("screen").addEventListener("keydown", function(ev){
+  var bb = ev.target.closest("#barBlock");
+  if (bb && (ev.key === "Enter" || ev.key === " ")){ ev.preventDefault(); toggleChartFocus(); }
+});
+function toggleChartFocus(){
+  S.chartFocus = !S.chartFocus;
+  clearTimeout(chartTimer);
+  if (S.chartFocus){
+    S.chartDay = 6;
+    noHapticNote("Crown focus captured by the chart. .digitalCrownAccessory shows a 7d chip. Turn the crown to scrub; tap again or wait 4 s to release.");
+    chartTimer = setTimeout(function(){ S.chartFocus = false; render();
+      noHapticNote("4 s without rotation released crown focus back to page navigation."); }, 4000);
+  } else {
+    noHapticNote("Crown focus released back to page navigation.");
+  }
+  render();
+}
+function handleNotifAction(key, i){
+  var n = NOTIFS[key];
+  if (i === -1){ goScreen("face-duo"); toast("Dismissed"); return; }
+  var label = n.actions[i];
+  if (label === "Got it"){ goScreen("face-duo"); toast("Seen · logged"); return; }
+  if (label === "Show why"){ S.screen = "app"; S.page = 1; render();
+    noHapticNote("Deep link laso://watch/why → page 2. The number lives here, one crown turn from the glance."); return; }
+  if (label === "How do you feel?"){ S.screen = "checkin"; render();
+    noHapticNote("Check-in sheet. Crown steps 1–5 with a .click detent. Not a tab, not in the page order."); return; }
+  if (label === "Mute today"){ S.muted = true; goScreen("face-duo"); toast("N2 and N3 muted for 24 h"); return; }
+  if (label === "Remind me at 23:00"){ goScreen("face-duo"); toast("One reminder set for 23:00"); return; }
+}
+
+/* ---------- Digital Crown ---------- */
+var crownAccum = 0, crownPx = 0, crownMarkTimer = null;
+function crown(dir){                    /* dir = +1 down, -1 up */
+  crownPx += dir * 1.4;
+  /* the ridge pattern is 2.8px tall, so translating it is a rotation */
+  document.getElementById("ridges").style.transform =
+    "translateY(" + (((crownPx % 2.8) + 2.8) % 2.8).toFixed(2) + "px)";
+  var mark = document.getElementById("crownMark");
+  mark.classList.add("on");
+  mark.style.top = (dir > 0 ? 88 : 62) + "px";
+  clearTimeout(crownMarkTimer);
+  crownMarkTimer = setTimeout(function(){ mark.classList.remove("on"); }, 500);
+
+  if (S.screen === "face-duo" || S.screen === "face-info"){
+    if (dir > 0){ goScreen("smartstack"); detent(null);
+      noHapticNote("Crown down from the face opens the Smart Stack."); }
+    return;
+  }
+  if (S.screen === "smartstack"){
+    var next = S.ss + dir;
+    if (next < 0){ goScreen("face-duo"); detent(null); return; }
+    if (next > 3) next = 3;
+    S.ss = next; detent(null); render();
+    noHapticNote("Smart Stack scroll. The stack uses system detents; the app never calls play(_:) for scrolling.");
+    return;
+  }
+  if (S.screen === "checkin"){
+    var nv = Math.min(5, Math.max(1, S.checkin + dir));
+    if (nv !== S.checkin){ S.checkin = nv; detent("Check-in rail stepped to " + S.checkin + " (" + CI_WORDS[S.checkin-1] + ")"); render(); }
+    return;
+  }
+  if (S.screen.indexOf("-long") > 0){
+    var el = document.getElementById("nScroll");
+    if (el){
+      crownAccum = Math.min(0, Math.max(-150, (crownAccum || 0) - dir * 22));
+      el.style.transform = "translateY(" + crownAccum + "px)";
+      detent(null);
+      noHapticNote("Long look scrolls under the crown. The sash stays pinned.");
+    }
+    return;
+  }
+  if (S.screen === "app" || S.screen === "launch"){
+    if (S.page === 1 && S.chartFocus){
+      var nd = Math.min(6, Math.max(0, S.chartDay - dir));
+      if (nd !== S.chartDay){
+        S.chartDay = nd;
+        var val = LAST7[6 - nd];
+        detent("Crown scrub → " + LAST7_FULL[LAST7_DAYS[6 - nd]] + ", " + (val === null ? "no value" : val));
+        clearTimeout(chartTimer);
+        chartTimer = setTimeout(function(){ S.chartFocus = false; render();
+          noHapticNote("4 s without rotation released crown focus."); }, 4000);
+        render();
+      }
+      return;
+    }
+    var np = Math.min(2, Math.max(0, S.page + dir));
+    if (np !== S.page){
+      S.page = np; S.chartFocus = false; render(); detent(null);
+      noHapticNote("Vertical page " + (S.page + 1) + " of 3. System page detent — the app never calls play(_:) for page changes (R8).");
+    }
+    return;
+  }
+  detent(null);
+}
+document.getElementById("watch").addEventListener("wheel", function(ev){
+  ev.preventDefault();
+  crown(ev.deltaY > 0 ? 1 : -1);
+}, { passive:false });
+document.addEventListener("keydown", function(ev){
+  if (ev.key === "ArrowDown"){ ev.preventDefault(); crown(1); }
+  if (ev.key === "ArrowUp"){ ev.preventDefault(); crown(-1); }
+});
+
+/* ---------- Double Tap ---------- */
+document.getElementById("devDouble").addEventListener("click", function(){
+  if (S.screen === "smartstack"){
+    S.widgetDone = "14:33";
+    haptic(".success", "Double Tap → Smart Stack Done → markActionDone. This is the concept’s primary action.");
+    render(); return;
+  }
+  if (S.screen.indexOf("-long") > 0){
+    var key = S.screen.slice(0, 2);
+    noHapticNote("Double Tap selects the first nondestructive action — “Got it” (R17).");
+    handleNotifAction(key, 0); return;
+  }
+  if (S.screen === "face-duo" || S.screen === "face-info"){
+    goScreen("smartstack");
+    noHapticNote("Double Tap on the watch face opens the Smart Stack. The app itself sets no primaryAction.");
+    return;
+  }
+  if (S.screen === "app" || S.screen === "launch"){
+    S.page = (S.page + 1) % 3; S.chartFocus = false; render();
+    noHapticNote("Inside the app Double Tap keeps its system meaning — advance to the next vertical tab. No page sets handGestureShortcut(.primaryAction), per R11.");
+    return;
+  }
+  if (S.screen === "checkin"){
+    haptic(".success", "Double Tap → Save");
+    S.screen = "app"; S.page = 0; render(); return;
+  }
+  noHapticNote("Double Tap on a short look opens the long look.");
+  S.screen = S.screen.replace("-short", "-long"); render();
+});
+
+/* ---------- dev panel open/close ---------- */
+document.getElementById("devbtn").addEventListener("click", function(){
+  var d = document.getElementById("dev");
+  var open = d.classList.toggle("open");
+  this.setAttribute("aria-expanded", String(open));
+});
+
+/* ---------- boot ---------- */
+render();
+var chk = selfCheck();
+document.getElementById("devCheck").textContent =
+  "ladder self-check: " + chk.ok + "/" + chk.total + " of Alex’s Tuesday" + (chk.bad.length ? " — " + chk.bad.join("; ") : " ✓");
+if (chk.bad.length) document.getElementById("devCheck").style.color = C.poor;
+noHapticNote("Turn the crown down to open the Smart Stack.");
+
+/* dev-only: allow a screenshot harness to drive the prototype from the URL hash, e.g.
+   #screen=app&page=1&canvas=40&state=stale&aod=1&band=poor&instance=7 */
+(function(){
+  var q = location.hash.replace(/^#/,""); if(!q) return;
+  q.split("&").forEach(function(kv){
+    var a = kv.split("="), k = a[0], v = a[1];
+    if (k==="aod") S.aod = (v==="1");
+    else if (k==="page"||k==="instance"||k==="ss"||k==="chartDay") S[k] = parseInt(v,10);
+    else if (k==="chartFocus") S.chartFocus = (v==="1");
+    else if (k in S) S[k] = v;
+  });
+  render();
+})();
+
+</script>
+</body>
+</html>

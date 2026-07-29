@@ -123,6 +123,23 @@ final class BackgroundRefreshCoordinator {
                     dayType: WidgetDataStore.shared.loadReadiness()?.dayType ?? "",
                     updatedAt: Date()
                 )
+                // The watch was the one surface this task never updated: it wrote the
+                // iOS widget snapshot and stopped, so the wrist stayed on whatever the
+                // last foreground refresh left it and aged into its stale state, while
+                // the phone's own widget stayed current. Push here too.
+                //
+                // Facts are not recomputed here: this lightweight task does not run the
+                // analysis engine. `lastKnownFacts` carries only the values that are
+                // still true on a later day, because this push stamps the payload as
+                // fresh and anything day-specific would be certified as current when it
+                // is not.
+                PhoneWatchSession.shared.push(
+                    readinessScore: score,
+                    grade: snapshot.grade,
+                    dayType: snapshot.dayType,
+                    facts: PhoneWatchSession.shared.lastKnownFacts()
+                )
+
                 if WidgetDataStore.shared.saveReadinessIfChanged(snapshot) {
                     WidgetDataStore.shared.markLastUpdate()
                     WidgetCenter.shared.reloadAllTimelines()

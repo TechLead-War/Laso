@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laso Watch — Concept 08 — Ask</title>
+<style>
+:root{
+  --bg:#000000;
+  --raised:#1B1B21;
+  --elev:#26262D;
+  --subtle:#17171C;
+  --t1:#F2F2F6;
+  --t2:#C9C9D2;
+  --t3:#ADADB8;
+  --border:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --scale:1.75;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#08080A;color:var(--t2);}
+body{
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  min-height:100vh;
+  padding:20px 20px 60px;
+}
+h1{font-size:15px;font-weight:600;color:var(--t1);letter-spacing:.2px}
+.sub{font-size:12px;color:var(--t3);margin-top:3px}
+header.pagehead{max-width:1360px;margin:0 auto 18px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+header.pagehead .tagline{font-size:12px;color:var(--t3)}
+
+.stage{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:210px minmax(320px,1fr) 300px;gap:22px;align-items:start}
+@media (max-width:1080px){.stage{grid-template-columns:1fr;}}
+
+/* ---------- screen switcher ---------- */
+.switcher{background:#0E0E12;border:1px solid #1D1D24;border-radius:12px;padding:10px}
+.switcher h2{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--t3);font-weight:600;margin:6px 4px 7px}
+.switcher .grp{margin-bottom:6px}
+.sw{
+  display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;
+  color:var(--t2);font:inherit;font-size:12px;padding:8px 9px;border-radius:8px;cursor:pointer;
+  min-height:32px;
+}
+.sw:hover{background:#16161C}
+.sw:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sw[aria-current="true"]{background:var(--elev);color:var(--t1);border-color:var(--border)}
+.sw .k{display:inline-block;width:26px;color:var(--t3);font-size:10px}
+
+/* ---------- watch ---------- */
+.watchwrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.watchzoom{transform:scale(var(--scale));transform-origin:top center;}
+.zoomspace{}
+.case{
+  position:relative;
+  background:linear-gradient(160deg,#3A3A40 0%,#141418 32%,#0B0B0D 60%,#2A2A30 100%);
+  padding:11px 12px;
+  border-radius:52px;
+}
+.case.s40{border-radius:44px;padding:9px 10px}
+.screen{
+  position:relative;background:var(--bg);overflow:hidden;
+  width:208px;height:248px;border-radius:30px;
+  color:var(--t1);
+}
+.screen.s40{width:162px;height:197px;border-radius:24px}
+.screen.aod{filter:brightness(.6) saturate(.7)}
+.canvas{position:absolute;inset:0}
+.t{position:absolute;white-space:nowrap}
+.wrap{white-space:normal}
+.clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+
+/* crown + side button */
+.crown{
+  position:absolute;right:-9px;top:64px;width:11px;height:46px;border-radius:4px;
+  background:repeating-linear-gradient(180deg,#4A4A52 0 2px,#26262B 2px 4px);
+  border:1px solid #0A0A0C;
+}
+.case.s40 .crown{top:52px;height:38px}
+.crowndial{
+  position:absolute;right:-34px;top:60px;width:26px;height:26px;border-radius:50%;
+  border:1px solid #2A2A31;background:#101015;
+}
+.crowndial .needle{position:absolute;left:50%;top:2px;width:2px;height:11px;margin-left:-1px;background:var(--accent);transform-origin:50% 11px;border-radius:1px}
+.crowndial.det{border-color:var(--accent)}
+.sidebtn{position:absolute;right:-6px;top:132px;width:7px;height:26px;border-radius:3px;background:#2A2A31;border:1px solid #0A0A0C}
+.case.s40 .sidebtn{top:106px;height:21px}
+.detent{position:absolute;right:-52px;top:70px;font-size:9px;color:var(--accent);opacity:0;letter-spacing:.4px}
+.detent.on{opacity:1}
+
+/* haptic pulse ring on screen edge */
+.pulse{position:absolute;inset:0;border-radius:inherit;border:2px solid var(--accent);opacity:0;pointer-events:none}
+.pulse.fire{animation:pulsering 520ms var(--ease)}
+@keyframes pulsering{0%{opacity:.95}70%{opacity:.35}100%{opacity:0}}
+
+.hapticbar{
+  min-height:26px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3);
+  background:#0E0E12;border:1px solid #1D1D24;border-radius:8px;padding:5px 10px;max-width:420px;
+}
+.hapticbar .dot{width:7px;height:7px;border-radius:50%;background:#33333B;flex:none}
+.hapticbar.live .dot{background:var(--accent)}
+.hapticbar code{color:var(--accent);font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.hapticbar .muted{color:#6C6C78}
+
+/* ---------- side panel ---------- */
+.panel{background:#0E0E12;border:1px solid #1D1D24;border-radius:12px;padding:12px;font-size:11.5px;line-height:1.5}
+.panel h2{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:7px}
+.panel + .panel{margin-top:12px}
+.panel dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+.panel dt{color:var(--t3)}
+.panel dd{color:var(--t1)}
+.panel ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.panel li{padding-left:12px;position:relative;color:var(--t2)}
+.panel li::before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:var(--border)}
+.panel li b{color:var(--t1);font-weight:600}
+.panel .fam{color:var(--accent);font-family:ui-monospace,Menlo,monospace;font-size:10.5px}
+.warn{color:var(--fair)}
+.mini{font-size:10.5px;color:#6C6C78;margin-top:8px;line-height:1.45}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{
+  position:fixed;right:16px;bottom:16px;z-index:40;
+  background:#15151B;border:1px solid #2A2A32;color:var(--t2);
+  font:inherit;font-size:11px;padding:9px 13px;border-radius:20px;cursor:pointer;min-height:34px;
+}
+.devbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.devpanel{
+  position:fixed;right:16px;bottom:60px;z-index:40;width:280px;
+  background:#0C0C10;border:1px solid #2A2A32;border-radius:12px;padding:12px;
+  display:none;max-height:78vh;overflow:auto;
+}
+.devpanel.open{display:block}
+.devpanel h3{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--t3);font-weight:600;margin:10px 0 6px}
+.devpanel h3:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{
+  flex:1 1 auto;background:#15151B;border:1px solid #26262D;color:var(--t2);font:inherit;font-size:11px;
+  padding:7px 8px;border-radius:7px;cursor:pointer;min-height:30px;
+}
+.seg button[aria-pressed="true"]{background:var(--elev);color:var(--t1);border-color:var(--accent)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.devpanel .note{font-size:10px;color:#6C6C78;margin-top:6px;line-height:1.45}
+.devpanel label.chk{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t2);padding:6px 0;cursor:pointer}
+
+/* generic interactive */
+.press{cursor:pointer;transition:transform 80ms var(--ease)}
+.press:active{transform:scale(.96)}
+button.bare{background:transparent;border:0;color:inherit;font:inherit;padding:0;text-align:left}
+.hit{position:absolute;background:transparent;border:0;padding:0;cursor:pointer}
+.hit:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}
+}
+.sronly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<header class="pagehead">
+  <h1>Concept 08 — Ask</h1>
+  <span class="tagline">Alex, 34 · Tuesday 14:32 · dark only · 46mm 208&times;248pt</span>
+</header>
+
+<div class="stage">
+
+  <nav class="switcher" aria-label="Screen switcher">
+    <div class="grp">
+      <h2>Off app</h2>
+      <button class="sw" data-scr="face"><span class="k">A1</span>Watch face</button>
+      <button class="sw" data-scr="stack"><span class="k">A2</span>Smart Stack</button>
+      <button class="sw" data-scr="nshort"><span class="k">A3</span>Notification, short look</button>
+      <button class="sw" data-scr="nlong1"><span class="k">A4</span>Long look, N1 morning</button>
+      <button class="sw" data-scr="nlong2"><span class="k">A5</span>Long look, N2 changed</button>
+    </div>
+    <div class="grp">
+      <h2>App</h2>
+      <button class="sw" data-scr="launch"><span class="k">B1</span>Launch, cold snapshot</button>
+      <button class="sw" data-scr="raise"><span class="k">B2</span>Wrist raise return</button>
+      <button class="sw" data-scr="p1"><span class="k">S1</span>Answer &mdash; page 1</button>
+      <button class="sw" data-scr="p2"><span class="k">S2</span>Because &mdash; page 2</button>
+      <button class="sw" data-scr="p3"><span class="k">S3</span>Do &mdash; page 3</button>
+      <button class="sw" data-scr="s4"><span class="k">S4</span>Factor detail</button>
+      <button class="sw" data-scr="s5"><span class="k">S5</span>Question deck</button>
+    </div>
+  </nav>
+
+  <div class="watchwrap">
+    <div class="watchzoom" id="zoom">
+      <div class="case" id="case">
+        <div class="screen" id="screen">
+          <div class="canvas" id="canvas"></div>
+          <div class="pulse" id="pulse"></div>
+        </div>
+        <div class="crown" aria-hidden="true"></div>
+        <div class="sidebtn" aria-hidden="true"></div>
+        <div class="crowndial" id="dial" aria-hidden="true"><div class="needle" id="needle"></div></div>
+        <div class="detent" id="detent" aria-hidden="true">&bull; click</div>
+      </div>
+    </div>
+    <div class="zoomspace" id="zoomspace"></div>
+    <div class="hapticbar" id="hapticbar">
+      <span class="dot"></span>
+      <span id="haptictext" class="muted">No haptic yet. Every state-changing tap names its WKHapticType here.</span>
+    </div>
+    <div class="hapticbar" id="crownbar">
+      <span class="dot"></span>
+      <span id="crowntext" class="muted">Digital Crown: mouse wheel or Up / Down arrow keys.</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>This screen</h2>
+      <dl id="meta"></dl>
+      <div class="mini" id="metanote"></div>
+    </div>
+    <div class="panel" id="notespanel">
+      <h2 id="notestitle">Notes</h2>
+      <ul id="notes"></ul>
+    </div>
+    <div class="panel">
+      <h2>Data split</h2>
+      <ul>
+        <li><b>Wrist reads natively</b> sleep, resting heart, breaths, HRV, SpO2, wrist temp, exercise, stand, live HR. Never stale.</li>
+        <li><b>Phone sends judgements</b> the sentence, attribution weights, 60&ndash;day baselines, severity bands, the one action.</li>
+        <li>A value the wrist can measure is never taken from the wire, so the wrist is never wrong about a number it is holding.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel">Dev</button>
+<div class="devpanel" id="devpanel" role="group" aria-label="Developer toolbar">
+  <h3>Canvas</h3>
+  <div class="seg" id="segSize"></div>
+  <h3>State</h3>
+  <div class="seg" id="segState"></div>
+  <h3>Always&ndash;On</h3>
+  <div class="seg" id="segAod"></div>
+  <h3>Severity band</h3>
+  <div class="seg" id="segBand"></div>
+  <div class="note" id="bandnote"></div>
+  <h3>Pinned question</h3>
+  <div class="seg" id="segPin"></div>
+  <h3>Gestures</h3>
+  <div class="seg" id="segGest"></div>
+  <label class="chk"><input type="checkbox" id="rejectChk"> Phone rejects the next <code>markActionDone</code></label>
+  <div class="note">The toolbar is not part of the design being judged.</div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================ tokens & sizes ============================ */
+const C = {t1:"var(--t1)",t2:"var(--t2)",t3:"var(--t3)",raised:"var(--raised)",elev:"var(--elev)",
+  subtle:"var(--subtle)",border:"var(--border)",primary:"var(--primary)",accent:"var(--accent)",
+  optimal:"var(--optimal)",fair:"var(--fair)",poor:"var(--poor)"};
+
+const SIZE = {
+  "46":{w:208,h:248,pad:10,cw:188,
+    s1:{hdrY:14,hdrH:44,lblY:24,stripY:62,heroY:76,heroSz:17,heroLH:21,heroMax:2,srcY:218},
+    s2:{rowY:[20,72,124],rowH:44,lblY:8,barY:26,barIn:10,barW:168,srcY:218},
+    s3:{glyphY:24,headY:56,headSz:17,headLH:21,headMax:2,detY:104,btnY:176,btnH:44,srcY:226},
+    s4:{navH:24,titleY:28,heroY:44,heroSz:22,barY:76,supLblY:98,supBarY:116,readY:130,
+        sparkBase:182,sparkH:36,sparkW:16,sparkGap:4},
+    s5:{top:12,rowH:44,gap:8},
+    c1:{w:178.5,h:56},
+    wdg:{w:184,h:78},
+    face:{timeSz:40}
+  },
+  "40":{w:162,h:197,pad:8,cw:146,
+    s1:{hdrY:12,hdrH:44,lblY:22,stripY:58,heroY:70,heroSz:16,heroLH:19,heroMax:3,srcY:172},
+    s2:{rowY:[18,68,118],rowH:44,lblY:8,barY:26,barIn:10,barW:126,srcY:172},
+    s3:{glyphY:20,headY:48,headSz:16,headLH:19,headMax:3,detY:100,btnY:132,btnH:44,srcY:184},
+    s4:{navH:20,titleY:24,heroY:38,heroSz:20,barY:66,supLblY:86,supBarY:102,readY:114,
+        sparkBase:160,sparkH:30,sparkW:12,sparkGap:3},
+    s5:{top:10,rowH:44,gap:8},
+    c1:{w:146,h:48},
+    wdg:{w:152,h:69.5},
+    face:{timeSz:32}
+  }
+};
+
+/* ============================ the one shared user ============================
+   Alex, 34. Tuesday 14:32. Every number below is from PROTOTYPE-SPEC.md.
+   7-night series are what watchOS's own ~7-day local HealthKit window holds.
+============================================================================ */
+const DAYS = ["Wed","Thu","Fri","Sat","Sun","Mon","Tue"];
+
+const SLEEP_H   = [7.4,7.1,6.9,7.3,6.6,7.0,6.2];                 // hours; Tue 6h 12m
+const SLEEP_TXT = ["7h 24m","7h 06m","6h 54m","7h 18m","6h 36m","7h 00m","6h 12m"];
+const RHR       = [55,54,56,55,57,55,58];                        // bpm; Tue 58
+const RESP      = [14.5,14.4,14.8,14.6,14.7,14.6,15.2];          // per min; Tue 15.2
+// Sleep debt check: need 7h 40m, last 5 nights Fri..Tue -> 0.767+0.367+1.067+0.667+1.467 = 4h 20m.
+const WATCH_WEEK = {sleep:"6h 56m",rhr:"56",resp:"14.7"};        // 7-night wrist means
+
+function mk(o){return o;}
+
+/* ---- factor library. value:null on the wire means "wrist, read it yourself" ---- */
+const F = {
+  sleep:()=>mk({id:"sleep",noun:"Sleep",state:"short",value:"6h 12m",sev:"fair",
+    min:0,max:10,fill:.62,tick:.767,base:"you need 7h 40m",weekTick:.6929,weekBase:"your week, 6h 56m",
+    src:"HK", title:"Sleep",hero:"6h 12m",heroUnit:"",heroRef:"you need 7h 40m",
+    sup:{label:"Debt",value:"4h 20m",fill:.542,tick:null,sev:"fair",src:"PHONE"},
+    spark:{vals:SLEEP_H,txt:SLEEP_TXT,min:0,max:10},
+    vo:"Sleep is short. 6 hours 12 minutes. You usually need 7 hours 40 minutes."}),
+  rhr:()=>mk({id:"restingHR",noun:"Heart",state:"high",value:"58 bpm",sev:"fair",
+    min:40,max:80,fill:.45,tick:.375,base:"usually 55",weekTick:.3929,weekBase:"your week, 56",
+    src:"HK", title:"Resting heart",hero:"58",heroUnit:" bpm",heroRef:"usually 55",
+    sup:{label:"Heart variation",value:"48 ms",fill:.467,tick:.567,sev:"fair",src:"HK"},
+    spark:{vals:RHR,txt:RHR.map(String),min:40,max:80},
+    vo:"Resting heart is high. 58 beats per minute. Usually 55."}),
+  resp:()=>mk({id:"respiratory",noun:"Breaths",state:"up",value:"15.2/min",sev:"fair",
+    min:10,max:20,fill:.52,tick:.46,base:"usually 14.6",weekTick:.4686,weekBase:"your week, 14.7",
+    src:"HK", title:"Breathing",hero:"15.2",heroUnit:"/min",heroRef:"usually 14.6",
+    sup:{label:"Blood oxygen",value:"96%",fill:.60,tick:.64,sev:"optimal",src:"HK"},
+    spark:{vals:RESP,txt:RESP.map(v=>v.toFixed(1)),min:10,max:20},
+    vo:"Breathing is up. 15.2 per minute. Usually 14.6."}),
+  recovery:()=>mk({id:"recovery",noun:"Recovery",state:"",value:"62",sev:"fair",
+    min:0,max:100,fill:.62,tick:.68,base:"usually 68",weekTick:null,weekBase:"phone only",
+    src:"PHONE", title:"Recovery",hero:"62",heroUnit:"",heroRef:"usually 68",
+    sup:{label:"Yesterday",value:"71",fill:.71,tick:.68,sev:"optimal",src:"PHONE"},
+    spark:null, vo:"Recovery 62. Usually 68."}),
+  strain:()=>mk({id:"strain",noun:"Strain",state:"low",value:"6.2 of 8 to 12",sev:"fair",
+    min:0,max:21,fill:.295,tick:.381,base:"target 8 to 12",weekTick:null,weekBase:"phone only",
+    src:"PHONE", title:"Strain",hero:"6.2",heroUnit:" of 21",heroRef:"target 8 to 12",
+    sup:{label:"Run, 2 days ago",value:"15.4",fill:.733,tick:.381,sev:"optimal",src:"PHONE"},
+    spark:null, vo:"Strain 6.2, target 8 to 12."}),
+  hrNow:()=>mk({id:"hrNow",noun:"Now",state:"sitting",value:"74 bpm",sev:"optimal",
+    min:40,max:160,fill:.283,tick:.15,base:"resting 58",weekTick:.15,weekBase:"your week, 56",
+    src:"HK-LIVE", title:"Heart now",hero:"74",heroUnit:" bpm",heroRef:"resting 58",
+    sup:{label:"Resting",value:"58 bpm",fill:.45,tick:.375,sev:"fair",src:"HK"},
+    spark:null, vo:"Heart now 74 beats per minute, sitting. Resting 58."}),
+  hrToday:()=>mk({id:"hrToday",noun:"Today",state:"",value:"52 to 141",sev:"optimal",
+    min:40,max:160,fill:.842,tick:.283,base:"now 74",weekTick:null,weekBase:"today only",
+    src:"HK", title:"Today's heart",hero:"52 to 141",heroUnit:"",heroRef:"now 74",
+    sup:{label:"Resting",value:"58 bpm",fill:.45,tick:.375,sev:"fair",src:"HK"},
+    spark:null, vo:"Today's heart ranged 52 to 141. Now 74."}),
+  rhrPlain:()=>Object.assign(F.rhr(),{noun:"Resting",state:""}),
+  inBed:()=>mk({id:"inBed",noun:"In bed",state:"",value:"6h 12m",sev:"fair",
+    min:0,max:10,fill:.62,tick:.767,base:"you need 7h 40m",weekTick:.6929,weekBase:"your week, 6h 56m",
+    src:"HK", title:"In bed",hero:"6h 12m",heroUnit:"",heroRef:"you need 7h 40m",
+    sup:{label:"Debt",value:"4h 20m",fill:.542,tick:null,sev:"fair",src:"PHONE"},
+    spark:{vals:SLEEP_H,txt:SLEEP_TXT,min:0,max:10},
+    vo:"In bed 6 hours 12 minutes. You usually need 7 hours 40 minutes."}),
+  deep:()=>mk({id:"deep",noun:"Deep",state:"",value:"52m",sev:"fair",
+    min:0,max:120,fill:.433,tick:.542,base:"usually 1h 05m",weekTick:.542,weekBase:"your week, 1h 05m",
+    src:"HK", title:"Deep sleep",hero:"52m",heroUnit:"",heroRef:"usually 1h 05m",
+    sup:{label:"REM",value:"1h 04m",fill:.533,tick:null,sev:"optimal",src:"HK"},
+    spark:null, vo:"Deep sleep 52 minutes. Usually 1 hour 5 minutes."}),
+  awake:()=>mk({id:"awake",noun:"Awake",state:"normal",value:"22m",sev:"optimal",
+    min:0,max:60,fill:.367,tick:.417,base:"usually 25m",weekTick:.417,weekBase:"your week, 25m",
+    src:"HK", title:"Awake",hero:"22m",heroUnit:"",heroRef:"usually 25m",
+    sup:null, spark:null, vo:"Awake 22 minutes. Usually 25 minutes, so this is normal."}),
+  stress:()=>mk({id:"stress",noun:"Stress",state:"rising",value:"41",sev:"fair",
+    min:0,max:100,fill:.41,tick:.30,base:"usually 30",weekTick:null,weekBase:"phone only",
+    src:"PHONE", title:"Stress",hero:"41",heroUnit:"",heroRef:"usually 30",
+    sup:{label:"Rising since",value:"11:00",fill:.41,tick:null,sev:"fair",src:"PHONE"},
+    spark:null, vo:"Stress 41 and rising. Usually 30."}),
+  caffeine:()=>mk({id:"caffeine",noun:"Caffeine",state:"",value:"2, last 11:15",sev:"fair",
+    min:0,max:5,fill:.40,tick:.20,base:"usually 1",weekTick:null,weekBase:"phone journal only",
+    src:"PHONE", title:"Caffeine",hero:"2",heroUnit:" today",heroRef:"usually 1",
+    sup:{label:"Last logged",value:"11:15",fill:.40,tick:null,sev:"fair",src:"PHONE"},
+    spark:null, vo:"Caffeine 2 today, last at 11:15. Usually 1."}),
+  temp:()=>mk({id:"temp",noun:"Temp",state:"up",value:"0.3 °C",sev:"fair",
+    min:0,max:1,fill:.30,tick:.20,base:"usually 0.2",weekTick:.20,weekBase:"your week, 0.2",
+    src:"HK", title:"Wrist temp",hero:"+0.3",heroUnit:" °C",heroRef:"usually ±0.2",
+    sup:{label:"Blood oxygen",value:"96%",fill:.60,tick:.64,sev:"optimal",src:"HK"},
+    spark:null, vo:"Wrist temperature up 0.3 degrees. Usually within 0.2."})
+};
+
+/* ---- the six pre-computed answers ---- */
+const ANSWERS = [
+  {id:"tired",q:"Why do I feel tired?",header:"Why you feel tired",headerShort:"Why tired",
+   headline:"You slept 1h 28m short. That's most of it.",
+   short:["Slept 1h 28m short.","Heart ran high."],confidence:"high",
+   weights:[.41,.32,.27],factors:[F.sleep(),F.rhr(),F.resp()],
+   stripVO:"Three of three signals are off your usual: sleep, resting heart, breathing."},
+  {id:"train",q:"Can I train today?",header:"Whether to train",headerShort:"Can I train",
+   headline:"Yes, but keep it easy today.",
+   short:["Train today, but","keep it easy."],confidence:"high",
+   weights:[.44,.31,.25],factors:[F.recovery(),F.strain(),F.sleep()],
+   stripVO:"Three signals: recovery, strain, sleep. All moderate."},
+  {id:"heart",q:"Why is my heart up?",header:"Why your heart is up",headerShort:"Heart up",
+   headline:"It's 74 now, sitting. Normal for you.",
+   short:["74 now, sitting.","Normal for you."],confidence:"high",
+   weights:[.45,.30,.25],factors:[F.hrNow(),F.hrToday(),F.rhrPlain()],
+   stripVO:"Three signals: heart now, today's range, resting heart. Two are normal, one is off."},
+  {id:"sleep",q:"Did I sleep badly?",header:"How you slept",headerShort:"Slept badly",
+   headline:"Short, not broken. 22 min awake is normal.",
+   short:["Short, not broken.","22 min awake."],confidence:"high",
+   weights:[.45,.30,.25],factors:[F.inBed(),F.deep(),F.awake()],
+   stripVO:"Three signals: time in bed, deep sleep, time awake. Two off your usual, one normal."},
+  {id:"stress",q:"What is stressing me?",header:"What's stressing you",headerShort:"Stress",
+   headline:"Stress 41 and rising since 11:00.",
+   short:["Stress 41 and","rising since 11:00."],confidence:"medium",
+   weights:[.42,.33,.25],factors:[F.stress(),F.caffeine(),F.rhr()],
+   stripVO:"Three signals: stress, caffeine, resting heart. All moderate."},
+  {id:"sick",q:"Am I getting sick?",header:"Whether you're sick",headerShort:"Getting sick",
+   headline:"Two small signs last night. Watch it.",
+   short:["Two small signs","last night."],confidence:"low",
+   weights:[.38,.34,.28],factors:[F.rhr(),F.resp(),F.temp()],
+   stripVO:"Three signals: resting heart, breathing, wrist temperature. All slightly off."}
+];
+
+const ACTION = {icon:"walk",headline:"Walk 20 minutes before 17:00.",detail:"Keep it easy."};
+const FALLBACK_ACTION = {icon:"stand",headline:"Stand up. You're 6 of 12.",detail:"Last stood 12:40."};
+const YESTERDAY_CACHED = "You slept 40m short. Heart was normal.";
+
+/* ============================ app state ============================ */
+const S = {
+  scr:"face", page:0, factor:0, spark:6, deck:0, stack:0, nscroll:0, nmax:0,
+  size:"46", state:"loaded", aod:false, band:"fair", pinned:0,
+  done:false, doneFail:false, reject:false, raiseRevealed:true, snapshot:false
+};
+
+const el = id=>document.getElementById(id);
+const px = n=>n+"px";
+const ans = ()=>ANSWERS[S.pinned];
+const L = ()=>SIZE[S.size];
+
+/* severity resolution. The dev band control is a preview override,
+   Alex's real Tuesday is fair on every factor. */
+function sevOf(f){ return S.band==="fair" ? f.sev : S.band; }
+function sevCol(name){ return name==="optimal"?C.optimal:name==="poor"?C.poor:C.fair; }
+function fCol(f){ return S.aod ? C.border : sevCol(sevOf(f)); }
+
+const isBlocked = ()=>S.state==="loading"||S.state==="cold"||S.state==="denied";
+const isError   = ()=>S.state==="error";
+const isStale   = ()=>S.state==="stale"||S.state==="yesterday";
+
+/* ============================ tiny render helpers ============================ */
+function txt(content, style, cls){
+  return '<div class="t '+(cls||"")+'" style="'+style+'">'+content+'</div>';
+}
+function sty(o){
+  let s="";
+  for(const k in o){ if(o[k]===null||o[k]===undefined) continue; s+=k+":"+o[k]+";" }
+  return s;
+}
+function box(o){ return '<div style="position:absolute;'+sty(o)+'"></div>'; }
+
+function bar(o){
+  const r=(o.h/2)+"px";
+  let out = box({left:px(o.x),top:px(o.y),width:px(o.w),height:px(o.h),"border-radius":r,
+    background:S.aod?"transparent":C.subtle,border:S.aod?"1px solid "+C.border:null});
+  if(S.aod) return out;
+  out += box({left:px(o.x),top:px(o.y),width:px(Math.max(2,o.w*o.fill)),height:px(o.h),
+    "border-radius":r,background:o.color});
+  if(o.tick!=null) out += box({left:px(o.x+o.w*o.tick-1),top:px(o.y-2),width:"2px",
+    height:px(o.h+4),background:C.t3,"border-radius":"1px"});
+  return out;
+}
+
+/* severity strip: widths proportional to the phone's attribution weights */
+function strip(o){
+  const a = o.answer||ans();
+  const gaps = o.gap*2, avail = o.w-gaps;
+  let x=o.x, out="";
+  if(o.empty){
+    return box({left:px(o.x),top:px(o.y),width:px(o.w),height:px(o.h),
+      "border-radius":px(o.h/2),background:C.subtle});
+  }
+  for(let i=0;i<3;i++){
+    const seg = avail*a.weights[i];
+    out += box({left:px(x),top:px(o.y),width:px(seg),height:px(o.h),"border-radius":px(o.h/2),
+      background:S.aod?"transparent":fCol(a.factors[i]),
+      border:S.aod?"1px solid "+C.border:null});
+    x += seg + o.gap;
+  }
+  return out;
+}
+
+/* the source + freshness line: shape carries freshness, not colour */
+function sourceText(){
+  const a=ans();
+  if(S.state==="loading") return "Reading last night.";
+  if(S.state==="cold")    return "4 more nights.";
+  if(S.state==="error")   return "This watch, 7 nights.";
+  if(S.state==="stale")   return "Your phone, 2h ago.";
+  if(S.state==="yesterday") return "Phone, yesterday 21:40.";
+  return a.confidence==="low" ? "Your phone, low confidence, 14:05" : "Your phone, 14:05";
+}
+function sourceLine(y){
+  const hollow = isStale();
+  const dot = hollow
+    ? box({left:px(L().pad),top:px(y+2),width:"5px",height:"5px","border-radius":"50%",
+        background:"transparent",border:"1px solid "+C.t3})
+    : box({left:px(L().pad),top:px(y+2),width:"5px",height:"5px","border-radius":"50%",background:C.t3});
+  return dot + txt(sourceText(), sty({left:px(L().pad+9),top:px(y-2),"font-size":"11px",
+    "font-weight":500,color:C.t3}));
+}
+
+function redact(x,y,w,h){
+  return box({left:px(x),top:px(y),width:px(w),height:px(h),"border-radius":"4px",background:C.raised});
+}
+
+/* SF-symbol stand-ins, inline SVG only */
+function glyph(name,size,color){
+  const s=size;
+  if(name==="walk") return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4" r="2"></circle><path d="M11 21l1.6-5.2L10 13l.8-4.4 3.4-1.2 2.4 3.2 2.6 1"></path><path d="M9.2 8.6L6.6 11 5 15"></path><path d="M12.6 15.8L15 18.4 16 21"></path></svg>';
+  if(name==="stand") return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="4" r="2"></circle><path d="M12 7v8"></path><path d="M8 9h8"></path><path d="M12 15l-2.5 6"></path><path d="M12 15l2.5 6"></path></svg>';
+  if(name==="chevdown") return '<svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="'+color+'" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l3 3 3-3"></path></svg>';
+  if(name==="back") return '<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 1L1.5 6.5 6.5 12"></path></svg>';
+  if(name==="sun") return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"></path></svg>';
+  if(name==="heart") return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="'+color+'" aria-hidden="true"><path d="M12 20s-7-4.4-7-9.2A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.8C19 15.6 12 20 12 20z"></path></svg>';
+  if(name==="laso") return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 13h4l2.5-6 3 12 2.5-6h6"></path></svg>';
+  return "";
+}
+
+/* ============================ S1 ANSWER ============================ */
+function pageAnswer(){
+  const g=L(), c=g.s1, a=ans();
+  let h="";
+
+  if(S.state==="denied"){
+    h += txt("Health access is off.", sty({left:px(g.pad),top:px(c.heroY),width:px(g.cw),
+      "font-size":px(c.heroSz),"font-weight":600,color:C.t1,"line-height":px(c.heroLH),
+      "white-space":"normal"}));
+    h += txt("Settings, Privacy, Health.", sty({left:px(g.pad),top:px(c.heroY+c.heroLH*2+8),
+      width:px(g.cw),"font-size":"12px",color:C.t2,"line-height":"16px","white-space":"normal"}));
+    return {html:h, lines:3,
+      vo:"Health access is off. Turn it on in Settings, Privacy, Health."};
+  }
+
+  // question header, 44pt hit area
+  const headerLabel = S.aod ? "Ask" : (S.state==="yesterday" ? "Yesterday" : a.header);
+  h += txt('<span style="display:inline-flex;align-items:center;gap:4px">'+headerLabel+
+      (S.aod?"":glyph("chevdown",8,"#ADADB8"))+'</span>',
+    sty({left:px(g.pad),top:px(c.lblY),"font-size":"12px","font-weight":400,color:C.t3,
+      "line-height":"14px"}));
+  h += '<button class="hit press" data-act="deck" aria-label="'+headerLabel+'. Button. Choose a different question." style="'+
+       sty({left:"0px",top:px(c.hdrY),width:px(g.w),height:px(c.hdrH)})+'"></button>';
+
+  // severity strip
+  const emptyStrip = S.state==="loading"||S.state==="cold";
+  if(isError()){
+    // no attribution weights offline: three equal segments from the wrist's own bands
+    const gap=3, avail=g.cw-gap*2; let x=g.pad;
+    for(let i=0;i<3;i++){
+      h += box({left:px(x),top:px(c.stripY),width:px(avail/3),height:"4px","border-radius":"2px",
+        background:S.aod?"transparent":sevCol(S.band==="fair"?"fair":S.band),
+        border:S.aod?"1px solid "+C.border:null});
+      x += avail/3 + gap;
+    }
+  } else {
+    h += strip({x:g.pad,y:c.stripY,w:g.cw,h:4,gap:3,empty:emptyStrip});
+  }
+
+  // hero sentence
+  let hero;
+  if(S.state==="loading") hero=null;
+  else if(S.state==="cold") hero="Not enough nights yet.";
+  else if(isError()) hero="Short sleep, and a high night heart.";
+  else if(S.snapshot) hero=YESTERDAY_CACHED;
+  else hero=a.headline;
+
+  if(S.aod){
+    h += redact(g.pad,c.heroY,g.cw,17);
+    h += redact(g.pad,c.heroY+c.heroLH,g.cw*0.62,17);
+  } else if(hero===null){
+    h += redact(g.pad,c.heroY,g.cw,17);
+    h += redact(g.pad,c.heroY+c.heroLH,g.cw*0.62,17);
+  } else {
+    h += txt(hero, sty({left:px(g.pad),top:px(c.heroY),width:px(g.cw),"font-size":px(c.heroSz),
+      "font-weight":600,color:C.t1,"line-height":px(c.heroLH),"white-space":"normal",
+      "-webkit-line-clamp":c.heroMax}), "clamp");
+  }
+
+  h += sourceLine(c.srcY);
+
+  return {html:h, lines:4,
+    vo:(S.aod?"Ask.":headerLabel+". Button. Choose a different question. ")+
+       (S.aod?"Content hidden while the display is dimmed.":a.stripVO+" "+(hero||"")+" "+sourceText())};
+}
+
+/* ============================ S2 BECAUSE ============================ */
+function pageBecause(){
+  const g=L(), c=g.s2, a=ans();
+  let h="";
+  const noTick = S.state==="cold";
+  const week   = isError();
+
+  for(let i=0;i<3;i++){
+    const f=a.factors[i], y=c.rowY[i];
+    h += box({left:px(g.pad),top:px(y),width:px(g.cw),height:px(c.rowH),"border-radius":"10px",
+      background:C.raised,border:"1px solid "+C.border});
+
+    if(S.aod){
+      h += redact(g.pad+10,y+c.lblY,g.cw*0.42,10);
+      h += redact(g.pad+g.cw-10-g.cw*0.22,y+c.lblY,g.cw*0.22,10);
+      h += box({left:px(g.pad+c.barIn),top:px(y+c.barY),width:px(c.barW),height:"6px",
+        "border-radius":"3px",background:"transparent",border:"1px solid "+C.border});
+    } else {
+      const state = (S.state==="cold") ? "" : f.state;
+      const label = '<span style="color:'+C.t2+'">'+f.noun+'</span>'+
+        (state?' <span style="color:'+C.t1+';font-weight:500">'+state+'</span>':"");
+      h += txt(label, sty({left:px(g.pad+c.barIn),top:px(y+c.lblY),"font-size":"12px",color:C.t2}));
+      h += txt(f.value, sty({left:px(g.pad),top:px(y+c.lblY+1),width:px(g.cw-c.barIn),
+        "text-align":"right","font-size":"11px","font-weight":500,color:C.t1}));
+      h += bar({x:g.pad+c.barIn,y:y+c.barY,w:c.barW,h:6,fill:f.fill,
+        tick: noTick?null:(week? f.weekTick : f.tick), color:fCol(f)});
+    }
+
+    h += '<button class="hit press" data-act="factor" data-i="'+i+'" aria-label="'+
+      (S.aod?"Hidden while the display is dimmed":f.vo)+' Opens the detail." style="'+
+      sty({left:px(g.pad),top:px(y),width:px(g.cw),height:px(c.rowH)})+'"></button>';
+  }
+  h += sourceLine(c.srcY);
+  return {html:h, lines:4,
+    vo:a.factors.map(f=>f.vo).join(" ")+" "+sourceText()};
+}
+
+/* ============================ S3 DO ============================ */
+function pageDo(){
+  const g=L(), c=g.s3;
+  const native = (S.state==="error"||S.state==="cold");
+  const act = native ? FALLBACK_ACTION : ACTION;
+  let h="";
+
+  h += '<div class="t" style="'+sty({left:px(g.pad),top:px(c.glyphY)})+'">'+
+       glyph(act.icon,24,S.aod?"#ADADB8":"#4DA3FF")+'</div>';
+
+  if(S.aod){
+    h += redact(g.pad,c.headY,g.cw,17);
+    h += redact(g.pad,c.headY+c.headLH,g.cw*0.55,17);
+  } else {
+    h += txt(act.headline, sty({left:px(g.pad),top:px(c.headY),width:px(g.cw),
+      "font-size":px(c.headSz),"font-weight":600,color:C.t1,"line-height":px(c.headLH),
+      "white-space":"normal","-webkit-line-clamp":c.headMax}), "clamp");
+  }
+
+  if(!S.done && !S.aod){
+    h += txt(act.detail, sty({left:px(g.pad),top:px(c.detY),"font-size":"12px",color:C.t2}));
+  }
+
+  if(!native){
+    const confirmed = S.done && !S.doneFail;
+    const bg = S.aod ? "transparent" : (confirmed ? C.raised : C.elev);
+    const label = confirmed ? "Done 14:32" : "Did it";
+    h += box({left:px(g.pad),top:px(c.btnY),width:px(g.cw),height:px(c.btnH),"border-radius":"10px",
+      background:bg,border:"1px solid "+C.border});
+    h += txt(label, sty({left:px(g.pad),top:px(c.btnY+(c.btnH-20)/2),width:px(g.cw),
+      "text-align":"center","font-size":"17px","font-weight":600,
+      color:(confirmed||S.aod)?C.t3:C.t1,"line-height":"20px"}));
+    if(!confirmed){
+      h += '<button class="hit press" data-act="markdone" aria-label="Did it. Button." style="'+
+        sty({left:px(g.pad),top:px(c.btnY),width:px(g.cw),height:px(c.btnH)})+'"></button>';
+    }
+    if(S.doneFail && !S.aod){
+      h += txt("Not saved. Tap to retry.", sty({left:px(g.pad),top:px(c.detY),
+        "font-size":"12px",color:C.t2}));
+    }
+  }
+  // No button in the watch-native fallback: standing is measured, not marked.
+  // Its absence is the signal — a fifth line of copy explaining it would break the budget.
+
+  h += sourceLine(c.srcY);
+  return {html:h, lines:4,
+    vo:"Today's action. "+act.headline+" "+(S.done?"Done at 14:32.":act.detail+" Did it. Button.")};
+}
+
+/* ============================ S4 FACTOR ============================ */
+function screenFactor(){
+  const g=L(), c=g.s4, a=ans(), f=a.factors[S.factor];
+  const week=isError();
+  let h="";
+
+  h += '<button class="hit press" data-act="back" aria-label="Back to the factors" style="'+
+       sty({left:"0px",top:"0px",width:px(g.w),height:px(c.navH+8)})+'"></button>';
+  h += '<div class="t" style="'+sty({left:px(g.pad),top:px(c.navH/2-6)})+'">'+glyph("back",13,"#ADADB8")+'</div>';
+
+  if(S.aod){
+    h += redact(g.pad,c.titleY,g.cw*0.4,10);
+    h += redact(g.pad,c.heroY,g.cw*0.5,20);
+    h += box({left:px(g.pad),top:px(c.barY),width:px(g.cw),height:"6px","border-radius":"3px",
+      background:"transparent",border:"1px solid "+C.border});
+    h += redact(g.pad,c.supLblY,g.cw*0.45,10);
+    h += box({left:px(g.pad),top:px(c.supBarY),width:px(g.cw),height:"6px","border-radius":"3px",
+      background:"transparent",border:"1px solid "+C.border});
+    const n=7, tot=n*c.sparkW+(n-1)*c.sparkGap, sx=g.pad+(g.cw-tot)/2;
+    for(let i=0;i<n;i++){
+      h += box({left:px(sx+i*(c.sparkW+c.sparkGap)),top:px(c.sparkBase-14),width:px(c.sparkW),
+        height:"14px",background:"transparent",border:"1px solid "+C.border,"border-radius":"2px"});
+    }
+    return {html:h, lines:4, vo:"Factor detail hidden while the display is dimmed."};
+  }
+
+  h += txt(f.title, sty({left:px(g.pad),top:px(c.titleY),"font-size":"12px",color:C.t3}));
+
+  h += txt('<span style="font-size:'+c.heroSz+'px;font-weight:600;color:'+C.t1+'">'+f.hero+'</span>'+
+           '<span style="font-size:12px;color:'+C.t3+'">'+f.heroUnit+'</span>',
+    sty({left:px(g.pad),top:px(c.heroY),"line-height":px(c.heroSz+4)}));
+  h += txt(week ? f.weekBase : f.heroRef, sty({left:px(g.pad),top:px(c.heroY+c.heroSz-11),
+    width:px(g.cw),"text-align":"right","font-size":"11px","font-weight":500,color:C.t3}));
+
+  h += bar({x:g.pad,y:c.barY,w:g.cw,h:6,fill:f.fill,
+    tick:(S.state==="cold")?null:(week?f.weekTick:f.tick),color:fCol(f)});
+
+  if(f.sup){
+    h += txt(f.sup.label, sty({left:px(g.pad),top:px(c.supLblY),"font-size":"12px",color:C.t2}));
+    h += txt(f.sup.value, sty({left:px(g.pad),top:px(c.supLblY+1),width:px(g.cw),
+      "text-align":"right","font-size":"11px","font-weight":500,color:C.t1}));
+    h += bar({x:g.pad,y:c.supBarY,w:g.cw,h:6,fill:f.sup.fill,
+      tick:(S.state==="cold")?null:f.sup.tick,
+      color:S.band==="fair"?sevCol(f.sup.sev):sevCol(S.band)});
+  }
+
+  if(f.spark){
+    const n=7, tot=n*c.sparkW+(n-1)*c.sparkGap, sx=g.pad+(g.cw-tot)/2;
+    h += txt(DAYS[S.spark]+" "+f.spark.txt[S.spark], sty({left:px(g.pad),top:px(c.readY),
+      width:px(g.cw),"text-align":"right","font-size":"11px","font-weight":500,color:C.t3}));
+    h += box({left:px(sx),top:px(c.sparkBase),width:px(tot),height:"1px",background:C.border});
+    for(let i=0;i<n;i++){
+      const v=f.spark.vals[i];
+      const frac=Math.max(.06,Math.min(1,(v-f.spark.min)/(f.spark.max-f.spark.min)));
+      const bh=frac*c.sparkH, bx=sx+i*(c.sparkW+c.sparkGap);
+      h += box({left:px(bx),top:px(c.sparkBase-bh),width:px(c.sparkW),height:px(bh),
+        background:i===6?fCol(f):C.elev,"border-radius":"2px"});
+      if(i===S.spark){
+        h += box({left:px(bx),top:px(c.sparkBase-bh-2),width:px(c.sparkW),height:"2px",
+          background:C.t1,"border-radius":"1px"});
+      }
+      h += '<button class="hit" data-act="spark" data-i="'+i+'" aria-label="'+DAYS[i]+" "+
+        f.spark.txt[i]+'" style="'+sty({left:px(bx),top:px(c.sparkBase-c.sparkH-4),
+        width:px(c.sparkW),height:px(c.sparkH+8)})+'"></button>';
+    }
+  } else {
+    h += txt("Phone only. No wrist history.", sty({left:px(g.pad),top:px(c.readY+16),
+      width:px(g.cw),"font-size":"11px","font-weight":500,color:C.t3}));
+  }
+
+  const sparkVO = f.spark
+    ? "Last 7 nights, "+f.title.toLowerCase()+": "+f.spark.txt.join(", ")+
+      ". Tonight is "+(f.spark.vals[6]>=Math.max.apply(null,f.spark.vals)?"the highest":"the lowest")+"."
+    : "No wrist history for this factor. It is computed on the phone.";
+  return {html:h, lines:4, vo:f.title+". "+f.vo+" "+sparkVO};
+}
+
+/* ============================ S5 DECK ============================ */
+function screenDeck(){
+  const g=L(), c=g.s5;
+  let rows="";
+  ANSWERS.forEach((a,i)=>{
+    const y = c.top + i*(c.rowH+c.gap) - S.deck;
+    rows += box({left:px(g.pad),top:px(y),width:px(g.cw),height:px(c.rowH),"border-radius":"10px",
+      background:C.raised});
+    if(i===S.pinned){
+      rows += box({left:px(g.pad),top:px(y),width:"3px",height:px(c.rowH),
+        "border-radius":"10px 0 0 10px",background:S.aod?C.border:C.accent});
+      rows += txt("now", sty({left:px(g.pad),top:px(y+c.rowH/2-7),width:px(g.cw-10),
+        "text-align":"right","font-size":"11px","font-weight":500,color:C.t3}));
+    }
+    rows += txt(S.aod?"":a.q, sty({left:px(g.pad+10),top:px(y+c.rowH/2-8),
+      width:px(g.cw-52),"font-size":"12px",color:C.t1,overflow:"hidden"}));
+    if(S.aod) rows += redact(g.pad+10,y+c.rowH/2-5,g.cw*0.5,10);
+    rows += '<button class="hit press" data-act="pin" data-i="'+i+'" aria-label="'+a.q+
+      (i===S.pinned?", currently selected":"")+'" style="'+
+      sty({left:px(g.pad),top:px(y),width:px(g.cw),height:px(c.rowH)})+'"></button>';
+  });
+  return {html:rows, lines:4, vo:"Question deck. "+ANSWERS.map((a,i)=>a.q+(i===S.pinned?", currently selected":"")).join(". ")};
+}
+
+/* ============================ WATCH FACE ============================ */
+function screenFace(){
+  const g=L(), a=ans();
+  const big = S.size==="46";
+  let h="";
+  const cw = big?178.5:146, ch = big?56:48;
+  const cx = (g.w-cw)/2, cy = big?104:82;
+
+  // TL corner: Laso accessoryCorner (C3). Goal metric, watch-native, never redacted.
+  h += cornerGauge(2,2,big?30:25,0.40,"#4DA3FF",false);
+  h += '<div class="t" style="'+sty({left:px(big?9:7),top:px(big?9:7)})+'">'+glyph("walk",big?15:13,"#4DA3FF")+'</div>';
+  h += txt("12/30", sty({left:px(big?40:33),top:px(big?9:7),"font-size":"12px","font-weight":600,color:C.t1}));
+  h += '<button class="hit press" data-act="deeplink" data-page="2" aria-label="Laso corner complication. Exercise 12 of 30 minutes. Opens the action page." style="'+
+       sty({left:"0px",top:"0px",width:px(big?80:64),height:px(big?44:38)})+'"></button>';
+
+  // TR corner: system weather
+  h += cornerGauge(g.w-2,2,big?30:25,0.62,"#ADADB8",true);
+  h += '<div class="t" style="'+sty({left:px(g.w-(big?24:21)),top:px(big?9:7)})+'">'+glyph("sun",big?15:13,"#ADADB8")+'</div>';
+  h += txt("24°", sty({left:px(0),top:px(big?9:7),width:px(g.w-(big?30:27)),
+    "text-align":"right","font-size":"12px","font-weight":600,color:C.t2}));
+
+  // time
+  h += txt("14:32", sty({left:px(0),top:px(big?52:44),width:px(g.w),"text-align":"center",
+    "font-size":px(g.face.timeSz),"font-weight":600,color:C.t1,"line-height":px(g.face.timeSz+4)}));
+
+  // C1 accessoryRectangular, Laso
+  h += box({left:px(cx),top:px(cy),width:px(cw),height:px(ch),"border-radius":"8px",background:"#0A0A0D"});
+  h += rectComplication(cx,cy,cw,ch,a);
+  h += '<button class="hit press" data-act="deeplink" data-page="0" aria-label="Laso rectangular complication. '+
+       (S.aod?"Hidden while dimmed":a.short.join(" ")+". Updated 14:05")+'. Opens the answer." style="'+
+       sty({left:px(cx),top:px(cy),width:px(cw),height:px(ch)})+'"></button>';
+
+  // bottom row: C2 Laso circular + two system circulars
+  const cr = big?40:34, by = big?176:140;
+  const xs = big?[20,84,148]:[12,64,116];
+  h += circComplication(xs[0],by,cr,a);
+  h += '<button class="hit press" data-act="deeplink" data-page="1" aria-label="Laso circular complication. '+
+       (S.aod?"Hidden while dimmed":"3 of 3 signals off your usual")+'. Opens the factors." style="'+
+       sty({left:px(xs[0]),top:px(by),width:px(cr),height:px(cr)})+'"></button>';
+  h += sysRings(xs[1],by,cr);
+  h += sysBattery(xs[2],by,cr);
+
+  h += txt("TUE 29", sty({left:px(0),top:px(big?226:180),width:px(g.w),"text-align":"center",
+    "font-size":"10px","font-weight":600,color:"#5C5C66","letter-spacing":"1px"}));
+
+  return {html:h, lines:0, vo:"Watch face. Laso corner complication, exercise 12 of 30. Laso rectangular complication: "+a.short.join(" ")+". Laso circular complication: 3 of 3 signals off your usual."};
+}
+
+/* corner complication: a quarter arc hugging the display corner, plus symbol and text.
+   mirror=true flips it to the top-right corner. */
+function cornerGauge(cx,cy,r,frac,col,mirror){
+  const sgn = mirror ? -1 : 1;
+  const pt = deg => [ (cx + sgn*r*Math.cos(deg*Math.PI/180)).toFixed(2),
+                      (cy + r*Math.sin(deg*Math.PI/180)).toFixed(2) ];
+  const sweep = mirror ? 1 : 0;
+  const a=pt(90), b=pt(0), c=pt(90-90*frac);
+  const size = r*2+8;
+  const ox = mirror ? cx-size+4 : cx-4, oy = cy-4;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="'+(mirror?(cx-size+4):(cx-4))+' '+(cy-4)+
+    ' '+size+' '+size+'" style="position:absolute;left:'+ox+'px;top:'+oy+'px" aria-hidden="true">'+
+    '<path d="M'+a[0]+' '+a[1]+' A'+r+' '+r+' 0 0 '+sweep+' '+b[0]+' '+b[1]+'" fill="none" stroke="#17171C" stroke-width="4" stroke-linecap="round"></path>'+
+    '<path d="M'+a[0]+' '+a[1]+' A'+r+' '+r+' 0 0 '+sweep+' '+c[0]+' '+c[1]+'" fill="none" stroke="'+col+'" stroke-width="4" stroke-linecap="round"></path>'+
+    '</svg>';
+}
+
+function rectComplication(x,y,w,h,a){
+  const p=6;
+  let out="";
+  out += txt(S.aod?"Why tired":a.headerShort, sty({left:px(x+p),top:px(y+3),"font-size":"11px",
+    "font-weight":500,color:C.t3}));
+  out += txt(S.aod?"":"14:05", sty({left:px(x),top:px(y+3),width:px(w-p),"text-align":"right",
+    "font-size":"11px",color:C.t3}));
+  if(S.aod){
+    out += redact(x+p,y+18,w-p*2,12);
+    out += redact(x+p,y+34,(w-p*2)*0.6,12);
+  } else {
+    out += txt(a.short[0], sty({left:px(x+p),top:px(y+16),"font-size":"15px","font-weight":600,
+      color:C.t1,"line-height":"17px"}));
+    out += txt(a.short[1], sty({left:px(x+p),top:px(y+32),"font-size":"15px","font-weight":600,
+      color:C.t1,"line-height":"17px"}));
+  }
+  out += strip({x:x+p,y:y+h-6,w:w-p*2,h:4,gap:3,answer:a});
+  return out;
+}
+
+function circComplication(x,y,d,a){
+  const r=d/2, sw=S.size==="46"?8:6, rad=r-sw/2;
+  const off = a.factors.filter(f=>sevOf(f)!=="optimal").length;
+  let segs="";
+  for(let i=0;i<3;i++){
+    const start=-90+i*120+4, end=-90+(i+1)*120-4;
+    const filled = sevOf(a.factors[i])!=="optimal";
+    const col = S.aod ? "#2E2E36" : (filled ? sevCol(sevOf(a.factors[i])) : "#17171C");
+    // butt caps, not round: at r=16 a round cap adds ~14° per end and swallows the 8° gap,
+    // which destroys the countability that carries this complication's meaning without colour.
+    segs += '<path d="'+arcPath(r,r,rad,start,end)+'" fill="none" stroke="'+col+
+      '" stroke-width="'+sw+'" stroke-linecap="butt"></path>';
+  }
+  let out = '<svg width="'+d+'" height="'+d+'" style="position:absolute;left:'+x+'px;top:'+y+'px" aria-hidden="true">'+segs+'</svg>';
+  out += txt(S.aod?"—":String(off), sty({left:px(x),top:px(y+d/2-13),width:px(d),
+    "text-align":"center","font-size":"14.5px","font-weight":500,color:C.t1,"line-height":"15px"}));
+  out += txt("off", sty({left:px(x),top:px(y+d/2+2),width:px(d),"text-align":"center",
+    "font-size":"10.5px",color:C.t3,"line-height":"11px"}));
+  return out;
+}
+function arcPath(cx,cy,r,a0,a1){
+  const rad=d=>d*Math.PI/180;
+  const x0=cx+r*Math.cos(rad(a0)), y0=cy+r*Math.sin(rad(a0));
+  const x1=cx+r*Math.cos(rad(a1)), y1=cy+r*Math.sin(rad(a1));
+  const large=(a1-a0)>180?1:0;
+  return "M"+x0.toFixed(2)+" "+y0.toFixed(2)+" A"+r+" "+r+" 0 "+large+" 1 "+x1.toFixed(2)+" "+y1.toFixed(2);
+}
+function sysRings(x,y,d){
+  const r=d/2;
+  const ring=(rad,frac,col)=>'<circle cx="'+r+'" cy="'+r+'" r="'+rad+'" fill="none" stroke="#17171C" stroke-width="4"></circle>'+
+    '<path d="'+arcPath(r,r,rad,-90,-90+359.9*frac)+'" fill="none" stroke="'+col+'" stroke-width="4" stroke-linecap="round"></path>';
+  return '<svg width="'+d+'" height="'+d+'" style="position:absolute;left:'+x+'px;top:'+y+'px" aria-hidden="true">'+
+    ring(r-2,0.458,"#FA114F")+ring(r-8,0.40,"#A2FC1C")+ring(r-14,0.50,"#04C7DD")+'</svg>';
+}
+function sysBattery(x,y,d){
+  const r=d/2;
+  let out='<svg width="'+d+'" height="'+d+'" style="position:absolute;left:'+x+'px;top:'+y+'px" aria-hidden="true">'+
+    '<circle cx="'+r+'" cy="'+r+'" r="'+(r-3)+'" fill="none" stroke="#17171C" stroke-width="4"></circle>'+
+    '<path d="'+arcPath(r,r,r-3,-90,-90+359.9*0.72)+'" fill="none" stroke="#A2FC1C" stroke-width="4" stroke-linecap="round"></path></svg>';
+  out += txt("72%", sty({left:px(x),top:px(y+d/2-7),width:px(d),"text-align":"center",
+    "font-size":"11px","font-weight":600,color:C.t2}));
+  return out;
+}
+
+/* ============================ SMART STACK ============================ */
+const STACK = [
+  {id:"laso", label:"Laso · accessoryRectangular"},
+  {id:"weather", label:"Weather"},
+  {id:"activity", label:"Activity"},
+  {id:"calendar", label:"Calendar"},
+  {id:"heart", label:"Heart Rate"}
+];
+function screenStack(){
+  const g=L(), a=ans();
+  const wgd=g.wdg, gap=8, step=wgd.h+gap;
+  const startY = 34 - S.stack*step;
+  let h="";
+  h += txt("14:32", sty({left:px(0),top:px(8),width:px(g.w-g.pad),"text-align":"right",
+    "font-size":"13px","font-weight":600,color:C.t1}));
+  h += txt("Smart Stack", sty({left:px(g.pad),top:px(9),"font-size":"11px",color:C.t3}));
+
+  STACK.forEach((w,i)=>{
+    const y = startY + i*step, x=(g.w-wgd.w)/2;
+    if(y > g.h || y+wgd.h < 24) return;
+    h += box({left:px(x),top:px(y),width:px(wgd.w),height:px(wgd.h),"border-radius":"14px",
+      background:"#000",border:"1px solid #14141A"});
+    if(w.id==="laso") h += lasoWidget(x,y,wgd.w,wgd.h,a);
+    if(w.id==="weather"){
+      h += txt("Weather", sty({left:px(x+8),top:px(y+6),"font-size":"11px","font-weight":500,color:C.t3}));
+      h += txt("24°", sty({left:px(x+8),top:px(y+22),"font-size":"24px","font-weight":600,color:C.t1}));
+      h += txt("Sunny · H 26° L 14°", sty({left:px(x+8),top:px(y+52),"font-size":"11px",color:C.t2}));
+    }
+    if(w.id==="activity"){
+      h += txt("Activity", sty({left:px(x+8),top:px(y+6),"font-size":"11px","font-weight":500,color:C.t3}));
+      h += txt("284/620 KCAL", sty({left:px(x+8),top:px(y+22),"font-size":"13px","font-weight":600,color:"#FA114F"}));
+      h += txt("12/30 MIN · 6/12 HR", sty({left:px(x+8),top:px(y+40),"font-size":"13px","font-weight":600,color:"#A2FC1C"}));
+    }
+    if(w.id==="calendar"){
+      h += txt("Calendar", sty({left:px(x+8),top:px(y+6),"font-size":"11px","font-weight":500,color:C.t3}));
+      h += txt("15:00 Standup", sty({left:px(x+8),top:px(y+24),"font-size":"15px","font-weight":600,color:C.t1}));
+      h += txt("in 28 min", sty({left:px(x+8),top:px(y+46),"font-size":"11px",color:C.t2}));
+    }
+    if(w.id==="heart"){
+      h += '<div class="t" style="'+sty({left:px(x+8),top:px(y+6)})+'">'+glyph("heart",12,"#FA114F")+'</div>';
+      h += txt("Heart Rate", sty({left:px(x+24),top:px(y+6),"font-size":"11px","font-weight":500,color:C.t3}));
+      h += txt("74 BPM", sty({left:px(x+8),top:px(y+24),"font-size":"20px","font-weight":600,color:C.t1}));
+      h += txt("Range today 52 to 141", sty({left:px(x+8),top:px(y+50),"font-size":"11px",color:C.t2}));
+    }
+    if(w.id==="laso"){
+      h += '<button class="hit press" data-act="deeplink" data-page="0" aria-label="Laso widget. '+
+        (S.aod?"Hidden while dimmed":a.header+". "+a.short.join(" ")+". Updated 14:05")+
+        '. Opens the answer." style="'+sty({left:px(x),top:px(y),width:px(wgd.w),height:px(wgd.h)})+'"></button>';
+    }
+  });
+  return {html:h, lines:0, vo:"Smart Stack. Laso answer widget on top: "+a.short.join(" ")};
+}
+function lasoWidget(x,y,w,h,a){
+  const p=8, cwid=w-p*2;
+  let out="";
+  out += txt(S.aod?"Ask":a.header, sty({left:px(x+p),top:px(y+6),"font-size":"11px",
+    "font-weight":500,color:C.t3}));
+  out += txt(S.aod?"":"14:05", sty({left:px(x),top:px(y+6),width:px(w-p),"text-align":"right",
+    "font-size":"11px",color:C.t3}));
+  if(S.aod){
+    out += redact(x+p,y+21,cwid,15);
+    out += redact(x+p,y+38,cwid*0.6,15);
+  } else {
+    out += txt(a.short[0], sty({left:px(x+p),top:px(y+19),"font-size":"15px","font-weight":600,
+      color:C.t1,"line-height":"17px"}));
+    out += txt(a.short[1], sty({left:px(x+p),top:px(y+36),"font-size":"15px","font-weight":600,
+      color:C.t1,"line-height":"17px"}));
+  }
+  out += strip({x:x+p,y:y+h-11.5,w:cwid,h:6,gap:2,answer:a});
+  return out;
+}
+
+/* ============================ NOTIFICATIONS ============================ */
+function screenNotifShort(){
+  const g=L();
+  let h="";
+  h += box({left:"0px",top:"0px",width:px(g.w),height:px(g.h),background:"#000"});
+  h += box({left:"0px",top:"0px",width:px(g.w),height:"44px",background:C.raised});
+  h += '<div class="t" style="'+sty({left:px(g.pad),top:"14px"})+'">'+glyph("laso",16,"#22D3EE")+'</div>';
+  h += txt("Laso", sty({left:px(g.pad+22),top:"15px","font-size":"13px","font-weight":600,color:C.t1}));
+  h += txt("7:05", sty({left:px(0),top:"16px",width:px(g.w-g.pad),"text-align":"right",
+    "font-size":"11px",color:C.t3}));
+  h += txt("Today's answer", sty({left:px(g.pad),top:px(g.h/2-18),width:px(g.cw),
+    "font-size":"20px","font-weight":600,color:C.t1,"white-space":"normal","line-height":"24px"}));
+  return {html:h, lines:1, vo:"Laso. Today's answer."};
+}
+
+function screenNotifLong(which){
+  const g=L();
+  const n = which===1
+    ? {cap:"Why you feel tired", head:"You slept 1h 28m short. That's most of it.",
+       sub:"Walk 20 minutes before 17:00.", answer:ANSWERS[0],
+       actions:["Did it","Ask something else","Not today"]}
+    : {cap:"Am I getting sick?", head:"Two small signs last night. Watch it.",
+       sub:"Low confidence.", answer:ANSWERS[5],
+       actions:["Log a symptom","Ask something else","Mute for 24h"]};
+  let h="";
+  const sc = S.nscroll;
+  h += box({left:"0px",top:px(0-sc),width:px(g.w),height:"38px",background:C.raised});
+  h += '<div class="t" style="'+sty({left:px(g.pad),top:px(12-sc)})+'">'+glyph("laso",15,"#22D3EE")+'</div>';
+  h += txt("Laso", sty({left:px(g.pad+21),top:px(13-sc),"font-size":"12px","font-weight":600,color:C.t1}));
+  h += txt(which===1?"7:05":"16:20", sty({left:px(0),top:px(14-sc),width:px(g.w-g.pad),
+    "text-align":"right","font-size":"11px",color:C.t3}));
+
+  const cy=46-sc, ch = S.size==="40"?100:106, ix=g.pad, iw=g.w-g.pad*2;
+  h += box({left:"4px",top:px(cy),width:px(g.w-8),height:px(ch),"border-radius":"12px",
+    background:"rgba(255,255,255,0.18)"});
+  h += txt(n.cap, sty({left:px(ix),top:px(cy+8),"font-size":"12px",color:C.t3}));
+  // a long look scrolls, so at 40mm the sentence is allowed a third line rather than truncating
+  h += txt(n.head, sty({left:px(ix),top:px(cy+24),width:px(iw),"font-size":"17px",
+    "font-weight":600,color:C.t1,"line-height":"21px","white-space":"normal",
+    "-webkit-line-clamp":S.size==="40"?3:2}),"clamp");
+  h += strip({x:ix,y:cy+ch-30,w:iw,h:4,gap:3,answer:n.answer});
+  h += txt(n.sub, sty({left:px(ix),top:px(cy+ch-21),"font-size":"12px",color:C.t2}));
+
+  let ay = cy+ch+8;
+  n.actions.concat(["Dismiss"]).forEach((label,i)=>{
+    const first = i===0;
+    h += box({left:px(g.pad),top:px(ay),width:px(g.cw),height:"40px","border-radius":"10px",
+      background:first?C.elev:C.raised,border:first?"1px solid "+C.accent:"1px solid "+C.border});
+    h += txt(label, sty({left:px(g.pad),top:px(ay+12),width:px(g.cw),"text-align":"center",
+      "font-size":"14px","font-weight":600,color:i===3?C.t3:C.t1}));
+    h += '<button class="hit press" data-act="notifaction" data-i="'+i+'" data-n="'+which+
+      '" aria-label="'+label+(first?", Double Tap target":"")+'" style="'+
+      sty({left:px(g.pad),top:px(ay),width:px(g.cw),height:"40px"})+'"></button>';
+    ay += 48;
+  });
+  return {html:h, lines:4, maxScroll:Math.max(0, ay - g.h + 10),
+    vo:"Laso notification. "+n.cap+". "+n.head+" "+n.sub+
+    " Actions: "+n.actions.join(", ")+", Dismiss."};
+}
+
+/* ============================ LAUNCH / RAISE ============================ */
+function screenLaunch(){
+  // watchOS shows the dock snapshot first: page 1 rendered with the last cached answer.
+  return pageAnswer();
+}
+
+/* ============================ root paging ============================ */
+function screenApp(){
+  const r = S.page===0?pageAnswer():S.page===1?pageBecause():pageDo();
+  const g=L();
+  // system vertical page indicator, rendered next to the crown
+  let dots="";
+  for(let i=0;i<3;i++){
+    dots += box({left:px(g.w-5),top:px(g.h/2-13+i*9),width:"3px",height:"3px","border-radius":"50%",
+      background:i===S.page?"#8A8A94":"#33333B"});
+  }
+  return {html:r.html+dots, lines:r.lines, vo:r.vo};
+}
+
+/* ============================ render ============================ */
+const SCREEN_META = {
+  face:{name:"Watch face",depth:"off app",crown:"crown down opens the Smart Stack"},
+  stack:{name:"Smart Stack",depth:"off app",crown:"scrolls the stack"},
+  nshort:{name:"Notification, short look",depth:"off app",crown:"none"},
+  nlong1:{name:"Long look, N1 morning answer",depth:"off app",crown:"scrolls the long look"},
+  nlong2:{name:"Long look, N2 answer changed",depth:"off app",crown:"scrolls the long look"},
+  launch:{name:"Launch, dock snapshot",depth:"root, page 1",crown:"vertical page navigation"},
+  raise:{name:"Wrist raise return",depth:"root, page 1",crown:"vertical page navigation"},
+  app:{name:"Root",depth:"root",crown:"vertical page navigation"},
+  s4:{name:"S4 Factor",depth:"depth 2",crown:"scrubs the 7-night sparkline"},
+  s5:{name:"S5 Deck",depth:"depth 2",crown:"list scroll"}
+};
+
+function render(){
+  const g=L();
+  const scr=el("screen"), cs=el("case");
+  scr.className = "screen"+(S.size==="40"?" s40":"")+(S.aod?" aod":"");
+  cs.className  = "case"+(S.size==="40"?" s40":"");
+  el("zoomspace").style.height = ((g.h+22)*1.75 - (g.h+22)) + "px";
+
+  let r;
+  if(S.scr==="face") r=screenFace();
+  else if(S.scr==="stack") r=screenStack();
+  else if(S.scr==="nshort") r=screenNotifShort();
+  else if(S.scr==="nlong1") r=screenNotifLong(1);
+  else if(S.scr==="nlong2") r=screenNotifLong(2);
+  else if(S.scr==="s4") r=screenFactor();
+  else if(S.scr==="s5") r=screenDeck();
+  else if(S.scr==="launch") r=screenLaunch();
+  else if(S.scr==="raise") r=screenApp();
+  else r=screenApp();
+
+  el("canvas").innerHTML = r.html;
+  el("canvas").setAttribute("aria-label", r.vo);
+  S.nmax = r.maxScroll || 0;
+
+  // switcher current
+  document.querySelectorAll(".sw").forEach(b=>{
+    const d=b.dataset.scr;
+    const cur = (d===S.scr) || (d==="p1"&&S.scr==="app"&&S.page===0) ||
+                (d==="p2"&&S.scr==="app"&&S.page===1) || (d==="p3"&&S.scr==="app"&&S.page===2);
+    b.setAttribute("aria-current", cur?"true":"false");
+  });
+
+  renderMeta(r);
+  renderDev();
+}
+
+function renderMeta(r){
+  const m = SCREEN_META[S.scr]||SCREEN_META.app;
+  const a=ans();
+  const rows = [
+    ["Screen", m.name + (S.scr==="app"?" · page "+(S.page+1)+" of 3":"")],
+    ["Depth", m.depth],
+    ["Crown", m.crown],
+    ["Canvas", S.size+"mm · "+L().w+" × "+L().h+"pt"],
+    ["State", ({loaded:"Loaded",loading:"Loading, no cache",cold:"Cold start, 3 nights",
+      denied:"HealthKit denied",error:"Phone unreachable",stale:"Stale, 2h",
+      yesterday:"Stale, yesterday's dayKey"})[S.state]],
+    ["Always‑On", S.aod?"Redacted":"Off"],
+    ["Pinned", a.q],
+    ["Text lines", r.lines===0 ? "not an app screen" :
+      (r.lines+" of 4"+(S.scr==="s5"?" — deliberate exception":""))]
+  ];
+  el("meta").innerHTML = rows.map(x=>"<dt>"+x[0]+"</dt><dd>"+x[1]+"</dd>").join("");
+  el("metanote").innerHTML = metaNote();
+  el("notestitle").textContent = notesTitle();
+  el("notes").innerHTML = notesFor().map(x=>"<li>"+x+"</li>").join("");
+}
+
+function metaNote(){
+  if(S.aod) return "Always‑On: the sentence, the factor labels, the bars and the action are replaced by stroked outlines and redaction blocks. No optimal, fair or poor colour anywhere — amber <em>is</em> the verdict. C3 stays live because exercise minutes against a goal are not a verdict.";
+  if(S.state==="error") return "Everything here is computed on the wrist from the local ~7‑day HealthKit window. The reference frame changes visibly from “usually 55” to “your week, 56” rather than swapping silently.";
+  if(S.state==="cold") return "Three real measured values from day 1, no fabricated baseline, no tick, and a named countdown. 7 nights is the watch's own local HealthKit window.";
+  if(S.state==="loading") return "No spinner. Two skeleton bars at the exact y of the hero lines so nothing jumps when the answer lands.";
+  if(S.state==="stale"||S.state==="yesterday") return "The freshness dot becomes a hollow ring — shape, not colour. The natively read factor values on page 2 stay today's; only the phone's judgement is old.";
+  if(S.state==="denied") return "watchOS offers no reliable deep link into Settings, so this is instruction copy and not a fake button.";
+  return "";
+}
+function notesTitle(){
+  return ({face:"Complications on this face",stack:"Smart Stack",nshort:"Short look",
+    nlong1:"N1 morning answer",nlong2:"N2 answer changed",s4:"Factor detail",s5:"The deck",
+    launch:"Cold launch",raise:"Wrist raise"})[S.scr] || "Root pages";
+}
+function notesFor(){
+  const a=ans();
+  switch(S.scr){
+    case "face": return [
+      '<span class="fam">accessoryCorner</span> &rarr; <b>laso://ask/do</b>. figure.walk, exercise 12 of 30, corner gauge in primary blue. A goal metric, watch‑native, so it is never stale and never redacted.',
+      '<span class="fam">accessoryRectangular</span> &rarr; <b>laso://ask/answer</b>. A 50‑character sentence variant authored by the phone, plus the severity strip. The only complication on any recovery app’s face that says <em>why</em>.',
+      '<span class="fam">accessoryCircular</span> &rarr; <b>laso://ask/because</b>. Three‑segment ring, one segment per factor, filled when that factor is off its usual. The digit and the filled count both carry the meaning without colour.',
+      'Three families, three different deep links, never shared. Every one changes daily.',
+      'The other slots are system complications so the Laso ones have to earn their place.'
+    ];
+    case "stack": return [
+      '<span class="fam">accessoryRectangular</span> only. accessoryCircular in the stack would show the same <b>3 off</b> glyph in more space than it needs.',
+      'Read‑only. At 69.5pt tall a 28pt button costs one of the two sentence lines.',
+      'Relevance is <b>TimelineProvider.relevance()</b> with <b>RelevantContext.sleep(.wakeup)</b> and <b>.fitness(_:)</b>. TimelineEntry.relevance does nothing on watchOS.',
+      'Black background, not a coloured card. A full‑bleed amber card would make a moderate Tuesday look like an alert.',
+      'Crown or Up / Down scrolls through 5 widgets.'
+    ];
+    case "nshort": return [
+      'Title carries no health data and no number — the short look is visible to anyone in the room.',
+      'It passes the read test in 2 words and deliberately fails the information test. That is what a short look is for.'
+    ];
+    case "nlong1": return [
+      'Fires once, 0–15 min after wake, and <b>only if today’s sentence differs from yesterday’s</b>. A delta trigger, not a state trigger.',
+      'Three actions of the allowed four. <b>Did it</b> is first and nondestructive, so Double Tap picks it.',
+      'No <b>Open</b> action — Apple: avoid an action that merely opens your app.',
+      'The long look carries the whole answer, so many users never open the app. That is the design working.'
+    ];
+    case "nlong2": return [
+      'Does <b>not</b> fire on Alex’s Tuesday — the illness signal stays at low confidence and is delivered passively on the widget. This screen is the state that <em>would</em> fire it.',
+      'Trigger is a confidence band crossing, never an absolute value. Never within 4h of N1, never after 21:00.',
+      '<b>Mute for 24h</b> ships at the point of irritation instead of being buried in settings.'
+    ];
+    case "s4": return [
+      'Fixed height, does not scroll — which is what frees the crown to scrub the sparkline.',
+      'The supporting row is the thing that did not fit on page 2. Heart variation is HRV in plain English.',
+      '7 nights is exactly the watch’s own local HealthKit window, so the sparkline needs no wire traffic at all.',
+      'Sparkline bars are 16 × 40pt tap targets — under the 44pt default, above the 28pt minimum, and the crown is the primary path.'
+    ];
+    case "s5": return [
+      'A fixed deck of six. No dictation: it costs 8–15 s against a 5.0 s median session, and it breaks exactly when the phone is in another room.',
+      'The pinned row carries an accent leading bar <b>and</b> the word <b>now</b> — colour never carries the selection alone.',
+      'Tapping pins the question, pops to root and re‑seeds pages 1‑3. No deeper push — the deck is a selector, not a hierarchy.',
+      'This is the one screen that exceeds the 4‑line budget. Recorded as a deliberate exception.'
+    ];
+    case "launch": return [
+      'watchOS shows the dock snapshot first, so the snapshot <b>is</b> page 1 rendered with the last cached answer. Never a splash, never a logo.',
+      'Use the toolbar’s <b>Replay snapshot</b> to see yesterday’s cached sentence swap for today’s with no animation and no count‑up.'
+    ];
+    case "raise": return [
+      'Returning to a frontmost app within ~2 min of wrist drop. The redaction crossfades out over 220ms; page position and crown selection are preserved.',
+      'No haptic, no re‑run of any appear animation.'
+    ];
+    default: return [
+      '<b>Page 1 Answer</b> — one sentence that names the biggest cause, with the number in it. The strip is the pre‑attentive verdict.',
+      '<b>Page 2 Because</b> — three factors, each against your own usual. Bars, not rings: 159–285 ms versus 1548–1772 ms.',
+      '<b>Page 3 Do</b> — one action, one button, confirmed immediately without waiting for the phone.',
+      'Crown drives the pages. Turning down <em>is</em> the act of asking why again. Depth from root to the deepest screen is 2.',
+      'No handGestureShortcut(.primaryAction) anywhere in the root — Double Tap advances the page, the watchOS 11 default.',
+      (a.id==="heart" ? '<span class="warn">Haptics are suppressed on this screen: this answer runs a live HKAnchoredObjectQuery on heartRate, and the haptic engine stops HealthKit heart‑rate sampling.</span>' : '')
+    ].filter(Boolean);
+  }
+}
+
+/* ============================ haptics ============================ */
+let hapticTimer=null;
+function hapticsSuppressed(){
+  return ans().id==="heart" && (S.scr==="app"||S.scr==="launch"||S.scr==="raise");
+}
+function haptic(type, note){
+  const bar=el("hapticbar"), t=el("haptictext");
+  if(hapticsSuppressed()){
+    bar.classList.remove("live");
+    t.className="";
+    t.innerHTML = 'Haptic suppressed — <code>'+type+'</code> withheld while this answer samples live heart rate (R8, 100&nbsp;ms minimum spacing elsewhere).';
+    return;
+  }
+  bar.classList.add("live");
+  t.className="";
+  t.innerHTML = '<code>'+type+'</code> &mdash; '+note;
+  const p=el("pulse");
+  p.classList.remove("fire"); void p.offsetWidth; p.classList.add("fire");
+  clearTimeout(hapticTimer);
+  hapticTimer=setTimeout(()=>{bar.classList.remove("live")},900);
+}
+
+/* ============================ crown ============================ */
+let crownAngle=0, crownAccum=0;
+const DETENT=26;
+function crownReadout(txtStr){ el("crowntext").className=""; el("crowntext").textContent=txtStr; }
+function flashDetent(){
+  if(hapticsSuppressed()) return;
+  const d=el("detent"), dial=el("dial");
+  d.classList.add("on"); dial.classList.add("det");
+  setTimeout(()=>{d.classList.remove("on"); dial.classList.remove("det")},170);
+}
+function crown(delta){
+  crownAngle += delta*4;
+  el("needle").style.transform = "rotate("+crownAngle+"deg)";
+  crownAccum += delta;
+  while(Math.abs(crownAccum)>=DETENT){
+    const dir = crownAccum>0?1:-1;
+    crownAccum -= dir*DETENT;
+    crownStep(dir);
+  }
+}
+function crownStep(dir){
+  if(S.scr==="face"){
+    if(dir>0){ S.scr="stack"; S.stack=0; flashDetent(); haptic(".click","crown down from the face opens the Smart Stack");
+      crownReadout("Crown: Smart Stack, widget 1 of "+STACK.length); render(); }
+    return;
+  }
+  if(S.scr==="stack"){
+    const n=Math.max(0,Math.min(STACK.length-1,S.stack+dir));
+    if(n===S.stack && dir<0 && S.stack===0){ S.scr="face"; crownReadout("Crown: back to the watch face"); render(); return; }
+    if(n!==S.stack){ S.stack=n; flashDetent(); haptic(".click","Smart Stack detent");
+      crownReadout("Crown: Smart Stack, widget "+(S.stack+1)+" of "+STACK.length); render(); }
+    return;
+  }
+  if(S.scr==="s4"){
+    const f=ans().factors[S.factor];
+    if(!f.spark){ crownReadout("Crown: nothing to scrub, this factor has no wrist history"); return; }
+    const n=Math.max(0,Math.min(6,S.spark+dir));
+    if(n!==S.spark){ S.spark=n; flashDetent(); haptic(".click","one night stepped on the sparkline");
+      crownReadout("Crown: sparkline "+DAYS[S.spark]+" "+f.spark.txt[S.spark]); render(); }
+    else { crownReadout("Crown: end of the 7 nights, no further detent"); }
+    return;
+  }
+  if(S.scr==="s5"){
+    const g=L(), max=Math.max(0, g.s5.top + 6*(g.s5.rowH+g.s5.gap) - g.h + 10);
+    const n=Math.max(0,Math.min(max,S.deck+dir*(g.s5.rowH+g.s5.gap)));
+    if(n!==S.deck){ S.deck=n; flashDetent(); haptic(".click","list detent");
+      crownReadout("Crown: deck scrolled"); render(); }
+    return;
+  }
+  if(S.scr==="nlong1"||S.scr==="nlong2"){
+    const n=Math.max(0,Math.min(S.nmax,S.nscroll+dir*24));
+    if(n!==S.nscroll){ S.nscroll=n; render(); crownReadout("Crown: scrolling the long look"); }
+    else crownReadout("Crown: end of the long look");
+    return;
+  }
+  if(S.scr==="nshort"){ crownReadout("Crown: a short look does not scroll"); return; }
+  // root pages
+  const n=Math.max(0,Math.min(2,S.page+dir));
+  if(n!==S.page){
+    S.page=n; if(S.scr!=="app"){S.scr="app";}
+    flashDetent(); haptic(".click","crown detent between root pages");
+    crownReadout("Crown: page "+(S.page+1)+" of 3 — "+["Answer","Because","Do"][S.page]);
+    render();
+  } else {
+    crownReadout("Crown: page "+(S.page+1)+" of 3, end of the set");
+  }
+}
+
+/* ============================ interactions ============================ */
+function go(scr, opts){
+  Object.assign(S, opts||{});
+  if(scr!==S.scr) S.nscroll = 0;
+  S.scr = scr;
+  if(scr!=="app") S.snapshot=false;
+  render();
+}
+
+document.addEventListener("click", e=>{
+  const sw=e.target.closest(".sw");
+  if(sw){
+    const d=sw.dataset.scr;
+    if(d==="p1") go("app",{page:0});
+    else if(d==="p2") go("app",{page:1});
+    else if(d==="p3") go("app",{page:2});
+    else if(d==="raise"){ go("raise",{page:0}); playRaise(); }
+    else if(d==="launch"){ go("launch",{page:0}); playSnapshot(); }
+    else go(d,{});
+    return;
+  }
+  const hit=e.target.closest("[data-act]");
+  if(!hit) return;
+  const act=hit.dataset.act;
+
+  if(act==="deck"){ S.deck=0; go("s5"); crownReadout("Crown: scrolls the deck"); return; }
+  if(act==="factor"){ S.factor=+hit.dataset.i; S.spark=6; go("s4");
+    crownReadout("Crown: scrubs the 7-night sparkline"); return; }
+  if(act==="back"){ go("app",{page:1}); crownReadout("Crown: page 2 of 3 — Because"); return; }
+  if(act==="spark"){ S.spark=+hit.dataset.i; flashDetent(); haptic(".click","night selected"); render(); return; }
+  if(act==="pin"){
+    S.pinned=+hit.dataset.i; S.done=false; S.doneFail=false;
+    haptic(".click","question pinned — a value step, not a completion");
+    go("app",{page:0});
+    crownReadout("Crown: page 1 of 3 — Answer, re-seeded from the pinned question");
+    return;
+  }
+  if(act==="markdone"){
+    if(S.reject){
+      S.done=true; S.doneFail=true; render();
+      haptic(".success","Did it — fired immediately, before the phone answers");
+      setTimeout(()=>{
+        S.done=false; S.doneFail=true; render();
+        haptic(".failure","WatchCommandResult rejected — button reverted, “Not saved. Tap to retry.”");
+      },700);
+    } else {
+      S.done=true; S.doneFail=false; render();
+      haptic(".success","Did it — fired immediately, WatchCommand.markActionDone sent");
+    }
+    return;
+  }
+  if(act==="deeplink"){
+    const p=+hit.dataset.page;
+    go("app",{page:p});
+    crownReadout("Crown: page "+(p+1)+" of 3 — "+["Answer","Because","Do"][p]+" (deep link)");
+    return;
+  }
+  if(act==="notifaction"){
+    const i=+hit.dataset.i, n=+hit.dataset.n;
+    if(i===3){ crownReadout("Dismiss is the system action — no haptic, back to the face"); go("face"); return; }
+    if(n===1 && i===0){ S.done=true; S.doneFail=false;
+      haptic(".success","Did it from the long look — markActionDone"); go("app",{page:2}); return; }
+    if(i===1){ S.deck=0; haptic(".click","Ask something else — laso://ask/deck"); go("s5"); return; }
+    if(n===2 && i===0){ haptic(".success","Log a symptom — written to the phone journal"); go("app",{page:0}); return; }
+    haptic(".click", n===1?"Not today — re-prompt suppressed for the rest of today"
+                         :"Mute for 24h — the big friendly toggle, at the point of irritation");
+    go("app",{page:0});
+    return;
+  }
+});
+
+/* keyboard + wheel crown */
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowDown"){ e.preventDefault(); crown(DETENT); }
+  if(e.key==="ArrowUp"){ e.preventDefault(); crown(-DETENT); }
+});
+document.addEventListener("wheel", e=>{
+  // the crown owns the wheel everywhere except the page's own scrollable chrome
+  if(e.target.closest(".devpanel, .switcher, .panel")) return;
+  e.preventDefault();
+  crown(e.deltaY*0.55);
+},{passive:false});
+
+/* Double Tap */
+function doubleTap(){
+  if(S.scr==="nlong1"){ S.done=true; S.doneFail=false;
+    haptic(".success","Double Tap picked the first nondestructive action: Did it");
+    go("app",{page:2}); return; }
+  if(S.scr==="nlong2"){
+    haptic(".success","Double Tap picked the first nondestructive action: Log a symptom");
+    go("app",{page:0}); return; }
+  if(S.scr==="app"||S.scr==="launch"||S.scr==="raise"){
+    const n=Math.min(2,S.page+1);
+    if(n!==S.page){ S.page=n; S.scr="app"; haptic(".click","Double Tap advanced the vertical tab — the watchOS 11 default, no primaryAction is set");
+      crownReadout("Double Tap: page "+(S.page+1)+" of 3"); render(); }
+    else { S.page=0; S.scr="app"; haptic(".click","Double Tap wrapped to page 1"); render(); }
+    return;
+  }
+  if(S.scr==="s5"||S.scr==="s4"){
+    crownReadout("Double Tap: system default here — no primaryAction is set on a list or a detail view");
+    return;
+  }
+  crownReadout("Double Tap: nothing app-defined off app");
+}
+
+/* launch / raise choreography */
+function playSnapshot(){
+  S.snapshot=true; render();
+  setTimeout(()=>{ S.snapshot=false; render(); },900);   // no animation, no count-up
+}
+function playRaise(){
+  S.aod=true; S.raiseRevealed=false; render();
+  const c=el("screen");
+  setTimeout(()=>{
+    S.aod=false; render();
+    c.style.transition="opacity 220ms var(--ease)";
+    c.style.opacity="0.2"; void c.offsetWidth; c.style.opacity="1";
+    setTimeout(()=>{c.style.transition="";},260);
+  },800);
+}
+
+/* ============================ dev toolbar ============================ */
+const SEGS = {
+  segSize:{key:"size",opts:[["46","46mm"],["40","40mm"]]},
+  segState:{key:"state",opts:[["loaded","Loaded"],["loading","Loading"],["cold","Cold start"],
+    ["denied","HK denied"],["error","Phone off"],["stale","Stale 2h"],["yesterday","Yesterday"]]},
+  segAod:{key:"aod",opts:[[false,"Off"],[true,"Redacted"]]},
+  segBand:{key:"band",opts:[["optimal","optimal"],["fair","fair"],["poor","poor"]]},
+  segPin:{key:"pinned",opts:ANSWERS.map((a,i)=>[i,a.q])}
+};
+function buildDev(){
+  for(const id in SEGS){
+    const cfg=SEGS[id];
+    el(id).innerHTML = cfg.opts.map(o=>
+      '<button data-seg="'+id+'" data-val="'+o[0]+'">'+o[1]+'</button>').join("");
+  }
+  el("segGest").innerHTML =
+    '<button data-gest="dt">Fire Double Tap</button>'+
+    '<button data-gest="snap">Replay snapshot</button>'+
+    '<button data-gest="raise">Replay wrist raise</button>';
+  el("devpanel").addEventListener("click", e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.seg){
+      const cfg=SEGS[b.dataset.seg], v=b.dataset.val;
+      S[cfg.key] = (cfg.key==="aod") ? (v==="true") : (cfg.key==="pinned" ? +v : v);
+      if(cfg.key==="pinned"){ S.done=false; S.doneFail=false; S.factor=0; S.spark=6; }
+      render(); return;
+    }
+    if(b.dataset.gest==="dt") doubleTap();
+    if(b.dataset.gest==="snap"){ go("launch",{page:0}); playSnapshot(); }
+    if(b.dataset.gest==="raise"){ go("raise",{page:0}); playRaise(); }
+  });
+  el("rejectChk").addEventListener("change", e=>{ S.reject=e.target.checked; });
+  el("devbtn").addEventListener("click", ()=>{
+    const p=el("devpanel"), open=p.classList.toggle("open");
+    el("devbtn").setAttribute("aria-expanded", open?"true":"false");
+  });
+}
+function renderDev(){
+  for(const id in SEGS){
+    const cfg=SEGS[id];
+    el(id).querySelectorAll("button").forEach(b=>{
+      const v=b.dataset.val;
+      const cur = (cfg.key==="aod") ? (String(S.aod)===v)
+                : (cfg.key==="pinned") ? (String(S.pinned)===v) : (S[cfg.key]===v);
+      b.setAttribute("aria-pressed", cur?"true":"false");
+    });
+  }
+  el("bandnote").textContent = S.band==="fair"
+    ? "fair is Alex's real Tuesday. All three factors sit in the 45–66 band."
+    : "Preview only. Alex's real Tuesday is fair — the numbers on screen are unchanged and are still Alex's.";
+}
+
+buildDev();
+render();
+crownReadout("Digital Crown: mouse wheel or Up / Down arrow keys.");
+</script>
+</body>
+</html>

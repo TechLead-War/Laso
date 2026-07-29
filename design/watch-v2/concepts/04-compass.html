@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 — Recovery Compass · Laso Watch prototype</title>
+<style>
+:root{
+  --bg:#000000; --sr:#1B1B21; --se:#26262D; --ss:#17171C;
+  --tp:#F2F2F6; --tsec:#C9C9D2; --tt:#ADADB8; --bl:#2E2E36;
+  --pri:#4DA3FF; --acc:#22D3EE; --opt:#33C48D; --fair:#E3B45A; --poor:#E05C64;
+  --page:#08080A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--page);color:var(--tsec)}
+body{
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  font-size:13px; line-height:1.45; padding:18px 18px 96px;
+}
+h1{font-size:15px;font-weight:600;color:var(--tp);margin:0 0 2px}
+h2{font-size:12px;font-weight:600;color:var(--tt);margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+p{margin:0 0 8px}
+.hdr{max-width:1180px;margin:0 auto 14px}
+.sub{color:var(--tt);font-size:12px}
+.strip{display:flex;flex-wrap:wrap;gap:6px;max-width:1180px;margin:12px auto 18px}
+button{
+  font:inherit;font-variant-numeric:tabular-nums;background:var(--sr);color:var(--tsec);
+  border:1px solid var(--bl);border-radius:9px;padding:7px 11px;cursor:pointer;
+  transition:transform 80ms ease, background 120ms ease, border-color 120ms ease;
+}
+button:hover{border-color:#43434f}
+button:active{transform:scale(.96)}
+button[aria-pressed="true"],button.on{background:#12243a;border-color:var(--pri);color:var(--tp)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.cols{display:flex;gap:26px;align-items:flex-start;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px}
+.watch{position:relative;padding:14px}
+.bezel{
+  position:relative;background:#000;border-radius:46px;padding:14px;
+  border:1px solid #26262b;
+  box-shadow:0 0 0 8px #131317, 0 18px 46px rgba(0,0,0,.75);
+}
+.screenwrap{position:relative;border-radius:34px;overflow:hidden;background:#000}
+.screenwrap.aod{filter:brightness(.5) saturate(.7)}
+svg.screen{display:block;background:#000;font-family:inherit;font-variant-numeric:tabular-nums}
+svg.screen text{font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif}
+svg .tap{cursor:pointer;transform-box:fill-box;transform-origin:center;transition:transform 80ms ease}
+svg .tap:active{transform:scale(.96)}
+.hpulse{position:absolute;inset:0;border-radius:34px;border:3px solid var(--pri);opacity:0;pointer-events:none}
+.hpulse.go{animation:pulse 320ms ease-out}
+@keyframes pulse{0%{opacity:.95;transform:scale(.985)}100%{opacity:0;transform:scale(1)}}
+.crownwrap{position:absolute;right:-4px;top:96px;display:flex;align-items:center;gap:6px}
+.detent{width:9px;height:2px;background:#3a3a44;border-radius:1px;opacity:.5}
+.detent.go{background:var(--pri);opacity:1}
+.crown{width:15px;height:44px;border-radius:5px;background:linear-gradient(90deg,#3a3a42,#8b8b96 45%,#4a4a54);position:relative;overflow:hidden}
+.crownlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1.5px,rgba(255,255,255,.16) 1.5px 3.5px)}
+.sidebtn{position:absolute;right:0;top:158px;width:8px;height:30px;border-radius:4px;background:linear-gradient(90deg,#2c2c33,#6f6f79)}
+.crownread{font-size:11px;color:var(--tt);text-align:center}
+.info{width:330px;min-width:300px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--sr);border:1px solid var(--bl);border-radius:12px;padding:12px 13px}
+.card .k{color:var(--tp);font-weight:600}
+ol.vo{margin:0;padding-left:18px}
+ol.vo li{margin-bottom:5px;color:var(--tsec)}
+.hlog{list-style:none;margin:0;padding:0;font-size:12px}
+.hlog li{padding:5px 0;border-bottom:1px solid #1c1c22;color:var(--tt)}
+.hlog li:last-child{border-bottom:0}
+.hlog b{color:var(--pri);font-weight:600}
+.hlog i{font-style:normal;color:var(--poor)}
+.pill{display:inline-block;font-size:11px;color:var(--tt);border:1px solid var(--bl);border-radius:6px;padding:1px 6px;margin-right:5px}
+.dev{position:fixed;right:16px;bottom:16px;z-index:40}
+.devpanel{
+  position:fixed;right:16px;bottom:62px;width:290px;max-height:78vh;overflow:auto;z-index:40;
+  background:#0e0e12;border:1px solid var(--bl);border-radius:14px;padding:12px;display:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.7);
+}
+.devpanel.open{display:block}
+.devpanel h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--tt);margin:12px 0 6px;font-weight:600}
+.devpanel h3:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;gap:5px}
+.row button{padding:5px 8px;font-size:12px}
+.warn{color:var(--fair);font-size:11px;margin-top:8px}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+  .hpulse.go{opacity:0;outline:3px solid var(--pri)}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>04 — Recovery Compass <span class="sub">· <code>compass</code> · Laso watchOS prototype</span></h1>
+  <p class="sub">Alex, Tuesday 14:32. Readiness 62 (Moderate, usual 68). Strain 6.2, today's aim 8 to 12. Last phone sync 14:20. Dark only. Crown = mouse wheel or &uarr;/&darr;.</p>
+</div>
+
+<div class="strip" id="strip"></div>
+
+<div class="cols">
+  <div class="stage">
+    <div class="watch">
+      <div class="bezel">
+        <div class="screenwrap" id="screenwrap">
+          <svg class="screen" id="svg" viewBox="0 0 208 248" width="354" height="422" role="group" aria-label="Apple Watch screen"></svg>
+          <div class="hpulse" id="hpulse"></div>
+        </div>
+        <div class="crownwrap">
+          <div class="detent" id="detent"></div>
+          <div class="crown" id="crown"><div class="crownlines" id="crownlines"></div></div>
+        </div>
+        <div class="sidebtn" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="crownread" id="crownread">Digital Crown 0&deg; · detent every 22&deg; fires <b>.click</b></div>
+    <div class="row" id="localctl"></div>
+  </div>
+
+  <div class="info">
+    <div class="card">
+      <div class="k" id="capTitle">Watch face</div>
+      <div id="capBody" class="sub"></div>
+    </div>
+    <div class="card">
+      <h2>VoiceOver reading order</h2>
+      <ol class="vo" id="vo"></ol>
+    </div>
+    <div class="card">
+      <h2>Haptics fired</h2>
+      <ul class="hlog" id="hlog"><li>Nothing yet. Every state change fires one.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Data honesty</h2>
+      <div class="sub" id="honesty"></div>
+    </div>
+  </div>
+</div>
+
+<button class="dev" id="devbtn" aria-expanded="false" aria-controls="devpanel">Dev</button>
+<div class="devpanel" id="devpanel" role="group" aria-label="Developer toolbar">
+  <h3>Canvas</h3>
+  <div class="row" id="ctlSize"></div>
+  <h3>State</h3>
+  <div class="row" id="ctlState"></div>
+  <h3>Always-On (isLuminanceReduced)</h3>
+  <div class="row" id="ctlAod"></div>
+  <h3>Readiness band (key variable)</h3>
+  <div class="row" id="ctlBand"></div>
+  <h3>Strain now</h3>
+  <div class="row" id="ctlStrain"></div>
+  <h3>Gestures</h3>
+  <div class="row" id="ctlGest"></div>
+  <div class="warn" id="devWarn"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ tokens */
+const C = {
+  bg:"#000000", sr:"#1B1B21", se:"#26262D", ss:"#17171C",
+  tp:"#F2F2F6", ts:"#C9C9D2", tt:"#ADADB8", bl:"#2E2E36",
+  pri:"#4DA3FF", acc:"#22D3EE", opt:"#33C48D", fair:"#E3B45A", poor:"#E05C64"
+};
+const BANDCOL = { optimal:C.opt, fair:C.fair, poor:C.poor };
+
+/* --------------------------------------------------- the shared Alex data */
+const ALEX = {
+  readiness:62, weekAvg:68, strain:6.2, tmin:8, tmax:12,
+  hrv:48, rhr:58, hrNow:74, kcal:284, syncAt:"14:20", heldAt:"09:12", doneAt:"14:41"
+};
+
+/* 7-day trail.
+   HONESTY: only three numbers here come from the brief —
+     Tue (today) readiness 62 / strain 6.2, Mon readiness 71, Sun strain 15.4 (the hard 10 km run).
+   Everything marked filler:true is PROTOTYPE FILLER, chosen so the mean readiness is 68
+   (the brief's 7-day average) and Monday sits below StrainCoachConfig.restDayThreshold 5.0.
+   Do not ship invented history. */
+const TRAIL = [
+  { d:"Wed", r:72, s:7.6,  filler:"readiness+strain" },
+  { d:"Thu", r:73, s:11.2, filler:"readiness+strain" },
+  { d:"Fri", r:58, s:5.0,  filler:"readiness+strain" },
+  { d:"Sat", r:68, s:8.1,  filler:"readiness+strain" },
+  { d:"Sun", r:74, s:15.4, filler:"readiness" },
+  { d:"Mon", r:71, s:3.4,  filler:"strain" },
+  { d:"Tue", r:62, s:6.2,  filler:null, today:true }
+];
+
+/* Corridor from StrainCoachConfig via TrainingZone.strainRange(for:).
+   Today's row is always overwritten by the phone's strainTargetMin/Max. */
+const CORRIDOR = { poor:[0,5], fair:[8,12], optimal:[14,18] };
+const BANDS = {
+  poor:    { r:38, label:"Low" },
+  fair:    { r:62, label:"Moderate" },
+  optimal: { r:74, label:"Optimal" }
+};
+
+/* ------------------------------------------------------------------ state */
+const S = {
+  screen:"face", size:46, page:0, state:"loaded", aod:false,
+  band:"fair", strain:6.2, done:false,
+  trailIdx:4, notif:"n1", notifResolved:null,
+  stackY:0, crownDeg:0, launchMode:"cold", rejected:false
+};
+
+/* --------------------------------------------------------------- geometry */
+const Z = {
+  46:{ W:208,H:248,pad:10, cardX:28,cardY:22,cardW:152,cardR:14, trailCardY:30,
+       ax0:40,ax1:168,ay0:34,ay1:150, kx:7.111, ky:1.16,
+       railX:32, railW:4, dotR:6, tDotR:3.5, tSelR:8, chevW:6, chevH:8, stepR:6,
+       freshX:170, freshY:32, freshR:2.5,
+       axisY:161, axisS:11, verdY:200, verdS:22, presY:219, presS:13, lead:16,
+       p2:{ x0:10,x1:198, l1:20,b1:46, l2:66,b2:92, r3:116, r4:150, vs:22, bh:8, ls:12 },
+       p3:{ x:10,w:188, hy:30,hs:17, dy:56,ds:13, ry:72, b1y:92, b2y:144, bh:44, br:10, bs:17 },
+       tr:{ selY:190, footY:212, grabY:11 } },
+  40:{ W:162,H:197,pad:8, cardX:21,cardY:14,cardW:120,cardR:12, trailCardY:20,
+       ax0:31,ax1:141,ay0:24,ay1:114, kx:6.111, ky:0.9,
+       railX:25, railW:3, dotR:5, tDotR:3, tSelR:6.5, chevW:5, chevH:7, stepR:5,
+       freshX:133, freshY:23, freshR:2,
+       axisY:121, axisS:10, verdY:156, verdS:20, presY:174, presS:12, lead:14,
+       p2:{ x0:8,x1:154, l1:14,b1:40, l2:68,b2:94, r3:118, r4:150, vs:20, bh:8, ls:11 },
+       p3:{ x:8,w:146, hy:22,hs:16, dy:42,ds:12, ry:56, b1y:66, b2y:116, bh:44, br:10, bs:16 },
+       tr:{ selY:152, footY:172, grabY:8 } }
+};
+const SCALE = 1.7;
+
+/* --------------------------------------------------------------- helpers */
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function n1(v){ return (Math.round(v*10)/10).toFixed(1); }
+function rect(x,y,w,h,r,fill,extra){
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+fill+'" '+(extra||"")+'/>';
+}
+function txt(x,y,t,o){
+  o = o || {};
+  return '<text x="'+x+'" y="'+y+'" font-size="'+(o.s||13)+'" font-weight="'+(o.w||400)+
+    '" fill="'+(o.f||C.tp)+'" text-anchor="'+(o.a||"start")+'" '+(o.extra||"")+'>'+esc(t)+'</text>';
+}
+function ln(x1,y1,x2,y2,stroke,sw,extra){
+  return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+
+    '" stroke-width="'+sw+'" stroke-linecap="butt" '+(extra||"")+'/>';
+}
+function circ(cx,cy,r,fill,extra){
+  return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+fill+'" '+(extra||"")+'/>';
+}
+/* average glyph width for SF Compact Rounded, measured by eye against the 46mm canvas */
+function tw(t,s){ return String(t).length * s * 0.53; }
+function wrap(t,maxW,s){
+  const words = String(t).split(" "); const out = []; let cur = "";
+  for(const w of words){
+    const trial = cur ? cur+" "+w : w;
+    if(tw(trial,s) > maxW && cur){ out.push(cur); cur = w; } else { cur = trial; }
+  }
+  if(cur) out.push(cur);
+  return out;
+}
+function ell(t,maxW,s){
+  if(tw(t,s) <= maxW) return t;
+  let cut = String(t);
+  while(cut.length > 2 && tw(cut+"…",s) > maxW) cut = cut.slice(0,-1);
+  return cut.replace(/\s+$/,"")+"…";
+}
+function pol(cx,cy,r,a){ /* a = degrees from 12 o'clock, clockwise */
+  const rad = (a-90)*Math.PI/180;
+  return [cx + r*Math.cos(rad), cy + r*Math.sin(rad)];
+}
+function arc(cx,cy,r,a0,a1){
+  const p0 = pol(cx,cy,r,a0), p1 = pol(cx,cy,r,a1);
+  const large = (a1-a0) > 180 ? 1 : 0;
+  return 'M '+p0[0].toFixed(2)+' '+p0[1].toFixed(2)+' A '+r+' '+r+' 0 '+large+' 1 '+p1[0].toFixed(2)+' '+p1[1].toFixed(2);
+}
+
+/* ----------------------------------------------------------- derivations */
+function tier(r){ return r >= 67 ? "optimal" : r >= 45 ? "fair" : "poor"; }
+function readiness(){ return BANDS[S.band].r; }
+function todayBand(){ return tier(readiness()); }
+/* Today's step always comes from the phone's strainTargetMin/Max.
+   For Alex that is 8 to 12; the other bands use the constant table for the demo. */
+function target(){ return CORRIDOR[todayBand()]; }
+function verdictKey(){
+  const t = target();
+  if(S.strain < t[0]) return "under";
+  if(S.strain > t[1]) return "over";
+  return "in";
+}
+const VERDICT = { under:"Room to add", in:"In your zone", over:"Ease off now" };
+const GLYPH   = { under:"+", in:"✓", over:"−" };
+const VERB    = { under:"Add", in:"Hold", over:"Ease" };
+function isAlex(){ return S.band === "fair" && Math.abs(S.strain - 6.2) < 0.01; }
+function prescription(){
+  const k = verdictKey(), t = target();
+  if(k === "under") return isAlex() ? "Easy 30 min gets you there" : "Add easy minutes to get there";
+  if(k === "in")    return "You are inside today’s aim";
+  return "Ease off for the rest of today";
+}
+function actionHeadline(){
+  const k = verdictKey();
+  if(k === "under") return isAlex() ? "Add an easy 30 min" : "Add an easy walk";
+  if(k === "in")    return "Hold here today";
+  return "Ease off from here";
+}
+function actionDetail(){
+  const t = target(), k = verdictKey();
+  if(k === "under") return "Puts you in your "+t[0]+" to "+t[1]+" aim";
+  if(k === "in")    return "You are inside your "+t[0]+" to "+t[1]+" aim";
+  return "You are past your "+t[0]+" to "+t[1]+" aim";
+}
+function aimStr(){ const t = target(); return t[0]+" to "+t[1]; }
+function ofAim(){ return n1(S.strain)+" of "+aimStr(); }
+
+const HAS_POSITION = { loaded:1, stale:1, staleYesterday:1, staleEstimate:1, errPhone:1, errWrist:1 };
+function hasPosition(){ return !!HAS_POSITION[S.state]; }
+function isHeld(){ return S.state === "errPhone" || S.state === "stale" || S.state === "staleYesterday"; }
+function isHollowDot(){ return S.state === "staleYesterday" || S.state === "staleEstimate"; }
+function outlineOnly(){ return S.aod || !hasPosition(); }
+
+/* ------------------------------------------------------------------ defs */
+function defs(){
+  return '<defs>'+
+    '<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'+
+      '<line x1="0" y1="0" x2="0" y2="4" stroke="'+C.tt+'" stroke-width="1.2" opacity="0.55"/>'+
+    '</pattern>'+
+    '<clipPath id="stackclip"><rect x="0" y="0" width="'+Z[S.size].W+'" height="'+Z[S.size].H+'"/></clipPath>'+
+  '</defs>';
+}
+
+/* ============================================================ THE PLOT ==== */
+function mx(z,s){ return z.ax0 + z.kx * Math.max(0, Math.min(s,18)); }
+function my(z,r){ return z.ay1 - z.ky * Math.max(0, Math.min(r,100)); }
+
+function stepGeom(z,band){
+  const rr = band === "optimal" ? [100,67] : band === "fair" ? [67,45] : [45,0];
+  const sr = CORRIDOR[band];
+  return { x:mx(z,sr[0]), x2:mx(z,sr[1]), y:my(z,rr[0])+2, y2:my(z,rr[1])-2 };
+}
+function stepSVG(z,band,mode){
+  /* mode: "outline" | "idle" | "lit" | "held" */
+  const g = stepGeom(z,band), w = g.x2-g.x, h = g.y2-g.y, col = BANDCOL[band];
+  if(mode === "outline"){
+    return rect(g.x,g.y,w,h,z.stepR,"none",'stroke="'+C.bl+'" stroke-width="1"');
+  }
+  if(mode === "idle"){
+    return rect(g.x,g.y,w,h,z.stepR,C.se);
+  }
+  let o = "";
+  if(mode === "held"){
+    o += rect(g.x,g.y,w,h,z.stepR,"url(#hatch)");
+    o += rect(g.x,g.y,w,h,z.stepR,"none",'stroke="'+col+'" stroke-width="1.5"');
+  } else {
+    o += rect(g.x,g.y,w,h,z.stepR,col,'fill-opacity="0.18"');
+    o += rect(g.x,g.y,w,h,z.stepR,"none",'stroke="'+col+'" stroke-width="1.5"');
+  }
+  /* end ticks: 3pt wide, projecting 4pt above and below the step */
+  o += ln(g.x, g.y-4, g.x, g.y2+4, col, 3);
+  o += ln(g.x2, g.y-4, g.x2, g.y2+4, col, 3);
+  return o;
+}
+function railSVG(z){
+  const segs = [["optimal",100,67],["fair",67,45],["poor",45,0]];
+  let o = "";
+  for(const s of segs){
+    const y = my(z,s[1]), y2 = my(z,s[2]);
+    o += rect(z.railX, y, z.railW, y2-y, z.railW/2, BANDCOL[s[0]], 'fill-opacity="0.28"');
+  }
+  const ty = my(z, readiness());
+  /* held: the tick is 2pt tall, so a 45 degree hatch cannot be seen on it —
+     it becomes a dashed rule instead. Still a shape channel, not a colour change. */
+  o += ln(z.railX, ty, z.railX+z.railW, ty, C.tp, 2, isHeld() ? 'stroke-dasharray="1.6 1.4"' : "");
+  return o;
+}
+function chevronSVG(z,cx,cy,dir){
+  const w = z.chevW, h = z.chevH, s = dir === "right" ? 1 : -1;
+  const x0 = cx - s*w/2, x1 = cx + s*w/2;
+  return '<path d="M '+x0+' '+(cy-h/2)+' L '+x1+' '+cy+' L '+x0+' '+(cy+h/2)+
+    '" fill="none" stroke="'+BANDCOL[todayBand()]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+}
+function dotSVG(z,x,y,r,hollow){
+  if(hollow){
+    return circ(x,y,r,"none",'stroke="'+C.tp+'" stroke-width="2"');
+  }
+  return circ(x,y,r+1,C.bg) + circ(x,y,r,C.tp);
+}
+
+function plotSVG(z, cardY, opts){
+  opts = opts || {};
+  let o = rect(z.cardX, cardY, z.cardW, z.cardW, z.cardR, C.ss, 'stroke="'+C.bl+'" stroke-width="1"');
+  const band = todayBand(), out = outlineOnly();
+
+  for(const b of ["optimal","fair","poor"]){
+    let mode = "idle";
+    if(out) mode = "outline";
+    else if(opts.litBand ? (b === opts.litBand) : (b === band)) mode = isHeld() ? "held" : "lit";
+    o += stepSVG(z,b,mode);
+  }
+  if(!out) o += railSVG(z);
+
+  if(!out && !opts.noDot){
+    const t = target();
+    const clamped = S.strain > 18;
+    const dx = mx(z,S.strain), dy = my(z, readiness());
+    const k = verdictKey();
+    if(k === "under"){
+      /* the gap is measured from the dot's EDGE to the step, so the chevron sits
+         in the middle of the white space the user actually sees (93.5 for Alex) */
+      const edge = mx(z,t[0]), start = dx + z.dotR, gap = edge - start;
+      if(gap > 3){
+        const cx = (start + edge)/2;
+        o += chevronSVG(z, cx, dy, "right");
+        if(gap >= 16){
+          o += ln(start + 2, dy, cx - z.chevW, dy, BANDCOL[band], 2, 'stroke-dasharray="2 2.5" opacity="0.8"');
+          o += ln(cx + z.chevW, dy, edge - 2, dy, BANDCOL[band], 2, 'stroke-dasharray="2 2.5" opacity="0.8"');
+        }
+      }
+    } else if(k === "over"){
+      const edge = mx(z,t[1]), end = dx - z.dotR, gap = end - edge;
+      if(gap > 3) o += chevronSVG(z, (edge + end)/2, dy, "left");
+    }
+    if(S.state === "staleYesterday"){
+      o += ln(dx, dy + z.dotR, dx, z.ay1, C.tp, 1, 'stroke-dasharray="2 2" opacity="0.55"');
+    }
+    if(clamped){
+      /* half dot flush to the right edge plus a right chevron */
+      o += '<path d="M '+z.ax1+' '+(dy-z.dotR)+' A '+z.dotR+' '+z.dotR+' 0 0 0 '+z.ax1+' '+(dy+z.dotR)+' Z" fill="'+C.tp+'"/>';
+      o += chevronSVG(z, z.ax1 + 5, dy, "right");
+    } else {
+      o += dotSVG(z, dx, dy, z.dotR, isHollowDot());
+    }
+  }
+  /* axis words */
+  o += txt(z.ax0, z.axisY, "Easy", { s:z.axisS, w:500, f:C.tt });
+  o += txt(z.ax1, z.axisY, "Hard", { s:z.axisS, w:500, f:C.tt, a:"end" });
+  return o;
+}
+
+function freshSVG(z){
+  if(S.state === "loading" || S.state === "coldstart" || S.state === "empty") return "";
+  const hollow = isHeld() || S.state === "staleEstimate";
+  if(hollow) return circ(z.freshX, z.freshY, z.freshR, "none", 'stroke="'+C.tt+'" stroke-width="1.5"');
+  return circ(z.freshX, z.freshY, z.freshR, C.pri);
+}
+
+function pageDots(z, active){
+  let o = "";
+  const x = z.W - 6, cy = z.H/2;
+  for(let i=0;i<3;i++){
+    const y = cy + (i-1)*9;
+    o += circ(x, y, i === active ? 2.2 : 1.6, i === active ? C.tp : C.tt, i === active ? "" : 'opacity="0.45"');
+  }
+  return o;
+}
+
+/* --------------------------------------------------- state copy for page 1 */
+function page1Copy(z){
+  const k = verdictKey();
+  if(S.aod)            return { head:"Hidden", headF:C.tt, body:"Raise your wrist to see it." };
+  if(S.state === "loading")   return { head:"Reading your day", headF:C.tt, body:"Your position appears at the first sync." };
+  if(S.state === "coldstart") return { head:"No position yet", headF:C.tp, body:"Day 3 of 7. The compass needs a week of your own history." };
+  if(S.state === "empty")     return { head:"No position yet", headF:C.tp, body:"The compass places you after your first full night." };
+  if(S.state === "errHK")     return { head:"Health access is off", headF:C.tp, body:"Open Settings on this watch to turn it on." };
+  if(S.state === "errWrist")  return { head:"Watch is off your wrist", headF:C.tp, body:"Strain stops counting until you put it back on." };
+  if(S.state === "errPhone")  return { head:VERDICT[k], headF:C.tp, body:"Readiness held from "+ALEX.heldAt, bodyF:C.tt };
+  if(S.state === "stale")     return { head:VERDICT[k], headF:C.tp, body:"Readiness from "+ALEX.heldAt, bodyF:C.tt };
+  if(S.state === "staleYesterday") return { head:VERDICT[k], headF:C.tp, body:"Yesterday’s readiness. Strain is today’s.", bodyF:C.tt };
+  if(S.state === "staleEstimate")  return { head:VERDICT[k], headF:C.tp, body:"Strain is an estimate since "+ALEX.heldAt, bodyF:C.tt };
+  return { head:VERDICT[k], headF:C.tp, body:prescription(), bodyF:C.ts };
+}
+
+function page1(z){
+  let o = plotSVG(z, z.cardY, {}) + freshSVG(z);
+  const cp = page1Copy(z);
+  const maxW = z.W - 2*z.pad;
+  o += txt(z.W/2, z.verdY, ell(cp.head, maxW, z.verdS), { s:z.verdS, w:600, f:cp.headF, a:"middle" });
+  const lines = wrap(cp.body, maxW, z.presS);
+  lines.slice(0,3).forEach(function(l,i){
+    o += txt(z.W/2, z.presY + i*z.lead, l, { s:z.presS, w:400, f:cp.bodyF || C.tt, a:"middle" });
+  });
+  o += pageDots(z,0);
+  return o;
+}
+
+/* ---------------------------------------------------------------- page 2 */
+function bar(z,p,y,frac,col){
+  const w = p.x1 - p.x0;
+  let o = rect(p.x0, y, w, p.bh, p.bh/2, C.ss);
+  if(frac > 0 && !S.aod && hasPosition()) o += rect(p.x0, y, w*frac, p.bh, p.bh/2, col);
+  return o;
+}
+function page2(z){
+  const p = z.p2, w = p.x1 - p.x0, band = todayBand(), col = BANDCOL[band], t = target();
+  const live = !S.aod && hasPosition();
+  let o = "";
+
+  /* row 1 — readiness */
+  o += txt(p.x0, p.l1, S.aod ? "Readiness" : "Readiness · usual "+ALEX.weekAvg, { s:p.ls, f:C.tt });
+  if(live) o += txt(p.x1, p.l1, String(readiness()), { s:p.vs, w:600, f:C.tp, a:"end" });
+  o += bar(z,p,p.b1, readiness()/100, col);
+  if(live){
+    const tx = p.x0 + w*(ALEX.weekAvg/100);
+    o += ln(tx, p.b1-3, tx, p.b1+p.bh+3, C.tp, 2);
+  }
+
+  /* row 2 — strain */
+  o += txt(p.x0, p.l2, S.aod ? "Strain" : "Strain · aim "+aimStr(), { s:p.ls, f:C.tt });
+  if(live) o += txt(p.x1, p.l2, n1(S.strain), { s:p.vs, w:600, f:C.tp, a:"end" });
+  o += rect(p.x0, p.b2, w, p.bh, p.bh/2, C.ss);
+  if(live){
+    const bx0 = p.x0 + w*(t[0]/18), bx1 = p.x0 + w*(t[1]/18);
+    o += rect(bx0, p.b2, bx1-bx0, p.bh, 0, col, 'fill-opacity="0.35"');
+    o += ln(bx0, p.b2-3, bx0, p.b2+p.bh+3, col, 2);
+    o += ln(bx1, p.b2-3, bx1, p.b2+p.bh+3, col, 2);
+    const mxp = p.x0 + w*(Math.min(S.strain,18)/18);
+    o += ln(mxp, p.b2-3, mxp, p.b2+p.bh+3, C.tp, 3);
+  }
+
+  /* row 3 — native HealthKit */
+  const r3 = S.aod ? "HRV · resting · now"
+    : (S.state === "errHK" ? "Heart data needs access"
+      : "HRV "+ALEX.hrv+" · rest "+ALEX.rhr+" · now "+ALEX.hrNow+" bpm");
+  o += txt(p.x0, p.r3, ell(r3, w, p.ls), { s:p.ls, f:C.ts });
+
+  /* row 4 — the split, stated once */
+  const r4 = hasPosition() || S.aod ? "Readiness and aim from iPhone" : page1Copy(z).head;
+  o += txt(z.W/2, p.r4, ell(r4, w, z.axisS), { s:z.axisS, f:C.tt, a:"middle" });
+
+  o += freshSVG(z);
+  o += pageDots(z,1);
+  return o;
+}
+
+/* ---------------------------------------------------------------- page 3 */
+function btn(x,y,w,h,r,label,labelCol,act,aria,fillCol,strokeCol,size){
+  const fill = fillCol || C.sr, stroke = strokeCol || C.bl;
+  let o = '<g class="tap" data-act="'+act+'" role="button" tabindex="0" aria-label="'+esc(aria||label)+'">';
+  o += rect(x,y,w,h,r,fill,'stroke="'+stroke+'" stroke-width="1"');
+  o += txt(x+w/2, y+h/2+ (size||17)*0.35, label, { s:size||17, w:600, f:labelCol, a:"middle" });
+  o += '</g>';
+  return o;
+}
+function page3(z){
+  const p = z.p3, band = todayBand(), col = BANDCOL[band], t = target();
+  const live = !S.aod && hasPosition();
+  let o = "";
+
+  if(S.aod){
+    o += txt(p.x, p.hy, "Hidden", { s:p.hs, w:600, f:C.tt });
+  } else if(!hasPosition()){
+    const cp = page1Copy(z);
+    o += txt(p.x, p.hy, ell(cp.head, p.w, p.hs), { s:p.hs, w:600, f:C.tp });
+    wrap(cp.body, p.w, p.ds).slice(0,2).forEach(function(l,i){
+      o += txt(p.x, p.dy + i*z.lead, l, { s:p.ds, f:C.tt });
+    });
+  } else {
+    o += txt(p.x, p.hy, ell(actionHeadline(), p.w, p.hs), { s:p.hs, w:600, f:C.tp });
+    o += txt(p.x, p.dy, ell(actionDetail(), p.w, p.ds), { s:p.ds, f:C.ts });
+  }
+
+  /* strain rail — identical geometry and marks to page 2 row 2 */
+  o += rect(p.x, p.ry, p.w, 8, 4, C.ss);
+  if(live){
+    const bx0 = p.x + p.w*(t[0]/18), bx1 = p.x + p.w*(t[1]/18);
+    o += rect(bx0, p.ry, bx1-bx0, 8, 0, col, 'fill-opacity="0.35"');
+    o += ln(bx0, p.ry-3, bx0, p.ry+11, col, 2);
+    o += ln(bx1, p.ry-3, bx1, p.ry+11, col, 2);
+    const m = p.x + p.w*(Math.min(S.strain,18)/18);
+    o += ln(m, p.ry-3, m, p.ry+11, C.tp, 3);
+  }
+
+  if(S.done){
+    let g = '<g role="img" aria-label="Done at '+ALEX.doneAt+'">';
+    g += rect(p.x, p.b1y, p.w, p.bh, p.br, C.opt, 'fill-opacity="0.18" stroke="'+C.opt+'" stroke-width="1"');
+    g += txt(p.x+p.w/2 - 8, p.b1y+p.bh/2+6, "Done "+ALEX.doneAt, { s:p.bs, w:600, f:C.tp, a:"middle" });
+    g += '<path d="M '+(p.x+p.w/2-52)+' '+(p.b1y+p.bh/2)+' l 4 5 l 8 -10" fill="none" stroke="'+C.opt+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    g += '</g>';
+    o += g;
+  } else {
+    o += btn(p.x, p.b1y, p.w, p.bh, p.br, "Mark done", C.pri, "markdone", "Mark done", C.sr, C.bl, p.bs);
+  }
+  if(S.rejected){
+    o += txt(p.x+p.w/2, p.b1y+p.bh+13, "Not saved. Tap to try again.", { s:11, w:500, f:C.poor, a:"middle" });
+  }
+  o += btn(p.x, p.b2y, p.w, p.bh, p.br, "Last 7 days", C.ts, "opentrail", "Last 7 days", C.sr, C.bl, p.bs);
+  o += freshSVG(z);
+  o += pageDots(z,2);
+  return o;
+}
+
+/* ------------------------------------------------------------ trail sheet */
+function insideAimCount(){
+  return TRAIL.filter(function(d){
+    const t = CORRIDOR[tier(d.r)];
+    return d.s >= t[0] && d.s <= t[1];
+  }).length;
+}
+function trail(z){
+  const cy = z.trailCardY, sel = TRAIL[S.trailIdx];
+  let o = "";
+  /* sheet grabber. On watchOS the sheet dismisses with a swipe; the grabber is the
+     prototype's stand-in for that, so its hit area spans the full width of the strip. */
+  o += '<g class="tap" data-act="closetrail" role="button" tabindex="0" aria-label="Close last 7 days">';
+  o += rect(0, 0, z.W, z.tr.grabY + 13, 0, "#000", 'opacity="0.01"');
+  o += rect(z.W/2-14, z.tr.grabY-1.5, 28, 3, 1.5, C.tt, 'opacity="0.55"');
+  o += '</g>';
+
+  o += plotSVG(z, cy, { noDot:true, litBand: S.aod ? null : tier(sel.r) });
+
+  if(!S.aod && hasPosition()){
+    /* polyline in date order */
+    let pts = TRAIL.map(function(d){ return mx(z,d.s).toFixed(1)+","+my(z,d.r).toFixed(1); }).join(" ");
+    o += '<polyline points="'+pts+'" fill="none" stroke="'+C.tt+'" stroke-width="1.5" opacity="0.35" stroke-linejoin="round"/>';
+    TRAIL.forEach(function(d,i){
+      const x = mx(z,d.s), y = my(z,d.r);
+      if(i === S.trailIdx) o += circ(x,y,z.tSelR,"none",'stroke="'+C.pri+'" stroke-width="2"');
+      if(d.today) o += dotSVG(z,x,y,z.dotR,false);
+      else o += circ(x,y,z.tDotR,C.tt,'opacity="0.55"');
+    });
+  }
+
+  const selLine = S.aod ? "Hidden"
+    : sel.d+" · "+sel.r+" ready · "+n1(sel.s)+" strain";
+  o += txt(z.W/2, z.tr.selY, selLine, { s:z.presS, f:S.aod ? C.tt : C.ts, a:"middle" });
+  o += txt(z.W/2, z.tr.footY, "From iPhone. Updated "+ALEX.syncAt+".", { s:z.axisS, f:C.tt, a:"middle" });
+  return o;
+}
+
+/* ========================================================= COMPLICATIONS == */
+function circularComp(cx,cy,r,opts){
+  opts = opts || {};
+  const t = target(), col = BANDCOL[todayBand()], sw = 6*(r/22);
+  const A0 = 225, SWEEP = 270;
+  const a = function(s){ return A0 + SWEEP*(Math.max(0,Math.min(s,18))/18); };
+  let o = '<path d="'+arc(cx,cy,r,A0,A0+SWEEP)+'" fill="none" stroke="'+C.ss+'" stroke-width="'+sw+'" stroke-linecap="round"/>';
+  if(opts.redact){
+    o += txt(cx, cy+4*(r/22), "––", { s:14*(r/22), w:600, f:C.tt, a:"middle" });
+    return o;
+  }
+  o += '<path d="'+arc(cx,cy,r,a(t[0]),a(t[1]))+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'"/>';
+  [t[0],t[1]].forEach(function(s){
+    const p0 = pol(cx,cy,r-sw/2,a(s)), p1 = pol(cx,cy,r-sw/2-3*(r/22),a(s));
+    o += ln(p0[0],p0[1],p1[0],p1[1],col,2);
+  });
+  const m0 = pol(cx,cy,r+sw/2+2*(r/22), a(S.strain)), m1 = pol(cx,cy,r-sw/2-2*(r/22), a(S.strain));
+  o += ln(m0[0],m0[1],m1[0],m1[1],C.tp,4*(r/22));
+  o += txt(cx, cy + 6*(r/22), GLYPH[verdictKey()], { s:16*(r/22), w:600, f:C.tp, a:"middle" });
+  return o;
+}
+function rectComp(x,y,w,h,redact){
+  const t = target(), col = BANDCOL[todayBand()];
+  let o = txt(x, y+13, redact ? "Hidden" : VERDICT[verdictKey()], { s:15, w:600, f:redact ? C.tt : C.tp });
+  const by = y+20;
+  o += rect(x, by, w, 8, 4, C.ss);
+  if(!redact){
+    const b0 = x + w*(t[0]/18), b1 = x + w*(t[1]/18);
+    o += rect(b0, by, b1-b0, 8, 0, col, 'fill-opacity="0.35"');
+    o += ln(b0, by-3, b0, by+11, col, 2);
+    o += ln(b1, by-3, b1, by+11, col, 2);
+    const m = x + w*(Math.min(S.strain,18)/18);
+    o += ln(m, by-3, m, by+11, C.tp, 3);
+    o += txt(x, by+22, ofAim(), { s:11, f:C.tt });
+  } else {
+    o += txt(x, by+22, "Raise your wrist", { s:11, f:C.tt });
+  }
+  return o;
+}
+function cornerComp(cx,cy,R,redact){
+  const t = target(), col = BANDCOL[todayBand()];
+  const p = function(th){ const rad = th*Math.PI/180; return [cx + R*Math.cos(rad), cy + R*Math.sin(rad)]; };
+  const seg = function(t0,t1,rad){
+    const q = function(th){ const r2 = th*Math.PI/180; return [cx + rad*Math.cos(r2), cy + rad*Math.sin(r2)]; };
+    const a0 = q(t0), a1 = q(t1);
+    return 'M '+a0[0].toFixed(2)+' '+a0[1].toFixed(2)+' A '+rad+' '+rad+' 0 0 1 '+a1[0].toFixed(2)+' '+a1[1].toFixed(2);
+  };
+  const ang = function(s){ return 12 + 66*(Math.max(0,Math.min(s,18))/18); };
+  let o = '<path d="'+seg(12,78,R)+'" fill="none" stroke="'+C.ss+'" stroke-width="5"/>';
+  if(!redact){
+    o += '<path d="'+seg(ang(t[0]),ang(t[1]),R)+'" fill="none" stroke="'+col+'" stroke-width="5"/>';
+    [t[0],t[1]].forEach(function(s){
+      const a0 = p(ang(s));
+      const rad = (ang(s))*Math.PI/180;
+      const inner = [cx + (R-5)*Math.cos(rad), cy + (R-5)*Math.sin(rad)];
+      o += ln(a0[0],a0[1],inner[0],inner[1],col,2);
+    });
+    const ma = ang(S.strain)*Math.PI/180;
+    o += ln(cx + (R+3)*Math.cos(ma), cy + (R+3)*Math.sin(ma), cx + (R-6)*Math.cos(ma), cy + (R-6)*Math.sin(ma), C.tp, 3);
+  }
+  o += '<path id="cornerpath" d="'+seg(18,72,R-13)+'" fill="none" stroke="none"/>';
+  o += '<text font-size="12" font-weight="600" fill="'+(redact ? C.tt : C.tp)+'">'+
+       '<textPath href="#cornerpath" startOffset="50%" text-anchor="middle">'+
+       esc(redact ? "Laso" : VERB[verdictKey()])+'</textPath></text>';
+  return o;
+}
+
+/* ============================================================ WATCH FACES = */
+function activityRings(cx,cy,r){
+  let o = "";
+  const cols = ["#F72C55","#A6F900","#00D8E0"], fr = [0.45,0.40,0.50];
+  for(let i=0;i<3;i++){
+    const rr = r - i*4.5;
+    o += '<circle cx="'+cx+'" cy="'+cy+'" r="'+rr+'" fill="none" stroke="'+cols[i]+'" stroke-opacity="0.22" stroke-width="3.6"/>';
+    o += '<path d="'+arc(cx,cy,rr,0,360*fr[i]-0.01)+'" fill="none" stroke="'+cols[i]+'" stroke-width="3.6" stroke-linecap="round"/>';
+  }
+  return o;
+}
+function faceModular(z){
+  const pad = z.pad, w = z.W - 2*pad, redact = S.aod;
+  let o = "";
+  o += txt(pad, pad+14, "TUE 29", { s:z.axisS, w:600, f:C.opt });
+  o += txt(z.W-pad, pad+30, "14:32", { s:z.size === 46 ? 40 : 32, w:600, f:C.tp, a:"end" });
+
+  /* middle slot — accessoryRectangular */
+  const ry = pad + 46, rh = 56;
+  o += rect(pad, ry, w, rh, 8, "#0B0B0E", 'stroke="'+C.bl+'" stroke-width="1" stroke-dasharray="3 3"');
+  o += '<g class="tap" data-act="open-why" role="button" tabindex="0" aria-label="Laso rectangular complication. '+
+       esc(redact ? "Hidden" : VERDICT[verdictKey()]+", "+ofAim())+'. Opens Why.">';
+  o += rectComp(pad+7, ry+6, w-14, rh-12, redact);
+  o += '</g>';
+  o += txt(pad, ry+rh+11, "accessoryRectangular → laso://watch/why", { s:8, w:600, f:C.pri });
+
+  /* bottom row — three circular slots */
+  const cy = ry + rh + 40, r = z.size === 46 ? 21 : 17;
+  const xs = [z.W*0.22, z.W*0.5, z.W*0.78];
+  o += activityRings(xs[0], cy, r-2);
+  o += '<g class="tap" data-act="open-compass" role="button" tabindex="0" aria-label="Laso circular complication. '+
+       esc(redact ? "Hidden" : VERDICT[verdictKey()]+". Strain "+n1(S.strain)+" of aim "+aimStr())+'. Opens Compass.">';
+  o += circularComp(xs[1], cy, r, { redact:redact });
+  o += '</g>';
+  /* system weather */
+  o += '<circle cx="'+xs[2]+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+C.ss+'" stroke-width="6"/>';
+  o += '<path d="'+arc(xs[2],cy,r,225,225+270*0.62)+'" fill="none" stroke="#7FC4FF" stroke-width="6" stroke-linecap="round"/>';
+  o += txt(xs[2], cy+5, "18°", { s:14, w:600, f:C.tp, a:"middle" });
+
+  o += txt(xs[1], cy + r + 11, redact ? "Hidden" : VERDICT[verdictKey()], { s:8, w:600, f:C.tt, a:"middle" });
+  o += txt(xs[1], cy + r + 21, "accessoryCircular", { s:8, w:600, f:C.pri, a:"middle" });
+  o += txt(xs[0], cy + r + 21, "Activity", { s:8, f:C.tt, a:"middle" });
+  o += txt(xs[2], cy + r + 21, "Weather", { s:8, f:C.tt, a:"middle" });
+  return o;
+}
+function faceCorner(z){
+  const redact = S.aod, cx = z.W/2, cy = z.H/2;
+  let o = "";
+  /* dial */
+  for(let i=0;i<12;i++){
+    const a = i*30, p0 = pol(cx,cy,z.W*0.40,a), p1 = pol(cx,cy,z.W*0.365,a);
+    o += ln(p0[0],p0[1],p1[0],p1[1], i%3===0 ? C.tp : C.tt, i%3===0 ? 2 : 1, 'opacity="'+(i%3===0?0.9:0.5)+'"');
+  }
+  const hh = pol(cx,cy,z.W*0.20, (14%12)*30 + 32*0.5);
+  const mh = pol(cx,cy,z.W*0.31, 32*6);
+  o += ln(cx,cy,hh[0],hh[1],C.tp,4,'stroke-linecap="round"');
+  o += ln(cx,cy,mh[0],mh[1],C.tp,3,'stroke-linecap="round"');
+  o += circ(cx,cy,2.5,C.pri);
+
+  /* top-left corner — Laso accessoryCorner */
+  o += '<g class="tap" data-act="open-move" role="button" tabindex="0" aria-label="Laso corner complication. '+
+       esc(redact ? "Hidden" : VERB[verdictKey()]+". Strain "+n1(S.strain)+" of aim "+aimStr())+'. Opens Move.">';
+  o += cornerComp(z.pad+2, z.pad+2, z.W*0.30, redact);
+  o += '</g>';
+  o += txt(z.pad, z.H*0.34, "accessoryCorner", { s:8, w:600, f:C.pri });
+  o += txt(z.pad, z.H*0.34+9, "→ laso://watch/move", { s:8, w:600, f:C.pri });
+
+  /* other corners, system */
+  o += txt(z.W-z.pad, z.pad+13, "18°", { s:14, w:600, f:C.tp, a:"end" });
+  o += txt(z.W-z.pad, z.pad+23, "Cloudy", { s:9, f:C.tt, a:"end" });
+  o += txt(z.pad, z.H-z.pad-11, "5,240", { s:14, w:600, f:C.tp });
+  o += txt(z.pad, z.H-z.pad-2, "steps", { s:9, f:C.tt });
+  o += txt(z.W-z.pad, z.H-z.pad-11, "78%", { s:14, w:600, f:C.tp, a:"end" });
+  o += txt(z.W-z.pad, z.H-z.pad-2, "battery", { s:9, f:C.tt, a:"end" });
+
+  /* sub-dials: left Activity, right Laso circular */
+  const sr = z.size === 46 ? 20 : 16;
+  o += activityRings(cx - z.W*0.245, cy, sr-2);
+  o += '<g class="tap" data-act="open-compass" role="button" tabindex="0" aria-label="Laso circular complication. '+
+       esc(redact ? "Hidden" : VERDICT[verdictKey()])+'. Opens Compass.">';
+  o += circularComp(cx + z.W*0.245, cy, sr, { redact:redact });
+  o += '</g>';
+  o += txt(cx + z.W*0.245, cy + sr + 10, "accessoryCircular", { s:8, w:600, f:C.pri, a:"middle" });
+  return o;
+}
+
+/* ============================================================ SMART STACK = */
+function lasoWidget(){
+  /* exact 152 x 69.5 pt spec geometry */
+  const t = target(), col = BANDCOL[todayBand()], redact = S.aod;
+  const wx = function(s){ return 9 + 2.333*Math.max(0,Math.min(s,18)); };
+  const wy = function(r){ return 56 - 0.42*Math.max(0,Math.min(r,100)); };
+  let o = rect(0,0,152,69.5,12,C.sr,'stroke="'+C.bl+'" stroke-width="1"');
+  o += rect(4,9,52,52,8,C.ss,'stroke="'+C.bl+'" stroke-width="1"');
+
+  const steps = [["optimal",100,67],["fair",67,45],["poor",45,0]];
+  for(const st of steps){
+    const b = st[0], sr2 = CORRIDOR[b];
+    const x = wx(sr2[0]), x2 = wx(sr2[1]), y = wy(st[1])+0.6, y2 = wy(st[2])-0.6;
+    if(redact || !hasPosition()){
+      o += rect(x,y,x2-x,y2-y,2,"none",'stroke="'+C.bl+'" stroke-width="1"');
+    } else if(b === todayBand()){
+      o += rect(x,y,x2-x,y2-y,2,col,'fill-opacity="0.22"');
+      o += rect(x,y,x2-x,y2-y,2,"none",'stroke="'+col+'" stroke-width="1"');
+    } else {
+      o += rect(x,y,x2-x,y2-y,2,C.se);
+    }
+  }
+  if(!redact && hasPosition()){
+    const dx = wx(S.strain), dy = wy(readiness());
+    o += circ(dx,dy,4,C.bg) + circ(dx,dy,3,C.tp);
+  }
+  o += txt(62, 21, redact ? "Hidden" : VERDICT[verdictKey()], { s:15, w:600, f:redact ? C.tt : C.tp });
+  o += txt(62, 36, redact ? "Raise your wrist" : ofAim(), { s:11, f:C.ts });
+  if(S.done){
+    let g = rect(62,40,86,28,8,"none",'stroke="'+C.opt+'" stroke-width="1"');
+    g += '<path d="M 74 54 l 3.5 4 l 7 -8.5" fill="none" stroke="'+C.opt+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    g += txt(112, 58, "Done", { s:12, w:600, f:C.tp, a:"middle" });
+    o += '<g role="img" aria-label="Done">'+g+'</g>';
+  } else {
+    o += btn(62,40,86,28,8,"Mark done",C.pri,"markdone","Mark done. Double Tap runs this without opening the app.",C.sr,C.bl,12);
+  }
+  return o;
+}
+function stack(z){
+  const cw = z.W - 2*z.pad, k = cw/152;
+  const cards = [];
+  /* system weather */
+  cards.push({ h:52, svg:(function(){
+    let o = rect(0,0,cw,52,12,C.sr,'stroke="'+C.bl+'" stroke-width="1"');
+    o += txt(12,19,"Weather",{s:11,w:600,f:C.tt});
+    o += txt(12,40,"18°",{s:22,w:600,f:C.tp});
+    o += txt(cw-12,40,"Cloudy · H 21 L 12",{s:11,f:C.ts,a:"end"});
+    return o;
+  })() });
+  /* laso rectangular */
+  cards.push({ h:69.5*k, svg:'<g transform="scale('+k.toFixed(4)+')">'+lasoWidget()+'</g>', tag:"accessoryRectangular — Laso Compass" });
+  /* circular row */
+  cards.push({ h:62, svg:(function(){
+    let o = rect(0,0,cw,62,12,C.sr,'stroke="'+C.bl+'" stroke-width="1"');
+    const r = 20, xs = [cw*0.22, cw*0.5, cw*0.78];
+    o += activityRings(xs[0],28,r-2);
+    o += '<g class="tap" data-act="open-compass" role="button" tabindex="0" aria-label="Laso circular widget. '+
+         esc(S.aod ? "Hidden" : VERDICT[verdictKey()])+'">'+circularComp(xs[1],28,r,{redact:S.aod})+'</g>';
+    o += '<circle cx="'+xs[2]+'" cy="28" r="'+r+'" fill="none" stroke="'+C.ss+'" stroke-width="5"/>';
+    o += txt(xs[2],32,"12:00",{s:11,w:600,f:C.tp,a:"middle"});
+    o += txt(xs[0],56,"Activity",{s:9,f:C.tt,a:"middle"});
+    o += txt(xs[1],56,"accessoryCircular",{s:9,w:600,f:C.pri,a:"middle"});
+    o += txt(xs[2],56,"Timer",{s:9,f:C.tt,a:"middle"});
+    return o;
+  })() });
+  /* system activity */
+  cards.push({ h:52, svg:(function(){
+    let o = rect(0,0,cw,52,12,C.sr,'stroke="'+C.bl+'" stroke-width="1"');
+    o += activityRings(30,26,18);
+    o += txt(60,22,"Move",{s:11,f:C.tt});
+    o += txt(60,40,"284 / 620 kcal",{s:15,w:600,f:C.tp});
+    return o;
+  })() });
+
+  const headH = 26;
+  let inner = "", y = 0;
+  cards.forEach(function(c){
+    inner += '<g transform="translate('+z.pad+','+(headH + y - S.stackY).toFixed(1)+')">'+c.svg+
+      (c.tag ? txt(0, c.h+11, c.tag, { s:8, w:600, f:C.pri }) : "")+'</g>';
+    y += c.h + (c.tag ? 22 : 10);
+  });
+  stack.maxY = Math.max(0, headH + y - z.H + 8);
+
+  let o = '<g clip-path="url(#stackclip)">'+inner+'</g>';
+  o += rect(0,0,z.W,headH,0,"#000");
+  o += txt(z.W/2, 18, "14:32", { s:14, w:600, f:C.tp, a:"middle" });
+  return o;
+}
+
+/* ============================================================ NOTIFICATIONS */
+const NOTIFS = {
+  n1:{ title:"In your zone", body:"Strain 8.1 of 8 to 12",
+       long:"You are in today’s zone.", detail:"Strain 8.1 of 8 to 12. Readiness 62 set this aim.",
+       strain:8.1, actions:[["Mark done","markdone"],["See compass","open-compass"]] },
+  n2:{ title:"Still room today", body:"Strain 6.2 of 8 to 12",
+       long:"Still room today.", detail:"Strain 6.2 of 8 to 12. A 30 minute easy walk closes it.",
+       strain:6.2, actions:[["Not today","nottoday"],["See compass","open-compass"]] },
+  n3:{ title:"Above your zone", body:"Strain 12.6 of 8 to 12",
+       long:"Above your zone.", detail:"Readiness 62 today, so ease off from here.",
+       strain:12.6, actions:[["See compass","open-compass"],["Hush today","hush"]] }
+};
+function appIcon(x,y,s){
+  let o = rect(x,y,s,s,s*0.28,"#101018",'stroke="'+C.bl+'" stroke-width="1"');
+  o += rect(x+s*0.42,y+s*0.30,s*0.34,s*0.22,s*0.06,C.fair,'fill-opacity="0.4" stroke="'+C.fair+'" stroke-width="1"');
+  o += circ(x+s*0.28,y+s*0.41,s*0.10,C.tp);
+  return o;
+}
+function miniPlot(x,y,strain){
+  /* 52 x 52, the same mapping as the widget */
+  const wx = function(s){ return x + 5 + 2.333*Math.max(0,Math.min(s,18)); };
+  const wy = function(r){ return y + 52 - 4 - 0.42*Math.max(0,Math.min(r,100)); };
+  const t = target(), col = BANDCOL[todayBand()];
+  let o = rect(x,y,52,52,8,C.ss,'stroke="'+C.bl+'" stroke-width="1"');
+  const steps = [["optimal",100,67],["fair",67,45],["poor",45,0]];
+  for(const st of steps){
+    const b = st[0], sr2 = CORRIDOR[b];
+    const x0 = wx(sr2[0]), x1 = wx(sr2[1]), y0 = wy(st[1])+0.6, y1 = wy(st[2])-0.6;
+    if(b === todayBand()){
+      o += rect(x0,y0,x1-x0,y1-y0,2,col,'fill-opacity="0.22"');
+      o += rect(x0,y0,x1-x0,y1-y0,2,"none",'stroke="'+col+'" stroke-width="1"');
+    } else o += rect(x0,y0,x1-x0,y1-y0,2,C.se);
+  }
+  const dx = wx(strain), dy = wy(readiness());
+  o += circ(dx,dy,4,C.bg) + circ(dx,dy,3,C.tp);
+  return o;
+}
+function notifShort(z){
+  const n = NOTIFS[S.notif];
+  let o = appIcon(z.W/2-14, z.H*0.20, 28);
+  o += txt(z.W/2, z.H*0.20+44, "LASO", { s:z.axisS, w:600, f:C.tt, a:"middle" });
+  o += txt(z.W/2, z.H*0.20+72, n.title, { s:z.size===46?20:17, w:600, f:C.tp, a:"middle" });
+  wrap(n.body, z.W-2*z.pad, z.presS).forEach(function(l,i){
+    o += txt(z.W/2, z.H*0.20+94+i*z.lead, l, { s:z.presS, f:C.ts, a:"middle" });
+  });
+  o += txt(z.W/2, z.H-14, "short look — never the only channel", { s:8, w:600, f:C.pri, a:"middle" });
+  return o;
+}
+function notifLong(z){
+  const n = NOTIFS[S.notif], pad = z.pad, w = z.W - 2*pad;
+  const off = S.stackY;
+  let inner = "";
+  let y = 34 - off;
+  inner += miniPlot(pad, y, n.strain);
+  inner += txt(pad+62, y+22, ell(n.long, w-62, z.size===46?17:15), { s:z.size===46?17:15, w:600, f:C.tp });
+  y += 60;
+  wrap(n.detail, w, z.presS).slice(0,3).forEach(function(l,i){
+    inner += txt(pad, y + i*z.lead, l, { s:z.presS, f:C.ts });
+  });
+  y += 3*z.lead + 6;
+  if(S.notifResolved){
+    inner += rect(pad, y, w, 44, 10, C.opt, 'fill-opacity="0.18" stroke="'+C.opt+'" stroke-width="1"');
+    inner += txt(z.W/2, y+27, S.notifResolved, { s:z.p3.bs, w:600, f:C.tp, a:"middle" });
+    y += 52;
+  } else {
+    n.actions.forEach(function(a){
+      inner += btn(pad, y, w, 44, 10, a[0], a[1] === "markdone" ? C.pri : C.ts, a[1], a[0], C.sr, C.bl, z.p3.bs);
+      y += 52;
+    });
+  }
+  inner += btn(pad, y, w, 44, 10, "Dismiss", C.ts, "dismiss", "Dismiss", C.sr, C.bl, z.p3.bs);
+  y += 52;
+  notifLong.maxY = Math.max(0, y + off - z.H + 10);
+
+  let o = '<g clip-path="url(#stackclip)">'+inner+'</g>';
+  o += rect(0,0,z.W,28,0,"#000");
+  o += appIcon(pad, 4, 20);
+  o += txt(pad+26, 18, "LASO", { s:z.axisS, w:600, f:C.tt });
+  o += txt(z.W-pad, 18, "now", { s:z.axisS, f:C.tt, a:"end" });
+  return o;
+}
+
+/* ================================================================= RENDER = */
+function render(){
+  const z = Z[S.size];
+  const svg = document.getElementById("svg");
+  svg.setAttribute("viewBox", "0 0 "+z.W+" "+z.H);
+  svg.setAttribute("width", Math.round(z.W*SCALE));
+  svg.setAttribute("height", Math.round(z.H*SCALE));
+  document.getElementById("screenwrap").classList.toggle("aod", S.aod);
+
+  let body = "";
+  switch(S.screen){
+    case "face":       body = faceModular(z); break;
+    case "faceCorner": body = faceCorner(z); break;
+    case "stack":      body = stack(z); break;
+    case "notifShort": body = notifShort(z); break;
+    case "notifLong":  body = notifLong(z); break;
+    case "trail":      body = trail(z); break;
+    case "launch":     body = (S.launchMode === "cold") ? page1(z) : [page1,page2,page3][S.page](z); break;
+    case "p1":         body = page1(z); break;
+    case "p2":         body = page2(z); break;
+    case "p3":         body = page3(z); break;
+  }
+  svg.innerHTML = defs() + body;
+  chrome();
+}
+
+/* ================================================================ CHROME = */
+const SCREENS = [
+  ["face","Watch face — Modular"],
+  ["faceCorner","Watch face — Corners"],
+  ["stack","Smart Stack"],
+  ["notifShort","Notification — short look"],
+  ["notifLong","Notification — long look"],
+  ["launch","App launch"],
+  ["p1","1 · Compass"],
+  ["p2","2 · Why"],
+  ["p3","3 · Move"],
+  ["trail","Last 7 days (sheet)"]
+];
+const STATES = [
+  ["loaded","loaded"],["loading","loading"],["coldstart","cold start"],["empty","empty"],
+  ["errPhone","error — phone"],["errHK","error — HealthKit"],["errWrist","error — off wrist"],
+  ["stale","stale 60 min"],["staleYesterday","stale — yesterday"],["staleEstimate","stale — estimate"]
+];
+const CAPTIONS = {
+  face:"Infograph Modular style. Laso holds two slots: accessoryRectangular (middle) and accessoryCircular (bottom centre). Activity and Weather fill the rest, so the Laso slots must earn their place. Crown down opens the Smart Stack.",
+  faceCorner:"Infograph style. Laso holds the top-left accessoryCorner and the right sub-dial accessoryCircular. Corner and Inline never reach the Smart Stack, so this is the only place a corner can live. accessoryInline is deliberately not shipped.",
+  stack:"Crown scrolls. Only accessoryRectangular and accessoryCircular reach the Smart Stack, and Laso ships both. Mark done is an AppIntent button carrying handGestureShortcut(.primaryAction) — Double Tap runs it without opening the app.",
+  notifShort:"Short look. Title carries no readiness score. Crown cycles N1 / N2 / N3.",
+  notifLong:"Long look. Crown scrolls. Two custom actions plus the system Dismiss. Every short look has a long look carrying the full sentence.",
+  launch:"Launch renders from the cached payload with no spinner. Cold launch always lands on page 1; a wrist raise inside the frontmost window keeps the page you were on.",
+  p1:"Page 1 of 3, TabView(.verticalPage). The dot sits 12pt left of the lit step. Crown pages. No tap targets on this screen.",
+  p2:"Page 2 of 3. Bars, not rings — 159 to 285 ms to read against 1548 to 1772 ms for a radial. This is the only page that runs a live heart-rate query, so haptics are suppressed while it is in flight.",
+  p3:"Page 3 of 3. One headline, one detail, two full-width 44pt buttons. Mark done writes WatchCommand.markActionDone.",
+  trail:"Modal sheet, depth 2. The crown drives a value here and only here, because at the top level the crown belongs to navigation. Tap the grabber to close."
+};
+function voLines(){
+  const k = verdictKey(), t = target();
+  if(S.screen === "p1" || S.screen === "launch"){
+    if(!hasPosition() || S.aod){ const cp = page1Copy(Z[S.size]); return [cp.head+".", cp.body]; }
+    return [
+      "Readiness "+readiness()+", "+BANDS[S.band].label.toLowerCase()+". Strain "+n1(S.strain)+", aim "+aimStr()+". "+
+        (k==="under"?"Below your aim.":k==="in"?"Inside your aim.":"Above your aim."),
+      VERDICT[k]+".",
+      prescription()+".",
+      "Readiness from iPhone, synced "+ALEX.syncAt+"."
+    ];
+  }
+  if(S.screen === "p2"){
+    const diff = k === "under" ? "Below the aim by "+n1(t[0]-S.strain) : k === "over" ? "Above the aim by "+n1(S.strain-t[1]) : "Inside the aim";
+    return [
+      "Readiness "+readiness()+", "+BANDS[S.band].label.toLowerCase()+". Your usual is "+ALEX.weekAvg+".",
+      "Strain "+n1(S.strain)+". Aim "+aimStr()+". "+diff+".",
+      "HRV "+ALEX.hrv+" milliseconds. Resting heart rate "+ALEX.rhr+". Heart rate now "+ALEX.hrNow+".",
+      "Readiness and aim come from iPhone. HRV and heart rate come from this watch."
+    ];
+  }
+  if(S.screen === "p3"){
+    return [
+      actionHeadline()+". "+actionDetail()+".",
+      "Strain "+n1(S.strain)+", aim "+aimStr()+".",
+      "Button: "+(S.done ? "Done at "+ALEX.doneAt+"." : "Mark done."),
+      "Button: Last 7 days."
+    ];
+  }
+  if(S.screen === "trail"){
+    const sel = TRAIL[S.trailIdx], n = insideAimCount();
+    return [
+      "Last 7 days. Today is "+(k==="under"?"below":k==="over"?"above":"inside")+" the aim. "+n+
+        " of the last seven days "+(n===1?"was":"were")+" inside the aim.",
+      "Adjustable: "+sel.d+". Readiness "+sel.r+". Strain "+n1(sel.s)+". Swipe up or down to change day.",
+      "From iPhone. Updated "+ALEX.syncAt+"."
+    ];
+  }
+  if(S.screen === "stack"){
+    return ["Weather. 18 degrees, cloudy.",
+      "Laso. "+VERDICT[k]+". "+ofAim()+". Button: Mark done.",
+      "Laso circular. "+VERDICT[k]+".",
+      "Activity. 284 of 620 kilocalories."];
+  }
+  if(S.screen === "notifShort" || S.screen === "notifLong"){
+    const n = NOTIFS[S.notif];
+    return ["Laso. "+n.title+". "+n.body+".", n.long+" "+n.detail, "Actions: "+n.actions.map(function(a){return a[0];}).join(", ")+", Dismiss."];
+  }
+  return ["Watch face. Laso complication: "+VERDICT[k]+". Strain "+n1(S.strain)+" of aim "+aimStr()+"."];
+}
+function honestyText(){
+  const bits = [];
+  bits.push('<span class="pill">watch</span>HRV, resting HR, live HR, active energy — native HealthKit on the wrist.');
+  bits.push('<span class="pill">iPhone</span>Readiness '+readiness()+', aim '+aimStr()+', the action line, the 7-day trail.');
+  bits.push('<span class="pill">derived</span>The verdict word, from strain against the aim. No new payload field.');
+  if(S.screen === "trail"){
+    bits.push('<span class="pill" style="color:#E3B45A;border-color:#E3B45A">filler</span>Only Tue 62 / 6.2, Mon 71 and Sun 15.4 come from the brief. The other four days are prototype filler, chosen so the mean is 68 and Monday sits under the 5.0 rest threshold. Not shippable history.');
+  }
+  if(!isAlex()) bits.push('<span class="pill" style="color:#E3B45A;border-color:#E3B45A">exploring</span>Off the Alex data. Readiness '+readiness()+', strain '+n1(S.strain)+'. Action copy is generic here because the real string comes from the phone.');
+  return bits.join("<br>");
+}
+function chrome(){
+  document.getElementById("capTitle").textContent = (SCREENS.find(function(s){return s[0]===S.screen;})||["","" ])[1];
+  const stName = (STATES.find(function(s){return s[0]===S.state;})||["",""])[1];
+  document.getElementById("capBody").innerHTML =
+    esc(CAPTIONS[S.screen] || "") + '<br><br><span class="pill">state: '+esc(stName)+'</span>'+
+    '<span class="pill">'+S.size+'mm</span>'+(S.aod ? '<span class="pill">Always-On redacted</span>' : "");
+  const vo = document.getElementById("vo");
+  vo.innerHTML = voLines().map(function(l){ return "<li>"+esc(l)+"</li>"; }).join("");
+  document.getElementById("honesty").innerHTML = honestyText();
+  document.querySelectorAll("#strip button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(b.dataset.screen === S.screen));
+  });
+  document.querySelectorAll("#ctlState button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.v === S.state)); });
+  document.querySelectorAll("#ctlSize button").forEach(function(b){ b.setAttribute("aria-pressed", String(Number(b.dataset.v) === S.size)); });
+  document.querySelectorAll("#ctlBand button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.v === S.band)); });
+  document.querySelectorAll("#ctlStrain button").forEach(function(b){ b.setAttribute("aria-pressed", String(Number(b.dataset.v) === S.strain)); });
+  document.querySelectorAll("#ctlAod button").forEach(function(b){ b.setAttribute("aria-pressed", String((b.dataset.v === "on") === S.aod)); });
+  document.getElementById("devWarn").textContent = isAlex() ? "" :
+    "Off the shared Alex data — band and strain are exploration controls.";
+  localControls();
+}
+function localControls(){
+  const el = document.getElementById("localctl");
+  let h = "";
+  if(S.screen === "notifShort" || S.screen === "notifLong"){
+    h = ["n1","n2","n3"].map(function(k){
+      return '<button data-local="notif" data-v="'+k+'" aria-pressed="'+(S.notif===k)+'">'+k.toUpperCase()+" · "+esc(NOTIFS[k].title)+"</button>";
+    }).join("");
+  } else if(S.screen === "launch"){
+    h = '<button data-local="launch" data-v="cold" aria-pressed="'+(S.launchMode==="cold")+'">Cold launch → page 1</button>'+
+        '<button data-local="launch" data-v="raise" aria-pressed="'+(S.launchMode==="raise")+'">Wrist raise → last page</button>';
+  } else if(S.screen === "p3"){
+    h = '<button data-local="reject" data-v="1">Simulate WatchCommandRejection</button>';
+  }
+  el.innerHTML = h;
+}
+
+/* ================================================================ HAPTICS = */
+let lastHaptic = 0, hrBusyUntil = 0;
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function haptic(type, why){
+  const now = Date.now();
+  if(S.screen === "p2" && now < hrBusyUntil){
+    prependLog('<i>suppressed</i> ' + esc(type) + " — heart-rate query in flight (R8)");
+    return;
+  }
+  if(now - lastHaptic < 100){ /* 100 ms minimum spacing */ return; }
+  lastHaptic = now;
+  const p = document.getElementById("hpulse");
+  p.classList.remove("go");
+  void p.offsetWidth;
+  if(!reduced) p.classList.add("go");
+  prependLog("<b>"+esc(type)+"</b> — "+esc(why));
+  const d = document.getElementById("detent");
+  if(type === ".click"){
+    d.classList.add("go");
+    setTimeout(function(){ d.classList.remove("go"); }, 160);
+  }
+}
+function prependLog(html){
+  const log = document.getElementById("hlog");
+  const li = document.createElement("li");
+  li.innerHTML = html;
+  log.prepend(li);
+  while(log.children.length > 6) log.lastElementChild.remove();
+}
+
+/* ================================================================== CROWN = */
+const DETENT = 22;
+let crownAcc = 0;
+function crown(dir){
+  S.crownDeg += dir*DETENT;
+  crownAcc += dir;
+  document.getElementById("crownlines").style.transform = "translateY("+((S.crownDeg%14+14)%14)+"px)";
+  document.getElementById("crownread").innerHTML = "Digital Crown "+S.crownDeg+"&deg; · detent every "+DETENT+"&deg; fires <b>.click</b>";
+
+  if(S.screen === "face" || S.screen === "faceCorner"){
+    if(dir > 0){ haptic(".click","crown down from the face opens the Smart Stack"); go("stack"); }
+    else haptic(".click","crown detent");
+    return;
+  }
+  if(S.screen === "stack"){
+    S.stackY = Math.max(0, Math.min((stack.maxY||0), S.stackY + dir*24));
+    haptic(".click","crown detent — Smart Stack scroll");
+    render(); return;
+  }
+  if(S.screen === "notifLong"){
+    S.stackY = Math.max(0, Math.min((notifLong.maxY||0), S.stackY + dir*20));
+    haptic(".click","crown detent — long look scroll");
+    render(); return;
+  }
+  if(S.screen === "notifShort"){
+    const order = ["n1","n2","n3"];
+    let i = order.indexOf(S.notif) + dir;
+    i = Math.max(0, Math.min(2, i));
+    if(order[i] !== S.notif){ S.notif = order[i]; haptic(".click","crown detent"); render(); }
+    return;
+  }
+  if(S.screen === "trail"){
+    const i = Math.max(0, Math.min(TRAIL.length-1, S.trailIdx + dir));
+    if(i !== S.trailIdx){ S.trailIdx = i; haptic(".click","crown detent — day "+TRAIL[i].d); render(); }
+    return;
+  }
+  /* app pages */
+  const pages = ["p1","p2","p3"];
+  let idx = pages.indexOf(S.screen === "launch" ? pages[S.page] : S.screen);
+  const next = Math.max(0, Math.min(2, idx + dir));
+  if(next !== idx){
+    /* the detent fires BEFORE the heart-rate query on page 2 starts */
+    haptic(".click","crown detent — page "+(next+1));
+    S.page = next; go(pages[next]);
+  }
+}
+function go(screen){
+  S.screen = screen;
+  if(screen === "p1") S.page = 0;
+  if(screen === "p2"){ S.page = 1; hrBusyUntil = Date.now() + 1400; }
+  if(screen === "p3") S.page = 2;
+  if(screen === "stack" || screen === "notifLong") S.stackY = 0;
+  if(screen === "notifShort" || screen === "notifLong") haptic(".notification", S.notif.toUpperCase()+" arriving");
+  render();
+}
+
+/* ================================================================ ACTIONS = */
+function act(name){
+  switch(name){
+    case "markdone":
+      if(S.rejected){ S.rejected = false; }
+      S.done = true;
+      haptic(".success","Mark done accepted — WatchCommand.markActionDone");
+      if(S.screen === "notifLong") S.notifResolved = "Done "+ALEX.doneAt;
+      render(); break;
+    case "opentrail": go("trail"); break;
+    case "closetrail": go("p3"); break;
+    case "open-compass": go("p1"); break;
+    case "open-why": go("p2"); break;
+    case "open-move": go("p3"); break;
+    case "nottoday":
+      haptic(".success","Not today — N2 suppressed for the rest of today");
+      S.notifResolved = "Hushed today"; render(); break;
+    case "hush":
+      haptic(".success","Hush today — N3 suppressed for the rest of today");
+      S.notifResolved = "Hushed today"; render(); break;
+    case "dismiss": S.notifResolved = null; go("face"); break;
+  }
+}
+function doubleTap(){
+  if(S.screen !== "stack") go("stack");
+  if(S.done){ prependLog("Double Tap — already done today, nothing to write"); return; }
+  S.done = true;
+  haptic(".success","Double Tap on the Smart Stack widget — marked done without opening the app");
+  render();
+}
+function reject(){
+  S.done = false; S.rejected = true;
+  haptic(".failure","WatchCommandRejection — the phone refused the write");
+  render();
+}
+
+/* ============================================================= TOOLBAR UI = */
+function buildStrip(){
+  document.getElementById("strip").innerHTML = SCREENS.map(function(s){
+    return '<button data-screen="'+s[0]+'" aria-pressed="false">'+esc(s[1])+"</button>";
+  }).join("");
+}
+function buildDev(){
+  document.getElementById("ctlSize").innerHTML =
+    [46,40].map(function(v){ return '<button data-k="size" data-v="'+v+'">'+v+"mm</button>"; }).join("");
+  document.getElementById("ctlState").innerHTML =
+    STATES.map(function(s){ return '<button data-k="state" data-v="'+s[0]+'">'+esc(s[1])+"</button>"; }).join("");
+  document.getElementById("ctlAod").innerHTML =
+    '<button data-k="aod" data-v="off">off</button><button data-k="aod" data-v="on">redacted</button>';
+  document.getElementById("ctlBand").innerHTML =
+    [["poor","Low 38"],["fair","Moderate 62 (Alex)"],["optimal","Optimal 74"]]
+      .map(function(b){ return '<button data-k="band" data-v="'+b[0]+'">'+esc(b[1])+"</button>"; }).join("");
+  document.getElementById("ctlStrain").innerHTML =
+    [[6.2,"6.2 (Alex)"],[9.4,"9.4"],[13.1,"13.1"],[19.2,"19.2 off scale"]]
+      .map(function(b){ return '<button data-k="strain" data-v="'+b[0]+'">'+esc(b[1])+"</button>"; }).join("");
+  document.getElementById("ctlGest").innerHTML =
+    '<button data-k="dtap">Fire Double Tap</button><button data-k="reset">Reset to Alex</button>';
+}
+
+/* ================================================================= EVENTS = */
+document.addEventListener("click", function(e){
+  const svgTarget = e.target.closest ? e.target.closest("[data-act]") : null;
+  if(svgTarget){ act(svgTarget.dataset.act); return; }
+  const b = e.target.closest("button");
+  if(!b) return;
+  if(b.dataset.screen){ go(b.dataset.screen); return; }
+  if(b.dataset.local === "notif"){ S.notif = b.dataset.v; S.notifResolved = null; haptic(".notification", b.dataset.v.toUpperCase()+" arriving"); render(); return; }
+  if(b.dataset.local === "launch"){ S.launchMode = b.dataset.v; render(); return; }
+  if(b.dataset.local === "reject"){ reject(); return; }
+  if(b.id === "devbtn"){
+    const p = document.getElementById("devpanel");
+    p.classList.toggle("open");
+    b.setAttribute("aria-expanded", String(p.classList.contains("open")));
+    return;
+  }
+  const k = b.dataset.k;
+  if(!k) return;
+  if(k === "size"){ S.size = Number(b.dataset.v); }
+  else if(k === "state"){ S.state = b.dataset.v; S.rejected = false; }
+  else if(k === "aod"){ S.aod = b.dataset.v === "on"; }
+  else if(k === "band" || k === "strain"){
+    const before = verdictKey();
+    if(k === "band") S.band = b.dataset.v; else S.strain = Number(b.dataset.v);
+    const after = verdictKey();
+    const onApp = ["p1","p2","p3","launch","trail"].indexOf(S.screen) >= 0;
+    if(onApp && after !== before){
+      if(after === "in") haptic(".directionUp","strain crossed into the zone while the app is frontmost");
+      else if(after === "over") haptic(".directionDown","strain crossed above the zone while the app is frontmost");
+    }
+  }
+  else if(k === "dtap"){ doubleTap(); return; }
+  else if(k === "reset"){ S.band = "fair"; S.strain = 6.2; S.state = "loaded"; S.aod = false; S.done = false; S.rejected = false; S.trailIdx = 4; S.notifResolved = null; }
+  render();
+});
+document.addEventListener("keydown", function(e){
+  const t = e.target.closest ? e.target.closest("[data-act]") : null;
+  if(t && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); act(t.dataset.act); return; }
+  if(e.key === "ArrowDown"){ e.preventDefault(); crown(1); }
+  if(e.key === "ArrowUp"){ e.preventDefault(); crown(-1); }
+});
+let wheelAcc = 0;
+document.getElementById("screenwrap").addEventListener("wheel", function(e){
+  e.preventDefault();
+  wheelAcc += e.deltaY;
+  while(Math.abs(wheelAcc) >= 40){ crown(wheelAcc > 0 ? 1 : -1); wheelAcc -= (wheelAcc > 0 ? 40 : -40); }
+}, { passive:false });
+document.getElementById("crown").addEventListener("wheel", function(e){
+  e.preventDefault(); crown(e.deltaY > 0 ? 1 : -1);
+}, { passive:false });
+
+buildStrip();
+buildDev();
+render();
+</script>
+</body>
+</html>

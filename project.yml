@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.86"
-    CURRENT_PROJECT_VERSION: "94"
+    MARKETING_VERSION: "1.2.87"
+    CURRENT_PROJECT_VERSION: "95"
 
 packages:
   Firebase:
@@ -259,6 +259,11 @@ targets:
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.lasohealth.fit
         ITSAppUsesNonExemptEncryption: false
+        # Required, and not optional in the way most usage strings are: HealthKit raises
+        # an exception and aborts the process inside requestAuthorization when it is
+        # missing, so the app crashes on first launch rather than degrading. Must live
+        # here and not in LasoWatch/Info.plist, which XcodeGen regenerates from this block.
+        NSHealthShareUsageDescription: "Laso reads your heart rate, activity and sleep on your watch so it can tell you how your body is doing without needing your iPhone nearby."
     settings:
       base:
         INFOPLIST_FILE: LasoWatch/Info.plist
@@ -275,6 +280,10 @@ targets:
     attributes:
       SystemCapabilities:
         com.apple.ApplicationGroups.watchos:
+          enabled: true
+        # The wrist reads its own sensors. Everything that describes "now" comes from
+        # here, so the app has something true to say with the phone switched off.
+        com.apple.HealthKit:
           enabled: true
 
   # Complication. Lives inside the watch app, not inside the iPhone app: a

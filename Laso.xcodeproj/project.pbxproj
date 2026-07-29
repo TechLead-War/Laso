@@ -56,6 +56,7 @@
 		1B831A68AA692A5CE8BFCFEF /* WakeAnchorSetterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCEB2CFEFE11427DD60C8252 /* WakeAnchorSetterSheet.swift */; };
 		1BC6822E5685CE8B1601D04F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 246EB96A91A1CDEB84FE85E5 /* SettingsView.swift */; };
 		1BC812C3E45AC3544CC21969 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 5196EE7C3D1093CD151E4C73 /* Localizable.xcstrings */; };
+		1C2114A47A94F976DD8BB16B /* WatchVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C8DBAA7A52F0387DE273C9 /* WatchVerdict.swift */; };
 		1C3500C4B4D3622DA2535EA9 /* AccelerateHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */; };
 		1D029E1B76728528904478CD /* HealthFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DBF7805661A86834CEC57A /* HealthFocus.swift */; };
 		1DB1A7D25E7BF95757B4027B /* WellbeingTrendAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85029EA7381AF020B487F0E6 /* WellbeingTrendAnalyzer.swift */; };
@@ -113,6 +114,7 @@
 		397B596D1455F2CE4ED569E1 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CBCE5F0076403F1992FEF39 /* ThemeManager.swift */; };
 		3A987E80E9734C1D0CD23CE6 /* InteractionEffectEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B5EF5C383DCC5FF70B00151 /* InteractionEffectEngine.swift */; };
 		3B190A5B104CB375424DE8BD /* LasoShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510C3C1F6BAAE8CBBDA152AD /* LasoShortcutsProvider.swift */; };
+		3CB8A9D5CD63EF5D93C47E80 /* WatchVerdictTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500C23E866E77BA02B0E39A /* WatchVerdictTests.swift */; };
 		3CF8781C292C53A76AB16C36 /* ConnectedDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E7B574CEA278C2E686C8AF /* ConnectedDeviceInfo.swift */; };
 		3D4BDCF241FE565FD15F9F13 /* LiveBloodPressureTempSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AAE1260BE7CC36C61419384 /* LiveBloodPressureTempSection.swift */; };
 		3E1CFCD5745CBC35847E8DA6 /* MobilityDeclineAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A242FF2FC77C87B3D2CF8A19 /* MobilityDeclineAnalyzer.swift */; };
@@ -142,6 +144,7 @@
 		4B773F9C735552245456F7FF /* Copy+Policy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2691A6C92314B1678FECFAEE /* Copy+Policy.swift */; };
 		4C30D582082F9E66CB5E66E1 /* ClinicalIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */; };
 		4C357F2518307C5D539A95E9 /* RegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F3EF7A987ECE8E28373C79 /* RegressionTests.swift */; };
+		4D14EF3B44C84A5E5E403904 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */; };
 		4DC1BEE6A23D830F01B45179 /* Copy+StressMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E41714304771021F932CA6C /* Copy+StressMonitor.swift */; };
 		4E27E107C793A5F4E7DFB0DF /* WatchCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */; };
 		4EBC16B1DE144526BA2D2102 /* Copy+CategoryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B03925296E89BF5307979F /* Copy+CategoryDetail.swift */; };
@@ -157,6 +160,7 @@
 		54EC27E7238CB13CE0243F0B /* CircadianHealthAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF94734A6035E40E1D4226AC /* CircadianHealthAnalyzer.swift */; };
 		55E7ACA603B432A788391DD3 /* RecoveryInfoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 651AACA82D15D407671E1FFC /* RecoveryInfoSheet.swift */; };
 		566EE9472F3CA3A90402A15B /* IntentCacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50B66375422C657743904CE /* IntentCacheStore.swift */; };
+		567B6CEFA64645C7924464EB /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */; };
 		568A4B9C45459F0BBC05BDE5 /* BreathworkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507233E471636899246378 /* BreathworkActivityAttributes.swift */; };
 		572C79A6167752E5E94C6DB9 /* AppColour.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A76DA46FCC55AB12B2B0E /* AppColour.swift */; };
 		575D4B082D84D0DA59E352D1 /* MLEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96477BAE4F2067A7AA6803C4 /* MLEvaluator.swift */; };
@@ -225,6 +229,7 @@
 		76446683BEF24BD450F61351 /* NLEmbeddingAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C331C42101235409295B307 /* NLEmbeddingAnalyzer.swift */; };
 		775BF78290BA7A95FB61E1CF /* WorkoutTypeAppEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A6DC3D694ECACF9CDEA619 /* WorkoutTypeAppEnum.swift */; };
 		78DC5B1E1326E6311B4C0D4B /* LasoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7C810E09575051B0D3A440 /* LasoApp.swift */; };
+		7944FF10538CF4F0A50BFBBA /* WatchVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C8DBAA7A52F0387DE273C9 /* WatchVerdict.swift */; };
 		795285976B887225AFD93F20 /* PersonalRecordAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3611EA7F38DF789E99949407 /* PersonalRecordAnalyzer.swift */; };
 		7973EC0939067531CDBF145F /* AnswerReadyScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4845B62F1C8EB66DE10F63A5 /* AnswerReadyScheduler.swift */; };
 		798E03F9AC503056A480D212 /* ExploreHealthStateLinkSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EEBCBC7F8B24E469CA038E /* ExploreHealthStateLinkSection.swift */; };
@@ -284,10 +289,12 @@
 		95D3AB185D2FA480F5E72E6C /* LockedInsightsCTA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3742B8C9E0215B86F3844543 /* LockedInsightsCTA.swift */; };
 		9635A2DB28D007C5F2A4B338 /* SupportedDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48447290A52C839F7E6DCFA /* SupportedDevice.swift */; };
 		96D5155AC39616347E70B5EA /* ScoreTrajectoryAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049389740647CFF0521FD7C8 /* ScoreTrajectoryAnalyzer.swift */; };
+		9719262B72CB8FB4845BB717 /* WatchHealthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FC6086BECAB0BD2AE9CE36 /* WatchHealthStore.swift */; };
 		9750BAA5D9BBA8978BBEDCF8 /* AlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4D4342ADADDD79F4F52A79 /* AlertEvaluator.swift */; };
 		97E818546E41696331825D33 /* HealthQueryEngineProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D7375239EFAE1FBB6E8B1E /* HealthQueryEngineProtocol.swift */; };
 		989EB6FB45EAC3C551ED8B23 /* Copy+Briefing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8E45173E03CC8A05F64D3B /* Copy+Briefing.swift */; };
 		998878736810978EEBD3B819 /* JournalEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */; };
+		99F537AD3B4F51691A72CF83 /* WatchHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355C7D282D8DEE915CF05E0A /* WatchHaptics.swift */; };
 		9ABD1828F6DD3F93BA70AB61 /* BreathworkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507233E471636899246378 /* BreathworkActivityAttributes.swift */; };
 		9AE94E3A0CF2EB8CFC36D2EE /* LiveWorkoutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2334583F2BBAC5225CBE88F2 /* LiveWorkoutSection.swift */; };
 		9B59184BF23ADD2FEF80FDBD /* PersonalOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5689557671179E561CD73D0 /* PersonalOptimizer.swift */; };
@@ -324,6 +331,7 @@
 		AAB847BC61393D23E6F5666B /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051915634C05C7737FC46E23 /* CategoryDetailView.swift */; };
 		ABF21DB20A3F524D0560968C /* LasoWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 50EC597AD31352ABAE5939B5 /* LasoWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AC0C2D59AC31DBD1448C3123 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67B7592107380119651070ED /* ThermalManager.swift */; };
+		AC1B988C899818A529C4BFF3 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */; };
 		ADCC8276E83BA45210FA72F2 /* Collection+Statistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8E7B5211CE219A0C9E48C7 /* Collection+Statistics.swift */; };
 		AE6E38759529A4B54E74627F /* ModelEvaluationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4C5F89FF047DDEFCF3CF8 /* ModelEvaluationStore.swift */; };
 		AE71ECA5DEB6241031B112FA /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6023E6422F4DC43D3171E1 /* WeeklyReviewViewModel.swift */; };
@@ -366,6 +374,7 @@
 		C468B99F83AB0BE0E94393ED /* ReadinessStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02C8CB51FC2BB2AD3A604A0 /* ReadinessStore.swift */; };
 		C4A226B7B45FB84FBB55C2C2 /* StatBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59FDF9333C23739810C55C5C /* StatBoxView.swift */; };
 		C4B214F033824C67DA2327BB /* DashboardSmartActionAdvisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9918769144FC023D22876D2 /* DashboardSmartActionAdvisor.swift */; };
+		C4F621DF21D23B191DA3AF40 /* WatchVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C8DBAA7A52F0387DE273C9 /* WatchVerdict.swift */; };
 		C69418ED9D3029D43AB43D6A /* TemperatureCompoundAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8AA6C651893546E9CD0AC1 /* TemperatureCompoundAnalyzer.swift */; };
 		C71A55E39174630EE464CCBD /* MLOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */; };
 		C7729BA468CFB0B2CA3D1F92 /* CopyOverridesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474720A7DEC11561E860BC07 /* CopyOverridesStore.swift */; };
@@ -562,6 +571,7 @@
 		0804946317C40FBB20D6EE8C /* HealthMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetric.swift; sourceTree = "<group>"; };
 		08470FD4FE34B97792ECE163 /* CorrelationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationsView.swift; sourceTree = "<group>"; };
 		09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCheckInView.swift; sourceTree = "<group>"; };
+		09FC6086BECAB0BD2AE9CE36 /* WatchHealthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHealthStore.swift; sourceTree = "<group>"; };
 		0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
 		0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		0B7F734F2F4F73A01B994CC6 /* MLPipelineRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLPipelineRunner.swift; sourceTree = "<group>"; };
@@ -638,6 +648,7 @@
 		32A942B3D08CF538442683E1 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		335D16B937F6B0A1ED4F53EB /* MaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceView.swift; sourceTree = "<group>"; };
 		33F2345DC861C97C348313BF /* LasoWatchWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LasoWatchWidgets.entitlements; sourceTree = "<group>"; };
+		355C7D282D8DEE915CF05E0A /* WatchHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHaptics.swift; sourceTree = "<group>"; };
 		35E67E929F4357F117C9DD82 /* AnalyticsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsProvider.swift; sourceTree = "<group>"; };
 		3611EA7F38DF789E99949407 /* PersonalRecordAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalRecordAnalyzer.swift; sourceTree = "<group>"; };
 		361995D08D2DE1BCBED85066 /* SleepDebtTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDebtTracker.swift; sourceTree = "<group>"; };
@@ -846,6 +857,7 @@
 		A2E429C36E9675CE2142019B /* FeatureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureEngine.swift; sourceTree = "<group>"; };
 		A2F2F5F8278612F9522DBE27 /* HealthRiskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskDetailView.swift; sourceTree = "<group>"; };
 		A33AA97A7430C2636D14E64C /* TrialScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrialScheduler.swift; sourceTree = "<group>"; };
+		A500C23E866E77BA02B0E39A /* WatchVerdictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVerdictTests.swift; sourceTree = "<group>"; };
 		A6A5008133E54508AECB34A0 /* ProgressBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarView.swift; sourceTree = "<group>"; };
 		A6A6DC3D694ECACF9CDEA619 /* WorkoutTypeAppEnum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTypeAppEnum.swift; sourceTree = "<group>"; };
 		A8AA7C381C6B031392D2CF8D /* DailyActionResultCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionResultCard.swift; sourceTree = "<group>"; };
@@ -893,6 +905,7 @@
 		B9918769144FC023D22876D2 /* DashboardSmartActionAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSmartActionAdvisor.swift; sourceTree = "<group>"; };
 		B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalIntelligence.swift; sourceTree = "<group>"; };
 		B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScoreLiveActivityManager.swift; sourceTree = "<group>"; };
 		BD254B169AC9BC98F1E1D195 /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
 		BE3BD36EFDDFEC821C64F97A /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
@@ -915,6 +928,7 @@
 		C48447290A52C839F7E6DCFA /* SupportedDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedDevice.swift; sourceTree = "<group>"; };
 		C674C7F8E78BA0DE27E10F98 /* LasoWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LasoWidgets.entitlements; sourceTree = "<group>"; };
 		C6CADCA0D3141F5EB53F7056 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
+		C7C8DBAA7A52F0387DE273C9 /* WatchVerdict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVerdict.swift; sourceTree = "<group>"; };
 		C7E098E67F2ABEB332E0C8C8 /* ReportTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTemplate.swift; sourceTree = "<group>"; };
 		C8900223B925BD1A13688FE1 /* LLMInsightGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMInsightGenerator.swift; sourceTree = "<group>"; };
 		CA4667535F5D829DFAACB854 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -1102,6 +1116,8 @@
 			children = (
 				794E13F1712E92ABA7B7C3F9 /* WatchBridge.swift */,
 				4F7048C434E7D85D2195A68E /* WatchStrings.swift */,
+				B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */,
+				C7C8DBAA7A52F0387DE273C9 /* WatchVerdict.swift */,
 			);
 			path = WatchShared;
 			sourceTree = "<group>";
@@ -1118,6 +1134,7 @@
 			isa = PBXGroup;
 			children = (
 				37F3EF7A987ECE8E28373C79 /* RegressionTests.swift */,
+				A500C23E866E77BA02B0E39A /* WatchVerdictTests.swift */,
 			);
 			path = LasoTests;
 			sourceTree = "<group>";
@@ -1131,6 +1148,8 @@
 				DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */,
 				D7132AD99BED8FE65100BA31 /* WatchAssets.xcassets */,
 				09B616A9A5663B962A2BB8C7 /* WatchCheckInView.swift */,
+				355C7D282D8DEE915CF05E0A /* WatchHaptics.swift */,
+				09FC6086BECAB0BD2AE9CE36 /* WatchHealthStore.swift */,
 				7990C45DA6F7185654AD64B6 /* WatchJournalView.swift */,
 				1A33C2476641DDAE4ABF21CC /* WatchRootView.swift */,
 				B5DA07B12970B0A639D17AA4 /* WatchStore.swift */,
@@ -2505,6 +2524,9 @@
 							com.apple.ApplicationGroups.watchos = {
 								enabled = YES;
 							};
+							com.apple.HealthKit = {
+								enabled = YES;
+							};
 						};
 					};
 					2131E0565430F53E4EC2F615 = {
@@ -3016,6 +3038,8 @@
 				CA020233DB2343F7195A9C14 /* WatchComplicationSteps.swift in Sources */,
 				D46DA3E71BEC6288BAFAD011 /* WatchMonitor.swift in Sources */,
 				7550C3B504ADF8D5322BF255 /* WatchStrings.swift in Sources */,
+				4D14EF3B44C84A5E5E403904 /* WatchTheme.swift in Sources */,
+				7944FF10538CF4F0A50BFBBA /* WatchVerdict.swift in Sources */,
 				63468BB32A6196DAB7DBD87D /* WebExportViewModel.swift in Sources */,
 				DDE8252144F3179CC3950AC3 /* WeeklyBarChart.swift in Sources */,
 				2D9EE3826558B031153DEE41 /* WeeklyChallenge.swift in Sources */,
@@ -3041,6 +3065,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C357F2518307C5D539A95E9 /* RegressionTests.swift in Sources */,
+				3CB8A9D5CD63EF5D93C47E80 /* WatchVerdictTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3077,6 +3102,8 @@
 				C8A943BF5FF12C7F30EF79ED /* ReadinessComplication.swift in Sources */,
 				B6B6401D132004FD6AE6D1ED /* WatchBridge.swift in Sources */,
 				FFE01E513561527219E35E33 /* WatchStrings.swift in Sources */,
+				567B6CEFA64645C7924464EB /* WatchTheme.swift in Sources */,
+				C4F621DF21D23B191DA3AF40 /* WatchVerdict.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3088,10 +3115,14 @@
 				26CDE9DD7326658BD23E2745 /* LasoWatchApp.swift in Sources */,
 				37935F4C2D5FBE7692148F6D /* WatchBridge.swift in Sources */,
 				4E27E107C793A5F4E7DFB0DF /* WatchCheckInView.swift in Sources */,
+				99F537AD3B4F51691A72CF83 /* WatchHaptics.swift in Sources */,
+				9719262B72CB8FB4845BB717 /* WatchHealthStore.swift in Sources */,
 				B049E2023B2502581B1C9A0B /* WatchJournalView.swift in Sources */,
 				70CE8A4825B420049A6EE5CC /* WatchRootView.swift in Sources */,
 				9BF926DE244CA54BBE547898 /* WatchStore.swift in Sources */,
 				7DD74221A83E90B417D4D45A /* WatchStrings.swift in Sources */,
+				AC1B988C899818A529C4BFF3 /* WatchTheme.swift in Sources */,
+				1C2114A47A94F976DD8BB16B /* WatchVerdict.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3168,7 +3199,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 95;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3187,7 +3218,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.86;
+				MARKETING_VERSION = 1.2.87;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3258,7 +3289,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 94;
+				CURRENT_PROJECT_VERSION = 95;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3271,7 +3302,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.86;
+				MARKETING_VERSION = 1.2.87;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

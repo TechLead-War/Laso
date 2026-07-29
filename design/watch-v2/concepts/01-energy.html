@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laso Watch — Concept 01 Body Battery</title>
+<style>
+/* ============================================================
+   Laso Watch v2 — Concept 01 "Body Battery" (slug: energy)
+   Single file. No network. Dark only. Tokens from DESIGN-TOKENS.md.
+   ============================================================ */
+
+:root{
+  /* --- design tokens, verbatim hex --- */
+  --bg:#000000;
+  --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D;
+  --surfaceSubtle:#17171C;
+  --textPrimary:#F2F2F6;
+  --textSecondary:#C9C9D2;
+  --textTertiary:#ADADB8;
+  --borderLow:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+
+  /* --- lab chrome, deliberately outside the watch --- */
+  --lab:#0B0B0E;
+  --labRaised:#141419;
+  --labBorder:#22222A;
+
+  --zoom:1.8;
+  --radius:44px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--lab);color:var(--textSecondary);height:100%}
+body{
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+
+/* ---------- lab layout ---------- */
+.lab{display:flex;min-height:100vh;gap:22px;padding:20px}
+.rail{width:212px;flex:0 0 212px}
+.railTitle{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--textTertiary);margin:16px 0 6px 4px}
+.railTitle:first-child{margin-top:0}
+.railBtn{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:9px 10px;border-radius:8px;font-size:13px;color:var(--textSecondary);
+  border:1px solid transparent;min-height:36px;
+}
+.railBtn:hover{background:var(--labRaised)}
+.railBtn[aria-current="true"]{background:var(--labRaised);border-color:var(--primary);color:var(--textPrimary)}
+.railBtn .fam{font-size:10px;color:var(--textTertiary);margin-left:auto}
+.brand{font-size:15px;font-weight:600;color:var(--textPrimary);margin-bottom:2px}
+.brandSub{font-size:11px;color:var(--textTertiary);line-height:1.5;margin-bottom:6px}
+
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding-top:6px}
+
+/* ---------- the watch ---------- */
+.device{position:relative;display:flex;align-items:center}
+.bezel{
+  position:relative;
+  background:linear-gradient(160deg,#3a3a41,#101014 45%,#26262b);
+  border-radius:calc(var(--radius) + 14px);
+  padding:13px;
+  box-shadow:0 22px 60px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.10);
+}
+.viewport{
+  position:relative;overflow:hidden;background:#000;
+  border-radius:var(--radius);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.canvas{
+  position:relative;width:208px;height:248px;background:#000;color:var(--textPrimary);
+  transform:scale(var(--zoom));transform-origin:0 0;
+}
+.pulseRing{
+  position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;
+  box-shadow:inset 0 0 0 3px var(--primary);opacity:0;
+}
+.pulseRing.on{animation:pulse 460ms ease-out}
+@keyframes pulse{0%{opacity:.95}100%{opacity:0}}
+
+/* crown + side button drawn on the right edge */
+.side{position:absolute;right:-13px;top:0;height:100%;width:16px;pointer-events:none}
+.crown{
+  position:absolute;right:-10px;top:27%;width:15px;height:44px;border-radius:5px;
+  background:linear-gradient(90deg,#4a4a52,#2a2a30 60%,#55555e);
+  box-shadow:0 2px 8px rgba(0,0,0,.6);overflow:hidden;
+}
+.crownGrip{position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.20) 0 1px,transparent 1px 4px);
+  transform:translateY(0);
+}
+.crownDot{
+  position:absolute;right:-10px;top:27%;width:15px;height:44px;border-radius:5px;
+  box-shadow:inset 0 0 0 2px var(--primary);opacity:0;pointer-events:none;
+}
+.crownDot.on{opacity:1;transition:opacity 60ms linear}
+.sideBtn{
+  position:absolute;right:-8px;top:52%;width:11px;height:34px;border-radius:4px;
+  background:linear-gradient(90deg,#3b3b42,#232329);box-shadow:0 2px 6px rgba(0,0,0,.6);
+}
+.crownRead{
+  position:absolute;left:calc(100% + 22px);top:24%;width:150px;font-size:11px;color:var(--textTertiary);line-height:1.55;
+}
+.crownRead b{color:var(--textSecondary);font-weight:600;display:block}
+.detents{display:flex;gap:4px;margin-top:6px}
+.detent{width:16px;height:3px;border-radius:2px;background:var(--borderLow)}
+.detent.on{background:var(--primary)}
+
+/* ---------- captions under the device ---------- */
+.hapticCap{min-height:34px;font-size:12px;color:var(--textTertiary);text-align:center;line-height:1.5;max-width:460px}
+.hapticCap .type{color:var(--optimal);font-weight:600}
+.hapticCap.flash{animation:capIn 300ms ease-out}
+@keyframes capIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.note{font-size:12px;color:var(--textTertiary);text-align:center;line-height:1.6;max-width:520px}
+.note b{color:var(--textSecondary);font-weight:600}
+.kbd{border:1px solid var(--labBorder);border-radius:4px;padding:1px 5px;font-size:11px;color:var(--textSecondary)}
+
+/* ---------- dev toolbar ---------- */
+.devToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;
+  background:var(--labRaised);border:1px solid var(--labBorder);border-radius:8px;
+  padding:8px 12px;font-size:11px;letter-spacing:.12em;color:var(--textTertiary);
+  min-height:36px;
+}
+.devToggle:hover{color:var(--textPrimary)}
+.devPanel{
+  position:fixed;right:16px;bottom:62px;z-index:41;width:268px;
+  background:var(--labRaised);border:1px solid var(--labBorder);border-radius:12px;
+  padding:12px;display:none;max-height:82vh;overflow:auto;
+}
+.devPanel.open{display:block}
+.devH{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--textTertiary);margin:12px 0 6px}
+.devH:first-child{margin-top:0}
+.segs{display:flex;flex-wrap:wrap;gap:5px}
+.seg{
+  border:1px solid var(--labBorder);border-radius:7px;padding:6px 9px;font-size:11px;
+  color:var(--textSecondary);background:#0E0E12;min-height:30px;
+}
+.seg[aria-pressed="true"]{border-color:var(--primary);color:var(--textPrimary);background:#12202F}
+.seg.wide{width:100%;text-align:left}
+.devFoot{font-size:10px;color:var(--textTertiary);line-height:1.5;margin-top:10px;border-top:1px solid var(--labBorder);padding-top:8px}
+
+/* ============================================================
+   WATCH-INTERNAL STYLES — every length below is points (1px = 1pt),
+   the .canvas transform does the scaling.
+   ============================================================ */
+.canvas *{font-variant-numeric:tabular-nums}
+.pad{position:absolute;left:10px;right:10px;top:0;bottom:0}
+.s40 .pad{left:8px;right:8px}
+
+.sysTime{position:absolute;right:12px;top:6px;font-size:14px;font-weight:600;color:var(--textPrimary);letter-spacing:.01em}
+.sysTimeAod{color:var(--textTertiary)}
+
+/* hero */
+.hero{font-size:52px;font-weight:600;line-height:56px;height:56px;color:var(--textPrimary);letter-spacing:-.02em}
+.s40 .hero{font-size:40px;line-height:44px;height:44px}
+.hero.dim{color:var(--textSecondary)}
+.hero.red{color:var(--textTertiary)}
+
+.bandLine{height:20px;display:flex;align-items:baseline;gap:0}
+.bandWord{font-size:17px;font-weight:600}
+.fresh{font-size:11px;font-weight:500;color:var(--textTertiary)}
+
+/* battery bar */
+.barWrap{position:relative;height:18px;display:flex;align-items:center}
+.bar{position:relative;height:14px;border-radius:9999px;background:var(--surfaceSubtle);box-shadow:inset 0 0 0 1px var(--borderLow)}
+.s40 .bar{height:12px}
+.barFill{position:absolute;left:0;top:0;bottom:0;border-radius:9999px;transition:width 600ms cubic-bezier(.22,.61,.36,1)}
+.barOutline{background:transparent;box-shadow:inset 0 0 0 2px var(--borderLow)}
+.barAod{background:transparent;box-shadow:inset 0 0 0 2px var(--textTertiary)}
+.nub{position:absolute;width:3px;height:6px;border-radius:0 2px 2px 0;background:var(--borderLow)}
+.tick{position:absolute;width:2px;height:18px;background:var(--textSecondary);border-radius:1px}
+.s40 .tick{height:16px}
+.tickDashed{background:repeating-linear-gradient(180deg,var(--textSecondary) 0 3px,transparent 3px 6px)}
+.tickHollow{background:transparent;box-shadow:inset 0 0 0 1px var(--textSecondary)}
+.tickLabel{height:13px;font-size:11px;font-weight:500;color:var(--textTertiary);position:relative}
+.tickLabel span{position:absolute;transform:translateX(-50%)}
+
+/* sparkline */
+.spark{height:21px;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.sbar{width:3px;border-radius:1.5px;background:var(--surfaceElevated)}
+.sbar.now{border-radius:1.5px}
+.sbar.stub{height:4px;background:var(--textTertiary)}
+.sbar.void{background:transparent;height:2px}
+
+.foot{font-size:13px;font-weight:400;color:var(--textTertiary);line-height:16px}
+.foot.wrap{line-height:15px}
+
+/* page dots */
+.dots{position:absolute;right:2px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px}
+.dot{width:4px;height:4px;border-radius:2px;background:var(--borderLow)}
+.dot.on{background:var(--textSecondary)}
+
+/* spend rows */
+.rowTitle{font-size:17px;font-weight:600;color:var(--textPrimary);height:20px}
+.srow{height:22px;display:flex;align-items:center;gap:6px}
+.slabel{width:60px;flex:0 0 60px;font-size:12px;color:var(--textTertiary);white-space:nowrap;overflow:hidden}
+.s40 .slabel{width:52px;flex:0 0 52px}
+.strack{height:8px;border-radius:4px;background:var(--surfaceSubtle);position:relative;flex:1}
+.sfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--textSecondary)}
+.sfill.pos{background:var(--optimal)}
+.sfill.aod{background:transparent;box-shadow:inset 0 0 0 1.5px var(--textTertiary)}
+.sval{width:24px;flex:0 0 24px;text-align:right;font-size:11px;font-weight:500;color:var(--textSecondary)}
+.sval.pos{color:var(--optimal)}
+
+/* tonight */
+.proj{height:26px;display:flex;align-items:baseline;gap:0}
+.projNum{font-size:22px;font-weight:600}
+.projTail{font-size:16px;font-weight:400;color:var(--textSecondary)}
+.fcast{position:relative;height:12px;border-radius:6px;background:var(--surfaceSubtle);overflow:hidden}
+.fcTick{position:absolute;top:0;bottom:0;width:2px;background:var(--poor)}
+.actionRow{
+  height:44px;border-radius:10px;background:var(--surfaceRaised);
+  box-shadow:inset 0 0 0 1px var(--borderLow);
+  display:flex;align-items:center;padding:0 10px;gap:8px;width:100%;
+  transition:transform 80ms linear;
+}
+.actionRow:active{transform:scale(.96)}
+.actionRow.press{transform:scale(.96)}
+.actionLabel{font-size:17px;font-weight:600;color:var(--textPrimary)}
+.chip{margin-left:auto;width:28px;height:18px;border-radius:6px;background:var(--surfaceElevated);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--optimal)}
+.chip.aod{color:var(--textTertiary)}
+
+/* recharge */
+.navBar{height:22px;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--textSecondary)}
+.navChev{width:8px;height:8px;border-left:1.5px solid var(--primary);border-bottom:1.5px solid var(--primary);transform:rotate(45deg)}
+.durRow{height:44px;display:flex;align-items:baseline;gap:4px}
+.durNum{font-size:40px;font-weight:600;color:var(--textPrimary);line-height:44px}
+.durUnit{font-size:17px;font-weight:600;color:var(--textSecondary)}
+.gain{font-size:17px;font-weight:600;color:var(--optimal);height:20px}
+.gain.aod{color:var(--textTertiary)}
+.startBtn{height:44px;border-radius:10px;background:var(--primary);color:#000;font-size:17px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;width:100%;transition:transform 80ms linear}
+.startBtn:active{transform:scale(.96)}
+.endBtn{height:44px;border-radius:10px;background:var(--surfaceRaised);box-shadow:inset 0 0 0 1px var(--borderLow);
+  color:var(--textPrimary);font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;width:100%}
+.crownAcc{position:absolute;right:1px;top:38%;width:3px;height:34px;border-radius:2px;background:var(--surfaceElevated);overflow:hidden}
+.crownAccKnob{position:absolute;left:0;right:0;height:9px;border-radius:2px;background:var(--primary)}
+
+/* watch face */
+.face{position:absolute;inset:0;padding:8px 6px}
+.faceRow{display:flex;align-items:center;justify-content:space-between}
+.faceDate{font-size:12px;font-weight:600;color:var(--optimal);letter-spacing:.06em}
+.faceTime{font-size:44px;font-weight:600;color:var(--textPrimary);line-height:46px;letter-spacing:-.01em}
+.slotC{width:42px;height:42px;border-radius:21px;position:relative;display:flex;align-items:center;justify-content:center}
+.slotSys{box-shadow:inset 0 0 0 1px #1E1E24}
+.laso{box-shadow:inset 0 0 0 1px rgba(77,163,255,.55);border-radius:8px}
+.lasoTag{position:absolute;font-size:5.5px;letter-spacing:.04em;color:var(--primary);white-space:nowrap;bottom:-8px;left:0}
+.slotR{width:188px;height:62px;border-radius:8px;padding:4px 5px;position:relative}
+.s40 .slotR{width:146px}
+.slotI{height:16px;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--textSecondary);border-radius:6px;padding:0 3px;position:relative}
+.sysMini{font-size:9px;color:var(--textTertiary);text-align:center;line-height:1.15}
+.sysBig{font-size:14px;font-weight:600;color:var(--textPrimary)}
+
+/* smart stack */
+.stackHead{height:16px;display:flex;justify-content:space-between;font-size:11px;color:var(--textTertiary);padding:0 2px}
+.stackView{position:absolute;left:10px;right:10px;top:22px;bottom:0;overflow:hidden}
+.s40 .stackView{left:8px;right:8px}
+.stackInner{position:absolute;left:0;right:0;top:0;transition:transform 220ms cubic-bezier(.22,.61,.36,1)}
+.widget{width:100%;height:78px;border-radius:14px;background:var(--surfaceRaised);padding:8px 9px;margin-bottom:8px;position:relative;text-align:left;display:block}
+.s40 .widget{height:69px}
+.widget.lasoW{box-shadow:inset 0 0 0 1px rgba(77,163,255,.55)}
+.wTag{position:absolute;right:6px;top:-1px;font-size:5.5px;color:var(--primary);letter-spacing:.04em}
+.wSysTitle{font-size:11px;font-weight:600;color:var(--textTertiary);margin-bottom:3px}
+.wSysBig{font-size:22px;font-weight:600;color:var(--textPrimary)}
+.wSysLine{font-size:11px;color:var(--textSecondary);margin-top:2px}
+
+/* notifications */
+.sash{height:24px;display:flex;align-items:center;gap:5px;border-radius:0 0 10px 10px;background:var(--surfaceRaised);
+  margin:0 -10px;padding:0 10px;font-size:11px;color:var(--textSecondary)}
+.appIcon{width:14px;height:14px;border-radius:4px;background:linear-gradient(150deg,var(--fair),var(--poor));flex:0 0 14px}
+.appIconBig{width:34px;height:34px;border-radius:10px;background:linear-gradient(150deg,var(--fair),var(--poor));margin:0 auto}
+.nTitle{font-size:17px;font-weight:600;color:var(--textPrimary);line-height:20px}
+.nBody{font-size:14px;color:var(--textSecondary);line-height:17px}
+.nAct{height:38px;border-radius:9px;background:var(--surfaceRaised);box-shadow:inset 0 0 0 1px var(--borderLow);
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--textPrimary);width:100%;
+  transition:transform 80ms linear;position:relative}
+.nAct:active{transform:scale(.96)}
+.nAct.press{transform:scale(.96)}
+.dtTag{position:absolute;right:5px;font-size:7px;color:var(--primary)}
+.nScroll{position:absolute;left:10px;right:10px;top:0;transition:transform 180ms ease-out}
+
+.col{display:flex;flex-direction:column}
+.center{align-items:center;text-align:center}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:1ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}
+}
+</style>
+</head>
+<body>
+
+<div class="lab">
+  <nav class="rail" aria-label="Screen switcher">
+    <div class="brand">Concept 01 — Body Battery</div>
+    <div class="brandSub">Alex, Tuesday 14:32. Ceiling 62, charge 48.<br>Wheel or <span class="kbd">up</span><span class="kbd">down</span> = Digital Crown.</div>
+    <div id="railList"></div>
+  </nav>
+
+  <main class="stage">
+    <div class="device" id="device">
+      <div class="bezel">
+        <div class="viewport" id="viewport">
+          <div class="canvas" id="canvas"></div>
+          <div class="pulseRing" id="pulseRing"></div>
+        </div>
+      </div>
+      <div class="crown" aria-hidden="true"><div class="crownGrip" id="crownGrip"></div></div>
+      <div class="crownDot" id="crownDot" aria-hidden="true"></div>
+      <div class="sideBtn" aria-hidden="true"></div>
+      <div class="crownRead" id="crownRead"></div>
+    </div>
+    <div class="hapticCap" id="hapticCap"></div>
+    <div class="note" id="note"></div>
+  </main>
+</div>
+
+<button class="devToggle" id="devToggle" aria-expanded="false" aria-controls="devPanel">DEV</button>
+<div class="devPanel" id="devPanel" role="group" aria-label="Developer toolbar">
+  <div class="devH">Canvas</div>
+  <div class="segs" id="segSize"></div>
+  <div class="devH">State</div>
+  <div class="segs" id="segState"></div>
+  <div class="devH">Always-On (isLuminanceReduced)</div>
+  <div class="segs" id="segAod"></div>
+  <div class="devH">Charge band (key variable)</div>
+  <div class="segs" id="segBand"></div>
+  <div class="devH">Gestures</div>
+  <div class="segs" id="segGesture"></div>
+  <div class="devFoot" id="devFoot"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. THE MODEL — every number on every surface comes from here.
+   Constants are the ones published in the design spec §12; in the
+   shipping app they would live once in WatchShared/ so the phone
+   and the wrist cannot drift.
+   ============================================================ */
+
+var K = { AWAKE: 1.2, EXERTION: 13, QUIET: 0.04, MINDFUL: 0.40, STILL: 0.06, FLOOR: 5 };
+var BEDTIME = 23 * 60;          // 23:00, from the new WatchPayload.bedtimeTargetLocal
+var LOW_FLOOR = 45;             // DesignSystem.fairFloor
+var OPT_FLOOR = 67;             // DesignSystem.optimalFloor
+
+/* Three scenarios so a reviewer can see all three colour bands.
+   Only "moderate" is the shared fictional user at 14:32; the other two are
+   labelled as other moments, because the ceiling is a hard cap and a 62
+   ceiling can never produce an Optimal charge. */
+var PRESETS = {
+  optimal: {
+    key:'optimal', label:'Optimal', when:'yesterday 08:20 · ceiling 71', ceiling:71, ceilingSetAt:'07:06',
+    now:8*60+20, wake:7*60, moveGoal:620, kcalBefore:0,
+    kcal:[0,0,0,0,0,0,0,0,0,0,0,0,0,18,28,31],
+    quiet:[], gaps:[]
+  },
+  moderate: {
+    key:'moderate', label:'Moderate', when:'Tuesday 14:32 — Alex', ceiling:62, ceilingSetAt:'07:04',
+    now:14*60+32, wake:7*60, moveGoal:620, kcalBefore:0,
+    kcal:[9,21,26,6,0,29,18,12,9,15,23,42,26,22,25,15],
+    quiet:[{end:12*60+25, min:25}],
+    gaps:[{from:8*60+40, to:9*60+30}]
+  },
+  low: {
+    key:'low', label:'Low', when:'same Tuesday 16:20, after a run', ceiling:62, ceilingSetAt:'07:04',
+    now:16*60+20, wake:7*60, moveGoal:620, kcalBefore:56,
+    kcal:[6,0,29,18,12,9,15,23,42,26,22,25,18,96,108,10],
+    quiet:[{end:12*60+25, min:25}],
+    gaps:[{from:8*60+40, to:9*60+30}]
+  }
+};
+
+function bucketStarts(p){
+  var last = Math.floor(p.now/30)*30;
+  var out=[]; for(var i=15;i>=0;i--) out.push(last - i*30);
+  return out;
+}
+function kcalCumAt(p, t){
+  var starts = bucketStarts(p), cum = p.kcalBefore;
+  if (t <= starts[0]) return cum;
+  for (var i=0;i<16;i++){
+    var s = starts[i], e = s + 30;
+    if (t >= e) { cum += p.kcal[i]; }
+    else { cum += p.kcal[i] * Math.max(0,(t - s))/30; break; }
+  }
+  return cum;
+}
+function quietGainAt(p, t){
+  var g = 0;
+  for (var i=0;i<p.quiet.length;i++) if (p.quiet[i].end <= t) g += p.quiet[i].min * K.QUIET;
+  return g;
+}
+function mindfulGainAt(p, t){
+  if (!S.mindfulMin || S.mindfulAt > t) return 0;
+  return Math.min(8, S.mindfulMin * K.MINDFUL);
+}
+function chargeAt(p, t){
+  var awake = Math.max(0, t - p.wake)/60 * K.AWAKE;
+  var ex = K.EXERTION * kcalCumAt(p,t) / p.moveGoal;
+  var raw = p.ceiling - awake - ex + quietGainAt(p,t) + mindfulGainAt(p,t);
+  return Math.min(p.ceiling, Math.max(K.FLOOR, raw));
+}
+function band(v){
+  if (v >= OPT_FLOOR) return {key:'optimal', word:'Optimal', col:'var(--optimal)'};
+  if (v >= LOW_FLOOR) return {key:'fair',    word:'Moderate', col:'var(--fair)'};
+  return {key:'poor', word:'Low', col:'var(--poor)'};
+}
+function hhmm(mins){
+  var m = ((mins % 1440) + 1440) % 1440;
+  return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+}
+function hhmmRound10(mins){ return hhmm(Math.round(mins/10)*10); }
+function durTxt(mins){
+  var h = Math.floor(mins/60), m = Math.round(mins%60);
+  return h > 0 ? (h + 'h' + String(m).padStart(2,'0') + 'm') : (m + 'm');
+}
+
+function model(){
+  var p = PRESETS[S.band];
+  var raw = chargeAt(p, p.now);
+  var charge = Math.round(raw);
+  var b = band(charge);
+  var spend = p.ceiling - charge;
+  var prev = chargeAt(p, p.now - 60);
+  var slope = Math.round(raw - prev);                       // negative = falling
+  var hoursToBed = Math.max(0, (BEDTIME - p.now)/60);
+  var bedtime = Math.round(raw - K.AWAKE * hoursToBed);
+  var crossMin = p.now + (raw - LOW_FLOOR)/K.AWAKE*60;
+  var crossState = (raw < LOW_FLOOR) ? 'now' : (crossMin >= BEDTIME ? 'never' : 'soon');
+
+  var awakeMin = p.now - p.wake;
+  var kcal = Math.round(kcalCumAt(p, p.now));
+  var awakeDrain = awakeMin/60 * K.AWAKE;
+  var exDrain = K.EXERTION * kcal / p.moveGoal;
+  var restMin = 0; for (var i=0;i<p.quiet.length;i++) restMin += p.quiet[i].min;
+  var restGain = quietGainAt(p, p.now) + mindfulGainAt(p, p.now);
+  restMin += (S.mindfulMin && S.mindfulAt <= p.now) ? S.mindfulMin : 0;
+
+  // 16 buckets: charge at bucket end, stubs where the wrist saw nothing.
+  var starts = bucketStarts(p), spark = [];
+  for (var j=0;j<16;j++){
+    var s = starts[j], e = Math.min(s+30, p.now);
+    var inGap = false;
+    for (var g=0; g<p.gaps.length; g++){
+      var ov = Math.min(e, p.gaps[g].to) - Math.max(s, p.gaps[g].from);
+      if (ov >= 15) inGap = true;                 // half the bucket or more unseen
+    }
+    if (e <= p.wake) { spark.push({kind:'void'}); continue; }
+    if (inGap)       { spark.push({kind:'stub'}); continue; }
+    var c = chargeAt(p, e);
+    var h = 4 + (c - (p.ceiling - 40))/40 * 16;
+    spark.push({kind:'bar', h: Math.max(4, Math.min(20, h))});
+  }
+
+  var gapMin = 0; for (var q=0;q<p.gaps.length;q++) gapMin += (p.gaps[q].to - p.gaps[q].from);
+
+  return {
+    p:p, charge:charge, band:b, ceiling:p.ceiling, spend:spend, slope:slope,
+    bedtime:bedtime, crossState:crossState, crossMin:crossMin,
+    awakeMin:awakeMin, awakeDrain:Math.round(awakeDrain), kcal:kcal,
+    exDrain:Math.round(exDrain), restMin:restMin, restGain:Math.round(restGain),
+    spark:spark, gapMin:gapMin, now:p.now
+  };
+}
+
+/* ============================================================
+   2. STATE
+   ============================================================ */
+
+var DIM = {
+  46:{w:208,h:248,pad:10,cw:188,zoom:1.8,rad:44,spark:true},
+  40:{w:162,h:197,pad:8, cw:146,zoom:2.1,rad:38,spark:false}
+};
+var DURATIONS=[3,5,10,20], GAINS=[1,2,4,8];
+
+var S = {
+  screen:'face', size:46, data:'loaded', aod:false, band:'moderate',
+  page:1, stackIdx:0, nScroll:0,
+  durIdx:1, running:false, endsAt:0, startedAt:0,
+  mindfulMin:0, mindfulAt:0,
+  launched:false, lastChargeSeen:null, tick:null
+};
+
+var SCREENS = [
+  {g:'Off-app',        id:'face',     name:'Watch face',            fam:'3 slots'},
+  {g:'Off-app',        id:'stack',    name:'Smart Stack',           fam:'rect'},
+  {g:'Notifications',  id:'n1short',  name:'N1 short look',         fam:'wake'},
+  {g:'Notifications',  id:'n1long',   name:'N1 long look',          fam:'wake'},
+  {g:'Notifications',  id:'n2short',  name:'N2 short look',         fam:'delta'},
+  {g:'Notifications',  id:'n2long',   name:'N2 long look',          fam:'delta'},
+  {g:'App',            id:'launch',   name:'Launch / wrist raise',  fam:''},
+  {g:'App',            id:'now',      name:'1 · Now',               fam:'page'},
+  {g:'App',            id:'spend',    name:'2 · Spend',             fam:'page'},
+  {g:'App',            id:'tonight',  name:'3 · Tonight',           fam:'page'},
+  {g:'App',            id:'recharge', name:'Recharge (push)',       fam:'leaf'}
+];
+
+var STATES = [
+  ['loaded','loaded'],
+  ['cacheLoad','loading · cache'],
+  ['firstLoad','loading · first launch'],
+  ['cold','cold start'],
+  ['empty','empty'],
+  ['errHealth','error · HealthKit denied'],
+  ['errPhone','error · phone unreachable'],
+  ['stale','stale · ceiling 2 days'],
+  ['offwrist','off wrist · paused']
+];
+
+/* ============================================================
+   3. HAPTICS + PULSE
+   ============================================================ */
+var hapticTimer=null;
+function haptic(type, why){
+  var ring = document.getElementById('pulseRing');
+  ring.classList.remove('on'); void ring.offsetWidth; ring.classList.add('on');
+  var cap = document.getElementById('hapticCap');
+  cap.innerHTML = '<span class="type">WKHapticType.' + type + '</span> — ' + why;
+  cap.classList.remove('flash'); void cap.offsetWidth; cap.classList.add('flash');
+  clearTimeout(hapticTimer);
+  hapticTimer = setTimeout(function(){ cap.innerHTML=''; }, 4200);
+}
+function haptic2(t1,w1,t2,w2){        // 100ms minimum spacing is a hard API constraint
+  haptic(t1,w1);
+  setTimeout(function(){ haptic(t2,w2); }, 140);
+}
+
+/* ============================================================
+   4. SHARED WATCH COMPONENTS
+   ============================================================ */
+function d(){ return DIM[S.size]; }
+
+function batteryBar(o){
+  // o: {fill, tick, tickStyle, outline, aod, w}
+  var w = o.w || d().cw;
+  var fillW = Math.max(0, Math.min(w, o.fill));
+  var cls = 'bar' + (o.outline ? ' barOutline' : '') + (o.aod ? ' barAod' : '');
+  var h = o.h || (S.size===46?14:12);
+  var inner = '';
+  if (!o.outline && !o.aod){
+    inner += '<div class="barFill" style="width:' + fillW + 'px;background:' + (o.col||'var(--fair)') + '"></div>';
+  }
+  var nub = '<div class="nub" style="left:' + w + 'px;top:50%;transform:translateY(-50%)"></div>';
+  var tick = '';
+  if (o.tick !== null && o.tick !== undefined){
+    tick = '<div class="tick ' + (o.tickStyle||'') + '" style="left:' + o.tick + 'px;top:50%;transform:translate(-50%,-50%)"></div>';
+  }
+  return '<div class="barWrap" style="width:' + w + 'px">' +
+           '<div class="' + cls + '" style="width:' + w + 'px;height:' + h + 'px">' + inner + '</div>' +
+           nub + tick +
+         '</div>';
+}
+
+function sparkline(m, col){
+  var out = '<div class="spark">';
+  for (var i=0;i<16;i++){
+    var b = m.spark[i];
+    if (b.kind==='void') out += '<div class="sbar void"></div>';
+    else if (b.kind==='stub') out += '<div class="sbar stub"></div>';
+    else {
+      var last = (i===15);
+      var h = b.h + (last?1:0);
+      out += '<div class="sbar" style="height:' + h.toFixed(1) + 'px' + (last ? ';background:' + col : '') + '"></div>';
+    }
+  }
+  return out + '</div>';
+}
+
+function pageDots(n){
+  var o = '<div class="dots">';
+  for (var i=1;i<=3;i++) o += '<div class="dot' + (i===n?' on':'') + '"></div>';
+  return o + '</div>';
+}
+
+function sysTime(m){
+  return '<div class="sysTime' + (S.aod?' sysTimeAod':'') + '">' + hhmm(m.now) + '</div>';
+}
+
+function signed(v){ return v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(v); }
+
+/* ============================================================
+   5. SCREEN 1 — NOW  (page 1 of 3)
+   ============================================================ */
+function renderNow(m){
+  var D = d(), cw = D.cw, st = S.data;
+  var b = m.band;
+  var fill = m.charge/100 * cw;
+  var tickX = m.ceiling/100 * cw;
+
+  if (S.aod) return renderNowAod(m);
+
+  var hero, heroCls='hero', line2, line3, barOpts, showSpark = D.spark, tickLabel = true;
+
+  var freshWord = {loaded:'live', cacheLoad:'6m', offwrist:'paused', stale:'2d'}[st] || 'live';
+  var tickStyle = '';
+
+  if (st==='firstLoad'){
+    hero = '··'; heroCls='hero red';
+    line2 = '<span class="bandWord" style="color:var(--textSecondary)">Reading your wrist</span>';
+    line3 = 'First charge in about a minute.';
+    barOpts = {outline:true, tick:null}; showSpark=false; tickLabel=false;
+  } else if (st==='cold'){
+    hero = String(m.spend); heroCls='hero';
+    line2 = '<span class="bandWord" style="color:var(--textSecondary)">Spent today</span>';
+    line3 = 'Ceiling needs 3 more nights of sleep.';
+    barOpts = {fill: m.spend/100*cw, col:'var(--textSecondary)', tick: cw, tickStyle:'tickHollow'};
+    tickLabel=false;
+  } else if (st==='empty' || st==='errHealth'){
+    hero = String(m.ceiling); heroCls='hero dim';
+    line2 = '<span class="bandWord" style="color:var(--textSecondary)">Ceiling only</span>';
+    line3 = (st==='empty') ? 'Spend starts when you wear it.'
+                           : 'Health access is off. Watch Settings › Privacy &amp; Security › Health.';
+    barOpts = {fill:0, outline:true, tick:tickX};
+    showSpark = false;
+  } else if (st==='errPhone'){
+    hero = String(m.charge);
+    line2 = '<span class="bandWord" style="color:' + b.col + '">' + b.word + '</span><span class="fresh"> · ceiling ' + m.p.ceilingSetAt + '</span>';
+    line3 = signed(m.slope) + '/hr · spend is live';
+    barOpts = {fill:fill, col:b.col, tick:tickX, tickStyle:'tickDashed'};
+  } else if (st==='stale'){
+    hero = String(m.charge);
+    line2 = '<span class="bandWord" style="color:' + b.col + '">' + b.word + '</span><span class="fresh"> · 2d</span>';
+    line3 = 'Ceiling 2 days old. Spend since ' + hhmm(m.p.wake) + ' is live.';
+    barOpts = {fill:fill, col:b.col, tick:tickX, tickStyle:'tickDashed'};
+  } else if (st==='offwrist'){
+    hero = String(m.charge);
+    var estd = m.gapMin > 180;
+    line2 = '<span class="bandWord" style="color:' + b.col + '">' + b.word + '</span><span class="fresh"> · ' + (estd?'est.':'paused') + '</span>';
+    line3 = durTxt(m.gapMin) + ' off wrist. ' + (estd ? 'Estimated.' : 'Charge held.');
+    barOpts = {fill:fill, col:b.col, tick:tickX};
+  } else {
+    hero = String(m.charge);
+    heroCls = 'hero' + (st==='cacheLoad' ? ' dim' : '');
+    line2 = '<span class="bandWord" style="color:' + b.col + '">' + b.word + '</span><span class="fresh"> · ' + freshWord + '</span>';
+    line3 = signed(m.slope) + '/hr · ' + m.bedtime + ' at bedtime';
+    barOpts = {fill:fill, col:b.col, tick:tickX};
+  }
+
+  var voHero = 'Charge ' + m.charge + ' out of 100. ' + b.word + '.';
+  var voBar  = m.charge + ' of a ceiling of ' + m.ceiling + '. You have spent ' + m.spend + ' today.';
+  var voSpark= 'From ' + m.ceiling + ' down to ' + m.charge + '. One gap: watch off wrist from 8:40 to 9:30 AM.';
+
+  var html = '';
+  html += sysTime(m);
+  html += '<div class="pad col" style="padding-top:' + (S.size===46?26:22) + 'px">';
+  html +=   '<div class="' + heroCls + '" role="text" aria-label="' + voHero + '">' + hero + '</div>';
+  html +=   '<div style="height:4px"></div>';
+  html +=   '<div class="bandLine">' + line2 + '</div>';
+  html +=   '<div style="height:10px"></div>';
+  html +=   '<div role="img" aria-label="Charge level. ' + voBar + '">' + batteryBar(barOpts) + '</div>';
+  if (tickLabel && barOpts.tick !== null && barOpts.tick !== undefined && barOpts.tickStyle !== 'tickHollow'){
+    html += '<div class="tickLabel"><span style="left:' + barOpts.tick + 'px">' + m.ceiling + '</span></div>';
+  } else {
+    html += '<div class="tickLabel"></div>';
+  }
+  html +=   '<div style="height:' + (showSpark?10:4) + 'px"></div>';
+  if (showSpark) html += '<div role="img" aria-label="Charge, last 8 hours. ' + voSpark + '">' + sparkline(m, b.col) + '</div>';
+  html +=   '<div style="height:8px"></div>';
+  html +=   '<div class="foot' + (st==='errHealth'?' wrap':'') + '">' + line3 + '</div>';
+  html += '</div>';
+  html += pageDots(1);
+  return html;
+}
+
+function renderNowAod(m){
+  // R7: genuine removal, not a dim. Layout is byte-for-byte stable.
+  var D = d();
+  var html = '';
+  html += sysTime(m);
+  html += '<div class="pad col" style="padding-top:' + (S.size===46?26:22) + 'px">';
+  html +=   '<div class="hero red">––</div>';
+  html +=   '<div style="height:4px"></div>';
+  html +=   '<div class="bandLine"><span class="bandWord" style="color:var(--textTertiary)">Laso</span></div>';
+  html +=   '<div style="height:10px"></div>';
+  html +=   batteryBar({aod:true, tick:null});
+  html +=   '<div class="tickLabel"></div>';
+  html +=   '<div style="height:10px"></div>';
+  html +=   '<div style="height:21px"></div>';
+  html +=   '<div style="height:8px"></div>';
+  html +=   '<div class="foot">Charge hidden</div>';
+  html += '</div>';
+  html += pageDots(1);
+  return html;
+}
+
+/* ============================================================
+   6. SCREEN 2 — SPEND
+   ============================================================ */
+function renderSpend(m){
+  var D = d();
+  var aod = S.aod;
+  var terms = [
+    {lab:'Awake ' + durTxt(m.awakeMin), val:-m.awakeDrain},
+    {lab:'Moving ' + m.kcal + 'kc',     val:-m.exDrain},
+    {lab:'Rest ' + m.restMin + 'm',     val: m.restGain}
+  ];
+  var max = 0; for (var i=0;i<3;i++) max = Math.max(max, Math.abs(terms[i].val));
+  if (max === 0) max = 1;
+
+  var rows = '';
+  for (var j=0;j<3;j++){
+    var t = terms[j], pos = t.val > 0;
+    var pct = Math.abs(t.val)/max*100;
+    var lab = aod ? t.lab.split(' ')[0] : t.lab;
+    var val = aod ? '––' : signed(t.val);
+    if (j > 0) rows += '<div style="height:4px"></div>';
+    rows += '<div class="srow" role="text" aria-label="' + t.lab + '. ' + (pos?'Plus ':'Minus ') + Math.abs(t.val) + '.">' +
+              '<div class="slabel">' + lab + '</div>' +
+              '<div class="strack"><div class="sfill' + (pos?' pos':'') + (aod?' aod':'') + '" style="width:' + pct.toFixed(0) + '%"></div></div>' +
+              '<div class="sval' + (pos&&!aod?' pos':'') + '"' + (aod?' style="color:var(--textTertiary)"':'') + '>' + val + '</div>' +
+            '</div>';
+  }
+
+  var title = aod ? 'Spent ––' : ('Spent ' + m.spend + ' since ' + hhmm(m.p.wake));
+  var foot;
+  if (aod) foot = 'Charge hidden';
+  else {
+    foot = 'Ceiling ' + m.ceiling + ' · ' + band(m.ceiling).word + ' · set ' + m.p.ceilingSetAt;
+    if (S.data === 'stale' || S.data === 'cacheLoad') foot += ' · updates 4x/hr';
+  }
+
+  var html = '';
+  html += sysTime(m);
+  html += '<div class="pad col" style="padding-top:' + (S.size===46?30:26) + 'px">';
+  html +=   '<div class="rowTitle">' + title + '</div>';
+  html +=   '<div style="height:10px"></div>';
+  html +=   rows;
+  html +=   '<div style="height:10px"></div>';
+  html +=   '<div class="foot">' + foot + '</div>';
+  html += '</div>';
+  html += pageDots(2);
+  return html;
+}
+
+/* ============================================================
+   7. SCREEN 3 — TONIGHT
+   ============================================================ */
+function renderTonight(m){
+  var D = d(), cw = D.cw, aod = S.aod;
+  var bb = band(m.bedtime);
+  var gain = GAINS[S.durIdx], dur = DURATIONS[S.durIdx];
+
+  // forecast polyline over [ceiling-40, ceiling] across now -> bedtime
+  var lo = m.ceiling - 40, span = 40, H = 12;
+  var y0 = H - (Math.min(m.ceiling, Math.max(lo, m.charge)) - lo)/span*H;
+  var y1 = H - (Math.min(m.ceiling, Math.max(lo, m.bedtime)) - lo)/span*H;
+  var tickX = null, tickLabel = '';
+  if (m.crossState === 'soon'){
+    tickX = (m.crossMin - m.now)/(BEDTIME - m.now) * cw;
+    tickLabel = hhmmRound10(m.crossMin);
+  } else if (m.crossState === 'now'){
+    tickX = 1; tickLabel = hhmm(m.now);
+  }
+
+  var assume;
+  if (m.crossState === 'soon') assume = (S.size===46 ? 'Doing nothing: Low by ' + tickLabel : 'Low by ' + tickLabel);
+  else if (m.crossState === 'now') assume = (S.size===46 ? 'Doing nothing: Low now' : 'Low now');
+  else assume = (S.size===46 ? 'Doing nothing: stays above Low' : 'Stays above Low');
+
+  var fc = '<div class="fcast" style="width:' + cw + 'px">' +
+             (aod ? '' :
+               '<svg width="' + cw + '" height="' + H + '" aria-hidden="true">' +
+                 '<polyline points="0,' + y0.toFixed(1) + ' ' + cw + ',' + y1.toFixed(1) + '" fill="none" stroke="var(--textSecondary)" stroke-width="2" />' +
+               '</svg>' +
+               (tickX !== null ? '<div class="fcTick" style="left:' + tickX.toFixed(0) + 'px"></div>' : '')) +
+           '</div>';
+  if (aod) fc = '<div class="fcast" style="width:' + cw + 'px;background:transparent;box-shadow:inset 0 0 0 2px var(--textTertiary)"></div>';
+
+  var html = '';
+  html += sysTime(m);
+  html += '<div class="pad col" style="padding-top:' + (S.size===46?30:26) + 'px">';
+  if (aod){
+    html += '<div class="proj"><span class="projNum" style="color:var(--textTertiary)">––</span><span class="projTail" style="color:var(--textTertiary)"> at bedtime</span></div>';
+  } else {
+    html += '<div class="proj" role="text" aria-label="' + m.bedtime + ' at bedtime, 11 PM. ' + bb.word + '."><span class="projNum" style="color:' + bb.col + '">' + m.bedtime + '</span><span class="projTail"> at bedtime</span></div>';
+  }
+  html +=   '<div style="height:8px"></div>';
+  html +=   '<div role="img" aria-label="Forecast to bedtime. Drops into Low around ' + (tickLabel||'never') + ' if you stay quiet.">' + fc + '</div>';
+  html +=   '<div class="tickLabel">' + (tickX!==null && !aod ? '<span style="left:' + tickX.toFixed(0) + 'px">' + tickLabel + '</span>' : '') + '</div>';
+  html +=   '<div style="height:6px"></div>';
+  html +=   '<div class="foot">' + (aod ? 'Charge hidden' : assume) + '</div>';
+  html +=   '<div style="height:10px"></div>';
+  html +=   '<button class="actionRow" id="rechargeRow" aria-label="Recharge, ' + dur + ' minutes. Adds about ' + gain + ' charge. Button.">' +
+              '<span class="actionLabel">Recharge ' + dur + ' min</span>' +
+              '<span class="chip' + (aod?' aod':'') + '">' + (aod ? '––' : '+' + gain) + '</span>' +
+            '</button>';
+  html += '</div>';
+  html += pageDots(3);
+  return html;
+}
+
+/* ============================================================
+   8. SCREEN 4 — RECHARGE (pushed leaf, depth 2)
+   ============================================================ */
+function renderRecharge(m){
+  var aod = S.aod, dur = DURATIONS[S.durIdx], gain = GAINS[S.durIdx];
+  var html = '';
+  html += sysTime(m);
+  html += '<div class="pad col" style="padding-top:' + (S.size===46?26:22) + 'px">';
+  html +=   '<button class="navBar" id="backBtn" aria-label="Back to Tonight"><span class="navChev"></span><span>Recharge</span></button>';
+  html +=   '<div style="height:10px"></div>';
+
+  if (S.running){
+    var left = Math.max(0, Math.round((S.endsAt - Date.now())/1000));
+    var mm = Math.floor(left/60), ss = left%60;
+    html += '<div class="durRow"><span class="durNum">' + mm + ':' + String(ss).padStart(2,'0') + '</span></div>';
+    html += '<div style="height:6px"></div>';
+    html += '<div class="gain" style="color:var(--textSecondary);font-weight:400;font-size:16px">Sit still</div>';
+    html += '<div style="height:14px"></div>';
+    html += '<button class="endBtn" id="endBtn">End</button>';
+  } else {
+    html += '<div class="durRow" role="text" aria-label="Duration, ' + dur + ' minutes. Swipe up or down to change.">' +
+              '<span class="durNum">' + dur + '</span><span class="durUnit"> min</span></div>';
+    html += '<div style="height:6px"></div>';
+    html += '<div class="gain' + (aod?' aod':'') + '" role="text" aria-label="Adds about ' + gain + ' charge.">' + (aod ? '–– charge' : '+' + gain + ' charge') + '</div>';
+    html += '<div style="height:14px"></div>';
+    html += '<button class="startBtn" id="startBtn" aria-label="Start. Button.">Start</button>';
+  }
+  html += '</div>';
+  // .digitalCrownAccessory(.visible)
+  var knobTop = 2 + S.durIdx * 7;
+  html += '<div class="crownAcc" aria-hidden="true"><div class="crownAccKnob" style="top:' + knobTop + 'px"></div></div>';
+  return html;
+}
+
+/* ============================================================
+   9. WATCH FACE — Laso in 3 real slots, system complications around it
+   ============================================================ */
+function faceCircularLaso(m){
+  var pct = S.aod ? 0 : m.charge/100;
+  var R = 17, C = 2*Math.PI*R;
+  var col = S.aod ? 'var(--textTertiary)' : m.band.col;
+  var svg = '<svg width="42" height="42" style="position:absolute;left:0;top:0" aria-hidden="true">' +
+      '<circle cx="21" cy="21" r="' + R + '" fill="none" stroke="var(--surfaceSubtle)" stroke-width="4" />' +
+      (S.aod ? '' :
+      '<circle cx="21" cy="21" r="' + R + '" fill="none" stroke="' + col + '" stroke-width="4" stroke-linecap="round"' +
+      ' stroke-dasharray="' + (C*pct).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 21 21)" />') +
+      '</svg>';
+  var centre = '<div style="font-size:14.5px;font-weight:500;color:' + (S.aod?'var(--textTertiary)':'var(--textPrimary)') + ';position:relative">' +
+               (S.aod ? '––' : m.charge) + '</div>';
+  return svg + centre;
+}
+function batterySymbol(v, col){
+  var lvl = v >= OPT_FLOOR ? 0.75 : (v >= LOW_FLOOR ? 0.5 : 0.25);
+  var innerW = (13 * lvl).toFixed(1);
+  return '<svg width="22" height="11" aria-hidden="true">' +
+    '<rect x="0.75" y="0.75" width="16.5" height="9.5" rx="3" fill="none" stroke="' + col + '" stroke-width="1.5" />' +
+    '<rect x="2.5" y="2.5" width="' + innerW + '" height="6" rx="1.5" fill="' + col + '" />' +
+    '<rect x="19" y="3.5" width="2" height="4" rx="1" fill="' + col + '" />' +
+    '</svg>';
+}
+function faceRectLaso(m){
+  var cw = S.size===46 ? 178 : 136;
+  var fill = m.charge/100*cw, tick = m.ceiling/100*cw;
+  if (S.aod){
+    return '<div style="font-size:19.5px;font-weight:600;color:var(--textTertiary)">––</div>' +
+           '<div style="height:6px"></div>' +
+           '<div style="width:' + cw + 'px;height:10px;border-radius:5px;box-shadow:inset 0 0 0 2px var(--textTertiary)"></div>';
+  }
+  var html = '<div style="display:flex;align-items:baseline;height:22px">' +
+      '<span style="font-size:19.5px;font-weight:600;color:var(--textPrimary)">' + m.charge + '</span>' +
+      '<span style="font-size:13px;color:var(--textSecondary)">&nbsp;' + m.band.word + '</span></div>';
+  html += '<div style="height:4px"></div>';
+  html += '<div style="position:relative;width:' + cw + 'px;height:10px">' +
+      '<div style="position:absolute;inset:0;border-radius:5px;background:var(--surfaceSubtle)"></div>' +
+      '<div style="position:absolute;left:0;top:0;bottom:0;width:' + fill.toFixed(0) + 'px;border-radius:5px;background:' + m.band.col + '"></div>' +
+      '<div style="position:absolute;left:' + tick.toFixed(0) + 'px;top:-2px;width:2px;height:14px;background:var(--textSecondary)"></div>' +
+      '</div>';
+  html += '<div style="height:4px"></div>';
+  html += '<div style="display:flex;align-items:flex-end;gap:6px">' + sparkline(m, m.band.col) +
+          '<span style="font-size:12px;color:var(--textTertiary);line-height:12px">' + signed(m.slope) + '/hr</span></div>';
+  return html;
+}
+function renderFace(m){
+  var aod = S.aod;
+  var col = aod ? 'var(--textTertiary)' : 'var(--textSecondary)';
+  var html = '<div class="face col">';
+  html += '<div class="faceRow">';
+  html +=   '<div class="slotC slotSys" title="system">' +
+              '<svg width="34" height="34" aria-hidden="true">' +
+              '<circle cx="17" cy="17" r="14" fill="none" stroke="#2A1417" stroke-width="4" />' +
+              '<circle cx="17" cy="17" r="14" fill="none" stroke="' + (aod?'#3A2226':'#FF2D55') + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="55 88" transform="rotate(-90 17 17)" />' +
+              '<circle cx="17" cy="17" r="9" fill="none" stroke="#0E2A22" stroke-width="4" />' +
+              '<circle cx="17" cy="17" r="9" fill="none" stroke="' + (aod?'#173A31':'#A6FF00') + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="22 57" transform="rotate(-90 17 17)" />' +
+              '<circle cx="17" cy="17" r="4" fill="none" stroke="#0B2430" stroke-width="4" />' +
+              '<circle cx="17" cy="17" r="4" fill="none" stroke="' + (aod?'#123240':'#00E5FF') + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="13 25" transform="rotate(-90 17 17)" />' +
+              '</svg></div>';
+  html +=   '<div class="faceDate" style="' + (aod?'color:var(--textTertiary)':'') + '">TUE 29</div>';
+  html +=   '<div class="slotC slotSys sysMini"><div><div class="sysBig" style="color:' + (aod?'var(--textTertiary)':'var(--textPrimary)') + '">24°</div><div>H26 L14</div></div></div>';
+  html += '</div>';
+  html += '<div style="height:6px"></div>';
+
+  // accessoryInline — Laso
+  html += '<button class="slotI laso" id="cInline" style="width:100%" aria-label="Laso inline complication. Charge ' + m.charge + ', falling. Opens Tonight.">' +
+            batterySymbol(m.charge, aod ? 'var(--textTertiary)' : m.band.col) +
+            '<span style="color:' + (aod?'var(--textTertiary)':'var(--textSecondary)') + '">' + (aod ? '–– · Laso' : m.charge + ' · ' + (m.slope<0?'falling':'rising')) + '</span>' +
+            '<span class="lasoTag">accessoryInline → Tonight</span>' +
+          '</button>';
+  html += '<div style="height:11px"></div>';
+  html += '<div class="faceTime" style="' + (aod?'color:var(--textTertiary)':'') + '">' + hhmm(m.now) + '</div>';
+  html += '<div style="height:6px"></div>';
+
+  // accessoryRectangular — Laso
+  html += '<button class="slotR laso" id="cRect" aria-label="Laso rectangular complication. Charge ' + m.charge + ' ' + m.band.word + ', ceiling ' + m.ceiling + '. Opens Spend.">' +
+            faceRectLaso(m) +
+            '<span class="lasoTag" style="bottom:-8px">accessoryRectangular → Spend</span>' +
+          '</button>';
+  html += '<div style="height:14px"></div>';
+
+  html += '<div class="faceRow">';
+  html +=   '<button class="slotC laso" id="cCirc" style="border-radius:21px" aria-label="Laso circular complication. Charge ' + m.charge + ' out of 100. Opens Now.">' +
+              faceCircularLaso(m) +
+              '<span class="lasoTag" style="bottom:-8px;left:-4px">accessoryCircular → Now</span>' +
+            '</button>';
+  html +=   '<div class="slotC slotSys sysMini"><div><div class="sysBig" style="color:' + (aod?'var(--textTertiary)':'#FF3B30') + '">' + (aod?'––':'74') + '</div><div>BPM</div></div></div>';
+  html +=   '<div class="slotC slotSys sysMini"><div><div class="sysBig" style="color:' + (aod?'var(--textTertiary)':'var(--textPrimary)') + '">5,240</div><div>steps</div></div></div>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ============================================================
+   10. SMART STACK — one Laso accessoryRectangular widget in context
+   ============================================================ */
+function lasoWidget(m){
+  var wide = S.size===46;
+  var barW = wide ? 168 : 136;
+  var fill = m.charge/100*barW, tick = m.ceiling/100*barW;
+  var tint = (!S.aod && m.charge < LOW_FLOOR && m.now < 18*60)
+    ? 'background:rgba(224,92,100,0.12)' : '';
+  if (S.aod){
+    return '<button class="widget lasoW" id="wLaso" style="' + tint + '" aria-label="Laso Energy widget, hidden in Always-On.">' +
+      '<span class="wTag">accessoryRectangular</span>' +
+      '<div style="display:flex;align-items:baseline;height:22px"><span style="font-size:19.5px;font-weight:600;color:var(--textTertiary)">––</span>' +
+      '<span style="font-size:13px;color:var(--textTertiary)">&nbsp;Laso</span></div>' +
+      '<div style="height:6px"></div>' +
+      '<div style="width:' + barW + 'px;height:10px;border-radius:5px;box-shadow:inset 0 0 0 2px var(--textTertiary)"></div>' +
+      '<div style="height:6px"></div>' +
+      '<div style="font-size:12px;color:var(--textTertiary)">Charge hidden</div></button>';
+  }
+  var fresh = {loaded:'live', cacheLoad:'6m', offwrist:'paused', stale:'2d'}[S.data] || 'live';
+  return '<button class="widget lasoW" id="wLaso" style="' + tint + '" aria-label="Laso Energy. Charge ' + m.charge + ' ' + m.band.word + '. Ceiling ' + m.ceiling + '. Falling ' + Math.abs(m.slope) + ' an hour. ' + m.bedtime + ' at bedtime. Opens Now.">' +
+    '<span class="wTag">accessoryRectangular</span>' +
+    '<div style="display:flex;align-items:baseline;height:22px">' +
+      '<span style="font-size:19.5px;font-weight:600;color:var(--textPrimary)">' + m.charge + '</span>' +
+      '<span style="font-size:13px;color:var(--textSecondary)">&nbsp;' + m.band.word + '</span>' +
+      '<span style="font-size:11px;color:var(--textTertiary);margin-left:auto">' + fresh + '</span>' +
+    '</div>' +
+    '<div style="height:6px"></div>' +
+    '<div style="position:relative;width:' + barW + 'px;height:10px">' +
+      '<div style="position:absolute;inset:0;border-radius:5px;background:var(--surfaceSubtle)"></div>' +
+      '<div style="position:absolute;left:0;top:0;bottom:0;width:' + fill.toFixed(0) + 'px;border-radius:5px;background:' + m.band.col + '"></div>' +
+      '<div style="position:absolute;left:' + tick.toFixed(0) + 'px;top:-2px;width:2px;height:14px;background:var(--textSecondary)"></div>' +
+    '</div>' +
+    '<div style="height:6px"></div>' +
+    '<div style="font-size:12px;color:var(--textTertiary)">' + signed(m.slope) + '/hr · ' + m.bedtime + ' at bedtime</div>' +
+  '</button>';
+}
+function sysWidget(title, big, line, col){
+  var c = S.aod ? 'var(--textTertiary)' : (col || 'var(--textPrimary)');
+  return '<div class="widget"><div class="wSysTitle">' + title + '</div>' +
+         '<div class="wSysBig" style="color:' + c + '">' + big + '</div>' +
+         '<div class="wSysLine" style="' + (S.aod?'color:var(--textTertiary)':'') + '">' + line + '</div></div>';
+}
+function renderStack(m){
+  var items = [
+    sysWidget('WEATHER', '24°', 'Partly cloudy · H26 L14'),
+    lasoWidget(m),
+    sysWidget('ACTIVITY', '284 kcal', 'Move 284/620 · Stand 6/12'),
+    sysWidget('CALENDAR', '15:00', 'Standup · 30 min')
+  ];
+  var h = (S.size===46 ? 86 : 77);
+  var html = '<div class="pad">';
+  html += '<div class="stackHead"><span>' + hhmm(m.now) + '</span><span>Smart Stack</span></div>';
+  html += '<div class="stackView"><div class="stackInner" style="transform:translateY(' + (-S.stackIdx*h) + 'px)">';
+  html += items.join('');
+  html += '</div></div></div>';
+  return html;
+}
+
+/* ============================================================
+   11. NOTIFICATIONS
+   ============================================================ */
+var NOTIF = {
+  n1: {
+    title:'Today’s charge is ready',
+    body:['62 to spend. 6 under your usual 68.', 'Front-load the hard work before 13:00.'],
+    actions:[
+      {label:'See the day',  go:'now',     first:true},
+      {label:'Plan tonight', go:'tonight'}
+    ]
+  },
+  n2: {
+    title:'Draining faster than usual',
+    body:['Down 22 since 07:00. Your Tuesday usual by now is 14.', '40 left. Bedtime lands near 30.'],
+    actions:[
+      {label:'Recharge 5 min', go:'recharge', first:true},
+      {label:'See spend',      go:'spend'},
+      {label:'Mute today',     mute:true}
+    ]
+  }
+};
+function renderShort(which, m){
+  var n = NOTIF[which];
+  var html = '<div class="pad col center" style="padding-top:52px">';
+  html += '<div class="appIconBig"></div>';
+  html += '<div style="height:10px"></div>';
+  html += '<div style="font-size:12px;letter-spacing:.1em;color:var(--textTertiary)">LASO</div>';
+  html += '<div style="height:10px"></div>';
+  html += '<div class="nTitle" style="text-align:center">' + n.title + '</div>';
+  html += '</div>';
+  return html;
+}
+function renderLong(which, m){
+  var n = NOTIF[which];
+  var html = '<div class="pad" style="overflow:hidden">';
+  html += '<div class="nScroll" style="transform:translateY(' + (-S.nScroll) + 'px)">';
+  html += '<div class="sash"><span class="appIcon"></span><span>Laso</span><span style="margin-left:auto;color:var(--textTertiary)">now</span></div>';
+  html += '<div style="height:10px"></div>';
+  html += '<div class="nTitle">' + n.title + '</div>';
+  html += '<div style="height:6px"></div>';
+  html += '<div class="nBody">' + n.body[0] + '</div>';
+  html += '<div style="height:4px"></div>';
+  html += '<div class="nBody">' + n.body[1] + '</div>';
+  html += '<div style="height:12px"></div>';
+  for (var i=0;i<n.actions.length;i++){
+    var a = n.actions[i];
+    html += '<button class="nAct" data-act="' + which + ':' + i + '">' + a.label +
+            (a.first ? '<span class="dtTag">DOUBLE TAP</span>' : '') + '</button>';
+    html += '<div style="height:6px"></div>';
+  }
+  html += '<button class="nAct" data-act="' + which + ':dismiss" style="color:var(--textSecondary)">Dismiss</button>';
+  html += '<div style="height:14px"></div>';
+  html += '</div></div>';
+  return html;
+}
+
+/* ============================================================
+   12. RENDER DISPATCH
+   ============================================================ */
+function render(){
+  var m = model();
+  var D = d();
+  var root = document.documentElement;
+  root.style.setProperty('--zoom', D.zoom);
+  root.style.setProperty('--radius', D.rad + 'px');
+  document.body.classList.toggle('s40', S.size === 40);
+
+  var vp = document.getElementById('viewport');
+  vp.style.width  = (D.w * D.zoom) + 'px';
+  vp.style.height = (D.h * D.zoom) + 'px';
+  var c = document.getElementById('canvas');
+  c.style.width = D.w + 'px'; c.style.height = D.h + 'px';
+  c.className = 'canvas' + (S.size===40 ? ' s40' : '');
+
+  var html = '';
+  switch (S.screen){
+    case 'face':     html = renderFace(m); break;
+    case 'stack':    html = renderStack(m); break;
+    case 'n1short':  html = renderShort('n1', m); break;
+    case 'n1long':   html = renderLong('n1', m); break;
+    case 'n2short':  html = renderShort('n2', m); break;
+    case 'n2long':   html = renderLong('n2', m); break;
+    case 'launch':
+    case 'now':      html = renderNow(m); break;
+    case 'spend':    html = renderSpend(m); break;
+    case 'tonight':  html = renderTonight(m); break;
+    case 'recharge': html = renderRecharge(m); break;
+  }
+  c.innerHTML = html;
+  wire();
+  paintRail();
+  paintCrown();
+  paintNote(m);
+  paintDev();
+
+  // band-crossing haptics, only while the app is frontmost (R8: no background haptics)
+  var appScreens = {now:1, spend:1, tonight:1, recharge:1, launch:1};
+  if (appScreens[S.screen]){
+    if (S.lastChargeSeen !== null && S.lastChargeSeen >= LOW_FLOOR && m.charge < LOW_FLOOR && m.now < 18*60){
+      haptic('directionDown', 'charge crossed down through 45 before 18:00');
+    } else if (S.lastChargeSeen !== null && S.lastChargeSeen < LOW_FLOOR && m.charge >= LOW_FLOOR){
+      haptic('directionUp', 'charge crossed back up through 45');
+    }
+  }
+  S.lastChargeSeen = m.charge;
+}
+
+/* ---------- per-render event wiring ---------- */
+function wire(){
+  var q = function(id){ return document.getElementById(id); };
+  var on = function(id, fn){ var e = q(id); if (e) e.addEventListener('click', fn); };
+
+  on('cCirc',  function(){ go('now');     });
+  on('cRect',  function(){ go('spend');   });
+  on('cInline',function(){ go('tonight'); });
+  on('wLaso',  function(){ go('now');     });
+  on('rechargeRow', function(){ go('recharge'); });
+  on('backBtn', function(){ go('tonight'); });
+  on('startBtn', startSession);
+  on('endBtn',   function(){ endSession(false); });
+
+  var acts = document.querySelectorAll('[data-act]');
+  for (var i=0;i<acts.length;i++){
+    acts[i].addEventListener('click', function(ev){
+      var v = ev.currentTarget.getAttribute('data-act').split(':');
+      notifAction(v[0], v[1]);
+    });
+  }
+}
+
+function notifAction(which, idx){
+  if (idx === 'dismiss'){ go('face'); return; }
+  var a = NOTIF[which].actions[parseInt(idx,10)];
+  if (a.mute){
+    haptic('success', 'Mute today — 24 h suppression flag set');
+    setTimeout(function(){ go('face'); }, 260);
+    return;
+  }
+  go(a.go);
+}
+
+/* ============================================================
+   13. NAVIGATION + INTERACTION
+   ============================================================ */
+function go(screen){
+  S.screen = screen;
+  S.nScroll = 0;
+  if (screen === 'now')     S.page = 1;
+  if (screen === 'spend')   S.page = 2;
+  if (screen === 'tonight') S.page = 3;
+  if (screen === 'n1short' || screen === 'n1long' || screen === 'n2short' || screen === 'n2long'){
+    haptic('notification', 'notification arriving — played by the system');
+  }
+  if (screen === 'launch') runLaunch();
+  render();
+}
+
+function runLaunch(){
+  // Wrist raise into the frontmost app: the cached charge is already on screen,
+  // no spinner, then the live recompute lands. R13.
+  S.data = 'cacheLoad'; S.launched = false;
+  setTimeout(function(){
+    if (S.screen !== 'launch') return;
+    S.data = 'loaded'; S.screen = 'now'; S.launched = true; render();
+  }, 900);
+}
+
+function startSession(){
+  S.running = true;
+  S.startedAt = Date.now();
+  S.endsAt = Date.now() + DURATIONS[S.durIdx]*60*1000;
+  haptic('start', 'Recharge session began — no haptic fires again until it ends (R8)');
+  render();
+  clearInterval(S.tick);
+  S.tick = setInterval(function(){
+    if (!S.running) return;
+    if (Date.now() >= S.endsAt) { endSession(true); return; }
+    if (S.screen === 'recharge') render();
+  }, 500);
+}
+function endSession(completed){
+  var elapsedMin = (Date.now() - S.startedAt)/60000;
+  var written = completed ? DURATIONS[S.durIdx] : Math.round(elapsedMin);
+  S.running = false; clearInterval(S.tick); S.tick = null;
+  S.mindfulMin = written;
+  S.mindfulAt = PRESETS[S.band].now;
+  haptic2('stop', 'session ended',
+          'success', 'HKCategoryTypeIdentifier.mindfulSession written — ' + written + ' min');
+  setTimeout(function(){ go('tonight'); }, 300);
+}
+
+function crown(dir){   // dir: +1 = clockwise / down
+  var grip = document.getElementById('crownGrip');
+  grip.style.transform = 'translateY(' + (dir>0 ? 2 : -2) + 'px)';
+  setTimeout(function(){ grip.style.transform = 'translateY(0)'; }, 90);
+
+  if (S.screen === 'face'){
+    if (dir > 0) go('stack');
+    return;
+  }
+  if (S.screen === 'stack'){
+    S.stackIdx = Math.max(0, Math.min(2, S.stackIdx + dir));
+    render(); return;
+  }
+  if (S.screen === 'n1long' || S.screen === 'n2long'){
+    S.nScroll = Math.max(0, Math.min(90, S.nScroll + dir*22));
+    render(); return;
+  }
+  if (S.screen === 'recharge'){
+    if (S.running) return;                     // no crown value while sampling
+    var next = Math.max(0, Math.min(3, S.durIdx + dir));
+    if (next !== S.durIdx){
+      S.durIdx = next;
+      flashDetent();
+      haptic('click', 'crown detent — ' + DURATIONS[S.durIdx] + ' min');
+      render();
+    }
+    return;
+  }
+  if (S.screen === 'now' || S.screen === 'spend' || S.screen === 'tonight' || S.screen === 'launch'){
+    var p = Math.max(1, Math.min(3, S.page + dir));
+    if (p !== S.page){
+      S.page = p;
+      S.screen = ['now','spend','tonight'][p-1];
+      render();
+    }
+    return;
+  }
+}
+function flashDetent(){
+  var dot = document.getElementById('crownDot');
+  dot.classList.add('on');
+  setTimeout(function(){ dot.classList.remove('on'); }, 130);
+}
+
+function doubleTap(){
+  // R11 / anti-pattern #8: the primary action exists on exactly one screen.
+  if (S.screen === 'recharge' && !S.running){ startSession(); return; }
+  if (S.screen === 'recharge' && S.running){ endSession(false); return; }
+  if (S.screen === 'n1long'){ flashAction(0); notifAction('n1', '0'); return; }
+  if (S.screen === 'n2long'){ flashAction(0); notifAction('n2', '0'); return; }
+  if (S.screen === 'n1short' || S.screen === 'n2short'){
+    setNote('Short look has no actions. Raise to the long look first, then Double Tap picks its first nondestructive action.');
+    return;
+  }
+  setNote('No primary action here by design. R11: "Avoid setting a primary action in views with lists, scroll views, or vertical tabs." Now / Spend / Tonight are vertical tab pages, so Double Tap is only bound on Recharge.');
+}
+function flashAction(i){
+  var el = document.querySelectorAll('.nAct')[i];
+  if (!el) return;
+  el.classList.add('press');
+  setTimeout(function(){ el.classList.remove('press'); }, 90);
+}
+
+/* ============================================================
+   14. LAB CHROME
+   ============================================================ */
+function paintRail(){
+  var host = document.getElementById('railList');
+  if (host.dataset.built !== '1'){
+    var html = '', group = '';
+    for (var i=0;i<SCREENS.length;i++){
+      var s = SCREENS[i];
+      if (s.g !== group){ group = s.g; html += '<div class="railTitle">' + group + '</div>'; }
+      html += '<button class="railBtn" data-screen="' + s.id + '">' + s.name +
+              (s.fam ? '<span class="fam">' + s.fam + '</span>' : '') + '</button>';
+    }
+    host.innerHTML = html;
+    host.dataset.built = '1';
+    var btns = host.querySelectorAll('[data-screen]');
+    for (var j=0;j<btns.length;j++){
+      btns[j].addEventListener('click', function(ev){
+        go(ev.currentTarget.getAttribute('data-screen'));
+      });
+    }
+  }
+  var all = host.querySelectorAll('[data-screen]');
+  for (var k=0;k<all.length;k++){
+    var id = all[k].getAttribute('data-screen');
+    var active = (id === S.screen) || (id === 'launch' && S.screen === 'now' && S.launched);
+    all[k].setAttribute('aria-current', active ? 'true' : 'false');
+  }
+}
+
+function paintCrown(){
+  var txt = {
+    face:'<b>Crown</b>turn down → Smart Stack',
+    stack:'<b>Crown</b>scrolls the stack',
+    n1long:'<b>Crown</b>scrolls the long look',
+    n2long:'<b>Crown</b>scrolls the long look',
+    n1short:'<b>Crown</b>—',
+    n2short:'<b>Crown</b>—',
+    now:'<b>Crown</b>pages 1–3 · Now',
+    launch:'<b>Crown</b>pages 1–3 · Now',
+    spend:'<b>Crown</b>pages 1–3 · Spend',
+    tonight:'<b>Crown</b>pages 1–3 · Tonight',
+    recharge:'<b>Crown</b>duration ' + DURATIONS[S.durIdx] + ' min'
+  }[S.screen] || '<b>Crown</b>—';
+
+  var det = '';
+  if (S.screen === 'recharge'){
+    det = '<div class="detents">';
+    for (var i=0;i<4;i++) det += '<div class="detent' + (i===S.durIdx?' on':'') + '"></div>';
+    det += '</div><div style="margin-top:4px">3 / 5 / 10 / 20 · .click at each detent</div>';
+  } else if (S.screen === 'now' || S.screen === 'spend' || S.screen === 'tonight' || S.screen === 'launch'){
+    det = '<div class="detents">';
+    for (var p=1;p<=3;p++) det += '<div class="detent' + (p===S.page?' on':'') + '" style="width:10px"></div>';
+    det += '</div>';
+  }
+  document.getElementById('crownRead').innerHTML = txt + det;
+}
+
+var noteOverride = null, noteTimer = null;
+function setNote(t){
+  noteOverride = t;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(function(){ noteOverride = null; render(); }, 7000);
+  render();
+}
+function paintNote(m){
+  if (noteOverride){ document.getElementById('note').innerHTML = noteOverride; return; }
+  var n = {
+    face:'Three Laso slots on one face, each with its own deep link — <b>circular → Now</b>, <b>rectangular → Spend</b>, <b>inline → Tonight</b>. The other four slots are system complications, so the Laso ones have to earn the space. Tap any blue-outlined slot.',
+    stack:'Only accessoryRectangular and accessoryCircular reach the Smart Stack; Laso ships <b>one rectangular widget only</b>. Crown or arrows scroll. Below 45 before 18:00 the card takes a 12% <b>poor</b> wash — switch the band to Low to see it.',
+    n1short:'N1, fired by the phone within 10 minutes of a detected wake. <b>The title carries no number</b> (R17: no sensitive data in a notification title).',
+    n1long:'The number only appears on the long look, which needs a raised, attended wrist. First nondestructive action is what Double Tap picks.',
+    n2short:'N2, fired by the <b>watch itself</b> from a background refresh, comparing today’s spend against the user’s own hourly curve. Works with the phone in another room.',
+    n2long:'Delta alert, never an absolute threshold. Max one a day, never before 10:00, and <b>Mute today</b> is one tap away.',
+    launch:'Wrist raise into the frontmost app: the cached charge is on screen immediately, dimmed, then the live recompute lands. <b>No spinner, ever.</b>',
+    now:'Page 1 of 3. Fill = charge, tick = the phone’s frozen ceiling, gap between them = today’s spend. Two stubs in the sparkline are the 08:40–09:30 off-wrist gap — a visible hole, never an interpolation.',
+    spend:'Page 2 of 3. The only screen that fails the 5-second test, and it is on page 2 for exactly that reason.',
+    tonight:'Page 3 of 3. The button states the size of its own effect. Tap it to push Recharge — the only screen in the app with a Double Tap primary action.',
+    recharge:'Depth 2, the only leaf. Crown drives 3 / 5 / 10 / 20 with a .click at each detent. <b>No haptic fires during the session</b>, because the session samples heart rate.'
+  }[S.screen] || '';
+  document.getElementById('note').innerHTML = n;
+}
+
+function seg(hostId, items, isOn, onPick){
+  var host = document.getElementById(hostId);
+  var html = '';
+  for (var i=0;i<items.length;i++){
+    html += '<button class="seg' + (items[i][2]?' wide':'') + '" data-v="' + items[i][0] + '" aria-pressed="' +
+            (isOn(items[i][0]) ? 'true':'false') + '">' + items[i][1] + '</button>';
+  }
+  host.innerHTML = html;
+  var b = host.querySelectorAll('[data-v]');
+  for (var j=0;j<b.length;j++){
+    b[j].addEventListener('click', function(ev){ onPick(ev.currentTarget.getAttribute('data-v')); });
+  }
+}
+function paintDev(){
+  seg('segSize', [['46','46mm 208×248'],['40','40mm 162×197']],
+      function(v){ return S.size === parseInt(v,10); },
+      function(v){ S.size = parseInt(v,10); render(); });
+
+  seg('segState', STATES.map(function(s){ return [s[0], s[1], true]; }),
+      function(v){ return S.data === v; },
+      function(v){ S.data = v; render(); });
+
+  seg('segAod', [['off','off'],['on','redacted']],
+      function(v){ return S.aod === (v==='on'); },
+      function(v){ S.aod = (v==='on'); render(); });
+
+  seg('segBand', [
+        ['optimal','Optimal 68 · other day', true],
+        ['moderate','Moderate 48 · Alex', true],
+        ['low','Low 41', true]
+      ],
+      function(v){ return S.band === v; },
+      function(v){ S.band = v; S.mindfulMin = 0; render(); });
+
+  seg('segGesture', [
+        ['dt','Fire Double Tap', true],
+        ['finish','Finish Recharge session (dev)', true]
+      ],
+      function(){ return false; },
+      function(v){
+        if (v === 'dt') doubleTap();
+        else if (S.running) endSession(true);
+        else setNote('Start a Recharge session first — page 3 → Recharge → Start.');
+      });
+
+  var p = PRESETS[S.band];
+  document.getElementById('devFoot').innerHTML =
+    'Scenario: <b>' + p.when + '</b><br>ceiling ' + p.ceiling + ' · wake ' + hhmm(p.wake) +
+    ' · now ' + hhmm(p.now) + '<br>Every displayed number is recomputed from the published model, not hard-coded.';
+}
+
+/* ============================================================
+   15. INPUT
+   ============================================================ */
+var wheelLock = 0;
+window.addEventListener('wheel', function(e){
+  var now = Date.now();
+  if (now - wheelLock < 90) return;
+  wheelLock = now;
+  crown(e.deltaY > 0 ? 1 : -1);
+}, {passive:true});
+
+window.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowDown'){ e.preventDefault(); crown(1); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); crown(-1); }
+  else if (e.key === 'd' || e.key === 'D'){ doubleTap(); }
+});
+
+document.getElementById('devToggle').addEventListener('click', function(){
+  var p = document.getElementById('devPanel');
+  var open = p.classList.toggle('open');
+  this.setAttribute('aria-expanded', open ? 'true':'false');
+});
+
+render();
+</script>
+</body>
+</html>

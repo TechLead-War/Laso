@@ -1,0 +1,360 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laso Watch — the final design</title>
+<style>
+:root{
+  --bg:#000; --page:#08080A; --raised:#1B1B21; --elev:#26262D; --subtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8; --border:#2E2E36;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --optimal:#33C48D; --fair:#E3B45A; --poor:#E05C64;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--page); color:var(--t2);
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased; padding:32px 20px 80px;
+}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:30px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
+.lede{font-size:16px;line-height:1.55;margin-top:10px;max-width:760px}
+.lede b{color:var(--t1)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-size:12px;color:var(--t3);border:1px solid var(--border);border-radius:9999px;padding:5px 11px;background:var(--raised)}
+h2{font-size:19px;font-weight:600;color:var(--t1);margin:44px 0 6px;padding-top:22px;border-top:1px solid var(--border)}
+h2 .n{color:var(--t3);font-weight:400;margin-right:8px}
+.sub{font-size:14px;line-height:1.55;max-width:760px;margin-bottom:20px}
+.row{display:flex;flex-wrap:wrap;gap:26px}
+figure{width:236px}
+figcaption{margin-top:10px}
+.cap{font-size:13px;font-weight:600;color:var(--t1)}
+.capsub{font-size:12px;color:var(--t3);line-height:1.45;margin-top:3px}
+.bezel{width:236px;height:276px;border-radius:52px;background:linear-gradient(160deg,#3a3a40,#1a1a1e 55%,#2a2a30);padding:14px;position:relative;box-shadow:0 10px 26px rgba(0,0,0,.55)}
+.bezel::after{content:"";position:absolute;right:-3px;top:82px;width:6px;height:34px;border-radius:3px;background:linear-gradient(180deg,#6a6a72,#3a3a42)}
+.bezel::before{content:"";position:absolute;right:-2px;top:132px;width:4px;height:26px;border-radius:2px;background:#33333a}
+.scr{width:208px;height:248px;border-radius:40px;background:var(--bg);overflow:hidden;position:relative;padding:12px 10px;display:flex;flex-direction:column}
+.tt{position:absolute;top:8px;right:14px;font-size:12px;color:var(--t1);font-weight:600}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:7px;padding:0 4px}
+.word{font-weight:600;letter-spacing:.5px;line-height:1;text-transform:uppercase}
+.w-xl{font-size:44px}.w-l{font-size:34px}.w-m{font-size:26px}
+.why{font-size:15px;color:var(--t2);line-height:1.2}
+.room{font-size:15px;color:var(--t3);line-height:1.2}
+.foot{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--t3);padding-bottom:2px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--optimal);flex:none}
+.pager{position:absolute;right:5px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px}
+.pager i{width:4px;height:4px;border-radius:50%;background:#48484f;display:block}
+.pager i.on{background:var(--t1)}
+.ttl{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;padding-right:46px;white-space:nowrap;overflow:hidden}
+.bars{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.bar{display:flex;flex-direction:column;gap:3px}
+.bl{display:flex;justify-content:space-between;font-size:12px;color:var(--t2)}
+.bl b{color:var(--t1);font-weight:600}
+.track{height:7px;border-radius:4px;background:var(--subtle);position:relative;overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.band{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--t3)}
+.tl{display:flex;flex-direction:column;gap:7px;margin-top:8px;padding-right:9px}
+.ev{display:flex;align-items:center;gap:8px;font-size:13px}
+.ev .tm{color:var(--t3);width:44px;flex:none;font-size:12px}
+.ev .nm{color:var(--t2);flex:1;white-space:nowrap}
+.ev.now .nm{color:var(--t1);font-weight:600}
+.ev .rt{font-size:12px;color:var(--t3);white-space:nowrap}
+.ev.now .rt{color:var(--fair);font-weight:600}
+.pip{width:6px;height:6px;border-radius:50%;background:#4a4a52;flex:none}
+.ev.now .pip{background:var(--fair);box-shadow:0 0 0 3px rgba(227,180,90,.22)}
+.ev.done .pip{background:#33C48D}
+.face{padding:10px 12px}
+.ftime{font-size:38px;font-weight:600;color:#7fd1ff;line-height:1;text-align:right}
+.fdate{font-size:13px;color:#7fd1ff;font-weight:600}
+.frow{display:flex;justify-content:space-between;align-items:flex-start}
+.slot{border:1.5px dashed var(--fair);border-radius:10px;padding:6px 8px;margin-top:9px;position:relative}
+.slot .tag{position:absolute;top:-8px;left:7px;font-size:8px;background:#000;color:var(--fair);padding:0 4px;letter-spacing:.3px}
+.fbot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px}
+.circ{width:52px;height:52px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px dashed var(--fair);position:relative}
+.sys{width:50px;height:50px;border-radius:50%;background:#141418;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--t2)}
+.card{background:var(--raised);border-radius:14px;padding:9px 10px;margin-bottom:7px;border:1px solid var(--border)}
+.card.laso{border:1.5px dashed var(--fair);background:#17140d}
+.ch{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t1);font-weight:600}
+.cs{font-size:12px;color:var(--t3);margin-top:2px}
+.btn{margin-top:7px;width:100%;background:var(--elev);border-radius:9px;padding:7px;text-align:center;font-size:13px;color:var(--t1);font-weight:600}
+.nsash{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fair);font-weight:600}
+.nbig{font-size:22px;font-weight:600;color:var(--t1);margin-top:8px;line-height:1.1}
+.nbody{font-size:14px;color:var(--t2);margin-top:7px;line-height:1.3}
+.nact{margin-top:auto;display:flex;flex-direction:column;gap:5px}
+.nact div{background:var(--elev);border-radius:9px;padding:6px;text-align:center;font-size:13px;color:var(--t1)}
+.aod .word,.aod .why,.aod .room{color:#3a3a42 !important}
+.redact{height:36px;border:1.5px solid #33333b;border-radius:9px;width:130px}
+.redact.s{height:14px;width:100px}
+.note{background:var(--raised);border:1px solid var(--border);border-left:3px solid var(--fair);border-radius:10px;padding:13px 15px;margin:18px 0;font-size:14px;line-height:1.6}
+.note b{color:var(--t1)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--t3);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+td b{color:var(--t1)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--fair)}
+.legend{font-size:12px;color:var(--t3);margin-top:14px}
+@media (max-width:640px){ .row{gap:18px} figure{width:236px} }
+</style>
+
+<div class="wrap">
+
+<h1>Laso Watch — the final design</h1>
+<p class="lede">
+  One word telling you what your body is doing, the reason under it, and how much room you have left
+  today. Chosen on the wrist from the wrist's own sensors, so it is never stale and never sends you
+  to your phone. <b>Every screen of the shipping design is on this page.</b>
+</p>
+<div class="chips">
+  <span class="chip">46mm &middot; 208 &times; 248 pt</span>
+  <span class="chip">Dark only</span>
+  <span class="chip">Alex, 34 &middot; Tuesday 14:32</span>
+  <span class="chip">Readiness 62 &middot; fair</span>
+  <span class="chip">Dashed outline = a Laso surface</span>
+</div>
+
+<div class="note">
+  <b>The rule this design is built on:</b> a word only reaches the headline if the user could not
+  already know it. That is why <code>STAND</code>, <code>DRINK</code>, <code>WALK</code> and
+  <code>COAST</code> are not here — Apple's own rings and stand reminders already say those, and the
+  wrist has exactly one line to spend.
+</div>
+
+<h2><span class="n">01</span>The app — three pages, Digital Crown moves between them</h2>
+<p class="sub">
+  Page 1 is the answer. Page 2 is why. Page 3 is what is coming. Nothing is more than one crown
+  turn from the answer, and the readiness number is deliberately on page 2, not page 1.
+</p>
+<div class="row" id="app"></div>
+
+<h2><span class="n">02</span>The seven words</h2>
+<p class="sub">
+  Four are orders and fire rarely, only when Laso knows something invisible to the user. Three are
+  states and cover most days — a fact measured against this user's own baseline, never a command.
+</p>
+<div class="row" id="vocab"></div>
+<table>
+  <tr><th>Tier</th><th>Word</th><th>Fires when</th><th>What makes it earned</th></tr>
+  <tr><td rowspan="4"><b>Order</b><br><span style="color:var(--t3)">rare</span></td>
+      <td><b>REST</b></td><td>Band poor, or the body-stress flag is elevated</td><td>A 60-day baseline the wrist cannot compute</td></tr>
+  <tr><td><b>TRAIN</b></td><td>Band optimal, no stress, headroom unspent</td><td>Only word gated on payload freshness — the only one that is expensive when wrong</td></tr>
+  <tr><td><b>BREATHE</b></td><td>Heart rate 20+ over resting while sitting still</td><td>Genuinely invisible; you do not feel a +21</td></tr>
+  <tr><td><b>SLEEP</b></td><td>Within 60 min of the bedtime target</td><td>Bedtime derived from sleep need and 5-night debt</td></tr>
+  <tr><td rowspan="3"><b>State</b><br><span style="color:var(--t3)">most days</span></td>
+      <td><b>RECOVERING</b></td><td>Within 72 h of a hard day and HRV under your band</td><td>Names the cause, not just the symptom</td></tr>
+  <tr><td><b>WARM</b></td><td>Resting HR sitting above your own baseline</td><td>+3 means nothing without 60 days of your history</td></tr>
+  <tr><td><b>STEADY</b></td><td>Everything inside your personal range</td><td>The fallback. The wrist is never left without a word.</td></tr>
+</table>
+
+<h2><span class="n">03</span>The watch face — where most of the value lands</h2>
+<p class="sub">
+  Apple states people may never explicitly launch a watch app. So the complication is the product
+  and the app is the detail view. Each family gets its own deep link, never a shared one.
+</p>
+<div class="row" id="faces"></div>
+
+<h2><span class="n">04</span>Smart Stack — crown down from the face</h2>
+<p class="sub">
+  Only <code>accessoryRectangular</code> and <code>accessoryCircular</code> reach the Smart Stack.
+  The card carries the answer plus one button, so the common case never opens the app at all.
+</p>
+<div class="row" id="stack"></div>
+
+<h2><span class="n">05</span>Notifications — two a day maximum, fired on change</h2>
+<p class="sub">
+  Notifications buy an open now, not a habit: a 3.5&times; lift in the next hour but no measurable
+  effect on long-term retention. So they fire on a change against a rolling average, never on an
+  absolute threshold, and every one can be hushed for the day.
+</p>
+<div class="row" id="notifs"></div>
+
+<h2><span class="n">06</span>The states — including the ones that usually get skipped</h2>
+<p class="sub">
+  There is no state where the wrist has nothing true to say. "Open Laso on your iPhone" does not
+  exist in this design. In Always-On the health values are genuinely hidden, not just dimmed,
+  because anyone standing behind you can read a dimmed screen.
+</p>
+<div class="row" id="states"></div>
+
+<h2><span class="n">07</span>How this differs from what ships today</h2>
+<table>
+  <tr><th>Today</th><th>This design</th></tr>
+  <tr><td>A bare number, "95", in white on black, with no colour at any score</td><td><b>A word and a colour band</b>, absorbed before you read a digit</td></tr>
+  <tr><td>"Progressive Overload" — a training-theory noun under the number</td><td><b>"2 days after your hard run"</b> — the reason, in plain words</td></tr>
+  <tr><td>Nothing on screen changes between 07:00 and 23:00</td><td><b>The headroom line counts down all day</b> from the watch's own sensors</td></tr>
+  <tr><td>Stale after 60 minutes, then asks you to go open your iPhone</td><td><b>Native HealthKit on the wrist</b>, so "now" is always current with the phone in another room</td></tr>
+  <tr><td>One text complication that shows <code>--</code> when stale</td><td><b>Three complications</b>, each with a gauge, colour and its own deep link</td></tr>
+  <tr><td>No Smart Stack widget at all</td><td><b>A Smart Stack card</b> that surfaces itself at wake, midday and after a workout</td></tr>
+  <tr><td>No haptics anywhere; the two "saved" strings are dead code</td><td><b>Every state-changing tap is confirmed by feel</b></td></tr>
+</table>
+
+<p class="legend">
+  Static reference page. For the interactive version with the Digital Crown, haptic markers and a
+  state switcher, open <code>concepts/02-verdict.html</code>. Full reasoning in
+  <code>04-RECOMMENDATION.md</code>.
+</p>
+
+</div>
+
+<script>
+var C={fair:"var(--fair)",optimal:"var(--optimal)",poor:"var(--poor)",primary:"var(--primary)"};
+
+function frame(inner,cap,capsub,cls){
+  return '<figure><div class="bezel"><div class="scr '+(cls||'')+'">'+inner+'</div></div>'+
+    '<figcaption><div class="cap">'+cap+'</div><div class="capsub">'+capsub+'</div></figcaption></figure>';
+}
+function pager(i){ var o=''; for(var k=0;k<3;k++) o+='<i class="'+(k===i?'on':'')+'"></i>'; return '<div class="pager">'+o+'</div>'; }
+
+/* ---------- page 1: the answer ---------- */
+function pgNow(word,why,room,col,size){
+  return '<div class="tt">14:32</div>'+pager(0)+
+    '<div class="hero">'+
+      '<div class="word '+(size||'w-l')+'" style="color:'+col+'">'+word+'</div>'+
+      '<div class="why">'+why+'</div>'+
+      '<div class="room">'+room+'</div>'+
+    '</div>'+
+    '<div class="foot"><span class="dot"></span>Fresh &middot; 6 min</div>';
+}
+/* ---------- page 2: why ---------- */
+function bar(label,val,pct,col,bandPct){
+  return '<div class="bar"><div class="bl"><span>'+label+'</span><b>'+val+'</b></div>'+
+    '<div class="track"><div class="fill" style="width:'+pct+'%;background:'+col+'"></div>'+
+    (bandPct?'<div class="band" style="left:'+bandPct+'%"></div>':'')+'</div></div>';
+}
+function pgWhy(){
+  return '<div class="tt">14:32</div>'+pager(1)+
+    '<div class="ttl">Readiness</div>'+
+    '<div style="display:flex;align-items:baseline;gap:7px;margin-top:2px">'+
+      '<div style="font-size:34px;font-weight:600;color:var(--fair);line-height:1">62</div>'+
+      '<div style="font-size:13px;color:var(--t3)">yesterday 71</div></div>'+
+    '<div class="bars">'+
+      bar('HRV','48 ms',60,C.fair,70)+
+      bar('Resting HR','58 bpm',72,C.fair,62)+
+      bar('Sleep','6h 12m',81,C.fair,100)+
+    '</div>'+
+    '<div style="margin-top:auto;font-size:11px;color:var(--t3);text-align:center">| your usual &middot; from iPhone</div>';
+}
+/* ---------- page 3: next ---------- */
+function ev(tm,nm,rt,cls){
+  return '<div class="ev '+(cls||'')+'"><span class="tm">'+tm+'</span><span class="pip"></span>'+
+    '<span class="nm">'+nm+'</span><span class="rt">'+rt+'</span></div>';
+}
+function pgNext(){
+  return '<div class="tt">14:32</div>'+pager(2)+
+    '<div class="ttl">Next</div>'+
+    '<div class="tl">'+
+      ev('13:00','Stand','missed','done')+
+      ev('14:00','Move','28 min','now')+
+      ev('15:20','Coffee','48 min')+
+      ev('16:00','Train','1h 28m')+
+      ev('22:20','Wind-down','7h 48m')+
+    '</div>';
+}
+
+document.getElementById("app").innerHTML =
+  frame(pgNow('Recovering','2 days after your hard run','Room for 18 more min',C.fair,'w-m'),
+        'Page 1 &middot; Now','The answer. No score, nothing to decode. Under 5 seconds.')+
+  frame(pgWhy(),'Page 2 &middot; Why',
+        'The number lives here, with the three things that moved it against your own range.')+
+  frame(pgNext(),'Page 3 &middot; Next',
+        'The day as windows. This is the part that changes on every glance.');
+
+document.getElementById("vocab").innerHTML =
+  frame(pgNow('Rest','Body-stress flag is up','Resting HR +7, HRV 39',C.poor,'w-xl'),
+        'REST &middot; order','Fires on a 60-day baseline the wrist cannot compute alone.')+
+  frame(pgNow('Train','Recovered and unspent','Room for 30 minutes hard',C.optimal,'w-xl'),
+        'TRAIN &middot; order','The only word gated on payload freshness. Costly when wrong.')+
+  frame(pgNow('Breathe','Heart rate 21 above resting','One minute, slow out-breath',C.primary,'w-l'),
+        'BREATHE &middot; order','You do not feel a +21 while sitting. The watch does.')+
+  frame(pgNow('Steady','Everything in your range','Room for 18 more min',C.optimal,'w-xl'),
+        'STEADY &middot; state','The fallback. The wrist is never left without a word.');
+
+/* ---------- watch faces ---------- */
+function faceModular(){
+  return '<div class="face" style="display:flex;flex-direction:column;height:100%">'+
+    '<div class="frow"><div class="fdate">TUE 29</div><div class="ftime">14:32</div></div>'+
+    '<div class="slot"><span class="tag">accessoryRectangular</span>'+
+      '<div style="display:flex;align-items:center;gap:6px">'+
+        '<div style="font-size:17px;font-weight:600;color:var(--fair)">RECOVERING</div></div>'+
+      '<div style="font-size:12px;color:var(--t2);margin-top:1px">Room for 18 more min</div>'+
+      '<div style="display:flex;gap:2px;align-items:flex-end;height:13px;margin-top:4px">'+
+        [30,28,26,22,18,18,12,6].map(function(v){return '<div style="width:4px;height:'+(v/30*13+2)+'px;background:var(--fair);opacity:.75;border-radius:1px"></div>';}).join('')+
+      '</div></div>'+
+    '<div class="fbot">'+
+      '<div class="circ"><div style="font-size:15px;font-weight:600;color:var(--fair)">18</div>'+
+        '<div style="font-size:8px;color:var(--t3)">MIN</div></div>'+
+      '<div class="sys">74<span style="font-size:8px">BPM</span></div>'+
+      '<div class="sys">21&deg;</div>'+
+    '</div></div>';
+}
+function faceInline(){
+  return '<div class="face" style="display:flex;flex-direction:column;height:100%">'+
+    '<div class="slot" style="margin-top:2px"><span class="tag">accessoryInline</span>'+
+      '<div style="font-size:13px;color:var(--fair)">Recovering &middot; 18 min room</div></div>'+
+    '<div style="font-size:52px;font-weight:600;color:var(--t1);text-align:center;margin-top:14px;line-height:1">14:32</div>'+
+    '<div style="display:flex;justify-content:center;gap:14px;margin-top:auto;padding-bottom:6px">'+
+      '<div class="circ"><div style="font-size:15px;font-weight:600;color:var(--fair)">18</div>'+
+        '<div style="font-size:8px;color:var(--t3)">MIN</div></div>'+
+      '<div class="sys" style="flex-direction:column"><div style="font-size:13px">5,240</div>'+
+        '<div style="font-size:8px;color:var(--t3)">STEPS</div></div>'+
+    '</div></div>';
+}
+document.getElementById("faces").innerHTML =
+  frame(faceModular(),'Modular &middot; two Laso slots',
+        'Rectangular carries the word, the room and the day so far. Circular is the headroom gauge.')+
+  frame(faceInline(),'Infograph &middot; inline + circular',
+        'One line at the top of the face. It is the cheapest slot a user can give you.');
+
+/* ---------- smart stack ---------- */
+document.getElementById("stack").innerHTML =
+  frame('<div class="tt">14:32</div><div style="margin-top:16px">'+
+    '<div class="card laso"><div class="ch" style="color:var(--fair)">RECOVERING</div>'+
+      '<div class="cs">2 days after your hard run &middot; room for 18 min</div>'+
+      '<div class="btn">&#10003;&nbsp; Mark done</div></div>'+
+    '<div class="card"><div class="ch">Activity</div><div class="cs">284 / 620 &middot; 12 exercise min</div></div>'+
+    '<div class="card" style="opacity:.6"><div class="ch">Now Playing</div><div class="cs">Paused</div></div>'+
+    '</div>','Smart Stack','The card answers without opening the app. Double Tap hits Mark done.');
+
+/* ---------- notifications ---------- */
+document.getElementById("notifs").innerHTML =
+  frame('<div class="hero" style="gap:10px">'+
+      '<div class="nsash" style="justify-content:center">Laso &middot; 07:05</div>'+
+      '<div class="word w-m" style="color:var(--fair)">Recovering</div>'+
+      '<div class="why">2 days after your hard run</div></div>',
+    'Short look','Two seconds of attention. It carries the answer, not a prompt to open something.')+
+  frame('<div class="nsash">Laso &middot; 07:05</div>'+
+    '<div class="nbig" style="color:var(--fair)">Recovering</div>'+
+    '<div class="nbody">HRV 48, under your usual 56. You have room for 30 easy minutes today, not a hard session.</div>'+
+    '<div class="nact"><div>Show why</div><div>Hush today</div></div>',
+    'Long look','Fires only when the call changed against a 4-day average. Hush is always one tap.');
+
+/* ---------- states ---------- */
+document.getElementById("states").innerHTML =
+  frame('<div class="tt">14:32</div>'+
+    '<div class="hero"><div class="word w-m" style="color:var(--primary)">Learning</div>'+
+    '<div class="why">3 of 7 nights</div>'+
+    '<div class="room">Your range is ready Friday</div></div>'+
+    '<div class="foot">Live data works now</div>',
+    'Cold start','Named, never a fake number. Garmin ships "No Status"; Fitbit states 7 nights.')+
+  frame('<div class="tt">14:32</div>'+
+    '<div class="hero"><div class="word w-m" style="color:var(--t2)">Steady</div>'+
+    '<div class="why">HR 74, steps 5,240</div>'+
+    '<div class="room">Room for 18 more min</div></div>'+
+    '<div class="foot" style="color:var(--t3)">Measured here &middot; no phone</div>',
+    'Phone unreachable','Everything here came off the wrist. This is why the old stale message is gone.')+
+  frame('<div class="tt" style="color:#3a3a42">14:32</div>'+
+    '<div class="hero"><div class="redact"></div><div class="redact s"></div></div>'+
+    '<div class="foot" style="color:#3a3a42">Laso</div>','aod',
+    'Always-On &middot; redacted')+
+  frame('<div class="tt">14:32</div>'+
+    '<div class="hero"><div class="word w-m" style="color:var(--t2)">Health off</div>'+
+    '<div class="why" style="font-size:13px">Settings &rsaquo; Privacy &rsaquo; Health &rsaquo; Laso</div>'+
+    '<div class="room" style="font-size:13px">Turn on Heart, Sleep, Activity</div></div>',
+    'HealthKit denied','The only state with no word. It says exactly which switch to flip.');
+
+/* the AOD frame needs its caption fixed up and the dim class applied */
+(function(){
+  var figs=document.getElementById("states").querySelectorAll("figure");
+  var f=figs[2];
+  f.querySelector(".scr").classList.add("aod");
+  f.querySelector(".cap").textContent="Always-On · redacted";
+  f.querySelector(".capsub").textContent="Apple requires health data to be hidden here, not dimmed. The layout stays put so nothing jumps on wake.";
+})();
+</script>

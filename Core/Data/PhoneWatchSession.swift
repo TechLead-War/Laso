@@ -2,6 +2,26 @@ import Foundation
 import Observation
 import WatchConnectivity
 
+/// The values the wrist needs and cannot measure for itself.
+///
+/// Every one of these needs 30 to 90 days of history, against the roughly seven days
+/// watchOS keeps locally. Sent once per refresh and cached on the watch, so the wrist can
+/// answer "is this high for me?" all day without another message.
+///
+/// All optional: a field the phone cannot compute yet is sent as nil and the matching
+/// rung of `WatchVerdict.evaluate` skips rather than guesses.
+struct WatchVerdictFacts: Codable, Equatable {
+    var bodyStressElevated: Bool?
+    var restingHeartRateBaseline: Double?
+    var hrvBaselineFloor: Double?
+    var hoursSinceHardDay: Double?
+    var exerciseCeilingMinutes: Int?
+    var bedtimeTarget: Date?
+    var nightsOfHistory: Int?
+
+    static let unknown = WatchVerdictFacts()
+}
+
 /// What the phone currently knows about the paired watch.
 ///
 /// Read by the Home card that teaches people to add the complication, which must
@@ -85,8 +105,13 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     /// Pushes the current state to the watch after an analysis refresh. A score of 0
     /// means the analysis has nothing to say yet, and is kept off the wrist entirely
     /// rather than shown there as today's result.
-    func push(readinessScore: Int, grade: String, dayType: String) {
-        WatchCoreState.save(readinessScore: readinessScore, grade: grade, dayType: dayType)
+    func push(
+        readinessScore: Int,
+        grade: String,
+        dayType: String,
+        facts: WatchVerdictFacts = .unknown
+    ) {
+        WatchCoreState.save(readinessScore: readinessScore, grade: grade, dayType: dayType, facts: facts)
         resend()
     }
 
@@ -99,6 +124,33 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     private func resend() {
         guard let core = WatchCoreState.today() else { return }
         send(buildPayload(core: core))
+    }
+
+    /// The facts stored by the last full refresh, for the background task to reuse.
+    ///
+    /// Only the slow-moving ones survive. The background task re-stamps the payload with
+    /// today's date and a fresh `updatedAt`, which is what lets the watch treat it as
+    /// current — so replaying a day-specific value through it would certify stale data as
+    /// fresh, and the wrist's one freshness gate (the `train` rung) would pass on it.
+    ///
+    /// Baselines and the night count are still true days later, so they carry over. The
+    /// exercise ceiling, the body-stress flag, tonight's bedtime and the elapsed time
+    /// since the last hard day are all about a particular day, and elapsed time in
+    /// particular would never grow. Those are dropped, and the rungs that need them skip.
+    func lastKnownFacts(now: Date = Date()) -> WatchVerdictFacts {
+        guard let stored = WatchCoreState.anyStored() else { return .unknown }
+        if stored.dayKey == WatchBridge.dayKey(for: now) { return stored.facts ?? .unknown }
+
+        let slow = stored.facts ?? .unknown
+        return WatchVerdictFacts(
+            bodyStressElevated: nil,
+            restingHeartRateBaseline: slow.restingHeartRateBaseline,
+            hrvBaselineFloor: slow.hrvBaselineFloor,
+            hoursSinceHardDay: nil,
+            exerciseCeilingMinutes: nil,
+            bedtimeTarget: nil,
+            nightsOfHistory: slow.nightsOfHistory
+        )
     }
 
     /// Wipes what the wrist is showing after the user deletes their account.
@@ -114,6 +166,7 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
 
     private func buildPayload(core: WatchCoreState.Stored?) -> WatchPayload {
         let action = DailyActionStore.today()
+        let facts = core?.facts ?? .unknown
         return WatchPayload(
             dayKey: WatchBridge.dayKey(for: Date()),
             readinessScore: core?.readinessScore ?? 0,
@@ -124,7 +177,15 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
             actionIcon: action?.icon,
             actionDone: DailyActionCompletion.isDoneToday,
             checkInAvailable: MorningCheckInManager.shouldShowCheckIn(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            schemaVersion: WatchBridge.schemaVersion,
+            bodyStressElevated: facts.bodyStressElevated,
+            restingHeartRateBaseline: facts.restingHeartRateBaseline,
+            hrvBaselineFloor: facts.hrvBaselineFloor,
+            hoursSinceHardDay: facts.hoursSinceHardDay,
+            exerciseCeilingMinutes: facts.exerciseCeilingMinutes,
+            bedtimeTarget: facts.bedtimeTarget,
+            nightsOfHistory: facts.nightsOfHistory
         )
     }
 
@@ -318,6 +379,9 @@ private enum WatchCoreState {
         let readinessScore: Int
         let grade: String
         let dayType: String
+        /// Optional so a state written by an older build still decodes rather than
+        /// dropping the score the watch face is already showing.
+        var facts: WatchVerdictFacts?
     }
 
     private static let key = "laso.watch.lastCoreState"
@@ -334,16 +398,30 @@ private enum WatchCoreState {
 
     /// Stores a real score only. Zero means the analysis has nothing to say yet, and
     /// keeping it would put a number on the watch face that reads as today's result.
-    static func save(readinessScore: Int, grade: String, dayType: String, now: Date = Date()) {
+    static func save(
+        readinessScore: Int,
+        grade: String,
+        dayType: String,
+        facts: WatchVerdictFacts,
+        now: Date = Date()
+    ) {
         guard readinessScore > 0 else { return }
         let stored = Stored(dayKey: WatchBridge.dayKey(for: now), readinessScore: readinessScore,
-                            grade: grade, dayType: dayType)
+                            grade: grade, dayType: dayType, facts: facts)
         guard let data = try? JSONEncoder().encode(stored) else {
             AnalyticsBackend.provider.captureError(
                 "Failed to encode watch core state", context: "phone_watch_core_state_encode")
             return
         }
         defaults.set(data, forKey: key)
+    }
+
+    /// The stored state whatever day it belongs to. Only for reusing the slow-moving
+    /// facts; the score itself is still gated on `today()` so a stale number can never
+    /// reach the wrist as today's result.
+    static func anyStored() -> Stored? {
+        guard let data = defaults.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(Stored.self, from: data)
     }
 
     static func clear() { defaults.removeObject(forKey: key) }

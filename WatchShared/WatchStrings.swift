@@ -12,13 +12,8 @@ import Foundation
 enum WatchStrings {
 
     enum Home {
-        static let readinessLabel = "Readiness"
-        static let todaysAction = "Today's Action"
         static let markDone = "Mark done"
         static let markedDone = "Done"
-        static let noAction = "No action yet. Open Laso on your iPhone."
-        static let stale = "Open Laso on your iPhone to refresh."
-        static let notPaired = "Open Laso on your iPhone to connect."
     }
 
     enum CheckIn {
@@ -28,12 +23,10 @@ enum WatchStrings {
         static let sleepQuality = "Sleep quality"
         static let energyLevel = "Energy level"
         static let soreness = "Body soreness"
-        static let saved = "Saved"
     }
 
     enum Journal {
         static let title = "Log"
-        static let saved = "Logged"
     }
 
     /// What the wrist says when a write did not land. Every refusal has a line here:
@@ -44,16 +37,100 @@ enum WatchStrings {
             case .earlierDay:
                 return "That was for an earlier day, so it was not saved. Tap again for today."
             case .notStored:
-                return "Your iPhone could not save that. Open Laso on your iPhone."
+                return "Your iPhone could not save that."
             case .notDelivered:
                 return "That did not reach your iPhone. Try again."
             }
         }
     }
 
+    /// The word on the wrist, and the fact under it.
+    ///
+    /// Every reason line states something measured. None of them is an instruction:
+    /// telling someone to walk or stand is a job watchOS already does, and the wrist has
+    /// one line to spend.
+    enum Verdict {
+        static func word(_ word: WatchWord) -> String {
+            switch word {
+            case .rest:       return "Rest"
+            case .breathe:    return "Breathe"
+            case .sleep:      return "Sleep"
+            case .train:      return "Train"
+            case .recovering: return "Recovering"
+            case .warm:       return "Warm"
+            case .steady:     return "Steady"
+            }
+        }
+
+        static let rest = "Your body is under strain"
+        static let train = "Recovered and unspent"
+        static let steady = "Everything in your range"
+
+        static func breathe(over: Int) -> String { "Heart rate \(over) above resting" }
+        static func warm(over: Int) -> String { "Resting HR \(over) above normal" }
+
+        static func recovering(days: Int) -> String {
+            days <= 1 ? "A day after your hard day" : "\(days) days after your hard day"
+        }
+
+        static func sleep(minutes: Int) -> String {
+            minutes > 0 ? "Wind down, bed in \(minutes) min" : "Past your bedtime target"
+        }
+
+        static func room(minutes: Int) -> String { "Room for \(minutes) more min" }
+        static let ceilingReached = "You have spent today's room"
+
+        static func learning(nights: Int) -> String {
+            "\(nights) of \(WatchVerdictThresholds.baselineNightsRequired) nights"
+        }
+
+        /// Shown when the only thing the wrist knows came over from the phone, because
+        /// its own sensors returned nothing. Names the source so the wearer is never told
+        /// something is "in your range" when nothing was measured.
+        static let phoneOnly = "From your iPhone score"
+
+        static let liveNow = "Measured here"
+        static let fromPhone = "from iPhone"
+        static let yourUsual = "your usual"
+
+        static func freshMinutes(_ minutes: Int) -> String { "\(minutes) min ago" }
+    }
+
+    /// What each screen says when it cannot show its normal content. None of these
+    /// sends the user to their phone: on a worn watch the sensor path always has
+    /// something true to say.
+    enum State {
+        /// HealthKit never reports a read denial, so this screen cannot tell "you tapped
+        /// Don't Allow" apart from "this watch has no history yet". It says what is true
+        /// of both and gives the one action that fixes either, instead of asserting a
+        /// cause it cannot know.
+        static let healthOffTitle = "No readings"
+        static let healthOffDetail = "Wear your watch, or check"
+        static let healthOffHint = "Settings › Privacy › Health"
+        /// The reason line when the phone has never synced. It reports what the wrist
+        /// actually measured and says nothing about a phone: an instruction to go and
+        /// open the iPhone app is the exact failure this design was built to delete.
+        static let noPhoneYet = "Nothing unusual right now"
+    }
+
+    enum Why {
+        static let title = "Readiness"
+        static let hrv = "HRV"
+        static let restingHeartRate = "Resting HR"
+        static let exercise = "Exercise"
+        static let noScore = "No score yet"
+    }
+
+    enum Next {
+        static let title = "Today"
+        static let exercise = "Exercise"
+        static let steps = "Steps"
+        static let ceiling = "Room"
+    }
+
     enum Complication {
-        static let name = "Readiness"
-        static let description = "Your readiness score at a glance."
+        static let verdictName = "Today's word"
+        static let verdictDescription = "What your body is doing, and how much room you have left."
     }
 
     /// Emoji scales for the check-in, in the same order as the phone's five point

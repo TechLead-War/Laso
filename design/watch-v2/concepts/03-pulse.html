@@ -1,0 +1,1901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laso Watch — Concept 03 Live Pulse</title>
+<style>
+/* ============================================================
+   Tokens — exact values from DESIGN-TOKENS.md (dark only)
+   ============================================================ */
+:root{
+  --bg:#000000;
+  --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D;
+  --surfaceSubtle:#17171C;
+  --textPrimary:#F2F2F6;
+  --textSecondary:#C9C9D2;
+  --textTertiary:#ADADB8;
+  --borderLow:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+  --zoom:1.85;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{background:#0A0A0C;color:var(--textSecondary);}
+body{
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding:20px 16px 120px;
+}
+
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+
+/* ============================================================
+   Page chrome (not part of the design under review)
+   ============================================================ */
+.pagehead{max-width:900px;margin:0 auto 14px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.pagehead h1{font-size:15px;font-weight:600;color:var(--textPrimary);letter-spacing:.2px}
+.pagehead span{font-size:12px;color:var(--textTertiary)}
+.pagehead code{font-size:12px;color:var(--primary)}
+
+.stage{display:flex;flex-direction:column;align-items:center;gap:10px}
+
+/* ============================================================
+   Watch hardware
+   ============================================================ */
+/* `zoom` rather than `transform: scale()` so the scaled watch still reserves layout space */
+.watchwrap{zoom:var(--zoom)}
+.watch{position:relative;display:flex;flex-direction:column;align-items:center}
+.strap{
+  width:76px;background:linear-gradient(180deg,#2a2a30,#191920);
+}
+.strap.top{height:26px;border-radius:14px 14px 4px 4px}
+.strap.bot{height:26px;border-radius:4px 4px 14px 14px}
+
+.case{
+  position:relative;
+  background:linear-gradient(150deg,#3a3a42 0%,#17171b 42%,#0c0c0f 100%);
+  padding:11px;
+  border-radius:44px;
+  box-shadow:0 0 0 1px #46464f, 0 14px 34px rgba(0,0,0,.75);
+}
+.case.small{border-radius:38px;padding:10px}
+
+/* Digital Crown + side button on the right edge */
+.crownwrap{position:absolute;right:-8px;top:26%;width:12px;height:44px}
+.crown{
+  width:12px;height:44px;border-radius:4px;
+  background:repeating-linear-gradient(180deg,#6d6d78 0 2px,#3b3b44 2px 4px);
+  box-shadow:inset 0 0 0 1px #7c7c88, 2px 0 4px rgba(0,0,0,.6);
+  transform-origin:center;
+}
+.crown.turn{background:repeating-linear-gradient(180deg,#8b8b98 0 2px,#4a4a56 2px 4px)}
+.sidebtn{
+  position:absolute;right:-5px;top:52%;width:6px;height:30px;border-radius:3px;
+  background:linear-gradient(90deg,#4a4a55,#2b2b33);
+  box-shadow:inset 0 0 0 1px #63636f;
+}
+/* crown detent marker — where .click would fire */
+.detent{
+  position:absolute;right:-30px;top:26%;
+  font-size:8px;color:var(--primary);opacity:0;
+  letter-spacing:.4px;white-space:nowrap;
+}
+.detent.on{opacity:1}
+.crownacc{
+  position:absolute;right:3px;top:26%;z-index:5;
+  background:var(--surfaceElevated);color:var(--textPrimary);
+  border:1px solid var(--borderLow);border-radius:9999px;
+  font-size:10px;padding:2px 6px;opacity:0;pointer-events:none;
+  white-space:nowrap;
+}
+.crownacc.on{opacity:1}
+
+/* ============================================================
+   Screen
+   ============================================================ */
+.screen{
+  position:relative;overflow:hidden;background:var(--bg);
+  border-radius:34px;
+  color:var(--textPrimary);
+}
+.screen.s46{width:208px;height:248px;--pad:10px;--cw:188px}
+.screen.s40{width:162px;height:197px;--pad:8px;--cw:146px;border-radius:28px}
+
+/* Always-On: the panel itself dims. Redaction is done per element, not by opacity. */
+.screen.aod{filter:brightness(.62)}
+
+.scr{position:absolute;inset:0;display:none}
+.scr.on{display:block}
+@media (prefers-reduced-motion: no-preference){
+  .scr.on{animation:fade .22s var(--ease)}
+  .scr.on.push{animation:push .22s var(--ease)}
+  .scr.on.pop{animation:pop .22s var(--ease)}
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes push{from{opacity:.2;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:.2;transform:translateX(-26px)}to{opacity:1;transform:none}}
+
+.abs{position:absolute;left:var(--pad)}
+.full{width:var(--cw)}
+
+/* haptic pulse ring drawn at the screen edge */
+.hapring{
+  position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 0 0 0 var(--primary);opacity:0;
+}
+.hapring.fire{opacity:1}
+@media (prefers-reduced-motion: no-preference){
+  .hapring.fire{animation:hap .5s var(--ease)}
+}
+@keyframes hap{
+  0%{box-shadow:inset 0 0 0 0 var(--primary);opacity:.0}
+  18%{box-shadow:inset 0 0 0 4px var(--primary);opacity:1}
+  100%{box-shadow:inset 0 0 0 12px var(--primary);opacity:0}
+}
+
+/* ============================================================
+   Type roles
+   ============================================================ */
+/* watchOS ships SF Compact Rounded, which is narrower than the SF Pro fallback a desktop
+   browser substitutes. -0.1px tracking on the small roles closes most of that gap so the
+   line breaks here match what the device would do. */
+.heroNum{font-weight:600;color:var(--textPrimary);line-height:1;letter-spacing:-1px}
+.unit{font-size:12px;font-weight:400;color:var(--textTertiary);line-height:1}
+.t-title{font-size:22px;font-weight:600;color:var(--textPrimary);line-height:1.05}
+.t-headline{font-size:17px;font-weight:600;line-height:1.18}
+.t-body{font-size:16px;font-weight:400;color:var(--textSecondary);line-height:1.2}
+.t-foot{font-size:13px;font-weight:400;line-height:1.18;letter-spacing:-.1px}
+.t-cap{font-size:12px;font-weight:400;color:var(--textTertiary);line-height:1.18;letter-spacing:-.1px}
+.t-cap2{font-size:11px;font-weight:500;color:var(--textTertiary);line-height:1.1;letter-spacing:-.1px}
+.up{text-transform:uppercase;letter-spacing:.6px}
+
+/* status chip */
+.chip{display:flex;align-items:center;gap:4px;height:14px}
+.chipdot{width:6px;height:6px;border-radius:50%;background:var(--textPrimary)}
+@media (prefers-reduced-motion: no-preference){
+  .chipdot.live{animation:pulsedot 2s ease-in-out infinite}
+}
+@keyframes pulsedot{0%,100%{opacity:.85}50%{opacity:1}}
+
+/* action row */
+.row{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surfaceRaised);border:1px solid var(--borderLow);border-radius:10px;
+  color:var(--primary);font-size:17px;font-weight:600;
+  width:var(--cw);height:44px;cursor:pointer;
+  transition:transform .08s var(--ease);
+}
+.row:active{transform:scale(.96)}
+.row[disabled]{background:var(--surfaceSubtle);color:var(--textTertiary);cursor:not-allowed}
+.row.big{height:60px;background:var(--primary);color:#000;border:none;border-radius:14px}
+.row.big:disabled{background:var(--surfaceSubtle)}
+@media (prefers-reduced-motion: reduce){.row:active{transform:none}}
+
+/* page dots — vertical TabView indicator */
+.pagedots{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px}
+.pagedots i{width:3px;height:3px;border-radius:50%;background:var(--borderLow);display:block}
+.pagedots i.on{background:var(--textSecondary)}
+
+/* ============================================================
+   The band — track / usual zone / rest tick / now marker
+   ============================================================ */
+.band{position:absolute}
+.bTrack,.bZone,.bRest,.bGhost,.bMark{position:absolute;top:0}
+.bTrack{left:0;background:var(--surfaceSubtle);border:1px solid var(--borderLow)}
+.bTrack.dash{background:none;border:1px dashed var(--borderLow)}
+.bTrack.aodline{background:none;border:1px solid var(--borderLow)}
+.bZone{background:var(--surfaceElevated)}
+.bRest,.bGhost{background:var(--textTertiary);border-radius:1px;width:2px}
+.bGhost{opacity:.75}
+.bMark{border-radius:2px;box-shadow:0 0 0 1.5px var(--bg)}
+.bMark.hollow{background:none !important;box-shadow:none;border:1.5px solid var(--textSecondary)}
+@media (prefers-reduced-motion: no-preference){
+  .bMark{transition:left .22s var(--ease)}
+}
+
+/* redaction bars (Always-On) */
+.redbars{display:flex;gap:6px;align-items:center}
+.hide{display:none !important}
+.redbars i{display:block;height:5px;border-radius:2.5px;background:var(--borderLow)}
+.dashrow{color:var(--textTertiary);letter-spacing:2px}
+
+/* ============================================================
+   Today — 24 bar sparkline
+   ============================================================ */
+.chart{position:absolute}
+.bars{position:absolute;left:0;bottom:0;display:flex;align-items:flex-end;gap:2px;height:100%}
+.bars b{display:block;width:3px;background:var(--textSecondary);border-radius:1px}
+.bars b.now{width:4px;background:var(--primary)}
+.bars b.future{background:var(--borderLow);height:2px !important}
+.restline{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--textTertiary)}
+.baseline{position:absolute;left:0;right:0;bottom:0;height:0;border-top:1px solid var(--borderLow)}
+.scrubline{position:absolute;top:0;bottom:0;width:1px;background:var(--textPrimary);display:none}
+.scrubline.on{display:block}
+
+/* ============================================================
+   Baseline — paired bars
+   ============================================================ */
+.pbar{height:5px;border-radius:2.5px}
+.pbar.a{background:var(--textPrimary)}
+.pbar.b{background:var(--textTertiary)}
+.dotted{border-bottom:1px dotted var(--textSecondary)}
+/* trailing values are positioned, not inline, so they cannot drive the row height */
+.rowlab{display:flex;justify-content:space-between;align-items:baseline;height:14px}
+.barline{position:relative;height:9px;margin-top:4px}
+.barline .pbar{position:absolute;left:0;top:2px}
+.barline .val{position:absolute;top:-1px}
+.screen.s46 .barline .val{left:156px}
+.screen.s40 .barline .val{left:118px}
+.screen.s40 .rowlab{height:13px}
+.screen.s40 .barline{height:7px;margin-top:2px}
+/* Readiness stacks at 46mm; at the 40mm floor it folds onto one line so the footer still fits */
+.r3val{display:flex;align-items:baseline;gap:6px;margin-top:1px}
+.screen.s40 .r3top{display:flex;justify-content:space-between;align-items:baseline}
+.screen.s40 .r3val{margin-top:0}
+
+/* ============================================================
+   Watch face
+   ============================================================ */
+.face{position:absolute;inset:0;padding:0}
+/* the face composition is authored at 208x248 and scaled down at 40mm rather than reflowed */
+.screen.s40 .face{width:208px;height:248px;transform:scale(.779);transform-origin:top left}
+.fslot{position:absolute;border-radius:8px}
+.fslot.laso{outline:1px dashed rgba(77,163,255,.55);outline-offset:2px;cursor:pointer}
+.fslot.laso:active{transform:scale(.96)}
+.ftag{
+  position:absolute;top:-9px;left:-2px;background:var(--primary);color:#000;
+  font-size:7px;font-weight:700;border-radius:3px;padding:0 3px;line-height:9px;
+}
+.ftime{position:absolute;font-weight:600;color:var(--optimal);letter-spacing:-.5px}
+.sysc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--textTertiary)}
+.ring{border-radius:50%}
+
+/* ============================================================
+   Smart Stack
+   ============================================================ */
+.stackview{position:absolute;inset:0;overflow:hidden}
+.stacklist{position:absolute;left:0;right:0;top:0;padding:0 5px}
+@media (prefers-reduced-motion: no-preference){.stacklist{transition:transform .22s var(--ease)}}
+.wdg{
+  position:relative;background:var(--surfaceRaised);border-radius:14px;
+  margin-bottom:8px;overflow:hidden;
+}
+.wdg.laso{outline:1px dashed rgba(77,163,255,.55);outline-offset:-1px;cursor:pointer}
+.wdg .wpad{padding:6px}
+.wtitle{position:absolute;top:2px;left:8px;font-size:9px;color:var(--textTertiary)}
+
+/* ============================================================
+   Notifications
+   ============================================================ */
+.sash{
+  position:absolute;left:0;right:0;top:0;height:34px;background:var(--primary);
+  display:flex;align-items:center;gap:5px;padding:0 10px;color:#001a33;
+  font-size:12px;font-weight:600;
+}
+.appicon{width:18px;height:18px;border-radius:50%;background:#001a33;display:flex;align-items:center;justify-content:center}
+.notifbody{position:absolute;left:0;right:0;padding:0 var(--pad)}
+@media (prefers-reduced-motion: no-preference){.notifbody{transition:transform .22s var(--ease)}}
+.nact{
+  width:var(--cw);border-radius:10px;background:var(--surfaceRaised);
+  border:1px solid var(--borderLow);height:44px;display:flex;align-items:center;
+  justify-content:center;font-size:15px;font-weight:600;color:var(--textPrimary);
+  margin-bottom:6px;cursor:pointer;transition:transform .08s var(--ease);
+}
+.nact:active{transform:scale(.96)}
+.nact.first{color:var(--primary)}
+.nact.dismiss{color:var(--textTertiary);font-weight:400}
+
+/* ============================================================
+   Screen switcher strip + dev toolbar (not judged)
+   ============================================================ */
+.switcher{max-width:900px;margin:24px auto 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.switcher .grp{font-size:10px;color:var(--textTertiary);text-transform:uppercase;letter-spacing:.8px;margin:0 4px 0 10px}
+.switcher .grp:first-child{margin-left:0}
+.sw{
+  background:var(--surfaceRaised);border:1px solid var(--borderLow);color:var(--textSecondary);
+  border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer;font-family:inherit;
+}
+.sw[aria-current="true"]{background:var(--primary);color:#000;border-color:var(--primary);font-weight:600}
+
+.hapcap{
+  max-width:900px;margin:10px auto 0;min-height:34px;display:flex;align-items:center;
+  justify-content:center;gap:8px;font-size:12px;color:var(--textTertiary);
+}
+.hapcap .pill{
+  background:var(--surfaceElevated);border:1px solid var(--borderLow);border-radius:9999px;
+  padding:4px 10px;color:var(--textPrimary);font-weight:600;
+}
+.hapcap .pill.mute{color:var(--textTertiary);font-weight:400}
+
+.legend{
+  max-width:900px;margin:10px auto 0;font-size:11px;color:var(--textTertiary);
+  border:1px solid var(--borderLow);border-radius:10px;padding:8px 10px;display:none;
+}
+.legend.on{display:block}
+.legend b{color:var(--textPrimary);font-weight:600}
+.legend code{color:var(--primary)}
+.legend div{margin:2px 0}
+
+.devbtn{
+  position:fixed;right:14px;bottom:14px;z-index:30;
+  width:40px;height:40px;border-radius:20px;border:1px solid var(--borderLow);
+  background:var(--surfaceRaised);color:var(--textSecondary);cursor:pointer;font-size:16px;
+}
+.devpanel{
+  position:fixed;right:14px;bottom:62px;z-index:30;width:260px;display:none;
+  background:#101014;border:1px solid var(--borderLow);border-radius:12px;padding:12px;
+}
+.devpanel.on{display:block}
+.devpanel h2{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--textTertiary);margin:10px 0 5px;font-weight:600}
+.devpanel h2:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{
+  flex:1 1 auto;background:var(--surfaceRaised);border:1px solid var(--borderLow);
+  color:var(--textSecondary);border-radius:6px;padding:5px 6px;font-size:11px;cursor:pointer;font-family:inherit;
+}
+.seg button[aria-pressed="true"]{background:var(--primary);color:#000;border-color:var(--primary);font-weight:600}
+.devnote{font-size:10px;color:var(--textTertiary);margin-top:10px;line-height:1.4}
+.hint{max-width:900px;margin:14px auto 0;font-size:11px;color:var(--textTertiary);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <h1>Laso Watch — Concept 03 <span style="color:var(--primary)">Live Pulse</span></h1>
+  <span>Alex, 34 · Tuesday 14:32 · prototype, not shipping code</span>
+  <code>laso://watch/pulse/*</code>
+</div>
+
+<div class="stage">
+  <div class="watchwrap">
+    <div class="watch">
+      <div class="strap top"></div>
+      <div class="case" id="case">
+        <div class="screen s46" id="screen">
+
+          <!-- ===================================================
+               OFF-APP 1 — WATCH FACE (Infograph Modular style)
+               =================================================== -->
+          <section class="scr" data-screen="face">
+            <div class="face">
+              <!-- top-left corner slot: Laso, accessoryCorner -->
+              <div class="fslot laso" id="cornerSlot" style="left:6px;top:6px;width:86px;height:44px" role="button" tabindex="0" aria-label="Laso Rest complication, accessory corner, opens Baseline">
+                <span class="ftag">1</span>
+                <svg viewBox="0 0 86 44" style="width:86px;height:44px" aria-hidden="true">
+                  <path id="cArc" d="M 5 36 A 26 26 0 0 1 31 10" fill="none" stroke="#2E2E36" stroke-width="3" stroke-linecap="round"/>
+                  <path id="cArcFill" d="M 5 36 A 26 26 0 0 1 31 10" fill="none" stroke="#ADADB8" stroke-width="3" stroke-linecap="round" stroke-dasharray="16 60"/>
+                  <path d="M 5 36 A 26 26 0 0 1 31 10" fill="none" stroke="#F2F2F6" stroke-width="3" stroke-dasharray="1.6 200" stroke-dashoffset="-12" id="cArcTick"/>
+                  <text x="34" y="27" fill="#F2F2F6" font-size="12" font-weight="600" id="cornerTxt">REST 58</text>
+                </svg>
+              </div>
+
+              <!-- top-right corner: system -->
+              <div class="fslot" style="right:6px;top:8px;width:60px;height:34px">
+                <div class="sysc" style="align-items:flex-end;font-size:10px">
+                  <span style="color:var(--fair)">06:41</span>
+                  <span style="font-size:8px">SUNRISE</span>
+                </div>
+              </div>
+
+              <!-- digital time -->
+              <div class="ftime" id="faceTime" style="left:0;right:0;top:44px;text-align:center;font-size:26px">14:32</div>
+
+              <!-- middle large rectangular: Laso, accessoryRectangular -->
+              <div class="fslot laso" id="rectSlot" style="left:10px;top:78px;width:188px;height:56px;background:#0B0B0E" role="button" tabindex="0" aria-label="Laso Pulse Today complication, accessory rectangular, opens Today">
+                <span class="ftag">2</span>
+                <div style="padding:5px 7px">
+                  <div style="display:flex;align-items:baseline;gap:3px">
+                    <span class="heroNum" id="rectHR" style="font-size:19.5px;font-weight:500">74</span>
+                    <span class="t-cap2" style="font-size:12px">BPM</span>
+                    <span style="flex:1"></span>
+                    <span class="t-cap2" id="rectAge" style="font-size:12px">6m</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-end;gap:6px;margin-top:4px">
+                    <div class="chart" id="rectChart" style="position:relative;width:58px;height:18px"></div>
+                    <span class="t-cap2" style="font-size:11px">rest 58</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- three circular sub-dials -->
+              <div class="fslot laso" id="circSlot" style="left:16px;top:144px;width:50px;height:50px" role="button" tabindex="0" aria-label="Laso Pulse complication, accessory circular, opens Now">
+                <span class="ftag">3</span>
+                <svg viewBox="0 0 50 50" style="width:50px;height:50px" aria-hidden="true">
+                  <circle cx="25" cy="25" r="21.5" fill="none" stroke="#2E2E36" stroke-width="2.5" stroke-linecap="round"
+                          stroke-dasharray="101.3 135.1" transform="rotate(135 25 25)"/>
+                  <circle id="circArc" cx="25" cy="25" r="21.5" fill="none" stroke="#F2F2F6" stroke-width="2.5" stroke-linecap="round"
+                          stroke-dasharray="28.7 135.1" transform="rotate(135 25 25)"/>
+                  <text id="circNum" x="25" y="29" text-anchor="middle" fill="#F2F2F6" font-size="14.5" font-weight="500">74</text>
+                </svg>
+                <div class="t-cap2" id="circLabel" style="position:absolute;left:0;right:0;top:50px;text-align:center;font-size:8px">bpm</div>
+              </div>
+
+              <div class="fslot" style="left:79px;top:144px;width:50px;height:50px">
+                <svg viewBox="0 0 50 50" style="width:50px;height:50px" aria-hidden="true">
+                  <circle cx="25" cy="25" r="21" fill="none" stroke="#3a1120" stroke-width="4"/>
+                  <circle cx="25" cy="25" r="21" fill="none" stroke="#E05C64" stroke-width="4" stroke-linecap="round" stroke-dasharray="60 132" transform="rotate(-90 25 25)"/>
+                  <circle cx="25" cy="25" r="15.5" fill="none" stroke="#0e3323" stroke-width="4"/>
+                  <circle cx="25" cy="25" r="15.5" fill="none" stroke="#33C48D" stroke-width="4" stroke-linecap="round" stroke-dasharray="39 97" transform="rotate(-90 25 25)"/>
+                  <circle cx="25" cy="25" r="10" fill="none" stroke="#0d2a3a" stroke-width="4"/>
+                  <circle cx="25" cy="25" r="10" fill="none" stroke="#22D3EE" stroke-width="4" stroke-linecap="round" stroke-dasharray="31 63" transform="rotate(-90 25 25)"/>
+                </svg>
+                <div class="t-cap2" style="position:absolute;left:0;right:0;top:50px;text-align:center;font-size:8px">activity</div>
+              </div>
+
+              <div class="fslot" style="left:142px;top:144px;width:50px;height:50px">
+                <div class="sysc" style="height:50px">
+                  <span style="font-size:16px;color:var(--textPrimary);font-weight:600">18°</span>
+                  <span style="font-size:8px">CLOUDY</span>
+                </div>
+                <div class="t-cap2" style="position:absolute;left:0;right:0;top:50px;text-align:center;font-size:8px">weather</div>
+              </div>
+
+              <!-- bottom corners: system -->
+              <div class="fslot" style="left:6px;bottom:6px;width:64px;height:30px">
+                <div class="sysc" style="align-items:flex-start;font-size:10px">
+                  <span style="color:var(--optimal)">72%</span>
+                  <span style="font-size:8px">BATTERY</span>
+                </div>
+              </div>
+              <div class="fslot" style="right:6px;bottom:6px;width:64px;height:30px">
+                <div class="sysc" style="align-items:flex-end;font-size:10px">
+                  <span style="color:var(--textPrimary)">TIMER</span>
+                  <span style="font-size:8px">00:00</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               OFF-APP 2 — SMART STACK
+               =================================================== -->
+          <section class="scr" data-screen="stack">
+            <div class="stackview">
+              <div class="t-cap2" style="position:absolute;right:8px;top:4px;z-index:2;color:var(--textPrimary)">14:32</div>
+              <div class="stacklist" id="stacklist" style="top:22px">
+
+                <div class="wdg" style="height:78px">
+                  <div class="wpad">
+                    <div class="wtitle" style="position:static;padding-bottom:3px">WEATHER</div>
+                    <div style="display:flex;align-items:baseline;gap:5px">
+                      <span style="font-size:22px;font-weight:600;color:var(--textPrimary)">18°</span>
+                      <span class="t-cap2">Cloudy · H 21 L 12</span>
+                    </div>
+                    <div class="t-cap2" style="margin-top:4px">Rain likely after 18:00</div>
+                  </div>
+                </div>
+
+                <!-- Laso widget, accessoryRectangular -->
+                <div class="wdg laso" id="stackWidget" role="button" tabindex="0" aria-label="Laso Pulse widget, accessory rectangular, opens Now">
+                  <div class="wpad" id="widgetPad"></div>
+                </div>
+
+                <div class="wdg" style="height:78px">
+                  <div class="wpad">
+                    <div class="wtitle" style="position:static;padding-bottom:3px">ACTIVITY</div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <svg viewBox="0 0 40 40" style="width:40px;height:40px" aria-hidden="true">
+                        <circle cx="20" cy="20" r="17" fill="none" stroke="#3a1120" stroke-width="4"/>
+                        <circle cx="20" cy="20" r="17" fill="none" stroke="#E05C64" stroke-width="4" stroke-linecap="round" stroke-dasharray="49 107" transform="rotate(-90 20 20)"/>
+                        <circle cx="20" cy="20" r="12" fill="none" stroke="#0e3323" stroke-width="4"/>
+                        <circle cx="20" cy="20" r="12" fill="none" stroke="#33C48D" stroke-width="4" stroke-linecap="round" stroke-dasharray="30 75" transform="rotate(-90 20 20)"/>
+                        <circle cx="20" cy="20" r="7" fill="none" stroke="#0d2a3a" stroke-width="4"/>
+                        <circle cx="20" cy="20" r="7" fill="none" stroke="#22D3EE" stroke-width="4" stroke-linecap="round" stroke-dasharray="22 44" transform="rotate(-90 20 20)"/>
+                      </svg>
+                      <div>
+                        <div class="t-cap2" style="color:var(--poor)">284 / 620 KCAL</div>
+                        <div class="t-cap2" style="color:var(--optimal)">12 / 30 MIN</div>
+                        <div class="t-cap2" style="color:var(--accent)">6 / 12 HR</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wdg" style="height:78px">
+                  <div class="wpad">
+                    <div class="wtitle" style="position:static;padding-bottom:3px">CALENDAR</div>
+                    <div style="font-size:15px;font-weight:600;color:var(--textPrimary)">Design review</div>
+                    <div class="t-cap2" style="margin-top:2px">15:00 – 15:30 · Room 2</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               OFF-APP 3 — SHORT LOOK
+               =================================================== -->
+          <section class="scr" data-screen="notif-short">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px;text-align:center">
+              <div style="width:44px;height:44px;border-radius:22px;background:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:10px">
+                <svg viewBox="0 0 24 24" style="width:24px;height:24px" aria-hidden="true">
+                  <path d="M3 13h4l2-5 3 9 2.5-6 1.5 2h5" fill="none" stroke="#001a33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="t-cap up" style="margin-bottom:8px">Laso</div>
+              <div class="t-body" style="color:var(--textPrimary);line-height:1.25">Your resting heart&nbsp;rate moved.</div>
+              <div class="t-cap2" style="margin-top:14px">Raise to read</div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               OFF-APP 4 — LONG LOOK (dynamic)
+               =================================================== -->
+          <section class="scr" data-screen="notif-long">
+            <div class="sash">
+              <span class="appicon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px">
+                  <path d="M3 13h4l2-5 3 9 2.5-6 1.5 2h5" fill="none" stroke="#4DA3FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Laso
+              <span style="flex:1"></span>
+              <span style="font-weight:400">now</span>
+            </div>
+            <div class="notifbody" id="longBody" style="top:44px">
+              <div class="t-title" id="nlTitle">Rest 58</div>
+              <div class="t-body" style="margin-top:4px;line-height:1.2">3 above your 7 day usual.</div>
+              <div class="chart" id="nlChart" style="position:relative;height:38px;margin:10px 0 4px"></div>
+              <div class="t-cap2" style="margin-bottom:10px">Last 7 mornings · today filled</div>
+              <div class="nact first" id="nlAct1" role="button" tabindex="0">Steady 60s</div>
+              <div class="nact" id="nlAct2" role="button" tabindex="0">Mute 7 days</div>
+              <div class="nact dismiss" id="nlAct3" role="button" tabindex="0">Dismiss</div>
+              <div class="t-cap2" style="opacity:.7;line-height:1.35;padding-bottom:14px">
+                N1 fires on |today − 7 day average| ≥ 4 bpm. Alex is +3, so on this day it would stay silent.
+                Rendered here for review.
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               OFF-APP 5 — LONG LOOK (static fallback)
+               =================================================== -->
+          <section class="scr" data-screen="notif-static">
+            <div class="sash">
+              <span class="appicon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px">
+                  <path d="M3 13h4l2-5 3 9 2.5-6 1.5 2h5" fill="none" stroke="#4DA3FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Laso
+              <span style="flex:1"></span>
+              <span style="font-weight:400">now</span>
+            </div>
+            <div class="notifbody" id="staticBody" style="top:44px">
+              <div class="t-title">Rest 58</div>
+              <div class="t-body" style="margin-top:4px;line-height:1.2">3 above your 7 day usual.</div>
+              <div class="t-cap2" style="margin:12px 0 10px;line-height:1.35">
+                Static interface. Bundled with the app, drawn when the dynamic view cannot load. Chart omitted.
+              </div>
+              <div class="nact first" id="nsAct1" role="button" tabindex="0">Steady 60s</div>
+              <div class="nact" id="nsAct2" role="button" tabindex="0">Mute 7 days</div>
+              <div class="nact dismiss" id="nsAct3" role="button" tabindex="0">Dismiss</div>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               APP — LAUNCH / WRIST-RAISE SNAPSHOT
+               =================================================== -->
+          <section class="scr" data-screen="launch">
+            <div class="chip abs" data-y="30|20">
+              <span class="chipdot" style="background:var(--textTertiary)"></span>
+              <span class="t-cap2 up">Reading</span>
+            </div>
+            <div class="abs" data-y="46|32" style="display:flex;align-items:flex-end;gap:4px">
+              <span class="heroNum" data-fs="52|40" style="color:var(--textSecondary)">74</span>
+              <span class="unit" style="padding-bottom:6px">BPM</span>
+            </div>
+            <div class="abs t-headline" data-y="102|78" data-fs="17|14" style="color:var(--textSecondary)">Last read 6 min ago</div>
+            <div class="band" id="launchBand" data-y="130|102"></div>
+            <div class="abs t-cap2" data-y="154|113" id="launchCap">rest 58 · usual 66 to 82</div>
+            <div class="abs" data-y="192|141">
+              <button class="row" id="launchBtn">Steady · 60s</button>
+            </div>
+            <div class="pagedots"><i class="on"></i><i></i><i></i></div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 1 · NOW
+               =================================================== -->
+          <section class="scr" data-screen="now">
+            <div class="chip abs" data-y="30|20" id="nowChip">
+              <span class="chipdot live" id="nowDot"></span>
+              <span class="t-cap2 up" id="nowChipTxt">Live</span>
+            </div>
+
+            <div class="abs" data-y="46|32" id="nowHeroWrap" style="display:flex;align-items:flex-end;gap:4px">
+              <span class="heroNum" data-fs="52|40" id="nowHero">74</span>
+              <span class="redbars hide" id="nowHeroRedact"></span>
+              <span class="unit" id="nowUnit" style="padding-bottom:6px">BPM</span>
+            </div>
+
+            <div class="abs t-headline full" data-y="102|78" data-fs="17|16" id="nowVerdict" style="line-height:1.15">Typical for 2pm</div>
+
+            <div class="band" id="nowBand" data-y="130|102"></div>
+
+            <div class="abs t-cap2 full" data-y="154|113" id="nowCap">rest 58 · usual 66 to 82</div>
+
+            <div class="abs" data-y="192|141">
+              <button class="row" id="nowBtn">Steady · 60s</button>
+            </div>
+
+            <!-- empty state (HealthKit denied) replaces the block above -->
+            <div class="abs full hide" data-y="50|32" id="nowEmpty">
+              <div class="t-title">Heart rate is off</div>
+              <div class="t-foot" style="color:var(--textSecondary);margin-top:10px;line-height:1.3">
+                Turn on Heart Rate for Laso in the Watch app, under Privacy.
+              </div>
+              <div class="t-cap2" style="margin-top:14px;line-height:1.3">Today and Baseline still work.</div>
+            </div>
+
+            <div class="pagedots"><i class="on"></i><i></i><i></i></div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 2a · STEADY READY
+               =================================================== -->
+          <section class="scr" data-screen="steady-ready">
+            <div class="abs t-title full" data-y="34|26" data-fs="22|20" style="text-align:center">Steady</div>
+            <div class="abs t-body full" data-y="68|54" data-fs="16|14" style="text-align:center;line-height:1.25">
+              Rest your arm and stay still for 60 seconds.
+            </div>
+            <div class="abs" data-y="152|131">
+              <button class="row big" id="steadyStart">Start</button>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 2b · STEADY RUNNING
+               =================================================== -->
+          <section class="scr" data-screen="steady-running">
+            <div class="abs full" data-y="60|46" style="text-align:center">
+              <span class="heroNum" data-fs="52|40" id="steadyCount">60</span>
+            </div>
+            <div class="abs t-cap full" data-y="120|96" style="text-align:center">seconds</div>
+            <div class="abs t-headline full" data-y="156|126" data-fs="17|16" style="text-align:center;color:var(--textSecondary)">Stay still</div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 2c · STEADY RESULT
+               =================================================== -->
+          <section class="scr" data-screen="steady-result">
+            <div class="abs t-cap2 up full" data-y="34|18" style="text-align:center">After 60s</div>
+            <div class="abs full" data-y="52|30" style="display:flex;align-items:flex-end;gap:4px;justify-content:center">
+              <span class="heroNum" data-fs="52|40" id="resHero">66</span>
+              <span class="redbars hide" id="resHeroRedact"></span>
+              <span class="unit" style="padding-bottom:6px">BPM</span>
+            </div>
+            <div class="abs t-headline full" data-y="110|74" data-fs="17|16" id="resVerdict" style="text-align:center">Settled</div>
+            <div class="band" id="resBand" data-y="136|98"></div>
+            <div class="abs t-cap2 full" data-y="160|110" id="resCap" style="text-align:center">8 down from 74 · back inside your usual</div>
+            <div class="abs" data-y="192|141">
+              <button class="row" id="resDone">Done</button>
+            </div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 3 · TODAY
+               =================================================== -->
+          <section class="scr" data-screen="today">
+            <div class="abs t-cap up" data-y="30|22">Today</div>
+            <div class="chart" id="todayChart" data-y="54|42"></div>
+            <div class="abs t-cap2" id="restLabel" data-y="110|84" style="font-size:10px">rest</div>
+            <div class="abs t-foot full" data-y="132|104" data-fs="13|11" id="todayL1" style="color:var(--textSecondary)">Low 52 at 04:20 · High 141 at 08:12</div>
+            <div class="abs t-foot full" data-y="166|134" data-fs="13|11" id="todayL2" style="color:var(--textTertiary)">You usually peak near 128</div>
+            <div class="abs t-foot full" data-y="186|300" data-fs="13|11" id="todayL3" style="color:var(--textTertiary)">5,240 steps · 12 exercise min</div>
+            <div class="pagedots"><i></i><i class="on"></i><i></i></div>
+          </section>
+
+          <!-- ===================================================
+               APP — SCREEN 4 · BASELINE
+               =================================================== -->
+          <section class="scr" data-screen="baseline">
+            <div class="abs t-cap up" data-y="26|14">Baseline</div>
+
+            <div class="abs full" data-y="44|28" id="bRow1">
+              <div class="rowlab">
+                <span class="t-cap">Resting HR</span>
+                <span class="t-cap2" style="color:var(--fair)" id="bD1">+3</span>
+              </div>
+              <div class="barline"><div class="pbar a" id="bBar1a"></div><span class="t-cap2 val" id="bV1a">58</span></div>
+              <div class="barline"><div class="pbar b" id="bBar1b"></div><span class="t-cap2 val" id="bV1b">55</span></div>
+            </div>
+
+            <div class="abs full" data-y="90|64" id="bRow2">
+              <div class="rowlab">
+                <span class="t-cap">Sleeping HRV</span>
+                <span class="t-cap2" style="color:var(--fair)" id="bD2">−6</span>
+              </div>
+              <div class="barline"><div class="pbar a" id="bBar2a"></div><span class="t-cap2 val" id="bV2a">48</span></div>
+              <div class="barline"><div class="pbar b" id="bBar2b"></div><span class="t-cap2 val" id="bV2b">54</span></div>
+            </div>
+
+            <div class="abs full" data-y="136|100" style="height:1px;background:var(--borderLow)"></div>
+
+            <div class="abs full" data-y="142|104" id="bRow3">
+              <div class="r3top">
+                <span class="t-cap">Readiness</span>
+                <span class="r3val">
+                  <span class="t-title" data-fs="22|18" id="bScore">62</span>
+                  <span class="t-foot" style="color:var(--fair)" id="bGrade">Moderate</span>
+                </span>
+              </div>
+              <div class="t-cap2" style="margin-top:1px" id="bSource">iPhone 09:12</div>
+            </div>
+
+            <div class="abs t-cap2 full" data-y="198|141" style="line-height:1.1">
+              Watch data updates about 4 times an hour, so it can differ from your phone.
+            </div>
+            <div class="pagedots"><i></i><i></i><i class="on"></i></div>
+          </section>
+
+          <div class="crownacc" id="crownacc">08:00</div>
+          <div class="hapring" id="hapring"></div>
+        </div>
+
+        <div class="crownwrap"><div class="crown" id="crown"></div></div>
+        <div class="sidebtn"></div>
+        <div class="detent" id="detent">● .click</div>
+      </div>
+      <div class="strap bot"></div>
+    </div>
+  </div>
+</div>
+
+<div class="hapcap" id="hapcap"><span class="pill mute">no haptic yet</span></div>
+
+<div class="legend" id="legend"></div>
+
+<nav class="switcher" id="switcher" aria-label="Screen switcher"></nav>
+
+<p class="hint">
+  Mouse wheel or ↑ / ↓ turns the Digital Crown. Crown down on the face opens the Smart Stack.
+  On Today the crown scrubs the hour. Steady runs at 6× speed so you do not wait a real minute.
+</p>
+
+<button class="devbtn" id="devbtn" aria-label="Open dev toolbar" aria-expanded="false">⚙</button>
+<div class="devpanel" id="devpanel" role="dialog" aria-label="Dev toolbar">
+  <h2>Canvas</h2>
+  <div class="seg" id="segSize">
+    <button data-size="46" aria-pressed="true">46mm</button>
+    <button data-size="40" aria-pressed="false">40mm</button>
+  </div>
+  <h2>State</h2>
+  <div class="seg" id="segState">
+    <button data-state="loaded" aria-pressed="true">loaded</button>
+    <button data-state="loading" aria-pressed="false">loading</button>
+    <button data-state="cold" aria-pressed="false">cold start</button>
+    <button data-state="empty" aria-pressed="false">empty</button>
+    <button data-state="error" aria-pressed="false">error</button>
+    <button data-state="stale" aria-pressed="false">stale</button>
+  </div>
+  <h2>Always-On (isLuminanceReduced)</h2>
+  <div class="seg" id="segAod">
+    <button data-aod="0" aria-pressed="true">off</button>
+    <button data-aod="1" aria-pressed="false">redacted</button>
+  </div>
+  <h2>Key variable — live bpm vs the 2pm band</h2>
+  <div class="seg" id="segBand">
+    <button data-band="calm" aria-pressed="false">Calm 61</button>
+    <button data-band="typical" aria-pressed="true">Typical 74</button>
+    <button data-band="up" aria-pressed="false">Up 91</button>
+    <button data-band="wellup" aria-pressed="false">Well up 108</button>
+  </div>
+  <h2>Gesture</h2>
+  <div class="seg">
+    <button id="btnDoubleTap">Fire Double Tap</button>
+  </div>
+  <p class="devnote">
+    Band cuts: below 66 Calm · 66–82 Typical · 83–101 Up · 102+ Well up.
+    strongExcursionBpm = 20. Personal statistics, no clinical meaning.
+  </p>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Fixed prototype constants — Alex, Tuesday 14:32
+   ============================================================ */
+const A = {
+  restingToday: 58,
+  restingBaseline60d: 55,
+  todayLow: 52, todayLowAt: "04:20",
+  todayHigh: 141, todayHighAt: "08:12",
+  hourBand1400: [66, 82],
+  usualPeak7d: 128,
+  hrvLastNight: 48, hrv7d: 54,
+  readiness: 62, readinessGrade: "Moderate", readinessAt: "iPhone 09:12",
+  steadyResult: 66,
+  steps: "5,240", exerciseMin: 12,
+  gauge: [40, 160]
+};
+
+const BAND_VALUE = { calm: 61, typical: 74, up: 91, wellup: 108 };
+const STRONG_EXCURSION = 20;
+
+/* hourly average heart rate, hours 00..23. 14 is the current hour. */
+const HOURLY = [61,58,56,55,54,57,60,68,96,74,70,72,81,69,74,null,null,null,null,null,null,null,null,null];
+/* per-clock-hour personal band, p25/p75 over the last 7 days */
+const HOUR_BAND = [
+  [60,72],[55,64],[53,61],[52,60],[52,60],[53,62],[55,66],[60,76],
+  [71,88],[68,84],[66,83],[66,84],[70,92],[67,85],[66,82],[66,84],
+  [67,86],[68,90],[70,95],[72,98],[68,86],[64,78],[61,72],[60,70]
+];
+/* last 7 mornings' resting heart rate, today last */
+const REST_7D = [54,56,53,55,57,54,58];
+
+/* ============================================================
+   State
+   ============================================================ */
+const S = {
+  screen: "face",
+  size: 46,
+  state: "loaded",
+  aod: false,
+  band: "typical",
+  stackOffset: 0,
+  notifOffset: 0,
+  scrubHour: null,
+  steadyTimer: null,
+  launchTimer: null
+};
+
+const SCREENS = [
+  { id: "face",           label: "Watch face",        grp: "Off-app" },
+  { id: "stack",          label: "Smart Stack",       grp: "Off-app" },
+  { id: "notif-short",    label: "Short look",        grp: "Off-app" },
+  { id: "notif-long",     label: "Long look",         grp: "Off-app" },
+  { id: "notif-static",   label: "Long look static",  grp: "Off-app" },
+  { id: "launch",         label: "Launch / raise",    grp: "App" },
+  { id: "now",            label: "1 · Now",           grp: "App" },
+  { id: "steady-ready",   label: "2a · Steady",       grp: "App" },
+  { id: "steady-running", label: "2b · Running",      grp: "App" },
+  { id: "steady-result",  label: "2c · Result",       grp: "App" },
+  { id: "today",          label: "3 · Today",         grp: "App" },
+  { id: "baseline",       label: "4 · Baseline",      grp: "App" }
+];
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.prototype.slice.call(document.querySelectorAll(s));
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============================================================
+   Band maths — the single position formula, used everywhere
+   ============================================================ */
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function bandX(v, trackWidth) {
+  return (clamp(v, A.gauge[0], A.gauge[1]) - A.gauge[0]) / (A.gauge[1] - A.gauge[0]) * trackWidth;
+}
+function verdictFor(v) {
+  const p25 = A.hourBand1400[0], p75 = A.hourBand1400[1];
+  if (v < p25)  return { word: "Calm",    color: "var(--optimal)",     key: "calm" };
+  if (v <= p75) return { word: "Typical", color: "var(--textPrimary)", key: "typical" };
+  if (v < p75 + STRONG_EXCURSION) return { word: "Up", color: "var(--fair)", key: "up" };
+  return { word: "Well up", color: "var(--poor)", key: "wellup" };
+}
+function liveHR() { return BAND_VALUE[S.band]; }
+
+/* ============================================================
+   Band renderer — track, usual zone, rest tick, ghost, now marker
+   ============================================================ */
+function drawBand(el, cfg) {
+  const tw = cfg.tw, h = cfg.h;
+  el.style.width = tw + "px";
+  el.style.height = h + "px";
+  el.innerHTML = "";
+
+  const track = document.createElement("div");
+  track.className = "bTrack" + (cfg.dashedTrack ? " dash" : "") + (cfg.aodTrack ? " aodline" : "");
+  track.style.width = tw + "px";
+  track.style.height = h + "px";
+  track.style.borderRadius = (h / 2) + "px";
+  el.appendChild(track);
+
+  if (cfg.zone) {
+    const z = document.createElement("div");
+    z.className = "bZone";
+    z.style.left = bandX(cfg.zone[0], tw) + "px";
+    z.style.width = (bandX(cfg.zone[1], tw) - bandX(cfg.zone[0], tw)) + "px";
+    z.style.height = h + "px";
+    z.style.borderRadius = (h / 2) + "px";
+    el.appendChild(z);
+  }
+  if (cfg.rest != null) {
+    const r = document.createElement("div");
+    r.className = "bRest";
+    r.style.left = (bandX(cfg.rest, tw) - 1) + "px";
+    r.style.height = cfg.restH + "px";
+    r.style.top = (-(cfg.restH - h) / 2) + "px";
+    el.appendChild(r);
+  }
+  if (cfg.ghost != null) {
+    const g = document.createElement("div");
+    g.className = "bGhost";
+    g.style.left = (bandX(cfg.ghost, tw) - 1) + "px";
+    g.style.height = cfg.restH + "px";
+    g.style.top = (-(cfg.restH - h) / 2) + "px";
+    el.appendChild(g);
+  }
+  if (cfg.marker != null) {
+    const m = document.createElement("div");
+    m.className = "bMark" + (cfg.hollow ? " hollow" : "");
+    m.style.left = (bandX(cfg.marker, tw) - cfg.markW / 2) + "px";
+    m.style.width = cfg.markW + "px";
+    m.style.height = cfg.markH + "px";
+    m.style.top = (-(cfg.markH - h) / 2) + "px";
+    m.style.background = cfg.markColor || "var(--textPrimary)";
+    el.appendChild(m);
+  }
+}
+
+function bandGeom() {
+  return S.size === 46
+    ? { h: 10, markW: 4, markH: 18, restH: 14 }
+    : { h: 8,  markW: 3.5, markH: 15, restH: 12 };
+}
+
+/* ============================================================
+   Haptics — visible pulse + a caption naming the WKHapticType
+   ============================================================ */
+function haptic(type, note) {
+  const ring = $("#hapring");
+  ring.classList.remove("fire");
+  void ring.offsetWidth;
+  ring.classList.add("fire");
+  window.setTimeout(function () { ring.classList.remove("fire"); }, 520);
+  $("#hapcap").innerHTML = '<span class="pill">' + type + "</span><span>" + note + "</span>";
+}
+function noHaptic(note) {
+  $("#hapcap").innerHTML = '<span class="pill mute">no haptic</span><span>' + note + "</span>";
+}
+function say(note) {
+  $("#hapcap").innerHTML = '<span class="pill mute">·</span><span>' + note + "</span>";
+}
+
+/* ============================================================
+   Screen 1 — Now
+   ============================================================ */
+function renderNow() {
+  const g = bandGeom();
+  const tw = S.size === 46 ? 188 : 146;
+  const v = liveHR();
+  const vd = verdictFor(v);
+  const st = S.state;
+
+  const empty = st === "empty";
+  /* toggle a class, never style.display — writing "" here would erase the inline
+     display:flex on the hero row and stack the redaction bars above the unit */
+  $("#nowEmpty").classList.toggle("hide", !empty);
+  ["#nowChip", "#nowHeroWrap", "#nowVerdict", "#nowBand", "#nowCap"].forEach(function (s) {
+    $(s).classList.toggle("hide", empty);
+  });
+  $("#nowBtn").parentNode.classList.toggle("hide", empty);
+  if (empty) return;
+
+  /* Always-On redaction — §9.7. Values are replaced, not dimmed. */
+  if (S.aod) {
+    $("#nowChipTxt").textContent = "Paused";
+    $("#nowDot").style.display = "none";
+    $("#nowHero").classList.add("hide");
+    const rb = $("#nowHeroRedact");
+    rb.classList.remove("hide");
+    rb.innerHTML = "";
+    const digits = String(v).length;
+    for (let i = 0; i < digits; i++) {
+      const b = document.createElement("i");
+      b.style.width = (S.size === 46 ? 18 : 14) + "px";
+      rb.appendChild(b);
+    }
+    rb.style.height = (S.size === 46 ? 52 : 40) + "px";
+    rb.style.alignItems = "flex-end";
+    rb.style.paddingBottom = (S.size === 46 ? 12 : 9) + "px";
+    $("#nowVerdict").textContent = "Pulse";
+    $("#nowVerdict").style.color = "var(--textTertiary)";
+    $("#nowVerdict").style.fontSize = "12px";
+    $("#nowVerdict").style.fontWeight = "400";
+    drawBand($("#nowBand"), { tw: tw, h: g.h, aodTrack: true, markW: g.markW, markH: g.markH, restH: g.restH });
+    $("#nowCap").textContent = "";
+    $("#nowBtn").disabled = false;
+    $("#nowBtn").style.background = "var(--surfaceSubtle)";
+    $("#nowBtn").style.color = "var(--textTertiary)";
+    return;
+  }
+
+  $("#nowBtn").style.background = "";
+  $("#nowBtn").style.color = "";
+  $("#nowDot").style.display = "";
+  $("#nowHero").classList.remove("hide");
+  $("#nowHeroRedact").classList.add("hide");
+  $("#nowVerdict").style.fontWeight = "600";
+  $("#nowVerdict").style.fontSize = (S.size === 46 ? 17 : 16) + "px";
+
+  const capFull = "rest " + A.restingToday + " · usual " + A.hourBand1400[0] + " to " + A.hourBand1400[1];
+  const capShort = "usual " + A.hourBand1400[0] + " to " + A.hourBand1400[1];
+
+  if (st === "loading") {
+    $("#nowChipTxt").textContent = "Reading";
+    $("#nowDot").style.background = "var(--textTertiary)";
+    $("#nowDot").classList.remove("live");
+    $("#nowHero").textContent = "74";
+    $("#nowHero").style.color = "var(--textSecondary)";
+    $("#nowVerdict").textContent = "Last read 6 min ago";
+    $("#nowVerdict").style.color = "var(--textSecondary)";
+    if (S.size === 40) $("#nowVerdict").style.fontSize = "14px";
+    drawBand($("#nowBand"), {
+      tw: tw, h: g.h, zone: A.hourBand1400, rest: A.restingToday, marker: 74, hollow: true,
+      markW: g.markW, markH: g.markH, restH: g.restH
+    });
+    $("#nowCap").textContent = S.size === 46 ? capFull : capShort;
+    $("#nowBtn").disabled = false;
+    return;
+  }
+
+  if (st === "error") {
+    $("#nowChipTxt").textContent = "No contact";
+    $("#nowDot").style.background = "var(--textTertiary)";
+    $("#nowDot").classList.remove("live");
+    $("#nowHero").textContent = "74";
+    $("#nowHero").style.color = "var(--textSecondary)";
+    $("#nowVerdict").textContent = "Watch is off your wrist";
+    $("#nowVerdict").style.color = "var(--textSecondary)";
+    if (S.size === 40) $("#nowVerdict").style.fontSize = "14px";
+    drawBand($("#nowBand"), {
+      tw: tw, h: g.h, zone: A.hourBand1400, rest: A.restingToday, marker: 74, hollow: true,
+      markW: g.markW, markH: g.markH, restH: g.restH
+    });
+    $("#nowCap").textContent = "Last read 14 min ago.";
+    $("#nowBtn").disabled = true;
+    return;
+  }
+
+  if (st === "cold") {
+    $("#nowChipTxt").textContent = "Live";
+    $("#nowDot").style.background = "var(--textPrimary)";
+    $("#nowDot").classList.add("live");
+    $("#nowHero").textContent = String(v);
+    $("#nowHero").style.color = "var(--textPrimary)";
+    $("#nowVerdict").textContent = "Learning your usual";
+    $("#nowVerdict").style.color = "var(--textPrimary)";
+    drawBand($("#nowBand"), {
+      tw: tw, h: g.h, dashedTrack: true, rest: A.restingToday, marker: v,
+      markColor: "var(--textPrimary)", markW: g.markW, markH: g.markH, restH: g.restH
+    });
+    $("#nowCap").textContent = "7 days of wear and this gets a band.";
+    $("#nowBtn").disabled = false;
+    return;
+  }
+
+  /* loaded and stale are identical here — Screen 1 never needed the phone */
+  $("#nowChipTxt").textContent = "Live";
+  $("#nowDot").style.background = vd.color;
+  $("#nowDot").classList.add("live");
+  $("#nowHero").textContent = String(v);
+  $("#nowHero").style.color = "var(--textPrimary)";
+  $("#nowVerdict").textContent = vd.word + " for 2pm";
+  $("#nowVerdict").style.color = vd.color;
+  drawBand($("#nowBand"), {
+    tw: tw, h: g.h, zone: A.hourBand1400, rest: A.restingToday, marker: v,
+    markColor: vd.color, markW: g.markW, markH: g.markH, restH: g.restH
+  });
+  $("#nowCap").textContent = S.size === 46 ? capFull : capShort;
+  $("#nowBtn").disabled = false;
+}
+
+/* ============================================================
+   Launch snapshot band
+   ============================================================ */
+function renderLaunch() {
+  const g = bandGeom();
+  const tw = S.size === 46 ? 188 : 146;
+  drawBand($("#launchBand"), {
+    tw: tw, h: g.h, zone: A.hourBand1400, rest: A.restingToday, marker: 74, hollow: true,
+    markW: g.markW, markH: g.markH, restH: g.restH
+  });
+  $("#launchCap").textContent = S.size === 46
+    ? "rest " + A.restingToday + " · usual " + A.hourBand1400[0] + " to " + A.hourBand1400[1]
+    : "usual " + A.hourBand1400[0] + " to " + A.hourBand1400[1];
+}
+
+/* ============================================================
+   Screen 2c — Steady result
+   ============================================================ */
+function renderResult() {
+  const g = bandGeom();
+  const tw = S.size === 46 ? 188 : 146;
+  const from = liveHR();
+  const to = A.steadyResult;
+  const drop = from - to;
+  const vd = verdictFor(to);
+
+  let word;
+  if (drop >= 6) word = "Settled";
+  else if (drop >= 0) word = "Holding";
+  else word = "Still up";
+
+  const wasOut = from > A.hourBand1400[1] || from < A.hourBand1400[0];
+  const isIn = to >= A.hourBand1400[0] && to <= A.hourBand1400[1];
+  let fact;
+  if (isIn && wasOut) fact = "back inside your usual";
+  else if (isIn) fact = "still inside your usual";
+  else fact = "still above your usual";
+
+  if (S.aod) {
+    $("#resHero").classList.add("hide");
+    const rb = $("#resHeroRedact");
+    rb.classList.remove("hide");
+    rb.innerHTML = "";
+    for (let i = 0; i < String(to).length; i++) {
+      const b = document.createElement("i");
+      b.style.width = (S.size === 46 ? 18 : 14) + "px";
+      rb.appendChild(b);
+    }
+    rb.style.height = (S.size === 46 ? 52 : 40) + "px";
+    rb.style.alignItems = "flex-end";
+    rb.style.paddingBottom = (S.size === 46 ? 12 : 9) + "px";
+    $("#resVerdict").textContent = "Result";
+    $("#resVerdict").style.color = "var(--textTertiary)";
+    drawBand($("#resBand"), { tw: tw, h: g.h, aodTrack: true, markW: g.markW, markH: g.markH, restH: g.restH });
+    $("#resCap").textContent = "";
+    return;
+  }
+
+  $("#resHero").classList.remove("hide");
+  $("#resHeroRedact").classList.add("hide");
+  $("#resHero").textContent = String(to);
+  $("#resVerdict").textContent = word;
+  $("#resVerdict").style.color = vd.color;
+  drawBand($("#resBand"), {
+    tw: tw, h: g.h, zone: A.hourBand1400, rest: A.restingToday, ghost: from, marker: to,
+    markColor: vd.color, markW: g.markW, markH: g.markH, restH: g.restH
+  });
+  const dl = Math.abs(drop);
+  const dir = drop >= 0 ? "down" : "up";
+  $("#resCap").textContent = dl + " " + dir + " from " + from + " · " + fact;
+}
+
+/* ============================================================
+   Screen 3 — Today
+   ============================================================ */
+function renderToday() {
+  const chartH = S.size === 46 ? 70 : 56;
+  const chartW = 118;
+  const left = Math.round(((S.size === 46 ? 208 : 162) - chartW) / 2);
+  const el = $("#todayChart");
+  el.style.left = left + "px";
+  el.style.width = chartW + "px";
+  el.style.height = chartH + "px";
+  el.innerHTML = "";
+
+  const barH = function (v) { return (clamp(v, A.gauge[0], A.gauge[1]) - A.gauge[0]) / 120 * chartH; };
+  const hideHR = (S.state === "empty") || S.aod;
+
+  /* Always-On: the 24 bars are removed outright, not dimmed. Only the two 1pt rules survive. */
+  if (!S.aod) {
+    const bars = document.createElement("div");
+    bars.className = "bars";
+    for (let h = 0; h < 24; h++) {
+      const b = document.createElement("b");
+      const v = HOURLY[h];
+      if (v == null || hideHR) {
+        b.className = "future";
+        b.style.height = "2px";
+      } else if (h === 14) {
+        b.className = "now";
+        b.style.height = barH(liveHR()) + "px";
+      } else {
+        b.style.height = barH(v) + "px";
+      }
+      bars.appendChild(b);
+    }
+    el.appendChild(bars);
+  }
+
+  const base = document.createElement("div");
+  base.className = "baseline";
+  el.appendChild(base);
+
+  if (!hideHR) {
+    const rl = document.createElement("div");
+    rl.className = "restline";
+    rl.style.top = (chartH - barH(A.restingToday)) + "px";
+    el.appendChild(rl);
+    $("#restLabel").style.display = "";
+    $("#restLabel").style.top = ((S.size === 46 ? 54 : 42) + chartH - barH(A.restingToday) - 5) + "px";
+  } else if (S.aod) {
+    const rl = document.createElement("div");
+    rl.className = "restline";
+    rl.style.borderTopColor = "var(--borderLow)";
+    rl.style.top = (chartH - barH(A.restingToday)) + "px";
+    el.appendChild(rl);
+    $("#restLabel").style.display = "none";
+  } else {
+    $("#restLabel").style.display = "none";
+  }
+
+  if (S.scrubHour != null && !hideHR) {
+    const sl = document.createElement("div");
+    sl.className = "scrubline on";
+    sl.style.left = (S.scrubHour * 5 + (S.scrubHour === 14 ? 2 : 1)) + "px";
+    el.appendChild(sl);
+  }
+
+  const l1 = $("#todayL1"), l2 = $("#todayL2"), l3 = $("#todayL3");
+  l3.style.display = S.size === 46 ? "" : "none";
+
+  if (S.aod) {
+    l1.textContent = "—— —— · —— ——";
+    l1.className = "abs t-foot full dashrow";
+    l2.textContent = "—— —— ——";
+    l2.className = "abs t-foot full dashrow";
+    l3.textContent = "—— · ——";
+    l3.className = "abs t-foot full dashrow";
+    return;
+  }
+  l1.className = "abs t-foot full"; l1.style.color = "var(--textSecondary)";
+  l2.className = "abs t-foot full"; l2.style.color = "var(--textTertiary)";
+  l3.className = "abs t-foot full"; l3.style.color = "var(--textTertiary)";
+
+  if (S.state === "empty") {
+    l1.textContent = "Heart rate is off";
+    if (S.size === 46) {
+      l2.textContent = A.steps + " steps · " + A.exerciseMin + " exercise min";
+      l3.style.display = "";
+      l3.textContent = "Turn it on in the Watch app, under Privacy.";
+    } else {
+      /* only two footnote slots survive the 40mm floor, so the recovery instruction wins */
+      l2.textContent = "Turn it on in the Watch app, under Privacy.";
+    }
+    return;
+  }
+
+  if (S.scrubHour != null) {
+    const h = S.scrubHour;
+    const hh = (h < 10 ? "0" + h : String(h)) + ":00";
+    const bnd = HOUR_BAND[h];
+    const v = HOURLY[h];
+    if (v == null) {
+      l1.textContent = hh + " no samples yet · usual " + bnd[0] + " to " + bnd[1];
+      l2.textContent = "Later today";
+    } else {
+      const shown = (h === 14) ? liveHR() : v;
+      l1.textContent = hh + " avg " + shown + " · usual " + bnd[0] + " to " + bnd[1];
+      let w;
+      if (shown < bnd[0]) w = "Calm";
+      else if (shown <= bnd[1]) w = "Typical";
+      else if (shown < bnd[1] + STRONG_EXCURSION) w = "Up";
+      else w = "Well up";
+      const label = (h === 0) ? "12am" : (h < 12 ? h + "am" : (h === 12 ? "12pm" : (h - 12) + "pm"));
+      l2.textContent = w + " for " + label;
+    }
+    l3.textContent = A.steps + " steps · " + A.exerciseMin + " exercise min";
+    return;
+  }
+
+  l1.textContent = "Low " + A.todayLow + " at " + A.todayLowAt + " · High " + A.todayHigh + " at " + A.todayHighAt;
+  l2.textContent = "You usually peak near " + A.usualPeak7d;
+  l3.textContent = A.steps + " steps · " + A.exerciseMin + " exercise min";
+}
+
+/* ============================================================
+   Screen 4 — Baseline
+   ============================================================ */
+function renderBaseline() {
+  const scaleW = S.size === 46 ? 150 : 110;
+  const px = function (v) { return v / 80 * scaleW; };
+  const cold = S.state === "cold";
+  const off = S.state === "empty";
+
+  $("#bBar1a").style.width = (off ? 0 : px(A.restingToday)) + "px";
+  $("#bBar1b").style.width = (cold || off ? 0 : px(A.restingBaseline60d)) + "px";
+  $("#bBar2a").style.width = (off ? 0 : px(A.hrvLastNight)) + "px";
+  $("#bBar2b").style.width = (cold || off ? 0 : px(A.hrv7d)) + "px";
+
+  const showTrail2 = S.size === 46;
+  $("#bV2a").style.display = showTrail2 ? "" : "none";
+  $("#bV2b").style.display = showTrail2 ? "" : "none";
+
+  if (S.aod) {
+    $("#bD1").textContent = "——"; $("#bD1").style.color = "var(--textTertiary)";
+    $("#bD2").textContent = "——"; $("#bD2").style.color = "var(--textTertiary)";
+    $("#bV1a").textContent = "——"; $("#bV1b").textContent = "——";
+    $("#bV2a").textContent = "——"; $("#bV2b").textContent = "——";
+    $$("#bRow1 .pbar, #bRow2 .pbar").forEach(function (b) { b.style.width = "0px"; });
+    $("#bScore").className = "t-title";
+    $("#bScore").textContent = "——"; $("#bScore").style.color = "var(--textTertiary)";
+    $("#bGrade").textContent = "——"; $("#bGrade").style.color = "var(--textTertiary)";
+    $("#bSource").textContent = "iPhone ——";
+    return;
+  }
+  $("#bBar1a").style.background = "var(--textPrimary)";
+  $("#bBar2a").style.background = "var(--textPrimary)";
+  $("#bBar1b").style.background = "var(--textTertiary)";
+  $("#bBar2b").style.background = "var(--textTertiary)";
+  $("#bScore").style.color = "var(--textPrimary)";
+  $("#bGrade").style.color = "var(--fair)";
+
+  if (off) {
+    $("#bD1").textContent = "Off"; $("#bD1").style.color = "var(--textTertiary)";
+    $("#bD2").textContent = "Off"; $("#bD2").style.color = "var(--textTertiary)";
+    $("#bV1a").textContent = "Off"; $("#bV1b").textContent = String(A.restingBaseline60d);
+    $("#bV2a").textContent = "Off"; $("#bV2b").textContent = String(A.hrv7d);
+    $("#bBar1b").style.width = px(A.restingBaseline60d) + "px";
+    $("#bBar2b").style.width = px(A.hrv7d) + "px";
+  } else if (cold) {
+    $("#bD1").textContent = "Learning"; $("#bD1").style.color = "var(--textTertiary)";
+    $("#bD2").textContent = "Learning"; $("#bD2").style.color = "var(--textTertiary)";
+    const nights = S.size === 46 ? "7 nights" : "";
+    $("#bV1a").textContent = String(A.restingToday); $("#bV1b").textContent = nights;
+    $("#bV2a").textContent = String(A.hrvLastNight); $("#bV2b").textContent = nights;
+  } else {
+    $("#bD1").textContent = "+3"; $("#bD1").style.color = "var(--fair)";
+    $("#bD2").textContent = "−6"; $("#bD2").style.color = "var(--fair)";
+    $("#bV1a").textContent = String(A.restingToday); $("#bV1b").textContent = String(A.restingBaseline60d);
+    $("#bV2a").textContent = String(A.hrvLastNight); $("#bV2b").textContent = String(A.hrv7d);
+  }
+
+  if (S.state === "stale") {
+    $("#bScore").style.color = "var(--textSecondary)";
+    $("#bScore").className = "t-title dotted";
+    $("#bGrade").style.color = "var(--textSecondary)";
+    $("#bSource").textContent = "iPhone 4h ago";
+  } else {
+    $("#bScore").className = "t-title";
+    $("#bSource").textContent = A.readinessAt;
+  }
+  $("#bScore").textContent = String(A.readiness);
+  $("#bGrade").textContent = A.readinessGrade;
+}
+
+/* ============================================================
+   Smart Stack widget — identical band encoding to Screen 1
+   ============================================================ */
+function renderWidget() {
+  /* 40mm is Apple's published widget canvas 152 x 69.5. 46mm has no published row
+     (research 00-SYNTHESIS §7), so it is interpolated from the 45mm and 49mm rows. */
+  const wW = S.size === 46 ? 198 : 152;
+  const wH = S.size === 46 ? 78 : 69.5;
+  const pad = 6;
+  const cw = wW - pad * 2;
+  const v = liveHR();
+  const vd = verdictFor(v);
+
+  const wrap = $("#stackWidget");
+  wrap.style.width = wW + "px";
+  wrap.style.height = wH + "px";
+  wrap.style.background = (vd.key === "wellup" && !S.aod)
+    ? "rgba(224,92,100,.22)"
+    : "var(--surfaceRaised)";
+
+  const pad_ = $("#widgetPad");
+  pad_.innerHTML = "";
+  pad_.style.padding = pad + "px";
+
+  const row1 = document.createElement("div");
+  row1.style.cssText = "display:flex;align-items:baseline;gap:3px;height:22px";
+  if (S.aod) {
+    row1.innerHTML =
+      '<span class="redbars"><i style="width:14px"></i><i style="width:14px"></i></span>' +
+      '<span class="t-cap2" style="font-size:11px">BPM</span><span style="flex:1"></span>' +
+      '<span class="t-cap2" style="font-size:11px">6m</span>';
+  } else {
+    row1.innerHTML =
+      '<span style="font-size:19.5px;font-weight:600;color:var(--textPrimary)">' + v + "</span>" +
+      '<span class="t-cap2" style="font-size:11px">BPM</span><span style="flex:1"></span>' +
+      '<span class="t-cap2" style="font-size:11px">6m</span>';
+  }
+  pad_.appendChild(row1);
+
+  const strip = document.createElement("div");
+  strip.className = "band";
+  strip.style.position = "relative";
+  strip.style.margin = "4px 0 0";
+  pad_.appendChild(strip);
+  const sh = S.size === 46 ? 10 : 8;
+  if (S.aod) {
+    drawBand(strip, { tw: cw, h: sh, aodTrack: true, markW: 3.5, markH: 14, restH: 12 });
+  } else {
+    drawBand(strip, {
+      tw: cw, h: sh, zone: A.hourBand1400, rest: A.restingToday, marker: v,
+      markColor: vd.color, markW: 3.5, markH: 14, restH: 12
+    });
+  }
+
+  const line = document.createElement("div");
+  line.className = "t-cap2";
+  line.style.cssText = "font-size:12px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--textSecondary)";
+  line.textContent = S.aod ? "Pulse" : vd.word + " for 2pm";
+  pad_.appendChild(line);
+}
+
+/* ============================================================
+   Watch face complications
+   ============================================================ */
+function renderFace() {
+  const v = liveHR();
+  const vd = verdictFor(v);
+  const stale = S.state === "stale" || S.state === "error";
+
+  /* accessoryCircular — open gauge, 40..160, 270 degree sweep, gap centred at the bottom */
+  const C = 2 * Math.PI * 21.5;
+  const sweep = C * 0.75;
+  const frac = (clamp(v, 40, 160) - 40) / 120;
+  const arc = $("#circArc");
+  arc.setAttribute("stroke-dasharray", (sweep * frac).toFixed(1) + " " + C.toFixed(1));
+  arc.setAttribute("stroke", S.aod ? "#2E2E36" : cssVal(vd.color));
+  if (stale && !S.aod) {
+    arc.setAttribute("stroke-dasharray", "3 3");
+    arc.setAttribute("stroke-dashoffset", "0");
+  } else {
+    arc.removeAttribute("stroke-dashoffset");
+  }
+  $("#circNum").textContent = S.aod ? "——" : String(v);
+  $("#circNum").setAttribute("fill", S.aod ? "#2E2E36" : "#F2F2F6");
+  $("#circNum").setAttribute("font-size", S.size === 46 ? "14.5" : "12.5");
+  $("#circLabel").textContent = "bpm";
+
+  /* accessoryCorner — REST 58 with a 40..80 gauge */
+  $("#cornerTxt").textContent = S.aod ? "REST ——" : "REST " + A.restingToday;
+  $("#cornerTxt").setAttribute("fill", S.aod ? "#2E2E36" : "#F2F2F6");
+  const cLen = 40.8;
+  const cf = (clamp(A.restingToday, 40, 80) - 40) / 40;
+  $("#cArcFill").setAttribute("stroke-dasharray", (cLen * cf).toFixed(1) + " 100");
+  $("#cArcFill").setAttribute("stroke", S.aod ? "#2E2E36" : "#ADADB8");
+  const tickAt = (clamp(A.restingBaseline60d, 40, 80) - 40) / 40 * cLen;
+  $("#cArcTick").setAttribute("stroke-dashoffset", (-tickAt).toFixed(1));
+  $("#cArcTick").setAttribute("stroke", S.aod ? "#2E2E36" : "#F2F2F6");
+
+  /* accessoryRectangular — 12 hour sparkline */
+  $("#rectHR").textContent = S.aod ? "——" : String(v);
+  $("#rectHR").style.color = S.aod ? "var(--borderLow)" : "var(--textPrimary)";
+  $("#rectAge").textContent = stale ? "22m" : "6m";
+  const rc = $("#rectChart");
+  rc.innerHTML = "";
+  const h12 = 18;
+  const bh = function (x) { return (clamp(x, 40, 160) - 40) / 120 * h12; };
+  const bars = document.createElement("div");
+  bars.className = "bars";
+  for (let h = 3; h <= 14; h++) {
+    const b = document.createElement("b");
+    const val = h === 14 ? v : HOURLY[h];
+    if (S.aod) { b.className = "future"; b.style.height = "2px"; }
+    else if (h === 14) { b.className = "now"; b.style.height = bh(val) + "px"; }
+    else { b.style.height = bh(val) + "px"; }
+    bars.appendChild(b);
+  }
+  rc.appendChild(bars);
+  const rl = document.createElement("div");
+  rl.className = "restline";
+  rl.style.top = (h12 - bh(A.restingToday)) + "px";
+  if (S.aod) rl.style.borderTopColor = "var(--borderLow)";
+  rc.appendChild(rl);
+}
+
+function cssVal(v) {
+  if (v.indexOf("var(") !== 0) return v;
+  const name = v.slice(4, -1).trim();
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#F2F2F6";
+}
+
+/* ============================================================
+   Notification 7-morning chart
+   ============================================================ */
+function renderNotifChart() {
+  const el = $("#nlChart");
+  const w = S.size === 46 ? 188 : 146;
+  const h = 38;
+  el.style.width = w + "px";
+  el.style.height = h + "px";
+  el.innerHTML = "";
+  const bh = function (x) { return (clamp(x, 40, 80) - 40) / 40 * h; };
+  const bars = document.createElement("div");
+  bars.className = "bars";
+  bars.style.gap = "2px";
+  for (let i = 0; i < REST_7D.length; i++) {
+    const b = document.createElement("b");
+    b.style.height = bh(REST_7D[i]) + "px";
+    if (i === REST_7D.length - 1) {
+      b.style.width = "4px";
+      b.style.background = "var(--fair)";
+    }
+    bars.appendChild(b);
+  }
+  el.appendChild(bars);
+  const base = document.createElement("div");
+  base.className = "baseline";
+  el.appendChild(base);
+}
+
+/* ============================================================
+   Master render
+   ============================================================ */
+function render() {
+  const sz = S.size;
+  const screen = $("#screen");
+  screen.className = "screen s" + sz + (S.aod ? " aod" : "");
+  $("#case").className = "case" + (sz === 40 ? " small" : "");
+
+  $$("[data-y]").forEach(function (el) {
+    const parts = el.dataset.y.split("|");
+    el.style.top = (sz === 46 ? parts[0] : parts[1]) + "px";
+  });
+  $$("[data-fs]").forEach(function (el) {
+    const parts = el.dataset.fs.split("|");
+    el.style.fontSize = (sz === 46 ? parts[0] : parts[1]) + "px";
+  });
+  $$(".full").forEach(function (el) { el.style.width = (sz === 46 ? 188 : 146) + "px"; });
+  $$(".row").forEach(function (el) { el.style.width = (sz === 46 ? 188 : 146) + "px"; });
+  $$(".nact").forEach(function (el) { el.style.width = (sz === 46 ? 188 : 146) + "px"; });
+  $("#steadyStart").style.height = (sz === 46 ? 60 : 52) + "px";
+
+  $$(".scr").forEach(function (s) {
+    s.classList.toggle("on", s.dataset.screen === S.screen);
+  });
+
+  renderFace();
+  renderWidget();
+  renderNow();
+  renderLaunch();
+  renderResult();
+  renderToday();
+  renderBaseline();
+  renderNotifChart();
+
+  $("#stacklist").style.transform = "translateY(" + (-S.stackOffset) + "px)";
+  const notifShift = "translateY(" + (-S.notifOffset) + "px)";
+  $("#longBody").style.transform = S.screen === "notif-long" ? notifShift : "none";
+  $("#staticBody").style.transform = S.screen === "notif-static" ? notifShift : "none";
+  $("#crownacc").classList.toggle("on", S.screen === "today" && S.scrubHour != null);
+  if (S.scrubHour != null) {
+    const h = S.scrubHour;
+    $("#crownacc").textContent = (h < 10 ? "0" + h : h) + ":00";
+  }
+
+  $$("#switcher .sw").forEach(function (b) {
+    b.setAttribute("aria-current", b.dataset.go === S.screen ? "true" : "false");
+  });
+  renderLegend();
+}
+
+/* ============================================================
+   Legend — complication and widget family labels
+   ============================================================ */
+function renderLegend() {
+  const l = $("#legend");
+  if (S.screen === "face") {
+    l.className = "legend on";
+    l.innerHTML =
+      "<div><b>1</b> &nbsp;<code>accessoryCorner</code> &nbsp;“Rest” — resting HR 58 on a 40–80 gauge, tick at the 60-day baseline 55. Deep link <code>laso://watch/pulse/baseline</code></div>" +
+      "<div><b>2</b> &nbsp;<code>accessoryRectangular</code> &nbsp;“Pulse Today” — 74 BPM, sample age, 12-hour sparkline against the rest line. Deep link <code>laso://watch/pulse/today</code></div>" +
+      "<div><b>3</b> &nbsp;<code>accessoryCircular</code> &nbsp;“Pulse” — open gauge 40–160 bpm, band colour, widgetLabel “bpm”. Deep link <code>laso://watch/pulse/now</code></div>" +
+      "<div style='margin-top:6px;opacity:.75'>accessoryInline is deliberately not shipped: no fourth destination worth its own deep link. Other slots are system complications so the Laso ones have to earn their place.</div>";
+  } else if (S.screen === "stack") {
+    l.className = "legend on";
+    l.innerHTML =
+      "<div><b>Laso widget</b> &nbsp;<code>accessoryRectangular</code> — the only Smart Stack family this concept ships. Same band encoding as Screen 1, so the widget teaches the app.</div>" +
+      "<div style='margin-top:4px;opacity:.75'>Surfaced by <code>TimelineProvider.relevance()</code> with <code>RelevantContext.fitness(_:)</code> and <code>RelevantContext.date(range:kind:)</code> for 12:30–15:00. <code>TimelineEntry.relevance</code> does nothing on watchOS and is not used.</div>";
+  } else {
+    l.className = "legend";
+    l.innerHTML = "";
+  }
+}
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+function go(id, note) {
+  if (S.steadyTimer) { window.clearInterval(S.steadyTimer); S.steadyTimer = null; }
+  if (S.launchTimer) { window.clearTimeout(S.launchTimer); S.launchTimer = null; }
+  if (id !== "today") S.scrubHour = null;
+  S.screen = id;
+  render();
+  if (note) say(note);
+
+  if (id === "launch") startLaunch();
+  if (id === "steady-ready" && !note) {
+    say("Pushed view, depth 2, no scrolling — which is what makes handGestureShortcut(.primaryAction) legal here under R11. Double Tap fires Start.");
+  }
+  if (id === "notif-short") haptic(".notification", "N1 arriving. System-fired; it interrupts sampling if the app is frontmost, which is why the ≤3/week cap matters twice.");
+  if (id === "notif-long" || id === "notif-static") {
+    S.notifOffset = 0;
+    render();
+    haptic(".notification", "Long look. First nondestructive action is Steady 60s, so Double Tap selects it.");
+  }
+}
+
+function startLaunch() {
+  say("Launch and wrist-raise both show the last snapshot first, then the live query installs.");
+  S.launchTimer = window.setTimeout(function () {
+    S.launchTimer = null;
+    S.screen = "now";
+    render();
+    noHaptic("first live sample — number crossfades to textPrimary, marker fills, chip flips to LIVE. No haptic: HKAnchoredObjectQuery is live (R8).");
+  }, 1500);
+}
+
+/* ============================================================
+   Steady session — 6x speed so a reviewer does not wait 60 s
+   ============================================================ */
+function startSteady() {
+  haptic(".start", "Steady started. Haptic fires FIRST; the HR query installs ≥100 ms after the engine finishes (R8).");
+  S.screen = "steady-running";
+  let n = 60;
+  $("#steadyCount").textContent = String(n);
+  render();
+  S.steadyTimer = window.setInterval(function () {
+    n -= 1;
+    $("#steadyCount").textContent = String(n);
+    if (n <= 0) {
+      window.clearInterval(S.steadyTimer);
+      S.steadyTimer = null;
+      finishSteady();
+    }
+  }, REDUCED ? 60 : 160);
+}
+
+function finishSteady() {
+  const from = liveHR();
+  const to = A.steadyResult;
+  const p25 = A.hourBand1400[0], p75 = A.hourBand1400[1];
+  const wasAbove = from > p75;
+  const isIn = to >= p25 && to <= p75;
+  S.screen = "steady-result";
+  render();
+  if (wasAbove && isIn) {
+    haptic(".directionDown", "Crossed from above the band to inside it. Query is stopped FIRST, then the haptic. Fires instead of .success, never in addition.");
+  } else if (isIn) {
+    haptic(".success", "Stayed inside the usual band. Query stopped before the haptic, never the reverse.");
+  } else {
+    noHaptic("still above the band — deliberately silent. A haptic here would punish a body for doing something. The screen says it in words.");
+  }
+}
+
+/* ============================================================
+   Digital Crown
+   ============================================================ */
+let crownAngle = 0;
+function crownSpin(dir) {
+  crownAngle += dir * 14;
+  const c = $("#crown");
+  c.style.transform = "translateY(" + (dir > 0 ? 1 : -1) + "px)";
+  c.classList.add("turn");
+  window.setTimeout(function () { c.style.transform = ""; c.classList.remove("turn"); }, 120);
+}
+function detentFlash() {
+  const d = $("#detent");
+  d.classList.add("on");
+  window.setTimeout(function () { d.classList.remove("on"); }, 220);
+}
+
+function crown(dir) {
+  crownSpin(dir);
+
+  if (S.screen === "face") {
+    if (dir > 0) { go("stack", "Crown down from the watch face opens the Smart Stack."); detentFlash(); }
+    return;
+  }
+  if (S.screen === "stack") {
+    const screenH = S.size === 46 ? 248 : 197;
+    const max = Math.max(0, $("#stacklist").offsetHeight - (screenH - 22));
+    S.stackOffset = clamp(S.stackOffset + dir * 30, 0, max);
+    if (dir < 0 && S.stackOffset === 0) { go("face", "Crown up past the top of the stack returns to the watch face."); return; }
+    detentFlash();
+    haptic(".click", "System crown detent inside the Smart Stack. No Laso HR query is live here.");
+    render();
+    return;
+  }
+  if (S.screen === "notif-long" || S.screen === "notif-static") {
+    const bodyEl = S.screen === "notif-long" ? $("#longBody") : $("#staticBody");
+    const screenH = S.size === 46 ? 248 : 197;
+    const max = Math.max(0, bodyEl.offsetHeight - (screenH - 48));
+    S.notifOffset = clamp(S.notifOffset + dir * 26, 0, max);
+    detentFlash();
+    render();
+    say("Long look scrolls under the crown. Dismiss is system-supplied and always last.");
+    return;
+  }
+  if (S.screen === "now") {
+    if (dir > 0) {
+      go("today", "Vertical TabView, page 1 → page 2. Detent suppressed on Screen 1: the query is torn down in the transition (R8).");
+      noHaptic("crown detent suppressed while the anchored HR query is live on Screen 1.");
+    } else {
+      noHaptic("already on page 1. Detent suppressed while the HR query is live.");
+    }
+    return;
+  }
+  if (S.screen === "today") {
+    detentFlash();
+    haptic(".click", "Crown detent. No HR query runs on Today, so a detent haptic is legal here.");
+    if (S.scrubHour == null) {
+      S.scrubHour = 14;
+      render();
+      return;
+    }
+    const next = S.scrubHour + dir;
+    if (next > 23) { S.scrubHour = null; go("baseline", "Scrubbed past hour 23, so crown control hands back to page navigation."); return; }
+    if (next < 0)  { S.scrubHour = null; go("now", "Scrubbed before hour 00, so crown control hands back to page navigation."); return; }
+    S.scrubHour = next;
+    render();
+    return;
+  }
+  if (S.screen === "baseline") {
+    detentFlash();
+    if (dir < 0) { haptic(".click", "Crown detent. Page 3 → page 2."); go("today", "Back up to Today."); }
+    else { haptic(".click", "Crown detent. Page 3 is the last page."); }
+    return;
+  }
+  if (S.screen === "launch") { say("Launch snapshot does not respond to the crown."); return; }
+  say("This screen does not use the crown. Steady is a pushed view; crown press is never handled (R10).");
+}
+
+/* ============================================================
+   Double Tap
+   ============================================================ */
+function doubleTap() {
+  if (S.screen === "steady-ready") {
+    say("Double Tap → primaryAction → Start");
+    startSteady();
+    return;
+  }
+  if (S.screen === "notif-long" || S.screen === "notif-static") {
+    say("Double Tap selects the first nondestructive action.");
+    actSteady();
+    return;
+  }
+  noHaptic("Double Tap ignored here. R11 forbids a primaryAction in views with vertical tabs, so Now / Today / Baseline set none. The only primaryAction in this concept is Start on the pushed Steady screen.");
+}
+
+function actSteady() {
+  go("steady-ready");
+  haptic(".start", "Notification action “Steady 60s” opens the pushed Steady screen and arms the recheck.");
+}
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+function buildSwitcher() {
+  const nav = $("#switcher");
+  let group = "";
+  SCREENS.forEach(function (s) {
+    if (s.grp !== group) {
+      group = s.grp;
+      const g = document.createElement("span");
+      g.className = "grp";
+      g.textContent = group;
+      nav.appendChild(g);
+    }
+    const b = document.createElement("button");
+    b.className = "sw";
+    b.type = "button";
+    b.dataset.go = s.id;
+    b.textContent = s.label;
+    b.addEventListener("click", function () { go(s.id); });
+    nav.appendChild(b);
+  });
+}
+
+function seg(sel, attr, fn) {
+  $$(sel + " button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      $$(sel + " button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      fn(b.dataset[attr]);
+    });
+  });
+}
+
+buildSwitcher();
+
+seg("#segSize", "size", function (v) { S.size = parseInt(v, 10); render(); say("Canvas " + v + "mm."); });
+seg("#segState", "state", function (v) {
+  S.state = v;
+  S.scrubHour = null;
+  render();
+  const notes = {
+    loaded: "Loaded. Screen 1 is entirely native, so it looks the same whether or not the phone is reachable.",
+    loading: "Loading. Cached number in textSecondary, outline-only marker, chip reads READING. No spinner (R13).",
+    cold: "Cold start, under 7 days of wear. The number is real from day one; the band is named as missing.",
+    empty: "HealthKit heart rate denied. No placeholder digits, no dashes. Today and Baseline still work.",
+    error: "No wrist contact. Last sample plus its age; Steady is disabled, not removed.",
+    stale: "Phone payload is 4 h old. Screens 1 and 3 are unaffected because neither ever needed the phone."
+  };
+  say(notes[v] || "");
+});
+seg("#segAod", "aod", function (v) {
+  S.aod = v === "1";
+  render();
+  say(S.aod
+    ? "Always-On. Number replaced by redaction bars, marker removed entirely because its position is the verdict, rest tick removed, all colour dropped. Controls stay interactive."
+    : "Wrist raised. Layout does not move, values come back.");
+});
+seg("#segBand", "band", function (v) {
+  S.band = v;
+  render();
+  const vd = verdictFor(liveHR());
+  say("Live " + liveHR() + " bpm → " + vd.word + ". The marker moves relative to the grey zone; the word carries it without colour.");
+});
+
+$("#btnDoubleTap").addEventListener("click", doubleTap);
+
+$("#devbtn").addEventListener("click", function () {
+  const p = $("#devpanel");
+  const open = p.classList.toggle("on");
+  $("#devbtn").setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+/* app controls */
+$("#nowBtn").addEventListener("click", function () {
+  if ($("#nowBtn").disabled) return;
+  go("steady-ready");
+  noHaptic("opening Steady. No haptic yet: the Screen 1 query is still tearing down (R8). .start fires on the Start press.");
+});
+$("#launchBtn").addEventListener("click", function () { go("steady-ready"); });
+$("#steadyStart").addEventListener("click", startSteady);
+$("#resDone").addEventListener("click", function () {
+  go("now", "Pop back to Now. Navigation is depth 2 at most.");
+  noHaptic("pop is not a state change and the live query is reinstalling, so nothing fires.");
+});
+
+/* complication and widget deep links */
+$("#circSlot").addEventListener("click", function () { go("now", "laso://watch/pulse/now"); });
+$("#rectSlot").addEventListener("click", function () { go("today", "laso://watch/pulse/today"); });
+$("#cornerSlot").addEventListener("click", function () { go("baseline", "laso://watch/pulse/baseline"); });
+$("#stackWidget").addEventListener("click", function () { go("now", "laso://watch/pulse/now — whole-widget tap target, no App Intent button."); });
+["#circSlot", "#rectSlot", "#cornerSlot", "#stackWidget"].forEach(function (s) {
+  $(s).addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $(s).click(); }
+  });
+});
+
+/* notification actions */
+$("#nlAct1").addEventListener("click", actSteady);
+$("#nsAct1").addEventListener("click", actSteady);
+$("#nlAct2").addEventListener("click", function () {
+  haptic(".success", "Muted for 7 days. The friendly hush toggle, shipped in the box rather than after the complaint.");
+  go("face");
+});
+$("#nsAct2").addEventListener("click", function () {
+  haptic(".success", "Muted for 7 days.");
+  go("face");
+});
+$("#nlAct3").addEventListener("click", function () { go("face", "Dismiss is system-supplied and always last."); });
+$("#nsAct3").addEventListener("click", function () { go("face", "Dismiss is system-supplied and always last."); });
+[$("#nlAct1"), $("#nlAct2"), $("#nlAct3"), $("#nsAct1"), $("#nsAct2"), $("#nsAct3")].forEach(function (el) {
+  el.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); }
+  });
+});
+
+/* crown input */
+let wheelAcc = 0;
+window.addEventListener("wheel", function (e) {
+  wheelAcc += e.deltaY;
+  if (Math.abs(wheelAcc) >= 40) {
+    crown(wheelAcc > 0 ? 1 : -1);
+    wheelAcc = 0;
+  }
+}, { passive: true });
+
+window.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowDown") { e.preventDefault(); crown(1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); crown(-1); }
+  else if (e.key === "d" || e.key === "D") { doubleTap(); }
+});
+
+render();
+say("Concept 03 Live Pulse. Start on the watch face — 80% of the value lives outside the app.");
+</script>
+</body>
+</html>

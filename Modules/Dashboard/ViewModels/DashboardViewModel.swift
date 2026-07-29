@@ -2197,6 +2197,79 @@ final class DashboardViewModel {
 
     /// Write current analysis state to App Group UserDefaults for widgets.
     @MainActor
+    /// The values the wrist needs and cannot measure, gathered from what this refresh
+    /// already computed.
+    ///
+    /// Nothing here is a new model. Each field reuses a number the phone was going to
+    /// produce anyway, because a second formula for "how recovered are you" would be a
+    /// second answer the two screens could disagree about. Any field the phone cannot
+    /// produce yet stays nil, and the matching rung on the wrist skips instead of
+    /// guessing.
+    private func watchVerdictFacts(readinessScore: Int) -> WatchVerdictFacts {
+        let hrv = analysisEngine.baselines[.heartRateVariability]
+
+        return WatchVerdictFacts(
+            // The phone's multi-day read, never a single night. `WatchVerdict` gates its
+            // `rest` rung on this so the wrist cannot call a rest day off one bad sleep.
+            bodyStressElevated: analysisEngine.illnessWarnings.isEmpty ? false : true,
+            restingHeartRateBaseline: analysisEngine.baselines[.restingHeartRate]?.mean,
+            // The floor of the usual range, not the mean: "suppressed" means under this
+            // wearer's normal spread, and a mean would flag half of all healthy nights.
+            hrvBaselineFloor: hrv.map { $0.mean - $0.standardDeviation },
+            hoursSinceHardDay: hoursSinceHardDay(),
+            // Reuses the existing workout programmer rather than inventing a second
+            // "how much is wise today" rule.
+            //
+            // Called with the same two inputs the app's own plan uses — the quantised
+            // recovery band and the live cycle phase, see ContentView.swift where
+            // TodaysActionDetailView is built. Passing the raw score and no cycle phase
+            // produced a different target duration from the one the app displays, so the
+            // wrist could offer more room than the phone did.
+            exerciseCeilingMinutes: WorkoutProgrammer
+                .generatePlan(
+                    recoveryBand: WorkoutRecoveryBand(score: readinessScore),
+                    cyclePhase: menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier
+                )
+                .targetDuration,
+            bedtimeTarget: sleepNeedCalculator.currentNeed?.recommendedBedtime,
+            nightsOfHistory: healthKitManager.timeSeries[.sleepDuration]?.daysOfData
+        )
+    }
+
+    /// Whole days since the last high-strain day, expressed in hours.
+    ///
+    /// Day granularity on purpose: the stored strain is one row per day, so quoting an
+    /// hour count would imply a precision the source does not have. The wrist turns this
+    /// straight back into "2 days after your hard day".
+    private func hoursSinceHardDay(now: Date = Date()) -> Double? {
+        let hardLevels: Set<String> = [
+            StrainLevel.high.rawValue,
+            StrainLevel.overreaching.rawValue,
+            StrainLevel.allOut.rawValue
+        ]
+        let today = Date.cal.startOfDay(for: now)
+
+        // Starts at yesterday, not today.
+        //
+        // Today's strain row is written and rewritten intraday, so a hard session
+        // finishing at 18:00 would report 0 hours, and the wrist renders 0 with the same
+        // sentence it uses for 24 ("a day after your hard day"). A hard day still in
+        // progress is also not something to recover from yet — the recovery it explains
+        // has not started.
+        //
+        // Only as far back as the recovering window reaches. Beyond it a suppressed HRV
+        // needs a different explanation, and blaming a workout the body has already
+        // finished paying for would be wrong.
+        let maxDays = Int(WatchVerdictThresholds.recoveringWindowHours / 24)
+        for daysAgo in 1...maxDays {
+            guard let day = Date.cal.date(byAdding: .day, value: -daysAgo, to: today),
+                  let strain = store.dailyStrain(on: day),
+                  hardLevels.contains(strain.level) else { continue }
+            return Double(daysAgo) * 24
+        }
+        return nil
+    }
+
     func writeWidgetSnapshots() {
         let grade = overallScore.grade
 
@@ -2262,10 +2335,12 @@ final class DashboardViewModel {
         // lock. Someone who glances at their wrist and then opens the app has to see
         // the same value. `loadCachedScore` is the live score LiveViewModel mirrors
         // for exactly this cross-surface use.
+        let watchScore = readinessStore.loadCachedScore() ?? overallScore.score
         PhoneWatchSession.shared.push(
-            readinessScore: readinessStore.loadCachedScore() ?? overallScore.score,
+            readinessScore: watchScore,
             grade: grade,
-            dayType: readiness.dayType
+            dayType: readiness.dayType,
+            facts: watchVerdictFacts(readinessScore: watchScore)
         )
 
         let snapshotsWritten = WidgetDataStore.shared.writeAllSnapshots(

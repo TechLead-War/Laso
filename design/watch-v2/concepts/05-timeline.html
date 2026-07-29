@@ -1,0 +1,1188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concept 05 — Body Clock (timeline)</title>
+<style>
+:root{
+  --bg:#000000;
+  --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D;
+  --surfaceSubtle:#17171C;
+  --textPrimary:#F2F2F6;
+  --textSecondary:#C9C9D2;
+  --textTertiary:#ADADB8;
+  --borderLow:#2E2E36;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --optimal:#33C48D;
+  --fair:#E3B45A;
+  --poor:#E05C64;
+  --page:#0A0A0C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page);
+  color:var(--textSecondary);
+  font-family:-apple-system,"SF Compact Rounded","SF Pro Rounded",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+}
+.app{display:flex;gap:26px;padding:22px 22px 80px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+
+/* ---------- screen switcher strip ---------- */
+.switcher{width:212px;flex:0 0 212px}
+.switcher h1{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--textPrimary);margin:0 0 2px}
+.switcher .sub{font-size:11px;color:var(--textTertiary);margin:0 0 14px;line-height:1.4}
+.grp{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--textTertiary);margin:14px 0 6px}
+.snav{display:block;width:100%;text-align:left;background:#111114;border:1px solid var(--borderLow);
+  color:var(--textSecondary);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:500;margin-bottom:5px;cursor:pointer;
+  font-family:inherit;min-height:34px}
+.snav:hover{border-color:#3d3d47;color:var(--textPrimary)}
+.snav[aria-current="true"]{background:#1d2a38;border-color:var(--primary);color:var(--textPrimary)}
+.snav .k{display:block;font-size:10px;color:var(--textTertiary);font-weight:400;margin-top:2px;line-height:1.35}
+.snav[aria-current="true"] .k{color:#9dc4ee}
+
+/* ---------- stage ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px}
+.deviceWrap{position:relative}
+.device{transform-origin:top left}
+.case{position:absolute;left:0;top:0;background:linear-gradient(160deg,#3a3a3e 0%,#161618 42%,#242427 100%);
+  border-radius:32px;box-shadow:0 18px 44px rgba(0,0,0,.72), inset 0 0 0 1px rgba(255,255,255,.07)}
+.glass{position:absolute;background:#000;border-radius:24px;overflow:hidden}
+.scr{position:absolute;left:0;top:0;width:100%;height:100%;background:var(--bg);overflow:hidden}
+.crown{position:absolute;background:linear-gradient(90deg,#4a4a50,#8b8b93 40%,#3a3a40);border-radius:2px 3px 3px 2px;
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.55)}
+.crownG{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:inherit;
+  background:repeating-linear-gradient(180deg, rgba(0,0,0,.55) 0 1px, rgba(255,255,255,.14) 1px 2.5px);
+  background-position:0 var(--rot,0px)}
+.crownDot{position:absolute;border-radius:50%;background:var(--accent);opacity:0}
+.crownDot.on{opacity:1}
+.sidebtn{position:absolute;background:linear-gradient(90deg,#3d3d43,#6f6f77,#33333a);border-radius:2px}
+.pulse{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:24px;border:3px solid rgba(242,242,246,.92);
+  opacity:0;pointer-events:none}
+.pulse.on{animation:pulseA .42s ease-out 1}
+@keyframes pulseA{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.965)}}
+.hcap{min-height:32px;font-size:12px;color:var(--textTertiary);text-align:center;max-width:440px;line-height:1.4;opacity:0;transition:opacity .18s}
+.hcap.on{opacity:1}
+.hcap b{color:var(--accent);font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.notes{max-width:440px;font-size:11.5px;line-height:1.5;color:var(--textTertiary);text-align:center}
+.notes b{color:var(--textSecondary);font-weight:600}
+.legend{max-width:440px;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--textTertiary)}
+.legend .li{display:flex;gap:7px;align-items:flex-start}
+.legend .no{flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:#12232b;border:1px solid var(--accent);
+  color:var(--accent);font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.legend code{color:var(--textSecondary);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{position:fixed;right:14px;bottom:14px;z-index:40;background:#15151a;border:1px solid var(--borderLow);
+  color:var(--textTertiary);border-radius:9px;padding:8px 12px;font-size:11.5px;font-family:inherit;cursor:pointer;min-height:34px}
+.devbtn:hover{color:var(--textPrimary);border-color:#45454f}
+.devpanel{position:fixed;right:14px;bottom:56px;z-index:40;width:250px;background:#0e0e12;border:1px solid var(--borderLow);
+  border-radius:12px;padding:12px;display:none;box-shadow:0 14px 34px rgba(0,0,0,.7)}
+.devpanel.open{display:block}
+.devpanel .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--textTertiary);margin:10px 0 5px}
+.devpanel .lbl:first-child{margin-top:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{flex:1 1 auto;background:#16161b;border:1px solid var(--borderLow);color:var(--textTertiary);
+  border-radius:7px;padding:6px 7px;font-size:11px;font-family:inherit;cursor:pointer;min-height:28px}
+.seg button[aria-pressed="true"]{background:#1d2a38;border-color:var(--primary);color:var(--textPrimary)}
+.seg button:hover{color:var(--textPrimary)}
+.devnote{font-size:10px;color:#6f6f7a;margin-top:9px;line-height:1.45}
+.wide{width:100%;margin-top:8px;background:#1d2a38;border:1px solid var(--primary);color:var(--textPrimary);
+  border-radius:8px;padding:8px;font-size:11.5px;font-family:inherit;cursor:pointer;min-height:34px}
+
+/* ---------- in-watch primitives ---------- */
+.tap{background:none;border:0;padding:0;margin:0;font-family:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform .08s ease-out}
+.tap:active{transform:scale(.96)}
+.tap:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btnface{border-radius:10px;background:var(--surfaceRaised);border:1px solid var(--borderLow);
+  display:flex;align-items:center;justify-content:center;text-align:center}
+.fade{animation:fadeIn .2s ease-out 1}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.slide{animation:slideIn .22s cubic-bezier(.22,.61,.36,1) 1}
+@keyframes slideIn{from{transform:translateX(26px);opacity:.2}to{transform:translateX(0);opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  .slide{animation:fadeIn .001s 1}
+  .pulse.on{animation:fadeOutOnly .42s linear 1}
+  @keyframes fadeOutOnly{0%{opacity:1}100%{opacity:0}}
+  .tap{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="switcher">
+    <h1>Concept 05 — Body Clock</h1>
+    <p class="sub">Alex, 34. Tuesday 14:32. Every surface renders the same day.<br>Wheel or &uarr;/&darr; = Digital Crown.</p>
+    <div id="switcherList"></div>
+  </aside>
+
+  <main class="stage">
+    <div class="deviceWrap" id="deviceWrap">
+      <div class="device" id="device">
+        <div class="case" id="case"></div>
+        <div class="glass" id="glass">
+          <div class="scr" id="screen"></div>
+          <div class="pulse" id="pulse"></div>
+        </div>
+        <div class="crown" id="crown"><div class="crownG" id="crownG"></div></div>
+        <div class="crownDot" id="crownDot"></div>
+        <div class="sidebtn" id="sidebtn"></div>
+      </div>
+    </div>
+    <div class="hcap" id="hcap"></div>
+    <div class="notes" id="notes"></div>
+    <div class="legend" id="legend"></div>
+  </main>
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel">Dev</button>
+<div class="devpanel" id="devpanel" role="group" aria-label="Developer toolbar">
+  <div class="lbl">Canvas</div>
+  <div class="seg" id="segSize"></div>
+  <div class="lbl">State</div>
+  <div class="seg" id="segState"></div>
+  <div class="lbl">Always-On (isLuminanceReduced)</div>
+  <div class="seg" id="segAO"></div>
+  <div class="lbl">Key variable &mdash; current window</div>
+  <div class="seg" id="segWin"></div>
+  <div class="lbl">Notification</div>
+  <div class="seg" id="segNotif"></div>
+  <button class="wide" id="btnDT">Fire Double Tap</button>
+  <button class="wide" id="btnStop">Simulate: window closes unsatisfied</button>
+  <div class="devnote" id="devnote"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================== Alex, Tuesday 14:32 ============================== */
+const M = (h,m)=>h*60+m;
+const NOW = M(14,32);
+const PLAN = {
+  wake:        M(7,0),
+  moveStart:   M(14,0),
+  moveEnd:     M(15,0),
+  missedStand: M(13,0),
+  coffee:      M(15,20),
+  trainStart:  M(16,0),
+  trainEnd:    M(19,0),
+  windDown:    M(22,20),
+  bed:         M(23,20)
+};
+const RAIL_START = PLAN.wake, RAIL_END = PLAN.bed;          /* 07:00 -> 23:20, 980 min */
+const DEF_START  = M(6,0),    DEF_END  = M(23,0);           /* empty-state default day */
+
+const WINDOWS = {
+  move:  { key:'move',  band:'optimal', glyph:'walk',  verb:'Move now',  name:'Move now',
+           count:'28', unit:'min left', why:'Last stood 12:40', whyNoPhone:'Last stood 12:40',
+           primary:'Snooze 15 min', primaryHaptic:'success', secondary:'Skip this hour',
+           widgetBtn:'Snooze 15 min', rowTime:'14:00', local:true,
+           facts:[['Last stood','12:40'],['Stand hours','6 of 12'],['Hour ends','15:00']],
+           edit:null, fixedNote:'Fixed by the clock' },
+  coffee:{ key:'coffee',band:'fair',    glyph:'cup',   verb:'Last coffee', name:'Last coffee',
+           count:'48', unit:'min left', why:'2 cups today, last 11:15', whyNoPhone:'Cutoff 15:20',
+           primary:'Log a cup', primaryHaptic:'success', secondary:'Not today',
+           widgetBtn:'Log a cup', rowTime:'15:20', local:false,
+           facts:[['Cups today','2'],['Last cup','11:15'],['Cutoff','15:20']],
+           edit:{idx:2, base:PLAN.coffee, min:PLAN.coffee-180, max:PLAN.trainStart-5} },
+  train: { key:'train', band:'optimal', glyph:'gym',   verb:'Train', name:'Train',
+           count:'1:28', unit:'until 16:00', why:'Strain 6.2 of an 8–12 target', whyNoPhone:'Ends 19:00',
+           primary:'Remind me at 16:00', primaryHaptic:'success', secondary:'Skip today',
+           widgetBtn:'Remind me at 16:00', rowTime:'16:00', local:true,
+           facts:[['Strain today','6.2'],['Target','8–12'],['Window','16:00–19:00']],
+           edit:{idx:2, base:PLAN.trainStart, min:PLAN.trainStart-180, max:PLAN.windDown-5} },
+  winddown:{key:'winddown',band:'primary',glyph:'moon',verb:'Wind down', name:'Wind down',
+           count:'7:48', unit:'until 22:20', why:'Bed 23:20 for 7h 40m', whyNoPhone:'Bed 23:20 for 7h 40m',
+           primary:'Start wind down', primaryHaptic:'start', secondary:'30 min later',
+           widgetBtn:'Start wind down', rowTime:'22:20', local:false,
+           facts:[['Bed target','23:20'],['Last night','6h 12m'],['Wind down','22:20']],
+           edit:{idx:2, base:PLAN.windDown, min:PLAN.windDown-180, max:PLAN.bed-5} },
+  bed:   { key:'bed',   band:'primary', glyph:'moon',  verb:'Bed', name:'Bed',
+           count:'8:48', unit:'until 23:20', why:'Last night 6h 12m', whyNoPhone:'Bed 23:20 for 7h 40m',
+           primary:null, primaryHaptic:null, secondary:null,
+           widgetBtn:null, rowTime:'23:20', local:false, facts:null, edit:null }
+};
+const WIN_ORDER = ['move','coffee','train','winddown','bed'];
+
+/* hour strip: 17 cells, 07:00-23:00. 0-5 credited, 6 missed (13:00), 7 current (14:00), 8-16 future */
+const CELLS = [];
+for (let i=0;i<17;i++) CELLS.push(i<6 ? 'past' : i===6 ? 'missed' : i===7 ? 'current' : 'future');
+
+/* ============================== layout tables ============================== */
+const LAY = {
+  '46': { w:208, h:248, pad:10, cw:188, unit:2,
+    s1:{chipY:24,chipH:14, verbY:38,verbH:28,verbFS:22, cntY:66,cntH:54,cntFS:52,
+        unitY:120,unitH:14,unitFS:12, whyY:134,whyH:16,whyFS:13,
+        railY:150,railH:22, labY:172,labH:12, btnY:192,btnH:44,
+        track:4,cur:12,nowH:16,tick:8,miss:4},
+    s2:{titleY:24,titleH:18, bandY:48,bandH:4, stripY:52,stripH:20, labY:72,labH:12,
+        listY:92,listH:156, cellW:9,gap:1.5, hFuture:3,hPast:6,hCur:14,nowH:18, rowH:28,rowGap:4,
+        timeX:10,timeW:44,timeFS:13, nameX:56,nameFS:17, glyphPad:20},
+    s3:{titleY:24,titleH:22, fY:[52,68,84], fH:16, pBtnY:110, sBtnY:162, btnH:44},
+    wdg:{w:184,h:80.5, titleH:21, stripY:23, stripH:20, btnY:46.5, btnH:34, gap:1,
+         hFuture:3,hPast:5,hCur:12,nowH:16}
+  },
+  '40': { w:162, h:197, pad:8, cw:146, unit:2.35,
+    s1:{chipY:20,chipH:12, verbY:32,verbH:24,verbFS:20, cntY:56,cntH:42,cntFS:40,
+        unitY:98,unitH:12,unitFS:11, whyY:110,whyH:14,whyFS:12,
+        railY:124,railH:18, labY:142,labH:10, btnY:152,btnH:44,
+        track:4,cur:10,nowH:14,tick:7,miss:4},
+    s2:{titleY:20,titleH:16, bandY:42,bandH:3, stripY:46,stripH:18, labY:64,labH:10,
+        listY:86,listH:111, cellW:7,gap:1, hFuture:3,hPast:5,hCur:12,nowH:16, rowH:28,rowGap:4,
+        timeX:8,timeW:36,timeFS:12, nameX:44,nameFS:15, glyphPad:18},
+    s3:{titleY:20,titleH:20, fY:[42,58,74], fH:16, pBtnY:100, sBtnY:152, btnH:44},
+    wdg:{w:152,h:69.5, titleH:19, stripY:21, stripH:16, btnY:40, btnH:29.5, gap:1,
+         hFuture:3,hPast:5,hCur:10,nowH:14}
+  }
+};
+
+/* ============================== state ============================== */
+const S = {
+  screen:'face', size:'46', state:'loaded', window:'move', notif:'n1',
+  alwaysOn:false, crownRot:0, crownDelta:0,
+  listScroll:64, stackScroll:0, nlScroll:0, launchPhase:1, pushAnim:false, inlineMsg:null
+};
+
+const STATES = [
+  ['loaded','Loaded'],['loading','Loading'],['cold','Cold start'],['empty','Empty'],
+  ['hkdenied','HealthKit denied'],['nophone','Phone unreachable'],['stale','Stale plan']
+];
+const SCREEN_DEFS = [
+  ['Off-app', [
+    ['face','Watch face','Three Laso complications in real slots, each labelled by family.'],
+    ['stack','Smart Stack','accessoryRectangular only. Crown scrolls four widgets.'],
+    ['nshort','Notification — short look','Title only. No health value in the title.'],
+    ['nlong','Notification — long look','Static long look. First action is the Double Tap target.']
+  ]],
+  ['App', [
+    ['launch','Launch (S0)','No spinner. Clock and cache in frame 1, HealthKit crossfades in.'],
+    ['raise','Wrist-raise return','Identical frame. Only the countdown digit moves.'],
+    ['s1','NOW (S1)','Entry screen. Crown down for DAY. Tap the card for Why.'],
+    ['s2','DAY (S2)','Crown scrolls the list; at the top, crown up returns to NOW.'],
+    ['s3','Why this window (S3)','Crown nudges the window time in 5-minute detents.']
+  ]]
+];
+
+/* ============================== helpers ============================== */
+const bandVar = b => 'var(--'+b+')';
+const abs = (x,y,w,h)=>'position:absolute;left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt = m => String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function glyphSVG(kind, size, colour){
+  const s = 'stroke="'+colour+'" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  const paths = {
+    walk:'<circle cx="8" cy="2.6" r="1.7" fill="'+colour+'" stroke="none"></circle><path d="M8 4.9l-2.3 3 1.9 1.5.5 3.2M7.6 9.4l-2.1 3.2M8 6.2l2.6 1.5" '+s+'></path>',
+    cup:'<path d="M2.5 4h7.2v3.1a3 3 0 0 1-3 3H5.5a3 3 0 0 1-3-3zM9.7 5h1.4a1.4 1.4 0 0 1 0 2.8H9.7M3 12.4h6.8" '+s+'></path>',
+    gym:'<path d="M2 5.4v3.2M4.1 4.1v5.8M9.9 4.1v5.8M12 5.4v3.2M4.1 7h5.8" '+s+'></path>',
+    moon:'<path d="M11.6 8.7A4.8 4.8 0 0 1 5.3 2.4 4.9 4.9 0 1 0 11.6 8.7z" '+s+'></path>',
+    arrow:'<path d="M2.5 7h8M7.4 3.6L10.8 7l-3.4 3.4" '+s+'></path>',
+    check:'<path d="M2.6 7.4l3 3 5.8-6.4" '+s+'></path>',
+    xmark:'<path d="M3.2 3.2l7.6 7.6M10.8 3.2l-7.6 7.6" '+s+'></path>',
+    updown:'<path d="M7 2.2v9.6M4.6 4.6L7 2.2l2.4 2.4M4.6 9.4L7 11.8l2.4-2.4" '+s+'></path>',
+    chevL:'<path d="M9 2.6L4.2 7 9 11.4" '+s+'></path>',
+    bell:'<path d="M4 9.6V6.4a3 3 0 0 1 6 0v3.2l1 1.2H3zM5.9 11.9a1.2 1.2 0 0 0 2.2 0" '+s+'></path>'
+  };
+  return '<svg viewBox="0 0 14 14" width="'+size+'" height="'+size+'" aria-hidden="true" focusable="false">'+paths[kind]+'</svg>';
+}
+
+/* ============================== state composition ============================== */
+function effWindow(){
+  if (S.state==='cold' || S.state==='empty') return 'move';
+  if (S.state==='hkdenied' && S.window==='move') return 'train';
+  return S.window;
+}
+function compose(){
+  const W = WINDOWS[effWindow()];
+  const c = {
+    w:W, band:W.band, verb:W.verb, count:W.count, unit:W.unit, why:W.why,
+    primary:W.primary, primaryHaptic:W.primaryHaptic, secondary:W.secondary,
+    chip:'Plan 2 min ago', chipHollow:false, railDefault:false, cellMode:'real',
+    coldRows:false, footer:null, drillIn:!!W.facts, showCurrentBlock:true, standCount:'6/12 stood'
+  };
+  switch(S.state){
+    case 'loading':
+      c.chip='Building today'; c.why='Reading your stand hours'; c.cellMode='skeleton'; break;
+    case 'cold':
+      c.chip='Day 2 of 7'; c.why='Training window from day 7'; c.coldRows=true; break;
+    case 'empty':
+      c.chip='Default day'; c.verb='Wear it overnight'; c.count='—'; c.unit='';
+      c.why='Your rail starts at your wake time'; c.railDefault=true; c.primary=null;
+      c.band='primary'; c.cellMode='skeleton'; c.drillIn=false; c.showCurrentBlock=false;
+      c.standCount='—/— stood'; break;
+    case 'hkdenied':
+      c.chip='Health access off'; c.why='Turn on Laso in the Health app for stand hours';
+      c.cellMode='unknown'; c.showCurrentBlock=false; c.standCount='—/12 stood'; break;
+    case 'nophone':
+      c.chip='Plan from Mon 21:40'; c.why=W.whyNoPhone;
+      c.footer='Windows from your last synced plan.'; break;
+    case 'stale':
+      c.chip='Plan 3h old'; c.chipHollow=true; break;
+  }
+  if (S.alwaysOn){
+    c.verb='Next window'; c.chip='————'; c.chipHollow=true;
+    c.why=null; c.standCount='—/— stood'; c.cellMode='ao';
+  }
+  return c;
+}
+
+/* ============================== small parts ============================== */
+function statusBar(L, opts){
+  opts = opts||{};
+  let h = '';
+  if (opts.back){
+    h += '<button class="tap" data-act="back" aria-label="Back to NOW" style="'+abs(2,3,26,20)+
+         'display:flex;align-items:center;justify-content:center">'+glyphSVG('chevL',13,'var(--primary)')+'</button>';
+  }
+  h += '<div style="'+abs(0,4,L.w-L.pad,16)+'text-align:right;font-size:13px;font-weight:600;color:'+
+       (S.alwaysOn?'var(--textTertiary)':'var(--textPrimary)')+'">14:32</div>';
+  return h;
+}
+function freshDot(hollow){
+  return hollow
+    ? '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;border:1.5px solid var(--borderLow);box-sizing:border-box"></span>'
+    : '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--optimal)"></span>';
+}
+function pageDots(L, active){
+  let h='';
+  for (let i=0;i<2;i++){
+    h += '<span style="position:absolute;right:3px;top:'+(L.h/2-7+i*8)+'px;width:4px;height:4px;border-radius:50%;background:'+
+         (i===active?'var(--textPrimary)':'var(--borderLow)')+'"></span>';
+  }
+  return h;
+}
+
+/* ---------- S1 day rail ---------- */
+function railSVG(L, c){
+  const g = L.s1, cw = L.cw, H = g.railH;
+  const a = c.railDefault ? DEF_START : RAIL_START;
+  const b = c.railDefault ? DEF_END   : RAIL_END;
+  const x = t => clamp((t-a)/(b-a),0,1)*cw;
+  const ao = S.alwaysOn;
+  const mid = H/2;
+  const yFor = hh => mid - hh/2;
+  let s = '<svg width="'+cw+'" height="'+H+'" aria-hidden="true" focusable="false">';
+  /* track */
+  if (ao){
+    s += '<rect x="0.5" y="'+(yFor(g.track)+0.5)+'" width="'+(cw-1)+'" height="'+(g.track-1)+'" rx="1.5" fill="none" stroke="var(--borderLow)" stroke-width="1"></rect>';
+  } else {
+    s += '<rect x="0" y="'+yFor(g.track)+'" width="'+cw+'" height="'+g.track+'" rx="2" fill="var(--surfaceSubtle)"></rect>';
+    s += '<rect x="0" y="'+yFor(g.track)+'" width="'+x(NOW)+'" height="'+g.track+'" rx="2" fill="var(--surfaceElevated)"></rect>';
+  }
+  if (!c.railDefault){
+    /* missed 13:00 stand hour */
+    if (c.cellMode==='real' || c.cellMode==='ao'){
+      s += '<rect x="'+(x(PLAN.missedStand)-1)+'" y="'+(yFor(g.miss)+0.75)+'" width="2" height="'+(g.miss-1.5)+
+           '" fill="none" stroke="var(--borderLow)" stroke-width="1.5"></rect>';
+    }
+    /* upcoming ticks */
+    const ticks = [[PLAN.coffee,'fair'],[PLAN.trainStart,'optimal'],[PLAN.windDown,'primary'],[PLAN.bed,'primary']];
+    ticks.forEach(function(t){
+      const px = clamp(x(t[0]),1,cw-2);
+      if (ao){
+        s += '<rect x="'+(px-0.75)+'" y="'+yFor(g.tick)+'" width="1.5" height="'+g.tick+'" fill="none" stroke="var(--borderLow)" stroke-width="1.5"></rect>';
+      } else {
+        s += '<rect x="'+(px-1)+'" y="'+yFor(g.tick)+'" width="2" height="'+g.tick+'" fill="'+bandVar(t[1])+'"></rect>';
+      }
+    });
+    /* current window block */
+    if (c.showCurrentBlock){
+      const x0 = x(PLAN.moveStart), x1 = x(PLAN.moveEnd);
+      if (ao){
+        s += '<rect x="'+(x0+0.75)+'" y="'+(yFor(g.cur)+0.75)+'" width="'+(x1-x0-1.5)+'" height="'+(g.cur-1.5)+
+             '" rx="1.5" fill="none" stroke="var(--borderLow)" stroke-width="1.5"></rect>';
+      } else {
+        s += '<rect x="'+x0+'" y="'+yFor(g.cur)+'" width="'+(x1-x0)+'" height="'+g.cur+'" rx="2" fill="'+bandVar(c.band)+'"></rect>';
+      }
+    }
+  }
+  /* NOW marker, never animated */
+  s += '<rect x="'+(x(NOW)-1)+'" y="'+yFor(g.nowH)+'" width="2" height="'+g.nowH+'" fill="'+
+       (ao?'var(--textTertiary)':'var(--textPrimary)')+'"></rect>';
+  s += '</svg>';
+  return s;
+}
+
+/* ---------- hour strip (S2, widget, rectangular complication) ---------- */
+function stripGeom(width, cellW, gap){
+  const total = cellW*17 + gap*16;
+  return { off:(width-total)/2, cellW:cellW, gap:gap,
+           x:function(i){ return this.off + i*(cellW+gap); },
+           xt:function(t){ const idx=(t-M(7,0))/60; return this.off + idx*(cellW+gap); } };
+}
+function hourStripSVG(width, H, cellW, gap, hFuture, hPast, hCur, nowH, mode, band){
+  const G = stripGeom(width, cellW, gap);
+  const ao = (mode==='ao');
+  let s = '<svg width="'+width+'" height="'+H+'" aria-hidden="true" focusable="false">';
+  for (let i=0;i<17;i++){
+    const st = CELLS[i], x = G.x(i);
+    if (ao || mode==='unknown'){
+      const hh = ao ? hPast : hPast;
+      s += '<rect x="'+(x+0.75)+'" y="'+(H-hh+0.75)+'" width="'+(cellW-1.5)+'" height="'+(hh-1.5)+
+           '" fill="none" stroke="var(--borderLow)" stroke-width="1.5"></rect>';
+      continue;
+    }
+    if (mode==='skeleton'){
+      s += '<rect x="'+x+'" y="'+(H-hFuture)+'" width="'+cellW+'" height="'+hFuture+'" rx="1" fill="var(--surfaceSubtle)"></rect>';
+      continue;
+    }
+    if (st==='future'){
+      s += '<rect x="'+x+'" y="'+(H-hFuture)+'" width="'+cellW+'" height="'+hFuture+'" rx="1" fill="var(--surfaceSubtle)"></rect>';
+    } else if (st==='past'){
+      s += '<rect x="'+x+'" y="'+(H-hPast)+'" width="'+cellW+'" height="'+hPast+'" rx="1" fill="var(--textTertiary)"></rect>';
+    } else if (st==='missed'){
+      s += '<rect x="'+(x+0.75)+'" y="'+(H-hPast+0.75)+'" width="'+(cellW-1.5)+'" height="'+(hPast-1.5)+
+           '" fill="none" stroke="var(--borderLow)" stroke-width="1.5"></rect>';
+    } else {
+      s += '<rect x="'+x+'" y="'+(H-hCur)+'" width="'+cellW+'" height="'+hCur+'" rx="1.5" fill="'+bandVar(band||'optimal')+'"></rect>';
+    }
+  }
+  const nx = G.x(7) + cellW*0.53;
+  s += '<rect x="'+(nx-1)+'" y="'+(H-nowH)+'" width="2" height="'+nowH+'" fill="'+
+       (ao?'var(--textTertiary)':'var(--textPrimary)')+'"></rect>';
+  s += '</svg>';
+  return s;
+}
+
+/* ============================== S1 — NOW ============================== */
+function renderS1(launch){
+  const L = LAY[S.size], g = L.s1, c = compose(), ao = S.alwaysOn;
+  const pad = L.pad, cw = L.cw;
+  const why = (launch===0) ? 'Reading your stand hours' : c.why;
+  let h = '<div class="scr'+(S.pushAnim?'':'')+'">';
+  h += statusBar(L,{});
+
+  /* freshness chip */
+  h += '<div style="'+abs(pad,g.chipY,cw,g.chipH)+'display:flex;align-items:center;gap:4px">'+
+       freshDot(c.chipHollow||ao)+
+       '<span style="font-size:11px;font-weight:500;color:var(--textTertiary);line-height:'+g.chipH+'px">'+esc(c.chip)+'</span></div>';
+
+  /* card = verb + countdown + unit + why. Tapping it pushes S3. */
+  const cardTop = g.verbY, cardH = (g.whyY+g.whyH)-g.verbY;
+  if (c.drillIn && !ao){
+    h += '<button class="tap" data-act="drill" aria-label="Why this window" style="'+abs(pad-4,cardTop-2,cw+8,cardH+4)+
+         'border-radius:10px"></button>';
+  }
+  const verbFS = (c.verb.length>12) ? Math.round(g.verbFS*0.8) : g.verbFS;
+  h += '<div style="'+abs(pad,g.verbY,cw,g.verbH)+'font-size:'+verbFS+'px;font-weight:600;color:var(--textPrimary);'+
+       'line-height:'+g.verbH+'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">'+
+       esc(ao?'Next window':c.verb)+'</div>';
+  h += '<div style="'+abs(pad,g.cntY,cw,g.cntH)+'font-size:'+g.cntFS+'px;font-weight:600;color:var(--textPrimary);'+
+       'line-height:'+g.cntH+'px;letter-spacing:-.02em;pointer-events:none">'+esc(c.count)+'</div>';
+  h += '<div style="'+abs(pad,g.unitY,cw,g.unitH)+'font-size:'+g.unitFS+'px;color:var(--textTertiary);'+
+       'line-height:'+g.unitH+'px;pointer-events:none">'+esc(c.unit)+'</div>';
+  if (ao){
+    h += '<div style="'+abs(pad,g.whyY,cw,g.whyH)+'display:flex;align-items:center;pointer-events:none">'+
+         '<span style="display:block;width:60px;height:1px;background:var(--borderLow)"></span></div>';
+  } else {
+    h += '<div class="'+(launch===1?'fade':'')+'" style="'+abs(pad,g.whyY,cw,g.whyH)+'font-size:'+g.whyFS+
+         'px;color:var(--textSecondary);line-height:'+g.whyH+'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">'+
+         esc(why)+'</div>';
+  }
+
+  /* day rail + end labels */
+  h += '<div class="'+(launch===1?'fade':'')+'" style="'+abs(pad,g.railY,cw,g.railH)+'">'+railSVG(L,c)+'</div>';
+  h += '<div style="'+abs(pad,g.labY,cw,g.labH)+'display:flex;justify-content:space-between;font-size:11px;'+
+       'color:var(--textTertiary);line-height:'+g.labH+'px">'+
+       '<span>'+(c.railDefault?'06:00 default':'07:00')+'</span><span>'+(c.railDefault?'23:00':'23:20')+'</span></div>';
+
+  /* primary button — no handGestureShortcut here (R11: S1 is a vertical tab page) */
+  if (c.primary){
+    h += '<button class="tap btnface" data-act="primary" style="'+abs(pad,g.btnY,cw,g.btnH)+
+         'font-size:17px;font-weight:600;color:'+(ao?'var(--textTertiary)':'var(--textPrimary)')+'">'+esc(c.primary)+'</button>';
+  }
+  if (S.inlineMsg){
+    h += '<div style="'+abs(pad,g.btnY-15,cw,14)+'font-size:11px;font-weight:500;color:var(--fair)">'+esc(S.inlineMsg)+'</div>';
+  }
+  h += pageDots(L,0);
+  h += '</div>';
+  return h;
+}
+
+/* ============================== S2 — DAY ============================== */
+function renderS2(){
+  const L = LAY[S.size], g = L.s2, c = compose(), ao = S.alwaysOn;
+  const pad = L.pad, cw = L.cw;
+  const G = stripGeom(cw, g.cellW, g.gap);
+  let h = '<div class="scr">';
+  h += statusBar(L,{});
+
+  h += '<div style="'+abs(pad,g.titleY,cw,g.titleH)+'display:flex;align-items:baseline;justify-content:space-between">'+
+       '<span style="font-size:17px;font-weight:600;color:var(--textPrimary)">Today</span>'+
+       '<span style="font-size:11px;font-weight:500;color:var(--textTertiary)">'+esc(c.standCount)+'</span></div>';
+
+  /* window band above the strip */
+  let band = '<svg width="'+cw+'" height="'+g.bandH+'" aria-hidden="true" focusable="false">';
+  if (!ao){
+    const tx0=G.xt(PLAN.trainStart), tx1=G.xt(PLAN.trainEnd);
+    const wx0=G.xt(PLAN.windDown), wx1=Math.min(G.xt(PLAN.bed), cw-1);
+    band += '<rect x="'+tx0+'" y="0" width="'+(tx1-tx0)+'" height="3" rx="1.5" fill="var(--optimal)"></rect>';
+    band += '<rect x="'+wx0+'" y="0" width="'+(wx1-wx0)+'" height="3" rx="1.5" fill="var(--primary)"></rect>';
+    band += '<rect x="'+(G.xt(PLAN.coffee)-1)+'" y="0" width="2" height="'+g.bandH+'" fill="var(--fair)"></rect>';
+    band += '<rect x="'+(Math.min(G.xt(PLAN.bed),cw-2)-1)+'" y="0" width="2" height="'+g.bandH+'" fill="var(--primary)"></rect>';
+  } else {
+    band += '<rect x="0.5" y="0.5" width="'+(cw-1)+'" height="'+(g.bandH-1)+'" fill="none" stroke="var(--borderLow)" stroke-width="1"></rect>';
+  }
+  band += '</svg>';
+  h += '<div style="'+abs(pad,g.bandY,cw,g.bandH)+'">'+band+'</div>';
+
+  /* hour strip */
+  h += '<div style="'+abs(pad,g.stripY,cw,g.stripH)+'">'+
+       hourStripSVG(cw,g.stripH,g.cellW,g.gap,g.hFuture,g.hPast,g.hCur,g.nowH,c.cellMode,'optimal')+'</div>';
+
+  /* strip labels under cells 0 / 5 / 11 / 16 */
+  let labs='';
+  [[0,'07'],[5,'12'],[11,'18'],[16,'23']].forEach(function(p){
+    labs += '<span style="position:absolute;left:'+(G.x(p[0])-4)+'px;top:0;width:'+(g.cellW+8)+
+            'px;text-align:center;font-size:11px;color:var(--textTertiary)">'+p[1]+'</span>';
+  });
+  h += '<div style="'+abs(pad,g.labY,cw,g.labH)+'">'+labs+'</div>';
+
+  /* window list, scrolled by the crown */
+  const rows = [
+    {t:'07:00', name:'Woke',        band:null,      glyph:'check', past:true},
+    {t:'13:00', name:'Missed',      band:null,      glyph:'xmark', past:true},
+    {t:'14:00', name:'Move now',    band:'optimal', glyph:'now'},
+    {t:'15:20', name:'Last coffee', band:'fair',    glyph:'arrow', cold:true},
+    {t:'16:00', name:'Train',       band:'optimal', glyph:'arrow', cold:true},
+    {t:'22:20', name:'Wind down',   band:'primary', glyph:'arrow', cold:true},
+    {t:'23:20', name:'Bed',         band:'primary', glyph:'arrow', cold:true}
+  ];
+  const listH = g.listH - (c.footer?14:0);
+  let inner='';
+  rows.forEach(function(r,i){
+    const y = i*(g.rowH+g.rowGap);
+    const cold = c.coldRows && r.cold;
+    const dim = r.past || cold;
+    const stripeCol = r.band ? bandVar(r.band) : 'var(--borderLow)';
+    inner += '<div style="'+abs(0,y,cw,g.rowH)+'">';
+    if (cold || !r.band || ao){
+      inner += '<span style="'+abs(0,0,3,g.rowH)+'border-radius:1.5px;border:1.5px solid var(--borderLow);box-sizing:border-box"></span>';
+    } else {
+      inner += '<span style="'+abs(0,0,3,g.rowH)+'border-radius:1.5px;background:'+stripeCol+'"></span>';
+    }
+    inner += '<span style="'+abs(g.timeX,0,g.timeW,g.rowH)+'font-size:'+g.timeFS+'px;color:'+(dim?'var(--textTertiary)':'var(--textSecondary)')+
+             ';line-height:'+g.rowH+'px">'+r.t+'</span>';
+    if (ao){
+      inner += '<span style="'+abs(g.nameX,g.rowH/2,52,1)+'background:var(--borderLow)"></span>';
+    } else {
+      inner += '<span style="'+abs(g.nameX,0,cw-g.nameX-g.glyphPad,g.rowH)+'font-size:'+(dim?g.timeFS:g.nameFS)+'px;font-weight:'+(dim?400:600)+
+               ';color:'+(dim?'var(--textTertiary)':'var(--textPrimary)')+';line-height:'+g.rowH+
+               'px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(cold?'Day 2 of 7':r.name)+'</span>';
+    }
+    if (!ao){
+      const gcol = dim ? 'var(--textTertiary)' : 'var(--textPrimary)';
+      if (r.glyph==='now'){
+        inner += '<span style="'+abs(cw-8,(g.rowH-14)/2,2,14)+'background:var(--textPrimary)"></span>';
+      } else {
+        inner += '<span style="'+abs(cw-g.glyphPad+2,(g.rowH-14)/2,14,14)+'">'+glyphSVG(r.glyph,14,gcol)+'</span>';
+      }
+    }
+    inner += '</div>';
+  });
+  const contentH = rows.length*g.rowH + (rows.length-1)*g.rowGap;
+  S.listMax = Math.max(0, contentH - listH);
+  S.listScroll = clamp(S.listScroll, 0, S.listMax);
+  h += '<div style="'+abs(pad,g.listY,cw,listH)+'overflow:hidden">'+
+       '<div style="position:absolute;left:0;top:'+(-S.listScroll)+'px;width:'+cw+'px;height:'+contentH+'px">'+inner+'</div></div>';
+  if (c.footer){
+    h += '<div style="'+abs(pad,L.h-13,cw,12)+'font-size:11px;color:var(--textTertiary);background:var(--bg)">'+esc(c.footer)+'</div>';
+  }
+  h += pageDots(L,1);
+  h += '</div>';
+  return h;
+}
+
+/* ============================== S3 — Why this window ============================== */
+function renderS3(){
+  const L = LAY[S.size], g = L.s3, c = compose(), ao = S.alwaysOn;
+  const W = c.w, pad = L.pad, cw = L.cw;
+  let h = '<div class="scr'+(S.pushAnim?' slide':'')+'">';
+  h += statusBar(L,{back:true});
+
+  h += '<span style="'+abs(pad,g.titleY,3,g.titleH)+'border-radius:1.5px;background:'+
+       (ao?'var(--borderLow)':bandVar(c.band))+'"></span>';
+  h += '<div style="'+abs(pad+10,g.titleY,cw-10,g.titleH)+'font-size:17px;font-weight:600;color:var(--textPrimary);'+
+       'line-height:'+g.titleH+'px">'+esc(ao?'Next window':W.name)+'</div>';
+
+  const facts = W.facts || [];
+  facts.forEach(function(f,i){
+    const y = g.fY[i];
+    const editable = W.edit && W.edit.idx===i;
+    let val = f[1];
+    if (editable && S.crownDelta!==0) val = fmt(clamp(W.edit.base + S.crownDelta*5, W.edit.min, W.edit.max));
+    if (editable && W.key==='train' && S.crownDelta!==0){
+      val = fmt(clamp(PLAN.trainStart + S.crownDelta*5, W.edit.min, W.edit.max))+'–19:00';
+    }
+    h += '<div style="'+abs(pad,y,cw,g.fH)+'display:flex;align-items:baseline;justify-content:space-between">';
+    if (ao){
+      h += '<span style="display:block;width:44px;height:1px;background:var(--borderLow)"></span>'+
+           '<span style="display:block;width:36px;height:1px;background:var(--borderLow)"></span>';
+    } else {
+      h += '<span style="font-size:12px;color:var(--textTertiary)">'+esc(f[0])+'</span>'+
+           '<span style="font-size:13px;color:var(--textPrimary);display:flex;align-items:center;gap:3px'+
+           (editable?';border-bottom:1px solid '+bandVar(c.band):'')+'">'+esc(val)+
+           (editable?glyphSVG('updown',10,bandVar(c.band)):'')+'</span>';
+    }
+    h += '</div>';
+  });
+  if (!ao && !W.edit && W.fixedNote){
+    h += '<div style="'+abs(pad,g.fY[2]+g.fH,cw,10)+'text-align:right;font-size:10px;color:var(--textTertiary);line-height:10px">'+
+         esc(W.fixedNote)+'</div>';
+  }
+  /* digitalCrownAccessory: signed delta */
+  if (!ao && W.edit && S.crownDelta!==0){
+    const mins = clamp(W.edit.base + S.crownDelta*5, W.edit.min, W.edit.max) - W.edit.base;
+    h += '<div style="'+abs(cw+pad-64,g.fY[2]+g.fH,64,14)+'text-align:right;font-size:11px;font-weight:600;color:'+
+         bandVar(c.band)+'">'+(mins>0?'+':'')+mins+' min</div>';
+  }
+  if (S.inlineMsg){
+    h += '<div style="'+abs(pad,g.pBtnY-15,cw,14)+'font-size:11px;font-weight:500;color:var(--fair)">'+esc(S.inlineMsg)+'</div>';
+  }
+  if (W.primary){
+    h += '<button class="tap btnface" data-act="primary" style="'+abs(pad,g.pBtnY,cw,g.btnH)+
+         'font-size:17px;font-weight:600;color:'+(ao?'var(--textTertiary)':'var(--textPrimary)')+
+         '" data-dt="1">'+esc(W.primary)+'</button>';
+  }
+  if (W.secondary){
+    h += '<button class="tap btnface" data-act="secondary" style="'+abs(pad,g.sBtnY,cw,g.btnH)+
+         'background:var(--bg);font-size:17px;font-weight:600;color:var(--textTertiary)">'+esc(W.secondary)+'</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ============================== widget (Smart Stack + rectangular complication) ============================== */
+function lasoWidget(w, hgt, geom, opts){
+  const c = compose(), ao = S.alwaysOn;
+  const title = ao ? 'Next window' : c.w.name;
+  const cellW = (w - geom.gap*16)/17;
+  const hasBtn = !!c.w.widgetBtn && !opts.noButton;
+  const stripH = hasBtn ? geom.stripH : geom.stripH + 10;   /* Bed has no button, the strip grows */
+  let h = '';
+  h += '<div style="'+abs(0,0,w,geom.titleH)+'display:flex;align-items:center;justify-content:space-between;padding:0 3px">'+
+       '<span style="font-size:17px;font-weight:600;color:var(--textPrimary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
+       esc(title)+'</span>'+
+       '<span style="font-size:17px;font-weight:600;color:var(--textPrimary);padding-left:6px">'+
+       esc(c.count==='—' ? '—' : (c.w.key==='move'?'28m':c.count.indexOf(':')>0?c.count:c.count+'m'))+'</span></div>';
+  h += '<div style="'+abs(0,geom.stripY,w,stripH)+'">'+
+       hourStripSVG(w,stripH,cellW,geom.gap,geom.hFuture,geom.hPast,geom.hCur,geom.nowH+(hasBtn?0:6),c.cellMode,c.band)+'</div>';
+  if (hasBtn){
+    h += '<button class="tap btnface" data-act="widget" style="'+abs(0,geom.btnY,w,geom.btnH)+
+         'border-radius:8px;font-size:13px;font-weight:600;color:'+(ao?'var(--textTertiary)':'var(--textPrimary)')+
+         '" data-dt="1">'+esc(c.w.widgetBtn)+'</button>';
+  }
+  return h;
+}
+
+/* ============================== watch face ============================== */
+function renderFace(){
+  const L = LAY[S.size], pad = L.pad, cw = L.cw, ao = S.alwaysOn;
+  const c = compose();
+  const sc = L.w/208, Y = v => v*(L.h/248);
+  const white = ao ? 'var(--textTertiary)' : '#FFFFFF';
+  let h = '<div class="scr" style="background:#000">';
+
+  /* 1. accessoryCorner — Laso, hugging the top-left corner */
+  const cs = 46*sc;
+  h += '<button class="tap" data-act="dl-now" aria-label="Laso corner complication, open NOW" style="'+abs(pad-6,Y(6),cs,cs)+'">';
+  h += '<svg width="'+cs+'" height="'+cs+'" aria-hidden="true" focusable="false">'+
+       '<path d="M3 '+(cs-3)+' A '+(cs-6)+' '+(cs-6)+' 0 0 1 '+(cs-3)+' 3" fill="none" stroke="var(--surfaceSubtle)" stroke-width="3.5" stroke-linecap="round"></path>'+
+       '<path d="M3 '+(cs-3)+' A '+(cs-6)+' '+(cs-6)+' 0 0 1 '+(cs-3)+' 3" fill="none" stroke="'+(ao?'var(--textTertiary)':bandVar(c.band))+
+       '" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(0.53*1.571*(cs-6))+' 999"></path></svg>';
+  h += '<span style="'+abs(10,8,13*sc,13*sc)+'">'+glyphSVG('walk',12*sc,ao?'var(--textTertiary)':'var(--textPrimary)')+'</span>';
+  h += '<span style="'+abs(8,23*sc,cs-10,13*sc)+'text-align:left;font-size:'+(12*sc)+
+       'px;font-weight:600;color:var(--textPrimary);line-height:'+(13*sc)+'px">28m</span>';
+  h += '</button>';
+  h += badge(1, pad+cs-21, 3);
+
+  /* system: date, and the time */
+  h += '<div style="'+abs(pad+cs-2,Y(8),44,14*sc)+'font-size:'+(12*sc)+'px;color:#FF9F0A;font-weight:600;line-height:'+(14*sc)+'px">TUE</div>'+
+       '<div style="'+abs(pad+cs-2,Y(8)+14*sc,44,16*sc)+'font-size:'+(14*sc)+'px;color:'+white+';font-weight:600;line-height:'+(16*sc)+'px">12</div>';
+  h += '<div style="'+abs(pad+cs+42,Y(6),L.w-pad-(pad+cs+42),30*sc)+'text-align:right;font-size:'+(26*sc)+
+       'px;font-weight:600;color:'+white+';line-height:'+(30*sc)+'px;letter-spacing:-.01em">14:32</div>';
+
+  /* middle row: three circular slots */
+  const cy = Y(50), r = 44*sc;
+  /* 2. accessoryCircular — Laso */
+  h += '<button class="tap" data-act="dl-window" aria-label="Laso circular complication, open Why this window" style="'+
+       abs(pad,cy,r,r)+'">'+circGauge(r,0.53,ao?'var(--textTertiary)':bandVar(c.band),c.w.glyph,ao)+'</button>';
+  h += '<span style="'+abs(pad,cy+r+1,r,11*sc)+'text-align:center;font-size:'+(10*sc)+
+       'px;font-weight:600;color:var(--textPrimary);line-height:'+(11*sc)+'px">28m</span>';
+  h += badge(2, pad+r+2, cy+r-16);
+  /* system: activity rings */
+  h += '<div style="'+abs((L.w-r)/2,cy,r,r)+'">'+ringsSVG(r,ao)+'</div>';
+  /* system: weather */
+  h += '<div style="'+abs(L.w-pad-r,cy,r,r)+'">'+circGauge(r,0.34,ao?'var(--textTertiary)':'#5AC8FA','none',ao)+
+       '<div style="'+abs(0,r/2-9*sc,r,18*sc)+'text-align:center;font-size:'+(14*sc)+'px;font-weight:600;color:'+white+
+       ';line-height:'+(18*sc)+'px">18&deg;</div></div>';
+
+  /* 3. accessoryRectangular — Laso */
+  const rw = cw, rh = 56*sc, ry = Y(118);
+  h += badge(3, L.w-pad-14, ry-16);
+  h += '<button class="tap" data-act="dl-day" aria-label="Laso rectangular complication, open DAY" style="'+abs(pad,ry,rw,rh)+'text-align:left">';
+  h += '<div style="'+abs(0,0,rw,20*sc)+'display:flex;align-items:center;justify-content:space-between">'+
+       '<span style="font-size:'+(15*sc)+'px;font-weight:500;color:var(--textPrimary);white-space:nowrap">'+esc(ao?'Next window':c.w.name)+'</span>'+
+       '<span style="font-size:'+(15*sc)+'px;font-weight:600;color:var(--textPrimary)">28m</span></div>';
+  h += '<div style="'+abs(0,22*sc,rw,20*sc)+'">'+
+       hourStripSVG(rw,20*sc,(rw-16*1.2)/17,1.2,3,6,14,18,c.cellMode,c.band)+'</div>';
+  h += '<div style="'+abs(0,44*sc,rw,12*sc)+'font-size:'+(11*sc)+'px;color:var(--textTertiary);line-height:'+(12*sc)+'px">'+
+       esc(ao?'——————':'then 15:20 last coffee')+'</div>';
+  h += '</button>';
+
+  /* system: calendar row, so the Laso slot has to earn its place */
+  h += '<div style="'+abs(pad,Y(184),cw,14*sc)+'display:flex;justify-content:space-between;font-size:'+(12*sc)+
+       'px;color:#FF453A;font-weight:600;line-height:'+(14*sc)+'px"><span>15:00</span>'+
+       '<span style="color:'+(ao?'var(--textTertiary)':'#C9C9D2')+';font-weight:400">Standup, 30 min</span></div>';
+
+  /* bottom system corners */
+  h += '<div style="'+abs(pad,L.h-Y(30),70,20*sc)+'font-size:'+(12*sc)+'px;color:#30D158;font-weight:600;line-height:'+(20*sc)+'px">86%</div>';
+  h += '<div style="'+abs(L.w-pad-70,L.h-Y(30),70,20*sc)+'text-align:right;font-size:'+(12*sc)+
+       'px;color:#FF9F0A;font-weight:600;line-height:'+(20*sc)+'px">5,240</div>';
+  h += '</div>';
+  return h;
+}
+function badge(n,x,y){
+  return '<span style="'+abs(x,y,15,15)+'border-radius:50%;background:#12232b;border:1px solid var(--accent);color:var(--accent);'+
+         'font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">'+n+'</span>';
+}
+function circGauge(size, frac, colour, glyph, ao){
+  const sw = size*0.12, r = (size-sw)/2, C = 2*Math.PI*r;
+  let s = '<svg width="'+size+'" height="'+size+'" aria-hidden="true" focusable="false">';
+  s += '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="var(--surfaceSubtle)" stroke-width="'+sw+'"></circle>';
+  s += '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+colour+'" stroke-width="'+sw+
+       '" stroke-linecap="round" stroke-dasharray="'+(C*frac)+' '+C+'" transform="rotate(-90 '+(size/2)+' '+(size/2)+')"></circle>';
+  s += '</svg>';
+  if (glyph && glyph!=='none'){
+    s += '<span style="'+abs(size/2-7,size/2-7,14,14)+'">'+glyphSVG(glyph,14,ao?'var(--textTertiary)':'var(--textPrimary)')+'</span>';
+  }
+  return '<span style="position:relative;display:block;width:'+size+'px;height:'+size+'px">'+s+'</span>';
+}
+function ringsSVG(size, ao){
+  const cols = ['#FA114F','#92E82A','#1EEAEF'], fracs=[0.46,0.40,0.50];
+  let s = '<svg width="'+size+'" height="'+size+'" aria-hidden="true" focusable="false">';
+  for (let i=0;i<3;i++){
+    const r = size/2 - 4 - i*6, C = 2*Math.PI*r;
+    s += '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="4.5"></circle>';
+    s += '<circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+(ao?'var(--textTertiary)':cols[i])+
+         '" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="'+(C*fracs[i])+' '+C+
+         '" transform="rotate(-90 '+(size/2)+' '+(size/2)+')"></circle>';
+  }
+  return s+'</svg>';
+}
+
+/* ============================== Smart Stack ============================== */
+function renderStack(){
+  const L = LAY[S.size], gw = L.wdg, ao = S.alwaysOn;
+  const cardW = gw.w, x = (L.w-cardW)/2;
+  const cards = [
+    {kind:'weather'}, {kind:'laso'}, {kind:'activity'}, {kind:'nowplaying'}
+  ];
+  const gap = 8, top = 30;
+  let inner = '', y = 0;
+  cards.forEach(function(cd){
+    const hgt = gw.h;
+    inner += '<div style="'+abs(0,y,cardW,hgt)+'border-radius:12px;background:'+
+             (cd.kind==='laso' ? '#000' : 'var(--surfaceRaised)')+';border:1px solid '+
+             (cd.kind==='laso' ? 'var(--borderLow)' : 'transparent')+';overflow:hidden">';
+    if (cd.kind==='laso'){
+      inner += '<div style="'+abs(0,0,cardW,hgt)+'">'+lasoWidget(cardW,hgt,gw,{})+'</div>';
+    } else if (cd.kind==='weather'){
+      inner += '<div style="'+abs(10,8,cardW-20,20)+'font-size:15px;font-weight:600;color:var(--textPrimary)">Weather</div>'+
+               '<div style="'+abs(10,28,cardW-20,26)+'font-size:22px;font-weight:600;color:#FFFFFF">18&deg;</div>'+
+               '<div style="'+abs(10,hgt-22,cardW-20,16)+'font-size:12px;color:var(--textTertiary)">Cloudy · H:20 L:11</div>';
+    } else if (cd.kind==='activity'){
+      inner += '<div style="'+abs(10,8,cardW-20,20)+'font-size:15px;font-weight:600;color:var(--textPrimary)">Activity</div>'+
+               '<div style="'+abs(10,28,cardW-70,16)+'font-size:12px;color:var(--textTertiary)">284/620 KCAL</div>'+
+               '<div style="'+abs(10,46,cardW-70,16)+'font-size:12px;color:var(--textTertiary)">12/30 MIN</div>'+
+               '<div style="'+abs(cardW-58,10,48,48)+'">'+ringsSVG(48,ao)+'</div>';
+    } else {
+      inner += '<div style="'+abs(10,8,cardW-20,20)+'font-size:15px;font-weight:600;color:var(--textPrimary)">Now Playing</div>'+
+               '<div style="'+abs(10,30,cardW-20,18)+'font-size:12px;color:var(--textTertiary)">Nothing is playing</div>';
+    }
+    inner += '</div>';
+    y += hgt + gap;
+  });
+  const contentH = y - gap, viewH = L.h - top;
+  S.stackMax = Math.max(0, contentH - viewH + 6);
+  S.stackScroll = clamp(S.stackScroll, 0, S.stackMax);
+
+  let h = '<div class="scr">';
+  h += statusBar(L,{});
+  h += '<div style="'+abs(0,top,L.w,viewH)+'overflow:hidden"><div style="position:absolute;left:'+x+'px;top:'+
+       (-S.stackScroll)+'px;width:'+cardW+'px;height:'+contentH+'px">'+inner+'</div></div>';
+  h += '</div>';
+  return h;
+}
+
+/* ============================== notifications ============================== */
+const NOTIFS = {
+  n1:{ title:"Today's windows",
+       body:'Train 16:00 to 19:00. Last coffee by 15:20. Wind down 22:20.',
+       actions:[['Remind at 15:50','success'],['Skip training today','success'],['Mute plan for a week','success']],
+       when:'wake + 10 min · ~07:10' },
+  n2:{ title:'Training window',
+       body:'16:00 to 19:00. Strain 6.2 of an 8 to 12 target.',
+       bodyNoPhone:'16:00 to 19:00.',
+       actions:[['Snooze 30 min','success'],['Skip today','success']],
+       when:'16:00 · opt-in only' },
+  n3:{ title:'Wind down',
+       body:'Bed by 23:20 for 7h 40m. Last night you went to bed 00:48.',
+       actions:[['Start wind down','start'],['Bed 30 min later','success'],['Skip tonight','success']],
+       when:'22:20 · bedtime − 60 min' }
+};
+function appSash(L,y){
+  return '<div style="'+abs(L.pad,y,L.cw,18)+'display:flex;align-items:center;gap:5px">'+
+         '<span style="width:16px;height:16px;border-radius:4px;background:var(--optimal);display:flex;align-items:center;'+
+         'justify-content:center">'+glyphSVG('walk',11,'#000')+'</span>'+
+         '<span style="font-size:12px;color:var(--textTertiary)">LASO</span></div>';
+}
+function renderNotifShort(){
+  const L = LAY[S.size], N = NOTIFS[S.notif];
+  let h = '<div class="scr">';
+  h += '<div style="'+abs(0,L.h*0.22,L.w,44)+'display:flex;align-items:center;justify-content:center">'+
+       '<span style="width:40px;height:40px;border-radius:11px;background:var(--optimal);display:flex;align-items:center;'+
+       'justify-content:center">'+glyphSVG('walk',24,'#000')+'</span></div>';
+  h += '<div style="'+abs(L.pad,L.h*0.22+52,L.cw,16)+'text-align:center;font-size:12px;color:var(--textTertiary)">LASO</div>';
+  h += '<div style="'+abs(L.pad,L.h*0.22+72,L.cw,46)+'text-align:center;font-size:17px;font-weight:600;color:var(--textPrimary);line-height:22px">'+
+       esc(N.title)+'</div>';
+  h += '</div>';
+  return h;
+}
+function renderNotifLong(){
+  const L = LAY[S.size], N = NOTIFS[S.notif];
+  const body = (S.state==='nophone' && N.bodyNoPhone) ? N.bodyNoPhone : N.body;
+  let inner='', y=0;
+  inner += '<div style="'+abs(0,y,L.cw,18)+'display:flex;align-items:center;gap:5px">'+
+           '<span style="width:16px;height:16px;border-radius:4px;background:var(--optimal);display:flex;align-items:center;'+
+           'justify-content:center">'+glyphSVG('walk',11,'#000')+'</span>'+
+           '<span style="font-size:12px;color:var(--textTertiary)">LASO</span></div>';
+  y += 24;
+  inner += '<div style="'+abs(0,y,L.cw,22)+'font-size:17px;font-weight:600;color:var(--textPrimary)">'+esc(N.title)+'</div>';
+  y += 26;
+  const bodyH = 54;
+  inner += '<div style="'+abs(0,y,L.cw,bodyH)+'font-size:13px;color:var(--textSecondary);line-height:18px">'+esc(body)+'</div>';
+  y += bodyH + 6;
+  N.actions.forEach(function(a,i){
+    inner += '<button class="tap btnface" data-act="notif" data-i="'+i+'" data-h="'+a[1]+'" style="'+abs(0,y,L.cw,40)+
+             'font-size:15px;font-weight:600;color:var(--textPrimary)'+(i===0?';border-color:var(--optimal)':'')+'"'+
+             (i===0?' data-dt="1"':'')+'>'+esc(a[0])+'</button>';
+    y += 46;
+  });
+  inner += '<button class="tap btnface" data-act="dismiss" style="'+abs(0,y,L.cw,40)+
+           'background:var(--bg);font-size:15px;font-weight:600;color:var(--textTertiary)">Dismiss</button>';
+  y += 46;
+  const viewH = L.h - 24;
+  S.nlMax = Math.max(0, y - viewH);
+  S.nlScroll = clamp(S.nlScroll,0,S.nlMax);
+  let h = '<div class="scr">';
+  h += statusBar(L,{});
+  h += '<div style="'+abs(0,24,L.w,viewH)+'overflow:hidden"><div style="position:absolute;left:'+L.pad+'px;top:'+
+       (-S.nlScroll)+'px;width:'+L.cw+'px;height:'+y+'px">'+inner+'</div></div>';
+  h += '</div>';
+  return h;
+}
+
+/* ============================== render + chrome ============================== */
+function render(){
+  const L = LAY[S.size];
+  const U = L.unit;
+  const caseW = L.w + 26, caseH = L.h + 30;
+  const dev = document.getElementById('device'), wrap = document.getElementById('deviceWrap');
+  dev.style.transform = 'scale('+U+')';
+  dev.style.width = caseW+'px'; dev.style.height = caseH+'px';
+  wrap.style.width = ((caseW+12)*U)+'px'; wrap.style.height = (caseH*U)+'px';
+  const cs = document.getElementById('case');
+  cs.style.width = caseW+'px'; cs.style.height = caseH+'px';
+  cs.style.borderRadius = Math.round(caseW*0.26)+'px';
+  const gl = document.getElementById('glass');
+  gl.style.left='13px'; gl.style.top='15px'; gl.style.width=L.w+'px'; gl.style.height=L.h+'px';
+  gl.style.borderRadius = '22px';
+  const cr = document.getElementById('crown');
+  cr.style.left=(caseW-1)+'px'; cr.style.top=Math.round(caseH*0.29)+'px'; cr.style.width='9px'; cr.style.height='34px';
+  document.getElementById('crownG').style.setProperty('--rot', (S.crownRot%8)+'px');
+  const cd = document.getElementById('crownDot');
+  cd.style.left=(caseW+11)+'px'; cd.style.top=(Math.round(caseH*0.29)+15)+'px'; cd.style.width='4px'; cd.style.height='4px';
+  const sb = document.getElementById('sidebtn');
+  sb.style.left=(caseW-1)+'px'; sb.style.top=Math.round(caseH*0.52)+'px'; sb.style.width='6px'; sb.style.height='26px';
+
+  const scr = document.getElementById('screen');
+  let html='';
+  switch(S.screen){
+    case 'face':   html = renderFace(); break;
+    case 'stack':  html = renderStack(); break;
+    case 'nshort': html = renderNotifShort(); break;
+    case 'nlong':  html = renderNotifLong(); break;
+    case 'launch': html = renderS1(S.launchPhase); break;
+    case 'raise':  html = renderS1(2); break;
+    case 's1':     html = renderS1(2); break;
+    case 's2':     html = renderS2(); break;
+    case 's3':     html = renderS3(); break;
+  }
+  scr.innerHTML = html;
+  scr.style.filter = S.alwaysOn ? 'brightness(.52)' : 'none';
+  S.pushAnim = false;
+  paintChrome();
+  syncToolbar();
+}
+
+function paintChrome(){
+  /* switcher */
+  const list = document.getElementById('switcherList');
+  if (!list.dataset.built){
+    let h='';
+    SCREEN_DEFS.forEach(function(grp){
+      h += '<div class="grp">'+grp[0]+'</div>';
+      grp[1].forEach(function(it){
+        h += '<button class="snav" data-screen="'+it[0]+'">'+it[1]+'<span class="k">'+it[2]+'</span></button>';
+      });
+    });
+    list.innerHTML = h; list.dataset.built='1';
+    list.addEventListener('click', function(e){
+      const b = e.target.closest('[data-screen]'); if (!b) return; go(b.dataset.screen);
+    });
+  }
+  Array.prototype.forEach.call(list.querySelectorAll('.snav'), function(b){
+    b.setAttribute('aria-current', b.dataset.screen===S.screen ? 'true' : 'false');
+  });
+
+  /* notes + legend */
+  const c = compose();
+  const notes = {
+    face:'<b>Watch face.</b> Three Laso complications, three different deep links. The countdown is a self-updating <code>Text(timerInterval:)</code>, so it stays exact between reloads. Tap any of them to follow its link.',
+    stack:'<b>Smart Stack.</b> Only <code>accessoryRectangular</code> ships here. Title + hour strip + one button, inside the 40mm 152 &times; 69.5 pt canvas. Crown scrolls.',
+    nshort:'<b>Short look.</b> Title only, no health value in it. Cadence ceiling is 2 proactive pushes per 24 h.',
+    nlong:'<b>Long look.</b> Static interface, so it renders with the phone unreachable. The first non-destructive action is the Double Tap target.',
+    launch:'<b>S0.</b> No spinner. Frame 1 is the device clock plus the cached window times; the stand-hour facts crossfade in when HealthKit answers.',
+    raise:'<b>Wrist-raise return.</b> Identical frame, no animation replay, no count-up. Only the countdown digit and the freshness chip move.',
+    s1:'<b>S1 NOW.</b> Verb + countdown carry the whole decision. Crown down for DAY. Tap the card for Why. No <code>handGestureShortcut</code> here — R11 forbids it on a vertical tab page.',
+    s2:'<b>S2 DAY.</b> Declared 4-line violation: a timeline is a list. Crown scrolls the list; at the top, crown up returns to NOW. Scroll up for 07:00 Woke and 13:00 Missed.',
+    s3:'<b>S3 Why.</b> Three facts and two real choices. Crown nudges the window time in 5-minute detents — except Move, which is fixed by the clock.'
+  };
+  document.getElementById('notes').innerHTML = notes[S.screen] || '';
+  const leg = document.getElementById('legend');
+  if (S.screen==='face'){
+    leg.innerHTML =
+      '<div class="li"><span class="no">1</span><span><code>accessoryCorner</code> — open gauge = minutes elapsed in the current window, text <code>28m</code>, walking glyph. Deep link <code>laso://watch/now</code> → S1.</span></div>'+
+      '<div class="li"><span class="no">2</span><span><code>accessoryCircular</code> — closed gauge = 53% of the window elapsed, glyph = window type, <code>widgetLabel 28m</code>. Deep link <code>laso://watch/window</code> → S3.</span></div>'+
+      '<div class="li"><span class="no">3</span><span><code>accessoryRectangular</code> — <code>Move now &middot; 28m</code>, the 17-cell hour strip, then the next window. Deep link <code>laso://watch/day</code> → S2.</span></div>'+
+      '<div class="li"><span class="no">–</span><span>Everything else on the face is a system complication: date, Activity rings, weather, battery, steps. <code>accessoryInline</code> is deliberately not shipped.</span></div>';
+  } else if (S.screen==='s3'){
+    leg.innerHTML = '<div class="li"><span class="no">⌘</span><span>Wheel or ↑/↓ turns the crown. On an editable fact it steps 5 minutes per detent and fires <code>.click</code>; the signed delta is the <code>digitalCrownAccessory</code>.</span></div>';
+  } else {
+    leg.innerHTML = '';
+  }
+}
+
+function syncToolbar(){
+  segPaint('segSize', [['46','46mm'],['40','40mm']], S.size);
+  segPaint('segState', STATES, S.state);
+  segPaint('segAO', [['off','Off'],['on','On']], S.alwaysOn?'on':'off');
+  segPaint('segWin', [['move','Move · act'],['coffee','Coffee · stop'],['train','Train · act'],
+                      ['winddown','Wind down · rest'],['bed','Bed · rest']], S.window);
+  segPaint('segNotif', [['n1','N1 plan'],['n2','N2 train'],['n3','N3 wind down']], S.notif);
+  let n = 'Bands: act = optimal #33C48D · stop = fair #E3B45A · rest = primary #4DA3FF. No red — nothing here is a failure state.';
+  if (S.state==='cold' || S.state==='empty') n += ' This state forces the Move window: it is the only one that needs no history.';
+  if (S.state==='hkdenied' && S.window==='move') n += ' Move is dropped from the ranking without stand data, so Train is shown.';
+  document.getElementById('devnote').textContent = n;
+}
+function segPaint(id, items, active){
+  const el = document.getElementById(id);
+  if (!el.dataset.built){
+    el.innerHTML = items.map(function(i){ return '<button data-v="'+i[0]+'">'+i[1]+'</button>'; }).join('');
+    el.dataset.built='1';
+    el.addEventListener('click', function(e){
+      const b = e.target.closest('[data-v]'); if(!b) return;
+      onSeg(id, b.dataset.v);
+    });
+  }
+  Array.prototype.forEach.call(el.querySelectorAll('button'), function(b){
+    b.setAttribute('aria-pressed', b.dataset.v===active ? 'true':'false');
+  });
+}
+function onSeg(id, v){
+  if (id==='segSize'){ S.size=v; S.listScroll=64; S.stackScroll=0; }
+  if (id==='segState'){ S.state=v; S.inlineMsg=null; }
+  if (id==='segAO'){ S.alwaysOn = (v==='on'); }
+  if (id==='segWin'){ S.window=v; S.crownDelta=0; S.inlineMsg=null; }
+  if (id==='segNotif'){ S.notif=v; S.nlScroll=0; }
+  render();
+}
+
+/* ============================== haptics ============================== */
+let hapTimer=null;
+function haptic(type, why){
+  const p = document.getElementById('pulse');
+  p.classList.remove('on'); void p.offsetWidth; p.classList.add('on');
+  const cap = document.getElementById('hcap');
+  cap.innerHTML = '<b>WKHapticType .'+type+'</b> &mdash; '+esc(why);
+  cap.classList.add('on');
+  clearTimeout(hapTimer);
+  hapTimer = setTimeout(function(){ cap.classList.remove('on'); }, 2600);
+}
+function say(msg){
+  const cap = document.getElementById('hcap');
+  cap.innerHTML = esc(msg);
+  cap.classList.add('on');
+  clearTimeout(hapTimer);
+  hapTimer = setTimeout(function(){ cap.classList.remove('on'); }, 2600);
+}
+
+/* ============================== navigation ============================== */
+function go(scr){
+  if (scr==='launch'){ S.launchPhase=0; S.screen='launch'; render();
+    setTimeout(function(){ if(S.screen==='launch'){ S.launchPhase=1; render(); } }, 700);
+    return; }
+  if (scr==='s3') S.pushAnim = true;
+  S.screen = scr;
+  if (scr==='nshort') haptic('notification','notification arriving — played by the system, not by us');
+  if (scr==='s3') S.crownDelta = 0;
+  S.inlineMsg = null;
+  render();
+}
+
+/* ============================== interactions ============================== */
+document.getElementById('screen').addEventListener('click', function(e){
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  act(b.dataset.act, b);
+});
+function act(a, node){
+  const c = compose(), W = c.w;
+  switch(a){
+    case 'drill': go('s3'); break;
+    case 'back': S.screen='s1'; render(); break;
+    case 'dl-now': go('s1'); say('laso://watch/now → S1 NOW'); break;
+    case 'dl-window': go('s3'); say('laso://watch/window → S3 Why this window'); break;
+    case 'dl-day': go('s2'); say('laso://watch/day → S2 DAY'); break;
+    case 'primary': runPrimary(); break;
+    case 'widget': runPrimary(true); break;
+    case 'secondary':
+      S.inlineMsg = null;
+      haptic('success', esc(W.secondary)+' committed on the watch');
+      render(); break;
+    case 'notif': {
+      const N = NOTIFS[S.notif], i = parseInt(node.dataset.i,10);
+      haptic(node.dataset.h, N.actions[i][0]+' — the action runs, it does not merely open the app');
+      break; }
+    case 'dismiss': say('Dismiss is system-supplied on every long look.'); break;
+  }
+}
+function runPrimary(fromWidget){
+  const c = compose(), W = c.w;
+  if (!W.primary) return;
+  if (S.state==='nophone' && !W.local){
+    S.inlineMsg = 'Not saved';
+    haptic('failure','the phone returned a WatchCommandRejection — never a silent revert');
+    render(); return;
+  }
+  S.inlineMsg = null;
+  const t = W.primaryHaptic;
+  const why = (t==='start')
+    ? 'Start wind down — an activity started, handed to the phone-side Live Activity'
+    : (W.primary + (fromWidget?' from the Smart Stack widget':'') + ' accepted, committed locally');
+  haptic(t, why);
+  render();
+}
+
+/* ---------- crown ---------- */
+let crownAccum = 0;
+function crownStep(dir){
+  S.crownRot += dir*3;
+  const cd = document.getElementById('crownDot');
+  cd.classList.add('on'); setTimeout(function(){ cd.classList.remove('on'); }, 110);
+  switch(S.screen){
+    case 'face':
+      if (dir>0){ go('stack'); say('Crown down from the face opens the Smart Stack.'); }
+      else { say('Crown up from the face opens Control Center — system, not ours.'); render(); }
+      return;
+    case 'stack': S.stackScroll = clamp(S.stackScroll + dir*18, 0, S.stackMax||0); render(); return;
+    case 'nlong': S.nlScroll = clamp(S.nlScroll + dir*18, 0, S.nlMax||0); render(); return;
+    case 'nshort': say('A short look is not scrollable — raise your wrist and it becomes the long look.'); render(); return;
+    case 'launch': case 'raise': case 's1':
+      if (dir>0){ S.screen='s2'; S.listScroll = S.listMax||64; render(); }
+      else render();
+      return;
+    case 's2':
+      if (dir<0 && S.listScroll<=0){ S.screen='s1'; render(); return; }
+      S.listScroll = clamp(S.listScroll + dir*14, 0, S.listMax||0); render(); return;
+    case 's3': {
+      const W = compose().w;
+      if (!W.edit){ say('No crown effect here. An hour boundary is not ours to move.'); render(); return; }
+      const next = clamp(W.edit.base + (S.crownDelta+dir)*5, W.edit.min, W.edit.max);
+      const stepped = (next !== clamp(W.edit.base + S.crownDelta*5, W.edit.min, W.edit.max));
+      S.crownDelta += dir;
+      S.crownDelta = clamp(S.crownDelta, Math.ceil((W.edit.min-W.edit.base)/5), Math.floor((W.edit.max-W.edit.base)/5));
+      if (stepped) haptic('click','crown detent — 5 minutes per step, DigitalCrownRotationalSensitivity .low');
+      render(); return; }
+  }
+}
+let wheelLock = 0;
+window.addEventListener('wheel', function(e){
+  if (!e.target.closest('.stage')) return;   /* wheel over the watch = crown; elsewhere the page scrolls */
+  e.preventDefault();
+  const now = Date.now();
+  if (now - wheelLock < 70) return;
+  wheelLock = now;
+  crownStep(e.deltaY > 0 ? 1 : -1);
+}, {passive:false});
+window.addEventListener('keydown', function(e){
+  if (e.key==='ArrowDown'){ e.preventDefault(); crownStep(1); }
+  else if (e.key==='ArrowUp'){ e.preventDefault(); crownStep(-1); }
+  else if (e.key==='ArrowLeft' && S.screen==='s3'){ e.preventDefault(); S.screen='s1'; render(); }
+});
+
+/* ---------- dev toolbar ---------- */
+document.getElementById('devbtn').addEventListener('click', function(){
+  const p = document.getElementById('devpanel');
+  const open = p.classList.toggle('open');
+  this.setAttribute('aria-expanded', open ? 'true':'false');
+});
+document.getElementById('btnDT').addEventListener('click', function(){
+  switch(S.screen){
+    case 's3': runPrimary(); say2('Double Tap → S3 primary action. Legal here: not a list, scroll view or vertical tab.'); break;
+    case 'stack': runPrimary(true); say2('Double Tap → the widget button, which runs an AppIntent.'); break;
+    case 'nlong': {
+      const N = NOTIFS[S.notif];
+      haptic(N.actions[0][1], N.actions[0][0]+' — Double Tap picks the first non-destructive action');
+      break; }
+    case 's1': case 's2': case 'launch': case 'raise':
+      S.screen = (S.screen==='s2') ? 's1' : 's2';
+      if (S.screen==='s2') S.listScroll = S.listMax||64;
+      render();
+      say('Double Tap turns the page here. R11: no primary action on a vertical tab page — the app sets none on S1 or S2.');
+      break;
+    case 'face': go('stack'); say('Double Tap on the watch face is a system gesture: it opens the Smart Stack.'); break;
+    default: say('Double Tap has no target on this surface.');
+  }
+});
+function say2(extra){
+  const cap = document.getElementById('hcap');
+  cap.innerHTML = cap.innerHTML + '<br>' + esc(extra);
+}
+document.getElementById('btnStop').addEventListener('click', function(){
+  haptic('stop','a window closed unsatisfied while the app was frontmost — never fired in the background');
+});
+
+/* ============================== boot ============================== */
+/* deep-link the prototype itself: #screen=s2&size=40&state=cold&win=train&ao=1&notif=n3 */
+(function(){
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (q.get('size')) S.size = q.get('size');
+  if (q.get('state')) S.state = q.get('state');
+  if (q.get('win')) S.window = q.get('win');
+  if (q.get('notif')) S.notif = q.get('notif');
+  if (q.get('ao')) S.alwaysOn = q.get('ao')==='1';
+  if (q.get('screen')) S.screen = q.get('screen');
+})();
+render();
+</script>
+</body>
+</html>
