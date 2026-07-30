@@ -10,8 +10,11 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .home
     @State private var showNotificationReprompt = false
     @State private var showHealthKitReprompt = false
-    @State private var showPMFSurvey = false
-    @State private var showJournalEntry = false
+    /// One sheet slot for the whole root view. Two `.sheet` modifiers stacked on
+    /// the same view lets SwiftUI honour only one of them, and the losing one can
+    /// still present its container with no content — an empty card with no Skip
+    /// button and no drag gesture, which the user can only escape by force-quit.
+    @State private var rootSheet: RootSheet?
     @State private var navigationPath = NavigationPath()
     @State private var homePath = NavigationPath()
     @State private var explorePath = NavigationPath()
@@ -33,6 +36,14 @@ struct ContentView: View {
         if UITestMode.isEnabled, let tab = UITestMode.initialTab.flatMap(AppTab.init(rawValue:)) {
             _selectedTab = State(initialValue: tab)
         }
+    }
+
+    /// The sheets the root view can present, so they share a single `.sheet`.
+    private enum RootSheet: String, Identifiable {
+        case pmfSurvey
+        case journalEntry
+
+        var id: String { rawValue }
     }
 
     var body: some View {
@@ -69,11 +80,11 @@ struct ContentView: View {
                     .animation(.spring(duration: 0.4), value: showHealthKitReprompt)
             }
         }
-        .sheet(isPresented: $showPMFSurvey) {
-            PMFSurveySheet()
-        }
-        .sheet(isPresented: $showJournalEntry) {
-            JournalEntryView()
+        .sheet(item: $rootSheet) { sheet in
+            switch sheet {
+            case .pmfSurvey:    PMFSurveySheet()
+            case .journalEntry: JournalEntryView()
+            }
         }
         .task(id: appStateStore.onboardingCompleted) {
             guard appStateStore.onboardingCompleted else { return }
@@ -132,6 +143,23 @@ struct ContentView: View {
                 showHealthKitReprompt = true
             }
 
+            // Deliberately at the end of this task, not in `onAppear`: setting a
+            // sheet flag from `onAppear` fires the presentation inside the app's
+            // first layout pass, before the root view controller is settled in the
+            // window, and UIKit can then install the sheet with no content. By
+            // here the initial load has already awaited real work, so the window
+            // is up. Also skipped while a blocking fullScreenCover (disclaimer,
+            // trial-expired paywall) owns the screen — a sheet cannot present over
+            // one, and the failed attempt is what strands an empty card.
+            // Mirrors LasoApp's own paywall condition, not just `shouldEnforcePaywall`:
+            // a free-year user is expired at StoreKit but has full access, so no
+            // cover is up and the survey is free to show.
+            let paywallOwnsScreen = subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
+            if appStateStore.disclaimerAcknowledged,
+               !paywallOwnsScreen,
+               PMFSurveyManager.shared.shouldShowSurvey() {
+                rootSheet = .pmfSurvey
+            }
         }
         .onAppear {
             startSessionAnalytics()
@@ -861,7 +889,7 @@ struct ContentView: View {
         // stack nests two stacks, which SwiftUI treats as undefined behavior and
         // pops straight back to the tab root, so present it modally instead.
         guard route != .journalEntry else {
-            showJournalEntry = true
+            rootSheet = .journalEntry
             return
         }
         switch selectedTab {
@@ -922,11 +950,6 @@ struct ContentView: View {
         // one-shot no-ops once fired or when their preconditions are unmet.
         AnswerReadyScheduler.checkAndFire(store: NotificationManager.shared.store)
         RepermissionScheduler.checkAndFire()
-
-        // Show PMF survey when eligible (14+ days, 10+ sessions, 90-day cooldown)
-        if PMFSurveyManager.shared.shouldShowSurvey() {
-            showPMFSurvey = true
-        }
     }
 
     /// Gathers wellness-specific signals (Watch pair, data completeness, permissions)

@@ -69,6 +69,10 @@ struct PMFSurveySheet: View {
             }
         }
         .onAppear {
+            // Every exit path starts the cooldown, not just Submit. Skip and
+            // swipe-to-dismiss left `lastSurveyDate` unwritten, so an eligible
+            // install re-presented this survey on every single launch.
+            PMFSurveyManager.shared.markSurveyShown()
             AppAnalytics.shared.trackFeatureOpen(.feedback, metadata: ["subscreen": "pmf_survey"])
         }
         .onDisappear {
@@ -289,8 +293,14 @@ final class PMFSurveyManager {
         return true // Never shown before, criteria met
     }
 
-    func markSurveyCompleted() {
+    /// Starts the 90-day cooldown. Called the moment the survey appears so that
+    /// skipping or swiping it away counts the same as answering it.
+    func markSurveyShown() {
         defaults.set(Date(), forKey: Key.lastSurveyDate)
+    }
+
+    func markSurveyCompleted() {
+        markSurveyShown()
         let count = defaults.integer(forKey: Key.surveyCount) + 1
         defaults.set(count, forKey: Key.surveyCount)
     }

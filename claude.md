@@ -30,9 +30,8 @@ Core rules: Explain in 2–3 plain lines what solution you are thinking no code 
 19. Optimize for correctness → maintainability.
 20. Explain risks and tradeoffs in final output.
 21. Discuss before coding; align with user before implementation.
-22. Simplest solution, every move — before any action (read, write, agent, research, design), pick the smallest correct solution. Each step must be deliberate, not reflexive. No premature abstraction, no extra parallel agents when one read does it, no elaborate automation when a manual step is simpler. Full scope still applies, just take the simplest path.
 
-23. `AmplitudeEventReference.html` is the source of truth for the analytics taxonomy. Never hand-edit it. After ANY change to `Core/Tracking/`, run `python3 scripts/gen_event_reference.py` and commit the regenerated file in the same commit. A new event also needs a one-line purpose and a tier in `scripts/event_purposes.json`, or the generator stops.
+22. `AmplitudeEventReference.html` is the source of truth for the analytics taxonomy. Never hand-edit it. After ANY change to `Core/Tracking/`, run `python3 scripts/gen_event_reference.py` and commit the regenerated file in the same commit. A new event also needs a one-line purpose and a tier in `scripts/event_purposes.json`, or the generator stops.
 
 **Why:** Enforces fast, correct, production-grade execution with zero ambiguity. Reflex complexity wastes time and ships more bugs than it prevents.
 

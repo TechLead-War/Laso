@@ -117,7 +117,29 @@ final class HealthKitManager: @unchecked Sendable {
     /// stays stale for a month reports once a day instead of once per sync.
     private static let staleReportedDayKey = "Laso.HealthKitManager.staleReportedDay"
 
+    /// In flight request, held process-wide because the system Health sheet is
+    /// process-wide. A second `requestAuthorization` while the first sheet is on
+    /// screen asks UIKit to present on a view controller that is already
+    /// presenting, and what stays on screen is an empty sheet with no rows and no
+    /// working buttons — only a force-quit clears it. Two `load()` calls race at
+    /// every launch (ContentView's `.task` and its scenePhase-active retry), which
+    /// is why the launch log showed `health_permission_requested` twice.
+    @ObservationIgnored @MainActor private static var inFlightAuthorization: Task<Void, Never>?
+
+    @MainActor
     func requestAuthorization() async {
+        if let inFlight = Self.inFlightAuthorization {
+            await inFlight.value
+            return
+        }
+        let request = Task { await performAuthorizationRequest() }
+        Self.inFlightAuthorization = request
+        await request.value
+        Self.inFlightAuthorization = nil
+    }
+
+    @MainActor
+    private func performAuthorizationRequest() async {
         guard isHealthKitAvailable else {
             error = "HealthKit is not available on this device"
             return
@@ -152,6 +174,19 @@ final class HealthKitManager: @unchecked Sendable {
         let shareTypes: Set<HKSampleType> = []
 
         let totalRequested = readTypes.count
+
+        // iOS shows no sheet once every requested type has been answered, so on a
+        // normal launch this call has nothing to do. Skip it rather than hand the
+        // system a presentation request during the app's first frames, where the
+        // privacy daemon is still warming up (see the retry note below) and the
+        // sheet can come up blank.
+        if let status = try? await healthStore.statusForAuthorizationRequest(toShare: shareTypes, read: readTypes),
+           status == .unnecessary {
+            isAuthorized = true
+            error = nil
+            UserDefaults.standard.set(true, forKey: Self.authorizationGrantedKey)
+            return
+        }
 
         do {
             await MainActor.run {
