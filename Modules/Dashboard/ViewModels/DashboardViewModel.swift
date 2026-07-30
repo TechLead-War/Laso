@@ -2103,6 +2103,32 @@ final class DashboardViewModel {
         }
     }
 
+    /// The wins the user has actually earned right now. Empty is a valid answer
+    /// and hides every share affordance: each template is gated so a card can
+    /// only ever carry a number the user would be glad to post.
+    ///
+    /// Lives here rather than on Home because the screenshot handler at the root
+    /// needs the same list from any tab, and two copies of this composition would
+    /// drift apart. `actionResult` is passed in because Home caches it in view
+    /// state to keep its shown-event firing once per morning.
+    @MainActor
+    func shareTemplates(
+        liveVM: LiveViewModel,
+        actionResult: DailyActionResultStore.Result?
+    ) -> [ShareTemplate] {
+        let recovery = liveVM.recovery.readinessScore ?? overallScore.score
+        return ShareTemplateBuilder.build(
+            vitalityAge: vitalityScorer.isReady ? vitalityScorer.vitalityAge : nil,
+            realAge: vitalityScorer.isReady ? vitalityScorer.chronologicalAge : nil,
+            recovery: recovery > 0 ? recovery : nil,
+            masterStreak: gamificationEngine.streaks.masterStreak,
+            actionResult: actionResult,
+            lastNightSleepSeconds: liveVM.sleep.lastNightSleepDuration > 0
+                ? liveVM.sleep.lastNightSleepDuration : nil,
+            allTimeBestSleepHours: analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh
+        )
+    }
+
     /// Single source of truth for what to do today.
     /// Cached per calendar day. stable within a day, refreshed on new day or after analysis re-run.
     @MainActor

@@ -26,4 +26,15 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .settings: return "gearshape"
         }
     }
+
+    /// The analytics screen this tab reports as. One mapping, so tab-switch
+    /// tracking and the root-level screenshot handler cannot disagree.
+    var feature: AppFeature {
+        switch self {
+        case .home: return .home
+        case .live: return .live
+        case .explore: return .explore
+        case .settings: return .settings
+        }
+    }
 }

@@ -203,16 +203,7 @@ struct HomeView: View {
     /// is nil until that has run. The personal-best card simply does not appear
     /// until then.
     private var shareTemplates: [ShareTemplate] {
-        ShareTemplateBuilder.build(
-            vitalityAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.vitalityAge : nil,
-            realAge: viewModel.vitalityScorer.isReady ? viewModel.vitalityScorer.chronologicalAge : nil,
-            recovery: liveReadinessScore > 0 ? liveReadinessScore : nil,
-            masterStreak: viewModel.gamificationEngine.streaks.masterStreak,
-            actionResult: dailyResult,
-            lastNightSleepSeconds: liveViewModel.sleep.lastNightSleepDuration > 0
-                ? liveViewModel.sleep.lastNightSleepDuration : nil,
-            allTimeBestSleepHours: viewModel.analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh
-        )
+        viewModel.shareTemplates(liveVM: liveViewModel, actionResult: dailyResult)
     }
 
     /// Compute the loop-closer card once today's morning lock exists. Guarded on

@@ -39,11 +39,21 @@ struct ContentView: View {
     }
 
     /// The sheets the root view can present, so they share a single `.sheet`.
-    private enum RootSheet: String, Identifiable {
+    private enum RootSheet: Identifiable {
         case pmfSurvey
         case journalEntry
+        /// Templates are captured at presentation time: the live scorers keep
+        /// moving behind the sheet, and a card must not change under the user
+        /// while they are choosing which one to post.
+        case shareWin([ShareTemplate])
 
-        var id: String { rawValue }
+        var id: String {
+            switch self {
+            case .pmfSurvey:    return "pmfSurvey"
+            case .journalEntry: return "journalEntry"
+            case .shareWin:     return "shareWin"
+            }
+        }
     }
 
     var body: some View {
@@ -82,9 +92,13 @@ struct ContentView: View {
         }
         .sheet(item: $rootSheet) { sheet in
             switch sheet {
-            case .pmfSurvey:    PMFSurveySheet()
-            case .journalEntry: JournalEntryView()
+            case .pmfSurvey:               PMFSurveySheet()
+            case .journalEntry:            JournalEntryView()
+            case .shareWin(let templates): ShareWinSheet(templates: templates)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+            presentShareCardForScreenshot()
         }
         .task(id: appStateStore.onboardingCompleted) {
             guard appStateStore.onboardingCompleted else { return }
@@ -287,12 +301,7 @@ struct ContentView: View {
             // The tap happened on the tab the user is LEAVING. Hardcoding .home
             // put every Settings→Live switch on Home, and trackBlockTap derives
             // element_id/action_id from this value too.
-            let fromScreen: AppFeature = switch oldTab {
-            case .home: .home
-            case .live: .live
-            case .explore: .explore
-            case .settings: .settings
-            }
+            let fromScreen: AppFeature = oldTab.feature
             AppAnalytics.shared.trackBlockTap(
                 title: newTab.rawValue.capitalized,
                 type: blockType,
@@ -921,6 +930,40 @@ struct ContentView: View {
             source: isLiveActivityRoute ? "live_activity" : "widget"
         )
         navigate(to: route)
+    }
+
+    // MARK: - Screenshot Share Offer
+
+    /// A screenshot is the strongest "I would show this to someone" signal the app
+    /// gets, so it offers a proper card instead of letting the user post a raw
+    /// screen grab. Fires on every screenshot, from any tab, by request.
+    ///
+    /// Nothing is presented when the user has no earned win to put on a card,
+    /// when a blocking fullScreenCover owns the screen, or when any sheet is
+    /// already up — that last guard also covers screenshotting the share sheet
+    /// itself, which would otherwise re-raise it on top of itself.
+    private func presentShareCardForScreenshot() {
+        let paywallOwnsScreen = subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
+        guard rootSheet == nil,
+              appStateStore.onboardingCompleted,
+              appStateStore.disclaimerAcknowledged,
+              !paywallOwnsScreen else { return }
+
+        let templates = dashboardViewModel.shareTemplates(
+            liveVM: liveViewModel,
+            actionResult: DailyActionResultStore.resultToShow()
+        )
+        guard !templates.isEmpty else { return }
+
+        // Entry step of the share funnel, matching Home's own Share CTA, so
+        // screenshot-sourced opens are separable from tapped ones.
+        AppAnalytics.shared.trackBlockTap(
+            title: "Share",
+            type: .shareCard,
+            screen: selectedTab.feature,
+            metadata: ["source": "screenshot", "card_type": "template"]
+        )
+        rootSheet = .shareWin(templates)
     }
 
     // MARK: - Session Analytics
