@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import FirebaseCore
 import FirebaseRemoteConfig
 import Observation
@@ -90,9 +91,9 @@ final class RemoteConfigManager: @unchecked Sendable {
         MainActor.assumeIsolated { _ = lastFetchTime }
     }
 
-    // MARK: - Copy Resolution Cache
+    // MARK: - Resolution Cache
 
-    /// Resolved copy strings, keyed by config key.
+    /// Resolved copy strings, copy arrays and colours, keyed by config key.
     ///
     /// Uncached, every `Copy.*` read paid a Firestore-override dictionary probe
     /// with an `Any` dynamic cast, a Firebase `configValue(forKey:)` (a lock, a
@@ -112,32 +113,46 @@ final class RemoteConfigManager: @unchecked Sendable {
     /// a view dependency; `lastFetchTime` is.
     @ObservationIgnored private let copyCacheLock = NSLock()
     @ObservationIgnored private var copyCache: [String: String] = [:]
+    @ObservationIgnored private var copyArrayCache: [String: [String]] = [:]
+    /// `Color?` because a missing/malformed hex is itself a valid resolution
+    /// (no `color_*` key ships a default), and re-resolving it per read was
+    /// the whole cost the cache removes.
+    @ObservationIgnored private var colorCache: [String: Color?] = [:]
     @ObservationIgnored private var copyCacheToken: Int = -1
 
-    /// Bumped on every activation so cached strings cannot outlive a config push.
+    /// Bumped on every activation so cached values cannot outlive a config push.
     @ObservationIgnored private var configGeneration: Int = 0
+
+    /// Caller must hold `copyCacheLock`.
+    private func dropResolutionCaches() {
+        copyCache.removeAll(keepingCapacity: true)
+        copyArrayCache.removeAll(keepingCapacity: true)
+        colorCache.removeAll(keepingCapacity: true)
+    }
 
     /// Called on the main actor from both activation paths.
     @MainActor
     private func invalidateCopyCache() {
         copyCacheLock.lock()
         configGeneration &+= 1
-        copyCache.removeAll(keepingCapacity: true)
+        dropResolutionCaches()
         copyCacheLock.unlock()
     }
 
     /// Resolve through the cache, calling `resolve` only on a miss.
-    private func cachedCopy(_ key: String, resolve: () -> String) -> String {
+    private func cached<T>(_ key: String,
+                           in store: ReferenceWritableKeyPath<RemoteConfigManager, [String: T]>,
+                           resolve: () -> T) -> T {
         let token = configGeneration &+ CopyOverridesStore.shared.revision
 
         copyCacheLock.lock()
-        if token == copyCacheToken, let hit = copyCache[key] {
+        if token == copyCacheToken, let hit = self[keyPath: store][key] {
             copyCacheLock.unlock()
             return hit
         }
         if token != copyCacheToken {
             copyCacheToken = token
-            copyCache.removeAll(keepingCapacity: true)
+            dropResolutionCaches()
         }
         copyCacheLock.unlock()
 
@@ -148,10 +163,23 @@ final class RemoteConfigManager: @unchecked Sendable {
         // activation that landed mid-resolve must not have a stale value
         // written back on top of the cleared cache.
         if token == copyCacheToken {
-            copyCache[key] = value
+            self[keyPath: store][key] = value
         }
         copyCacheLock.unlock()
         return value
+    }
+
+    // MARK: - Colours
+
+    /// Parsed RC colour override, or nil when the key is unset or malformed so
+    /// `AppColour` falls back to its bundled light/dark pair.
+    ///
+    /// `observeFetchUpdates()` runs before the cache, not inside it: it is the
+    /// SwiftUI dependency edge, so caching it away would stop a published
+    /// colour change from repainting.
+    func color(forKey key: String) -> Color? {
+        observeFetchUpdates()
+        return cached(key, in: \.colorCache) { Color(hex: self.stringValue(forKey: key)) }
     }
 
     private func stringValue(forKey key: String) -> String {
@@ -513,7 +541,7 @@ final class RemoteConfigManager: @unchecked Sendable {
     /// through so operators cannot accidentally blank the UI.
     func copyString(_ key: String, default fallback: String) -> String {
         observeFetchUpdates()
-        return cachedCopy(key) {
+        return cached(key, in: \.copyCache) {
             if let override = CopyOverridesStore.shared.string(forKey: key) {
                 return override
             }
@@ -530,20 +558,22 @@ final class RemoteConfigManager: @unchecked Sendable {
     /// `default` array.
     func copyArray(_ key: String, default fallback: [String]) -> [String] {
         observeFetchUpdates()
-        if let override = CopyOverridesStore.shared.stringArray(forKey: key) {
-            return override
+        return cached(key, in: \.copyArrayCache) {
+            if let override = CopyOverridesStore.shared.stringArray(forKey: key) {
+                return override
+            }
+            guard let raw = self.remoteConfig?.configValue(forKey: key).stringValue,
+                  !raw.isEmpty,
+                  let data = raw.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String].self, from: data),
+                  !decoded.isEmpty else {
+                // An RC value of "[]" decodes fine but would blank the copy that
+                // consumes it (iOS drops a notification with empty content), so an
+                // empty array falls back like a missing key.
+                return fallback
+            }
+            return decoded
         }
-        guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
-              !raw.isEmpty,
-              let data = raw.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([String].self, from: data),
-              !decoded.isEmpty else {
-            // An RC value of "[]" decodes fine but would blank the copy that
-            // consumes it (iOS drops a notification with empty content), so an
-            // empty array falls back like a missing key.
-            return fallback
-        }
-        return decoded
     }
 }
 

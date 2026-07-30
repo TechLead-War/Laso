@@ -11,6 +11,10 @@ final class MetricDetailViewModel {
 
     var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays
 
+    /// `Calendar.monthSymbols` rebuilds a 12-string array from the locale on
+    /// every access, and three properties here read it per body pass.
+    private static let monthSymbols = Date.cal.monthSymbols
+
     var timeSeries: MetricTimeSeries? {
         healthKitManager.timeSeries[metric]
     }
@@ -92,7 +96,7 @@ final class MetricDetailViewModel {
     var historicalFacts: [HistoricalFact] {
         guard let ctx = historicalContext else { return [] }
         var facts: [HistoricalFact] = []
-        let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
+        let monthName = Self.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
 
         // All-time percentile
         if ctx.totalDataPoints >= 90 {
@@ -173,13 +177,19 @@ final class MetricDetailViewModel {
         let samples = series.samples(lastDays: selectedTimeRange)
         guard samples.count >= 7 else { return [] }
 
-        // Compute 7-day rolling average for the trend line
+        // Rolling average as a running sum: the slice-and-map version allocated a
+        // fresh array per point, 359 of them at the 365-day range.
         let windowSize = min(7, max(3, samples.count / 5))
         var trendPoints: [MetricSample] = []
-        for i in (windowSize - 1)..<samples.count {
-            let window = samples[(i - windowSize + 1)...i]
-            let avg = window.map(\.value).reduce(0, +) / Double(windowSize)
-            trendPoints.append(MetricSample(date: samples[i].date, value: avg))
+        trendPoints.reserveCapacity(samples.count - windowSize + 1)
+
+        var sum = 0.0
+        for i in 0..<windowSize { sum += samples[i].value }
+        trendPoints.append(MetricSample(date: samples[windowSize - 1].date, value: sum / Double(windowSize)))
+
+        for i in windowSize..<samples.count {
+            sum += samples[i].value - samples[i - windowSize].value
+            trendPoints.append(MetricSample(date: samples[i].date, value: sum / Double(windowSize)))
         }
         return trendPoints
     }
@@ -231,9 +241,9 @@ final class MetricDetailViewModel {
         let change = ((thisAvg - lastAvg) / lastAvg) * 100
         let improving = metric.higherIsBetter ? change > 0 : change < 0
 
-        let thisLabel = cal.monthSymbols[cal.component(.month, from: now) - 1]
+        let thisLabel = Self.monthSymbols[cal.component(.month, from: now) - 1]
         let lastMonthDate = cal.date(byAdding: .month, value: -1, to: now) ?? now
-        let lastLabel = cal.monthSymbols[cal.component(.month, from: lastMonthDate) - 1]
+        let lastLabel = Self.monthSymbols[cal.component(.month, from: lastMonthDate) - 1]
 
         return MonthComparison(
             thisMonthAvg: thisAvg,

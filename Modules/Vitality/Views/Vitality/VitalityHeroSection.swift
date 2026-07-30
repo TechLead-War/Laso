@@ -136,6 +136,11 @@ struct VitalityHeroSection: View {
         .background(
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .fill(AppColour.surfaceInverse)
+                // Shadow sits on the opaque fill and BEFORE the gradient overlay.
+                // Hung on the composed card instead, its source is the animating
+                // particle orb, so it re-blurs offscreen every frame; hung after
+                // the overlay it becomes a composite shadow and caches no better.
+                .shadow(color: AppColour.shadowAmbient, radius: 16, y: 8)
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                         .fill(
@@ -152,7 +157,6 @@ struct VitalityHeroSection: View {
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(paceTint.opacity(0.42), lineWidth: 1)
         )
-        .shadow(color: AppColour.shadowAmbient, radius: 16, y: 8)
         .padding(.horizontal)
     }
 

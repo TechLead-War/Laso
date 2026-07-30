@@ -52,11 +52,20 @@ final class PersistenceManager {
 
     // MARK: - Migration
 
-    /// One-time migration of any existing plaintext health data to encrypted storage
+    /// One-time migration of any existing plaintext health data to encrypted storage.
+    /// Records which keys have been migrated rather than a single done-flag, so
+    /// adding a key to `encryptedKeys` later still migrates it exactly once
+    /// without anyone having to remember to bump a version number.
     private func migratePlaintextData() {
-        for key in Self.encryptedKeys {
+        let migratedKeysKey = "healthpulse.migration.encryptedKeys"
+        let alreadyMigrated = Set(defaults.stringArray(forKey: migratedKeysKey) ?? [])
+        let pending = Self.encryptedKeys.subtracting(alreadyMigrated)
+        guard !pending.isEmpty else { return }
+
+        for key in pending {
             encrypted.migrateIfNeeded(forKey: key)
         }
+        defaults.set(Array(Self.encryptedKeys), forKey: migratedKeysKey)
     }
 
     /// One-time migration: enable critical + heart rate alerts for existing users.

@@ -14,9 +14,17 @@ final class CategoryDetailViewModel {
     @ObservationIgnored
     private var trendCache: [HealthMetric: TrendAnalyzer.TrendResult]?
 
+    /// Cached `valueForRange` strings — each row asks twice (visible text and
+    /// accessibility label), so the memo halves the work outright.
+    @ObservationIgnored
+    private var valueCache: [HealthMetric: String] = [:]
+
     var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays {
         didSet {
-            if oldValue != selectedTimeRange { trendCache = nil }
+            if oldValue != selectedTimeRange {
+                trendCache = nil
+                valueCache.removeAll()
+            }
         }
     }
 
@@ -173,11 +181,20 @@ final class CategoryDetailViewModel {
     /// Period-aware display value: average of samples within the selected
     /// range. Falls back to the latest sample when the range has no data.
     func valueForRange(for metric: HealthMetric) -> String {
+        if let cached = valueCache[metric] { return cached }
+        let value = computeValueForRange(for: metric)
+        valueCache[metric] = value
+        return value
+    }
+
+    private func computeValueForRange(for metric: HealthMetric) -> String {
         guard let series = healthKitManager.timeSeries[metric], !series.samples.isEmpty else {
             return "--"
         }
         let cutoff = Date.cal.date(byAdding: .day, value: -selectedTimeRange, to: Date()) ?? Date()
-        let inRange = series.samples.filter { $0.date >= cutoff }
+        // Binary-searched window; samples are sorted by the series init, so this
+        // is the same set the linear filter produced.
+        let inRange = series.samples(from: cutoff, until: .distantFuture)
         if inRange.isEmpty {
             return metric.formatValue(series.latestValue ?? 0)
         }

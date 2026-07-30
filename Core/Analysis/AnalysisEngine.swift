@@ -3,7 +3,7 @@ import Observation
 
 @Observable
 final class AnalysisEngine {
-    private let persistence = PersistenceManager()
+    private let persistence: PersistenceManager
 
     // MARK: - Nested Observable State Groups
 
@@ -161,7 +161,12 @@ final class AnalysisEngine {
     let mlOrchestrator = MLOrchestrator()
     var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
 
-    init() {
+    /// `persistence` is injected so the app shares the container's single
+    /// instance. Building a second one here ran the encrypted-store migration
+    /// and registered a second iCloud KVS observer on every launch. The default
+    /// argument keeps the standalone previews working unchanged.
+    init(persistence: PersistenceManager = PersistenceManager()) {
+        self.persistence = persistence
         baselines = persistence.loadBaselines()
         lastAnalysis = persistence.loadLastAnalysisDate()
         // Restore fitted forecaster models so the grid search runs on its 30-day

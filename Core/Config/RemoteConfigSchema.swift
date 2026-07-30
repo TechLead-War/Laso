@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 
 // MARK: - Remote Config Schema
 //
@@ -346,16 +345,10 @@ extension RemoteConfigManager {
 
     // MARK: Colors
     //
-    // Returns the parsed `Color` if RC has a valid hex string, or `nil` if
-    // the value is missing / malformed. Callers must supply the bundled
-    // default — kept in `AppColour` — as a guaranteed fallback. This keeps
-    // the design system safe during cold start, offline, throttle, and the
-    // documented Firebase Remote Config outages.
-
-    func color(forKey key: String) -> Color? {
-        let hex = string(forKey: key) ?? ""
-        return Color(hex: hex)
-    }
+    // `color(forKey:)` lives in `RemoteConfigManager.swift` alongside its cache.
+    // Callers must supply the bundled default — kept in `AppColour` — as a
+    // guaranteed fallback. This keeps the design system safe during cold start,
+    // offline, throttle, and the documented Firebase Remote Config outages.
 
     // MARK: Onboarding
 

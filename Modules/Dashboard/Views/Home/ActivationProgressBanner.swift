@@ -166,11 +166,14 @@ struct AskYourDataCard: View {
 
     /// Deterministic prompt rotation. picks a sample question based on the
     /// current day so it shifts daily without flickering within a session.
-    private var samplePrompt: String {
+    /// `static` because a stored/computed property on a `View` re-runs on every
+    /// construction, and "does not flicker within a session" is exactly what
+    /// resolving it once per process buys.
+    private static let samplePrompt: String = {
         let prompts = Copy.Home.AskYourData.conciergePrompts
         let day = Date.cal.ordinality(of: .day, in: .year, for: Date()) ?? 1
         return prompts[day % prompts.count]
-    }
+    }()
 
     var body: some View {
         Button(action: {
@@ -184,7 +187,7 @@ struct AskYourDataCard: View {
                     .foregroundStyle(AppColour.textTertiary)
 
                 HStack(spacing: DS.space3) {
-                    Text(samplePrompt)
+                    Text(Self.samplePrompt)
                         .font(DS.Typography.body)
                         .italic()
                         .foregroundStyle(AppColour.textSecondary)
@@ -206,7 +209,7 @@ struct AskYourDataCard: View {
         .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.askYourDataCard")
-        .accessibilityLabel(Copy.Home.xLabel(Copy.Home.AskYourData.caption, samplePrompt))
+        .accessibilityLabel(Copy.Home.xLabel(Copy.Home.AskYourData.caption, Self.samplePrompt))
         .accessibilityHint(Copy.Home.opensAskYourDataHint)
     }
 }

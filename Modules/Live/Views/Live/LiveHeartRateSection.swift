@@ -7,8 +7,11 @@ struct LiveHeartRateSection: View {
     let heartRateZonePercent: CGFloat
     var heartRateTracker: SectionTracker
     @Binding var maxScrollDepth: Int
-    @Binding var pulseScale: CGFloat
-    @Binding var lastAnimationTime: Date
+
+    // Local to this card: a beat pulse held on LiveView re-ran the whole tab's
+    // body twice per heartbeat.
+    @State private var pulseScale: CGFloat = 1.0
+    @State private var lastAnimationTime: Date = .distantPast
 
     private var isHeartRateStale: Bool {
         !vitals.isHeartRateFresh && vitals.heartRateTimestamp != nil

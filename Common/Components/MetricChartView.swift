@@ -15,13 +15,6 @@ struct MetricChartView: View {
     private let xAxisDateFormat: Date.FormatStyle
     private let yDomain: ClosedRange<Double>
 
-    @State private var selectedDate: Date?
-    @State private var isDragging = false
-
-    /// A scroll view claims a pan at roughly 10pt, so scrubbing has to engage just
-    /// under that to still feel instant without stealing a vertical page scroll.
-    private static let scrubMinimumDrag: CGFloat = 8
-
     init(
         samples: [MetricSample],
         metric: HealthMetric,
@@ -51,24 +44,6 @@ struct MetricChartView: View {
 
     private var color: Color {
         metric.category.color
-    }
-
-    /// Find the closest sample to the selected date
-    private var selectedSample: MetricSample? {
-        guard let selectedDate, !samples.isEmpty else { return nil }
-        let insertionIndex = samples.firstIndex(onOrAfter: selectedDate)
-        if insertionIndex <= 0 {
-            return samples.first
-        }
-        if insertionIndex >= samples.count {
-            return samples.last
-        }
-
-        let previous = samples[insertionIndex - 1]
-        let next = samples[insertionIndex]
-        return abs(previous.date.timeIntervalSince(selectedDate)) <= abs(next.date.timeIntervalSince(selectedDate))
-            ? previous
-            : next
     }
 
     var body: some View {
@@ -184,30 +159,8 @@ struct MetricChartView: View {
                     .symbolSize(20)
                 }
             }
-
-            // Selection indicator
-            if let sample = selectedSample {
-                RuleMark(x: .value("Selected", sample.date))
-                    .foregroundStyle(.secondary.opacity(0.5))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-
-                PointMark(
-                    x: .value("Selected", sample.date),
-                    y: .value(metric.displayName, sample.value)
-                )
-                .foregroundStyle(color)
-                .symbolSize(80)
-
-                PointMark(
-                    x: .value("Selected", sample.date),
-                    y: .value(metric.displayName, sample.value)
-                )
-                .foregroundStyle(AppColour.markerOnSurface)
-                .symbolSize(30)
-            }
         }
         .chartYScale(domain: yDomain)
-        .chartXSelection(value: $selectedDate)
         .chartXAxis {
             AxisMarks(values: .stride(by: xAxisStride.component, count: xAxisStride.count)) { _ in
                 AxisValueLabel(format: xAxisDateFormat)
@@ -223,77 +176,19 @@ struct MetricChartView: View {
         .frame(height: 220)
         .clipped()
         .contentShape(Rectangle())
+        // The crosshair, tooltip and scrub state live in this overlay, not in the
+        // Chart closure above. Selection state up here would re-emit every
+        // LineMark/AreaMark and re-solve the scales on every touch move.
         .chartOverlay { proxy in
-            GeometryReader { geometry in
-                Rectangle()
-                    .fill(Color.clear)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: Self.scrubMinimumDrag)
-                            .onChanged { value in
-                                // The chart fills the width of a scrolling page, so it only
-                                // takes over once the finger is clearly moving sideways.
-                                // Once scrubbing it keeps the touch, however the finger drifts.
-                                guard isDragging || abs(value.translation.width) > abs(value.translation.height) else { return }
-                                if !isDragging {
-                                    AppAnalytics.shared.trackChartInteraction(
-                                        metric: metric.rawValue,
-                                        interactionType: "drag_start",
-                                        period: periodLabel,
-                                        screen: .metricDetail
-                                    )
-                                    AppAnalytics.shared.trackActivationMilestone(.firstChartInteraction)
-                                    AppAnalytics.shared.trackCoreAction(.interactedWithChart, screen: .metricDetail)
-                                }
-                                isDragging = true
-                                let origin = geometry[proxy.plotFrame!].origin
-                                let locationX = value.location.x - origin.x
-                                if let date: Date = proxy.value(atX: locationX) {
-                                    selectedDate = date
-                                }
-                            }
-                            .onEnded { _ in
-                                // A drag that was left to the page scroll never sent a
-                                // drag_start, so it must not send a drag_end either.
-                                guard isDragging else { return }
-                                isDragging = false
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "drag_end",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
-                            }
-                    )
-                    .onTapGesture { location in
-                        let origin = geometry[proxy.plotFrame!].origin
-                        let locationX = location.x - origin.x
-                        if let date: Date = proxy.value(atX: locationX) {
-                            if selectedDate == date {
-                                selectedDate = nil // Deselect on second tap
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "tap_deselect",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
-                            } else {
-                                selectedDate = date
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "tap_select",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
-                            }
-                        }
-                    }
-            }
+            MetricChartScrubLayer(
+                proxy: proxy,
+                samples: samples,
+                metric: metric,
+                baseline: baseline,
+                color: color,
+                periodLabel: periodLabel
+            )
         }
-        .overlay(alignment: .topLeading) {
-            selectedValueOverlay
-        }
-        .sensoryFeedback(.selection, trigger: selectedSample?.id)
         // Chart-level summary so VoiceOver announces what the chart
         // shows on focus (metric name, time span, latest value, trend direction).
         .accessibilityElement(children: .contain)
@@ -309,7 +204,7 @@ struct MetricChartView: View {
         guard let first = samples.first, let last = samples.last else {
             return "No data available"
         }
-        let latest = "\(formattedValue(last.value)) \(metric.unit)"
+        let latest = "\(metricChartFormattedValue(last.value, metric: metric)) \(metric.unit)"
         let direction: String
         if last.value > first.value * 1.02 {
             direction = "trending up"
@@ -319,52 +214,6 @@ struct MetricChartView: View {
             direction = "stable"
         }
         return "Latest \(latest), \(direction)"
-    }
-
-    @ViewBuilder
-    private var selectedValueOverlay: some View {
-        if let sample = selectedSample {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(sample.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
-                    .font(.caption2)
-                    .foregroundStyle(AppColour.textSecondary)
-
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(formattedValue(sample.value))
-                        .font(.callout.weight(.bold).monospacedDigit())
-                        .foregroundStyle(color)
-
-                    Text(metric.unit)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(AppColour.textSecondary)
-                }
-
-                // Show how far from baseline
-                if let baseline, baseline > 0 {
-                    let devPercent = ((sample.value - baseline) / baseline) * 100
-                    let sign = devPercent >= 0 ? "+" : ""
-                    Text("\(sign)\(String(format: "%.1f", devPercent))% from baseline")
-                        .font(.caption2)
-                        .foregroundStyle(abs(devPercent) > 10 ? AppColour.warning : AppColour.textSecondary)
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
-            .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
-            .padding(DS.space1)
-        }
-    }
-
-    private func formattedValue(_ value: Double) -> String {
-        switch metric {
-        case .steps, .activeCalories, .basalCalories, .flightsClimbed,
-             .heartRate, .restingHeartRate, .walkingHeartRateAverage,
-             .heartRateRecovery, .bloodPressureSystolic, .bloodPressureDiastolic:
-            return String(format: "%.0f", value)
-        default:
-            return String(format: "%.1f", value)
-        }
     }
 
     private static func makeDataSpanDays(samples: [MetricSample]) -> Int {
@@ -448,6 +297,207 @@ struct MetricChartView: View {
         return low...high
     }
 
+}
+
+// MARK: - Scrub Layer
+
+/// Swift Charts sizes a point symbol by area, so a hand-drawn replacement has to
+/// convert that area back to a diameter to land on the same dot.
+func chartSymbolDiameter(area: CGFloat) -> CGFloat {
+    2 * (area / .pi).squareRoot()
+}
+
+private func metricChartFormattedValue(_ value: Double, metric: HealthMetric) -> String {
+    switch metric {
+    case .steps, .activeCalories, .basalCalories, .flightsClimbed,
+         .heartRate, .restingHeartRate, .walkingHeartRateAverage,
+         .heartRateRecovery, .bloodPressureSystolic, .bloodPressureDiastolic:
+        return String(format: "%.0f", value)
+    default:
+        return String(format: "%.1f", value)
+    }
+}
+
+/// Crosshair, tooltip and scrub state for `MetricChartView`. It owns the selection
+/// so a touch move invalidates only this overlay; the chart's marks sit in the
+/// parent body and are never re-emitted.
+private struct MetricChartScrubLayer: View {
+    let proxy: ChartProxy
+    let samples: [MetricSample]
+    let metric: HealthMetric
+    let baseline: Double?
+    let color: Color
+    let periodLabel: String
+
+    @State private var selectedDate: Date?
+    @State private var isDragging = false
+
+    /// A scroll view claims a pan at roughly 10pt, so scrubbing has to engage just
+    /// under that to still feel instant without stealing a vertical page scroll.
+    private static let scrubMinimumDrag: CGFloat = 8
+
+    /// Find the closest sample to the selected date
+    private var selectedSample: MetricSample? {
+        guard let selectedDate, !samples.isEmpty else { return nil }
+        let insertionIndex = samples.firstIndex(onOrAfter: selectedDate)
+        if insertionIndex <= 0 {
+            return samples.first
+        }
+        if insertionIndex >= samples.count {
+            return samples.last
+        }
+
+        let previous = samples[insertionIndex - 1]
+        let next = samples[insertionIndex]
+        return abs(previous.date.timeIntervalSince(selectedDate)) <= abs(next.date.timeIntervalSince(selectedDate))
+            ? previous
+            : next
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let plotRect = proxy.plotFrame.map { geometry[$0] }
+
+            ZStack(alignment: .topLeading) {
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: Self.scrubMinimumDrag)
+                            .onChanged { value in
+                                // The chart fills the width of a scrolling page, so it only
+                                // takes over once the finger is clearly moving sideways.
+                                // Once scrubbing it keeps the touch, however the finger drifts.
+                                guard isDragging || abs(value.translation.width) > abs(value.translation.height) else { return }
+                                if !isDragging {
+                                    AppAnalytics.shared.trackChartInteraction(
+                                        metric: metric.rawValue,
+                                        interactionType: "drag_start",
+                                        period: periodLabel,
+                                        screen: .metricDetail
+                                    )
+                                    AppAnalytics.shared.trackActivationMilestone(.firstChartInteraction)
+                                    AppAnalytics.shared.trackCoreAction(.interactedWithChart, screen: .metricDetail)
+                                }
+                                isDragging = true
+                                guard let plotRect else { return }
+                                let locationX = value.location.x - plotRect.origin.x
+                                if let date: Date = proxy.value(atX: locationX) {
+                                    selectedDate = date
+                                }
+                            }
+                            .onEnded { _ in
+                                // A drag that was left to the page scroll never sent a
+                                // drag_start, so it must not send a drag_end either.
+                                guard isDragging else { return }
+                                isDragging = false
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "drag_end",
+                                    period: periodLabel,
+                                    screen: .metricDetail
+                                )
+                            }
+                    )
+                    .onTapGesture { location in
+                        guard let plotRect else { return }
+                        let locationX = location.x - plotRect.origin.x
+                        if let date: Date = proxy.value(atX: locationX) {
+                            if selectedDate == date {
+                                selectedDate = nil // Deselect on second tap
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "tap_deselect",
+                                    period: periodLabel,
+                                    screen: .metricDetail
+                                )
+                            } else {
+                                selectedDate = date
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "tap_select",
+                                    period: periodLabel,
+                                    screen: .metricDetail
+                                )
+                            }
+                        }
+                    }
+
+                if let plotRect, let sample = selectedSample {
+                    crosshair(for: sample, in: plotRect)
+                        .allowsHitTesting(false)
+                }
+
+                selectedValueOverlay
+            }
+        }
+        .sensoryFeedback(.selection, trigger: selectedSample?.id)
+    }
+
+    @ViewBuilder
+    private func crosshair(for sample: MetricSample, in plotRect: CGRect) -> some View {
+        if let x = proxy.position(forX: sample.date),
+           let y = proxy.position(forY: sample.value) {
+            let pointX = plotRect.minX + x
+            let pointY = plotRect.minY + y
+
+            Path { path in
+                path.move(to: CGPoint(x: pointX, y: plotRect.minY))
+                path.addLine(to: CGPoint(x: pointX, y: plotRect.maxY))
+            }
+            .stroke(.secondary.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+            Circle()
+                .fill(color)
+                .frame(width: chartSymbolDiameter(area: 80), height: chartSymbolDiameter(area: 80))
+                .position(x: pointX, y: pointY)
+
+            Circle()
+                .fill(AppColour.markerOnSurface)
+                .frame(width: chartSymbolDiameter(area: 30), height: chartSymbolDiameter(area: 30))
+                .position(x: pointX, y: pointY)
+        }
+    }
+
+    @ViewBuilder
+    private var selectedValueOverlay: some View {
+        if let sample = selectedSample {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(sample.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
+                    .font(.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
+
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(metricChartFormattedValue(sample.value, metric: metric))
+                        .font(.callout.weight(.bold).monospacedDigit())
+                        .foregroundStyle(color)
+
+                    Text(metric.unit)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(AppColour.textSecondary)
+                }
+
+                // Show how far from baseline
+                if let baseline, baseline > 0 {
+                    let devPercent = ((sample.value - baseline) / baseline) * 100
+                    let sign = devPercent >= 0 ? "+" : ""
+                    Text("\(sign)\(String(format: "%.1f", devPercent))% from baseline")
+                        .font(.caption2)
+                        .foregroundStyle(abs(devPercent) > 10 ? AppColour.warning : AppColour.textSecondary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            // Shadow rides on the background shape, not the composed tooltip: a
+            // shadow over changing content re-blurs offscreen every touch move.
+            .background {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(AppColour.surfaceOverlay)
+                    .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
+            }
+            .padding(DS.space1)
+        }
+    }
 }
 
 #if DEBUG

@@ -254,9 +254,12 @@ struct ExploreView: View {
                     .onDisappear { needsAttentionTracker.disappeared() }
 
                     // 8. Why this week — declining metrics merged with their causal explanation
-                    if viewModel.analysis.dataDepth.daysOfData >= 30, !decliningHighlights.isEmpty {
+                    // Filtered once, and only once the depth gate has passed, so
+                    // the check and the section share one pass.
+                    let declining = viewModel.analysis.dataDepth.daysOfData >= 30 ? decliningHighlights : []
+                    if !declining.isEmpty {
                         ExploreDecliningTrendsSection(
-                            decliningHighlights: decliningHighlights,
+                            decliningHighlights: declining,
                             causalChains: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.causalChains : [],
                             onHighlightTapped: { highlight in
                                 AppAnalytics.shared.trackBlockTap(

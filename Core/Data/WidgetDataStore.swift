@@ -81,6 +81,11 @@ final class WidgetDataStore {
     private let suiteName: String
     private let userDefaults: UserDefaults?
 
+    // A full snapshot write runs `save`/`load` up to ten times in one pass, so
+    // the coders are shared instead of allocated per call.
+    private static let jsonEncoder = JSONEncoder()
+    private static let jsonDecoder = JSONDecoder()
+
     init(suiteName: String = "group.com.lasohealth.fit") {
         self.suiteName = suiteName
         self.userDefaults = UserDefaults(suiteName: suiteName)
@@ -206,13 +211,13 @@ final class WidgetDataStore {
     // MARK: - Helpers
 
     private func save<T: Encodable>(_ value: T, forKey key: String) {
-        guard let data = try? JSONEncoder().encode(value) else { return }
+        guard let data = try? Self.jsonEncoder.encode(value) else { return }
         userDefaults?.set(data, forKey: key)
     }
 
     private func load<T: Decodable>(forKey key: String) -> T? {
         guard let data = userDefaults?.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: data)
+        return try? Self.jsonDecoder.decode(T.self, from: data)
     }
 
     /// Write all widget snapshots and reload timelines only if user-visible content changed.

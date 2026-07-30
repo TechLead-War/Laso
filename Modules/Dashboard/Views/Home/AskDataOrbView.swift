@@ -53,12 +53,21 @@ private struct FrameCache: Sendable {
     }
 }
 
+// MARK: - Color Helper
+
+/// File scope so the constant gradients below can be built as `static let`
+/// instead of re-allocated inside the draw closure every frame.
+private func rgba(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> Color {
+    Color(.sRGB, red: r / 255, green: g / 255, blue: b / 255, opacity: a)
+}
+
 // MARK: - AskDataOrbView
 
 /// Neon plasma orb. exact SwiftUI Canvas replica of the website's vitality orb.
 /// All geometry is pre-computed on a background thread; per-frame rendering is path-free.
 struct AskDataOrbView: View {
     let size: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var thermalManager = ThermalManager.shared
     @State private var cache: FrameCache?
     @State private var isVisible = false
@@ -73,13 +82,73 @@ struct AskDataOrbView: View {
     private nonisolated static let shellTintBlue = Color(.sRGB, red: 0, green: 113 / 255, blue: 227 / 255, opacity: 1)
     private nonisolated static let shellTintCyan = Color(.sRGB, red: 6 / 255, green: 182 / 255, blue: 212 / 255, opacity: 1)
 
+    /// Every gradient whose stops do not move with the animation. Built once here
+    /// rather than re-allocated (with their Colors) inside the draw closure on
+    /// every one of the ~30 frames a second the orb renders.
+    private nonisolated static let haloGradient = Gradient(stops: [
+        .init(color: rgba(6, 182, 212, 0.2), location: 0),
+        .init(color: rgba(0, 113, 227, 0.18), location: 0.55),
+        .init(color: rgba(3, 14, 44, 0), location: 1),
+    ])
+    private nonisolated static let bodyGradient = Gradient(stops: [
+        .init(color: rgba(7, 31, 74, 0.08), location: 0),
+        .init(color: rgba(5, 26, 74, 0.24), location: 0.4),
+        .init(color: rgba(2, 18, 58, 0.86), location: 1),
+    ])
+    private nonisolated static let hotspotGradient = Gradient(stops: [
+        .init(color: rgba(140, 240, 255, 0.18), location: 0),
+        .init(color: rgba(6, 182, 212, 0.09), location: 0.32),
+        .init(color: rgba(6, 182, 212, 0), location: 1),
+    ])
+    private nonisolated static let rimGradient = Gradient(stops: [
+        .init(color: rgba(34, 197, 255, 0.1), location: 0),
+        .init(color: rgba(34, 197, 255, 0), location: 1),
+    ])
+    private nonisolated static let coreGradient = Gradient(stops: [
+        .init(color: rgba(0, 113, 227, 0.07), location: 0),
+        .init(color: rgba(0, 113, 227, 0), location: 1),
+    ])
+    private nonisolated static let centerVoidGradient = Gradient(stops: [
+        .init(color: rgba(2, 16, 50, 0.78), location: 0),
+        .init(color: rgba(2, 16, 50, 0.38), location: 0.58),
+        .init(color: rgba(2, 16, 50, 0), location: 1),
+    ])
+    private nonisolated static let travelerAGradient = Gradient(stops: [
+        .init(color: rgba(255, 255, 255, 0.48), location: 0),
+        .init(color: rgba(6, 182, 212, 0.2), location: 0.35),
+        .init(color: .clear, location: 1),
+    ])
+    private nonisolated static let travelerBGradient = Gradient(stops: [
+        .init(color: rgba(52, 211, 153, 0.36), location: 0),
+        .init(color: .clear, location: 1),
+    ])
+    private nonisolated static let outerBlobGradient = Gradient(stops: [
+        .init(color: rgba(2, 16, 50, 0.68), location: 0),
+        .init(color: rgba(2, 16, 50, 0.34), location: 0.58),
+        .init(color: rgba(2, 16, 50, 0), location: 1),
+    ])
+    private nonisolated static let cavityBlobGradient = Gradient(stops: [
+        .init(color: rgba(2, 16, 50, 0.56), location: 0),
+        .init(color: rgba(2, 16, 50, 0), location: 1),
+    ])
+    private nonisolated static let pocketBlobGradient = Gradient(stops: [
+        .init(color: rgba(2, 16, 50, 0.44), location: 0),
+        .init(color: rgba(2, 16, 50, 0), location: 1),
+    ])
+    private nonisolated static let energyGradient = Gradient(stops: [
+        .init(color: rgba(6, 182, 212, 0.08), location: 0),
+        .init(color: rgba(6, 182, 212, 0), location: 1),
+    ])
+    private nonisolated static let innerRing1Color = rgba(6, 182, 212, 0.1)
+    private nonisolated static let innerRing2Color = rgba(0, 113, 227, 0.08)
+
     init(size: CGFloat = 200) {
         self.size = size
     }
 
     var body: some View {
         Group {
-            if thermalManager.shouldThrottle {
+            if reduceMotion || thermalManager.shouldThrottle {
                 staticOrb
             } else if let cache {
                 // This screen stays alive under anything pushed or presented over it,
@@ -111,7 +180,14 @@ struct AskDataOrbView: View {
         }
         .accessibilityHidden(true)
         .onAppear { isVisible = true }
-        .onDisappear { isVisible = false }
+        .onDisappear {
+            isVisible = false
+            // 180 frames x 1,920 particles is ~13.5 MB of jetsam headroom held for
+            // nothing while the user is on another screen. `.task` restarts on the
+            // next appearance and rebuilds it; the view already falls through to
+            // staticOrb while `cache` is nil.
+            cache = nil
+        }
         .task(id: size) {
             cache = await Self.buildCache(size: size)
         }
@@ -224,11 +300,7 @@ struct AskDataOrbView: View {
         // Outer halo
         let haloPath = Path(ellipseIn: CGRect(x: cx - R * 1.6, y: cy - R * 1.6, width: R * 3.2, height: R * 3.2))
         ctx.fill(haloPath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(6, 182, 212, 0.2), location: 0),
-                .init(color: rgba(0, 113, 227, 0.18), location: 0.55),
-                .init(color: rgba(3, 14, 44, 0), location: 1),
-            ]),
+            Self.haloGradient,
             center: center, startRadius: R * 0.2, endRadius: R * 1.58
         ))
 
@@ -238,11 +310,7 @@ struct AskDataOrbView: View {
 
         let bodyRect = CGRect(x: cx - R * 1.26, y: cy - R * 1.26, width: R * 2.52, height: R * 2.52)
         clipped.fill(Path(bodyRect), with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(7, 31, 74, 0.08), location: 0),
-                .init(color: rgba(5, 26, 74, 0.24), location: 0.4),
-                .init(color: rgba(2, 18, 58, 0.86), location: 1),
-            ]),
+            Self.bodyGradient,
             center: CGPoint(x: cx - R * 0.2, y: cy - R * 0.21), startRadius: R * 0.05, endRadius: R * 1.05
         ))
 
@@ -254,42 +322,28 @@ struct AskDataOrbView: View {
         let hotCenter = CGPoint(x: cx - R * 0.28, y: cy - R * 0.17)
         let hotPath = Path(ellipseIn: CGRect(x: hotCenter.x - R * 0.66, y: hotCenter.y - R * 0.66, width: R * 1.32, height: R * 1.32))
         hotCtx.fill(hotPath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(140, 240, 255, 0.18), location: 0),
-                .init(color: rgba(6, 182, 212, 0.09), location: 0.32),
-                .init(color: rgba(6, 182, 212, 0), location: 1),
-            ]),
+            Self.hotspotGradient,
             center: hotCenter, startRadius: 0, endRadius: R * 0.66
         ))
 
         let rimCenter = CGPoint(x: cx + R * 0.16, y: cy + R * 0.32)
         let rimPath = Path(ellipseIn: CGRect(x: rimCenter.x - R * 0.76, y: rimCenter.y - R * 0.76, width: R * 1.52, height: R * 1.52))
         hotCtx.fill(rimPath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(34, 197, 255, 0.1), location: 0),
-                .init(color: rgba(34, 197, 255, 0), location: 1),
-            ]),
+            Self.rimGradient,
             center: rimCenter, startRadius: 0, endRadius: R * 0.76
         ))
 
         let coreCenter = CGPoint(x: cx - R * 0.03, y: cy + R * 0.02)
         let corePath = Path(ellipseIn: CGRect(x: coreCenter.x - R * 0.55, y: coreCenter.y - R * 0.55, width: R * 1.1, height: R * 1.1))
         hotCtx.fill(corePath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(0, 113, 227, 0.07), location: 0),
-                .init(color: rgba(0, 113, 227, 0), location: 1),
-            ]),
+            Self.coreGradient,
             center: coreCenter, startRadius: 0, endRadius: R * 0.55
         ))
 
         // Center void
         let voidPath = Path(ellipseIn: CGRect(x: cx - R * 0.72, y: cy - R * 0.72, width: R * 1.44, height: R * 1.44))
         clipped.fill(voidPath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(2, 16, 50, 0.78), location: 0),
-                .init(color: rgba(2, 16, 50, 0.38), location: 0.58),
-                .init(color: rgba(2, 16, 50, 0), location: 1),
-            ]),
+            Self.centerVoidGradient,
             center: center, startRadius: 0, endRadius: R * 0.72
         ))
     }
@@ -370,20 +424,13 @@ struct AskDataOrbView: View {
 
         let g1Path = Path(ellipseIn: CGRect(x: h1.x - R * 0.26, y: h1.y - R * 0.26, width: R * 0.52, height: R * 0.52))
         hotGlow.fill(g1Path, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(255, 255, 255, 0.48), location: 0),
-                .init(color: rgba(6, 182, 212, 0.2), location: 0.35),
-                .init(color: .clear, location: 1),
-            ]),
+            Self.travelerAGradient,
             center: h1, startRadius: 0, endRadius: R * 0.26
         ))
 
         let g2Path = Path(ellipseIn: CGRect(x: h2.x - R * 0.2, y: h2.y - R * 0.2, width: R * 0.4, height: R * 0.4))
         hotGlow.fill(g2Path, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(52, 211, 153, 0.36), location: 0),
-                .init(color: .clear, location: 1),
-            ]),
+            Self.travelerBGradient,
             center: h2, startRadius: 0, endRadius: R * 0.2
         ))
     }
@@ -396,31 +443,21 @@ struct AskDataOrbView: View {
         // Dark outer blob
         let outerCenter = CGPoint(x: cx - R * 0.12 + driftX, y: cy + R * 0.06 + driftY)
         ctx.fill(frame.outerBlob, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(2, 16, 50, 0.68), location: 0),
-                .init(color: rgba(2, 16, 50, 0.34), location: 0.58),
-                .init(color: rgba(2, 16, 50, 0), location: 1),
-            ]),
+            Self.outerBlobGradient,
             center: outerCenter, startRadius: R * 0.08, endRadius: R * 0.92
         ))
 
         // Cavity blob
         let cavityCenter = CGPoint(x: cx + R * 0.03 - driftX * 0.6, y: cy - R * 0.05 - driftY * 0.3)
         ctx.fill(frame.cavityBlob, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(2, 16, 50, 0.56), location: 0),
-                .init(color: rgba(2, 16, 50, 0), location: 1),
-            ]),
+            Self.cavityBlobGradient,
             center: cavityCenter, startRadius: 0, endRadius: R * 0.66
         ))
 
         // Pocket blob
         let pocketCenter = CGPoint(x: cx + R * 0.08, y: cy - R * 0.08)
         ctx.fill(frame.pocketBlob, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(2, 16, 50, 0.44), location: 0),
-                .init(color: rgba(2, 16, 50, 0), location: 1),
-            ]),
+            Self.pocketBlobGradient,
             center: pocketCenter, startRadius: 0, endRadius: R * 0.45
         ))
 
@@ -429,8 +466,8 @@ struct AskDataOrbView: View {
         glowInner.blendMode = .plusLighter
         glowInner.addFilter(.blur(radius: R * 0.045))
 
-        glowInner.stroke(frame.innerRing1, with: .color(rgba(6, 182, 212, 0.1)), lineWidth: R * 0.038)
-        glowInner.stroke(frame.innerRing2, with: .color(rgba(0, 113, 227, 0.08)), lineWidth: R * 0.03)
+        glowInner.stroke(frame.innerRing1, with: .color(Self.innerRing1Color), lineWidth: R * 0.038)
+        glowInner.stroke(frame.innerRing2, with: .color(Self.innerRing2Color), lineWidth: R * 0.03)
 
         // Energy glow
         var energyCtx = ctx
@@ -439,24 +476,18 @@ struct AskDataOrbView: View {
         let eCenter = frame.energyCenter
         let ePath = Path(ellipseIn: CGRect(x: eCenter.x - R * 0.3, y: eCenter.y - R * 0.3, width: R * 0.6, height: R * 0.6))
         energyCtx.fill(ePath, with: .radialGradient(
-            Gradient(stops: [
-                .init(color: rgba(6, 182, 212, 0.08), location: 0),
-                .init(color: rgba(6, 182, 212, 0), location: 1),
-            ]),
+            Self.energyGradient,
             center: eCenter, startRadius: 0, endRadius: R * 0.3
         ))
-    }
-
-    // MARK: - Color Helper
-
-    private func rgba(_ r: Double, _ g: Double, _ b: Double, _ a: Double) -> Color {
-        Color(.sRGB, red: r / 255, green: g / 255, blue: b / 255, opacity: a)
     }
 
     // MARK: - Cache Generation
 
     private nonisolated static func buildCache(size: CGFloat) async -> FrameCache {
-        await Task.detached(priority: .userInitiated) {
+        // .utility, not .userInitiated: nothing is waiting on this (the view renders
+        // staticOrb until it lands), so it must not contend with the first layout of
+        // the screen that pushed it.
+        await Task.detached(priority: .utility) {
             let s = Double(size)
             let cx = s / 2, cy = s / 2
             let R = s * 0.314

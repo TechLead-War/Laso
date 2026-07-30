@@ -9,13 +9,17 @@ final class DataRetentionManager {
     // MARK: - Prune
 
     /// Delete rows older than their retention window. Skips if already ran today.
-    func pruneIfNeeded(context: ModelContext) {
+    /// Returns the number of rows deleted so callers can skip cache invalidation
+    /// when nothing changed. At the shipped retention defaults this is usually 0,
+    /// and invalidating anyway forced a second whole-table load on every launch.
+    @discardableResult
+    func pruneIfNeeded(context: ModelContext) -> Int {
         let defaults = UserDefaults.standard
         let today = Date.cal.startOfDay(for: Date())
 
         if let last = defaults.object(forKey: AppKeys.Retention.lastPruneDate) as? Date,
            Date.cal.isDate(last, inSameDayAs: today) {
-            return
+            return 0
         }
 
         let rc = RemoteConfigManager.shared
@@ -50,6 +54,7 @@ final class DataRetentionManager {
         }
 
         defaults.set(today, forKey: AppKeys.Retention.lastPruneDate)
+        return totalPruned
     }
 
     // MARK: - Helpers

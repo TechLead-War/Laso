@@ -1,8 +1,10 @@
 import SwiftUI
 
-let vitalityWhoopGreen = AppColour.vitalityWhoopGreen
-let vitalityPaceYellow = AppColour.vitalityPaceYellow
-let vitalityPaceRed = AppColour.vitalityPaceRed
+// Computed, not `let`: Swift initializes a global `let` lazily once, so a
+// Remote Config colour activation later in the session never repainted these.
+var vitalityWhoopGreen: Color { AppColour.vitalityWhoopGreen }
+var vitalityPaceYellow: Color { AppColour.vitalityPaceYellow }
+var vitalityPaceRed: Color { AppColour.vitalityPaceRed }
 
 let vitalityPaceGreenUpperBound = 1.08
 let vitalityPaceYellowUpperBound = 1.22

@@ -29,9 +29,53 @@ enum AppColour {
 
     // MARK: - Dynamic Colour Helper
 
+    private struct DynamicKey: Hashable {
+        let light: UInt64
+        let dark: UInt64
+    }
+
+    /// One shared closure-backed `UIColor` per (light, dark) pair.
+    ///
+    /// The RC-backed tokens below are computed `static var`s, so before this
+    /// cache every read minted a brand-new `UIColor`. Two `Color`s wrapping
+    /// different `UIColor` instances are not equal, which silently defeated
+    /// SwiftUI's value-diffing early-out in every view that stores a
+    /// `let color: Color` — across 186 read sites.
+    ///
+    /// `nonisolated(unsafe)` + `NSLock`: colours are read from background
+    /// scorers as well as view bodies, and the entries are immutable once
+    /// written. Bounded by the number of distinct token pairs in this file.
+    private static let dynamicCacheLock = NSLock()
+    nonisolated(unsafe) private static var dynamicCache: [DynamicKey: Color] = [:]
+
+    /// sRGB components packed at 16 bits per channel. Keying on the components
+    /// rather than on the `UIColor` objects keeps the cache exact for the
+    /// three-decimal literals below without depending on `UIColor`'s own
+    /// hashing, where a miss would mean unbounded growth rather than a wrong
+    /// colour. nil for any colour that is not component-readable, which then
+    /// simply skips the cache.
+    private static func packedComponents(_ colour: UIColor) -> UInt64? {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard colour.getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        func quantise(_ value: CGFloat) -> UInt64 {
+            UInt64((min(max(value, 0), 1) * 65_535).rounded())
+        }
+        return quantise(r) << 48 | quantise(g) << 32 | quantise(b) << 16 | quantise(a)
+    }
+
     /// Wraps a light + dark pair into a `Color` that follows the active theme.
     private static func dynamic(light: UIColor, dark: UIColor) -> Color {
-        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+        guard let lightKey = packedComponents(light), let darkKey = packedComponents(dark) else {
+            return Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+        }
+        let key = DynamicKey(light: lightKey, dark: darkKey)
+
+        dynamicCacheLock.lock()
+        defer { dynamicCacheLock.unlock() }
+        if let hit = dynamicCache[key] { return hit }
+        let colour = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+        dynamicCache[key] = colour
+        return colour
     }
 
     // MARK: - Remote-overridable wrapper

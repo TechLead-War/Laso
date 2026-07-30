@@ -11,7 +11,9 @@ struct AskYourDataView: View {
     @State private var isSearching = false
     @State private var activeQueryID = UUID()
 
-    private let suggestedQuestions = Copy.Home.AskYourData.suggestedQuestions
+    /// `static` because a stored property with an initializer on a `View` struct
+    /// re-resolves on every construction, i.e. every parent body pass.
+    private static let suggestedQuestions = Copy.Home.AskYourData.suggestedQuestions
 
     var body: some View {
         ScrollView {
@@ -90,7 +92,7 @@ struct AskYourDataView: View {
                 .foregroundStyle(AppColour.textSecondary)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.space2) {
-                ForEach(suggestedQuestions, id: \.self) { question in
+                ForEach(Self.suggestedQuestions, id: \.self) { question in
                     Button {
                         query = question
                         AppAnalytics.shared.trackBlockTap(title: "Suggested Question", type: .smartAction, screen: .askYourData, metadata: ["source": "ask_your_data_suggestion", "query_length": question.count])

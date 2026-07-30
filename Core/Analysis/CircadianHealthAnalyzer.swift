@@ -34,6 +34,12 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
 
     private static let minimumDays = 7
 
+    /// Relative amplitude, inter-daily stability and intra-daily variability are
+    /// 30-90 day constructs. A decade of history does not make them more accurate,
+    /// it makes them less responsive to a recent change in rhythm, so the series is
+    /// windowed to the top of that range before anything is computed.
+    private static let lookbackDays = 90
+
     // MARK: - InsightAnalyzer Conformance
 
     static func generateInsights(context: AnalysisContext) -> [Insight] {
@@ -146,14 +152,17 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
     static func computeBiomarkers(from context: AnalysisContext) -> CircadianBiomarkers? {
         let calendar = Date.cal
 
-        // Need at least 7 days of step/activity data
-        guard let stepsSeries = context.timeSeries[.steps],
-              stepsSeries.samples.count >= minimumDays else {
-            return nil
-        }
+        guard let stepsSeries = context.timeSeries[.steps] else { return nil }
 
         let sleepSeries = context.timeSeries[.sleepDuration]
-        let samples = stepsSeries.samples.sorted { $0.date < $1.date }
+        let cutoff = Date().daysAgo(lookbackDays)
+        let samples = stepsSeries.samples
+            .filter { $0.date >= cutoff }
+            .sorted { $0.date < $1.date }
+
+        // Need at least 7 days of step/activity data inside the window
+        guard samples.count >= minimumDays else { return nil }
+
         let daysAnalyzed = samples.count
 
         let dailyValues = samples.map(\.value)

@@ -99,13 +99,35 @@ final class DashboardViewModel {
     @MainActor private var lastExpensiveCacheHash: Int = 0
 
     /// Cached daily action. computed once per calendar day (or after analysis refresh)
-    @MainActor private var _cachedDailyAction: SmartAction?
-    @MainActor private var _cachedDailyActionDate: Date?
+    /// Observation-ignored: `smartDailyAction` is called from inside HomeView's body,
+    /// so writing these as tracked state re-invalidated the body that produced them
+    /// and cost a second full pass and layout every time the cache missed.
+    @ObservationIgnored @MainActor private var _cachedDailyAction: SmartAction?
+    @ObservationIgnored @MainActor private var _cachedDailyActionDate: Date?
+
+    /// Action proof, refreshed on the refresh path rather than on demand.
+    /// `RecommendationEvaluator.buildActionProof` runs a predicated SwiftData fetch,
+    /// which is the one piece of `smartDailyAction` that must never run in a frame.
+    @ObservationIgnored @MainActor private var _cachedActionProof: RecommendationEvaluator.ActionProofSummary?
 
     /// Cached 365-day score history for the current refresh cycle.
     /// Fetched once on first access via `scoreHistoryCached()`, cleared at
     /// the start of each refresh and after saving a new analysis snapshot.
     @MainActor private var _cachedScoreHistory: [(date: Date, score: Int)]?
+
+    /// Whether cycle tracking applies to this user. Read before the flow query is
+    /// launched and reused for the tracker's own gate, so the two cannot drift.
+    @MainActor
+    static func resolveCycleApplicability() -> Bool {
+        let isFemale = UserProfileStore.shared.loadLocal()?.gender == .female
+        let enabled = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool ?? true
+        return isFemale && enabled
+    }
+
+    /// Lookback the launch scorer prewarm loads. One year is the longest window
+    /// any scorer here looks at: vitality age and strain baselines both cap at
+    /// 365 days, so a longer read changes no score it produces.
+    private static let prewarmLookbackDays = 365
 
     /// Memoized baseline-drift insights. See the note at the compute site.
     /// Observation-ignored: pure cache state, and writing it mid-refresh would
@@ -512,11 +534,17 @@ final class DashboardViewModel {
 
         guard needsVitality || needsStrain || needsBrain || needsStress else { return }
 
+        // Passed explicitly instead of letting each scorer fall through to
+        // `store.loadAllTimeSeries()`. This runs inside `ContentView.init`, before
+        // the first frame exists, and the unbounded load grows for the life of the
+        // install. Every scorer window here fits inside a year.
+        let recent = store.loadRecentTimeSeries(days: Self.prewarmLookbackDays)
+
         if needsBrain {
-            brainHealthScorer.compute(from: store, timeSeries: nil)
+            brainHealthScorer.compute(from: store, timeSeries: recent)
         }
         if needsStress {
-            stressScorer.compute(from: store, timeSeries: nil)
+            stressScorer.compute(from: store, timeSeries: recent)
         }
         if let age = resolveChronologicalAge() {
             if needsStrain {
@@ -525,11 +553,11 @@ final class DashboardViewModel {
                     age: age,
                     restingHR: nil,
                     todayHRSamples: [],
-                    timeSeries: nil
+                    timeSeries: recent
                 )
             }
             if needsVitality {
-                vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: nil)
+                vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: recent)
             }
         }
         // Tiles built before prewarm reflected the empty default scorer
@@ -772,7 +800,13 @@ final class DashboardViewModel {
         if ui.isFirstLaunchSync { ui.syncPhase = .analyzing }
 
         let ts = healthKitManager.timeSeries
-        async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 365)
+        // Gated here rather than only at the compute below: unconditionally
+        // launching a 365-day menstrual query ran it for every user the feature
+        // does not apply to.
+        let cycleApplicable = Self.resolveCycleApplicability()
+        async let cycleFlowSamplesTask: [HealthKitManager.MenstrualFlowSample] = cycleApplicable
+            ? await healthKitManager.fetchMenstrualFlowSamples(days: 365)
+            : []
         // Fetch raw per-sample HR for today. needed for accurate strain zone classification.
         // The stored time series only has daily averages, losing per-minute granularity.
         async let todayRawHRTask = healthKitManager.fetchTodayRawHeartRateSamples()
@@ -806,24 +840,36 @@ final class DashboardViewModel {
             )
             // Invalidate score history cache after saving. the new snapshot is now part of the data
             invalidateScoreHistoryCache()
-            // Seed historical snapshots from HK history so EWMA on Explore has
-            // real per-day scores immediately on a fresh install instead of
-            // needing two weeks of app usage. No-op once history is full.
-            backfillScoreHistoryIfNeeded()
             updateCachedProperties()
             if !shouldReuseThermalSnapshot {
                 computeNewEngines(todayRawHR: todayRawHR)
             }
         }
 
+        // Seed historical snapshots from HK history so EWMA on Explore has
+        // real per-day scores immediately on a fresh install instead of
+        // needing two weeks of app usage. No-op once history is full.
+        // Awaited: Explore's EWMA reads score history, so it must land first.
+        await backfillScoreHistoryIfNeeded()
+
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
+
+        // Forecasts and circadian biomarkers build from value-type inputs, so only
+        // the assignment needs the main actor. Running them inline put a second
+        // stall right behind the scorer block and the two read as one freeze.
+        // The briefing stays on main: `generateBriefing` takes the orchestrator
+        // itself, and handing a live reference type to a detached task would trade
+        // a stall for a data race.
+        let forecasts = shouldReuseThermalSnapshot ? nil : await buildHealthForecastsOffMain()
+        let circadian = shouldReuseThermalSnapshot ? nil : await buildCircadianBiomarkersOffMain()
+
         await MainActor.run {
             invalidateDailyActionCache()
             if !shouldReuseThermalSnapshot {
                 refreshIntelligenceBriefing()
-                refreshHealthForecasts()
-                refreshCircadianBiomarkers()
+                if let forecasts { healthForecasts = forecasts }
+                if let circadian { circadianBiomarkers = circadian }
                 checkActivationMilestones()
             }
             writeWidgetSnapshots()
@@ -893,11 +939,7 @@ final class DashboardViewModel {
         // hoist a male user (or female with cycle tracking off) would run a
         // full cycle compute on first launch. Mirrors the assignment in
         // computeNewEngines exactly so the two stay in sync.
-        let cycleProfile = UserProfileStore.shared.loadLocal()
-        let cycleIsFemale = cycleProfile?.gender == .female
-        let cyclePref = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
-        let cycleEnabled = cyclePref ?? true
-        menstrualCycleTracker.isApplicable = cycleIsFemale && cycleEnabled
+        menstrualCycleTracker.isApplicable = cycleApplicable
 
         // Compute menstrual cycle if applicable
         if menstrualCycleTracker.isApplicable {
@@ -1869,8 +1911,12 @@ final class DashboardViewModel {
     /// `StoredAnalysisSnapshot` per missing day. Idempotent: existing rows
     /// are never overwritten and the loop short-circuits once the history
     /// already meets the window length, so this stays cheap on warm launches.
+    /// Replays run off the main actor because there are up to `windowDays` of them
+    /// and each one slices every metric's full series, computes a baseline and runs
+    /// an anomaly pass per metric. `AnalysisEngine.replay` is static over value
+    /// types, so only the resulting writes need to come back to main.
     @MainActor
-    private func backfillScoreHistoryIfNeeded() {
+    private func backfillScoreHistoryIfNeeded() async {
         let cal = Date.cal
         let history = scoreHistoryCached()
         if history.count >= WeeklyScoreSmoothing.windowDays { return }
@@ -1878,22 +1924,28 @@ final class DashboardViewModel {
         let today = cal.startOfDay(for: Date())
         let presentDays = Set(history.map { cal.startOfDay(for: $0.date) })
         let timeSeries = healthKitManager.timeSeries
-        var inserted = 0
 
-        for offset in 1...WeeklyScoreSmoothing.windowDays {
-            guard let day = cal.date(byAdding: .day, value: -offset, to: today),
-                  !presentDays.contains(day) else { continue }
-            guard let result = AnalysisEngine.replay(asOf: day, timeSeries: timeSeries) else { continue }
+        let replayed = await Task.detached(priority: .utility) {
+            var out: [(day: Date, overallScore: Int, categoryScores: [HealthScore], baselines: [HealthMetric: UserBaseline])] = []
+            for offset in 1...WeeklyScoreSmoothing.windowDays {
+                guard let day = cal.date(byAdding: .day, value: -offset, to: today),
+                      !presentDays.contains(day) else { continue }
+                guard let result = AnalysisEngine.replay(asOf: day, timeSeries: timeSeries) else { continue }
+                out.append((day, result.overallScore, result.categoryScores, result.baselines))
+            }
+            return out
+        }.value
+
+        for entry in replayed {
             store.saveBackfillSnapshot(
-                date: day,
-                overallScore: result.overallScore,
-                categoryScores: result.categoryScores,
-                baselines: result.baselines
+                date: entry.day,
+                overallScore: entry.overallScore,
+                categoryScores: entry.categoryScores,
+                baselines: entry.baselines
             )
-            inserted += 1
         }
 
-        if inserted > 0 {
+        if !replayed.isEmpty {
             invalidateScoreHistoryCache()
         }
     }
@@ -2183,7 +2235,9 @@ final class DashboardViewModel {
             )
         )
 
-        let proofSummary = RecommendationEvaluator.buildActionProof(store: store)
+        // Refreshed on the refresh path. Falling back to a live build only covers
+        // the case where the card is read before the first refresh has landed.
+        let proofSummary = _cachedActionProof ?? RecommendationEvaluator.buildActionProof(store: store)
 
         let action = SmartAction(
             icon: recommendation.icon,
@@ -2212,6 +2266,9 @@ final class DashboardViewModel {
     func invalidateDailyActionCache() {
         _cachedDailyAction = nil
         _cachedDailyActionDate = nil
+        // Rebuilt here, on the refresh path, so the next body pass that misses the
+        // action cache does not have to reach SwiftData to fill in the proof.
+        _cachedActionProof = RecommendationEvaluator.buildActionProof(store: store)
     }
 
     // MARK: - Intelligence Briefing
@@ -2745,6 +2802,32 @@ final class DashboardViewModel {
             multiHorizonForecasts: analysisEngine.mlOrchestrator.multiHorizonForecasts,
             timeSeries: healthKitManager.timeSeries
         )
+    }
+
+    /// Snapshots the inputs on the main actor, then builds off it. Both arguments
+    /// are value types, so nothing shared crosses the boundary.
+    @MainActor
+    private func buildHealthForecastsOffMain() async -> [MetricForecast] {
+        let horizons = analysisEngine.mlOrchestrator.multiHorizonForecasts
+        let series = healthKitManager.timeSeries
+        return await Task.detached(priority: .utility) {
+            ForecastBuilder.buildForecasts(multiHorizonForecasts: horizons, timeSeries: series)
+        }.value
+    }
+
+    /// See `buildHealthForecastsOffMain`. `computeBiomarkers` is static over an
+    /// `AnalysisContext` of value types.
+    @MainActor
+    private func buildCircadianBiomarkersOffMain() async -> CircadianHealthAnalyzer.CircadianBiomarkers? {
+        let context = AnalysisContext(
+            timeSeries: healthKitManager.timeSeries,
+            baselines: analysisEngine.baselines,
+            trends: analysisEngine.trends,
+            anomalies: []
+        )
+        return await Task.detached(priority: .utility) {
+            CircadianHealthAnalyzer.computeBiomarkers(from: context)
+        }.value
     }
 
     /// Check and advance activation milestones (Paper 8)

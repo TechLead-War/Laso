@@ -236,23 +236,17 @@ struct OnbV2ScreenContainer<Content: View>: View {
         }
     }
 
+    /// No GeometryReader: the centre is already a relative UnitPoint and the radius
+    /// is absolute, so reading the size only bought an extra layout pass per bloom.
     private func radial(_ color: Color, x: CGFloat, y: CGFloat, r: CGFloat) -> some View {
-        GeometryReader { geo in
-            let cx = geo.size.width * x
-            let cy = geo.size.height * y
-            RadialGradient(
-                colors: [color, .clear],
-                center: UnitPoint(x: x, y: y),
-                startRadius: 0, endRadius: r
-            )
-            .frame(width: geo.size.width, height: geo.size.height)
-            .position(x: geo.size.width / 2, y: geo.size.height / 2)
-            .opacity(0.999)
-            .blur(radius: 30)
-            .allowsHitTesting(false)
-            // (cx, cy) referenced via UnitPoint above; keep var bound to silence unused warning
-            .onAppear { _ = (cx, cy) }
-        }
+        RadialGradient(
+            colors: [color, .clear],
+            center: UnitPoint(x: x, y: y),
+            startRadius: 0, endRadius: r
+        )
+        .opacity(0.999)
+        .blur(radius: 30)
+        .allowsHitTesting(false)
     }
 }
 
@@ -575,7 +569,10 @@ struct OnbV2CountUp: View {
         Text(format(current))
             .font(font)
             .foregroundStyle(color)
-            .onAppear {
+            // `.task` instead of a run-loop Timer: the old timer had no stored
+            // handle and no onDisappear, so leaving the screen mid-count left it
+            // ticking. A task is cancelled with the view.
+            .task {
                 guard !started else { return }
                 started = true
                 // Reduce Motion: land on the final value instantly, no tick loop.
@@ -583,17 +580,16 @@ struct OnbV2CountUp: View {
                     current = target
                     return
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    let start = Date()
-                    let timer = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { t in
-                        let elapsed = Date().timeIntervalSince(start)
-                        let p = min(1, elapsed / duration)
-                        // ease-out cubic
-                        let eased = 1 - pow(1 - p, 3)
-                        current = target * eased
-                        if p >= 1 { current = target; t.invalidate() }
-                    }
-                    RunLoop.main.add(timer, forMode: .common)
+                if delay > 0 {
+                    try? await Task.sleep(for: .seconds(delay))
+                }
+                let start = Date()
+                while !Task.isCancelled {
+                    let p = min(1, Date().timeIntervalSince(start) / duration)
+                    // ease-out cubic
+                    current = target * (1 - pow(1 - p, 3))
+                    if p >= 1 { break }
+                    try? await Task.sleep(for: .milliseconds(16))
                 }
             }
     }

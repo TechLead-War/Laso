@@ -83,12 +83,10 @@ struct DiscoveryView: View {
                     .fill(AppColour.primary.opacity(0.08))
                     .frame(width: 140, height: 140)
                     .scaleEffect(appeared ? 1.2 : 0.8)
-                    .animation(
-                        thermallyConstrained
-                            ? .easeInOut(duration: 0.6)
-                            : .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
-                        value: appeared
-                    )
+                    // One shot, not repeatForever: this flow has no cancellation
+                    // point, so a forever loop keeps the display link pinned for as
+                    // long as the user reads the pages.
+                    .animation(.easeInOut(duration: 0.6), value: appeared)
 
                 Circle()
                     .fill(AppColour.primary.opacity(0.04))

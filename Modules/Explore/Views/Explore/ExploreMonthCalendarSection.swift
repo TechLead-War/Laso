@@ -33,7 +33,9 @@ struct ExploreMonthCalendarSection: View, Equatable {
     @State private var monthAnchor: Date = Date.cal.startOfDay(for: Date())
     @State private var selectedDay: SelectedDay?
 
-    private var today: Date { Date.cal.startOfDay(for: Date()) }
+    /// The environment flag rather than `UIAccessibility.isVoiceOverRunning`,
+    /// so turning VoiceOver on while this card is on screen rebuilds it.
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
 
     /// Every day of the anchored month, plus leading blanks so the first day
     /// lands under its real weekday column.
@@ -52,15 +54,11 @@ struct ExploreMonthCalendarSection: View, Equatable {
         return Array(repeating: nil, count: leading) + days.map { Optional($0) }
     }
 
-    private var isViewingCurrentMonth: Bool {
-        Date.cal.isDate(monthAnchor, equalTo: today, toGranularity: .month)
-    }
-
-    private var scoredThisMonth: Int {
+    private func scoredThisMonth(cells: [Date?]) -> Int {
         cells.compactMap { $0 }.filter { scoresByDay[$0] != nil }.count
     }
 
-    private var daysElapsed: Int {
+    private func daysElapsed(cells: [Date?], today: Date) -> Int {
         cells.compactMap { $0 }.filter { $0 <= today }.count
     }
 
@@ -68,7 +66,7 @@ struct ExploreMonthCalendarSection: View, Equatable {
     /// yesterday too means the streak does not read as broken before the day's
     /// own score has been written. Always measured from today, not from the
     /// month being viewed, so paging back cannot appear to change it.
-    private var streak: Int {
+    private func streak(today: Date) -> Int {
         var count = 0
         var cursor = scoresByDay[today] != nil
             ? today
@@ -82,12 +80,22 @@ struct ExploreMonthCalendarSection: View, Equatable {
     }
 
     var body: some View {
+        // Resolved once per pass: `today` was re-derived on every cell and
+        // footer read, and `cells` rebuilt the whole 31-date grid for each of
+        // its three readers.
+        let today = Date.cal.startOfDay(for: Date())
+        let cells = self.cells
+        let isCurrentMonth = Date.cal.isDate(monthAnchor, equalTo: today, toGranularity: .month)
+        // VoiceOver labels cost a DateFormatter pass and two copy lookups per
+        // cell, so they are only built when something will read them.
+        let needsAccessibilityLabels = voiceOverEnabled
+
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            header
+            header(isCurrentMonth: isCurrentMonth)
             weekdayHeader
-            grid
+            grid(cells: cells, today: today, needsAccessibilityLabels: needsAccessibilityLabels)
             Divider().overlay(AppColour.borderLow)
-            footerRow
+            footerRow(cells: cells, today: today, isCurrentMonth: isCurrentMonth)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -100,7 +108,7 @@ struct ExploreMonthCalendarSection: View, Equatable {
     /// Title and one-line explainer sit above the month, because the month name
     /// alone never said what the dials measured. The month keeps the chevrons on
     /// its own row so the control stays next to the label it changes.
-    private var header: some View {
+    private func header(isCurrentMonth: Bool) -> some View {
         VStack(alignment: .leading, spacing: DS.space1) {
             Text(Copy.Explore.monthCalendarTitle)
                 .font(DS.Typography.headline)
@@ -117,18 +125,18 @@ struct ExploreMonthCalendarSection: View, Equatable {
                     .foregroundStyle(AppColour.textSecondary)
                 Spacer()
                 HStack(spacing: 6) {
-                    monthButton(step: -1, systemImage: "chevron.left", label: Copy.Explore.monthPrevious)
-                    monthButton(step: 1, systemImage: "chevron.right", label: Copy.Explore.monthNext)
+                    monthButton(step: -1, systemImage: "chevron.left", label: Copy.Explore.monthPrevious, isCurrentMonth: isCurrentMonth)
+                    monthButton(step: 1, systemImage: "chevron.right", label: Copy.Explore.monthNext, isCurrentMonth: isCurrentMonth)
                 }
             }
             .padding(.top, DS.space1)
         }
     }
 
-    private func monthButton(step: Int, systemImage: String, label: String) -> some View {
+    private func monthButton(step: Int, systemImage: String, label: String, isCurrentMonth: Bool) -> some View {
         // Forward is dead on the current month: there is nothing recorded ahead
         // of today, so paging into it would only show an empty grid.
-        let disabled = step > 0 && isViewingCurrentMonth
+        let disabled = step > 0 && isCurrentMonth
         return Button {
             guard let moved = Date.cal.date(byAdding: .month, value: step, to: monthAnchor) else { return }
             AppAnalytics.shared.trackBlockTap(
@@ -170,11 +178,11 @@ struct ExploreMonthCalendarSection: View, Equatable {
         return Array(symbols[offset...] + symbols[..<offset])
     }
 
-    private var grid: some View {
+    private func grid(cells: [Date?], today: Date, needsAccessibilityLabels: Bool) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
             ForEach(Array(cells.enumerated()), id: \.offset) { _, day in
                 if let day {
-                    dayCell(day)
+                    dayCell(day, today: today, needsAccessibilityLabels: needsAccessibilityLabels)
                 } else {
                     Color.clear.frame(height: Self.cellHeight)
                 }
@@ -184,7 +192,7 @@ struct ExploreMonthCalendarSection: View, Equatable {
 
     private static let cellHeight: CGFloat = 58
 
-    private func dayCell(_ day: Date) -> some View {
+    private func dayCell(_ day: Date, today: Date, needsAccessibilityLabels: Bool) -> some View {
         let score = scoresByDay[day]
         let isFuture = day > today
         let isToday = day == today
@@ -225,7 +233,11 @@ struct ExploreMonthCalendarSection: View, Equatable {
         .buttonStyle(.plain)
         .disabled(isFuture)
         .accessibilityIdentifier("explore.monthCalendar.day")
-        .accessibilityLabel(accessibilityLabel(day: day, score: score, contexts: contexts))
+        .accessibilityLabel(
+            needsAccessibilityLabels
+                ? accessibilityLabel(day: day, score: score, contexts: contexts)
+                : ""
+        )
     }
 
     private func dayNumberColour(isToday: Bool, isFuture: Bool, hasScore: Bool) -> Color {
@@ -235,9 +247,9 @@ struct ExploreMonthCalendarSection: View, Equatable {
     }
 
     /// Cached because `Date.formatted(_:)` re-resolves an ICU format style on every
-    /// call, and this label is built for all 31 cells on every grid build whether
-    /// or not VoiceOver is running. The template gives the same weekday/day/month
-    /// as the format style did, ordered for the user's locale.
+    /// call, and this label is built for all 31 cells whenever VoiceOver is on.
+    /// The template gives the same weekday/day/month as the format style did,
+    /// ordered for the user's locale.
     private static var accessibilityDateFormatter: DateFormatter {
         Date.FormatterCache.formatter(key: "Laso.Explore.calendarDayAccessibility") { formatter in
             formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
@@ -258,10 +270,10 @@ struct ExploreMonthCalendarSection: View, Equatable {
         return parts.joined(separator: ". ")
     }
 
-    private var footerRow: some View {
+    private func footerRow(cells: [Date?], today: Date, isCurrentMonth: Bool) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 1) {
-                Text(Copy.Explore.monthStreakDays(streak))
+                Text(Copy.Explore.monthStreakDays(streak(today: today)))
                     .font(DS.Typography.headline)
                     .foregroundStyle(AppColour.textPrimary)
                 Text(Copy.Explore.monthStreakLabel)
@@ -269,8 +281,8 @@ struct ExploreMonthCalendarSection: View, Equatable {
                     .foregroundStyle(AppColour.textTertiary)
             }
             Spacer(minLength: 8)
-            if isViewingCurrentMonth {
-                Text(Copy.Explore.monthScoredDays(scoredThisMonth, daysElapsed))
+            if isCurrentMonth {
+                Text(Copy.Explore.monthScoredDays(scoredThisMonth(cells: cells), daysElapsed(cells: cells, today: today)))
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textTertiary)
                     .multilineTextAlignment(.trailing)

@@ -17,10 +17,32 @@ struct CustomTabBar: View {
         .padding(.vertical, 6)
         .glassChrome(in: Capsule())
         .overlay(Capsule().strokeBorder(AppColour.borderLow, lineWidth: 0.5))
-        .shadow(color: AppColour.shadowFloating, radius: 14, y: 4)
+        .background { shadowHalo }
         .padding(.horizontal, DS.space6)
         .padding(.bottom, DS.space1)
         .sensoryFeedback(.selection, trigger: selectedTab)
+    }
+
+    /// Outside-only drop shadow for the floating bar.
+    ///
+    /// As a whole-view `.shadow` its input was the composed bar, whose glass
+    /// backdrop changes on every scroll frame, so it re-rasterized and re-blurred
+    /// offscreen each frame. Hanging it on a backing capsule and masking the bar's
+    /// own area out keeps just the halo: the glass still samples live scrolling
+    /// content, and the mask depends only on size so it rasterizes once at layout.
+    /// An opaque capsule instead of the mask would kill that refraction.
+    private var shadowHalo: some View {
+        Capsule()
+            .fill(AppColour.surfaceRaised)
+            .shadow(color: AppColour.shadowFloating, radius: 14, y: 4)
+            .mask {
+                // A mask clips to its own drawn area, so the rectangle has to reach
+                // past the blur spread or it cuts off the halo it exists to keep.
+                Rectangle()
+                    .padding(-40)
+                    .overlay(Capsule().blendMode(.destinationOut))
+                    .compositingGroup()
+            }
     }
 
     @ViewBuilder
@@ -29,9 +51,11 @@ struct CustomTabBar: View {
 
         Button {
             let fromTab = selectedTab
-            withAnimation(.spring(duration: 0.32, bounce: 0.18)) {
-                selectedTab = tab
-            }
+            // Written bare: inside a `withAnimation` the tab root's structural
+            // switch got the default opacity transition, so both screen trees
+            // stayed mounted and composited for the full 0.32 s and the outgoing
+            // tab lost its state. The spring is scoped to the button below.
+            selectedTab = tab
             AppAnalytics.shared.trackBlockTap(
                 title: tab.label,
                 type: blockType(for: tab),
@@ -60,6 +84,7 @@ struct CustomTabBar: View {
                         .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
                 }
             }
+            .animation(.spring(duration: 0.32, bounce: 0.18), value: selectedTab)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tab.label)

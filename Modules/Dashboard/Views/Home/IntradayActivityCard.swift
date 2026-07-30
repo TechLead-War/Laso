@@ -18,8 +18,16 @@ struct IntradayActivityCard: View {
     /// stretches, not gaps.
     let buckets: [Double]
 
-    private var total: Double { buckets.reduce(0, +) }
-    private var peak: Double { buckets.max() ?? 0 }
+    // Scanned once in init rather than per read — the header number, the peak
+    // label, the accessibility string and every tick height all ask for these.
+    private let total: Double
+    private let peak: Double
+
+    init(buckets: [Double]) {
+        self.buckets = buckets
+        self.total = buckets.reduce(0, +)
+        self.peak = buckets.max() ?? 0
+    }
 
     /// Quarter points of the day. Positions come from the fraction, not a bucket
     /// index, so the labels stay put whatever the resolution.
@@ -93,35 +101,51 @@ struct IntradayActivityCard: View {
     }
 
     private var ticks: some View {
-        GeometryReader { proxy in
-            let slot = proxy.size.width / CGFloat(max(buckets.count, 1))
-            // Hairline, never wider than its slot, so 96 ticks stay separate.
-            let tickWidth = max(1, min(2, slot * 0.5))
-
-            ZStack(alignment: .bottomLeading) {
-                // The baseline runs the whole width in the accent colour, so an
-                // empty stretch reads as "measured, nothing here" rather than as
-                // a hole in the chart. This single line is most of why the
-                // reference picture feels finished.
-                Path { path in
-                    path.move(to: CGPoint(x: 0, y: proxy.size.height))
-                    path.addLine(to: CGPoint(x: proxy.size.width, y: proxy.size.height))
-                }
+        ZStack(alignment: .bottomLeading) {
+            // The baseline runs the whole width in the accent colour, so an
+            // empty stretch reads as "measured, nothing here" rather than as
+            // a hole in the chart. This single line is most of why the
+            // reference picture feels finished.
+            BaselineShape()
                 .stroke(AppColour.accent.opacity(0.55), style: Self.dash)
 
-                ForEach(Array(buckets.enumerated()), id: \.offset) { index, value in
-                    if value > 0, peak > 0 {
-                        Rectangle()
-                            .fill(AppColour.accent)
-                            .frame(
-                                width: tickWidth,
-                                height: max(2, proxy.size.height * (value / peak))
-                            )
-                            .offset(x: slot * CGFloat(index))
-                    }
-                }
+            // One path for all 96 ticks. They never overlap and share one solid
+            // colour, so a single fill draws exactly what 96 Rectangles did
+            // without 96 view identities and layout entries.
+            TickShape(buckets: buckets, peak: peak)
+                .fill(AppColour.accent)
+        }
+    }
+
+    private struct BaselineShape: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            return path
+        }
+    }
+
+    private struct TickShape: Shape {
+        let buckets: [Double]
+        let peak: Double
+
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            guard peak > 0, !buckets.isEmpty else { return path }
+            let slot = rect.width / CGFloat(buckets.count)
+            // Hairline, never wider than its slot, so 96 ticks stay separate.
+            let tickWidth = max(1, min(2, slot * 0.5))
+            for (index, value) in buckets.enumerated() where value > 0 {
+                let height = max(2, rect.height * (value / peak))
+                path.addRect(CGRect(
+                    x: rect.minX + slot * CGFloat(index),
+                    y: rect.maxY - height,
+                    width: tickWidth,
+                    height: height
+                ))
             }
-            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottomLeading)
+            return path
         }
     }
 

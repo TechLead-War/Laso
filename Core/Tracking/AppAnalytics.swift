@@ -381,7 +381,6 @@ enum BlockType: String {
 final class AppAnalytics {
     static let shared = AppAnalytics()
 
-    private let queue = DispatchQueue(label: "com.healthpulse.analytics")
     private let session = SessionTracker.shared
     private let defaults = UserDefaults.standard
 
@@ -849,20 +848,18 @@ final class AppAnalytics {
         // shift their open stamps forward by the gap: screen_exited duration_sec
         // must measure foreground dwell only, mirroring the score-reaction re-arm
         // in trackAppBackgrounded.
-        queue.sync {
-            if let backgroundStart = self.backgroundedAt {
-                let now = Date()
-                // Clamps: a wall-clock rollback during background makes the gap
-                // negative (would inflate durations), and a notification-tap deep
-                // link can stamp a screen open after foregrounding but before this
-                // runs — shifting that fresh stamp by the full gap would push it
-                // past `now` and produce negative duration_sec.
-                let gap = max(0, now.timeIntervalSince(backgroundStart))
-                for (feature, opened) in self.openTimestamps {
-                    self.openTimestamps[feature] = min(opened.addingTimeInterval(gap), now)
-                }
-                self.backgroundedAt = nil
+        if let backgroundStart = backgroundedAt {
+            let now = Date()
+            // Clamps: a wall-clock rollback during background makes the gap
+            // negative (would inflate durations), and a notification-tap deep
+            // link can stamp a screen open after foregrounding but before this
+            // runs — shifting that fresh stamp by the full gap would push it
+            // past `now` and produce negative duration_sec.
+            let gap = max(0, now.timeIntervalSince(backgroundStart))
+            for (feature, opened) in openTimestamps {
+                openTimestamps[feature] = min(opened.addingTimeInterval(gap), now)
             }
+            backgroundedAt = nil
         }
 
         // A session left open by a prior app run (killed or backgrounded past the
@@ -965,13 +962,16 @@ final class AppAnalytics {
     /// idle timeout or next launch). Re-arms score_viewed / score_reaction so
     /// reaction_time_sec never spans the backgrounded gap.
     func trackAppBackgrounded() {
+        // Anything still buffered would be lost if the app is killed while
+        // backgrounded, so drain it before the process can go away.
+        SectionViewBuffer.flushNow()
         session.closeActiveSpanForBackground()
         scoreSeenDate = nil
         scoreViewedThisSession = false
         // onDisappear never fires on backgrounding, so open-screen stamps survive
         // the gap; remember when it started so the next foreground can exclude
         // the backgrounded time from screen_exited duration_sec.
-        queue.sync { self.backgroundedAt = Date() }
+        backgroundedAt = Date()
     }
 
     /// Emits `session_ended` for a session that has truly ended, tagged with its own
@@ -1084,12 +1084,15 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
+        // Buffered section_viewed events belong to the screen the user is
+        // leaving, so drain them before recordScreenView moves the screen that
+        // logEvent injects forward.
+        SectionViewBuffer.flushNow()
+
         let now = Date()
         let previousScreen = session.recordScreenView(feature.rawValue)
 
-        queue.sync {
-            self.openTimestamps[feature] = now
-        }
+        openTimestamps[feature] = now
 
         // Always send previous_screen and transition with explicit "first_screen"
         // placeholders on the first screen of a session so PostHog funnels can
@@ -1118,12 +1121,10 @@ final class AppAnalytics {
         let now = Date()
         var durationSeconds = 0.0
 
-        queue.sync {
-            if let start = openTimestamps[feature] {
-                durationSeconds = now.timeIntervalSince(start)
-            }
-            openTimestamps[feature] = nil
+        if let start = openTimestamps[feature] {
+            durationSeconds = now.timeIntervalSince(start)
         }
+        openTimestamps[feature] = nil
 
         let duration = max(0, Int(durationSeconds.rounded()))
 
@@ -3462,7 +3463,16 @@ final class AppAnalytics {
         setUserProperty("onboarding_completed", value: onboardingCompleted ? "yes" : "no")
     }
 
+    /// Memoized `sanitizeEventName` answers. Event names and parameter keys are
+    /// string literals from a closed set, so the same few hundred inputs were
+    /// being re-lowercased, re-mapped per character and re-trimmed on every
+    /// event — roughly 20 keys per event, all identical work. Capped so a future
+    /// caller passing a dynamic key cannot grow this without bound.
+    private var sanitizedNameCache: [String: String] = [:]
+
     private func sanitizeEventName(_ name: String) -> String {
+        if let cached = sanitizedNameCache[name] { return cached }
+
         let allowed = name.lowercased().map { char -> Character in
             if char.isLetter || char.isNumber || char == "_" {
                 return char
@@ -3470,9 +3480,19 @@ final class AppAnalytics {
             return "_"
         }
         let normalized = String(allowed).trimmingCharacters(in: CharacterSet(charactersIn: "_"))
-        if normalized.isEmpty { return "custom_event" }
-        if normalized.count > 80 { return String(normalized.prefix(80)) }
-        return normalized
+        let result: String
+        if normalized.isEmpty {
+            result = "custom_event"
+        } else if normalized.count > 80 {
+            result = String(normalized.prefix(80))
+        } else {
+            result = normalized
+        }
+
+        if sanitizedNameCache.count < 512 {
+            sanitizedNameCache[name] = result
+        }
+        return result
     }
 
 

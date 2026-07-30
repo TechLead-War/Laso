@@ -32,7 +32,7 @@ final class AppContainer {
 
         let healthKitManager = HealthKitManager()
         self.healthKitManager = healthKitManager
-        analysisEngine = AnalysisEngine()
+        analysisEngine = AnalysisEngine(persistence: persistenceManager)
         deviceSourceManager = DeviceSourceManager(healthStore: healthKitManager.healthStore)
 
         if let modelContainer = HealthDataContainerFactory.makeModelContainer() {

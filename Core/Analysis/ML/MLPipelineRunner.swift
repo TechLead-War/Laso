@@ -186,7 +186,12 @@ final class MLPipelineRunner {
             var forecastIdx = 0
             for (metric, _) in input.timeSeries {
                 forecastIdx += 1
-                if forecastIdx % 10 == 0 { await Task.yield() }
+                if forecastIdx % 10 == 0 {
+                    await Task.yield()
+                    // The only suspension point inside the loop, so it is also
+                    // the only place a cancel can land before the next gate.
+                    if Task.isCancelled { output.stoppedEarly = true; return output }
+                }
                 if let forecast = components.forecaster.forecast(metric: metric, horizons: [1, 3, 7]) {
                     output.multiHorizonForecasts[metric] = forecast
 
@@ -297,6 +302,10 @@ final class MLPipelineRunner {
     }
 
     func shouldStopForThermal(after component: String) async -> Bool {
+        // Every step of the pipeline already routes through this gate, so
+        // checking cancellation here turns all of them into cancellation
+        // checkpoints without threading a flag through the whole runner.
+        if Task.isCancelled { return true }
         let state = ProcessInfo.processInfo.thermalState
         if state == .critical || state == .serious {
             logger.warning("Stopping ML pipeline after \(component): thermal state \(state == .critical ? "critical" : "serious"), returning partial results")

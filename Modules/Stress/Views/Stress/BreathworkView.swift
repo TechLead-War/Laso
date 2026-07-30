@@ -136,14 +136,78 @@ private enum SessionState {
     case complete
 }
 
+// MARK: - Session Clock
+
+/// The two countdowns, ticked at 10 Hz. Held in an observable box rather than
+/// screen-root `@State`: as root state every tick rebuilt the whole session view,
+/// roughly 3,000 body passes over a five minute session, to move two numbers and
+/// a ring. Only the three leaves below read it, so only they rebuild.
+@Observable
+private final class BreathSessionClock {
+    var sessionRemaining: Double = 0
+    var phaseRemaining: Double = 0
+}
+
+private func formattedDuration(_ seconds: Double) -> String {
+    let totalSeconds = Int(seconds)
+    let m = totalSeconds / 60
+    let s = totalSeconds % 60
+    return String(format: "%d:%02d", m, s)
+}
+
+private struct BreathProgressRing: View {
+    let clock: BreathSessionClock
+    let total: Double
+    let accent: Color
+
+    private var progress: Double {
+        guard total > 0 else { return 0 }
+        return 1.0 - (clock.sessionRemaining / total)
+    }
+
+    var body: some View {
+        Circle()
+            .trim(from: 0, to: progress)
+            .stroke(accent.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+            .frame(width: 240, height: 240)
+            .rotationEffect(.degrees(-90))
+    }
+}
+
+private struct BreathPhaseCountdown: View {
+    let clock: BreathSessionClock
+
+    var body: some View {
+        Text("\(max(Int(ceil(clock.phaseRemaining)), 0))")
+            .font(DS.Typography.displayM)
+            .foregroundStyle(.primary.opacity(0.8))
+            .contentTransition(.numericText())
+    }
+}
+
+private struct BreathSessionCountdown: View {
+    let clock: BreathSessionClock
+    let total: Double
+
+    var body: some View {
+        Text(Copy.StressMonitor.xText(formattedDuration(total - clock.sessionRemaining), formattedDuration(total)))
+            .font(DS.Typography.subheadlineMedium.monospacedDigit())
+            .foregroundStyle(.secondary)
+    }
+}
+
 // MARK: - BreathworkView
 
 struct BreathworkView: View {
     @State private var selectedProtocol: BreathingProtocol = .cyclicSighing
     @State private var sessionState: SessionState = .idle
     @State private var currentPhase: BreathPhase = .inhale
-    @State private var phaseTimeRemaining: Double = 0
-    @State private var sessionTimeRemaining: Double = 0
+    @State private var clock = BreathSessionClock()
+    /// Wall-clock deadlines. The countdowns are read off these rather than
+    /// decremented by a fixed 0.1 per tick, which made every dropped tick run the
+    /// session long by exactly that much.
+    @State private var sessionEndDate: Date?
+    @State private var phaseEndDate: Date?
     @State private var circleScale: CGFloat = 0.4
     @State private var showStopConfirmation = false
     @State private var selectedMood: PostSessionMood?
@@ -155,15 +219,11 @@ struct BreathworkView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
-    private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    /// `@State`, so a parent re-render does not throw the publisher away and drop
+    /// the ticks it had already scheduled.
+    @State private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     private var accent: Color { selectedProtocol.accentColor }
-
-    private var sessionProgress: Double {
-        let total = selectedProtocol.sessionDuration
-        guard total > 0 else { return 0 }
-        return 1.0 - (sessionTimeRemaining / total)
-    }
 
     var body: some View {
         ZStack {
@@ -386,18 +446,13 @@ struct BreathworkView: View {
                 .frame(height: 24)
 
             // Phase countdown
-            Text(phaseCountdownText)
-                .font(DS.Typography.displayM)
-                .foregroundStyle(.primary.opacity(0.8))
-                .contentTransition(.numericText())
+            BreathPhaseCountdown(clock: clock)
 
             Spacer()
                 .frame(height: 8)
 
             // Session timer
-            Text(Copy.StressMonitor.xText(formattedDuration(selectedProtocol.sessionDuration - sessionTimeRemaining), formattedDuration(selectedProtocol.sessionDuration)))
-                .font(DS.Typography.subheadlineMedium.monospacedDigit())
-                .foregroundStyle(.secondary)
+            BreathSessionCountdown(clock: clock, total: selectedProtocol.sessionDuration)
 
             Spacer()
 
@@ -417,11 +472,7 @@ struct BreathworkView: View {
                 .stroke(accent.opacity(0.12), lineWidth: 4)
                 .frame(width: 240, height: 240)
 
-            Circle()
-                .trim(from: 0, to: sessionProgress)
-                .stroke(accent.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .frame(width: 240, height: 240)
-                .rotationEffect(.degrees(-90))
+            BreathProgressRing(clock: clock, total: selectedProtocol.sessionDuration, accent: accent)
 
             // Breathing circle (inner, animated)
             Circle()
@@ -452,11 +503,6 @@ struct BreathworkView: View {
                 .blur(radius: 4)
                 .scaleEffect(circleScale)
         }
-    }
-
-    private var phaseCountdownText: String {
-        let seconds = max(Int(ceil(phaseTimeRemaining)), 0)
-        return "\(seconds)"
     }
 
     private var sessionControls: some View {
@@ -601,13 +647,17 @@ struct BreathworkView: View {
         let firstPhase = proto.phases[0]
         let cycleDuration = max(proto.phases.reduce(0.0) { $0 + proto.duration(for: $1) }, 1)
 
-        sessionTimeRemaining = proto.sessionDuration
+        let now = Date()
+        let firstPhaseDuration = proto.duration(for: firstPhase)
+        clock.sessionRemaining = proto.sessionDuration
+        clock.phaseRemaining = firstPhaseDuration
+        sessionEndDate = now.addingTimeInterval(proto.sessionDuration)
+        phaseEndDate = now.addingTimeInterval(firstPhaseDuration)
         currentPhase = firstPhase
-        phaseTimeRemaining = proto.duration(for: firstPhase)
         selectedMood = nil
         pauseCount = 0
         didTrackCompletedSession = false
-        sessionStartedAt = Date()
+        sessionStartedAt = now
 
         // Animate circle to target scale
         withAnimation(.easeInOut(duration: proto.duration(for: firstPhase))) {
@@ -620,25 +670,24 @@ struct BreathworkView: View {
         BreathworkLiveActivityManager.shared.start(
             protocol: proto,
             phase: firstPhase,
-            sessionTimeRemaining: sessionTimeRemaining
+            sessionTimeRemaining: clock.sessionRemaining
         )
     }
 
     private func tick() {
-        let dt = 0.1
-
-        phaseTimeRemaining -= dt
-        sessionTimeRemaining -= dt
+        guard let sessionEnd = sessionEndDate, let phaseEnd = phaseEndDate else { return }
+        let now = Date()
+        clock.sessionRemaining = max(0, sessionEnd.timeIntervalSince(now))
+        clock.phaseRemaining = max(0, phaseEnd.timeIntervalSince(now))
 
         // Session complete
-        if sessionTimeRemaining <= 0 {
-            sessionTimeRemaining = 0
+        if clock.sessionRemaining <= 0 {
             completeSession()
             return
         }
 
         // Phase complete. advance
-        if phaseTimeRemaining <= 0 {
+        if clock.phaseRemaining <= 0 {
             advancePhase()
         }
     }
@@ -652,7 +701,11 @@ struct BreathworkView: View {
         let duration = selectedProtocol.duration(for: nextPhase)
 
         currentPhase = nextPhase
-        phaseTimeRemaining = duration
+        clock.phaseRemaining = duration
+        // Anchored to now, not to the deadline that just passed: after a long
+        // background gap this resyncs in one step instead of racing the user
+        // through every phase it missed.
+        phaseEndDate = Date().addingTimeInterval(duration)
 
         // Haptic on phase transition
         phaseTransitionTrigger.toggle()
@@ -665,7 +718,7 @@ struct BreathworkView: View {
         BreathworkLiveActivityManager.shared.update(
             protocol: selectedProtocol,
             phase: nextPhase,
-            sessionTimeRemaining: sessionTimeRemaining,
+            sessionTimeRemaining: clock.sessionRemaining,
             isPaused: false
         )
     }
@@ -680,14 +733,18 @@ struct BreathworkView: View {
             AppAnalytics.shared.trackBreathworkSessionPaused(
                 selectedProtocol,
                 phase: currentPhase,
-                remainingSec: max(Int(ceil(sessionTimeRemaining)), 0),
+                remainingSec: max(Int(ceil(clock.sessionRemaining)), 0),
                 pauseCount: pauseCount
             )
         } else {
+            // Push both deadlines out by however long the pause lasted.
+            let now = Date()
+            sessionEndDate = now.addingTimeInterval(clock.sessionRemaining)
+            phaseEndDate = now.addingTimeInterval(clock.phaseRemaining)
             AppAnalytics.shared.trackBreathworkSessionResumed(
                 selectedProtocol,
                 phase: currentPhase,
-                remainingSec: max(Int(ceil(sessionTimeRemaining)), 0),
+                remainingSec: max(Int(ceil(clock.sessionRemaining)), 0),
                 pauseCount: pauseCount
             )
         }
@@ -695,13 +752,13 @@ struct BreathworkView: View {
         BreathworkLiveActivityManager.shared.update(
             protocol: selectedProtocol,
             phase: currentPhase,
-            sessionTimeRemaining: sessionTimeRemaining,
+            sessionTimeRemaining: clock.sessionRemaining,
             isPaused: sessionState == .paused
         )
     }
 
     private func endSession() {
-        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - sessionTimeRemaining), 0)
+        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - clock.sessionRemaining), 0)
         if sessionStartedAt != nil {
             AppAnalytics.shared.trackBreathworkSessionAbandoned(
                 selectedProtocol,
@@ -721,6 +778,8 @@ struct BreathworkView: View {
         }
         sessionStartedAt = nil
         pauseCount = 0
+        sessionEndDate = nil
+        phaseEndDate = nil
         BreathworkLiveActivityManager.shared.end(after: 0)
     }
 
@@ -729,6 +788,8 @@ struct BreathworkView: View {
             sessionState = .complete
             circleScale = 0.4
         }
+        sessionEndDate = nil
+        phaseEndDate = nil
         BreathworkLiveActivityManager.shared.end(after: 30)
     }
 
@@ -739,7 +800,7 @@ struct BreathworkView: View {
         // Active elapsed time, the same measure endSession reports on abandon, so the
         // two events are comparable. Wall clock since session start would also count
         // paused time and the whole dwell on the mood screen.
-        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - sessionTimeRemaining), 0)
+        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - clock.sessionRemaining), 0)
 
         AppAnalytics.shared.trackBreathworkSessionCompleted(
             selectedProtocol,
@@ -755,15 +816,6 @@ struct BreathworkView: View {
             metric: selectedProtocol.subtitle
         )
         sessionStartedAt = nil
-    }
-
-    // MARK: - Helpers
-
-    private func formattedDuration(_ seconds: Double) -> String {
-        let totalSeconds = Int(seconds)
-        let m = totalSeconds / 60
-        let s = totalSeconds % 60
-        return String(format: "%d:%02d", m, s)
     }
 }
 

@@ -141,7 +141,13 @@ struct WeeklyBarChart<Point: Identifiable>: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
-        .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
+        // Shadow rides on the background shape, not the composed tooltip: a shadow
+        // over changing content re-blurs offscreen every frame, one on a shape
+        // resolves to a cached shadowPath.
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(AppColour.surfaceOverlay)
+                .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
+        }
     }
 }

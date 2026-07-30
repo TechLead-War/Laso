@@ -17,14 +17,21 @@ final class ThermalManager {
     /// The current thermal state reported by the OS.
     private(set) var currentState: ProcessInfo.ThermalState
 
+    /// Mirrored into observable state rather than read from `ProcessInfo` at each
+    /// call site: a plain `ProcessInfo` read is invisible to Observation, so views
+    /// would not repaint when the user flips Low Power Mode mid-session.
+    private(set) var isLowPowerMode: Bool
+
     /// True when thermal state is `.serious` or `.critical`. defer non-essential heavy work.
     var shouldThrottle: Bool {
         currentState == .serious || currentState == .critical
     }
 
-    /// Prefer static or reduced visual effects when the device is already warming up.
+    /// Prefer static or reduced visual effects when the device is already warming
+    /// up, or when the user has asked for battery to be preserved. Low Power Mode
+    /// is an explicit user intent signal, so it outranks thermal state.
     var shouldReduceVisualEffects: Bool {
-        currentState == .fair || shouldThrottle
+        isLowPowerMode || currentState == .fair || shouldThrottle
     }
 
     /// Longer analysis cooldowns under thermal pressure prevent repeated full refreshes
@@ -142,19 +149,31 @@ final class ThermalManager {
 
     private init() {
         self.currentState = ProcessInfo.processInfo.thermalState
+        self.isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
         logger.info("Initial thermal state: \(Self.label(for: ProcessInfo.processInfo.thermalState))")
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(thermalStateDidChange),
-            name: ProcessInfo.thermalStateDidChangeNotification,
-            object: nil
-        )
+        // queue: .main is load-bearing. Both notifications are posted on an
+        // arbitrary thread, and these properties are @Observable state read from
+        // SwiftUI bodies on the main actor.
+        _ = NotificationCenter.default.addObserver(
+            forName: ProcessInfo.thermalStateDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.thermalStateDidChange()
+        }
+        _ = NotificationCenter.default.addObserver(
+            forName: .NSProcessInfoPowerStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+        }
     }
 
     // MARK: - Notification Handler
 
-    @objc private func thermalStateDidChange(_ notification: Notification) {
+    private func thermalStateDidChange() {
         let newState = ProcessInfo.processInfo.thermalState
         let oldLabel = Self.label(for: currentState)
         let newLabel = Self.label(for: newState)

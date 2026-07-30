@@ -211,6 +211,28 @@ private struct OnbV2MetricChip: View {
     }
 }
 
+// MARK: - Age readout
+
+/// The reveal walks this number ~230 times over 3.7 s. Held in an observable box
+/// rather than screen-root `@State` so only the number's own view rebuilds: as
+/// root state, every step rebuilt the orb, the four chips and the verdict block too.
+@Observable
+private final class OnbV2AgeReadout {
+    var value: Double = 0
+}
+
+private struct OnbV2AgeText: View {
+    let readout: OnbV2AgeReadout
+    let glowTint: Color
+
+    var body: some View {
+        Text(String(format: "%.1f", readout.value))
+            .font(.system(size: 64, weight: .heavy).monospacedDigit())
+            .foregroundStyle(AppColour.textOnInverse)
+            .shadow(color: glowTint.opacity(0.5), radius: 18)
+    }
+}
+
 // MARK: - The screen
 
 struct OnbV2VitalityRevealScreen: View {
@@ -294,7 +316,7 @@ struct OnbV2VitalityRevealScreen: View {
 
     @State private var particles = makeOrbParticles()
     @State private var start = Date()
-    @State private var age = 0.0
+    @State private var ageReadout = OnbV2AgeReadout()
     @State private var label = Copy.OnboardingV2.revealOrbYourAge
     @State private var consumed: [Bool]
     @State private var appeared = false
@@ -340,10 +362,7 @@ struct OnbV2VitalityRevealScreen: View {
                             .position(center)
 
                         VStack(spacing: 8) {
-                            Text(String(format: "%.1f", age))
-                                .font(.system(size: 64, weight: .heavy).monospacedDigit())
-                                .foregroundStyle(AppColour.textOnInverse)
-                                .shadow(color: orbTint.opacity(0.5), radius: 18)
+                            OnbV2AgeText(readout: ageReadout, glowTint: orbTint)
                             Text(label)
                                 .font(.system(size: 12, weight: .bold)).tracking(3.2)
                                 .foregroundStyle(OnbV2.fg2)
@@ -472,10 +491,10 @@ struct OnbV2VitalityRevealScreen: View {
         for i in 0...steps {
             let p = Double(i) / Double(steps)
             let e = 1 - pow(1 - p, 3)
-            age = from + (to - from) * e
+            ageReadout.value = from + (to - from) * e
             try? await Task.sleep(for: .milliseconds(16))
         }
-        age = to
+        ageReadout.value = to
     }
 
     @MainActor
@@ -500,12 +519,12 @@ struct OnbV2VitalityRevealScreen: View {
                 withAnimation(.timingCurve(0.5, 0, 0.25, 1, duration: 0.8)) { consumed[idx] = true }
                 // walk the number from the real age toward the computed vitality age
                 let target = Double(chronoAge) + Double(vitalityAge - chronoAge) * Double(step + 1) / Double(n)
-                await tweenAge(from: age, to: target, duration: 0.6)
+                await tweenAge(from: ageReadout.value, to: target, duration: 0.6)
                 // clear pause between each metric so the user sees them go in one by one
                 try? await Task.sleep(for: .milliseconds(550))
             }
         }
-        await tweenAge(from: age, to: Double(vitalityAge), duration: 0.3)
+        await tweenAge(from: ageReadout.value, to: Double(vitalityAge), duration: 0.3)
         label = Copy.OnboardingV2.revealOrbYears
         // let the final number land alone for a beat before the verdict appears
         try? await Task.sleep(for: .milliseconds(550))

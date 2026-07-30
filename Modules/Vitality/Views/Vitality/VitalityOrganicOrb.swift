@@ -1,14 +1,15 @@
 import SwiftUI
 
 struct OrganicParticleOrbView: View {
+    /// Blob wobble for the static branch only. The animated branch samples its own
+    /// phase off the timeline clock, so nothing outside has to drive it.
     let phase: CGFloat
     let tint: Color
-    /// True while the orb is off screen or the app is not active. Both loops here
-    /// drive the display link every frame, so they must stop when nobody sees them.
+    /// True while the orb is off screen or the app is not active. The timeline
+    /// drives the display link, so it must stop when nobody sees them.
     let paused: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var glowPulse = false
     @State private var thermalManager = ThermalManager.shared
 
     private static let fullParticles: [ParticleSeed] = makeParticles(count: 160)
@@ -19,6 +20,14 @@ struct OrganicParticleOrbView: View {
     /// rasterised once and only the colour keeps animating.
     private static let glowShadowRadius: CGFloat = 20
 
+    /// Seconds for one full blob revolution and one full glow breath. Both are
+    /// sampled off the timeline clock rather than driven by
+    /// `withAnimation(...).repeatForever`, which ticks at display rate: the blob
+    /// re-solves 81 points of trig and two offscreen gaussians re-blur on every
+    /// one of those ticks, so they have to share the Canvas's throttled clock.
+    private static let wobbleLoop: Double = 18
+    private static let glowLoop: Double = 4.8
+
     private var effectiveParticles: [ParticleSeed] {
         if reduceMotion { return [] }
         if thermalManager.shouldReduceVisualEffects {
@@ -28,14 +37,10 @@ struct OrganicParticleOrbView: View {
     }
 
     var body: some View {
-        let blobShape = OrganicBlobShape(phase: phase)
-
-        return Group {
-            if reduceMotion || thermalManager.shouldThrottle {
-                staticOrb(blobShape: blobShape)
-            } else {
-                animatedOrb(blobShape: blobShape)
-            }
+        if reduceMotion || thermalManager.shouldThrottle {
+            staticOrb(blobShape: OrganicBlobShape(phase: phase))
+        } else {
+            animatedOrb()
         }
     }
 
@@ -60,37 +65,28 @@ struct OrganicParticleOrbView: View {
     }
 
     @ViewBuilder
-    private func animatedOrb(blobShape: OrganicBlobShape) -> some View {
-        OrbParticleCanvas(
-            tint: tint,
-            particles: effectiveParticles,
-            paused: paused,
-            frameRate: thermalManager.maxFrameRate
-        )
-        .overlay(
-            blobShape
-                .stroke(tint.opacity(0.22), lineWidth: 1.0)
-        )
-        .overlay(
-            blobShape
-                .stroke(tint.opacity(glowPulse ? 0.65 : 0.38), lineWidth: 16)
-                .blur(radius: 14)
-                // Dark-only, same reason as staticOrb above.
-                .blendMode(BlendMode.screen)
-        )
-        .shadow(color: tint.opacity(glowPulse ? 0.5 : 0.3), radius: Self.glowShadowRadius, y: 4)
-        .onChange(of: paused, initial: true) { _, isPaused in
-            if isPaused {
-                // A repeatForever animation only ends when its value is written
-                // outside an animation.
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) { glowPulse = false }
-            } else {
-                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-                    glowPulse = true
-                }
-            }
+    private func animatedOrb() -> some View {
+        TimelineView(.animation(minimumInterval: 1.0 / thermalManager.maxFrameRate, paused: paused)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let wobble = t.truncatingRemainder(dividingBy: Self.wobbleLoop) / Self.wobbleLoop
+            let blobShape = OrganicBlobShape(phase: CGFloat(wobble * 2 * Double.pi))
+            // 0 at rest, 1 at full glow. A cosine over `glowLoop` reproduces the
+            // eased 2.4 s autoreversing pulse this used to run through withAnimation.
+            let glow = 0.5 - 0.5 * cos(2 * Double.pi * t / Self.glowLoop)
+
+            OrbParticleCanvas(tint: tint, particles: effectiveParticles, time: t)
+                .overlay(
+                    blobShape
+                        .stroke(tint.opacity(0.22), lineWidth: 1.0)
+                )
+                .overlay(
+                    blobShape
+                        .stroke(tint.opacity(0.38 + 0.27 * glow), lineWidth: 16)
+                        .blur(radius: 14)
+                        // Dark-only, same reason as staticOrb above.
+                        .blendMode(BlendMode.screen)
+                )
+                .shadow(color: tint.opacity(0.3 + 0.2 * glow), radius: Self.glowShadowRadius, y: 4)
         }
     }
 
@@ -134,15 +130,21 @@ struct OrganicParticleOrbView: View {
 private struct OrbParticleCanvas: View {
     let tint: Color
     let particles: [ParticleSeed]
-    let paused: Bool
-    let frameRate: Double
+    let time: TimeInterval
+
+    /// Fixed stops, so the gradient is built once instead of per drawn frame.
+    private static let darkCoreGradient = Gradient(stops: [
+        .init(color: Color.black.opacity(0.62), location: 0),
+        .init(color: Color.black.opacity(0.42), location: 0.72),
+        .init(color: Color.black.opacity(0.0), location: 1.0),
+    ])
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / frameRate, paused: paused)) { timeline in
-            Canvas { context, size in
-                drawDarkCore(context: context, size: size)
-                drawParticles(context: context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
-            }
+        // Every sibling orb in the app already renders off the main thread; this
+        // one competes with scroll and layout on the screen it sits on.
+        Canvas(rendersAsynchronously: true) { context, size in
+            drawDarkCore(context: context, size: size)
+            drawParticles(context: context, size: size, time: time)
         }
     }
 
@@ -156,15 +158,10 @@ private struct OrbParticleCanvas: View {
             x: center.x - radius, y: center.y - radius,
             width: radius * 2, height: radius * 2
         ))
-        let gradient = Gradient(stops: [
-            .init(color: Color.black.opacity(0.62), location: 0),
-            .init(color: Color.black.opacity(0.42), location: 0.72),
-            .init(color: Color.black.opacity(0.0), location: 1.0),
-        ])
         context.fill(
             path,
             with: .radialGradient(
-                gradient,
+                Self.darkCoreGradient,
                 center: center,
                 startRadius: 0,
                 endRadius: radius
@@ -173,6 +170,15 @@ private struct OrbParticleCanvas: View {
     }
 
     private func drawParticles(context: GraphicsContext, size: CGSize, time: TimeInterval) {
+        // Only two tints exist across the 160 particles and they differ only in
+        // alpha, so both shadings are resolved once instead of building a Color
+        // and re-resolving a shading per fill. This context sets no blend mode,
+        // so carrying the alpha on the context lands on the same pixels as
+        // baking it into the color.
+        var dots = context
+        let base = dots.resolve(.color(tint))
+        let bright = dots.resolve(.color(AppColour.markerOnInverse))
+
         for particle in particles {
             let x = size.width * particle.x
                 + CGFloat(cos(time * particle.speed + particle.phase) * particle.drift)
@@ -186,11 +192,10 @@ private struct OrbParticleCanvas: View {
                 height: particle.size
             )
 
-            let color: Color = particle.tintMix < 0.44
-                ? tint.opacity(particle.alpha)
-                : AppColour.markerOnInverse.opacity(particle.alpha)
+            let shading = particle.tintMix < 0.44 ? base : bright
 
-            context.fill(Path(ellipseIn: dotRect), with: .color(color))
+            dots.opacity = particle.alpha
+            dots.fill(Path(ellipseIn: dotRect), with: shading)
 
             if particle.size > 3.0 {
                 let glow = particle.size * 2.6
@@ -200,7 +205,8 @@ private struct OrbParticleCanvas: View {
                     width: glow,
                     height: glow
                 )
-                context.fill(Path(ellipseIn: glowRect), with: .color(color.opacity(0.12)))
+                dots.opacity = particle.alpha * 0.12
+                dots.fill(Path(ellipseIn: glowRect), with: shading)
             }
         }
     }

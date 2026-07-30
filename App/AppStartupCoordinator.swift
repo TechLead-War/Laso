@@ -56,7 +56,11 @@ final class AppStartupCoordinator {
         guard let container = store.modelContainer else { return }
 
         let retentionContext = ModelContext(container)
-        DataRetentionManager().pruneIfNeeded(context: retentionContext)
-        store.invalidateTimeSeriesCache()
+        // Only invalidate when rows actually went away. Invalidating unconditionally
+        // threw away a cache that nothing had made stale, and the next read paid for
+        // a second full materialization of the whole sample table.
+        if DataRetentionManager().pruneIfNeeded(context: retentionContext) > 0 {
+            store.invalidateTimeSeriesCache()
+        }
     }
 }

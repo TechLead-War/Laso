@@ -76,6 +76,16 @@ final class LiveViewModel {
     private var lastTieredFetchDate: Date?
     private var isFetchingCumulativeStats = false
     private var pendingCumulativeStatsCallbacks = 0
+    /// Today's cumulative stats arrive as six independent HealthKit callbacks. They
+    /// stage here and publish in a single batch so the tiles fill together in one
+    /// render pass instead of popping in one at a time.
+    @ObservationIgnored private var stagedTodaySteps: Double = 0
+    @ObservationIgnored private var stagedTodayActiveCalories: Double = 0
+    @ObservationIgnored private var stagedTodayExerciseMinutes: Double = 0
+    @ObservationIgnored private var stagedTodayStandHours: Double = 0
+    @ObservationIgnored private var stagedTodayDistance: Double = 0
+    @ObservationIgnored private var stagedTodayFlightsClimbed: Double = 0
+    @ObservationIgnored private var hasPendingReadinessRecompute = false
     private static let homeFetchDebounce: TimeInterval = 1.0
     private static let tieredFetchDebounceNominal: TimeInterval = 10
     private static let tieredFetchDebounceFair: TimeInterval = 20
@@ -201,8 +211,12 @@ final class LiveViewModel {
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let now = Date()
-        // Debounce: skip if called within 1 second of last fetch
-        if let last = lastHomeFetchDate, now.timeIntervalSince(last) < Self.homeFetchDebounce {
+        // Debounce against both timestamps. On the legacy tab-return path the tab
+        // change fires `fetchHomeDataTiered()` milliseconds before HomeView's
+        // `onAppear` gets here, and checking only `lastHomeFetchDate` let this
+        // re-issue the same three to six HealthKit queries.
+        let lastAnyFetch = [lastHomeFetchDate, lastTieredFetchDate].compactMap { $0 }.max()
+        if let last = lastAnyFetch, now.timeIntervalSince(last) < Self.homeFetchDebounce {
             return
         }
         if ThermalManager.shared.shouldThrottle {
@@ -600,37 +614,37 @@ final class LiveViewModel {
         let startOfDay = Date.cal.startOfDay(for: Date())
         fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todaySteps = v
+                self?.stagedTodaySteps = v
                 self?.finishCumulativeStatsFetch()
             }
         }
         fetchTodayStat(.activeEnergyBurned, unit: .kilocalorie(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todayActiveCalories = v
+                self?.stagedTodayActiveCalories = v
                 self?.finishCumulativeStatsFetch()
             }
         }
         fetchTodayStat(.appleExerciseTime, unit: .minute(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todayExerciseMinutes = v
+                self?.stagedTodayExerciseMinutes = v
                 self?.finishCumulativeStatsFetch()
             }
         }
         fetchTodayStat(.appleStandTime, unit: .hour(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todayStandHours = v
+                self?.stagedTodayStandHours = v
                 self?.finishCumulativeStatsFetch()
             }
         }
         fetchTodayStat(.distanceWalkingRunning, unit: .meterUnit(with: .kilo), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todayDistance = v
+                self?.stagedTodayDistance = v
                 self?.finishCumulativeStatsFetch()
             }
         }
         fetchTodayStat(.flightsClimbed, unit: .count(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
-                self?.activity.todayFlightsClimbed = v
+                self?.stagedTodayFlightsClimbed = v
                 self?.finishCumulativeStatsFetch()
             }
         }
@@ -648,6 +662,15 @@ final class LiveViewModel {
         pendingCumulativeStatsCallbacks = max(0, pendingCumulativeStatsCallbacks - 1)
         if pendingCumulativeStatsCallbacks == 0 {
             isFetchingCumulativeStats = false
+            // One publish for all six. Observation fires per set regardless of
+            // value, so writing them as they landed cost six render passes and
+            // showed the tiles popping in one at a time.
+            activity.todaySteps = stagedTodaySteps
+            activity.todayActiveCalories = stagedTodayActiveCalories
+            activity.todayExerciseMinutes = stagedTodayExerciseMinutes
+            activity.todayStandHours = stagedTodayStandHours
+            activity.todayDistance = stagedTodayDistance
+            activity.todayFlightsClimbed = stagedTodayFlightsClimbed
         }
     }
 
@@ -725,7 +748,7 @@ final class LiveViewModel {
                 guard let self else { return }
                 self.recovery.latestRestingHeartRate = value
                 self.recovery.latestRestingHeartRateTimestamp = date
-                self.computeReadinessScore()
+                self.scheduleReadinessRecompute()
             }
         }
         fetchLatestSampleWithDate(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli), maxAge: 48 * 3600) { [weak self] value, date in
@@ -733,8 +756,21 @@ final class LiveViewModel {
                 guard let self else { return }
                 self.recovery.latestHRV = value
                 self.recovery.latestHRVTimestamp = date
-                self.computeReadinessScore()
+                self.scheduleReadinessRecompute()
             }
+        }
+    }
+
+    /// Coalesces the resting-HR and HRV callbacks into one readiness compute.
+    /// Deferring rather than counting to two keeps the score correct when only
+    /// one of the two metrics has a sample inside its 48 h window.
+    private func scheduleReadinessRecompute() {
+        guard !hasPendingReadinessRecompute else { return }
+        hasPendingReadinessRecompute = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.hasPendingReadinessRecompute = false
+            self.computeReadinessScore()
         }
     }
 

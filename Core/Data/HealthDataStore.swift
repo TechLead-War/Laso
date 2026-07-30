@@ -296,6 +296,53 @@ final class HealthDataStore {
         return series
     }
 
+    /// Load only the recent window of every metric.
+    ///
+    /// `loadAllTimeSeries` has no predicate and no fetch limit, and the daily
+    /// sample table is deliberately never pruned, so its cost grows for the life
+    /// of the install. Launch does not need the whole history: the scorers all
+    /// work inside a one-year window. Deliberately does NOT write `allSeriesCache`
+    /// or `metricSeriesCache` — a truncated series in those caches would silently
+    /// shorten every later full-history read.
+    func loadRecentTimeSeries(days: Int) -> [HealthMetric: MetricTimeSeries] {
+        if let cached = allSeriesCache {
+            return cached
+        }
+
+        guard modelContext != nil else {
+            AppAnalytics.shared.recordNonFatal("modelContext is nil — SwiftData unavailable", context: "load_recent_time_series")
+            return [:]
+        }
+
+        guard let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) else {
+            return loadAllTimeSeries()
+        }
+
+        var descriptor = FetchDescriptor<StoredDailySample>(
+            predicate: #Predicate { $0.date >= cutoff }
+        )
+        descriptor.sortBy = [SortDescriptor(\.date)]
+
+        guard let samples = try? modelContext?.fetch(descriptor) else {
+            AppAnalytics.shared.recordNonFatal("fetch failed", context: "load_recent_time_series")
+            return [:]
+        }
+
+        var grouped: [String: [MetricSample]] = [:]
+        for stored in samples {
+            grouped[stored.metricRawValue, default: []].append(
+                MetricSample(date: stored.date, value: stored.value)
+            )
+        }
+
+        var result: [HealthMetric: MetricTimeSeries] = [:]
+        for (rawValue, samples) in grouped {
+            guard let metric = HealthMetric(rawValue: rawValue) else { continue }
+            result[metric] = MetricTimeSeries(metric: metric, samples: samples)
+        }
+        return result
+    }
+
     /// Load all stored time series in a single efficient query
     func loadAllTimeSeries() -> [HealthMetric: MetricTimeSeries] {
         if let cached = allSeriesCache {

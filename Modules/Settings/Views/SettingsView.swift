@@ -12,7 +12,10 @@ import FirebaseAuth
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @State private var preferences: NotificationPreferences
+    // Loaded in `.task`, not in `init`: this view sits in a ViewBuilder that runs
+    // on every navigation event, so an initial value meant a disk read, an AES-GCM
+    // open and a JSON decode per pass.
+    @State private var preferences: NotificationPreferences = .default
     @State private var showExportSheet = false
     @State private var showDeleteDataAlert = false
     @State private var isDeleting = false
@@ -48,7 +51,6 @@ struct SettingsView: View {
         self.deviceSourceManager = deviceSourceManager
         self.healthKitManager = healthKitManager
         self.healthDataStore = healthDataStore
-        self._preferences = State(initialValue: persistence.loadPreferences())
     }
 
     private var devicesStatusText: String {

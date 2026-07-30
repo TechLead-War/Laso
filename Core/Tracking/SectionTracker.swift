@@ -114,11 +114,62 @@ final class SectionTracker {
     func disappeared() {
         guard let start = appearDate else { return }
         let durationMs = Int(Date().timeIntervalSince(start) * 1000)
-        AppAnalytics.shared.trackSectionViewed(section: section, tab: tab, durationMs: durationMs)
+        SectionViewBuffer.add(section: section, tab: tab, durationMs: durationMs)
         appearDate = nil
     }
 
     func tapped(target: String) {
         AppAnalytics.shared.trackSectionTapped(section: section, tab: tab, target: target)
+    }
+}
+
+/// Batches `section_viewed` so a LazyVStack recycling five sections mid-scroll
+/// does not run five analytics pipelines inside the gesture's frame budget.
+/// Same events, same properties, just emitted together shortly after the scroll
+/// instead of one per recycle. Flushed on screen change and on backgrounding so
+/// a buffered event never outlives the screen it describes.
+@MainActor
+enum SectionViewBuffer {
+    private struct Pending {
+        let section: AppSection
+        let tab: AppFeature
+        let durationMs: Int
+    }
+
+    private static var pending: [Pending] = []
+    private static var flushTask: Task<Void, Never>?
+
+    /// Throttle, not debounce: the first buffered event schedules the flush and
+    /// later ones join that batch. A debounce would keep restarting the timer
+    /// during a long scroll and could starve the flush indefinitely.
+    private static let flushDelay: Duration = .seconds(1)
+
+    static func add(section: AppSection, tab: AppFeature, durationMs: Int) {
+        pending.append(Pending(section: section, tab: tab, durationMs: durationMs))
+        guard flushTask == nil else { return }
+        flushTask = Task {
+            try? await Task.sleep(for: flushDelay)
+            flushTask = nil
+            flush()
+        }
+    }
+
+    static func flushNow() {
+        flushTask?.cancel()
+        flushTask = nil
+        flush()
+    }
+
+    private static func flush() {
+        guard !pending.isEmpty else { return }
+        let batch = pending
+        pending.removeAll(keepingCapacity: true)
+        for item in batch {
+            AppAnalytics.shared.trackSectionViewed(
+                section: item.section,
+                tab: item.tab,
+                durationMs: item.durationMs
+            )
+        }
     }
 }

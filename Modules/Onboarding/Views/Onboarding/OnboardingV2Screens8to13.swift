@@ -405,7 +405,10 @@ struct OnbV2Screen10Scan: View {
 
         startDate = Date()
         timer?.invalidate()
-        let t = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { ticker in
+        // 10 Hz, not 20: every tick writes screen-root state and rebuilds this whole
+        // body while the HealthKit import runs. The bar is 4 pt tall and the status
+        // line shows a whole percent, so the extra ten ticks a second buy nothing.
+        let t = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { ticker in
             guard let start = startDate else { return }
             let elapsed = Date().timeIntervalSince(start)
             progress = min(1.0, elapsed / totalDuration)

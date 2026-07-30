@@ -8,10 +8,6 @@ struct HealthScoreRing: View {
     let lineWidth: CGFloat
     let showScore: Bool
     let tint: Color?
-    /// Turn off for rings inside a lazily recycled list. The row is torn down when
-    /// it scrolls away, so `animatedProgress` resets to 0 and the one-second trim
-    /// replays on every scroll back — nine of them at once in the Biology tab.
-    let animatesOnAppear: Bool
 
     @State private var animatedProgress: Double = 0
 
@@ -23,6 +19,9 @@ struct HealthScoreRing: View {
         tint ?? DS.scoreColor(score)
     }
 
+    /// `animatesOnAppear` is accepted but ignored: appearing never animates any
+    /// more, so no caller needs to opt out. Kept only so the one existing call
+    /// site still compiles — delete the argument there, then this parameter.
     init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true, tint: Color? = nil, animatesOnAppear: Bool = true) {
         self.score = score
         self.label = label
@@ -30,7 +29,6 @@ struct HealthScoreRing: View {
         self.lineWidth = lineWidth
         self.showScore = showScore
         self.tint = tint
-        self.animatesOnAppear = animatesOnAppear
     }
 
     var body: some View {
@@ -47,7 +45,6 @@ struct HealthScoreRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(animatesOnAppear ? .easeInOut(duration: 1.0) : nil, value: animatedProgress)
 
             // Center text. always perfectly centered regardless of 1 or 2 lines
             centerContent
@@ -61,10 +58,16 @@ struct HealthScoreRing: View {
         .accessibilityLabel(label.isEmpty ? "Score \(score)" : "\(label) score \(score) out of 100")
         .accessibilityValue(Copy.Common.percentValue(score))
         .onAppear {
-            animatedProgress = progress
+            // Seeded with animations off. A LazyVStack tears the row down on
+            // scroll-off, so `@State` resets to 0 and an animated seed replayed
+            // the full fill every scroll back, reading as a score that just
+            // changed. Only a real score change should animate.
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { animatedProgress = progress }
         }
         .onChange(of: score) {
-            animatedProgress = progress
+            withAnimation(.easeInOut(duration: 1.0)) { animatedProgress = progress }
         }
     }
 

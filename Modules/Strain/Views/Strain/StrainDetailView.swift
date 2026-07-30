@@ -79,20 +79,6 @@ struct StrainDetailView: View {
 
     @State private var animatedProgress: Double = 0
     @State private var showLearnMore = false
-    @State private var selectedHistoryDate: Date?
-    /// Latches once the drag is claimed as a scrub, so a curving finger keeps
-    /// scrubbing instead of handing the touch back to the page scroll.
-    @State private var isScrubbing = false
-
-    /// Matches `MetricChartView`: below this the touch belongs to the page scroll.
-    private static let scrubMinimumDrag: CGFloat = 8
-
-    private var selectedHistoryPoint: DailyStrainPoint? {
-        guard let selectedHistoryDate, !weekHistory.isEmpty else { return nil }
-        return weekHistory.min(by: { lhs, rhs in
-            abs(lhs.date.timeIntervalSince(selectedHistoryDate)) < abs(rhs.date.timeIntervalSince(selectedHistoryDate))
-        })
-    }
 
     private var progress: Double {
         min(strainValue / maxStrain, 1.0)
@@ -126,7 +112,11 @@ struct StrainDetailView: View {
                 if hasData {
                     heroSection
                     if !weekHistory.isEmpty {
-                        historySection
+                        StrainHistoryChart(
+                            weekHistory: weekHistory,
+                            targetStrainRange: targetStrainRange,
+                            maxStrain: maxStrain
+                        )
                     }
                     if trendPoints.count >= TrendSparkCard.minimumPoints {
                         trendsSection
@@ -226,12 +216,18 @@ struct StrainDetailView: View {
         }
         .padding(DS.space6)
         .frame(maxWidth: .infinity)
-        .background(strainGradient, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        // Shadow rides on the background shape, not the composed card: hung on the
+        // card its source is the animating trim ring, so it re-blurs offscreen for
+        // the whole entry animation instead of resolving to a cached shadowPath.
+        .background {
+            RoundedRectangle(cornerRadius: DS.Radius.xl)
+                .fill(strainGradient)
+                .shadow(color: AppColour.shadowAmbient, radius: 12, y: 4)
+        }
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.xl)
                 .strokeBorder(strainLevel.color.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
-        .shadow(color: AppColour.shadowAmbient, radius: 12, y: 4)
         .padding(.horizontal)
     }
 
@@ -268,203 +264,6 @@ struct StrainDetailView: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
-    }
-
-    // MARK: - History Chart
-
-    private var historySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeaderView(icon: "calendar", title: Copy.Strain.sevenDayHistory)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Chart {
-                    ForEach(weekHistory) { point in
-                        if point.hasRecordedData {
-                            BarMark(
-                                x: .value("Day", point.date, unit: .day),
-                                y: .value("Strain", point.strain)
-                            )
-                            .foregroundStyle(point.level.color.gradient)
-                            .cornerRadius(4)
-                            // Per-bar VoiceOver readout for the 7-day strain history.
-                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
-                            .accessibilityValue(Text(Copy.Strain.strainValueAndLevel(String(format: "%.1f", point.strain), point.level.displayName)))
-                        } else {
-                            // Full height shaded column so a day with no data reads as a
-                            // gap, not as a real zero effort day.
-                            BarMark(
-                                x: .value("Day", point.date, unit: .day),
-                                yStart: .value("Strain", 0.0),
-                                yEnd: .value("Strain", maxStrain)
-                            )
-                            .foregroundStyle(.secondary.opacity(0.12))
-                            .cornerRadius(4)
-                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
-                            .accessibilityValue(Text(Copy.Strain.noDataDay))
-                        }
-                    }
-
-                    RuleMark(y: .value("Target Low", targetStrainRange.lowerBound))
-                        .foregroundStyle(.secondary.opacity(0.4))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-
-                    RuleMark(y: .value("Target High", targetStrainRange.upperBound))
-                        .foregroundStyle(.secondary.opacity(0.4))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-
-                    if let selected = selectedHistoryPoint {
-                        RuleMark(x: .value("Selected Day", selected.date, unit: .day))
-                            .foregroundStyle(selected.hasRecordedData ? selected.level.color.opacity(0.35) : Color.secondary.opacity(0.35))
-                            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
-
-                        if selected.hasRecordedData {
-                            PointMark(
-                                x: .value("Selected Day", selected.date, unit: .day),
-                                y: .value("Strain", selected.strain)
-                            )
-                            .foregroundStyle(AppColour.markerOnSurface)
-                            .symbolSize(60)
-
-                            PointMark(
-                                x: .value("Selected Day", selected.date, unit: .day),
-                                y: .value("Strain", selected.strain)
-                            )
-                            .foregroundStyle(selected.level.color)
-                            .symbolSize(24)
-                        }
-                    }
-                }
-                .chartXSelection(value: $selectedHistoryDate)
-                .chartYScale(domain: 0...21)
-                // Chart-level VoiceOver summary for the strain history.
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel(Text(Copy.Strain.strainOverTheLastDaysText(weekHistory.count)))
-                .accessibilityValue(Text(strainChartAccessibilityValue))
-                .chartYAxis {
-                    AxisMarks(values: [0, 7, 14, 21]) { value in
-                        AxisValueLabel {
-                            if let v = value.as(Double.self) {
-                                Text(Copy.Strain.xText(Int(v))).font(DS.Typography.caption2)
-                            }
-                        }
-                        AxisGridLine()
-                    }
-                }
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day)) { _ in
-                        AxisValueLabel(format: .dateTime.weekday(.abbreviated))
-                        AxisGridLine()
-                    }
-                }
-                .frame(height: 170)
-                .chartOverlay { proxy in
-                    GeometryReader { geometry in
-                        Rectangle()
-                            .fill(Color.clear)
-                            .contentShape(Rectangle())
-                            .gesture(
-                                DragGesture(minimumDistance: Self.scrubMinimumDrag)
-                                    .onChanged { value in
-                                        // The chart fills the width of a scrolling page, so it
-                                        // only takes over once the finger is clearly moving
-                                        // sideways. Once scrubbing it keeps the touch, however
-                                        // the finger drifts.
-                                        guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
-                                        isScrubbing = true
-                                        guard let plotFrame = proxy.plotFrame else { return }
-                                        let origin = geometry[plotFrame].origin
-                                        let x = value.location.x - origin.x
-                                        if let date: Date = proxy.value(atX: x) {
-                                            selectedHistoryDate = date
-                                        }
-                                    }
-                                    .onEnded { _ in isScrubbing = false }
-                            )
-                            .onTapGesture { location in
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Strain History Chart",
-                                    type: .chartTouch,
-                                    screen: .strainDetail
-                                )
-                                guard let plotFrame = proxy.plotFrame else { return }
-                                let origin = geometry[plotFrame].origin
-                                let x = location.x - origin.x
-                                if let date: Date = proxy.value(atX: x) {
-                                    if let current = selectedHistoryDate,
-                                       Date.cal.isDate(current, inSameDayAs: date) {
-                                        selectedHistoryDate = nil
-                                    } else {
-                                        selectedHistoryDate = date
-                                    }
-                                }
-                            }
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    if let selected = selectedHistoryPoint {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(selected.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            if selected.hasRecordedData {
-                                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                    Text(String(format: "%.1f", selected.strain))
-                                        .font(.callout.weight(.bold).monospacedDigit())
-                                        .foregroundStyle(selected.level.color)
-                                    Text(Copy.Strain.scaleSuffix)
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(.secondary)
-                                }
-                                Text(selected.level.displayName)
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(selected.level.color)
-                            } else {
-                                Text(Copy.Strain.noDataDay)
-                                    .font(.callout.weight(.bold))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(AppColour.surfaceOverlay, in: RoundedRectangle(cornerRadius: 8))
-                        .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
-                        .padding(DS.space1)
-                    }
-                }
-                .sensoryFeedback(.selection, trigger: selectedHistoryPoint?.id)
-
-                if !recordedDays.isEmpty {
-                    let avgStrain = averageStrain
-                    HStack(spacing: 6) {
-                        Text(Copy.Strain.averageOfDaysWithData(recordedDays.count))
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(.secondary)
-                        HStack(spacing: 2) {
-                            Text(String(format: "%.1f", avgStrain))
-                                .font(DS.Typography.captionSemibold.monospacedDigit())
-                            Text(Copy.Strain.scaleSuffix)
-                                .font(DS.Typography.caption2Medium.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(StrainLevel(strain: avgStrain).displayName)
-                            .font(DS.Typography.caption2Semibold)
-                            .foregroundStyle(StrainLevel(strain: avgStrain).color)
-                            .padding(.horizontal, DS.badgeH)
-                            .padding(.vertical, DS.badgeV)
-                            .background(StrainLevel(strain: avgStrain).color.opacity(DS.badgeBg), in: Capsule())
-                    }
-                }
-
-                if recordedDays.count < weekHistory.count {
-                    Text(Copy.Strain.missingDaysNote)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            .padding(DS.cardPadding)
-            .cardStyle()
-            .padding(.horizontal)
-        }
     }
 
     // MARK: - Trends
@@ -521,27 +320,6 @@ struct StrainDetailView: View {
             .cardStyle()
             .padding(.horizontal)
         }
-    }
-
-    /// Days that actually recorded activity. Days with no data are excluded from
-    /// every average so an unworn watch does not read as an easy day.
-    private var recordedDays: [DailyStrainPoint] {
-        weekHistory.filter(\.hasRecordedData)
-    }
-
-    private var averageStrain: Double {
-        guard !recordedDays.isEmpty else { return 0 }
-        return recordedDays.map(\.strain).reduce(0, +) / Double(recordedDays.count)
-    }
-
-    private var strainChartAccessibilityValue: String {
-        guard !recordedDays.isEmpty else { return Copy.Strain.noHistoryAvailable }
-        let latest = recordedDays.last?.strain ?? 0
-        return Copy.Strain.latestStrainAndAverage(
-            String(format: "%.1f", latest),
-            String(format: "%.1f", averageStrain),
-            recordedDays.count
-        )
     }
 
     private var targetStatusTitle: String {
@@ -741,6 +519,253 @@ struct StrainDetailView: View {
             return "\(h)h \(String(format: "%02d", m))m"
         }
         return "\(m)m"
+    }
+}
+
+// MARK: - History Chart
+
+/// The 7-day history card, split out of `StrainDetailView` so it can own the scrub
+/// state. Left on the screen root, a single touch move rebuilt the hero ring, the
+/// trend spark card and every other section on the page.
+private struct StrainHistoryChart: View {
+    let weekHistory: [DailyStrainPoint]
+    let targetStrainRange: ClosedRange<Double>
+    let maxStrain: Double
+
+    @State private var selectedHistoryDate: Date?
+    /// Latches once the drag is claimed as a scrub, so a curving finger keeps
+    /// scrubbing instead of handing the touch back to the page scroll.
+    @State private var isScrubbing = false
+
+    /// Matches `MetricChartView`: below this the touch belongs to the page scroll.
+    private static let scrubMinimumDrag: CGFloat = 8
+
+    private var selectedHistoryPoint: DailyStrainPoint? {
+        guard let selectedHistoryDate, !weekHistory.isEmpty else { return nil }
+        return weekHistory.min(by: { lhs, rhs in
+            abs(lhs.date.timeIntervalSince(selectedHistoryDate)) < abs(rhs.date.timeIntervalSince(selectedHistoryDate))
+        })
+    }
+
+    /// Days that actually recorded activity. Days with no data are excluded from
+    /// every average so an unworn watch does not read as an easy day.
+    private var recordedDays: [DailyStrainPoint] {
+        weekHistory.filter(\.hasRecordedData)
+    }
+
+    private var averageStrain: Double {
+        guard !recordedDays.isEmpty else { return 0 }
+        return recordedDays.map(\.strain).reduce(0, +) / Double(recordedDays.count)
+    }
+
+    private var strainChartAccessibilityValue: String {
+        guard !recordedDays.isEmpty else { return Copy.Strain.noHistoryAvailable }
+        let latest = recordedDays.last?.strain ?? 0
+        return Copy.Strain.latestStrainAndAverage(
+            String(format: "%.1f", latest),
+            String(format: "%.1f", averageStrain),
+            recordedDays.count
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeaderView(icon: "calendar", title: Copy.Strain.sevenDayHistory)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Chart {
+                    ForEach(weekHistory) { point in
+                        if point.hasRecordedData {
+                            BarMark(
+                                x: .value("Day", point.date, unit: .day),
+                                y: .value("Strain", point.strain)
+                            )
+                            .foregroundStyle(point.level.color.gradient)
+                            .cornerRadius(4)
+                            // Per-bar VoiceOver readout for the 7-day strain history.
+                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
+                            .accessibilityValue(Text(Copy.Strain.strainValueAndLevel(String(format: "%.1f", point.strain), point.level.displayName)))
+                        } else {
+                            // Full height shaded column so a day with no data reads as a
+                            // gap, not as a real zero effort day.
+                            BarMark(
+                                x: .value("Day", point.date, unit: .day),
+                                yStart: .value("Strain", 0.0),
+                                yEnd: .value("Strain", maxStrain)
+                            )
+                            .foregroundStyle(.secondary.opacity(0.12))
+                            .cornerRadius(4)
+                            .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
+                            .accessibilityValue(Text(Copy.Strain.noDataDay))
+                        }
+                    }
+
+                    RuleMark(y: .value("Target Low", targetStrainRange.lowerBound))
+                        .foregroundStyle(.secondary.opacity(0.4))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+
+                    RuleMark(y: .value("Target High", targetStrainRange.upperBound))
+                        .foregroundStyle(.secondary.opacity(0.4))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+
+                    if let selected = selectedHistoryPoint {
+                        RuleMark(x: .value("Selected Day", selected.date, unit: .day))
+                            .foregroundStyle(selected.hasRecordedData ? selected.level.color.opacity(0.35) : Color.secondary.opacity(0.35))
+                            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+
+                        if selected.hasRecordedData {
+                            PointMark(
+                                x: .value("Selected Day", selected.date, unit: .day),
+                                y: .value("Strain", selected.strain)
+                            )
+                            .foregroundStyle(AppColour.markerOnSurface)
+                            .symbolSize(60)
+
+                            PointMark(
+                                x: .value("Selected Day", selected.date, unit: .day),
+                                y: .value("Strain", selected.strain)
+                            )
+                            .foregroundStyle(selected.level.color)
+                            .symbolSize(24)
+                        }
+                    }
+                }
+                .chartYScale(domain: 0...21)
+                // Chart-level VoiceOver summary for the strain history.
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(Text(Copy.Strain.strainOverTheLastDaysText(weekHistory.count)))
+                .accessibilityValue(Text(strainChartAccessibilityValue))
+                .chartYAxis {
+                    AxisMarks(values: [0, 7, 14, 21]) { value in
+                        AxisValueLabel {
+                            if let v = value.as(Double.self) {
+                                Text(Copy.Strain.xText(Int(v))).font(DS.Typography.caption2)
+                            }
+                        }
+                        AxisGridLine()
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day)) { _ in
+                        AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                        AxisGridLine()
+                    }
+                }
+                .frame(height: 170)
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: Self.scrubMinimumDrag)
+                                    .onChanged { value in
+                                        // The chart fills the width of a scrolling page, so it
+                                        // only takes over once the finger is clearly moving
+                                        // sideways. Once scrubbing it keeps the touch, however
+                                        // the finger drifts.
+                                        guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
+                                        isScrubbing = true
+                                        guard let plotFrame = proxy.plotFrame else { return }
+                                        let origin = geometry[plotFrame].origin
+                                        let x = value.location.x - origin.x
+                                        if let date: Date = proxy.value(atX: x) {
+                                            selectedHistoryDate = date
+                                        }
+                                    }
+                                    .onEnded { _ in isScrubbing = false }
+                            )
+                            .onTapGesture { location in
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Strain History Chart",
+                                    type: .chartTouch,
+                                    screen: .strainDetail
+                                )
+                                guard let plotFrame = proxy.plotFrame else { return }
+                                let origin = geometry[plotFrame].origin
+                                let x = location.x - origin.x
+                                if let date: Date = proxy.value(atX: x) {
+                                    if let current = selectedHistoryDate,
+                                       Date.cal.isDate(current, inSameDayAs: date) {
+                                        selectedHistoryDate = nil
+                                    } else {
+                                        selectedHistoryDate = date
+                                    }
+                                }
+                            }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if let selected = selectedHistoryPoint {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(selected.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            if selected.hasRecordedData {
+                                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                    Text(String(format: "%.1f", selected.strain))
+                                        .font(.callout.weight(.bold).monospacedDigit())
+                                        .foregroundStyle(selected.level.color)
+                                    Text(Copy.Strain.scaleSuffix)
+                                        .font(.caption.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Text(selected.level.displayName)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(selected.level.color)
+                            } else {
+                                Text(Copy.Strain.noDataDay)
+                                    .font(.callout.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        // Shadow rides on the background shape, not the composed
+                        // tooltip: a shadow over changing content re-blurs offscreen
+                        // every touch move.
+                        .background {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AppColour.surfaceOverlay)
+                                .shadow(color: AppColour.shadowFloating, radius: 4, y: 2)
+                        }
+                        .padding(DS.space1)
+                    }
+                }
+                .sensoryFeedback(.selection, trigger: selectedHistoryPoint?.id)
+
+                if !recordedDays.isEmpty {
+                    let avgStrain = averageStrain
+                    HStack(spacing: 6) {
+                        Text(Copy.Strain.averageOfDaysWithData(recordedDays.count))
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 2) {
+                            Text(String(format: "%.1f", avgStrain))
+                                .font(DS.Typography.captionSemibold.monospacedDigit())
+                            Text(Copy.Strain.scaleSuffix)
+                                .font(DS.Typography.caption2Medium.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(StrainLevel(strain: avgStrain).displayName)
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(StrainLevel(strain: avgStrain).color)
+                            .padding(.horizontal, DS.badgeH)
+                            .padding(.vertical, DS.badgeV)
+                            .background(StrainLevel(strain: avgStrain).color.opacity(DS.badgeBg), in: Capsule())
+                    }
+                }
+
+                if recordedDays.count < weekHistory.count {
+                    Text(Copy.Strain.missingDaysNote)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+            .padding(.horizontal)
+        }
     }
 }
 

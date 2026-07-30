@@ -6,10 +6,8 @@ struct LiveView: View {
     let deviceSourceManager: DeviceSourceManager
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var pulseScale: CGFloat = 1.0
     @State private var previousZone: LiveViewModel.HeartRateZone?
     @State private var hasTrackedFirstData = false
-    @State private var lastAnimationTime: Date = .distantPast
     @State private var maxScrollDepth: Int = 0
 
     // Section trackers
@@ -110,9 +108,7 @@ struct LiveView: View {
                         currentHeartRateZone: viewModel.currentHeartRateZone,
                         heartRateZonePercent: viewModel.heartRateZonePercent,
                         heartRateTracker: heartRateTracker,
-                        maxScrollDepth: $maxScrollDepth,
-                        pulseScale: $pulseScale,
-                        lastAnimationTime: $lastAnimationTime
+                        maxScrollDepth: $maxScrollDepth
                     )
                     LiveVitalsSection(
                         vitals: viewModel.vitals,

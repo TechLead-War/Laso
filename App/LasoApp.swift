@@ -130,16 +130,23 @@ struct LasoApp: App {
                 // Reporting only, and it walks every loaded dyld image, so it runs
                 // off the launch path instead of inside `init` ahead of first frame.
                 Task.detached(priority: .utility) { AppIntegrityGuard.performChecks() }
-                await container.startupCoordinator.runInitialSetup(
-                    healthDataStore: container.healthDataStore,
-                    healthKitManager: container.healthKitManager
-                )
 
-                // Dismiss splash once background init is done
+                // Not awaited. `runInitialSetup` blocks on a StoreKit product fetch
+                // with an 8 s ceiling, so awaiting it tied how long the user stares
+                // at the splash to network quality while the real UI sat rendered
+                // underneath. Nothing the splash draws reads any of this state, and
+                // subscription status starts `.unknown`, which never enforces the
+                // paywall, so dropping the splash first cannot flash it.
+                Task {
+                    await container.startupCoordinator.runInitialSetup(
+                        healthDataStore: container.healthDataStore,
+                        healthKitManager: container.healthKitManager
+                    )
+                }
+
                 withAnimation(.easeOut(duration: 0.3)) {
                     showSplash = false
                 }
-
             }
             // After "Delete All My Data" wipes local state + signs out, the
             // SettingsView posts LasoDidWipeAccount. Reset onboardingCompleted

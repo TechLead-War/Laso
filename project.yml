@@ -100,6 +100,10 @@ targets:
         UIBackgroundModes: [fetch, processing, remote-notification]
         BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.fit.background-refresh"]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Without this opt-in iOS caps every animation at 60 Hz on ProMotion
+        # iPhones, no matter what frame rate the view asks for. Raises the
+        # ceiling to 120 Hz and the power draw with it.
+        CADisableMinimumFrameDurationOnPhone: true
         UILaunchScreen:
           UIColorName: LaunchBackground
     configFiles:

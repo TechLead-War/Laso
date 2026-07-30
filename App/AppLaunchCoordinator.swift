@@ -56,7 +56,14 @@ final class AppLaunchCoordinator {
         // Start the Firestore listener that streams admin-edited Copy overrides
         // so live edits in the in-app dashboard propagate to every screen
         // without an app relaunch. Must run after FirebaseApp.configure().
-        CopyOverridesStore.shared.start()
+        //
+        // Off the launch path: attaching it pays Firestore's background init and
+        // its first snapshot callback decodes ~1500 keys and drops the whole
+        // resolved-copy cache. Nothing on screen needs it — every string falls
+        // through to the English literal baked into Common/Copy until it lands.
+        Task.detached(priority: .utility) {
+            CopyOverridesStore.shared.start()
+        }
 
         analyticsManager.configure()
         analyticsManager.installCrashHandlers()

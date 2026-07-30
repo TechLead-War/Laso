@@ -11,6 +11,9 @@ struct CategoryDetailView: View {
     @State private var metricsTracker = SectionTracker(section: .categoryDetailMetrics, tab: .categoryDetail)
 
     var body: some View {
+        // One read per pass — the property re-runs the insight coordinator on
+        // every access.
+        let insights = viewModel.insights
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
                 // Category Score (timeframe-independent overall score)
@@ -89,10 +92,10 @@ struct CategoryDetailView: View {
                 }
 
                 // Insights for this category
-                if !viewModel.insights.isEmpty {
+                if !insights.isEmpty {
                     let displayLimit = FeatureGate.isFreeTier ? FeatureGate.insightLimit : Int.max
-                    let visibleInsights = Array(viewModel.insights.prefix(displayLimit))
-                    let hiddenInsights = max(0, viewModel.insights.count - visibleInsights.count)
+                    let visibleInsights = Array(insights.prefix(displayLimit))
+                    let hiddenInsights = max(0, insights.count - visibleInsights.count)
 
                     VStack(alignment: .leading, spacing: DS.itemSpacing) {
                         Text(Copy.CategoryDetail.insights)
@@ -205,7 +208,7 @@ struct CategoryDetailView: View {
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: [
                 "category": viewModel.category.displayName,
-                "insight_count": viewModel.insights.count
+                "insight_count": insights.count
             ])
         }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.categoryDetail, metadata: ["category": viewModel.category.displayName]) }
