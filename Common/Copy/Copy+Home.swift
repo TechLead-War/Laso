@@ -248,6 +248,18 @@ extension Copy {
         static var streakMilestoneShare: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_share", default: "Share this") }
         static var streakMilestoneDismiss: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_dismiss", default: "No thanks") }
 
+        // MARK: - Intraday activity + week strip
+
+        static var intradayTitle: String { RemoteConfigManager.shared.copyString("copy_home_intraday_title", default: "Your day so far") }
+        static var intradayUnit: String { RemoteConfigManager.shared.copyString("copy_home_intraday_unit", default: "CAL") }
+        static func intradayPeak(_ calories: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_intraday_peak", default: "%d cal"), calories)
+        }
+        static func intradayAccessibility(_ calories: Int, _ peakHour: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_intraday_accessibility", default: "Active energy today, %1$d calories. Busiest hour %2$@."), calories, peakHour)
+        }
+        static var weekStripAccessibility: String { RemoteConfigManager.shared.copyString("copy_home_week_strip_accessibility", default: "Your score for the last seven days. Opens the full month.") }
+
         // MARK: - Connection Status (Home empty state)
 
         enum ConnectionStatus {

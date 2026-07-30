@@ -543,6 +543,26 @@ struct HomeView: View {
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
 
+                    // 1a-. Last seven days, right under the score they are the
+                    // history of. Tapping opens the full month in Biology.
+                    WeekScoreStrip(scoresByDay: viewModel.cachedDailyScoresByDay) {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Week Strip",
+                            type: .exploreCalendarDay,
+                            screen: .home,
+                            metadata: ["destination": "explore"]
+                        )
+                        NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: nil)
+                    }
+
+                    // 1a--. When today actually happened. Every other number on
+                    // this screen is a daily total, so this is the only view of
+                    // the shape of the day. Hidden until the day has any energy
+                    // logged, since an all-zero chart says nothing.
+                    if liveViewModel.activity.intradayActiveEnergy.contains(where: { $0 > 0 }) {
+                        IntradayActivityCard(buckets: liveViewModel.activity.intradayActiveEnergy)
+                    }
+
                     // 1a0. Sleep bank. The only running total on the screen, so
                     // it sits right under the score it helps explain. Hidden
                     // entirely until the balance is big enough to act on.

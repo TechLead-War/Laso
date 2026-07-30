@@ -99,10 +99,25 @@ struct ExploreDaySheet: View {
 
     private var signalsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text(Copy.Explore.daySignalsTitle)
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
-                .textCase(.uppercase)
+            // The basis of the comparison is stated here once. Repeating it as a
+            // sentence under all four readings is what made the card read as a
+            // wall of text.
+            HStack(alignment: .firstTextBaseline, spacing: DS.space2) {
+                Text(Copy.Explore.daySignalsTitle)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: DS.space2)
+                // Never promise a comparison no row can make: a first-week user
+                // has no stored baselines at all.
+                if detail.signals.contains(where: { $0.usual != nil }) {
+                    Text(Copy.Explore.daySignalsQualifier)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textQuaternary)
+                        .fixedSize()
+                }
+            }
+            .textCase(.uppercase)
 
             VStack(spacing: 0) {
                 ForEach(Array(detail.signals.enumerated()), id: \.element.id) { index, signal in
@@ -118,39 +133,54 @@ struct ExploreDaySheet: View {
     }
 
     private func signalRow(_ signal: DashboardViewModel.DaySignal) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .firstTextBaseline, spacing: DS.space3) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(signal.title)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(AppColour.textPrimary)
-                Spacer(minLength: 8)
+                    .lineLimit(2)
+                Text(signal.subText)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: DS.space2)
+
+            HStack(alignment: .firstTextBaseline, spacing: DS.space1) {
+                // Neutral, not the category tint: heart rate variability and
+                // resting heart rate share one colour and one icon, so tinting
+                // made those two rows read as duplicates. The numbers are what
+                // tell them apart.
                 Text(signal.valueText)
-                    .font(DS.Typography.subheadlineMedium)
+                    .font(DS.Typography.title3)
                     .foregroundStyle(AppColour.textPrimary)
-            }
-
-            if let fraction = signal.fraction {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(AppColour.trackNeutral)
-                        // One neutral tint on purpose: below usual is bad for
-                        // HRV and good for resting heart rate, so a good/bad
-                        // colour here would be wrong half the time. The bar
-                        // shows size of the gap, the line below reads it out.
-                        Capsule()
-                            .fill(AppColour.accent)
-                            .frame(width: max(3, geo.size.width * fraction))
-                    }
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                // Direction is a fact, not a verdict: below usual is bad for HRV
+                // and good for resting heart rate, so this stays grey both ways.
+                if let arrow = Self.arrow(for: signal.usual) {
+                    Image(systemName: arrow)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
-                .frame(height: 3)
             }
-
-            Text(signal.gapText)
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
+            .layoutPriority(1)
         }
-        .padding(.vertical, 10)
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, DS.space3)
+        // The arrow is an Image, so a combined label would drop the direction
+        // silently. `gapText` is the sentence that used to carry it on screen.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel([signal.title, signal.valueText, signal.gapText].joined(separator: ", "))
+    }
+
+    private static func arrow(for usual: DashboardViewModel.DaySignal.Usual?) -> String? {
+        switch usual {
+        case .above:        return "arrowtriangle.up.fill"
+        case .below:        return "arrowtriangle.down.fill"
+        case .atUsual, nil: return nil
+        }
     }
 
     /// Names what the day did not record, so a thinner score is visibly thinner

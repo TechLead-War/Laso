@@ -198,6 +198,7 @@
 		65E771E1DFEDBC9F92BC0DE9 /* MultiMetricClusterAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D3EDF028E737A253244644 /* MultiMetricClusterAnalyzer.swift */; };
 		661A8C2A76F0FA7904C9B724 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EC68BD376519E5F0105F1FD /* LoadingView.swift */; };
 		6681E7C169E53F57C7A279D7 /* SessionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10473A4E47171198AA83332A /* SessionTracker.swift */; };
+		66919F384108E16D406B98A6 /* IntradayActivityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C90A1877CD7FC0A49780368 /* IntradayActivityCard.swift */; };
 		66F6CD2480537BDEC62E96DE /* RepeatTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFE38ADFBAE9828684EFF55 /* RepeatTimer.swift */; };
 		67DEE6237FAF6483F7381E29 /* HealthScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B01E70385C6E84A556B5C /* HealthScoreRing.swift */; };
 		69EFD9C3F372BCFA31F2CB28 /* AppColour.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A76DA46FCC55AB12B2B0E /* AppColour.swift */; };
@@ -207,6 +208,7 @@
 		6A6F6442958A6B981E7ACD5D /* MetricTimeSeries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58958683641A039F46621E11 /* MetricTimeSeries.swift */; };
 		6C8FE32C30ACD23F9094FFEE /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1D395AC63E530722B5F1FBF4 /* FirebaseMessaging */; };
 		6CD7EBD49DD562307EAB1568 /* CircadianAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7100A86FE84DF728F2303E /* CircadianAnalyzer.swift */; };
+		6D56DDD4F546E8712975B8AD /* WeekScoreStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92433E9D50DFCC64AE7CEAE /* WeekScoreStrip.swift */; };
 		6D8D2592F69941A1BB2FF413 /* BreathworkLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB550DF613A646C3C15C54C /* BreathworkLiveActivityWidget.swift */; };
 		6D9CD996A3B57D79314F8F64 /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3EC72063A5D64B85AC6C0D /* WeeklyReviewView.swift */; };
 		6E63B59C60A97718C53697EE /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E020657065005DF616545BF6 /* Date+Extensions.swift */; };
@@ -217,6 +219,7 @@
 		70320E7F02D87ADCE2DFB0B2 /* AppStoreVersionChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC22C4577F4B4A65A3838A1 /* AppStoreVersionChecker.swift */; };
 		70821C46FC2BEEDA42CCC54B /* DeviceSetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEC87DF4B1B4F6D124F5FBC /* DeviceSetupGuideView.swift */; };
 		70CE8A4825B420049A6EE5CC /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33C2476641DDAE4ABF21CC /* WatchRootView.swift */; };
+		7110152A605B1E3E353A94D8 /* DayScoreDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7244DA472ECDA795E956D1 /* DayScoreDial.swift */; };
 		71E0D0FF2B2B16765F2D6D62 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C2BDC454A62ECE1B1805CD /* ServiceProtocols.swift */; };
 		725586241A48C4F4342D37BB /* MorningCheckInManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6F6EFE6BF9A2189C67F2F6 /* MorningCheckInManager.swift */; };
 		732080AE5C4C3F895541E6B3 /* NotificationOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8544B094AAEAF9BA1286F5D7 /* NotificationOptimizer.swift */; };
@@ -577,6 +580,7 @@
 		0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
 		0B49E689ABA5DD3EE12E59A8 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		0B7F734F2F4F73A01B994CC6 /* MLPipelineRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLPipelineRunner.swift; sourceTree = "<group>"; };
+		0C90A1877CD7FC0A49780368 /* IntradayActivityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntradayActivityCard.swift; sourceTree = "<group>"; };
 		0CC830FF07C8AFDA4C07C702 /* HealthStateTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthStateTimelineView.swift; sourceTree = "<group>"; };
 		0CD135A2AA4F4C748A239A19 /* HealthKitMetricRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitMetricRegistry.swift; sourceTree = "<group>"; };
 		0CFF25C948BA03E6AB0505B9 /* UITestMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestMode.swift; sourceTree = "<group>"; };
@@ -866,6 +870,7 @@
 		A8AA7C381C6B031392D2CF8D /* DailyActionResultCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionResultCard.swift; sourceTree = "<group>"; };
 		A8DA785FDEBFEB25AF04ECF5 /* WakeAnchorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeAnchorConfig.swift; sourceTree = "<group>"; };
 		A9135AB9785666485017DA2D /* NotificationRepromptBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRepromptBanner.swift; sourceTree = "<group>"; };
+		A92433E9D50DFCC64AE7CEAE /* WeekScoreStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekScoreStrip.swift; sourceTree = "<group>"; };
 		A97775C40E61B1F730B33BE0 /* HealthScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorer.swift; sourceTree = "<group>"; };
 		A9A065E46C9925CCA2364C4A /* PredictionVerdictEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionVerdictEngine.swift; sourceTree = "<group>"; };
 		AB16F524F28FEB59FDDE3039 /* OnboardingV2Foundation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Foundation.swift; sourceTree = "<group>"; };
@@ -913,6 +918,7 @@
 		BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScoreLiveActivityManager.swift; sourceTree = "<group>"; };
 		BD254B169AC9BC98F1E1D195 /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
 		BE3BD36EFDDFEC821C64F97A /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
+		BE7244DA472ECDA795E956D1 /* DayScoreDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayScoreDial.swift; sourceTree = "<group>"; };
 		BE727A3DE25980A4AFDEA71C /* View+WritingTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+WritingTools.swift"; sourceTree = "<group>"; };
 		BF86987B6B0814201D9BB63B /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		C012846D9977EE0DE8FB08B3 /* LiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewModel.swift; sourceTree = "<group>"; };
@@ -1665,6 +1671,7 @@
 			isa = PBXGroup;
 			children = (
 				326BB0C270274DBF4670B65F /* DataSourceBadge.swift */,
+				BE7244DA472ECDA795E956D1 /* DayScoreDial.swift */,
 				B511A21E5659E7FDA8E582CC /* DesignSystem.swift */,
 				076BF1861B9106B431D075CA /* DriverRowView.swift */,
 				04A1A7577FDD788EC8AF159A /* DSButton.swift */,
@@ -1956,6 +1963,7 @@
 				E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */,
 				70B4CCCF7296B9A2EBD59163 /* HomeConnectHealthView.swift */,
 				47115FCDE9548FC56A98AB3F /* HomeView.swift */,
+				0C90A1877CD7FC0A49780368 /* IntradayActivityCard.swift */,
 				9C103DBEF41101A1E3B27AEE /* LifeContextChipRow.swift */,
 				896F3809E01AA4E1779D608D /* MetricStripView.swift */,
 				8085E5E05DF400C5C89BD403 /* MorningCheckInView.swift */,
@@ -1968,6 +1976,7 @@
 				282D3653E910175FDBD29EF1 /* TodaysActionDetailView.swift */,
 				DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */,
 				EA3EC72063A5D64B85AC6C0D /* WeeklyReviewView.swift */,
+				A92433E9D50DFCC64AE7CEAE /* WeekScoreStrip.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -2772,6 +2781,7 @@
 				408EECE699B62EF323B235EE /* DataRetentionManager.swift in Sources */,
 				65AAFCC9DA75CF136E0273EC /* DataSourceBadge.swift in Sources */,
 				F4A13442C79E91FB21541A98 /* Date+Extensions.swift in Sources */,
+				7110152A605B1E3E353A94D8 /* DayScoreDial.swift in Sources */,
 				0DDD1543BCE148A06C8E0C1A /* DecisionPolicyEngine.swift in Sources */,
 				16BF4F8F5A8040A15D8FB396 /* DesignSystem.swift in Sources */,
 				8D031A75B4B18A3538CCA759 /* DeviceDetailView.swift in Sources */,
@@ -2852,6 +2862,7 @@
 				C32F33DB3DC285C1B4DD3364 /* IntentDataProvider.swift in Sources */,
 				4553DFCCCDD5E837A5297EBF /* IntentSnippetViews.swift in Sources */,
 				3A987E80E9734C1D0CD23CE6 /* InteractionEffectEngine.swift in Sources */,
+				66919F384108E16D406B98A6 /* IntradayActivityCard.swift in Sources */,
 				A5CE591CFFF4EFCCDFBF3E5C /* InviteFriendsView.swift in Sources */,
 				998878736810978EEBD3B819 /* JournalEntryView.swift in Sources */,
 				F6E5F4022A5ACBD8B2AED443 /* JournalStore.swift in Sources */,
@@ -3049,6 +3060,7 @@
 				4D14EF3B44C84A5E5E403904 /* WatchTheme.swift in Sources */,
 				7944FF10538CF4F0A50BFBBA /* WatchVerdict.swift in Sources */,
 				63468BB32A6196DAB7DBD87D /* WebExportViewModel.swift in Sources */,
+				6D56DDD4F546E8712975B8AD /* WeekScoreStrip.swift in Sources */,
 				DDE8252144F3179CC3950AC3 /* WeeklyBarChart.swift in Sources */,
 				2D9EE3826558B031153DEE41 /* WeeklyChallenge.swift in Sources */,
 				6A68FD891E963DD2DF66C8D8 /* WeeklyPatternAnalyzer.swift in Sources */,
@@ -3207,7 +3219,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 98;
+				CURRENT_PROJECT_VERSION = 99;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3226,7 +3238,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.90;
+				MARKETING_VERSION = 1.2.91;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3297,7 +3309,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 98;
+				CURRENT_PROJECT_VERSION = 99;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3310,7 +3322,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.90;
+				MARKETING_VERSION = 1.2.91;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

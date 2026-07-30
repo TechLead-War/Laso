@@ -198,6 +198,11 @@ extension LiveViewModel {
         var todayFlightsClimbed: Double = 0
         var todayMindfulMinutes: Double = 0
 
+        /// Today's active energy split into 24 hour buckets, index = hour of day.
+        /// Empty until the first intraday fetch lands; a populated array can still
+        /// hold zeros, which are real quiet hours and must be drawn as such.
+        var intradayActiveEnergy: [Double] = []
+
         var moveGoal: Double = 500
         var exerciseGoal: Double = 30
         var standGoal: Double = 12

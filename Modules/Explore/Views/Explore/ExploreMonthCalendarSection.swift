@@ -97,16 +97,31 @@ struct ExploreMonthCalendarSection: View, Equatable {
         }
     }
 
+    /// Title and one-line explainer sit above the month, because the month name
+    /// alone never said what the dials measured. The month keeps the chevrons on
+    /// its own row so the control stays next to the label it changes.
     private var header: some View {
-        HStack {
-            Text(monthAnchor.formatted(.dateTime.month(.wide).year()))
+        VStack(alignment: .leading, spacing: DS.space1) {
+            Text(Copy.Explore.monthCalendarTitle)
                 .font(DS.Typography.headline)
                 .foregroundStyle(AppColour.textPrimary)
-            Spacer()
-            HStack(spacing: 6) {
-                monthButton(step: -1, systemImage: "chevron.left", label: Copy.Explore.monthPrevious)
-                monthButton(step: 1, systemImage: "chevron.right", label: Copy.Explore.monthNext)
+
+            Text(Copy.Explore.monthCalendarSubtitle)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack {
+                Text(monthAnchor.formatted(.dateTime.month(.wide).year()))
+                    .font(DS.Typography.subheadlineMedium)
+                    .foregroundStyle(AppColour.textSecondary)
+                Spacer()
+                HStack(spacing: 6) {
+                    monthButton(step: -1, systemImage: "chevron.left", label: Copy.Explore.monthPrevious)
+                    monthButton(step: 1, systemImage: "chevron.right", label: Copy.Explore.monthNext)
+                }
             }
+            .padding(.top, DS.space1)
         }
     }
 
@@ -286,62 +301,6 @@ struct ExploreMonthCalendarSection: View, Equatable {
 /// parent's display list, where a `Canvas` needs a drawing surface of its own —
 /// 31 of those, each issuing 20 separate strokes, is what made this card the
 /// most expensive draw in the app. Same geometry, 2 strokes per dial instead of 20.
-private struct TickArc: Shape {
-    static let tickCount = 20
-
-    let range: Range<Int>
-
-    func path(in rect: CGRect) -> Path {
-        let centreX: Double = rect.width / 2
-        let centreY: Double = rect.height / 2
-        let inner: Double = rect.width * 0.30
-        let outer: Double = rect.width * 0.48
-
-        var path = Path()
-        for index in range {
-            let angle: Double = (Double(index) / Double(Self.tickCount)) * 2 * .pi - .pi / 2
-            let cosine: Double = cos(angle)
-            let sine: Double = sin(angle)
-            path.move(to: CGPoint(x: centreX + inner * cosine, y: centreY + inner * sine))
-            path.addLine(to: CGPoint(x: centreX + outer * cosine, y: centreY + outer * sine))
-        }
-        return path
-    }
-}
-
-/// A ring of ticks, filled in proportion to the day's score and tinted by its
-/// band. An empty dial means the day was never scored, which is a different
-/// thing from a low score and has to look different.
-private struct DayScoreDial: View {
-    let score: Int?
-
-    private static let tickStroke = StrokeStyle(lineWidth: 1.8, lineCap: .round)
-
-    private var litTickCount: Int {
-        guard let score else { return 0 }
-        let fraction = Double(score) / 100
-        let ticks = Int((Double(TickArc.tickCount) * fraction).rounded())
-        // A score outside 0...100 would build a reversed Range and trap.
-        return min(TickArc.tickCount, max(0, ticks))
-    }
-
-    var body: some View {
-        let lit = litTickCount
-        let tint: Color = score.map { DashboardViewModel.RecoveryState(score: $0).color } ?? AppColour.trackNeutral
-
-        // Disjoint ranges, so the two strokes never overlap and the result is
-        // pixel-identical to colouring each tick individually.
-        ZStack {
-            TickArc(range: lit..<TickArc.tickCount)
-                .stroke(AppColour.trackNeutral, style: Self.tickStroke)
-            if lit > 0 {
-                TickArc(range: 0..<lit)
-                    .stroke(tint, style: Self.tickStroke)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-}
 
 /// Lets a tapped day drive `.sheet(item:)`. A wrapper rather than a retroactive
 /// `Identifiable` on `Date`, which would apply to every date in the app.

@@ -629,6 +629,76 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
+    // MARK: - Intraday (one day, in time order)
+
+    /// One day split into fixed-width buckets in time order, `0` for a bucket
+    /// with no data. Nil only when the day is completely empty.
+    ///
+    /// 15 minutes by default, not an hour: at 24 buckets a day is six or seven
+    /// fat blocks and reads as a bar chart, where the same day at 96 buckets
+    /// reads as the trace it actually is. The query cost is the same one
+    /// statistics collection either way.
+    ///
+    /// Deliberately separate from `fetchHourlySamples` below rather than a
+    /// parameter on it. That one windows a rolling span from `Date()`, discards
+    /// zero-valued buckets, stacks several days onto the same hour-of-day, and
+    /// gives up under 12 populated hours. All four are right for a circadian
+    /// average and wrong for a single day: a quiet stretch is a real reading, and
+    /// an app opened at 7am legitimately has only the morning.
+    func fetchIntradayBuckets(
+        _ metric: HealthMetric,
+        on day: Date = Date(),
+        bucketMinutes: Int = 15
+    ) async -> [Double]? {
+        let config = HealthKitMetricRegistry.config(for: metric)
+        guard let quantityType = config.quantityType, bucketMinutes > 0 else { return nil }
+
+        let startDate = Date.cal.startOfDay(for: day)
+        guard let endDate = Date.cal.date(byAdding: .day, value: 1, to: startDate) else { return nil }
+
+        // Measured, never assumed 24 hours: the two DST days are 23 and 25 hours
+        // long, and a fixed count would drop or pad a bucket on exactly those days.
+        let bucketSeconds = Double(bucketMinutes) * 60
+        let bucketCount = max(1, Int((endDate.timeIntervalSince(startDate) / bucketSeconds).rounded()))
+
+        return await withCheckedContinuation { continuation in
+            var interval = DateComponents()
+            interval.minute = bucketMinutes
+
+            let query = HKStatisticsCollectionQuery(
+                quantityType: quantityType,
+                quantitySamplePredicate: HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate),
+                options: config.statisticsOption == .cumulativeSum ? .cumulativeSum : .discreteAverage,
+                // Midnight, so bucket boundaries land on the hours the axis labels.
+                anchorDate: startDate,
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, error in
+                guard let results, error == nil else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                var buckets = [Double](repeating: 0, count: bucketCount)
+                results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                    let raw = config.statisticsOption == .cumulativeSum
+                        ? statistics.sumQuantity()?.doubleValue(for: config.unit)
+                        : statistics.averageQuantity()?.doubleValue(for: config.unit)
+                    guard let raw else { return }
+                    let offset = statistics.startDate.timeIntervalSince(startDate)
+                    let index = Int(offset / bucketSeconds)
+                    guard buckets.indices.contains(index) else { return }
+                    buckets[index] = raw * config.valueScale
+                }
+
+                continuation.resume(returning: buckets.contains { $0 > 0 } ? buckets : nil)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
     // MARK: - Hourly Data (Circadian Analysis)
 
     func fetchHourlySamples(_ metric: HealthMetric, days: Int = 30) async -> [[Double]]? {

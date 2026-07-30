@@ -1719,16 +1719,24 @@ final class DashboardViewModel {
     /// One signal as it read on a past day, next to the baseline the scorer was
     /// using then.
     struct DaySignal: Identifiable {
+        /// Which side of the person's own usual the reading landed on. Nil when
+        /// the day stored no baseline, and for strain, which has none in this
+        /// model, so the card can stay silent rather than imply a comparison it
+        /// cannot make.
+        enum Usual { case above, atUsual, below }
+
         let title: String
-        /// The metric screen this row opens. Nil for strain, which is a derived
-        /// score rather than a recorded metric.
-        let metric: HealthMetric?
         let valueText: String
-        /// "12 ms below your usual", or "At your usual". Same wording as Home.
+        /// The row's second line, always present: the person's own usual as a
+        /// real number, or why there is not one, or the strain level word. One
+        /// slot for all three so a missing baseline cannot produce a
+        /// differently shaped row.
+        let subText: String
+        /// "12 ms below your usual", or "At your usual". No longer drawn: the
+        /// number opposite it says this now. Kept because it is what VoiceOver
+        /// reads, so the spoken direction comes from the same place the arrow does.
         let gapText: String
-        /// Where the reading sits inside the person's own recent range, for the
-        /// bar. Nil when there is no baseline to place it against.
-        let fraction: Double?
+        let usual: Usual?
 
         var id: String { title }
     }
@@ -1768,23 +1776,33 @@ final class DashboardViewModel {
                 continue
             }
             let baseline = snapshot?.baselines[metric]?.mean
+            let comparison = baseline.map {
+                Self.usualComparison(current: value, baseline: $0, unit: metric.unit)
+            }
             signals.append(DaySignal(
                 title: metric.displayName,
-                metric: metric,
                 valueText: Self.dayValueText(value, of: metric),
-                gapText: baseline.map { Self.gapToUsual(current: value, baseline: $0, unit: metric.unit) }
+                // Same formatter as the reading, so "48 ms" sits opposite
+                // "usual 44 ms" and "6h 23m" opposite "usual 7h 30m".
+                subText: baseline.map { Copy.Explore.dayUsualValue(Self.dayValueText($0, of: metric)) }
                     ?? Copy.Explore.dayNoBaseline,
-                fraction: baseline.map { Self.signalFraction(value: value, baseline: $0) }
+                gapText: comparison?.text ?? Copy.Explore.dayNoBaseline,
+                usual: comparison?.usual
             ))
         }
 
         if let strain = store.dailyStrain(on: dayStart) {
             signals.append(DaySignal(
                 title: Copy.Explore.dayStrainTitle,
-                metric: nil,
-                valueText: Copy.Explore.dayStrainValue(String(format: "%.1f", strain.strain), strain.level),
+                valueText: String(format: "%.1f", strain.strain),
+                // The store hands back the raw case name it persisted, so this
+                // printed "allOut" on a hard day. Rebuild the level from the
+                // number, the way ContentView and StrainDetailView already do.
+                // The store keeps returning the raw string on purpose: the
+                // illness check below matches it against raw case names.
+                subText: StrainLevel(strain: strain.strain).displayName,
                 gapText: Copy.Explore.dayStrainCaption,
-                fraction: min(1, max(0, strain.strain / StrainScorerConfig.strainScaleMax))
+                usual: nil
             ))
         }
 
@@ -1834,10 +1852,6 @@ final class DashboardViewModel {
     /// The reading placed on a bar that runs from half to one and a half times
     /// the person's own usual, so the bar answers "how far off was this" rather
     /// than pretending the metric has an absolute scale.
-    private static func signalFraction(value: Double, baseline: Double) -> Double {
-        guard baseline > 0 else { return 0.5 }
-        return min(1, max(0, (value / baseline - 0.5)))
-    }
 
     /// Clears the cached score history so the next access re-fetches from the store.
     @MainActor
@@ -2665,20 +2679,35 @@ final class DashboardViewModel {
     /// unit. A row that said only "Good" gave nothing to act on; a row that says
     /// "6 bpm above usual" does. Gaps under 3% read as at-usual, since a rounded
     /// "0 bpm above usual" is noise, not a finding.
-    static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
+    /// The sentence and the direction it describes, from one body. Both the 3%
+    /// deadband and the rounds-to-zero guard live here, so an arrow can never
+    /// point up on a row whose sentence reads "At your usual" — a sleep gap of
+    /// 0.4h clears the 3% floor and then rounds away, and a separately computed
+    /// direction would disagree exactly there.
+    static func usualComparison(
+        current: Double,
+        baseline: Double,
+        unit: String
+    ) -> (text: String, usual: DaySignal.Usual) {
         let gap = current - baseline
-        guard baseline > 0, abs(gap) / baseline >= 0.03 else { return Copy.Home.whyValueAtUsual }
+        guard baseline > 0, abs(gap) / baseline >= 0.03 else {
+            return (Copy.Home.whyValueAtUsual, .atUsual)
+        }
         // A gap that rounds away is at usual. On an hours metric the 3% floor
         // above still lets a 0.4 hour gap through, which printed the nonsense
         // "0 hrs below usual".
         let rounded = Int(abs(gap).rounded())
-        guard rounded > 0 else { return Copy.Home.whyValueAtUsual }
+        guard rounded > 0 else { return (Copy.Home.whyValueAtUsual, .atUsual) }
         let agreeing = (rounded == 1 && unit == HealthMetric.sleepDuration.unit)
             ? Copy.Home.unitHourSingular
             : unit
         return gap > 0
-            ? Copy.Home.whyValueAboveUsual(String(rounded), agreeing)
-            : Copy.Home.whyValueBelowUsual(String(rounded), agreeing)
+            ? (Copy.Home.whyValueAboveUsual(String(rounded), agreeing), .above)
+            : (Copy.Home.whyValueBelowUsual(String(rounded), agreeing), .below)
+    }
+
+    static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
+        usualComparison(current: current, baseline: baseline, unit: unit).text
     }
 
     /// Plain-English summary under the score as a bold heading + a lighter sub

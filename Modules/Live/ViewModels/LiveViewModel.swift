@@ -214,6 +214,7 @@ final class LiveViewModel {
         fetchTodayCumulativeStats()
         fetchActivityGoals()
         fetchTodayMindfulMinutes()
+        fetchIntradayActivity()
         fetchLatestWorkout()
         fetchLastNightSleep()
         // Pre-fetch latest vitals so Live tab has data immediately when opened
@@ -221,6 +222,18 @@ final class LiveViewModel {
         fetchFallbackBloodOxygen()
         fetchFallbackRespiratoryRate()
         refreshPlanner.markFullRefresh(at: now, state: &refreshState)
+    }
+
+    /// Today's active energy by hour, for the intraday chart on Home. Its own
+    /// task because it is a statistics-collection query over the whole day, far
+    /// heavier than the single-value reads around it, and nothing on screen
+    /// blocks on it.
+    private func fetchIntradayActivity() {
+        Task { [weak self] in
+            guard let self else { return }
+            guard let buckets = await healthKitManager.fetchIntradayBuckets(.activeCalories) else { return }
+            activity.intradayActiveEnergy = buckets
+        }
     }
 
     /// Tiered fetch. only queries data whose refresh interval has elapsed

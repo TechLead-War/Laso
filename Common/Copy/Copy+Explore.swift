@@ -51,6 +51,10 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_month_scored_days", default: "%1$d of %2$d days scored this month"), scored, total)
         }
 
+        /// The card carried only the month name, so nothing on screen said what
+        /// the ring in each cell actually measured.
+        static var monthCalendarTitle: String { RemoteConfigManager.shared.copyString("copy_explore_month_calendar_title", default: "Daily score") }
+        static var monthCalendarSubtitle: String { RemoteConfigManager.shared.copyString("copy_explore_month_calendar_subtitle", default: "One ring per day. Tap any day to see what drove it.") }
         static var monthPrevious: String { RemoteConfigManager.shared.copyString("copy_explore_month_previous", default: "Previous month") }
         static var monthNext: String { RemoteConfigManager.shared.copyString("copy_explore_month_next", default: "Next month") }
 
@@ -64,6 +68,11 @@ extension Copy {
         static var dayNoScoreHint: String { RemoteConfigManager.shared.copyString("copy_explore_day_no_score_hint", default: "Nothing was recorded, so there is nothing to score.") }
         static var daySignalsTitle: String { RemoteConfigManager.shared.copyString("copy_explore_day_signals_title", default: "What the score was built from") }
         static var dayNoBaseline: String { RemoteConfigManager.shared.copyString("copy_explore_day_no_baseline", default: "No usual to compare against yet") }
+        /// Stated once in the card header instead of once per row.
+        static var daySignalsQualifier: String { RemoteConfigManager.shared.copyString("copy_explore_day_signals_qualifier", default: "Vs your usual") }
+        static func dayUsualValue(_ value: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_usual_value", default: "usual %1$@"), value)
+        }
         static func dayValue(_ amount: String, _ unit: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_day_value", default: "%1$@ %2$@"), amount, unit)
         }
@@ -71,9 +80,6 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_day_hours_minutes", default: "%1$dh %2$dm"), hours, minutes)
         }
         static var dayStrainTitle: String { RemoteConfigManager.shared.copyString("copy_explore_day_strain_title", default: "Strain") }
-        static func dayStrainValue(_ amount: String, _ level: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_explore_day_strain_value", default: "%1$@ · %2$@"), amount, level)
-        }
         static var dayStrainCaption: String { RemoteConfigManager.shared.copyString("copy_explore_day_strain_caption", default: "How hard the day was on your body") }
         static func dayContext(_ name: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_explore_day_context", default: "You were marked %1$@ that day"), name)
