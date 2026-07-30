@@ -161,6 +161,10 @@ extension RemoteConfigManager {
         // Paywall.
         RC.paywallWatchRowsMax:               4 as NSNumber,
 
+        // Pre renewal reminder — OFF until the app actually charges.
+        RC.renewalReminderEnabled:            false as NSNumber,
+        RC.renewalReminderDaysBefore:         3     as NSNumber,
+
         // Referral program master switch.
         RC.referralProgramEnabled:            true as NSNumber,
 
@@ -365,6 +369,9 @@ extension RemoteConfigManager {
     // MARK: Referral
 
     var referralProgramEnabled: Bool           { bool(forKey: RC.referralProgramEnabled) }
+    var renewalReminderEnabled: Bool           { bool(forKey: RC.renewalReminderEnabled) }
+    /// Clamped so a bad console value cannot make the reminder permanent or dead.
+    var renewalReminderDaysBefore: Int         { min(14, max(1, int(forKey: RC.renewalReminderDaysBefore))) }
 
     // MARK: Notification timing
 

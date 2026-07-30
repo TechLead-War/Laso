@@ -135,6 +135,10 @@ enum AppKeys {
         /// fires a single time per cancellation rather than on every status
         /// refresh. Cleared when auto-renew is turned back on.
         static let cancelledSaveArmed = "laso.billing.cancelled_save_armed"
+
+        /// Day the pre renewal reminder was last shown. The reminder repeats daily
+        /// through the window, so this is a per-day gate, not a one-shot.
+        static let renewalReminderShownDate = "laso.billing.renewal_reminder_shown_date"
     }
 
     // MARK: - Readiness

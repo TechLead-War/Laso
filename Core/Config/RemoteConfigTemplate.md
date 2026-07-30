@@ -287,6 +287,8 @@ Consumer: `Modules/Paywall/Views/Subscription/PaywallView.swift`.
 | `paywall_variant` | String | `"control"` | A/B variant selector |
 | `paywall_show_yearly_default` | Bool | `true` | Pre-select yearly tier |
 | `referral_program_enabled` | Bool | `true` | Kill switch for the invite/referral program (Settings row, onboarding code step, share caption) |
+| `renewal_reminder_enabled` | Bool | `false` | Master switch for the pre renewal reminder sheet. Ships OFF because everyone currently has free access. Flip ON in the release that starts charging |
+| `renewal_reminder_days_before` | Int | `3` | How many days before renewal the reminder starts appearing daily. Clamped to 1–14 in code |
 
 ---
 

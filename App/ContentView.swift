@@ -46,12 +46,14 @@ struct ContentView: View {
         /// moving behind the sheet, and a card must not change under the user
         /// while they are choosing which one to post.
         case shareWin([ShareTemplate])
+        case renewalReminder(RenewalReminderStore.Reminder)
 
         var id: String {
             switch self {
-            case .pmfSurvey:    return "pmfSurvey"
-            case .journalEntry: return "journalEntry"
-            case .shareWin:     return "shareWin"
+            case .pmfSurvey:        return "pmfSurvey"
+            case .journalEntry:     return "journalEntry"
+            case .shareWin:         return "shareWin"
+            case .renewalReminder:  return "renewalReminder"
             }
         }
     }
@@ -92,9 +94,10 @@ struct ContentView: View {
         }
         .sheet(item: $rootSheet) { sheet in
             switch sheet {
-            case .pmfSurvey:               PMFSurveySheet()
-            case .journalEntry:            JournalEntryView()
-            case .shareWin(let templates): ShareWinSheet(templates: templates)
+            case .pmfSurvey:                    PMFSurveySheet()
+            case .journalEntry:                 JournalEntryView()
+            case .shareWin(let templates):      ShareWinSheet(templates: templates)
+            case .renewalReminder(let reminder): RenewalReminderSheet(reminder: reminder)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
@@ -169,9 +172,20 @@ struct ContentView: View {
             // a free-year user is expired at StoreKit but has full access, so no
             // cover is up and the survey is free to show.
             let paywallOwnsScreen = subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
-            if appStateStore.disclaimerAcknowledged,
-               !paywallOwnsScreen,
-               PMFSurveyManager.shared.shouldShowSurvey() {
+            guard appStateStore.disclaimerAcknowledged, !paywallOwnsScreen else { return }
+
+            // Billing before feedback: this is the only sheet the user loses money
+            // by missing, so it takes the single sheet slot ahead of the survey.
+            // Once per day through the window, which is why the day is stamped
+            // here rather than when the sheet closes — a force-quit before reading
+            // it must not re-raise it on the next launch the same day.
+            if let reminder = RenewalReminderStore.reminder(for: subscriptionManager) {
+                RenewalReminderStore.markShownToday()
+                rootSheet = .renewalReminder(reminder)
+                return
+            }
+
+            if PMFSurveyManager.shared.shouldShowSurvey() {
                 rootSheet = .pmfSurvey
             }
         }

@@ -31,6 +31,21 @@ extension Copy {
         static func trialDuration(_ days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_paywall_paywall_trial_duration", default: "%d-day free trial"), days) }
         static func afterTrial(_ price: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_paywall_paywall_after_trial", default: "After your free trial, you will be charged %@ automatically"), price) }
 
+        // MARK: - Pre Renewal Reminder
+
+        /// Auto-renew ON: the user does nothing and gets charged, so the useful
+        /// action is cancelling. Auto-renew OFF: access lapses unless they renew.
+        static var renewalChargeTitle: String { RemoteConfigManager.shared.copyString("copy_paywall_renewal_charge_title", default: "Renewing soon") }
+        static var renewalLapseTitle: String { RemoteConfigManager.shared.copyString("copy_paywall_renewal_lapse_title", default: "Your plan is ending") }
+        static func renewalChargeBody(date: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_paywall_renewal_charge_body", default: "Your Laso plan renews on %@. Cancel before then if you do not want to be charged."), date)
+        }
+        static func renewalLapseBody(date: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_paywall_renewal_lapse_body", default: "Your Laso plan ends on %@. Renew before then to keep your insights and history."), date)
+        }
+        static var renewalManageCTA: String { RemoteConfigManager.shared.copyString("copy_paywall_renewal_manage_cta", default: "Manage subscription") }
+        static var renewalDismissLabel: String { RemoteConfigManager.shared.copyString("copy_paywall_renewal_dismiss_label", default: "Close renewal reminder") }
+
         // MARK: - Legal Disclosure
 
         static var appleAutoRenewDisclosure: String { RemoteConfigManager.shared.copyString("copy_paywall_paywall_apple_auto_renew_disclosure", default: "Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your App Store account settings after purchase.") }

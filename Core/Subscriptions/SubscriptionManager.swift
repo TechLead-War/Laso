@@ -50,6 +50,23 @@ final class SubscriptionManager {
         return false
     }
 
+    /// Whether StoreKit says the active period will auto renew. Resolved on every
+    /// `refreshStatus` for trial and paid alike, and nil when StoreKit does not
+    /// surface renewal info (offline, no subscription) so callers can stay silent
+    /// rather than guess which way the charge will go.
+    private(set) var willAutoRenew: Bool?
+
+    /// When the current period ends: the first charge date on a trial, the next
+    /// charge date on a paid period. Nil in every other state, including grace,
+    /// where the date has already passed and means something different.
+    var renewalDate: Date? {
+        switch status {
+        case .trial(let expiration):          return expiration
+        case .subscribed(let expirationDate): return expirationDate
+        case .unknown, .billingGrace, .expired: return nil
+        }
+    }
+
     var isBillingGrace: Bool {
         if case .billingGrace = status { return true }
         return false
@@ -308,6 +325,11 @@ final class SubscriptionManager {
     // MARK: - Status Check
 
     func refreshStatus() async {
+        // Cleared up front so a lapsed or unknown state cannot keep serving the
+        // renewal flag resolved for a period that no longer exists. Only the
+        // active-entitlement branch below sets it again.
+        willAutoRenew = nil
+
         // The free-year Remote Config flag can flip on AFTER the win-back was
         // armed; retire the now-nonsense push the same way the purchase and
         // referral-unlock paths do. Guarded on the armed flag so a normal
@@ -341,6 +363,11 @@ final class SubscriptionManager {
                     // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
                     clearGraceState(resolved: true)
+                    // Resolved here rather than inside armCancelledSaveIfNeeded,
+                    // which skips trials: the renewal reminder needs the flag for
+                    // trial and paid alike to pick between "you will be charged"
+                    // and "your access ends".
+                    willAutoRenew = await autoRenewIsOn(for: transaction.productID)
                     await armCancelledSaveIfNeeded(productID: transaction.productID, expiration: expiration)
                     return
                 }

@@ -199,6 +199,16 @@ enum RC {
     /// Consumer: Modules/Onboarding/Views/Onboarding/OnboardingV2Screens14ToDone.swift
     static let paywallWatchRowsMax               = "paywall_watch_rows_max"
 
+    /// Master switch for the pre renewal reminder sheet. Ships OFF because every
+    /// user currently has free access, so there is no renewal to warn about.
+    /// Turn ON in the same release that starts charging.
+    /// Consumer: Core/Subscriptions/RenewalReminderStore.swift
+    static let renewalReminderEnabled            = "renewal_reminder_enabled"
+
+    /// How many days before the renewal date the reminder starts appearing.
+    /// Consumer: Core/Subscriptions/RenewalReminderStore.swift
+    static let renewalReminderDaysBefore         = "renewal_reminder_days_before"
+
     // MARK: Referral
     /// Kill switch for the whole invite/referral program (Settings row,
     /// onboarding code step, share caption). Consumer: ReferralManager.isEnabled.

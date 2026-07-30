@@ -132,6 +132,7 @@
 		453CF4EBF12D39DFD3D9A76B /* DailyActionResultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B65BB412118954AC2AAE5B1 /* DailyActionResultStore.swift */; };
 		4553DFCCCDD5E837A5297EBF /* IntentSnippetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3093926AEB4792FABA2F5AEF /* IntentSnippetViews.swift */; };
 		461D89EBFEF78B0790A417E2 /* SleepNeedConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2891C24C4BA8381331A31889 /* SleepNeedConfig.swift */; };
+		473CFC0642013549FCA628A0 /* RenewalReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F1752AB92977E7D27BD15C /* RenewalReminderStore.swift */; };
 		488ABDA144D7BD1039A5D655 /* RemoteConfigKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F7D6AF332CE6CD4E913AD7 /* RemoteConfigKeys.swift */; };
 		4896B12ADCAA10A33878E200 /* CardioRespiratoryAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3B13F4131F97D8A3453704 /* CardioRespiratoryAgeAnalyzer.swift */; };
 		493B2AF6902F42F27F875216 /* SubscriptionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */; };
@@ -333,6 +334,7 @@
 		AC0C2D59AC31DBD1448C3123 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67B7592107380119651070ED /* ThermalManager.swift */; };
 		AC1B988C899818A529C4BFF3 /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */; };
 		ADCC8276E83BA45210FA72F2 /* Collection+Statistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8E7B5211CE219A0C9E48C7 /* Collection+Statistics.swift */; };
+		AE45F590604BE1030EAA6D6B /* RenewalReminderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24E39D6511D29B1F53BF3E0 /* RenewalReminderSheet.swift */; };
 		AE6E38759529A4B54E74627F /* ModelEvaluationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F4C5F89FF047DDEFCF3CF8 /* ModelEvaluationStore.swift */; };
 		AE71ECA5DEB6241031B112FA /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6023E6422F4DC43D3171E1 /* WeeklyReviewViewModel.swift */; };
 		AF832D43060E793A960082FF /* SectionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B261CA79AE5F8EE731B0B35 /* SectionTracker.swift */; };
@@ -798,6 +800,7 @@
 		85C4DCA79B6E9E9EACDDDAE9 /* InsightFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightFactory.swift; sourceTree = "<group>"; };
 		86F0EEEF2E628CA7442A145B /* WeeklySummaryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklySummaryScheduler.swift; sourceTree = "<group>"; };
 		86FF3D33B2154ACB498EE0DD /* EngagementSequenceScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngagementSequenceScheduler.swift; sourceTree = "<group>"; };
+		87F1752AB92977E7D27BD15C /* RenewalReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalReminderStore.swift; sourceTree = "<group>"; };
 		87FAFA41F372622304B0AD74 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		88530F4B9515D8E0DD6C9FBF /* ShareableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableCard.swift; sourceTree = "<group>"; };
 		887387E802B2C4A4E0CDB340 /* DiscoveryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryEngine.swift; sourceTree = "<group>"; };
@@ -887,6 +890,7 @@
 		B15735738BDFA91C28F42354 /* FrequencyCapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrequencyCapManager.swift; sourceTree = "<group>"; };
 		B17EA97B4819C200C955CB4A /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
 		B196E886F79A91323B2778F8 /* FoundationModelTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelTools.swift; sourceTree = "<group>"; };
+		B24E39D6511D29B1F53BF3E0 /* RenewalReminderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalReminderSheet.swift; sourceTree = "<group>"; };
 		B31985DC9984558EDF16D01E /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
 		B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
 		B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownActivityAttributes.swift; sourceTree = "<group>"; };
@@ -1205,6 +1209,7 @@
 		1A8E2675F7AD2B6CBE866A57 /* Subscriptions */ = {
 			isa = PBXGroup;
 			children = (
+				87F1752AB92977E7D27BD15C /* RenewalReminderStore.swift */,
 				B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */,
 				67B1934E42EF4CB68C9C7390 /* SubscriptionManager.swift */,
 			);
@@ -1643,6 +1648,7 @@
 			isa = PBXGroup;
 			children = (
 				4AB6116F31543CD4B4E1CFAC /* PaywallView.swift */,
+				B24E39D6511D29B1F53BF3E0 /* RenewalReminderSheet.swift */,
 			);
 			path = Subscription;
 			sourceTree = "<group>";
@@ -2950,6 +2956,8 @@
 				F9CBD4D61DCD85555721832A /* RemoteConfigKeys.swift in Sources */,
 				C7D79CD9DC6D3923059DF163 /* RemoteConfigManager.swift in Sources */,
 				08CC2A1F3501BECC92DAB011 /* RemoteConfigSchema.swift in Sources */,
+				AE45F590604BE1030EAA6D6B /* RenewalReminderSheet.swift in Sources */,
+				473CFC0642013549FCA628A0 /* RenewalReminderStore.swift in Sources */,
 				66F6CD2480537BDEC62E96DE /* RepeatTimer.swift in Sources */,
 				4197F7A0127D9F6094E0B599 /* RepermissionScheduler.swift in Sources */,
 				9F8F672D77545C9D62769E7D /* ReportTemplate.swift in Sources */,
@@ -3199,7 +3207,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3218,7 +3226,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.89;
+				MARKETING_VERSION = 1.2.90;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3289,7 +3297,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3302,7 +3310,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.89;
+				MARKETING_VERSION = 1.2.90;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
