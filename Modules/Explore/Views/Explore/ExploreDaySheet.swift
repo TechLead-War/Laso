@@ -41,7 +41,8 @@ struct ExploreDaySheet: View {
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.exploreDaySheet, metadata: [
                 "has_score": detail.score != nil,
-                "signals_count": detail.signals.count
+                "signals_count": detail.signals.count,
+                "has_photo": MirrorPhotoStore.shared.hasPhoto(on: detail.date)
             ])
         }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.exploreDaySheet) }
@@ -82,6 +83,12 @@ struct ExploreDaySheet: View {
     private var mirrorPhoto: some View {
         if let photo = MirrorPhotoStore.shared.image(on: detail.date) {
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Open mirror photo",
+                    type: .mirrorPhotoOpened,
+                    screen: .exploreDaySheet,
+                    metadata: ["source": "explore_day"]
+                )
                 showFullPhoto = true
             } label: {
                 Image(uiImage: photo)

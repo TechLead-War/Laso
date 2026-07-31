@@ -65,12 +65,14 @@ struct MirrorSettingsView: View {
             titleVisibility: .visible
         ) {
             Button(Copy.Mirror.settingsDeleteAction, role: .destructive) {
+                let count = store.photoCount
                 do {
                     try store.deleteAll()
                     AppAnalytics.shared.trackBlockTap(
                         title: "Delete mirror archive",
                         type: .mirrorArchiveDeleted,
-                        screen: .settings
+                        screen: .settings,
+                        metadata: ["scope": "all", "photo_count": count]
                     )
                 } catch {
                     deleteFailed = true
@@ -88,6 +90,12 @@ struct MirrorSettingsView: View {
     private func delete(_ day: Date) {
         do {
             try store.delete(on: day)
+            AppAnalytics.shared.trackBlockTap(
+                title: "Delete mirror photo",
+                type: .mirrorArchiveDeleted,
+                screen: .settings,
+                metadata: ["scope": "single"]
+            )
         } catch {
             deleteFailed = true
         }

@@ -196,6 +196,12 @@ struct WeeklyReviewView: View {
                             ZStack {
                                 if let photo = store.image(on: day) {
                                     Button {
+                                        AppAnalytics.shared.trackBlockTap(
+                                            title: "Open mirror photo",
+                                            type: .mirrorPhotoOpened,
+                                            screen: .weeklyReview,
+                                            metadata: ["source": "weekly_strip"]
+                                        )
                                         mirrorFullPhoto = photo
                                     } label: {
                                         Image(uiImage: photo)

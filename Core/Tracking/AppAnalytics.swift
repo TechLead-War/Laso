@@ -136,6 +136,7 @@ enum BlockType: String {
     // Daily Mirror. user taps
     case mirrorCaptureStarted = "mirror_capture_started"
     case mirrorPhotoSaved = "mirror_photo_saved"
+    case mirrorPhotoOpened = "mirror_photo_opened"
     case mirrorArchiveDeleted = "mirror_archive_deleted"
 
     // Navigation
