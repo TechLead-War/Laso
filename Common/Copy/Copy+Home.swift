@@ -47,6 +47,22 @@ extension Copy {
         /// Same button once today's reminder time has gone by, so the reminder lands tomorrow. %@ is the clock time.
         static func nextUpRemindTomorrow(_ time: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_remind_tomorrow", default: "Remind tomorrow %@"), time) }
         static var nextUpReminderSet: String { RemoteConfigManager.shared.copyString("copy_home_next_up_reminder_set", default: "Reminder set") }
+        /// The merged life-context entry on the action card. Idle state.
+        static var nextUpContextPrompt: String { RemoteConfigManager.shared.copyString("copy_home_next_up_context_prompt", default: "Something going on today? Tell me") }
+        /// Active state. %@ is the context display name, e.g. "Unwell".
+        static func nextUpContextAdjusted(_ name: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_next_up_context_adjusted", default: "Adjusted for: %@ · change"), name)
+        }
+        /// Evening-anchored actions cannot honestly be completed in the morning,
+        /// so the done button waits and this line says why.
+        static var nextUpDoneTonightHint: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done_tonight_hint", default: "You can mark it done this evening.") }
+        /// The collapsed state after done. The card gives the slot back.
+        static var nextUpDoneLogged: String { RemoteConfigManager.shared.copyString("copy_home_next_up_done_logged", default: "Logged. It joins your record.") }
+        /// Shown when the advisor fell back to the generic default so standard
+        /// advice is never dressed as personal.
+        static var nextUpFallbackNote: String { RemoteConfigManager.shared.copyString("copy_home_next_up_fallback_note", default: "No strong signal today, so this is the standard suggestion.") }
+        /// Eyebrow after 6pm, when the instruction restates in the present tense.
+        static var nextUpHeaderTonight: String { RemoteConfigManager.shared.copyString("copy_home_next_up_header_tonight", default: "TONIGHT") }
 
         // MARK: - Data coverage
         //
@@ -67,6 +83,11 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_home_coverage_missing_hint", default: "%@ has sent nothing. Either it is switched off for Laso in the Health app, or your watch has not recorded it."), names)
         }
         static var coverageOpenSettings: String { RemoteConfigManager.shared.copyString("copy_home_coverage_open_settings", default: "Check Health settings") }
+        /// The one-line replacement for the coverage card, rendered inside the
+        /// score card and naming only signals the score actually uses.
+        static func coverageInlineMissing(_ names: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_coverage_inline_missing", default: "Not reading: %@. Tap to fix in the Health app."), names)
+        }
 
         // MARK: - Sleep bank
         //
@@ -239,6 +260,16 @@ extension Copy {
         static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Small steps add up.") }
         static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
         static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
+        /// The honest replacement for the n=1 next-morning delta: a plain fact
+        /// when the record is thin, so the card never claims causation from one
+        /// morning inside its own noise band.
+        static var dailyResultLogged: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_logged", default: "Done yesterday. Every completion builds your record.") }
+        /// Aggregated proof once there are at least three completions.
+        /// %1$d completions, %2$@ the measured payoff sentence fragment in a
+        /// borrowed unit, %3$d the window in weeks.
+        static func dailyResultAggregate(_ times: Int, _ payoff: String, _ weeks: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_aggregate", default: "Done %1$d times. %2$@, measured across your last %3$d weeks."), times, payoff, weeks)
+        }
 
         // Streak milestone: the one time offer to share a streak the user has
         // just crossed. Shown once per milestone, never again.
@@ -258,6 +289,13 @@ extension Copy {
         static func intradayAccessibility(_ calories: Int, _ peakHour: String) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_home_intraday_accessibility", default: "Active energy today, %1$d calories. Busiest hour %2$@."), calories, peakHour)
         }
+        /// The computed verdict under the calorie total: today against the
+        /// person's own typical day up to the same hour. Derived, never typed.
+        static var intradayVerdictAhead: String { RemoteConfigManager.shared.copyString("copy_home_intraday_verdict_ahead", default: "Ahead of your usual day by this hour") }
+        static var intradayVerdictBehind: String { RemoteConfigManager.shared.copyString("copy_home_intraday_verdict_behind", default: "Quieter than your usual day so far") }
+        static var intradayVerdictUsual: String { RemoteConfigManager.shared.copyString("copy_home_intraday_verdict_usual", default: "About your usual pace for this hour") }
+        /// Legend for the baseline overlay drawn behind today's ticks.
+        static var intradayUsualLegend: String { RemoteConfigManager.shared.copyString("copy_home_intraday_usual_legend", default: "Faint bars are your usual day") }
         static var weekStripAccessibility: String { RemoteConfigManager.shared.copyString("copy_home_week_strip_accessibility", default: "Your score for the last seven days. Opens the full month.") }
 
         // MARK: - Connection Status (Home empty state)

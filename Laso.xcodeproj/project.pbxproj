@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -127,7 +127,6 @@
 		4197F7A0127D9F6094E0B599 /* RepermissionScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC90DE6811B52871702E0082 /* RepermissionScheduler.swift */; };
 		41BEAF87E59F4FA27AB7CF6B /* OnbV2VitalityReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782A700090EE31E08EFC61CA /* OnbV2VitalityReveal.swift */; };
 		421D98FD3FAA63162014FC05 /* BaselineCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C23C83BB01D6AA8C14D39 /* BaselineCalculator.swift */; };
-		434DA19EBE79065B6D6994DE /* DataCoverageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */; };
 		44DA1A66B0D7D377CD111B03 /* HealthStateTimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5845E7295C458830CD703F4F /* HealthStateTimelineViewModel.swift */; };
 		453CF4EBF12D39DFD3D9A76B /* DailyActionResultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B65BB412118954AC2AAE5B1 /* DailyActionResultStore.swift */; };
 		4553DFCCCDD5E837A5297EBF /* IntentSnippetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3093926AEB4792FABA2F5AEF /* IntentSnippetViews.swift */; };
@@ -204,7 +203,6 @@
 		67DEE6237FAF6483F7381E29 /* HealthScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B01E70385C6E84A556B5C /* HealthScoreRing.swift */; };
 		69EFD9C3F372BCFA31F2CB28 /* AppColour.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A76DA46FCC55AB12B2B0E /* AppColour.swift */; };
 		6A3DB319DE6164B1DD14D3B5 /* DailyActionResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AA7C381C6B031392D2CF8D /* DailyActionResultCard.swift */; };
-		6A636CC08AF67DBB9F7E73D4 /* LifeContextChipRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C103DBEF41101A1E3B27AEE /* LifeContextChipRow.swift */; };
 		6A68FD891E963DD2DF66C8D8 /* WeeklyPatternAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB2ED13B08A1D698F5104A4 /* WeeklyPatternAnalyzer.swift */; };
 		6A6F6442958A6B981E7ACD5D /* MetricTimeSeries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58958683641A039F46621E11 /* MetricTimeSeries.swift */; };
 		6C8FE32C30ACD23F9094FFEE /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1D395AC63E530722B5F1FBF4 /* FirebaseMessaging */; };
@@ -258,7 +256,6 @@
 		82FC4578117A1D29DEA905A0 /* ReferralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B727ED1031D4D01216F07B67 /* ReferralManager.swift */; };
 		83B806C029BEE2C2FF1C3283 /* ScrollDepthTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45EC82D52BD96558ECDEAC3 /* ScrollDepthTracker.swift */; };
 		83CD8A0FAF5341781E380E81 /* CausalChainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FB1F0B6F65A579057550A9 /* CausalChainEngine.swift */; };
-		84427010C0992FC88B494C37 /* ActivationProgressBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */; };
 		84635AAE673CEB62AB76BF36 /* MenstrualCycleTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB0ECC498E15CAE9AC31BCB /* MenstrualCycleTracker.swift */; };
 		84914D0704052F0EFF3C6F05 /* TrendSparkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC58BA694A808A84C0C8BAB8 /* TrendSparkCard.swift */; };
 		84E2985505570173FA32A080 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C894749F24040044533EB /* CustomTabBar.swift */; };
@@ -309,7 +306,6 @@
 		9BF82D92464366C63B6BDE7C /* TodayWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC12905F26E546B850B843B /* TodayWorkoutView.swift */; };
 		9BF926DE244CA54BBE547898 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5DA07B12970B0A639D17AA4 /* WatchStore.swift */; };
 		9C103FBF9A80F879D1D6056C /* NutritionCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0DF92F32206A9FE3B6D7DC /* NutritionCorrelationAnalyzer.swift */; };
-		9C9C96923FA67B2919F2E2B8 /* CoachGreetingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E803B0AB14E3419329BA3FC7 /* CoachGreetingView.swift */; };
 		9CBF62DC542F7C0B2CFEC340 /* Copy+Vitality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E70023F46DBF3C93DD395AF /* Copy+Vitality.swift */; };
 		9D3F7E5F58CD51C63A5C6281 /* InsightCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E6BE3FD18FC543590A76EB /* InsightCoordinator.swift */; };
 		9DA3C3A567007ABBCB076834 /* LiveHeartRateSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E78C29DCF6A62EC4F927060 /* LiveHeartRateSection.swift */; };
@@ -638,7 +634,7 @@
 		2B9B4E13B3E0CBF33D986638 /* CorrelationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationDiscovery.swift; sourceTree = "<group>"; };
 		2BD5106A411BF786550CB911 /* BrainHealthDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainHealthDetailView.swift; sourceTree = "<group>"; };
 		2E09D3D7E71AA46E72FF86DA /* VitalityHeroSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityHeroSection.swift; sourceTree = "<group>"; };
-		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E766E483790D639837DE686 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		2E78C29DCF6A62EC4F927060 /* LiveHeartRateSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeartRateSection.swift; sourceTree = "<group>"; };
 		2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoUITests.swift; sourceTree = "<group>"; };
@@ -673,7 +669,7 @@
 		3DBF894D61F74B87706B9396 /* WakeUpTimeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeUpTimeDetector.swift; sourceTree = "<group>"; };
 		3E0FF72B5323F23F5726B0CD /* AnalysisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisEngine.swift; sourceTree = "<group>"; };
 		3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetView.swift; sourceTree = "<group>"; };
-		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		40D2A73BAF6AE0371B4C739E /* BiologicalAgeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalAgeConfig.swift; sourceTree = "<group>"; };
 		4110E401704451F4474260E9 /* StoredECGFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredECGFeatures.swift; sourceTree = "<group>"; };
 		42507233E471636899246378 /* BreathworkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkActivityAttributes.swift; sourceTree = "<group>"; };
@@ -848,7 +844,6 @@
 		9912F154DD8358499156979C /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		9B1126FDF9B9F9CB1B17EA3B /* WidgetStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStyle.swift; sourceTree = "<group>"; };
 		9B65BB412118954AC2AAE5B1 /* DailyActionResultStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionResultStore.swift; sourceTree = "<group>"; };
-		9C103DBEF41101A1E3B27AEE /* LifeContextChipRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeContextChipRow.swift; sourceTree = "<group>"; };
 		9CBCE5F0076403F1992FEF39 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		9DE80A834AB5919BB9C3D041 /* Copy+SleepCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+SleepCoach.swift"; sourceTree = "<group>"; };
 		9E19438F39FEFC8FE00D4532 /* Copy+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Live.swift"; sourceTree = "<group>"; };
@@ -915,7 +910,7 @@
 		B8B93DC233848DE7E3BBB185 /* LiveHeaderSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeaderSection.swift; sourceTree = "<group>"; };
 		B9918769144FC023D22876D2 /* DashboardSmartActionAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSmartActionAdvisor.swift; sourceTree = "<group>"; };
 		B9B08CAC0A2DCAEF1DA59114 /* ClinicalIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalIntelligence.swift; sourceTree = "<group>"; };
-		B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B9E92B1B223BE68464CEB46D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B9F5E64ACEE1256CDAA7ACF4 /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScoreLiveActivityManager.swift; sourceTree = "<group>"; };
 		BD254B169AC9BC98F1E1D195 /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
@@ -932,7 +927,6 @@
 		C2C7BCB77296C0CC52749362 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		C32AB04FCDD2E7672174903F /* TemporalSequenceMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporalSequenceMiner.swift; sourceTree = "<group>"; };
 		C331C892F45619F1CB08A11D /* WorkoutProgrammer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutProgrammer.swift; sourceTree = "<group>"; };
-		C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationProgressBanner.swift; sourceTree = "<group>"; };
 		C374B09C3F0ACBBEB5293079 /* LasoWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LasoWatch.entitlements; sourceTree = "<group>"; };
 		C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoWatchApp.swift; sourceTree = "<group>"; };
 		C3C2BDC454A62ECE1B1805CD /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
@@ -968,16 +962,15 @@
 		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
 		DBC01A4C868E156268F8F0A9 /* WatchComplicationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchComplicationCard.swift; sourceTree = "<group>"; };
-		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DD5FB10DF230EF3F82639ED0 /* RemoteConfigTemplate.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RemoteConfigTemplate.md; sourceTree = "<group>"; };
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
-		DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
 		DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
 		E020657065005DF616545BF6 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
-		E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCoverageCard.swift; sourceTree = "<group>"; };
 		E45EC82D52BD96558ECDEAC3 /* ScrollDepthTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDepthTracker.swift; sourceTree = "<group>"; };
 		E48A81F37075D7FBB01F687D /* MetricVerdict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricVerdict.swift; sourceTree = "<group>"; };
 		E4D82C406619CC236860AF7A /* StressMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressMonitorView.swift; sourceTree = "<group>"; };
@@ -985,7 +978,6 @@
 		E5CCB07634A6E96AA9A9D467 /* CoachActionIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachActionIntents.swift; sourceTree = "<group>"; };
 		E64C23C83BB01D6AA8C14D39 /* BaselineCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineCalculator.swift; sourceTree = "<group>"; };
 		E7DA3A23144BE59D58F6EF1A /* AppStoreReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreReviewManager.swift; sourceTree = "<group>"; };
-		E803B0AB14E3419329BA3FC7 /* CoachGreetingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGreetingView.swift; sourceTree = "<group>"; };
 		E82A6E1BC82AC5F7CBCB007D /* MetricLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricLogSheet.swift; sourceTree = "<group>"; };
 		E8BC791E520041885A5F9D66 /* RemoteConfigSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigSchema.swift; sourceTree = "<group>"; };
 		E8DBF7805661A86834CEC57A /* HealthFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthFocus.swift; sourceTree = "<group>"; };
@@ -1021,7 +1013,7 @@
 		FC809FB75555302A82EC9770 /* AppAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAnalytics.swift; sourceTree = "<group>"; };
 		FE09DF13E3BB3F60E42DE072 /* LifeContextStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeContextStore.swift; sourceTree = "<group>"; };
 		FE0DF92F32206A9FE3B6D7DC /* NutritionCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionCorrelationAnalyzer.swift; sourceTree = "<group>"; };
-		FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1958,16 +1950,12 @@
 		90523D2C30700CE8D1D88105 /* Home */ = {
 			isa = PBXGroup;
 			children = (
-				C36C37C5AFF4135B50C8E4AE /* ActivationProgressBanner.swift */,
 				AF90103772D95B1813B43297 /* AskDataOrbView.swift */,
 				16C8F3969F7703B5346324B8 /* AskYourDataView.swift */,
-				E803B0AB14E3419329BA3FC7 /* CoachGreetingView.swift */,
 				A8AA7C381C6B031392D2CF8D /* DailyActionResultCard.swift */,
-				E23A898E0CFACD84B3F11B10 /* DataCoverageCard.swift */,
 				70B4CCCF7296B9A2EBD59163 /* HomeConnectHealthView.swift */,
 				47115FCDE9548FC56A98AB3F /* HomeView.swift */,
 				0C90A1877CD7FC0A49780368 /* IntradayActivityCard.swift */,
-				9C103DBEF41101A1E3B27AEE /* LifeContextChipRow.swift */,
 				896F3809E01AA4E1779D608D /* MetricStripView.swift */,
 				8085E5E05DF400C5C89BD403 /* MorningCheckInView.swift */,
 				DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */,
@@ -2515,6 +2503,7 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					08AD24A007F4503B8999A065 = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -2535,6 +2524,7 @@
 						ProvisioningStyle = Automatic;
 					};
 					1B53013A9579B763C5987AD2 = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.watchos = {
@@ -2546,6 +2536,7 @@
 						};
 					};
 					2131E0565430F53E4EC2F615 = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -2554,6 +2545,7 @@
 						};
 					};
 					352EFC7934409A0E2B4A5ACE = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.watchos = {
@@ -2579,6 +2571,7 @@
 				525DEF767B88AE8AA4386F79 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5CC06B5893DD0C0D5077ECE7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -2664,7 +2657,6 @@
 				7A51132C40FC657213FDAE3F /* AchievementsView.swift in Sources */,
 				6586834C90CD59645EF0DAD4 /* AcknowledgementsView.swift in Sources */,
 				60961D5F02CE25196A84D3F9 /* ActionReminderScheduler.swift in Sources */,
-				84427010C0992FC88B494C37 /* ActivationProgressBanner.swift in Sources */,
 				B692F89E6CB4040A978A9BCB /* ActivationSequenceManager.swift in Sources */,
 				61B6FA04FBA9C66D8D37AC20 /* AdaptiveAnomalyDetector.swift in Sources */,
 				0901C78DEA61ADB1FEA001D3 /* AdherenceRecord.swift in Sources */,
@@ -2717,7 +2709,6 @@
 				4C30D582082F9E66CB5E66E1 /* ClinicalIntelligence.swift in Sources */,
 				A11FCCCCBB63FF89CBF82D6E /* CloudBackupManager.swift in Sources */,
 				13BBFB12EFF158D1B763D4CE /* CoachActionIntents.swift in Sources */,
-				9C9C96923FA67B2919F2E2B8 /* CoachGreetingView.swift in Sources */,
 				743F8528C3B10684039A018F /* CognitiveEnergyAnalyzer.swift in Sources */,
 				ADCC8276E83BA45210FA72F2 /* Collection+Statistics.swift in Sources */,
 				31B4B3B7CFEAB9AE1DE85069 /* CompoundInsightEngine.swift in Sources */,
@@ -2775,7 +2766,6 @@
 				C782912B245ACF19023C1CCC /* DashboardHousekeepingService.swift in Sources */,
 				C4B214F033824C67DA2327BB /* DashboardSmartActionAdvisor.swift in Sources */,
 				58E77E8DEC5160C9EA84EB75 /* DashboardViewModel.swift in Sources */,
-				434DA19EBE79065B6D6994DE /* DataCoverageCard.swift in Sources */,
 				408EECE699B62EF323B235EE /* DataRetentionManager.swift in Sources */,
 				65AAFCC9DA75CF136E0273EC /* DataSourceBadge.swift in Sources */,
 				F4A13442C79E91FB21541A98 /* Date+Extensions.swift in Sources */,
@@ -2867,7 +2857,6 @@
 				E6A753C685A967C27EC3CDDC /* LLMInsightGenerator.swift in Sources */,
 				78DC5B1E1326E6311B4C0D4B /* LasoApp.swift in Sources */,
 				3B190A5B104CB375424DE8BD /* LasoShortcutsProvider.swift in Sources */,
-				6A636CC08AF67DBB9F7E73D4 /* LifeContextChipRow.swift in Sources */,
 				81A5CFF6BB130BD0AC26A52C /* LifeContextStore.swift in Sources */,
 				B0FDB7774EBF898406B7FB4D /* LiveActivitySection.swift in Sources */,
 				3D4BDCF241FE565FD15F9F13 /* LiveBloodPressureTempSection.swift in Sources */,
@@ -3218,7 +3207,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 99;
+				CURRENT_PROJECT_VERSION = 100;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3237,7 +3226,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.91;
+				MARKETING_VERSION = 1.2.92;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3259,7 +3248,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				ENABLE_DEBUG_DYLIB = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -3308,7 +3297,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 99;
+				CURRENT_PROJECT_VERSION = 100;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3321,7 +3310,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.91;
+				MARKETING_VERSION = 1.2.92;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3338,7 +3327,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3364,7 +3353,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				ENABLE_DEBUG_DYLIB = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -3385,7 +3374,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3428,7 +3417,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;
@@ -3446,7 +3435,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3469,7 +3458,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3513,7 +3502,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;

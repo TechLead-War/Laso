@@ -1,29 +1,41 @@
 import Foundation
+import SwiftData
 import UserNotifications
 
 /// Journey 5: denied-branch re-permission.
 ///
 /// A user who reached onboarding with no health data (the journal-first branch)
-/// can still log morning check-ins. After three check-ins this fires ONE push
-/// that restates the user's OWN logged words from the stored prediction phrase,
+/// can still log journal entries. After three entries this fires ONE push that
+/// restates the user's OWN logged words from the stored prediction phrase,
 /// e.g. "You logged waking up tired 3 mornings, want to see if your sleep data
 /// explains it?". It never invents a hypothesis. A one-shot flag stops repeats.
+///
+/// The count moved off MorningCheckInManager when the morning check-in card was
+/// deleted (KEEP-KILL): journal entries are now the journal-first branch's only
+/// logging surface, so they are what proves the user felt their own pattern.
 enum RepermissionScheduler {
 
-    /// Minimum logged check-ins before the re-permission nudge is allowed to
-    /// fire. Three is enough for the user to feel their own pattern before we
-    /// offer to explain it with health data.
-    private static let requiredCheckIns = 3
+    /// Minimum logged journal entries before the re-permission nudge is allowed
+    /// to fire. Three is enough for the user to feel their own pattern before
+    /// we offer to explain it with health data (Journey 5 spec).
+    private static let requiredJournalEntries = 3
 
-    /// Fire the nudge if the user has logged enough check-ins and we have their
-    /// own words to quote. No-op when already fired, under the check-in bar, or
-    /// missing a stored prediction phrase. Safe to call on every refresh.
-    static func checkAndFire() {
+    /// Fire the nudge if the user has logged enough journal entries and we have
+    /// their own words to quote. No-op when already fired, under the entry bar,
+    /// or missing a stored prediction phrase. Safe to call on every refresh.
+    ///
+    /// `store` is nil on the background-refresh path, which has no data store
+    /// in hand; journal entries are written from foreground surfaces, so the
+    /// next foreground session (which always passes the store) re-evaluates
+    /// with nothing lost.
+    @MainActor
+    static func checkAndFire(store: HealthDataStore? = nil) {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: AppKeys.Prediction.repermissionFired) else { return }
 
-        let count = MorningCheckInManager.loadHistory().count
-        guard count >= requiredCheckIns else { return }
+        guard let context = store?.modelContainer?.mainContext,
+              let count = try? context.fetchCount(FetchDescriptor<StoredJournalEntry>()),
+              count >= requiredJournalEntries else { return }
 
         // The push must quote the user's own words; without a stored phrase there
         // is nothing honest to say, so stay silent rather than invent one.

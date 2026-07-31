@@ -1006,7 +1006,9 @@ struct ContentView: View {
         // not left waiting on the next background refresh. Both are cheap
         // one-shot no-ops once fired or when their preconditions are unmet.
         AnswerReadyScheduler.checkAndFire(store: NotificationManager.shared.store)
-        RepermissionScheduler.checkAndFire()
+        // The data store carries the journal entries the nudge now counts,
+        // since the morning check-in card it used to count was deleted.
+        RepermissionScheduler.checkAndFire(store: healthDataStore)
     }
 
     /// Gathers wellness-specific signals (Watch pair, data completeness, permissions)

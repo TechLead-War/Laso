@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — 05 Mission Control</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root{
+  --surfaceSunken:#E4E4EC; --surfaceBase:#EEEEF4; --surfaceRaised:#F8F8FB;
+  --surfaceElevated:#FCFCFD; --surfaceOverlay:#FEFEFF; --surfaceSubtle:#EAEAF1;
+  --textPrimary:#1B1B20; --textSecondary:#44444D; --textTertiary:#5B5B65;
+  --borderLow:#E0E0E8; --borderMedium:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --good:#0C7752; --warn:#8A6400; --bad:#C42B33;
+  --goodWash:rgba(12,119,82,.09); --warnWash:rgba(138,100,0,.09); --badWash:rgba(196,43,51,.09);
+  --goodEdge:rgba(12,119,82,.24); --warnEdge:rgba(138,100,0,.24); --badEdge:rgba(196,43,51,.24);
+  --cardShadow:0 1px 2px rgba(0,0,0,.12);
+  --cardBorder:1px solid var(--borderLow);
+  --hatch:rgba(91,91,101,.18);
+}
+[data-theme="dark"]{
+  --surfaceSunken:#08080A; --surfaceBase:#0F0F13; --surfaceRaised:#1B1B21;
+  --surfaceElevated:#26262D; --surfaceOverlay:#33333B; --surfaceSubtle:#17171C;
+  --textPrimary:#F2F2F6; --textSecondary:#C9C9D2; --textTertiary:#ADADB8;
+  --borderLow:#2E2E36; --borderMedium:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --good:#3DCC99; --warn:#E3B45A; --bad:#E05C64;
+  --goodWash:rgba(61,204,153,.13); --warnWash:rgba(227,180,90,.13); --badWash:rgba(224,92,100,.13);
+  --goodEdge:rgba(61,204,153,.30); --warnEdge:rgba(227,180,90,.30); --badEdge:rgba(224,92,100,.30);
+  --cardShadow:none;
+  --hatch:rgba(173,173,184,.20);
+}
+
+/* ============================================================
+   RESET + PAGE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  font-size:17px; line-height:1.35;
+  background:var(--surfaceSunken); color:var(--textPrimary);
+  -webkit-font-smoothing:antialiased;
+  display:flex; align-items:center; justify-content:center;
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  font-family:-apple-system,"SF Pro Rounded","SF Pro Display",system-ui,sans-serif;}
+
+/* phone frame */
+.phone{
+  width:100%; max-width:430px; height:100dvh; max-height:932px;
+  background:var(--surfaceBase); position:relative; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+@media (min-width:520px) and (min-height:700px){
+  body{background:#101014}
+  .phone{border-radius:44px; box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 10px #1c1c20;height:min(92dvh,880px)}
+}
+
+/* ============================================================
+   STATUS BAR
+   ============================================================ */
+.statusbar{
+  flex:0 0 auto; height:52px; padding:14px 24px 0;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  color:var(--textPrimary); font-size:15px; font-weight:600; letter-spacing:.01em;
+}
+.statusbar .sb-r{display:flex;align-items:center;gap:5px}
+.statusbar svg{display:block}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.hdr{
+  flex:0 0 auto; padding:2px 12px 10px;
+  display:flex; align-items:baseline; gap:8px;
+  border-bottom:1px solid transparent;
+  transition:border-color .2s, background .2s;
+}
+.hdr.stuck{border-bottom-color:var(--borderLow);background:var(--surfaceBase)}
+.hdr h1{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+
+/* ============================================================
+   SCROLL AREA
+   ============================================================ */
+.scroll{
+  flex:1 1 auto; overflow-y:auto; overflow-x:hidden;
+  padding:0 12px 24px; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar{display:none}
+.stack{display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.card{
+  background:var(--surfaceRaised); border:var(--cardBorder); box-shadow:var(--cardShadow);
+  border-radius:16px; padding:16px;
+}
+.card.hero{border-radius:24px;padding:18px 18px 14px}
+
+/* entrance */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.anim{animation:rise .34s cubic-bezier(.22,.9,.3,1) both}
+
+/* ============================================================
+   SECTION LABEL (inside board card)
+   ============================================================ */
+.grp{
+  font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--textTertiary); margin-bottom:10px;
+}
+.grp.mt{margin-top:16px;padding-top:16px;border-top:1px solid var(--borderLow)}
+
+/* ============================================================
+   ALERT RAIL (slot 0)
+   ============================================================ */
+.alert{
+  background:var(--surfaceRaised); border:1px solid var(--badEdge); box-shadow:var(--cardShadow);
+  border-left:4px solid var(--bad); border-radius:16px; padding:14px 16px;
+}
+.alert .a-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.alert .a-hd svg{flex:0 0 auto;color:var(--bad)}
+.alert .a-hd b{font-size:15px;font-weight:700;color:var(--bad);letter-spacing:-.01em}
+.alert p{font-size:17px;line-height:1.42;color:var(--textPrimary)}
+.alert .a-anchor{margin-top:8px;font-size:13px;line-height:1.4;color:var(--textTertiary)}
+
+/* ============================================================
+   HERO CLUSTER
+   ============================================================ */
+.cl-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cl-label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--textTertiary)}
+.badge{
+  font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--textSecondary); background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow); border-radius:9999px; padding:3px 8px;
+}
+.cl-row{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.cl-num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.verdict{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--g);
+}
+.verdict::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--g);flex:0 0 auto}
+
+/* hero band */
+.hband{margin-top:18px}
+.hb-tagrow{position:relative;height:15px;margin-bottom:7px}
+.hb-tag{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;
+  font-size:11px;font-weight:600;color:var(--textTertiary);letter-spacing:.02em}
+.hb-rail{position:relative;height:18px;border-radius:9999px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow);overflow:hidden}
+.hb-zone{position:absolute;top:0;bottom:0;background:var(--surfaceOverlay);
+  border:1px solid var(--borderMedium);border-radius:4px}
+[data-theme="dark"] .hb-zone{background:var(--surfaceElevated)}
+.hb-zone.ghost{background:transparent;
+  background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)}
+.hb-mark{position:absolute;top:-3px;bottom:-3px;width:5px;border-radius:3px;background:var(--g);
+  box-shadow:0 0 0 2px var(--surfaceRaised);transition:left .5s cubic-bezier(.22,.9,.3,1)}
+.hb-lab{position:relative;height:16px;margin-top:6px}
+.hb-lab span{position:absolute;top:0;font-size:11px;font-weight:600;color:var(--textTertiary);
+  transform:translateX(-50%);white-space:nowrap}
+.hb-note{margin-top:6px;font-size:12px;color:var(--textTertiary);line-height:1.35}
+
+/* contributor chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.chip{
+  font-size:13px;font-weight:600;color:var(--textSecondary);
+  background:var(--surfaceSubtle);border:1px solid var(--borderLow);
+  border-radius:9999px;padding:8px 12px;line-height:1.2;
+}
+.chip .cn{color:var(--textPrimary);font-variant-numeric:tabular-nums}
+
+/* action strip — the ONE instruction */
+.act{
+  margin-top:18px;padding-top:18px;border-top:1px solid var(--borderLow);
+  display:flex;gap:11px;align-items:flex-start;
+}
+.act-ico{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--primary);
+  color:#fff;display:flex;align-items:center;justify-content:center;margin-top:1px}
+[data-theme="dark"] .act-ico{color:#08080A}
+.act-body{flex:1 1 auto;min-width:0}
+.act-text{font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.3;color:var(--textPrimary)}
+.act-btns{display:flex;gap:8px;margin-top:12px}
+.btn{
+  min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--borderMedium);
+  background:var(--surfaceElevated);color:var(--textPrimary);
+  font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-.01em;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;
+  transition:transform 80ms ease-in,background .18s,border-color .18s;
+}
+.btn:active{transform:scale(.965);transition:transform 80ms ease-in}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+[data-theme="dark"] .btn.pri{color:#08080A}
+.btn:focus-visible,button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.remind{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.remind .rb{min-height:44px;padding:0 13px;border-radius:9999px;border:1px solid var(--borderLow);
+  background:var(--surfaceSubtle);color:var(--textSecondary);font-family:inherit;font-size:14px;
+  font-weight:600;cursor:pointer;display:inline-flex;align-items:center}
+.remind .rb:active{transform:scale(.96)}
+.act-note{margin-top:9px;font-size:13px;color:var(--good);font-weight:600}
+
+/* ============================================================
+   TILES — the rigid grid. Every tile reads identically.
+   ============================================================ */
+.tilerow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;padding-top:18px;
+  border-top:1px solid var(--borderLow)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{
+  background:var(--surfaceElevated);border:1px solid var(--borderLow);
+  border-left:3px solid var(--g);border-radius:12px;padding:12px 12px 11px;
+  min-width:0;
+}
+.tile.locked{--g:var(--borderMedium)}
+.t-label{font-size:12px;font-weight:600;color:var(--textTertiary);letter-spacing:.01em;
+  line-height:1.35;min-height:32px;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+.t-val{font-size:22px;font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-top:2px;white-space:nowrap}
+.tile.big .t-val{font-size:30px}
+.t-lock{font-size:15px;font-weight:600;color:var(--textTertiary);margin-top:5px;line-height:1.25}
+.t-verdict{font-size:13px;font-weight:700;color:var(--g);margin-top:8px;line-height:1.3;
+  display:flex;align-items:center;gap:5px}
+.t-verdict::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--g);flex:0 0 auto}
+.tile.locked .t-verdict{color:var(--textTertiary)}
+
+/* meter inside a tile */
+.meter{margin-top:10px}
+.m-rail{position:relative;height:8px;border-radius:9999px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow)}
+.m-band{position:absolute;top:-1px;bottom:-1px;background:var(--surfaceOverlay);
+  border:1px solid var(--borderMedium);border-radius:3px}
+[data-theme="dark"] .m-band{background:var(--surfaceOverlay)}
+.m-band.ghost{background:transparent;border-style:dashed;
+  background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)}
+.m-mark{position:absolute;top:-3px;bottom:-3px;width:4px;border-radius:2px;background:var(--g);
+  box-shadow:0 0 0 2px var(--surfaceElevated);transition:left .5s cubic-bezier(.22,.9,.3,1)}
+.m-anchor{height:15px;margin-top:5px;font-size:11px;font-weight:600;color:var(--textTertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* pin control */
+.pinbar{display:flex;align-items:center;justify-content:flex-start;margin-top:2px;margin-left:-10px}
+.iconbtn{
+  min-width:44px;min-height:44px;border-radius:12px;border:1px solid transparent;background:transparent;
+  color:var(--textTertiary);display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;padding:0 10px;
+  transition:transform 80ms ease-in,background .18s,color .18s;
+}
+.iconbtn:active{transform:scale(.95)}
+.iconbtn[aria-pressed="true"],.iconbtn.on{background:var(--surfaceSubtle);color:var(--textPrimary);border-color:var(--borderLow)}
+.pinpanel{margin-top:10px;padding:11px;border-radius:12px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow)}
+.pinpanel p{font-size:13px;color:var(--textSecondary);margin-bottom:9px}
+.pinchips{display:flex;flex-wrap:wrap;gap:7px}
+.pinchip{min-height:44px;padding:0 13px;border-radius:9999px;border:1px solid var(--borderLow);
+  background:var(--surfaceElevated);color:var(--textSecondary);font-family:inherit;font-size:14px;
+  font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  transition:transform 80ms ease-in}
+.pinchip:active{transform:scale(.96)}
+.pinchip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+[data-theme="dark"] .pinchip[aria-pressed="true"]{color:#08080A}
+
+/* ============================================================
+   CHART
+   ============================================================ */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.sec-hd h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.exp{
+  min-height:44px;min-width:44px;padding:0 4px 0 10px;border:none;background:transparent;cursor:pointer;
+  color:var(--textTertiary);display:inline-flex;align-items:center;gap:5px;
+  font-family:inherit;font-size:13px;font-weight:600;transition:transform 80ms ease-in
+}
+.exp:active{transform:scale(.95)}
+.exp svg{transition:transform .25s cubic-bezier(.22,.9,.3,1)}
+.exp[aria-expanded="true"] svg{transform:rotate(180deg)}
+.lead{font-size:16px;line-height:1.4;color:var(--textSecondary);margin:6px 0 10px}
+.lead b{color:var(--textPrimary);font-weight:700}
+.reflegend{display:flex;align-items:center;gap:7px;margin-bottom:9px;
+  font-size:11px;font-weight:700;color:var(--good);letter-spacing:.01em}
+.reflegend i{display:block;width:22px;height:0;border-top:2px dashed var(--good);flex:0 0 auto}
+.reflegend em{font-style:normal;display:block;width:16px;height:10px;border-radius:2px;
+  background:var(--goodWash);border:1px solid var(--goodEdge);flex:0 0 auto}
+.chartwrap{overflow-x:auto}
+svg.chart{display:block;width:100%;height:auto}
+.xlab{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;font-weight:600;color:var(--textTertiary)}
+.drawer{max-height:0;overflow:hidden;opacity:0;transition:max-height .3s cubic-bezier(.22,.9,.3,1),opacity .25s ease}
+.drawer.open{max-height:420px;opacity:1}
+.drawer-in{padding-top:14px;margin-top:14px;border-top:1px solid var(--borderLow)}
+
+/* ============================================================
+   PAST RESULTS
+   ============================================================ */
+.proof p{font-size:16px;line-height:1.45;color:var(--textSecondary)}
+.proof p b{color:var(--textPrimary);font-weight:700}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.foot{padding:4px 4px 0;display:flex;flex-direction:column;gap:10px}
+.foot-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.foot-meta{font-size:12px;color:var(--textTertiary)}
+.escape{
+  min-height:44px;padding:0 14px;border-radius:9999px;border:1px solid var(--borderMedium);
+  background:var(--surfaceRaised);color:var(--textSecondary);font-family:inherit;font-size:14px;
+  font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  transition:transform 80ms ease-in
+}
+.escape:active{transform:scale(.96)}
+.disclosure{font-size:12px;line-height:1.45;color:var(--textTertiary);padding:0 2px}
+
+/* ============================================================
+   RAW MODE
+   ============================================================ */
+.rawbanner{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;
+  background:var(--surfaceSubtle);border:1px solid var(--borderLow)}
+.rawbanner p{flex:1 1 auto;font-size:15px;font-weight:600;color:var(--textSecondary)}
+.rawlist{display:flex;flex-direction:column}
+.rawrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--borderLow)}
+.rawrow:last-child{border-bottom:none}
+.rawrow .rk{font-size:15px;color:var(--textSecondary)}
+.rawrow .rv{font-size:17px;font-weight:600;color:var(--textPrimary);font-variant-numeric:tabular-nums}
+
+/* ============================================================
+   SKELETON / EMPTY
+   ============================================================ */
+@keyframes shim{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
+.sk{background:var(--surfaceSubtle);border-radius:8px;animation:shim 1.5s ease-in-out infinite}
+.sk.r{border-radius:9999px}
+.empty-ico{width:44px;height:44px;border-radius:14px;background:var(--surfaceSubtle);
+  border:1px solid var(--borderLow);display:flex;align-items:center;justify-content:center;color:var(--textTertiary)}
+.empty h2{font-size:20px;font-weight:700;letter-spacing:-.01em;margin-top:12px}
+.empty p{font-size:15px;line-height:1.45;color:var(--textSecondary);margin-top:6px}
+
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+.tabbar{
+  flex:0 0 auto; display:flex; padding:8px 6px 22px;
+  background:var(--surfaceRaised);
+  background:color-mix(in srgb,var(--surfaceRaised) 82%,transparent);
+  backdrop-filter:saturate(180%) blur(22px); -webkit-backdrop-filter:saturate(180%) blur(22px);
+  border-top:1px solid var(--borderLow);
+}
+.tab{
+  flex:1 1 0;min-height:44px;border:none;background:transparent;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--textTertiary);font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.01em;
+  transition:transform 80ms ease-in,color .18s;border-radius:12px;
+}
+.tab:active{transform:scale(.94)}
+.tab[aria-current="page"]{color:var(--primary)}
+
+/* ============================================================
+   DEV TOOLBAR — not part of the design being judged
+   ============================================================ */
+.devbtn{
+  position:fixed;right:10px;bottom:96px;z-index:60;width:34px;height:34px;border-radius:9px;
+  border:1px solid rgba(140,140,150,.5);background:rgba(30,30,34,.82);color:#e9e9ee;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.devpanel{
+  position:fixed;right:10px;bottom:138px;z-index:60;width:206px;padding:10px;border-radius:10px;
+  border:1px solid rgba(140,140,150,.45);background:rgba(24,24,28,.96);color:#e9e9ee;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;
+  box-shadow:0 12px 30px rgba(0,0,0,.5);display:none;
+}
+.devpanel.open{display:block}
+.devpanel h3{font-size:9px;text-transform:uppercase;letter-spacing:.09em;opacity:.55;margin:8px 0 5px;font-weight:600}
+.devpanel h3:first-child{margin-top:0}
+.devrow{display:flex;flex-wrap:wrap;gap:4px}
+.devpanel button{
+  flex:1 1 auto;padding:6px 7px;border-radius:6px;border:1px solid rgba(150,150,160,.35);
+  background:rgba(255,255,255,.06);color:#e9e9ee;font-family:inherit;font-size:10px;cursor:pointer;
+}
+.devpanel button.on{background:#4DA3FF;border-color:#4DA3FF;color:#08080A;font-weight:700}
+.devpanel .note{margin-top:9px;opacity:.5;line-height:1.4;font-size:9px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <span class="num">9:41</span>
+    <span class="sb-r" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.2 4.1a10 10 0 0 1 13.6 0"/><path d="M3.7 6.9a6.3 6.3 0 0 1 8.6 0"/><path d="M6.2 9.6a2.6 2.6 0 0 1 3.6 0"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".6" y=".6" width="21" height="10.8" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2.2" y="2.2" width="15" height="7.6" rx="1.8" fill="currentColor"/><path d="M23.4 4.2v3.6a2.4 2.4 0 0 0 0-3.6z" fill="currentColor" fill-opacity=".45"/></svg>
+    </span>
+  </div>
+
+  <!-- HEADER -->
+  <header class="hdr" id="hdr"><h1>Today</h1></header>
+
+  <!-- SCROLL -->
+  <main class="scroll" id="scroll"><div class="stack" id="stack"></div></main>
+
+  <!-- TAB BAR -->
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab" aria-current="page" data-tab="Today">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="4.5" width="17.6" height="16" rx="4"/><path d="M3.2 9.3h17.6M8 2.8v3.4M16 2.8v3.4"/></svg>
+      Today
+    </button>
+    <button class="tab" data-tab="Live">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 12h3.6l2-5.4 3.2 11 2.4-7.2 1.6 3.4h5.9"/></svg>
+      Live
+    </button>
+    <button class="tab" data-tab="Explore">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M15.6 8.4l-2 5.2-5.2 2 2-5.2z"/></svg>
+      Explore
+    </button>
+    <button class="tab" data-tab="Settings">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.6 14.4a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.3 1.03z"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<!-- DEV TOOLBAR -->
+<button class="devbtn" id="devbtn" aria-label="Open prototype controls" aria-expanded="false">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+<div class="devpanel" id="devpanel" role="group" aria-label="Prototype controls">
+  <h3>Theme</h3>
+  <div class="devrow" id="dev-theme">
+    <button data-v="auto">Auto</button><button data-v="light">Light</button><button data-v="dark">Dark</button>
+  </div>
+  <h3>Data state</h3>
+  <div class="devrow" id="dev-data">
+    <button data-v="full">Watch</button><button data-v="iphone">iPhone only</button><button data-v="new">New user</button>
+  </div>
+  <div class="devrow" style="margin-top:4px">
+    <button data-v="loading" data-grp="data">Loading</button><button data-v="empty" data-grp="data">Empty</button>
+  </div>
+  <h3>Readiness</h3>
+  <div class="devrow" id="dev-level">
+    <button data-v="high">High</button><button data-v="medium">Moderate</button><button data-v="low">Low</button>
+  </div>
+  <p class="note">Readiness levels apply to the Watch state. Low also fires the body stress warning at slot 0.</p>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. STATE
+   ============================================================ */
+const S = {
+  theme:'auto', data:'full', level:'medium',
+  raw:false, pinMode:false, chartOpen:false,
+  pinned:['sleepNight','stepsYest'],
+  actionDone:false, remindOpen:false, remindSet:null
+};
+
+/* ============================================================
+   2. DATA — one fictional user, Alex 34.
+   Every tile carries its own comparison + verdict, so no tile
+   needs another number on the screen to be understood.
+   ============================================================ */
+const T = {
+  // ---- Watch, moderate morning (the default) ----
+  fullMedium:{
+    alert:null,
+    hero:{label:'Readiness', value:'62', verdict:'Moderate', grade:'warn',
+          min:30, max:95, bandLo:58, bandHi:74, mark:62, tag:'your usual'},
+    chips:['Sleep short <b class="cn">1h 28m</b>','Hard run Sunday'],
+    action:{text:'Keep today easy. Walk, not run.'},
+    tiles:{
+      sleepNight:{label:'Sleep last night', value:'6h 12m', verdict:'Under', grade:'warn',
+        min:240, max:600, bandLo:440, bandHi:480, mark:372, anchor:'7h 40m need'},
+      stepsYest:{label:'Steps yesterday', value:'8,400', verdict:'Goal met', grade:'good',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:8400, anchor:'7,000 goal'},
+      bedtime:{label:'Bedtime steadiness', value:'40 min', verdict:'Later than usual', grade:'warn',
+        min:0, max:90, bandLo:0, bandHi:30, mark:40, anchor:'within 30 min'},
+      sleepWeek:{label:'Sleep shortfall, last 5 nights', value:'4h 20m', verdict:'More than usual', grade:'warn',
+        min:0, max:8, bandLo:0, bandHi:3, mark:4.33, anchor:'usual up to 3h'},
+      rhr:{label:'Resting heart rate', value:'58 bpm', verdict:'Inside your usual', grade:'good',
+        min:44, max:72, bandLo:52, bandHi:59, mark:58, anchor:'usual 55'},
+      movement:{label:'Movement yesterday', value:'34 min', verdict:'Goal met', grade:'good',
+        min:0, max:75, bandLo:30, bandHi:60, mark:34, anchor:'30 min goal'}
+    },
+    chart:{title:'Last 14 nights', lead:'Most of last week ran short of your need.',
+      series:[474,444,486,456,468,432,450,480,438,414,438,396,420,372],
+      devMin:-140, devMax:45, min:0, max:540, bandLo:440, bandHi:480, ref:460, refLabel:'7h 40m need',
+      refLegend:'7h 40m need, give or take 20 min',
+      x:['oldest','last night'],
+      detailBtn:'Bedtime',
+      detailLead:'Your bedtime has slid later all week. The last seven nights sat 40 minutes past your usual on average.',
+      dots:[-10,5,-15,10,0,15,-5,25,30,35,40,45,50,55], dotBand:30, dotMax:60,
+      dotRef:'your usual 11:10 pm'},
+    proof:{text:'You have kept a day easy after a hard run <b>6 times</b>. Your readiness the next morning averaged <b>4 points</b> higher.'},
+    raw:[['Readiness','62'],['Heart rate variability','48 ms'],['Resting heart rate','58 bpm'],
+         ['Sleep last night','6h 12m'],['Bedtime','11:55 pm'],['Steps yesterday','8,400'],
+         ['Movement yesterday','34 min'],['Distance yesterday','6.1 km']]
+  },
+
+  // ---- Watch, strong morning ----
+  fullHigh:{
+    alert:null,
+    hero:{label:'Readiness', value:'78', verdict:'Optimal', grade:'good',
+          min:30, max:95, bandLo:58, bandHi:74, mark:78, tag:'your usual'},
+    chips:['Sleep on target <b class="cn">7h 52m</b>','Two easy days behind you'],
+    action:{text:'You have room for a hard session today.'},
+    tiles:{
+      sleepNight:{label:'Sleep last night', value:'7h 52m', verdict:'On target', grade:'good',
+        min:240, max:600, bandLo:440, bandHi:480, mark:472, anchor:'7h 40m need'},
+      stepsYest:{label:'Steps yesterday', value:'9,100', verdict:'Goal met', grade:'good',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:9100, anchor:'7,000 goal'},
+      bedtime:{label:'Bedtime steadiness', value:'2 min', verdict:'Inside your usual', grade:'good',
+        min:0, max:90, bandLo:0, bandHi:30, mark:2, anchor:'within 30 min'},
+      sleepWeek:{label:'Sleep shortfall, last 5 nights', value:'20 min', verdict:'Inside your usual', grade:'good',
+        min:0, max:8, bandLo:0, bandHi:3, mark:0.33, anchor:'usual up to 3h'},
+      rhr:{label:'Resting heart rate', value:'54 bpm', verdict:'Inside your usual', grade:'good',
+        min:44, max:72, bandLo:52, bandHi:59, mark:54, anchor:'usual 55'},
+      movement:{label:'Movement yesterday', value:'46 min', verdict:'Goal met', grade:'good',
+        min:0, max:75, bandLo:30, bandHi:60, mark:46, anchor:'30 min goal'}
+    },
+    chart:{title:'Last 14 nights', lead:'You have slept close to your need all week.',
+      series:[468,462,480,474,486,456,492,470,478,452,484,466,448,472],
+      devMin:-140, devMax:45, min:0, max:540, bandLo:440, bandHi:480, ref:460, refLabel:'7h 40m need',
+      refLegend:'7h 40m need, give or take 20 min',
+      x:['oldest','last night'],
+      detailBtn:'Bedtime',
+      detailLead:'Your bedtime has held steady all week. The last seven nights sat 2 minutes past your usual on average.',
+      dots:[-10,5,-15,10,0,15,-5,10,5,-10,0,5,-5,10], dotBand:30, dotMax:60,
+      dotRef:'your usual 11:10 pm'},
+    proof:{text:'You have trained hard on mornings like this <b>9 times</b>. Your readiness stayed inside your usual range afterwards <b>7 times</b>.'},
+    raw:[['Readiness','78'],['Heart rate variability','57 ms'],['Resting heart rate','54 bpm'],
+         ['Sleep last night','7h 52m'],['Bedtime','11:00 pm'],['Steps yesterday','9,100'],
+         ['Movement yesterday','46 min'],['Distance yesterday','6.8 km']]
+  },
+
+  // ---- Watch, low morning + body stress warning ----
+  fullLow:{
+    alert:{title:'Something changed in your body',
+      body:'Your resting heart rate has run 6 bpm above your usual for 3 mornings, and your sleep dropped over the same days.',
+      anchor:'This pattern is common after a hard week or the start of a cold. It is not an emergency, and it usually settles within a few days.'},
+    hero:{label:'Readiness', value:'41', verdict:'Low', grade:'bad',
+          min:30, max:95, bandLo:58, bandHi:74, mark:41, tag:'your usual'},
+    chips:['Sleep short <b class="cn">2h 05m</b>','Heart rate up 3 mornings'],
+    action:{text:'Rest today. A short walk is plenty.'},
+    tiles:{
+      sleepNight:{label:'Sleep last night', value:'5h 35m', verdict:'Well under', grade:'bad',
+        min:240, max:600, bandLo:440, bandHi:480, mark:335, anchor:'7h 40m need'},
+      stepsYest:{label:'Steps yesterday', value:'4,200', verdict:'Below your goal', grade:'warn',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:4200, anchor:'7,000 goal'},
+      bedtime:{label:'Bedtime steadiness', value:'52 min', verdict:'Later than usual', grade:'warn',
+        min:0, max:90, bandLo:0, bandHi:30, mark:52, anchor:'within 30 min'},
+      sleepWeek:{label:'Sleep shortfall, last 5 nights', value:'7h 39m', verdict:'Well over usual', grade:'bad',
+        min:0, max:9, bandLo:0, bandHi:3, mark:7.65, anchor:'usual up to 3h'},
+      rhr:{label:'Resting heart rate', value:'61 bpm', verdict:'Above your usual', grade:'bad',
+        min:44, max:72, bandLo:52, bandHi:59, mark:61, anchor:'usual 55'},
+      movement:{label:'Movement yesterday', value:'12 min', verdict:'Below your goal', grade:'warn',
+        min:0, max:75, bandLo:30, bandHi:60, mark:12, anchor:'30 min goal'}
+    },
+    chart:{title:'Last 14 nights', lead:'Every night this week came in under your need.',
+      series:[462,444,420,438,402,414,396,408,378,390,372,384,360,335],
+      devMin:-140, devMax:45, min:0, max:540, bandLo:440, bandHi:480, ref:460, refLabel:'7h 40m need',
+      refLegend:'7h 40m need, give or take 20 min',
+      x:['oldest','last night'],
+      detailBtn:'Bedtime',
+      detailLead:'Your bedtime has slid nearly an hour later. The last seven nights sat 52 minutes past your usual on average.',
+      dots:[10,15,20,25,30,35,40,45,50,55,50,55,55,55], dotBand:30, dotMax:60,
+      dotRef:'your usual 11:10 pm'},
+    proof:{text:'You have taken a rest day after mornings like this <b>4 times</b>. Your readiness came back inside your usual range within two days <b>3 times</b>.'},
+    raw:[['Readiness','41'],['Heart rate variability','39 ms'],['Resting heart rate','61 bpm'],
+         ['Sleep last night','5h 35m'],['Bedtime','12:05 am'],['Steps yesterday','4,200'],
+         ['Movement yesterday','12 min'],['Distance yesterday','3.0 km']]
+  },
+
+  // ---- iPhone only, no wearable ----
+  iphone:{
+    alert:null,
+    hero:{label:'Steps a day, this week', badge:'iPhone only', value:'8,100', verdict:'Goal met', grade:'good',
+          min:0, max:14000, bandLo:7000, bandHi:10000, mark:8100, tag:'your goal range',
+          note:'Based on movement only. Readiness needs heart and sleep data this phone cannot record.'},
+    chips:['Up <b class="cn">400</b> a day on last week','Walking pace steady'],
+    action:{text:'Add a 15 minute walk after lunch.'},
+    tiles:{
+      stepsYest:{label:'Steps yesterday', value:'8,400', verdict:'Goal met', grade:'good',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:8400, anchor:'7,000 goal'},
+      flights:{label:'Flights yesterday', value:'12', verdict:'Inside your usual', grade:'good',
+        min:0, max:22, bandLo:6, bandHi:14, mark:12, anchor:'usual 6 to 14'},
+      distance:{label:'Distance yesterday', value:'6.1 km', verdict:'Inside your usual', grade:'good',
+        min:0, max:11, bandLo:4.2, bandHi:7.5, mark:6.1, anchor:'usual 4.2 to 7.5 km'},
+      pace:{label:'Walking pace', value:'5.1 km/h', verdict:'Inside your usual', grade:'good',
+        min:3.5, max:6.5, bandLo:4.6, bandHi:5.4, mark:5.1, anchor:'usual 4.6 to 5.4'},
+      sleepNight:{label:'Sleep last night', locked:'Needs a wearable'},
+      rhr:{label:'Resting heart rate', locked:'Needs a wearable'}
+    },
+    chart:{title:'Last 14 days', lead:'You have walked past your goal on most days this week.',
+      series:[6800,7400,8100,6200,9000,7700,8600,7100,9400,6900,8200,7600,8900,8400],
+      devMin:-1400, devMax:3300, min:0, max:11000, bandLo:7000, bandHi:10000, ref:7000, refLabel:'7,000 goal',
+      refLegend:'7,000 to 10,000, your goal range',
+      x:['oldest','yesterday'],
+      detailBtn:'Weeks',
+      detailLead:'Your daily average moved up by 400 steps.',
+      weeks:[7700,8100]},
+    proof:{text:'You have added a lunchtime walk <b>8 times</b>. Your daily steps averaged <b>1,100</b> higher on those days.'},
+    raw:[['Steps yesterday','8,400'],['Steps a day, this week','8,100'],['Distance yesterday','6.1 km'],
+         ['Flights yesterday','12'],['Walking pace','5.1 km/h'],['Walking steadiness','OK'],
+         ['Sleep last night','not recorded'],['Resting heart rate','not recorded']]
+  },
+
+  // ---- Genuinely new: wearable on, no baselines yet ----
+  new:{
+    alert:null,
+    hero:{label:'Steps yesterday', badge:'Day 3', value:'8,100', verdict:'Goal met', grade:'good',
+          min:0, max:14000, bandLo:7000, bandHi:10000, mark:8100, tag:'general goal range', ghost:true,
+          note:'7,000 is the general goal. Your own usual range opens once you have 7 days recorded.'},
+    chips:['<b class="cn">2 of 7</b> days recorded','Readiness opens on day 7'],
+    action:{text:'Take a 20 minute walk today.'},
+    tiles:{
+      stepsToday:{label:'Steps today', value:'620', verdict:'Underway', grade:'good',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:620, anchor:'7,000 goal', ghost:true},
+      movement:{label:'Movement yesterday', value:'28 min', verdict:'Close to goal', grade:'good',
+        min:0, max:75, bandLo:30, bandHi:60, mark:28, anchor:'30 min goal', ghost:true},
+      stepsYest:{label:'Steps yesterday', value:'8,100', verdict:'Goal met', grade:'good',
+        min:0, max:14000, bandLo:7000, bandHi:10000, mark:8100, anchor:'7,000 goal', ghost:true},
+      sleepNight:{label:'Sleep last night', locked:'Opens after 7 nights'},
+      bedtime:{label:'Bedtime steadiness', locked:'Opens after 7 nights'},
+      rhr:{label:'Resting heart rate', locked:'Opens after 7 nights'}
+    },
+    chart:{title:'Last 14 days', lead:'Two full days recorded. The rest fills in as you go.',
+      series:[null,null,null,null,null,null,null,null,null,null,null,null,7400,8100],
+      devMin:-1400, devMax:3300, min:0, max:11000, bandLo:7000, bandHi:10000, ref:7000, refLabel:'7,000 goal',
+      refLegend:'7,000 to 10,000, the general goal range',
+      x:['oldest','yesterday'],
+      detailBtn:'What opens',
+      detailLead:'Sleep, bedtime and resting heart rate need 7 days before they can be compared to anything.',
+      unlock:[['Day 7','Sleep need, bedtime steadiness, resting heart rate'],
+              ['Day 14','Readiness, body stress warning'],
+              ['Day 30','Long range patterns']]},
+    proof:{text:'Nothing to compare yet. This slot fills in once you have repeated an action a few times.'},
+    raw:[['Steps today','620'],['Steps yesterday','8,100'],['Distance today','0.4 km'],
+         ['Movement yesterday','28 min'],['Sleep last night','6h 48m'],['Days recorded','3']]
+  }
+};
+
+const GROUPS = {
+  full:[{label:'Sleep', keys:['sleepNight','bedtime','sleepWeek']},
+        {label:'Movement and heart', keys:['stepsYest','movement','rhr']}],
+  iphone:[{label:'Movement', keys:['stepsYest','flights','distance','pace']},
+          {label:'Sleep and heart', keys:['sleepNight','rhr']}],
+  new:[{label:'Movement', keys:['stepsToday','movement','stepsYest']},
+       {label:'Sleep and heart', keys:['sleepNight','bedtime','rhr']}]
+};
+const PINNABLE = {
+  full:['sleepNight','stepsYest','bedtime','sleepWeek','rhr','movement'],
+  iphone:['stepsYest','flights','distance','pace'],
+  new:['stepsToday','movement','stepsYest']
+};
+const DEFAULT_PINS = {full:['sleepNight','stepsYest'], iphone:['stepsYest','flights'], new:['stepsToday','movement']};
+
+function scenario(){
+  if(S.data==='iphone') return T.iphone;
+  if(S.data==='new') return T.new;
+  return S.level==='high' ? T.fullHigh : S.level==='low' ? T.fullLow : T.fullMedium;
+}
+function famKey(){ return (S.data==='iphone'||S.data==='new') ? S.data : 'full'; }
+
+/* ============================================================
+   3. SMALL BUILDERS
+   ============================================================ */
+const GC = {good:'var(--good)', warn:'var(--warn)', bad:'var(--bad)'};
+const pct = (v,min,max)=> Math.max(0, Math.min(100, ((v-min)/(max-min))*100));
+
+function ico(name){
+  const p = {
+    check:'<path d="M4.5 12.5l5 5 10-11"/>',
+    bolt:'<path d="M13 2.5L4.5 13.5H11l-1 8 8.5-11H12z" stroke-linejoin="round"/>',
+    chev:'<path d="M6 9.5l6 6 6-6"/>',
+    pin:'<path d="M14.6 2.9l6.5 6.5-2.2 2.2-1.5-.4-3.5 3.5.5 3.5-1.7 1.7-8.3-8.3 1.7-1.7 3.5.5 3.5-3.5-.4-1.5z" stroke-linejoin="round"/><path d="M8.4 15.6L3.2 20.8"/>',
+    eye:'<path d="M1.8 12S5.5 5.2 12 5.2 22.2 12 22.2 12 18.5 18.8 12 18.8 1.8 12 1.8 12z"/><circle cx="12" cy="12" r="3"/>',
+    warn:'<path d="M12 3.6L1.9 20.4h20.2z" stroke-linejoin="round"/><path d="M12 9.6v4.6M12 17.2h.01"/>',
+    heart:'<path d="M12 20.5S3.4 15.2 3.4 9.4A4.9 4.9 0 0 1 12 6.2a4.9 4.9 0 0 1 8.6 3.2c0 5.8-8.6 11.1-8.6 11.1z" stroke-linejoin="round"/>'
+  }[name];
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${p}</svg>`;
+}
+
+/* one meter = one number's single reference range + its position */
+function meter(t){
+  const l = pct(t.bandLo,t.min,t.max), r = pct(t.bandHi,t.min,t.max);
+  const mk = pct(t.mark,t.min,t.max);
+  return `<div class="meter">
+    <div class="m-rail">
+      <div class="m-band${t.ghost?' ghost':''}" style="left:${l}%;width:${r-l}%"></div>
+      <div class="m-mark" style="left:calc(${mk}% - 2px)"></div>
+    </div>
+    <div class="m-anchor">${t.anchor}</div>
+  </div>`;
+}
+
+function tile(key, t, big){
+  if(!t) return '';
+  if(t.locked){
+    return `<div class="tile locked${big?' big':''}">
+      <div class="t-label">${t.label}</div>
+      <div class="t-lock">${t.locked}</div>
+      <div class="meter"><div class="m-rail"><div class="m-band ghost" style="left:0;width:100%"></div></div>
+      <div class="m-anchor"></div></div>
+      <div class="t-verdict">No verdict yet</div>
+    </div>`;
+  }
+  return `<div class="tile${big?' big':''}" style="--g:${GC[t.grade]}">
+    <div class="t-label">${t.label}</div>
+    <div class="t-val num">${t.value}</div>
+    ${meter(t)}
+    <div class="t-verdict">${t.verdict}</div>
+  </div>`;
+}
+
+/* ============================================================
+   4. SLOT RENDERERS
+   ============================================================ */
+function slotAlert(sc){
+  if(!sc.alert) return '';
+  return `<section class="alert anim" style="animation-delay:0ms" role="note">
+    <div class="a-hd">${ico('warn')}<b>${sc.alert.title}</b></div>
+    <p>${sc.alert.body}</p>
+    <p class="a-anchor">${sc.alert.anchor}</p>
+  </section>`;
+}
+
+function slotCluster(sc){
+  const h = sc.hero;
+  const l = pct(h.bandLo,h.min,h.max), r = pct(h.bandHi,h.min,h.max), mk = pct(h.mark,h.min,h.max);
+  const g = GC[h.grade];
+  const pins = S.pinned.filter(k=>sc.tiles[k]);
+  const pinnable = PINNABLE[famKey()];
+
+  const actBody = S.actionDone
+    ? `<div class="act-note">${ico('check')} Marked done. Nothing else to do.</div>`
+    : `<div class="act-btns">
+         <button class="btn pri" data-act="done">${ico('check')} Done</button>
+         <button class="btn" data-act="remind" aria-expanded="${S.remindOpen}">Remind me</button>
+       </div>
+       ${S.remindOpen?`<div class="remind">
+          <button class="rb" data-remind="in 2 hours">In 2 hours</button>
+          <button class="rb" data-remind="at 5 pm">At 5 pm</button>
+          <button class="rb" data-remind="tonight">Tonight</button>
+       </div>`:''}
+       ${S.remindSet?`<div class="act-note">${ico('check')} Reminder set ${S.remindSet}.</div>`:''}`;
+
+  return `<section class="card hero anim" style="animation-delay:40ms">
+    <div class="cl-top">
+      <div class="cl-label">${h.label}</div>
+      ${h.badge?`<span class="badge">${h.badge}</span>`:''}
+    </div>
+    <div class="cl-row">
+      <span class="cl-num num">${h.value}</span>
+      <span class="verdict" style="--g:${g}">${h.verdict}</span>
+    </div>
+    <div class="hband">
+      <div class="hb-tagrow"><span class="hb-tag" style="left:${((l+r)/2).toFixed(1)}%">${h.tag}</span></div>
+      <div class="hb-rail">
+        <div class="hb-zone${h.ghost?' ghost':''}" style="left:${l}%;width:${r-l}%"></div>
+        <div class="hb-mark" style="left:calc(${mk}% - 2px);--g:${g}"></div>
+      </div>
+      <div class="hb-lab">
+        <span style="left:${l}%">${h.bandLo.toLocaleString()}</span>
+        <span style="left:${r}%">${h.bandHi.toLocaleString()}</span>
+      </div>
+      ${h.note?`<p class="hb-note">${h.note}</p>`:''}
+    </div>
+
+    <div class="chips">${sc.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+
+    <div class="act">
+      <span class="act-ico" aria-hidden="true">${ico('bolt')}</span>
+      <div class="act-body">
+        <p class="act-text">${sc.action.text}</p>
+        ${actBody}
+      </div>
+    </div>
+
+    <div class="tilerow">
+      ${pins.map(k=>tile(k, sc.tiles[k], true)).join('')}
+    </div>
+    <div class="pinbar">
+      <button class="iconbtn ${S.pinMode?'on':''}" data-act="pin" aria-pressed="${S.pinMode}"
+        aria-label="Choose which two tiles are pinned here">${ico('pin')} Pinned</button>
+    </div>
+    ${S.pinMode?`<div class="pinpanel">
+      <p>Pick any two. The order of everything else on this screen never changes.</p>
+      <div class="pinchips">
+        ${pinnable.map(k=>`<button class="pinchip" data-pin="${k}" aria-pressed="${S.pinned.includes(k)}">${sc.tiles[k].label}</button>`).join('')}
+      </div>
+    </div>`:''}
+  </section>`;
+}
+
+function slotBoard(sc){
+  const groups = GROUPS[famKey()];
+  const body = groups.map((g,i)=>{
+    const keys = g.keys.filter(k=>!S.pinned.includes(k) && sc.tiles[k]);
+    if(!keys.length) return '';
+    return `<div class="grp${i>0?' mt':''}">${g.label}</div>
+      <div class="grid">${keys.map(k=>tile(k, sc.tiles[k])).join('')}</div>`;
+  }).join('');
+  if(!body.trim()) return '';
+  return `<section class="card anim" style="animation-delay:90ms">${body}</section>`;
+}
+
+function barChart(c){
+  // Distance from the one reference the card names. Zero line = that reference,
+  // shaded block = the personal goal range. Nothing else is drawn.
+  const W=343,H=132,PAD=10,n=c.series.length;
+  const step=(W-PAD*2)/(n-1);
+  const y = d => H*(c.devMax-d)/(c.devMax-c.devMin);
+  const y0=y(0), bTop=y(c.bandHi-c.ref), bBot=y(c.bandLo-c.ref);
+  let marks='';
+  c.series.forEach((v,i)=>{
+    const x=(PAD+i*step).toFixed(1);
+    if(v===null){
+      marks += `<circle cx="${x}" cy="${y0.toFixed(1)}" r="3" fill="none"
+        stroke="var(--borderMedium)" stroke-width="1.2" stroke-dasharray="1.6 1.6"/>`;
+      return;
+    }
+    const yv=y(v-c.ref).toFixed(1), last=i===n-1;
+    marks += `<line x1="${x}" y1="${y0.toFixed(1)}" x2="${x}" y2="${yv}"
+        stroke="var(--borderMedium)" stroke-width="2.6" stroke-linecap="round"/>`
+      + `<circle cx="${x}" cy="${yv}" r="${last?5.2:4}"
+        fill="${last?'var(--textPrimary)':'var(--textTertiary)'}"
+        ${last?'stroke="var(--surfaceRaised)" stroke-width="2"':''}/>`;
+  });
+  return `<div class="reflegend"><em></em><i></i>${c.refLegend}</div>
+  <div class="chartwrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="${c.title}, each point shown as its distance from ${c.refLabel}. The shaded block is your goal range and is the only reference drawn.">
+    <rect x="0" y="${bTop.toFixed(1)}" width="${W}" height="${(bBot-bTop).toFixed(1)}" fill="var(--goodWash)"/>
+    <line x1="0" y1="${bTop.toFixed(1)}" x2="${W}" y2="${bTop.toFixed(1)}" stroke="var(--goodEdge)" stroke-width="1"/>
+    <line x1="0" y1="${bBot.toFixed(1)}" x2="${W}" y2="${bBot.toFixed(1)}" stroke="var(--goodEdge)" stroke-width="1"/>
+    <line x1="0" y1="${y0.toFixed(1)}" x2="${W}" y2="${y0.toFixed(1)}" stroke="var(--good)" stroke-width="1.4" stroke-dasharray="4 3"/>
+    ${marks}
+  </svg></div>
+  <div class="xlab">${c.x.map(t=>`<span>${t}</span>`).join('')}</div>`;
+}
+
+function dotChart(c){
+  const W=343,H=96,PAD=4,n=c.dots.length;
+  const step=(W-PAD*2)/(n-1);
+  const y = v => H/2 + (v/c.dotMax)*(H/2-8); // later bedtime sits lower
+  const bandTop=y(-c.dotBand), bandBot=y(c.dotBand);
+  let dots='';
+  c.dots.forEach((v,i)=>{
+    const x=PAD+i*step, cy=y(v);
+    const out=Math.abs(v)>c.dotBand;
+    dots += `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="${i===n-1?4.6:3.4}"
+      fill="${out?'var(--warn)':'var(--textPrimary)'}"/>`;
+  });
+  return `<div class="reflegend"><em></em>${c.dotRef}, give or take 30 min</div>
+  <div class="chartwrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Bedtime against ${c.dotRef}, within 30 minutes either side. Later is lower.">
+    <rect x="0" y="${bandTop.toFixed(1)}" width="${W}" height="${(bandBot-bandTop).toFixed(1)}" fill="var(--goodWash)"/>
+    <line x1="0" y1="${(H/2).toFixed(1)}" x2="${W}" y2="${(H/2).toFixed(1)}" stroke="var(--good)" stroke-width="1.4" stroke-dasharray="4 3"/>
+    ${dots}
+  </svg></div>
+  <div class="xlab"><span>oldest</span><span>last night</span></div>`;
+}
+
+function weekBars(c){
+  const W=343,H=84;
+  const max=Math.max(...c.weeks)*1.25;
+  const bw=132;
+  let out='';
+  c.weeks.forEach((v,i)=>{
+    const h=(v/max)*H, x= i===0?4:W-bw-4;
+    out += `<rect x="${x}" y="${(H-h).toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="4"
+      fill="${i===1?'var(--textPrimary)':'var(--borderMedium)'}"/>
+      <text x="${x+10}" y="${(H-h+20).toFixed(1)}" font-size="15" font-weight="700"
+        fill="${i===1?'var(--surfaceRaised)':'var(--textPrimary)'}"
+        font-family="-apple-system,system-ui,sans-serif">${v.toLocaleString()}</text>`;
+  });
+  return `<div class="chartwrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="Last week ${c.weeks[0]} steps a day, this week ${c.weeks[1]}.">${out}</svg></div>
+    <div class="xlab"><span>last week</span><span>this week</span></div>`;
+}
+
+function slotChart(sc){
+  const c = sc.chart;
+  let detail = '';
+  if(c.dots) detail = `<p class="lead">${c.detailLead}</p>${dotChart(c)}`;
+  else if(c.weeks) detail = `<p class="lead">${c.detailLead}</p>${weekBars(c)}`;
+  else if(c.unlock) detail = `<p class="lead">${c.detailLead}</p>
+      <div class="rawlist">${c.unlock.map(u=>`<div class="rawrow"><span class="rk">${u[1]}</span><span class="rv">${u[0]}</span></div>`).join('')}</div>`;
+
+  return `<section class="card anim" style="animation-delay:140ms">
+    <div class="sec-hd">
+      <h2>${c.title}</h2>
+      <button class="exp" data-act="chart" aria-expanded="${S.chartOpen}" aria-controls="chart-drawer">
+        ${c.detailBtn} ${ico('chev')}
+      </button>
+    </div>
+    <p class="lead">${c.lead}</p>
+    ${barChart(c)}
+    <div class="drawer ${S.chartOpen?'open':''}" id="chart-drawer" aria-hidden="${!S.chartOpen}">
+      <div class="drawer-in">${detail}</div>
+    </div>
+  </section>`;
+}
+
+function slotProof(sc){
+  return `<section class="card proof anim" style="animation-delay:190ms">
+    <div class="grp">Past results</div>
+    <p>${sc.proof.text}</p>
+  </section>`;
+}
+
+function slotFooter(){
+  return `<div class="foot anim" style="animation-delay:230ms">
+    <div class="foot-row">
+      <span class="foot-meta">Updated just now</span>
+      <button class="escape" data-act="raw" aria-pressed="${S.raw}">
+        ${ico('eye')} ${S.raw?'Show verdicts':'Show raw numbers'}
+      </button>
+    </div>
+    <p class="disclosure">${S.raw
+      ? 'Values only, exactly as recorded. Nothing on this screen is being graded while scores are off.'
+      : 'Readiness is a directional summary of your sleep and heart signals over the last week, not a measurement. Every number here is compared with your own history, never with other people.'}</p>
+  </div>`;
+}
+
+/* ---- raw mode: scores off, no verdicts, no colour ---- */
+function renderRaw(sc){
+  const c = sc.chart;
+  const W=343,H=138,PAD=2,n=c.series.length,gap=4,bw=(W-PAD*2-gap*(n-1))/n;
+  const ry = v => H-(v-c.min)/(c.max-c.min)*H;
+  const rawBars = c.series.map((v,i)=>{
+    if(v===null) return '';
+    const x=PAD+i*(bw+gap);
+    return `<rect x="${x.toFixed(1)}" y="${ry(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(3,H-ry(v)).toFixed(1)}" rx="3" fill="var(--borderMedium)"/>`;
+  }).join('');
+  return `
+  <div class="rawbanner anim">
+    ${ico('eye')}<p>Scores and verdicts are off.</p>
+  </div>
+  <section class="card anim" style="animation-delay:40ms">
+    <div class="grp">Recorded values</div>
+    <div class="rawlist">
+      ${sc.raw.map(r=>`<div class="rawrow"><span class="rk">${r[0]}</span><span class="rv num">${r[1]}</span></div>`).join('')}
+    </div>
+  </section>
+  <section class="card anim" style="animation-delay:90ms">
+    <div class="grp">${c.title}</div>
+    <div class="chartwrap"><svg class="chart" viewBox="0 0 343 138" role="img" aria-label="${c.title}, values only, no reference range.">${rawBars}</svg></div>
+    <div class="xlab">${c.x.map(s=>`<span>${s}</span>`).join('')}</div>
+  </section>
+  ${slotFooter()}`;
+}
+
+/* ---- loading ---- */
+function renderLoading(){
+  const skTile = `<div class="tile" style="--g:var(--borderLow)">
+      <div class="sk" style="height:12px;width:62%"></div>
+      <div class="sk" style="height:26px;width:48%;margin-top:8px"></div>
+      <div class="sk r" style="height:8px;width:100%;margin-top:12px"></div>
+      <div class="sk" style="height:11px;width:44%;margin-top:8px"></div>
+    </div>`;
+  return `
+  <section class="card hero anim">
+    <div class="sk" style="height:12px;width:34%"></div>
+    <div class="sk" style="height:32px;width:52%;margin-top:10px"></div>
+    <div class="sk r" style="height:14px;width:100%;margin-top:16px"></div>
+    <div class="sk" style="height:11px;width:30%;margin-top:9px"></div>
+    <div class="sk r" style="height:30px;width:100%;margin-top:16px"></div>
+    <div class="sk" style="height:1px;width:100%;margin-top:16px"></div>
+    <div class="sk" style="height:17px;width:76%;margin-top:16px"></div>
+    <div class="sk r" style="height:44px;width:100%;margin-top:12px"></div>
+    <div class="tilerow">${skTile}${skTile}</div>
+  </section>
+  <section class="card anim" style="animation-delay:80ms">
+    <div class="sk" style="height:12px;width:22%;margin-bottom:12px"></div>
+    <div class="grid">${skTile}${skTile}</div>
+  </section>
+  <section class="card anim" style="animation-delay:140ms">
+    <div class="sk" style="height:17px;width:40%"></div>
+    <div class="sk" style="height:138px;width:100%;margin-top:14px;border-radius:12px"></div>
+  </section>
+  <p class="disclosure" style="padding:8px 4px">Reading your last 14 days from Health. This takes a few seconds.</p>`;
+}
+
+/* ---- empty ---- */
+function renderEmpty(){
+  const lockTile = lbl => `<div class="tile locked">
+      <div class="t-label">${lbl}</div>
+      <div class="t-lock">Not connected</div>
+      <div class="meter"><div class="m-rail"><div class="m-band ghost" style="left:0;width:100%"></div></div><div class="m-anchor"></div></div>
+      <div class="t-verdict">No verdict yet</div>
+    </div>`;
+  return `
+  <section class="card hero empty anim">
+    <div class="empty-ico">${ico('heart')}</div>
+    <h2>Health is not connected</h2>
+    <p>Laso reads steps, sleep and heart data from Health on this phone. Nothing leaves the device.</p>
+    <div class="act-btns" style="margin-top:14px">
+      <button class="btn pri" data-act="connect">Connect Health</button>
+    </div>
+    <div class="tilerow">${lockTile('Sleep last night')}${lockTile('Steps yesterday')}</div>
+  </section>
+  <section class="card anim" style="animation-delay:80ms">
+    <div class="grp">Sleep</div>
+    <div class="grid">${lockTile('Bedtime steadiness')}${lockTile('Sleep shortfall, last 5 nights')}</div>
+    <div class="grp mt">Movement and heart</div>
+    <div class="grid">${lockTile('Movement yesterday')}${lockTile('Resting heart rate')}</div>
+  </section>
+  <p class="disclosure" style="padding:8px 4px">The layout above is exactly what you will see once data arrives. Nothing moves, the blanks fill in.</p>`;
+}
+
+/* ============================================================
+   5. RENDER
+   ============================================================ */
+function render(){
+  const stack = document.getElementById('stack');
+  if(S.data==='loading'){ stack.innerHTML = renderLoading(); paintDev(); return; }
+  if(S.data==='empty'){ stack.innerHTML = renderEmpty(); paintDev(); return; }
+
+  const sc = scenario();
+  // keep pins valid for the current data family
+  const allowed = PINNABLE[famKey()];
+  if(!S.pinned.every(k=>allowed.includes(k))) S.pinned = DEFAULT_PINS[famKey()].slice();
+
+  stack.innerHTML = S.raw
+    ? renderRaw(sc)
+    : slotAlert(sc) + slotCluster(sc) + slotBoard(sc) + slotChart(sc) + slotProof(sc) + slotFooter();
+  paintDev();
+}
+
+function applyTheme(){
+  const dark = S.theme==='dark' || (S.theme==='auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+}
+
+/* ============================================================
+   6. EVENTS
+   ============================================================ */
+document.getElementById('stack').addEventListener('click', e=>{
+  const pinBtn = e.target.closest('[data-pin]');
+  if(pinBtn){
+    const k = pinBtn.dataset.pin;
+    if(!S.pinned.includes(k)) S.pinned = [S.pinned[1], k];
+    render(); return;
+  }
+  const rem = e.target.closest('[data-remind]');
+  if(rem){ S.remindSet = rem.dataset.remind; S.remindOpen=false; render(); return; }
+
+  const b = e.target.closest('[data-act]');
+  if(!b) return;
+  switch(b.dataset.act){
+    case 'done':    S.actionDone = true; S.remindOpen=false; break;
+    case 'remind':  S.remindOpen = !S.remindOpen; break;
+    case 'pin':     S.pinMode = !S.pinMode; break;
+    case 'chart':   S.chartOpen = !S.chartOpen; break;
+    case 'raw':     S.raw = !S.raw; break;
+    case 'connect': S.data='loading'; render(); setTimeout(()=>{S.data='full'; render();}, 1600); return;
+  }
+  render();
+});
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.removeAttribute('aria-current'));
+    t.setAttribute('aria-current','page');
+  });
+});
+
+const scroller = document.getElementById('scroll');
+scroller.addEventListener('scroll', ()=>{
+  document.getElementById('hdr').classList.toggle('stuck', scroller.scrollTop > 6);
+}, {passive:true});
+
+/* dev toolbar */
+const devPanel = document.getElementById('devpanel');
+const devBtn = document.getElementById('devbtn');
+devBtn.addEventListener('click', ()=>{
+  const open = devPanel.classList.toggle('open');
+  devBtn.setAttribute('aria-expanded', String(open));
+});
+function devWire(id, key, after){
+  document.getElementById(id).addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    S[key] = b.dataset.v; if(after) after(); render();
+  });
+}
+devWire('dev-theme','theme', applyTheme);
+devWire('dev-data','data', ()=>{ S.raw=false; S.pinMode=false; S.actionDone=false; S.remindSet=null; S.remindOpen=false; S.chartOpen=false; });
+devWire('dev-level','level');
+document.querySelectorAll('[data-grp="data"]').forEach(b=>{
+  b.addEventListener('click', ()=>{ S.data=b.dataset.v; S.raw=false; render(); });
+});
+function paintDev(){
+  const map = {'dev-theme':'theme','dev-data':'data','dev-level':'level'};
+  Object.entries(map).forEach(([id,key])=>{
+    document.querySelectorAll('#'+id+' button').forEach(b=> b.classList.toggle('on', S[key]===b.dataset.v));
+  });
+  document.querySelectorAll('[data-grp="data"]').forEach(b=> b.classList.toggle('on', S.data===b.dataset.v));
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(S.theme==='auto') applyTheme(); });
+
+applyTheme();
+render();
+</script>
+</body>
+</html>

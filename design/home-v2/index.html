@@ -1,0 +1,148 @@
+<title>Laso Home Screen v2 — concepts</title>
+<style>
+:root{--bg:#EEEEF4;--card:#F8F8FB;--tx:#1B1B20;--tx2:#44444D;--tx3:#5B5B65;--bd:#E0E0E8;--ac:#0064CC}
+@media(prefers-color-scheme:dark){:root{--bg:#0F0F13;--card:#1B1B21;--tx:#F2F2F6;--tx2:#C9C9D2;--tx3:#ADADB8;--bd:#2E2E36;--ac:#4DA3FF}}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 20px 80px;background:var(--bg);color:var(--tx);
+font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+.sub{color:var(--tx3);font-size:17px;margin:0 0 28px;max-width:70ch;line-height:1.5}
+.docs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px}
+.docs a{font-size:13px;font-weight:600;text-decoration:none;color:var(--ac);
+background:var(--card);border:1px solid var(--bd);border-radius:9999px;padding:8px 14px}
+.hero.before{border-color:#8A6400}
+.tag.before{color:#E3B45A}
+.hero{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--bd);
+border-radius:24px;padding:24px;margin-bottom:36px;display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:center}
+.hero img{width:100%;border-radius:16px;border:1px solid var(--bd)}
+.hero h2{margin:0 0 8px;font-size:26px;letter-spacing:-.01em}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+color:var(--ac);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{position:relative;display:block;text-decoration:none;color:inherit;background:var(--card);
+border:1px solid var(--bd);border-radius:20px;overflow:hidden;transition:transform .18s ease}
+.card:hover{transform:translateY(-3px)}
+.card img{width:100%;display:block;border-bottom:1px solid var(--bd);background:#000}
+.rank{position:absolute;top:12px;left:12px;font-size:12px;font-weight:700;background:rgba(0,0,0,.62);
+color:#fff;border-radius:9999px;padding:4px 10px}
+.body{padding:16px 18px 18px}
+.card h2{margin:0 0 8px;font-size:19px;letter-spacing:-.01em}
+.card p{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--tx2)}
+.counts{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.links{margin-top:12px;display:flex;justify-content:space-between;font-size:13px;color:var(--ac);font-weight:600}
+.links em{font-style:normal;color:var(--tx3);font-weight:400}
+@media(max-width:700px){.hero.before{border-color:#8A6400}
+.tag.before{color:#E3B45A}
+.hero{grid-template-columns:1fr}}
+</style>
+<div class="wrap">
+<h1>Laso Home Screen, rebuilt from scratch</h1>
+<p class="sub">Ten concepts from one research brief, judged on four independent lenses. Every prototype is a single self-contained file. Open any one and use the control in the corner to switch theme, data state and day type.</p>
+<div class="docs">
+<a href="research/DESIGN-BRIEF.md">Design brief</a>
+<a href="research/current-home-critique.md">Critique of the current screen</a>
+<a href="RECOMMENDATION.md">Recommendation</a>
+<a href="FINAL-home.md">Final design notes</a>
+<a href="research/apps-recovery-wearables.md">Wearables teardown</a>
+<a href="research/apps-platform-mass-market.md">Platform apps teardown</a>
+<a href="research/apps-niche-behavioral.md">Niche apps teardown</a>
+<a href="research/ux-research.md">UX research</a>
+<a href="research/psychology-research.md">Psychology research</a>
+<a href="research/clinical-metric-comprehension.md">Clinical research</a>
+<a href="research/data-capability-inventory.md">Data inventory</a>
+</div>
+<a class="hero before" href="concepts/00-current-today.html">
+  <img src="shots/00-current-today.png" alt="">
+  <div><span class="tag before">Before, the screen shipping today</span>
+  <h2>Today, as it is now</h2>
+  <p class="sub" style="margin:0">A working copy of the current screen, flaws included: 18 blocks, about 60 numbers, 51 tap targets, 18 ways out, four things all telling you what to do, and a change chip that describes a different number from the ring above it.</p></div>
+</a>
+<a class="hero" href="FINAL-home.html">
+  <img src="shots/final/w500.png" alt="">
+  <div><span class="tag">Recommended, production build</span>
+  <h2>The Band, merged</h2>
+  <p class="sub" style="margin:0">Four signals, each shown as a position inside your own range, each carrying its own plain verdict. One instruction. One proof line. No score anywhere. Degrades honestly to phone-only and to day three, and a warning takes the top slot without being hedged.</p></div>
+</a>
+<div class="grid"><a class="card" href="concepts/08-the-band.html">
+      <div class="rank">#1</div>
+      <img src="shots/08-the-band.png" alt="">
+      <div class="body">
+        <h2>The Band</h2>
+        <p>Every signal is a position inside your own range, drawn in a unit you already own — there is no score, no grade, and no way to fail this screen.</p>
+        <div class="counts">5 blocks &middot; 7 numbers &middot; 8 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>08-the-band.md</em></div>
+      </div></a><a class="card" href="concepts/10-tomorrow.html">
+      <div class="rank">#2</div>
+      <img src="shots/10-tomorrow.png" alt="">
+      <div class="body">
+        <h2>Tomorrow</h2>
+        <p>This morning is already decided, so the screen leads with tonight and tomorrow — the only part of your health you can still change while you are looking at it — and it never predicts, it states what is currently building and what you can still move.</p>
+        <div class="counts">6 blocks &middot; 5 numbers &middot; 6 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>10-tomorrow.md</em></div>
+      </div></a><a class="card" href="concepts/09-because.html">
+      <div class="rank">#3</div>
+      <img src="shots/09-because.png" alt="">
+      <div class="body">
+        <h2>Because</h2>
+        <p>Every element on this screen is a causal statement, and the app shows its work in place, because the loudest complaint across four of six competitor recovery apps is &quot;the score does not match how I feel and it will not tell me why.&quot;</p>
+        <div class="counts">5 blocks &middot; 11 numbers &middot; 8 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>09-because.md</em></div>
+      </div></a><a class="card" href="concepts/07-coach.html">
+      <div class="rank">#4</div>
+      <img src="shots/07-coach.png" alt="">
+      <div class="body">
+        <h2>The Coach</h2>
+        <p>Someone has already read your data, has exactly one thing to say, and says it with your number set inside the sentence, so the verdict lands before you read a word and the reason is one tap away without leaving the screen.</p>
+        <div class="counts">7 blocks &middot; 11 numbers &middot; 7 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>07-coach.md</em></div>
+      </div></a><a class="card" href="concepts/04-sleep-first.html">
+      <div class="rank">#5</div>
+      <img src="shots/04-sleep-first.png" alt="">
+      <div class="body">
+        <h2>Sleep and Body Clock First</h2>
+        <p>Sleep timing is the biggest lever most people actually own, so the screen shows two clock quantities — when to go to bed tonight, and how last night landed — and carries no score of any kind anywhere.</p>
+        <div class="counts">5 blocks &middot; 10 numbers &middot; 8 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>04-sleep-first.md</em></div>
+      </div></a><a class="card" href="concepts/02-daily-briefing.html">
+      <div class="rank">#6</div>
+      <img src="shots/02-daily-briefing.png" alt="">
+      <div class="body">
+        <h2>The Daily Briefing</h2>
+        <p>The app writes you a dated one-page dispatch while you sleep, and the Home Screen is that dispatch — a masthead, a headline verdict, the one thing to do, the story behind it, and a sign-off — visibly authored, visibly new every morning.</p>
+        <div class="counts">6 blocks &middot; 12 numbers &middot; 8 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>02-daily-briefing.md</em></div>
+      </div></a><a class="card" href="concepts/03-body-budget.html">
+      <div class="rank">#7</div>
+      <img src="shots/03-body-budget.png" alt="">
+      <div class="body">
+        <h2>The Body Budget</h2>
+        <p>Today comes with an amount of effort you can afford to spend, and spending all of it is the good outcome — so the screen shows you the amount, in a unit you already own (minutes, or steps on an iPhone), and nothing else: there is no 0-100 score anywhere on this screen, not even behind a tap.</p>
+        <div class="counts">6 blocks &middot; 12 numbers &middot; 8 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>03-body-budget.md</em></div>
+      </div></a><a class="card" href="concepts/06-todays-story.html">
+      <div class="rank">#8</div>
+      <img src="shots/06-todays-story.png" alt="">
+      <div class="body">
+        <h2>Today&#x27;s Story</h2>
+        <p>Home is not a dashboard of metrics, it is a single thread through the twenty-four hours around now — last night, this morning, the day ahead, tonight — where each moment carries one number and one meaning, and the thread always ends with the one thing to do tonight.</p>
+        <div class="counts">6 blocks &middot; 6 numbers &middot; 8 taps &middot; 4 exits</div>
+        <div class="links"><span>Open prototype</span><em>06-todays-story.md</em></div>
+      </div></a><a class="card" href="concepts/05-mission-control.html">
+      <div class="rank">#9</div>
+      <img src="shots/05-mission-control.png" alt="">
+      <div class="body">
+        <h2>Mission Control</h2>
+        <p>Density is not the enemy of calm, uninterpretable density is; so put the comparison and the plain-word verdict inside every single element, let colour carry the pre-attentive load, and lock the whole thing to one rigid grid so twenty-two numbers are scanned chromatically in one sweep instead of parsed one at a time.</p>
+        <div class="counts">6 blocks &middot; 22 numbers &middot; 5 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>05-mission-control.md</em></div>
+      </div></a><a class="card" href="concepts/01-one-number.html">
+      <div class="rank">#10</div>
+      <img src="shots/01-one-number.png" alt="">
+      <div class="body">
+        <h2>The One Number</h2>
+        <p>The screen answers one question with one number, one sentence and one cause, and then it ends — because the design goal is that the user closes the app satisfied in five seconds, not that they stay.</p>
+        <div class="counts">4 blocks &middot; 6 numbers &middot; 7 taps &middot; 3 exits</div>
+        <div class="links"><span>Open prototype</span><em>01-one-number.md</em></div>
+      </div></a></div>
+</div>

@@ -1,0 +1,1564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — FINAL</title>
+<style>
+/* ============================================================
+   LASO HOME v2 — FINAL
+   Base concept: 08-the-band. Merges M1-M8 per RECOMMENDATION.md §3.
+   Every colour, radius, spacing and type value from DESIGN-TOKENS.md.
+
+   The one idea: every signal is a position inside your own range.
+   The band is drawn, never printed. Band width is the only
+   confidence widget on the screen.
+   ============================================================ */
+
+:root{
+  /* surfaces */
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elevated:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  /* text */
+  --t1:#1B1B20; --t2:#44444D; --t3:#5B5B65;
+  /* lines */
+  --bLow:#E0E0E8; --bMed:#C9C9D3;
+  /* accents */
+  --primary:#0064CC;
+  --ok:#0C7752; --warn:#8A6400; --bad:#C42B33;
+  --cardShadow:0 1px 2px rgba(0,0,0,0.12);
+  /* the band: one tint, one opacity, every bar, every position.
+     It identifies "your range". It never says good. */
+  --bandFill:rgba(0,100,204,0.16);
+  --bandEdge:#0064CC;   /* solid: 4.7:1 against the track, so the range boundary is perceivable */
+  --ink:#1B1B20;
+  --skel:linear-gradient(90deg,#E6E6EE 25%,#F1F1F7 37%,#E6E6EE 63%);
+  --btnOnPrimary:#FFFFFF;
+
+  /* type scale — one variable per shipping size, so Dynamic Type is
+     a single override block rather than a rewrite. */
+  --fs-msg:20px;  --fs-lab:15px;  --fs-val:20px;  --fs-pos:13px;
+  --fs-focal:17px;--fs-clause:13px;--fs-inst:20px;--fs-body:13px;
+  --fs-btn:15px;  --fs-cap:12px;  --fs-h2:17px;   --fs-eyebrow:12px;
+}
+html[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8;
+  --bLow:#2E2E36; --bMed:#414149;
+  --primary:#4DA3FF;
+  --ok:#3DCC99; --warn:#E3B45A; --bad:#E05C64;
+  --cardShadow:none;
+  --bandFill:rgba(77,163,255,0.16);
+  --bandEdge:#4DA3FF;   /* 6.8:1 against the dark track */
+  --ink:#F2F2F6;
+  --skel:linear-gradient(90deg,#22222A 25%,#2C2C35 37%,#22222A 63%);
+  --btnOnPrimary:#04121F;
+}
+
+/* Dynamic Type. At AX3 the value and the position word leave the
+   label's line and stack under it; the band keeps full width and the
+   card grows. Nothing truncates, nothing clips. */
+html[data-type="large"]{
+  --fs-msg:23px; --fs-lab:17px; --fs-val:23px; --fs-pos:15px;
+  --fs-focal:19px;--fs-clause:15px;--fs-inst:23px;--fs-body:15px;
+  --fs-btn:17px; --fs-cap:13px; --fs-h2:19px; --fs-eyebrow:13px;
+}
+html[data-type="ax3"]{
+  --fs-msg:28px; --fs-lab:21px; --fs-val:26px; --fs-pos:19px;
+  --fs-focal:24px;--fs-clause:19px;--fs-inst:27px;--fs-body:18px;
+  --fs-btn:19px; --fs-cap:16px; --fs-h2:23px; --fs-eyebrow:15px;
+}
+html[data-type="ax3"] .bar .top{flex-direction:column;align-items:flex-start;gap:1px}
+html[data-type="ax3"] .bar .val{white-space:normal}
+html[data-type="ax3"] .bar .val .pos{display:block;margin-left:0;margin-top:1px}
+html[data-type="ax3"] .btnrow{flex-direction:column}
+html[data-type="ax3"] .rawRow{flex-direction:column;align-items:flex-start;gap:2px}
+html[data-type="ax3"] .chartFoot{flex-direction:column;gap:2px}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--sunken);
+  color:var(--t1);
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.35;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.num{
+  font-family:ui-rounded,-apple-system,"SF Pro Rounded","SF Pro Text",system-ui,sans-serif;
+  font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:8px}
+
+/* ---------- phone frame ---------- */
+.stage{min-height:100%;display:flex;align-items:center;justify-content:center;padding:0}
+.phone{
+  width:100%;max-width:430px;height:100dvh;max-height:932px;
+  background:var(--sunken);position:relative;display:flex;flex-direction:column;overflow:hidden;
+}
+@media (min-width:620px){
+  body{background:#0d0d10}
+  html[data-theme="light"] body{background:#c9c9d3}
+  .stage{padding:24px}
+  .phone{height:844px;border-radius:44px;box-shadow:0 30px 80px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08)}
+}
+
+/* ---------- status bar ---------- */
+.statusbar{
+  flex:0 0 auto;height:52px;padding:14px 26px 0;display:flex;align-items:center;
+  justify-content:space-between;font-size:15px;font-weight:600;letter-spacing:.2px;
+}
+.statusbar .icons{display:flex;align-items:center;gap:6px}
+.statusbar svg{display:block}
+
+/* ---------- Slot 0: header ---------- */
+.hdr{
+  flex:0 0 auto;padding:2px 12px 10px;display:flex;align-items:flex-end;
+  justify-content:space-between;gap:12px;
+}
+.hdr h1{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.05}
+.hdr .date{font-size:var(--fs-clause);color:var(--t3);font-weight:500;padding-bottom:3px}
+
+/* ---------- scroll ---------- */
+.scroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:0 12px calc(96px + env(safe-area-inset-bottom));
+}
+.scroll::-webkit-scrollbar{width:0}
+
+/* fold marker — design aid, off by default */
+.fold{position:absolute;left:0;right:0;border-top:1px dashed rgba(196,43,51,.85);pointer-events:none;z-index:60;display:none}
+.fold::after{content:"fold";position:absolute;right:8px;top:-15px;font-size:10px;font-weight:700;color:#fff;background:#C42B33;padding:1px 5px;border-radius:3px}
+body.showfold .fold{display:block}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--raised);border:1px solid var(--bLow);box-shadow:var(--cardShadow);
+  border-radius:16px;padding:16px;margin-bottom:12px;
+}
+.card.hero{border-radius:24px;padding:16px 16px 14px}
+html[data-theme="dark"] .card{box-shadow:none}
+
+/* ---------- 1a: attention strip ---------- */
+.attn{
+  display:flex;gap:10px;align-items:flex-start;
+  background:var(--elevated);border:1px solid var(--bMed);border-left:3px solid var(--warn);
+  border-radius:12px;padding:12px 12px 12px 11px;margin-bottom:14px;
+}
+.attn svg{flex:0 0 20px;margin-top:1px;color:var(--warn)}
+.attn .t{font-size:var(--fs-lab);font-weight:600;line-height:1.32;color:var(--t1)}
+.attn .a{font-size:var(--fs-body);color:var(--t2);margin-top:6px;line-height:1.4}
+
+/* ---------- 1b: the message ---------- */
+.msgRow{display:flex;gap:10px;align-items:flex-start;margin-bottom:16px}
+.msgRow .tick{flex:0 0 3px;align-self:stretch;min-height:38px;border-radius:9999px;background:var(--bandEdge)}
+.msg{font-size:var(--fs-msg);font-weight:600;letter-spacing:-.3px;line-height:1.25;color:var(--t1)}
+
+/* ---------- 1c: the four bars ---------- */
+.bars{display:flex;flex-direction:column;gap:16px}
+.bar .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.bar .lab{font-size:var(--fs-lab);font-weight:600;letter-spacing:-.1px;color:var(--t1)}
+.bar .val{font-size:var(--fs-val);font-weight:700;letter-spacing:-.3px;color:var(--t1);white-space:nowrap}
+.bar .val .pos{font-size:var(--fs-pos);font-weight:600;color:var(--t3);margin-left:6px;letter-spacing:0}
+
+/* M4 — focal point. The single bar furthest outside its band puts its
+   position word under the label, left aligned, large, in the verdict
+   colour. Every other bar keeps the small grey word on the right. */
+.bar.focal .top{margin-bottom:2px}
+.posFocal{
+  font-size:var(--fs-focal);font-weight:600;letter-spacing:-.2px;color:var(--warn);
+  margin-bottom:10px;line-height:1.2;
+}
+
+.track{
+  position:relative;height:14px;border-radius:9999px;background:var(--subtle);
+  border:1px solid var(--bLow);
+}
+.band{
+  position:absolute;top:-1px;bottom:-1px;border-radius:9999px;
+  background:var(--bandFill);border:1px solid var(--bandEdge);
+}
+.band.provisional{border-style:dashed;background:none}
+
+/* M5a — marker weight and contrast borrowed from 07-coach.
+   Thick stem + halo in the card colour + a cap whose SHAPE carries the
+   direction, so the verdict survives a 7px blur and is redundant across
+   position, size, shape and contrast. */
+.mk{
+  position:absolute;top:50%;left:50%;
+  width:16px;height:16px;border-radius:9999px;      /* circle  = inside your range */
+  transform:translate(-50%,-50%);
+  background:var(--ink);
+  box-shadow:0 0 0 2.5px var(--raised),0 1px 3px rgba(0,0,0,.30);
+}
+.mk.out{                                            /* diamond = outside, and larger */
+  border-radius:4px;transform:translate(-50%,-50%) rotate(45deg);
+}
+/* Colour is spent once, on the single bar the screen is pointing at, so
+   the pre-attentive channel agrees with the words. A reading that is out
+   of range but not yet a change stays neutral, which is what
+   "one morning only" says in prose. */
+.mk.focal{background:var(--warn)}
+.mk.settle{animation:settle 900ms ease-out 1}
+@keyframes settle{
+  0%  {box-shadow:0 0 0 2.5px var(--raised),0 0 0 2px var(--bandEdge)}
+  45% {box-shadow:0 0 0 2.5px var(--raised),0 0 0 10px var(--bandEdge)}
+  100%{box-shadow:0 0 0 2.5px var(--raised),0 1px 3px rgba(0,0,0,.30)}
+}
+/* earlier mornings of the same signal, so persistence is shown, not asserted.
+   0.55 is the floor that clears 3:1 against the track in light mode; below
+   that the ghosts are decoration a low-vision user cannot see. */
+.mk.past{
+  width:9px;height:9px;border-radius:9999px;opacity:.55;
+  background:var(--ink);box-shadow:none;transform:translate(-50%,-50%);
+}
+
+.bar .clause{font-size:var(--fs-clause);color:var(--t2);margin-top:10px;line-height:1.35}
+.bar .learn{font-size:var(--fs-clause);color:var(--t3);margin-top:10px;line-height:1.35}
+
+/* ---------- 1d + 1e ---------- */
+.legend{
+  display:flex;align-items:center;gap:7px;margin-top:16px;padding-top:12px;
+  border-top:1px solid var(--bLow);font-size:var(--fs-cap);color:var(--t3);
+}
+.legend .sw{width:22px;height:10px;border-radius:9999px;background:var(--bandFill);border:1px solid var(--bandEdge)}
+.stateNote{font-size:var(--fs-cap);color:var(--t3);margin-top:9px;line-height:1.4}
+
+/* ---------- Slot 2: today ---------- */
+.eyebrow{
+  font-size:var(--fs-eyebrow);font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:8px;
+}
+.inst{font-size:var(--fs-inst);font-weight:600;letter-spacing:-.3px;line-height:1.3;color:var(--t1)}
+.ctxNote{font-size:var(--fs-body);color:var(--t2);margin-top:8px;line-height:1.4}
+.btnrow{display:flex;gap:8px;margin-top:14px}
+.btn{
+  flex:1 1 0;min-height:48px;border-radius:12px;padding:6px 10px;
+  font-size:var(--fs-btn);font-weight:600;line-height:1.2;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform 80ms ease-in,background-color 200ms ease-in-out;
+}
+.btn:active{transform:scale(.965);transition:transform 80ms ease-in}
+.btn.primary{background:var(--primary);color:var(--btnOnPrimary)}
+.btn.ghost{background:var(--elevated);color:var(--t1);border:1px solid var(--bMed)}
+.btn.on{background:var(--ok);color:var(--btnOnPrimary);border-color:transparent}
+.btn.set{background:var(--subtle);color:var(--t2);border:1px solid var(--bLow)}
+.btn.wide{flex:1 1 100%}
+.proof{margin-top:12px;font-size:var(--fs-body);line-height:1.45;color:var(--t3)}
+.doneNote{
+  margin-top:12px;display:flex;gap:7px;align-items:flex-start;
+  font-size:var(--fs-body);color:var(--ok);line-height:1.4;
+}
+.doneNote svg{flex:0 0 auto;margin-top:2px}
+
+/* ---------- Slot 3: chart ---------- */
+.h2{font-size:var(--fs-h2);font-weight:600;letter-spacing:-.2px;color:var(--t1)}
+.lede{font-size:var(--fs-body);color:var(--t2);margin:6px 0 12px;line-height:1.45}
+.chartWrap{margin:0 -2px}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.axisTxt{font-size:11px;fill:var(--t3);font-family:ui-rounded,-apple-system,system-ui,sans-serif;
+  font-feature-settings:"tnum" 1}
+.dot{fill:var(--ink);opacity:.32}
+.dot.last{opacity:1}
+.capt{font-size:var(--fs-body);color:var(--t3);margin-top:10px;line-height:1.45}
+
+.disc{margin-top:12px;border-top:1px solid var(--bLow);padding-top:4px}
+.discBtn{
+  width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;font-size:var(--fs-lab);font-weight:600;color:var(--t1);text-align:left;
+}
+.discBtn .chev{transition:transform 250ms cubic-bezier(.22,1,.36,1);color:var(--t3);display:flex}
+.discBtn[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.discPanel{overflow:hidden;max-height:0;transition:max-height 300ms cubic-bezier(.22,1,.36,1),opacity 200ms linear;opacity:0}
+.discPanel.open{max-height:2200px;opacity:1}   /* AX3 at 320pt measures 1306px */
+.discPanel dl{padding:4px 0 8px;display:flex;flex-direction:column;gap:12px}
+.discPanel dt{font-size:var(--fs-body);font-weight:700;color:var(--t1)}
+.discPanel dd{font-size:var(--fs-body);color:var(--t2);line-height:1.45;margin-top:3px}
+.discPanel dd + dd{margin-top:5px}
+
+/* ---------- Slot 4: escape hatch ---------- */
+.raw{
+  width:100%;min-height:56px;border-radius:16px;background:var(--raised);
+  border:1px solid var(--bLow);box-shadow:var(--cardShadow);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 16px;margin-bottom:12px;transition:transform 80ms ease-in;
+}
+html[data-theme="dark"] .raw{box-shadow:none}
+.raw:active{transform:scale(.99)}
+.raw .rl{text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0}
+.raw .rt{display:block;font-size:var(--fs-lab);font-weight:600;line-height:1.25}
+.raw .rs{display:block;font-size:var(--fs-cap);color:var(--t3);line-height:1.35}
+.raw svg{color:var(--t3);flex:0 0 auto}
+
+/* ---------- Slot 5: footer ---------- */
+.footNote{font-size:var(--fs-cap);color:var(--t3);text-align:left;padding:2px 4px 8px;line-height:1.5}
+
+/* ---------- raw mode ---------- */
+.rawList{display:flex;flex-direction:column}
+.rawRow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--bLow)}
+.rawRow:last-child{border-bottom:none}
+.rawRow .k{font-size:var(--fs-lab);color:var(--t2)}
+.rawRow .v{font-size:var(--fs-h2);font-weight:600}
+.rawSeries{font-size:var(--fs-body);color:var(--t2);line-height:1.8;word-spacing:2px;padding-top:10px}
+
+/* ---------- skeleton ---------- */
+.sk{display:block;background:var(--skel);background-size:400% 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.skLine{height:14px}
+/* the loading mark spans the whole track on purpose. A placeholder pinned to
+   the centre of the band is a picture of "inside your range" on a screen that
+   does not know yet — the §11.9 defect wearing a shimmer. */
+.skMark{position:absolute;left:0;right:0;top:-1px;bottom:-1px;border-radius:9999px}
+
+/* ---------- empty ---------- */
+.emptyTrack{position:relative;height:14px;border-radius:9999px;background:var(--subtle);border:1px dashed var(--bMed)}
+/* no data means the widest band the screen can draw, so the one confidence
+   mechanic still tells the truth before the first reading arrives. */
+.emptyBand{position:absolute;left:14%;width:72%;top:-1px;bottom:-1px;border-radius:9999px;border:1px dashed var(--bMed)}
+
+/* ---------- tab bar ---------- */
+.tabs{
+  flex:0 0 auto;position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));
+  height:64px;border-radius:24px;display:flex;align-items:stretch;
+  background:color-mix(in srgb, var(--raised) 93%, transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  backdrop-filter:saturate(180%) blur(24px);
+  border:1px solid var(--bLow);
+  box-shadow:0 6px 24px rgba(0,0,0,.10);
+}
+/* the bar floats 8px off the bottom, so without this the scroll shows a
+   half-cut line of body text in the gutter underneath it. */
+.tabs::after{
+  content:"";position:absolute;left:-9px;right:-9px;top:100%;
+  height:calc(9px + env(safe-area-inset-bottom));background:var(--sunken);
+}
+/* no backdrop-filter (older WebKit, forced-colours) means the tint alone has
+   to hide the text behind it. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .tabs{background:var(--raised)}
+}
+html[data-theme="dark"] .tabs{box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:11px;font-weight:600;color:var(--t3);border-radius:20px;min-height:44px;
+  transition:transform 80ms ease-in,color 160ms linear;
+}
+.tab:active{transform:scale(.94)}
+.tab[aria-current="page"]{color:var(--primary)}
+.tab svg{display:block}
+
+/* ---------- dev toolbar (not part of the design under judgement) ---------- */
+.devBtn{
+  position:fixed;right:0;top:112px;z-index:80;
+  width:22px;height:44px;border-radius:12px 0 0 12px;background:var(--overlay);
+  border:1px solid var(--bMed);border-right:none;
+  color:var(--t3);display:flex;align-items:center;justify-content:center;opacity:.34;
+  box-shadow:-2px 2px 10px rgba(0,0,0,.12);
+}
+.devBtn svg{width:14px;height:14px}
+.devBtn:hover,.devBtn[aria-expanded="true"]{opacity:1}
+.devPanel{
+  position:fixed;right:8px;top:160px;z-index:81;
+  width:236px;max-height:78vh;overflow:auto;
+  background:var(--overlay);border:1px solid var(--bMed);border-radius:16px;
+  padding:12px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.3);font-size:12px;
+}
+@media (min-width:620px){
+  .devBtn{right:max(238px, calc(50% - 215px - 46px));top:140px;width:44px;border-radius:12px;border-right:1px solid var(--bMed);opacity:.55}
+  .devBtn svg{width:20px;height:20px}
+  .devPanel{right:max(8px, calc(50% - 215px - 304px));top:140px}
+}
+.devPanel.open{display:block}
+.devPanel h3{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin:12px 0 5px;font-weight:700}
+.devPanel h3:first-child{margin-top:0}
+.devPanel .hint{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.4}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{
+  flex:1 1 auto;min-height:30px;padding:5px 8px;border-radius:8px;border:1px solid var(--bLow);
+  background:var(--raised);color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;
+}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--btnOnPrimary);border-color:var(--primary)}
+
+/* ---------- self-check report (dev only) ---------- */
+#report{
+  position:fixed;inset:0;z-index:200;background:var(--base);color:var(--t1);
+  padding:18px;overflow:auto;display:none;font-size:12px;line-height:1.5;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;
+}
+#report.open{display:block}
+#report b{font-weight:700}
+.pass{color:var(--ok)} .fail{color:var(--bad)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+
+    <!-- iOS status bar -->
+    <div class="statusbar">
+      <span class="num" id="clock">9:41</span>
+      <span class="icons" aria-hidden="true">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2 6.2 9.3a2.6 2.6 0 0 1 3.6 0L8 11.2Zm0-4.4a5 5 0 0 0-3.6 1.5L3 6.9a7 7 0 0 1 10 0l-1.4 1.4A5 5 0 0 0 8 6.8Zm0-4.3a9.3 9.3 0 0 0-6.6 2.7L0 3.8a11.3 11.3 0 0 1 16 0l-1.4 1.4A9.3 9.3 0 0 0 8 2.5Z"/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3.2" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><path d="M24 4.2v3.6a2 2 0 0 0 0-3.6Z" fill="currentColor" opacity=".45"/></svg>
+      </span>
+    </div>
+
+    <!-- Slot 0 — header. Zero tap targets. -->
+    <div class="hdr">
+      <h1>Today</h1>
+      <span class="date">Tuesday, 29 July</span>
+    </div>
+
+    <main class="scroll" id="scroll"></main>
+    <div class="fold" id="foldLine" aria-hidden="true"></div>
+
+    <!-- chrome — the three exits from Home -->
+    <nav class="tabs" aria-label="Main">
+      <button class="tab" aria-current="page" data-tab="Today">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="4"/><path d="M3 9.5h18M8 2.8v3.4M16 2.8v3.4"/><circle cx="12" cy="15" r="2.1" fill="currentColor" stroke="none"/></svg>
+        Today
+      </button>
+      <button class="tab" data-tab="Live">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12h4l2-5 3.5 10 2.5-6 1.8 3h5.2"/></svg>
+        Live
+      </button>
+      <button class="tab" data-tab="Explore">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.4 8.6 13.6 13.6 8.6 15.4 10.4 10.4Z"/></svg>
+        Explore
+      </button>
+      <button class="tab" data-tab="Settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.3 14.6a1.6 1.6 0 0 0 .32 1.77l.06.06a1.95 1.95 0 1 1-2.76 2.76l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.95 1.95 0 1 1-3.9 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.95 1.95 0 1 1-2.76-2.76l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97h-.17a1.95 1.95 0 1 1 0-3.9h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.95 1.95 0 1 1 2.76-2.76l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47v-.17a1.95 1.95 0 1 1 3.9 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.95 1.95 0 1 1 2.76 2.76l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.95 1.95 0 1 1 0 3.9h-.09a1.6 1.6 0 0 0-1.47.97Z"/></svg>
+        Settings
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+<!-- dev toolbar — deliberately parked on the right edge, clear of every real control -->
+<button class="devBtn" id="devBtn" aria-label="Prototype controls" aria-expanded="false" aria-controls="devPanel">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg>
+</button>
+<div class="devPanel" id="devPanel" role="group" aria-label="Prototype controls">
+  <h3>Appearance</h3>
+  <div class="seg" data-group="theme">
+    <button data-v="auto">Auto</button><button data-v="light">Light</button><button data-v="dark">Dark</button>
+  </div>
+  <h3>Data available</h3>
+  <div class="seg" data-group="data">
+    <button data-v="full">Watch</button><button data-v="phone">Phone only</button><button data-v="new">New, day 3</button>
+  </div>
+  <h3>Screen</h3>
+  <div class="seg" data-group="screen">
+    <button data-v="loaded">Loaded</button><button data-v="loading">Loading</button><button data-v="empty">Empty</button>
+  </div>
+  <h3>Today looks like</h3>
+  <div class="seg" data-group="day">
+    <button data-v="quiet">Rested</button><button data-v="short">Short night</button><button data-v="attention">Worth a look</button>
+  </div>
+  <p class="hint">high &middot; moderate &middot; low, in the old readiness language. This screen has no score, so it changes position and words instead.</p>
+  <h3>Time of day</h3>
+  <div class="seg" data-group="time">
+    <button data-v="am">Morning</button><button data-v="pm">After 6pm</button>
+  </div>
+  <h3>Life context</h3>
+  <div class="seg" data-group="ctx">
+    <button data-v="normal">None</button><button data-v="unwell">Unwell</button>
+  </div>
+  <h3>Sleep pattern</h3>
+  <div class="seg" data-group="sleeper">
+    <button data-v="regular">Regular wake</button><button data-v="irregular">Shift work</button>
+  </div>
+  <h3>Text size</h3>
+  <div class="seg" data-group="type">
+    <button data-v="default">Default</button><button data-v="large">Large</button><button data-v="ax3">AX3</button>
+  </div>
+  <h3>Design aids</h3>
+  <div class="seg" data-group="fold">
+    <button data-v="off">Fold off</button><button data-v="on">Show fold</button>
+  </div>
+  <div class="seg" style="margin-top:6px">
+    <button id="runChecks" aria-pressed="false">Run build checks</button>
+  </div>
+</div>
+
+<div id="report" role="region" aria-label="Build checks" tabindex="-1"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. STATE
+   ============================================================ */
+const S = {
+  theme:"auto",  data:"full",   screen:"loaded", day:"short",
+  time:"am",     ctx:"normal",  sleeper:"regular", type:"default",
+  raw:false,     disc:false,    done:false,      remind:0, fold:false
+};
+
+/* the escape hatch persists, because it is a preference and not a mode.
+   file:// blocks storage in some browsers, so it fails quietly. */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("laso.home." + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem("laso.home." + k, JSON.stringify(v)); } catch(e){} }
+};
+S.raw = store.get("raw", false);
+
+/* ============================================================
+   2. FORMATTERS — borrowed units only. There is no code path that
+      can emit an index, so F5 and F3 are unviolatable here.
+   ============================================================ */
+const F = {
+  sleep : h => Math.floor(h) + "h " + String(Math.round((h - Math.floor(h)) * 60)).padStart(2,"0") + "m",
+  steps : n => Math.round(n).toLocaleString("en-GB"),
+  bed   : m => clock(m, true),      // minutes past 22:00
+  short : m => clock(m, false),
+  rhr   : n => Math.round(n) + " bpm",
+  dist  : k => k.toFixed(1) + " km",
+  stair : n => Math.round(n) + (Math.round(n) === 1 ? " flight" : " flights"),
+  pace  : k => k.toFixed(1) + " km/h",
+  hrv   : n => Math.round(n) + " ms"
+};
+function clock(m, meridiem){
+  const t = ((22*60 + Math.round(m)) % 1440 + 1440) % 1440;
+  const hh = Math.floor(t/60), mm = t % 60;
+  let h12 = hh % 12; if (h12 === 0) h12 = 12;
+  const s = h12 + ":" + String(mm).padStart(2,"0");
+  return meridiem ? s + " " + (hh < 12 ? "am" : "pm") : s;
+}
+
+/* position word — derived from value vs band at render time, never
+   written down. The word and the picture cannot disagree. */
+const VOCAB = ["under","inside","above","earlier","later"];
+/* the same five words read as a sentence, because "later your range" is not
+   English and a screen reader has no picture to fall back on. */
+const ariaPos = (pos, range) => ({
+  under:"under " + range, inside:"inside " + range, above:"above " + range,
+  earlier:"earlier than " + range, later:"later than " + range
+})[pos];
+/* what the drawn shape may honestly be called. Three days is not a usual. */
+const rangeName = () => S.data === "new" ? "the starting range" : "your range";
+function posWord(v, band, key){
+  if (v < band[0]) return key === "bedtime" ? "earlier" : "under";
+  if (v > band[1]) return key === "bedtime" ? "later"   : "above";
+  return "inside";
+}
+
+/* ============================================================
+   3. GEOMETRY — the single uncertainty mechanism.
+      Every band is drawn at the SAME x position on every bar, so four
+      verdicted signals cost four numbers instead of twelve, and the
+      column of markers is a non-textual read.
+      Lower confidence => wider band. That is the only confidence
+      widget on this screen, and it cannot be hidden because it is the
+      geometry.
+   ============================================================ */
+const BAND_HALF = { full:16, phone:24, new:36 };   // % either side of centre
+
+function markX(v, band, half){
+  const t  = (v - band[0]) / (band[1] - band[0]);
+  const tc = t - 0.5;
+  let x;
+  if (Math.abs(tc) <= 0.5){
+    x = 50 + tc * 2 * half;
+  } else {
+    const over = Math.abs(tc) - 0.5;
+    x = 50 + Math.sign(tc) * (half + over * 2 * half * 0.55);
+  }
+  return Math.max(7, Math.min(93, x));
+}
+/* how far outside, in band half-widths. 0 means inside. */
+function outness(v, band){
+  const t = (v - band[0]) / (band[1] - band[0]);
+  return Math.max(0, Math.abs(t - 0.5) - 0.5);
+}
+
+/* ============================================================
+   4. RAW DATA — one fictional user, Alex, 34.
+      M7: every printed string on the screen is derived from these
+      arrays. Nothing below this block is a hand-written fact.
+   ============================================================ */
+const RAW = {
+  sleepNeedH   : 7 + 40/60,          // SleepNeedCalculator, personal. Never a flat 7.5h (B6).
+  sleepTolMin  : 25,
+  onsetMin     : 20,                 // typical time to fall asleep
+  bedTolMin    : 45,                 // wider than the others: the anchor is derived, not measured
+  stepsAnchor  : 7000,               // WHO-ish dose response, not 10,000 (B7)
+  rhrTolBpm    : 2,
+
+  // 14 nights of sleep, hours
+  nights : [7.90,7.60,8.00,7.40,7.70,7.30,7.90,7.10,7.50,7.20,6.80,7.00,6.85,6.20],
+  // 14 days of steps
+  steps  : [7100,9200,6800,11400,8100,5900,10200,7600,12800,8900,6400,9700,7300,8400],
+  // 14 bedtimes, minutes past 22:00
+  bed    : [18,27,12,40,22,48,30,88,102,79,96,84,118,155],
+  // 14 resting heart rates, bpm
+  rhr    : [55,54,56,55,57,54,55,56,54,56,55,57,56,58],
+  // 14 wake times, minutes past midnight
+  wakeRegular   : [388,392,385,395,390,398,382,390,393,387,391,389,394,386],
+  wakeIrregular : [330,540,360,600,390,570,345,585,420,555,335,600,375,540],
+
+  hrvSDNN : 48,                      // shown once, in the escape hatch only, correctly labelled
+
+  // phone-only family
+  dist   : [5.2,6.8,4.9,8.4,6.0,4.3,7.5,5.6,9.4,6.6,4.7,7.1,5.4,6.1],
+  stairs : [8,12,6,15,9,4,13,7,17,10,5,11,6,3],
+  pace   : [4.7,4.5,4.8,4.6,4.4,4.9,4.6,4.5,4.7,4.4,4.8,4.6,4.5,4.6],
+
+  // genuinely new: three days, phone family only. Nothing with a
+  // baseline renders before it has one.
+  newSteps  : [6100,8300,7200],
+  newDist   : [4.4,5.9,5.1],
+  newStairs : [7,4,6],
+  newPace   : [4.8,4.5,4.6],
+
+  // Day 3 has no usual to describe, so these are the wide starting shapes the
+  // screen begins with. Public anchors, named as such on the screen, replaced
+  // by the user's own history at day seven.
+  startingBands : { steps:[7000,12000], dist:[3.0,9.0], stairs:[2,18], pace:[3.6,5.6] },
+
+  // completion record. Nothing here counts consecutive days, by design.
+  proof : { n:6, sleptExtraMin:38, coveredExtraKm:1.2, windowWeeks:8 }
+};
+
+/* --- small statistics, one implementation each --- */
+const mean   = a => a.reduce((x,y)=>x+y,0) / a.length;
+const median = a => { const s = a.slice().sort((x,y)=>x-y); const m = s.length>>1;
+                      return s.length % 2 ? s[m] : (s[m-1]+s[m])/2; };
+const sd     = a => { const m = mean(a); return Math.sqrt(mean(a.map(v=>(v-m)*(v-m)))); };
+
+/* how many readings at the end of the series sat outside the band */
+function runOutside(series, band){
+  let n = 0;
+  for (let i = series.length - 1; i >= 0; i--){
+    if (series[i] > band[1] || series[i] < band[0]) n++; else break;
+  }
+  return n;
+}
+function countInside(series, band){
+  return series.filter(v => v >= band[0] && v <= band[1]).length;
+}
+
+/* --- band derivation. Built once here, consumed by the bars, the
+       chart, the clauses and the instruction, so no two can disagree
+       (this is B9's fix, in miniature). --- */
+function wakeArray(){ return S.sleeper === "irregular" ? RAW.wakeIrregular : RAW.wakeRegular; }
+function wakeIsIrregular(){ return sd(wakeArray()) > 60; }   // §11.8 guard
+
+/* A band is a baseline, so it is built from the days BEFORE the three the
+   screen is currently reporting on. tail() rewrites only those last three, so
+   this is the same history the bars and the chart plot — one derivation, no
+   second array that can drift out of step with the first (B9). */
+const REPORTED = 3;
+const baselineOf = arr => arr.slice(0, arr.length - REPORTED);
+function rhrBaseline(){ return Math.round(mean(baselineOf(RAW.rhr))); }
+
+function bedTargetMin(){
+  // M2 — clock arithmetic: wake − sleep need − onset. No model risk.
+  // Guard: an irregular wake time makes that arithmetic an accusation,
+  // so the band falls back to the user's own median bedtime.
+  if (wakeIsIrregular()) return median(baselineOf(RAW.bed));
+  const wake = median(wakeArray());                       // minutes past midnight
+  const target = wake - RAW.sleepNeedH * 60 - RAW.onsetMin;   // may go negative
+  return ((target - 22*60) % 1440 + 1440) % 1440;             // minutes past 22:00
+}
+
+function bands(){
+  const need = RAW.sleepNeedH, tol = RAW.sleepTolMin / 60;
+  const bedC = bedTargetMin();
+  const rhrBase = rhrBaseline();
+  return {
+    sleep  : [need - tol, need + tol],
+    steps  : [RAW.stepsAnchor, Math.round(quantile(baselineOf(RAW.steps), 0.85) / 500) * 500],
+    bedtime: [bedC - RAW.bedTolMin, bedC + RAW.bedTolMin],
+    rhr    : [rhrBase - RAW.rhrTolBpm, rhrBase + RAW.rhrTolBpm],
+    dist   : [round1(quantile(baselineOf(RAW.dist), 0.2)), round1(quantile(baselineOf(RAW.dist), 0.8))],
+    stairs : [Math.round(quantile(baselineOf(RAW.stairs), 0.2)), Math.round(quantile(baselineOf(RAW.stairs), 0.8))],
+    pace   : [round1(quantile(baselineOf(RAW.pace), 0.15)), round1(quantile(baselineOf(RAW.pace), 0.85))]
+  };
+}
+function newBands(){
+  // three days cannot describe a usual, so the band is the honest wide
+  // starting shape and it is drawn dashed.
+  return RAW.startingBands;
+}
+function quantile(a, q){
+  const s = a.slice().sort((x,y)=>x-y);
+  const i = (s.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i);
+  return lo === hi ? s[lo] : s[lo] + (s[hi] - s[lo]) * (i - lo);
+}
+const round1 = n => Math.round(n * 10) / 10;
+
+/* ============================================================
+   5. THE THREE DAYS. Only the last reading of each series moves;
+      every word on the screen is computed from the result.
+   ============================================================ */
+const DAYS = {
+  quiet:{
+    tail:{ sleep:[7.30,7.45,7.60], steps:[8100,9200,9700], bedtime:[70,55,62], rhr:[55,54,55] },
+    ghosts:[]
+  },
+  short:{
+    tail:{ sleep:[7.00,6.85,6.20], steps:[9700,7300,8400], bedtime:[84,118,155], rhr:[55,56,58] },
+    ghosts:[]
+  },
+  attention:{
+    tail:{ sleep:[6.40,6.10,6.00], steps:[6300,5600,5100], bedtime:[148,152,160], rhr:[60,61,62] },
+    // the two earlier mornings render as ghost markers, so the
+    // persistence the strip claims is visible on the bar itself
+    ghosts:["sleep","rhr"], alert:true
+  }
+};
+
+const META = {
+  sleep  : { name:"Sleep",              fmt:F.sleep, first:"two weeks ago", last:"last night",  series:()=>tail(RAW.nights, "sleep") },
+  steps  : { name:"Steps",              fmt:F.steps, first:"two weeks ago", last:"yesterday",   series:()=>tail(RAW.steps,  "steps") },
+  bedtime: { name:"Bedtime",            fmt:F.bed,   first:"two weeks ago", last:"last night",  series:()=>tail(RAW.bed,    "bedtime") },
+  rhr    : { name:"Resting heart rate", fmt:F.rhr,   first:"two weeks ago", last:"this morning",series:()=>tail(RAW.rhr,    "rhr") },
+  dist   : { name:"Distance",           fmt:F.dist,  first:"two weeks ago", last:"yesterday",   series:()=>RAW.dist },
+  stairs : { name:"Stairs",             fmt:F.stair, first:"two weeks ago", last:"yesterday",   series:()=>RAW.stairs },
+  pace   : { name:"Walking pace",       fmt:F.pace,  first:"two weeks ago", last:"yesterday",   series:()=>RAW.pace }
+};
+
+/* the 14-day array with today's reading written into the last slot, so
+   the chart's last plotted point IS the bar's value. Asserted below. */
+function tail(arr, key){
+  const v = arr.slice();
+  const t = DAYS[S.day].tail[key];
+  v.splice(v.length - t.length, t.length, ...t);
+  return v;
+}
+
+const BAR_ORDER = {
+  full : ["sleep","steps","bedtime","rhr"],
+  phone: ["steps","dist","stairs","pace"],
+  new  : ["steps","dist","stairs","pace"]
+};
+
+const PHONE_TODAY = { steps:8400, dist:6.1, stairs:3, pace:4.6 };
+const NEW_TODAY   = { steps:7200, dist:5.1, stairs:6,  pace:4.6 };
+
+/* ============================================================
+   6. THE BAR MODEL — value, band, position word, clause. Everything
+      derived. Nothing typed.
+   ============================================================ */
+function barModels(){
+  const half = BAND_HALF[S.data];
+  const B = S.data === "new" ? newBands() : bands();
+  return BAR_ORDER[S.data].map(key => {
+    const m = META[key];
+    const band = B[key];
+    const series = S.data === "new" ? newSeries(key) : (S.data === "phone" ? phoneSeries(key) : m.series());
+    const v = series[series.length - 1];
+    const pos = posWord(v, band, key);
+    const past = (S.data === "full" && DAYS[S.day].ghosts.includes(key)) ? series.slice(-3, -1) : [];
+    return {
+      key, band, value:v, half,
+      label : m.name,
+      text  : m.fmt(v),
+      pos,
+      out   : pos !== "inside",
+      dist  : outness(v, band),
+      /* clause rule: a reading inside your own range has nothing to
+         explain, so it gets no clause. The morning a clause appears
+         where there was none is itself the event. */
+      clause: S.data === "new" ? null : (pos === "inside" ? null : clauseFor(key, v, band, series)),
+      learn : S.data === "new" ? "still learning it" : null,
+      x     : markX(v, band, half),
+      xs    : past.map(p => markX(p, band, half)),
+      series
+    };
+  });
+}
+function phoneSeries(key){
+  const v = { steps:RAW.steps, dist:RAW.dist, stairs:RAW.stairs, pace:RAW.pace }[key].slice();
+  v[v.length - 1] = PHONE_TODAY[key];
+  return v;
+}
+function newSeries(key){
+  const v = { steps:RAW.newSteps, dist:RAW.newDist, stairs:RAW.newStairs, pace:RAW.newPace }[key].slice();
+  v[v.length - 1] = NEW_TODAY[key];
+  return v;
+}
+
+const NIGHTS = ["one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen"];
+const word = n => NIGHTS[n-1] || String(n);
+
+function clauseFor(key, v, band, series){
+  if (key === "sleep"){
+    const shortMin = Math.round((band[0] - v) * 60);
+    if (shortMin <= 0) return "over your range";
+    if (shortMin < 45)  return "by about half an hour";
+    if (shortMin < 80)  return "by about an hour";
+    return "by about " + word(Math.round(shortMin / 60)) + " hours";
+  }
+  if (key === "steps"){
+    const run = runOutside(series, band);
+    return v < band[0]
+      ? (run >= 3 ? "quieter for " + word(run) + " days" : "a quieter day than usual")
+      : "a busier day than usual";
+  }
+  if (key === "bedtime"){
+    const run = runOutside(series, band);
+    if (run >= 7) return v > band[1] ? "later all week" : "earlier all week";
+    if (run >= 2) return (v > band[1] ? "later for " : "earlier for ") + word(run) + " nights";
+    return v > band[1] ? "later than usual" : "earlier than usual";
+  }
+  if (key === "rhr"){
+    const run = runOutside(series, band);
+    if (run <= 1) return "one morning only";
+    if (run === 2) return "two mornings running";
+    return word(run) + " mornings running";
+  }
+  if (key === "dist")   return v < band[0] ? "less ground than usual" : "more ground than usual";
+  if (key === "stairs") return v < band[0] ? "fewer flights than usual" : "more flights than usual";
+  if (key === "pace")   return v < band[0] ? "slower than your usual walk" : "brisker than your usual walk";
+  return null;
+}
+
+/* 1b — the message. About the person, never the performance. */
+function message(bars){
+  if (S.data === "new")   return "Day three. Still learning you.";
+  // only claim a repeat when the strip that explains it is actually rendering,
+  // otherwise the line points at nothing.
+  if (alertFires())       return "Something here has repeated.";
+  const sleepBar = bars.find(b => b.key === "sleep");
+  if (sleepBar && sleepBar.pos === "under") return "Short night. You showed up.";
+  if (bars.every(b => !b.out)) return "Nothing new is building.";      // M3
+  return "A quieter day. Nothing more.";
+}
+
+/* 1a — the attention strip. Fires only on the IllnessEarlyWarning gate:
+   two or more signals, one sigma, two consecutive days. One plain
+   sentence with magnitudes and persistence, one harm anchor, and no
+   instruction — the instruction lives in Slot 2 and nowhere else. */
+function alertFires(){ return S.data === "full" && !!DAYS[S.day].alert; }
+function attention(bars){
+  if (!alertFires()) return null;
+  const rhr = bars.find(b => b.key === "rhr");
+  const run = runOutside(rhr.series, rhr.band);
+  /* measured against the average, because that is the anchor the persistence
+     rule in the expander uses. Two anchors and one number reads as one rule. */
+  const over = Math.round(rhr.value - rhrBaseline());
+  return {
+    key:"rhr",
+    title: "Your resting heart rate has been about " + over + " bpm above your average for " +
+           word(run) + " mornings, alongside shorter sleep.",
+    anchor:"Many doctors are not concerned until this lasts a week or comes with a fever."
+  };
+}
+
+/* 1e — state note. A caption on the one uncertainty mechanism, not a
+   second one. Renders for phone and new only. */
+function stateNote(){
+  if (S.data === "phone") return "No wrist data, so these ranges are wider.";
+  if (S.data === "new")   return "Still learning your usual. These ranges narrow at seven days.";
+  return null;
+}
+
+/* ============================================================
+   7. SLOT 2 — the one instruction. The only imperative on the screen.
+      It always carries a clock time, so there is an hour to be
+      reminded at.
+   ============================================================ */
+function instruction(){
+  const t = bedTargetMin();
+  if (S.data === "new"){
+    /* "Walk TO 7,000" would be a target the Steps bar above has already passed,
+       so the ask is a fresh daily dose, not a running total. */
+    return { text:"Walk " + F.steps(RAW.stepsAnchor) + " steps before 6:00 pm.",
+             remindAt:"2:00 pm", remindLabel:"Remind me later", proof:null,
+             note:"Seven thousand is where most of the benefit has already arrived. Your own range replaces it at day seven." };
+  }
+  if (S.data === "phone"){
+    return { text:"Walk 20 minutes before 6:00 pm.",
+             remindAt:"4:30 pm", remindLabel:"Remind me later",
+             proof:proofLine("Those days you covered " + RAW.proof.coveredExtraKm + " km more ground than usual"),
+             note:null };
+  }
+  if (wakeIsIrregular()){
+    // §11.8 — an uncontrollable bedtime is not a fair instruction, so
+    // the screen asks for the half of sleep regularity the user owns.
+    const w = median(wakeArray());
+    const hh = Math.floor(w/60), mm = w % 60;
+    const h12 = (hh % 12) || 12;
+    return { text:"Up by " + h12 + ":" + String(mm).padStart(2,"0") + " am tomorrow.",
+             remindAt:"10:00 pm", remindLabel:"Remind me tonight",
+             proof:proofLine(),
+             note:"Your wake time moves a lot, so this screen works on that rather than on a bedtime." };
+  }
+  if (S.ctx === "unwell"){
+    // §11.7 — a declared life context changes the instruction itself,
+    // not just an acknowledgement under it.
+    return { text:"In bed by " + F.short(t - 45) + " tonight.",
+             remindAt:F.bed(t - 75), remindLabel:"Remind me tonight",
+             proof:proofLine(),
+             note:"You marked yourself unwell, so tonight's target moved earlier and today asks for nothing else." };
+  }
+  /* "tonight" is what makes the bare clock time unambiguous. In the evening
+     state that word is gone, so the hour has to carry am/pm itself — "In bed
+     by 10:30." at 7pm is a sentence a tired reader can put twelve hours out. */
+  return { text:S.time === "pm" ? "In bed by " + F.bed(t) + "." : "In bed by " + F.short(t) + " tonight.",
+           remindAt:F.bed(t - 30), remindLabel:"Remind me tonight",
+           proof:proofLine(), note:null };
+}
+/* M6 — 03's proof grammar: payoff + size + window, aggregate, borrowed
+   unit, no causal verb. Absent when there is no record. Never faked.
+   The count is spelled, like every other count on the screen, and it moves
+   the moment Done is pressed — the acknowledgement says it joins the record,
+   so the record has to agree. */
+function proofLine(payoff){
+  const p = RAW.proof;
+  const done = p.n + (S.done ? 1 : 0);
+  if (!done) return null;
+  return "Done " + word(done) + " times. " +
+         (payoff || "Those mornings you slept " + p.sleptExtraMin + " minutes longer than usual") +
+         ", measured across your last " + word(p.windowWeeks) + " weeks.";
+}
+
+/* ============================================================
+   8. RENDER
+   ============================================================ */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const n = s => `<span class="num">${esc(s)}</span>`;
+
+function barHTML(b, focal){
+  const left  = (50 - b.half) + "%";
+  const width = (b.half * 2) + "%";
+  const prov  = S.data === "new" ? " provisional" : "";
+  /* a ghost closer than this to the live marker sits underneath it and is not
+     drawn at all, so it is dropped rather than rendered invisible. The clause
+     and the aria label still carry the full count in words. */
+  const ghosts = b.xs.filter(x => Math.abs(x - b.x) > 4)
+                     .map(x => `<span class="mk past" style="left:${x.toFixed(2)}%"></span>`).join("");
+  const aria = `${b.label} ${b.text}, ${ariaPos(b.pos, rangeName())}${b.clause ? ", " + b.clause : ""}.`;
+  const isFocal = focal === b.key;
+  return `
+  <div class="bar${isFocal ? " focal" : ""}">
+    <div class="top">
+      <span class="lab">${esc(b.label)}</span>
+      <span class="val num">${esc(b.text)}${isFocal ? "" : `<span class="pos">${esc(b.pos)}</span>`}</span>
+    </div>
+    ${isFocal ? `<p class="posFocal">${esc(b.pos)}</p>` : ""}
+    <div class="track" role="img" aria-label="${esc(aria)}">
+      <span class="band${prov}" style="left:${left};width:${width}"></span>
+      ${ghosts}
+      <span class="mk${b.out ? " out" : ""}${isFocal ? " focal" : ""}" style="left:${b.x.toFixed(2)}%"></span>
+    </div>
+    ${b.clause ? `<p class="clause" data-prose>${esc(b.clause)}</p>` : ""}
+    ${b.learn  ? `<p class="learn">${esc(b.learn)}</p>` : ""}
+  </div>`;
+}
+
+function heroHTML(){
+  const bars  = barModels();
+  const attn  = attention(bars);
+  const note  = stateNote();
+  /* M4 focal rule — the single bar furthest outside its band. If every
+     bar is inside there is no focal bar and no clause anywhere.
+     When the strip fires it names a signal, and the one coloured mark on the
+     screen has to be that signal: two entry points on the one morning that
+     needs a single one is the split the strip exists to prevent. */
+  const outs  = bars.filter(b => b.out).sort((a,c) => c.dist - a.dist);
+  const focal = attn ? attn.key : (outs.length ? outs[0].key : null);
+  const legend = S.data === "new" ? "the starting range, not yours yet" : "your range";
+  return `
+  <section class="card hero" aria-labelledby="heroMsg">
+    ${attn ? `
+    <div class="attn" role="note">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.2M12 16.4h.01"/></svg>
+      <div>
+        <p class="t" data-prose>${esc(attn.title)}</p>
+        <p class="a" data-prose>${esc(attn.anchor)}</p>
+      </div>
+    </div>` : ""}
+    <div class="msgRow">
+      <span class="tick" aria-hidden="true"></span>
+      <p class="msg" id="heroMsg" data-prose>${esc(message(bars))}</p>
+    </div>
+    <div class="bars">${bars.map(b => barHTML(b, focal)).join("")}</div>
+    <div class="legend"><span class="sw" aria-hidden="true"></span> ${esc(legend)}</div>
+    ${note ? `<p class="stateNote">${esc(note)}</p>` : ""}
+  </section>`;
+}
+
+/* M1 — 02's action card, wholesale: behaviour + time, Done, Remind me,
+   aggregate proof. */
+function todayHTML(){
+  const t = instruction();
+  const evening = S.time === "pm";
+  const doneBtn = S.done
+    ? `<button class="btn on" data-act="done" aria-pressed="true">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg>Done</button>`
+    : `<button class="btn primary" data-act="done" aria-pressed="false">Done</button>`;
+  const remBtn =
+    S.remind === 0 ? `<button class="btn ghost" data-act="remind" aria-pressed="false">${esc(t.remindLabel)}</button>` :
+    S.remind === 1 ? `<button class="btn ghost" data-act="remind" aria-pressed="false">Remind at ${esc(t.remindAt)}?</button>` :
+                     `<button class="btn set" data-act="remind" aria-pressed="true" aria-label="Reminder set for ${esc(t.remindAt)}">Set for ${esc(t.remindAt)}</button>`;
+  const proof = t.proof ? withNums(t.proof) : null;
+  return `
+  <section class="card" aria-labelledby="todayHead">
+    <p class="eyebrow" id="todayHead">${evening ? "Tonight" : "Today"}</p>
+    <p class="inst" data-prose data-instruction>${withNums(t.text)}</p>
+    ${t.note ? `<p class="ctxNote" data-prose>${esc(t.note)}</p>` : ""}
+    <div class="btnrow">${doneBtn}${remBtn}</div>
+    ${S.done ? `<p class="doneNote" data-prose><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg>Logged. It joins the record below, and nothing counts consecutive days.</p>` : ""}
+    ${proof ? `<p class="proof" data-prose>${proof}</p>` : ""}
+  </section>`;
+}
+/* wrap every figure so tabular numerals apply and the budget counter can see
+   it. The decimal has to be inside the group, or "1.2 km" is counted, styled
+   and read as two numbers. */
+function withNums(s){
+  return esc(s).replace(/(\d[\d,:]*(?:\.\d+)?)/g, m0 => `<span class="num">${m0}</span>`);
+}
+
+/* Slot 3 — 14 days of the first bar's signal. Interpretation above the
+   chart (D3). Dots only, no connecting line. */
+function chartHTML(){
+  const bars = barModels();
+  const b = bars[0];
+  const m = META[b.key];
+  const v = b.series;
+  const len = v.length;
+
+  /* the viewBox width matches the card's inner width at a 320pt phone, so
+     the 11px axis labels never render below 11px on the smallest screen. */
+  const W = 264, H = 108, padL = 52, padR = 4, padT = 11, padB = 20;
+  const lo = Math.min(...v, b.band[0]);
+  const hi = Math.max(...v, b.band[1]);
+  const pad = (hi - lo) * 0.16 || 1;
+  const min = lo - pad, max = hi + pad;
+  const y = val => padT + (max - val) / (max - min) * (H - padT - padB);
+  const x = i => padL + (len === 1 ? 0 : i * (W - padL - padR) / (len - 1));
+
+  const bandTop = y(b.band[1]), bandBot = y(b.band[0]);
+  const dots = v.map((val,i) =>
+    `<circle class="dot${i === len-1 ? " last" : ""}" cx="${x(i).toFixed(1)}" cy="${y(val).toFixed(1)}" r="${i === len-1 ? 4.8 : 3.4}"/>`
+  ).join("");
+
+  const inside = countInside(v, b.band);
+  const run = runOutside(v, b.band);
+  const unit = b.key === "sleep" ? "nights" : "days";
+  /* on day three the shape is not the user's range yet, and the sentence has
+     to agree with the legend two cards up. */
+  const isNew = S.data === "new";
+  const window_ = isNew ? "your first " + word(len) + " " + unit
+                        : "the last " + word(len) + " " + unit;
+  let lede;
+  if (run === 0){
+    lede = cap(word(inside)) + " of " + window_ + " sat inside " + rangeName() + ", this one included.";
+  } else {
+    lede = cap(word(inside)) + " of " + window_ + " sat inside " + rangeName() + ". The last " +
+           (run === 1 ? "one ran" : word(run) + " ran") + " " + (v[len-1] > b.band[1] ? "over" : "under") + " it.";
+  }
+
+  const title = S.data === "new" ? "Your first three days" : "Your last 14 days";
+  /* M5b — naming what was checked converts silence from "the app is
+     thin" into "the app looked". Quiet days only. */
+  const capt = (S.data === "full" && S.day === "quiet")
+    ? "Your heart rate, breathing and temperature all sat in your usual range last night."
+    : null;
+
+  return `
+  <section class="card" aria-labelledby="chartHead">
+    <h2 class="h2" id="chartHead">${S.data === "new" ? esc(title) : `Your last ${n(14)} days`}</h2>
+    <p class="lede" data-prose>${esc(lede)}</p>
+    <div class="chartWrap">
+      <svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+           aria-label="${esc(m.name)} for ${esc(window_)}. ${cap(rangeName())} is ${esc(m.fmt(b.band[0]))} to ${esc(m.fmt(b.band[1]))}. Latest reading ${esc(m.fmt(v[len-1]))}, ${ariaPos(b.pos, rangeName())}.">
+        <rect x="${padL}" y="${bandTop.toFixed(1)}" width="${W-padL-padR}" height="${Math.max(2,(bandBot-bandTop)).toFixed(1)}"
+              rx="7" fill="var(--bandFill)" stroke="var(--bandEdge)" stroke-width="1"${S.data==="new"?' stroke-dasharray="4 3"':""}/>
+        <text class="axisTxt num" x="0" y="${(bandTop+4).toFixed(1)}">${esc(m.fmt(b.band[1]))}</text>
+        <text class="axisTxt num" x="0" y="${(bandBot+4).toFixed(1)}">${esc(m.fmt(b.band[0]))}</text>
+        ${dots}
+        <text class="axisTxt" x="${padL}" y="${H-4}">${esc(S.data === "new" ? "day one" : m.first)}</text>
+        <text class="axisTxt" x="${W-padR}" y="${H-4}" text-anchor="end">${esc(m.last)}</text>
+      </svg>
+    </div>
+    ${capt ? `<p class="capt" data-prose>${esc(capt)}</p>` : ""}
+    ${discHTML()}
+  </section>`;
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* the persistence rule, and then what it did to THIS morning. The second half
+   used to be typed, so it announced "one morning only" on the two days out of
+   three when the screen said something else. */
+function changeNote(){
+  const bar = barModels().find(b => b.key === "rhr");
+  if (!bar) return "That rule needs a resting heart rate, which a phone on its own cannot read.";
+  if (bar.pos !== "above") return "This morning it is inside your range, so there is nothing to count.";
+  const run  = runOutside(bar.series, bar.band);
+  const over = Math.round(bar.value - rhrBaseline());
+  const nights = run <= 1 ? "one morning" : word(run) + " mornings";
+  return over >= 5 && run >= 3
+    ? "This morning it is " + over + " above on " + nights + ", which is why you are being told."
+    : "This morning it is " + over + " above on " + nights + ", which is not enough, so nothing else happens.";
+}
+
+function discHTML(){
+  const bedC = bedTargetMin();
+  const derivation = S.data === "new"
+    ? `Three days is not enough to describe your usual, so every band here starts from a public target drawn deliberately wide. Your own last two weeks replace it from day seven.`
+    : S.data === "phone"
+    ? `Every band here is the middle of your own last two weeks, and nobody else's.`
+    : `Sleep sits around the amount your own nights say you need, ${F.sleep(RAW.sleepNeedH)}.
+       Steps start at ${F.steps(RAW.stepsAnchor)} and stretch to your own busiest days.
+       ${wakeIsIrregular()
+          ? `Bedtime would normally be your usual wake time minus that need minus the ${RAW.onsetMin} minutes you take to fall asleep, but your wake time moves too much for that sum to be fair, so your own middle bedtime is used instead, and that is ${F.bed(bedC)}.`
+          : `Bedtime is your usual wake time minus that need minus the ${RAW.onsetMin} minutes you normally take to fall asleep, which lands at ${F.bed(bedC)}.`}
+       Resting heart rate is the middle of your own last two weeks.`;
+  return `
+  <div class="disc">
+    <button class="discBtn" data-act="disc" aria-expanded="${S.disc}" aria-controls="discPanel">
+      How your range is built
+      <span class="chev" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>
+    <div class="discPanel${S.disc ? " open" : ""}" id="discPanel">
+      <dl>
+        <div>
+          <dt>Where each band comes from</dt>
+          <dd>${derivation}</dd>
+          ${S.data === "full" ? `<dd>Bedtime gets a wider window than the others because it is worked out from your wake time rather than measured directly.</dd>` : ""}
+        </div>
+        <div>
+          <dt>Why the band is this wide</dt>
+          <dd>Width is the only confidence signal on this screen. More of your own history makes it narrower. With a phone alone, or in your first week, it is drawn wider on purpose.</dd>
+        </div>
+        <div>
+          <dt>When we call something a change</dt>
+          <dd>We do not call that a change until it is 5 or more above your average for three mornings. One raised morning means almost nothing. ${esc(changeNote())}</dd>
+        </div>
+        <div>
+          <dt>Not counted</dt>
+          <dd>How you feel. We do not measure it, so it is not in these ranges.</dd>
+          <dd>Blood oxygen. Nothing was recorded last night.</dd>
+          <dd>Sleep stages. The error is wider than the number, so we leave them out.</dd>
+        </div>
+        <div>
+          <dt>Why steps start at ${F.steps(RAW.stepsAnchor)}</dt>
+          <dd>That goal is the level where most of the health benefit has already arrived. ${S.data === "new"
+            ? "The top of the band is a wide starting guess until you have two weeks of your own."
+            : "The top of the band is your own busiest fortnight, not a round number."}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>`;
+}
+
+/* Slot 4 — the escape hatch, and the screen it produces. */
+function escapeRowHTML(){
+  return `
+  <button class="raw" data-act="raw">
+    <span class="rl">
+      <span class="rt">Just the numbers</span>
+      <span class="rs">Turn off ranges and words. Nothing gets judged.</span>
+    </span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+  </button>`;
+}
+function rawHTML(){
+  const bars = barModels();
+  const rows = bars.map(b =>
+    `<div class="rawRow"><span class="k">${esc(b.label)}</span><span class="v num">${esc(b.text)}</span></div>`).join("");
+  const extra = S.data === "full"
+    ? `<div class="rawRow"><span class="k">Heart rate variability (SDNN)</span><span class="v num">${esc(F.hrv(RAW.hrvSDNN))}</span></div>
+       <div class="rawRow"><span class="k">Sleep, 14-night average</span><span class="v num">${esc(F.sleep(mean(tail(RAW.nights,"sleep"))))}</span></div>`
+    : "";
+  const first = bars[0];
+  return `
+  <section class="card">
+    <p class="eyebrow">Raw readings</p>
+    <div class="rawList">${rows}${extra}</div>
+  </section>
+  <section class="card">
+    <p class="eyebrow">${esc(first.label)}, day by day</p>
+    <p class="rawSeries num">${first.series.map(v => esc(META[first.key].fmt(v))).join("  ·  ")}</p>
+  </section>
+  <button class="raw" data-act="raw">
+    <span class="rl">
+      <span class="rt">Bring the ranges back</span>
+      <span class="rs">Positions, words and today's one thing return.</span>
+    </span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+  <p class="footNote">Nothing here is judged. These are the numbers as recorded.<br>Nothing here is compared with anything, including other people.</p>`;
+}
+
+/* Loading — the four shapes and all four labels are immediate. Only the
+   values and the marker positions shimmer. The structure never flickers. */
+function loadingHTML(){
+  const rows = BAR_ORDER[S.data].map(k => `
+    <div class="bar">
+      <div class="top">
+        <span class="lab">${esc(META[k].name)}</span>
+        <span class="sk skLine" style="width:74px;height:16px"></span>
+      </div>
+      <div class="track">
+        <span class="sk skMark"></span>
+        <span class="band" style="left:${50 - BAND_HALF[S.data]}%;width:${BAND_HALF[S.data]*2}%"></span>
+      </div>
+    </div>`).join("");
+  return `
+  <section class="card hero">
+    <div class="msgRow"><span class="tick" aria-hidden="true"></span><span class="sk skLine" style="width:70%;height:19px;margin-top:3px"></span></div>
+    <div class="bars">${rows}</div>
+    <div class="legend"><span class="sw" aria-hidden="true"></span> your range</div>
+  </section>
+  <section class="card">
+    <p class="eyebrow">Today</p>
+    <span class="sk skLine" style="width:82%;height:19px"></span>
+    <div class="btnrow"><span class="sk skLine" style="flex:1 1 0;height:48px;border-radius:12px"></span><span class="sk skLine" style="flex:1 1 0;height:48px;border-radius:12px"></span></div>
+  </section>
+  <p class="footNote">Reading your last 14 days.</p>`;
+}
+
+/* Empty — the bands render as goal shapes, not blanks. An unfilled
+   shape says fill me; a blank tile says this app is broken. */
+function emptyHTML(){
+  const rows = ["Sleep","Steps","Bedtime","Resting heart rate"].map(l => `
+    <div class="bar">
+      <div class="top"><span class="lab">${esc(l)}</span><span class="val" style="color:var(--t3);font-size:var(--fs-lab);font-weight:600">not yet</span></div>
+      <div class="emptyTrack"><span class="emptyBand"></span></div>
+    </div>`).join("");
+  return `
+  <section class="card hero">
+    <div class="msgRow"><span class="tick" aria-hidden="true"></span><p class="msg" data-prose>Nothing to read yet. The shapes are ready.</p></div>
+    <div class="bars">${rows}</div>
+    <div class="legend"><span class="sw" aria-hidden="true"></span> your range, once there is one</div>
+  </section>
+  <section class="card">
+    <p class="eyebrow">Today</p>
+    <p class="inst" data-prose>Steps and distance arrive the same day. The rest follow.</p>
+    <div class="btnrow"><button class="btn primary wide" data-act="connect">Connect Apple Health</button></div>
+  </section>
+  <p class="footNote">Nothing is sent anywhere. Everything is read on this phone.</p>`;
+}
+
+function normalHTML(){
+  /* M8. On day three there is no history to compare against yet, so the
+     promise that survives is the half that is still true. */
+  const trust = S.data === "new"
+    ? "Nothing here is compared with other people. These ranges start wide and narrow into yours."
+    : "Every number here is compared with your own history, never with other people.";
+  return heroHTML() + todayHTML() + chartHTML() + escapeRowHTML() +
+    `<p class="footNote">Updated just now.<br>${trust}</p>`;
+}
+
+/* ============================================================
+   9. PAINT
+   ============================================================ */
+const scroll = document.getElementById("scroll");
+const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lastKey = null;
+
+function render(){
+  let html;
+  if (S.screen === "loading")    html = loadingHTML();
+  else if (S.screen === "empty") html = emptyHTML();
+  else if (S.raw)                html = rawHTML();
+  else                           html = normalHTML();
+  scroll.innerHTML = html;
+
+  /* §11.9 — markers are positioned from the computed value in the
+     markup itself. The settle pulse is an enhancement layered on top
+     and it never moves the marker, so a slow frame can never render a
+     false "everything is inside your range". */
+  const key = [S.screen, S.data, S.day, S.raw, S.sleeper, S.ctx].join("|");
+  if (key !== lastKey && !reduce()){
+    lastKey = key;
+    scroll.querySelectorAll(".mk:not(.past)").forEach((m, i) => {
+      setTimeout(() => m.classList.add("settle"), 40 + i * 70);
+    });
+  } else {
+    lastKey = key;
+  }
+  positionFold();
+}
+
+function positionFold(){
+  const tabs = document.querySelector(".tabs");
+  const phone = document.querySelector(".phone");
+  const line = document.getElementById("foldLine");
+  if (!tabs || !phone || !line) return;
+  line.style.top = (tabs.getBoundingClientRect().top - phone.getBoundingClientRect().top) + "px";
+}
+
+/* ============================================================
+   10. EVENTS — one delegated handler, so nothing can lose a binding
+   ============================================================ */
+scroll.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.getAttribute("data-act");
+
+  if (act === "done"){
+    S.done = !S.done;                 // writes a record. Nothing counts consecutive days.
+    render();
+    const b = scroll.querySelector('[data-act="done"]'); if (b) b.focus();
+  } else if (act === "remind"){
+    S.remind = S.remind === 2 ? 0 : S.remind + 1;   // states the time before it commits
+    render();
+    const b = scroll.querySelector('[data-act="remind"]'); if (b) b.focus();
+  } else if (act === "disc"){
+    S.disc = !S.disc;
+    render();
+    const b = scroll.querySelector('[data-act="disc"]'); if (b) b.focus();
+  } else if (act === "raw"){
+    S.raw = !S.raw;
+    store.set("raw", S.raw);
+    render();
+    scroll.scrollTop = 0;
+    const b = scroll.querySelector('[data-act="raw"]'); if (b) b.focus();
+  } else if (act === "connect"){
+    S.screen = "loading"; syncDev(); render();
+    setTimeout(() => { S.screen = "loaded"; S.data = "new"; syncDev(); render(); }, 1400);
+  }
+});
+
+/* The other three tabs are exits this prototype does not build. Moving
+   aria-current="page" onto Explore while Today's content stays on screen is a
+   lie the screen can tell with no code at all, so there is no handler. */
+
+/* ============================================================
+   11. THEME, DEV TOOLBAR, URL HASH
+   ============================================================ */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme",
+    S.theme === "auto" ? (mq.matches ? "dark" : "light") : S.theme);
+}
+mq.addEventListener("change", () => { if (S.theme === "auto") applyTheme(); });
+
+function applyChrome(){
+  document.documentElement.setAttribute("data-type", S.type);
+  document.body.classList.toggle("showfold", S.fold);
+}
+
+const devBtn = document.getElementById("devBtn");
+const devPanel = document.getElementById("devPanel");
+devBtn.addEventListener("click", () => {
+  const open = devPanel.classList.toggle("open");
+  devBtn.setAttribute("aria-expanded", String(open));
+});
+
+function syncDev(){
+  document.querySelectorAll(".devPanel .seg[data-group]").forEach(seg => {
+    const g = seg.getAttribute("data-group");
+    const cur = g === "fold" ? (S.fold ? "on" : "off") : S[g];
+    seg.querySelectorAll("button").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-v") === cur)));
+  });
+}
+
+document.querySelectorAll(".devPanel .seg[data-group] button").forEach(b => {
+  b.addEventListener("click", () => {
+    const g = b.parentElement.getAttribute("data-group");
+    const v = b.getAttribute("data-v");
+    if (g === "fold"){ S.fold = (v === "on"); }
+    else {
+      S[g] = v;
+      if (g === "theme") applyTheme();
+      if (g === "data" || g === "day"){ S.done = false; S.remind = 0; }
+    }
+    applyChrome(); syncDev(); render();
+  });
+});
+
+/* URL hash drives every state, so any screenshot is reproducible:
+   #theme=dark&data=phone&screen=loading&day=attention&raw=1&disc=1&type=ax3 */
+function readHash(){
+  const h = location.hash.replace(/^#/, "");
+  if (!h) return;
+  h.split("&").forEach(p => {
+    const [k, v] = p.split("=");
+    if (v === undefined) return;
+    if (["theme","data","screen","day","time","ctx","sleeper","type"].includes(k)) S[k] = v;
+    else if (["raw","disc","done","fold"].includes(k)) S[k] = (v === "1" || v === "true");
+    else if (k === "remind") S.remind = Number(v) || 0;
+    else if (k === "dev" && v === "1"){
+      devPanel.classList.add("open"); devBtn.setAttribute("aria-expanded","true");
+    }
+    // design aid: pin the phone to an exact width so a screenshot can be
+    // taken at 320, 390 or 430 on a desktop browser.
+    else if (k === "w" && Number(v)){
+      const p = document.querySelector(".phone");
+      p.style.width = Number(v) + "px"; p.style.maxWidth = Number(v) + "px";
+      p.style.borderRadius = "0"; p.style.boxShadow = "none"; p.style.border = "none";
+      p.style.height = "100dvh"; p.style.maxHeight = "none";
+      document.querySelector(".stage").style.padding = "0";
+      document.querySelector(".stage").style.alignItems = "flex-start";
+    }
+  });
+}
+window.addEventListener("hashchange", () => { readHash(); applyTheme(); applyChrome(); syncDev(); render(); if (location.hash.includes("checks=1")) runChecks(); });
+window.addEventListener("resize", positionFold);
+
+/* ============================================================
+   12. BUILD CHECKS — the M7 assertion pass and the §11.9 guard, run
+        across every rendered state. Not part of the design; it is the
+        thing that stops the design from lying.
+   ============================================================ */
+const IMPERATIVES = /^(read|go|do|take|try|start|stop|walk|sleep|rest|drink|move|keep|get|make|turn|check|aim|push|avoid|limit|eat|breathe|relax|run|log|track|add|open|tap|swipe|scroll)\b/i;
+
+function checkState(desc, html){
+  const errs = [];
+  const doc = new DOMParser().parseFromString("<div>" + html + "</div>", "text/html");
+  const root = doc.body.firstChild;
+
+  const inst = root.querySelectorAll("[data-instruction]");
+  if (inst.length > 1) errs.push("more than one instruction (" + inst.length + ")");
+
+  root.querySelectorAll("[data-prose]").forEach(p => {
+    if (p.hasAttribute("data-instruction")) return;
+    const txt = p.textContent.trim();
+    txt.split(/(?<=[.!?])\s+/).forEach(s => {
+      if (IMPERATIVES.test(s.trim())) errs.push("second imperative: “" + s.trim() + "”");
+    });
+  });
+
+  root.querySelectorAll(".pos, .posFocal").forEach(e => {
+    const w = e.textContent.trim();
+    if (!VOCAB.includes(w)) errs.push("position word outside the locked vocabulary: " + w);
+  });
+
+  root.querySelectorAll(".track").forEach(t => {
+    if (/\d/.test(t.textContent)) errs.push("a band endpoint is printed on a bar");
+  });
+
+  root.querySelectorAll(".mk:not(.past)").forEach(m => {
+    if (!/left:\s*[\d.]+%/.test(m.getAttribute("style") || "")) errs.push("a marker has no position at first paint");
+  });
+
+  const nums = root.querySelectorAll(".num").length;
+  return { desc, errs, nums };
+}
+
+function runChecks(){
+  const saved = JSON.parse(JSON.stringify(S));
+  const lines = [];
+  let fails = 0;
+
+  const combos = [];
+  ["full","phone","new"].forEach(d =>
+    ["quiet","short","attention"].forEach(day => combos.push({data:d, day, screen:"loaded", raw:false})));
+  combos.push({data:"full", day:"short", screen:"loading", raw:false});
+  combos.push({data:"full", day:"short", screen:"empty",  raw:false});
+  combos.push({data:"full", day:"short", screen:"loaded", raw:true});
+  combos.push({data:"full", day:"short", screen:"loaded", raw:false, ctx:"unwell"});
+  combos.push({data:"full", day:"short", screen:"loaded", raw:false, sleeper:"irregular"});
+  combos.push({data:"full", day:"short", screen:"loaded", raw:false, time:"pm"});
+
+  combos.forEach(c => {
+    Object.assign(S, {ctx:"normal", sleeper:"regular", time:"am"}, c);
+    let html;
+    if (S.screen === "loading") html = loadingHTML();
+    else if (S.screen === "empty") html = emptyHTML();
+    else if (S.raw) html = rawHTML();
+    else html = normalHTML();
+    const r = checkState(`${c.data}/${c.day}/${c.screen}${c.raw?"/raw":""}${c.ctx?"/"+c.ctx:""}${c.sleeper?"/"+c.sleeper:""}${c.time?"/"+c.time:""}`, html);
+    fails += r.errs.length;
+    lines.push((r.errs.length ? "FAIL " : "ok   ") + r.desc.padEnd(40) + " numbers:" + String(r.nums).padStart(3) +
+      (r.errs.length ? "\n       " + r.errs.join("\n       ") : ""));
+  });
+
+  /* the chart's last plotted point must equal the first bar's value */
+  Object.assign(S, saved);
+  ["quiet","short","attention"].forEach(day => {
+    S.day = day; S.data = "full";
+    const bars = barModels();
+    const b = bars[0];
+    const ok = Math.abs(b.series[b.series.length-1] - b.value) < 1e-9;
+    if (!ok) fails++;
+    lines.push((ok ? "ok   " : "FAIL ") + ("chart last point == sleep bar, " + day).padEnd(40));
+  });
+
+  Object.assign(S, saved);
+  applyTheme(); applyChrome(); syncDev(); render();
+
+  /* live budget count on whatever is currently on screen */
+  const b = budget();
+  const rep = document.getElementById("report");
+  rep.innerHTML =
+    "<b>BUILD CHECKS</b>\n" + lines.join("\n") +
+    "\n\n" + (fails ? `<span class="fail">${fails} failure(s)</span>` : `<span class="pass">all states clean</span>`) +
+    "\n\n<b>BUDGET — current state (" + S.data + "/" + S.day + "/" + S.screen + ", " + window.innerWidth + "px)</b>\n" +
+    Object.entries(b).map(([k,v]) => "  " + k.padEnd(30) + v).join("\n") +
+    "\n\n<b>tap the report to close</b>";
+  rep.classList.add("open");
+  rep.focus();
+  if (window.console) console.log(rep.textContent);
+}
+
+function budget(){
+  const tabs = document.querySelector(".tabs");
+  const foldY = tabs.getBoundingClientRect().top;
+  const above = el => el.getBoundingClientRect().top < foldY && el.getBoundingClientRect().bottom > 0;
+
+  const numsAll = Array.from(scroll.querySelectorAll(".num")).filter(e => e.textContent.trim());
+  const numsAbove = numsAll.filter(above);
+  const proseAbove = Array.from(scroll.querySelectorAll("[data-prose]")).filter(above);
+  const wordsProse = proseAbove.reduce((s,e) => s + e.textContent.trim().split(/\s+/).filter(Boolean).length, 0);
+
+  const allText = [];
+  const walk = el => {
+    if (el.nodeType === 3){ const t = el.textContent.trim(); if (t) allText.push({t, el:el.parentElement}); return; }
+    if (el.nodeType !== 1) return;
+    if (el.tagName === "svg") return;
+    Array.from(el.childNodes).forEach(walk);
+  };
+  walk(scroll);
+  const aboveTokens = allText.filter(x => above(x.el)).map(x => x.t).join(" ");
+  const wordsAll = aboveTokens.split(/\s+/).filter(Boolean).length;
+
+  return {
+    "blocks (incl. header)": scroll.querySelectorAll("section.card, .raw, .footNote").length + 1,
+    "cards above fold":    Array.from(scroll.querySelectorAll("section.card, .raw")).filter(above).length,
+    "numbers, total":      numsAll.length,
+    "numbers above fold":  numsAbove.length + "   [" + numsAbove.map(e=>e.textContent.trim()).join(" | ") + "]",
+    "prose words above":   wordsProse,
+    "all words above":     wordsAll + "   [" + aboveTokens + "]",
+    "tap targets":         scroll.querySelectorAll("button").length + document.querySelectorAll(".tab").length,
+    "exits from Home":     document.querySelectorAll('.tab:not([aria-current])').length,
+    "disclosure levels":   scroll.querySelector(".discPanel") ? 1 : 0,
+    "instructions":        scroll.querySelectorAll("[data-instruction]").length,
+    "uncertainty widgets": scroll.querySelector(".band") ? 1 : 0
+  };
+}
+
+document.getElementById("runChecks").addEventListener("click", runChecks);
+document.getElementById("report").addEventListener("click", function(){ this.classList.remove("open"); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  const rep = document.getElementById("report");
+  if (rep.classList.contains("open")){ rep.classList.remove("open"); devBtn.focus(); return; }
+  if (devPanel.classList.contains("open")){
+    devPanel.classList.remove("open"); devBtn.setAttribute("aria-expanded","false"); devBtn.focus();
+  }
+});
+
+/* ============================================================
+   13. GO
+   ============================================================ */
+readHash();
+applyTheme();
+applyChrome();
+syncDev();
+render();
+if (location.hash.includes("checks=1")) runChecks();
+</script>
+</body>
+</html>

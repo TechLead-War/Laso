@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — 06 Today's Story</title>
+<style>
+/* ============================================================
+   Laso design tokens — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elevated:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --tp:#1B1B20; --ts:#44444D; --tt:#5B5B65;
+  --bl:#E0E0E8; --bm:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --ok:#0C7752; --warn:#8A6400; --bad:#C42B33;
+  --ok-wash:rgba(12,119,82,.12); --warn-wash:rgba(138,100,0,.14); --bad-wash:rgba(196,43,51,.11);
+  --bad-tint:rgba(196,43,51,.06);
+  --band-fill:rgba(68,68,77,.20); --band-edge:rgba(68,68,77,.34); --band-prog:rgba(68,68,77,.24);
+  --shadow:0 1px 2px rgba(0,0,0,.12);
+  --shadow-lift:0 6px 18px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.10);
+  --rail:#C9C9D3;
+}
+:root[data-theme="dark"],
+:root[data-theme="auto"]{ color-scheme:light dark; }
+@media (prefers-color-scheme:dark){
+  :root[data-theme="auto"]{
+    --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+    --overlay:#33333B; --subtle:#17171C;
+    --tp:#F2F2F6; --ts:#C9C9D2; --tt:#ADADB8;
+    --bl:#2E2E36; --bm:#414149;
+    --primary:#4DA3FF; --accent:#22D3EE;
+    --ok:#3DCC99; --warn:#E3B45A; --bad:#E05C64;
+    --ok-wash:rgba(61,204,153,.14); --warn-wash:rgba(227,180,90,.15); --bad-wash:rgba(224,92,100,.15);
+    --bad-tint:rgba(224,92,100,.09);
+    --band-fill:rgba(201,201,210,.18); --band-edge:rgba(201,201,210,.32); --band-prog:rgba(201,201,210,.22);
+    --shadow:none; --shadow-lift:none;
+    --rail:#414149;
+  }
+}
+:root[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --tp:#F2F2F6; --ts:#C9C9D2; --tt:#ADADB8;
+  --bl:#2E2E36; --bm:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --ok:#3DCC99; --warn:#E3B45A; --bad:#E05C64;
+  --ok-wash:rgba(61,204,153,.14); --warn-wash:rgba(227,180,90,.15); --bad-wash:rgba(224,92,100,.15);
+  --bad-tint:rgba(224,92,100,.09);
+  --band-fill:rgba(201,201,210,.18); --band-edge:rgba(201,201,210,.32); --band-prog:rgba(201,201,210,.22);
+  --shadow:none; --shadow-lift:none;
+  --rail:#414149;
+}
+:root[data-theme="light"]{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elevated:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --tp:#1B1B20; --ts:#44444D; --tt:#5B5B65;
+  --bl:#E0E0E8; --bm:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --ok:#0C7752; --warn:#8A6400; --bad:#C42B33;
+  --ok-wash:rgba(12,119,82,.12); --warn-wash:rgba(138,100,0,.14); --bad-wash:rgba(196,43,51,.11);
+  --bad-tint:rgba(196,43,51,.06);
+  --band-fill:rgba(68,68,77,.20); --band-edge:rgba(68,68,77,.34); --band-prog:rgba(68,68,77,.24);
+  --shadow:0 1px 2px rgba(0,0,0,.12);
+  --shadow-lift:0 6px 18px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.10);
+  --rail:#C9C9D3;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  background:#0C0C10; color:var(--tp);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+}
+@media (min-width:520px){ body{padding:24px;} }
+.num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  font-family:-apple-system,"SF Pro Rounded","SF Pro Display",system-ui,sans-serif;}
+
+/* ---------- phone frame ---------- */
+.phone{
+  position:relative; width:100%; max-width:430px; height:100vh; max-height:932px;
+  background:var(--sunken); display:flex; flex-direction:column; overflow:hidden;
+}
+@media (min-width:520px){
+  .phone{height:852px; border-radius:44px; box-shadow:0 30px 80px rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.09);}
+}
+.phone[data-size="mini"]{max-width:375px;}
+@media (min-width:520px){ .phone[data-size="mini"]{height:812px;} }
+
+/* ---------- status bar ---------- */
+.statusbar{
+  flex:0 0 auto; height:47px; padding:8px 22px 0 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:15px; font-weight:600; color:var(--tp);
+}
+.statusbar .sright{display:flex; align-items:center; gap:5px;}
+.statusbar svg{display:block;}
+
+/* ---------- header ---------- */
+.hdr{
+  flex:0 0 auto; padding:2px 12px 10px 12px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.hdr h1{margin:0; font-size:24px; line-height:1.1; font-weight:700;
+  letter-spacing:-.02em; color:var(--tp);}
+.iconbtn{
+  width:44px; height:44px; flex:0 0 44px; border:0; background:transparent;
+  border-radius:9999px; color:var(--ts);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:background .18s ease, transform .08s ease-in;
+}
+.iconbtn:hover{background:var(--subtle);}
+.iconbtn:active{transform:scale(.9);}
+.iconbtn:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+
+/* ---------- scroll ---------- */
+.scroll{
+  flex:1 1 auto; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; padding:2px 12px 28px 12px; position:relative;
+}
+.thread{position:relative; padding-left:28px;}
+
+/* ---------- the thread: one rail segment per node ---------- */
+.node{position:relative; margin:0 0 12px 0;}
+.node:last-child{margin-bottom:0;}
+.node::before{
+  content:""; position:absolute; left:-18px; top:0; bottom:-12px; width:2px;
+  border-radius:2px; background:var(--rail); opacity:.6;
+}
+.node:last-child::before{bottom:auto; height:30px;}
+.node.future::before{
+  background:repeating-linear-gradient(to bottom, var(--rail) 0 4px, transparent 4px 10px);
+  opacity:.85;
+}
+.node.first::before{top:20px;}
+
+.dot{
+  position:absolute; left:-24px; top:14px; width:14px; height:14px; border-radius:9999px;
+  background:var(--sunken); border:2px solid var(--rail);
+  display:flex; align-items:center; justify-content:center; z-index:2;
+}
+.dot.done{background:var(--ts); border-color:var(--ts); color:var(--sunken);}
+.dot.future{border-style:dashed; border-color:var(--bm);}
+.dot.now{width:18px; height:18px; left:-26px; top:16px; border:3px solid var(--tp);
+  background:var(--sunken);}
+.dot.now::after{
+  content:""; position:absolute; inset:-7px; border-radius:9999px;
+  border:2px solid var(--tp); opacity:.28; animation:halo 2.8s ease-out infinite;
+}
+@keyframes halo{
+  0%{transform:scale(.7); opacity:.36}
+  70%{transform:scale(1.32); opacity:0}
+  100%{transform:scale(1.32); opacity:0}
+}
+
+/* ---------- surfaces ---------- */
+.card{
+  background:var(--raised); border:1px solid var(--bl); border-radius:16px;
+  box-shadow:var(--shadow); padding:13px 16px 14px 16px;
+}
+.card.hero{border-radius:24px; padding:18px 18px 20px 18px; box-shadow:var(--shadow-lift);}
+.card.soon{
+  background:transparent; box-shadow:none; border:1px dashed var(--bm);
+  padding:13px 16px 14px 16px;
+}
+.railline{
+  min-height:44px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:6px 2px 6px 0;
+}
+.railline .lab{font-size:13px; font-weight:600; color:var(--tt); min-width:92px;}
+.railline .rv{font-size:16px; font-weight:600; color:var(--tp);}
+.railline .slim{flex:1 1 90px; min-width:80px;}
+.railline .slim .bar{margin-top:0;}
+.railline .slim .track{height:8px;}
+.railline .slim .mark{top:-4px; height:16px;}
+.railline .slim .barpad{display:none;}
+
+/* ---------- type ---------- */
+.eyeb{font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--tt); display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.eyeb .at{font-weight:600; letter-spacing:.02em; text-transform:none; font-size:12px;}
+.valrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:8px;}
+.val{font-size:34px; line-height:1.02; font-weight:700; letter-spacing:-.022em; color:var(--tp);}
+.unit{font-size:15px; font-weight:500; color:var(--ts);}
+.verdict{font-size:13px; font-weight:700; padding:4px 10px; border-radius:9999px; white-space:nowrap;}
+.v-ok{color:var(--ok); background:var(--ok-wash);}
+.v-warn{color:var(--warn); background:var(--warn-wash);}
+.v-bad{color:var(--bad); background:var(--bad-wash);}
+.v-neutral{color:var(--ts); background:var(--subtle);}
+.sub{font-size:15px; line-height:1.36; color:var(--ts); margin:10px 0 0 0;}
+.sub strong{color:var(--tp); font-weight:600;}
+.src{font-size:13px; line-height:1.36; color:var(--tt); margin:9px 0 0 0;}
+.instruction{font-size:17px; line-height:1.32; font-weight:600; color:var(--tp); margin:10px 0 0 0;}
+
+/* ---------- positional band bar ---------- */
+.bar{margin-top:13px;}
+.track{position:relative; height:12px; border-radius:9999px;
+  background:var(--subtle); border:1px solid var(--bl);}
+.track.tall{height:14px;}
+.band{position:absolute; top:-1px; bottom:-1px; border-radius:9999px;
+  background:var(--band-fill); border:1px solid var(--band-edge);}
+.prog{position:absolute; top:1px; bottom:1px; left:1px; border-radius:9999px;
+  background:var(--band-prog);}
+.mark{position:absolute; top:-6px; width:4px; height:24px; border-radius:9999px;
+  background:var(--tp); box-shadow:0 0 0 2px var(--raised); transform:translateX(-2px);
+  transition:left .5s cubic-bezier(.22,.7,.3,1);}
+.track.tall .mark{top:-7px; height:28px;}
+.mark.ghost{background:var(--bm); height:16px; top:-2px;}
+.bandlab{position:absolute; top:17px; font-size:11px; font-weight:600; color:var(--tt);
+  transform:translateX(-50%); white-space:nowrap;}
+.barpad{height:20px;}
+.barpad.bare{height:2px;}
+
+/* ---------- expander ---------- */
+.exp{
+  margin-top:13px; width:100%; min-height:44px;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:transparent; border:0; border-top:1px solid var(--bl);
+  padding:11px 0 0 0; color:var(--ts); font-size:14px; font-weight:600;
+  cursor:pointer; font-family:inherit; text-align:left; transition:opacity .18s ease;
+}
+.exp:hover{opacity:.7;}
+.exp:focus-visible{outline:2px solid var(--primary); outline-offset:3px; border-radius:6px;}
+.exp .chev{transition:transform .25s cubic-bezier(.22,.7,.3,1); flex:0 0 auto;}
+.exp[aria-expanded="true"] .chev{transform:rotate(180deg);}
+.panel{overflow:hidden; max-height:0; opacity:0;
+  transition:max-height .36s cubic-bezier(.22,.7,.3,1), opacity .24s ease;}
+.panel.open{max-height:760px; opacity:1;}
+.panelin{padding-top:14px;}
+
+/* ---------- 7 night chart ---------- */
+.chartcap{font-size:15px; line-height:1.35; color:var(--tp); font-weight:600; margin:0;}
+.chartsub{font-size:13px; line-height:1.35; color:var(--tt); margin:5px 0 12px 0;}
+.chart{width:100%; display:block;}
+.chart .grid{stroke:var(--bl); stroke-width:1;}
+.chart .axis, .chart .rowlab{fill:var(--tt); font-size:11px; font-weight:600;
+  font-family:-apple-system,system-ui,sans-serif;}
+.chart .rowlab{letter-spacing:.04em;}
+.chart .sleepbar{fill:var(--ts); opacity:.36;}
+.chart .sleepbar.last{fill:var(--tp); opacity:.88;}
+.chart .bedtick{stroke:var(--tp); stroke-width:2; opacity:.5;}
+
+/* ---------- health notice: position 1, never blurred ---------- */
+.notice{
+  border-left:3px solid var(--bad); background:var(--bad-tint);
+  border-radius:0 12px 12px 0; padding:12px 14px; margin:0 0 14px 0;
+}
+.notice h3{margin:0; font-size:15px; font-weight:700; color:var(--tp);
+  display:flex; align-items:center; gap:7px;}
+.notice p{margin:8px 0 0 0; font-size:15px; line-height:1.38; color:var(--ts);}
+.notice .anchor{font-size:13px; color:var(--tt);}
+
+/* ---------- buttons ---------- */
+.btn{
+  min-height:44px; padding:0 18px; border-radius:9999px; border:0;
+  background:var(--tp); color:var(--sunken);
+  font-size:16px; font-weight:600; font-family:inherit; cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px;
+  transition:transform .08s ease-in, opacity .18s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn:focus-visible{outline:2px solid var(--primary); outline-offset:3px;}
+.btn[data-state="done"]{background:var(--subtle); color:var(--ts); border:1px solid var(--bl);}
+.btn-soft{
+  margin-top:12px; min-height:44px; padding:0 16px; border-radius:9999px;
+  background:var(--elevated); border:1px solid var(--bm); color:var(--tp);
+  font-size:15px; font-weight:600; font-family:inherit; cursor:pointer;
+  transition:transform .08s ease-in, background .18s ease;
+}
+.btn-soft:active{transform:scale(.97);}
+.btn-soft:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+.btn-soft[aria-pressed="true"]{background:var(--tp); color:var(--sunken); border-color:var(--tp);}
+.actionrow{display:flex; gap:10px; align-items:center; margin-top:15px; flex-wrap:wrap;}
+
+/* ---------- footer ---------- */
+.foot{margin:18px 0 0 28px; font-size:12px; line-height:1.4; color:var(--tt);}
+
+/* ---------- raw mode ---------- */
+.rawnote{font-size:13px; color:var(--tt); margin:0 0 18px 0; line-height:1.4;}
+.rawseg{margin:0 0 18px 0;}
+.rawseg h3{margin:0 0 6px 0; font-size:11px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--tt);}
+.rawrow{display:flex; justify-content:space-between; gap:14px; padding:11px 0;
+  border-bottom:1px solid var(--bl); font-size:16px; color:var(--ts);}
+.rawrow:last-child{border-bottom:0;}
+.rawrow b{color:var(--tp); font-weight:600;}
+
+/* ---------- skeleton ---------- */
+.sk{background:var(--subtle); border-radius:8px; position:relative; overflow:hidden;}
+.sk::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent, rgba(128,128,140,.18), transparent);
+  animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ---------- tab bar ---------- */
+.tabbar{
+  flex:0 0 auto; height:83px; padding:8px 8px 22px 8px;
+  display:flex; align-items:flex-start; justify-content:space-around;
+  background:var(--base); border-top:1px solid var(--bl);
+}
+@supports (backdrop-filter:blur(20px)){
+  .tabbar{background:color-mix(in srgb, var(--base) 80%, transparent);
+    backdrop-filter:saturate(180%) blur(22px); -webkit-backdrop-filter:saturate(180%) blur(22px);}
+}
+.tab{
+  flex:1 1 0; min-height:48px; border:0; background:transparent; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--tt); font-family:inherit; font-size:11px; font-weight:600;
+  border-radius:12px; transition:color .18s ease, transform .08s ease-in;
+}
+.tab[aria-current="page"]{color:var(--primary);}
+.tab:active{transform:scale(.94);}
+.tab:focus-visible{outline:2px solid var(--primary); outline-offset:-2px;}
+
+/* ---------- toast ---------- */
+.toast{
+  position:absolute; left:12px; right:12px; bottom:95px; z-index:40;
+  background:var(--tp); color:var(--sunken); border-radius:14px;
+  padding:12px 16px; font-size:15px; font-weight:600;
+  opacity:0; transform:translateY(10px); pointer-events:none;
+  transition:opacity .25s ease-in-out, transform .25s ease-in-out;
+}
+.toast.show{opacity:1; transform:translateY(0);}
+
+/* ---------- sheet ---------- */
+.scrim{position:absolute; inset:0; background:rgba(0,0,0,.34); opacity:0;
+  pointer-events:none; transition:opacity .25s ease; z-index:50;}
+.scrim.show{opacity:1; pointer-events:auto;}
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:51;
+  background:var(--elevated); border-top:1px solid var(--bl);
+  border-radius:20px 20px 0 0; padding:10px 16px 30px 16px;
+  transform:translateY(105%); transition:transform .3s cubic-bezier(.22,.7,.3,1);
+}
+.sheet.show{transform:translateY(0);}
+.grabber{width:36px; height:5px; border-radius:9999px; background:var(--bm); margin:0 auto 14px auto;}
+.sheet h2{margin:0 0 4px 0; font-size:20px; font-weight:700;}
+.sheet > p{margin:0 0 14px 0; font-size:14px; line-height:1.4; color:var(--tt);}
+.switchrow{display:flex; align-items:center; justify-content:space-between; gap:14px;
+  min-height:56px; padding:10px 0; border-top:1px solid var(--bl);}
+.switchrow .lbl{font-size:17px; font-weight:600; color:var(--tp);}
+.switchrow .hint{font-size:13px; color:var(--tt); margin-top:3px; line-height:1.35;}
+.sw{position:relative; width:52px; height:32px; flex:0 0 52px; border-radius:9999px;
+  background:var(--bm); border:0; cursor:pointer; transition:background .22s ease;}
+.sw::after{content:""; position:absolute; top:3px; left:3px; width:26px; height:26px;
+  border-radius:9999px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3);
+  transition:transform .22s cubic-bezier(.3,.8,.3,1);}
+.sw[aria-checked="true"]{background:var(--ok);}
+.sw[aria-checked="true"]::after{transform:translateX(20px);}
+.sw:focus-visible{outline:2px solid var(--primary); outline-offset:3px;}
+
+/* ---------- fold guide ---------- */
+.foldguide{position:absolute; left:0; right:0; bottom:83px; height:0;
+  border-top:1.5px dashed var(--bad); z-index:30; pointer-events:none; display:none;}
+.foldguide span{position:absolute; right:8px; top:-17px; font-size:10px; font-weight:700;
+  color:var(--bad); background:var(--sunken); padding:1px 5px; border-radius:4px;}
+.phone[data-fold="1"] .foldguide{display:block;}
+
+/* ---------- entrance ---------- */
+.enter{animation:rise .34s cubic-bezier(.22,.7,.3,1) both;}
+@keyframes rise{from{opacity:0; transform:translateY(9px)} to{opacity:1; transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important;}
+  .dot.now::after{opacity:.28; transform:scale(1);}
+}
+
+/* ---------- dev toolbar (not part of the design being judged) ---------- */
+.dev{position:fixed; right:10px; bottom:10px; z-index:200;
+  font-family:-apple-system,system-ui,sans-serif;}
+.devtoggle{width:38px; height:38px; border-radius:9999px;
+  border:1px solid rgba(255,255,255,.2); background:rgba(26,26,30,.94); color:#fff;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.45);}
+.devpanel{position:absolute; right:0; bottom:46px; width:240px;
+  background:rgba(22,22,26,.97); border:1px solid rgba(255,255,255,.14);
+  border-radius:12px; padding:10px; display:none; color:#EDEDF2;
+  box-shadow:0 12px 40px rgba(0,0,0,.55); max-height:78vh; overflow:auto;}
+.devpanel.show{display:block;}
+.devpanel h4{margin:9px 0 5px 0; font-size:9px; font-weight:700; letter-spacing:.11em;
+  text-transform:uppercase; color:#8E8E99;}
+.devpanel h4:first-child{margin-top:0;}
+.devrow{display:flex; gap:4px; flex-wrap:wrap;}
+.devbtn{flex:1 1 auto; padding:6px 4px; border-radius:7px;
+  border:1px solid rgba(255,255,255,.16); background:transparent; color:#C7C7D1;
+  font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;}
+.devbtn[data-on="1"]{background:#4DA3FF; color:#08080A; border-color:#4DA3FF;}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone" data-size="std" data-fold="0">
+
+  <div class="statusbar">
+    <span class="num" id="sbtime">7:04</span>
+    <span class="sright">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true">
+        <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.5" y="6" width="3" height="6" rx="1"/>
+        <rect x="9" y="3.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="1" width="3" height="11" rx="1"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true">
+        <path d="M8 10.6 6.2 8.7a2.6 2.6 0 0 1 3.6 0L8 10.6Zm0-4.2a5 5 0 0 0-3.5 1.4L3.1 6.4a7 7 0 0 1 9.8 0l-1.4 1.4A5 5 0 0 0 8 6.4Zm0-4a9 9 0 0 0-6.4 2.6L.2 3.6a11 11 0 0 1 15.6 0l-1.4 1.4A9 9 0 0 0 8 2.4Z"/>
+      </svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none" aria-hidden="true">
+        <rect x=".5" y=".5" width="21" height="11" rx="3.2" stroke="currentColor" opacity=".4"/>
+        <rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/>
+        <path d="M23 4.2v3.6c1-.3 1.6-.9 1.6-1.8S24 4.5 23 4.2Z" fill="currentColor" opacity=".4"/>
+      </svg>
+    </span>
+  </div>
+
+  <header class="hdr">
+    <h1 id="hdrday">Tuesday <span class="num" style="font-weight:400;color:var(--tt)">29</span></h1>
+    <button class="iconbtn" id="menubtn" aria-label="Display options" aria-haspopup="dialog">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/>
+        <circle cx="15.5" cy="7" r="2.2"/><circle cx="10.5" cy="12" r="2.2"/><circle cx="14.5" cy="17" r="2.2"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="scroll" id="scroll">
+    <div class="thread" id="thread"></div>
+    <div class="foot" id="foot"></div>
+  </main>
+
+  <div class="foldguide"><span>5.4&Prime; FOLD</span></div>
+
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab" aria-current="page" data-tab="Today">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.2"/><path d="M12 7.4V12l3 1.8"/>
+      </svg>Today
+    </button>
+    <button class="tab" data-tab="Live">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2.5 12h3.2l2-5.4 3.4 11 2.6-8 1.7 4.2h2.9"/>
+      </svg>Live
+    </button>
+    <button class="tab" data-tab="Explore">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16 16"/>
+      </svg>Explore
+    </button>
+    <button class="tab" data-tab="Settings">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.1"/>
+        <path d="M12 2.8v2.4M12 18.8v2.4M4.5 12H2.1M21.9 12h-2.4M6.7 6.7 5 5M19 19l-1.7-1.7M6.7 17.3 5 19M19 5l-1.7 1.7"/>
+      </svg>Settings
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle" aria-hidden="true">
+    <div class="grabber"></div>
+    <h2 id="sheettitle">Display</h2>
+    <p>Changes what this screen shows. Nothing is deleted.</p>
+    <div class="switchrow">
+      <div>
+        <div class="lbl">Plain numbers</div>
+        <div class="hint">Turn off every score, band and verdict. Show the readings only.</div>
+      </div>
+      <button class="sw" id="rawsw" role="switch" aria-checked="false" aria-label="Plain numbers"></button>
+    </div>
+    <div class="actionrow"><button class="btn" id="sheetclose">Done</button></div>
+  </div>
+</div>
+
+<div class="dev">
+  <button class="devtoggle" id="devtoggle" aria-label="Prototype controls" aria-expanded="false">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="devpanel" id="devpanel">
+    <h4>Appearance</h4>
+    <div class="devrow" data-group="theme">
+      <button class="devbtn" data-v="auto" data-on="1">Auto</button>
+      <button class="devbtn" data-v="light">Light</button>
+      <button class="devbtn" data-v="dark">Dark</button>
+    </div>
+    <h4>Time of day</h4>
+    <div class="devrow" data-group="time">
+      <button class="devbtn" data-v="am" data-on="1">7am</button>
+      <button class="devbtn" data-v="pm">2pm</button>
+      <button class="devbtn" data-v="night">9pm</button>
+    </div>
+    <h4>Data available</h4>
+    <div class="devrow" data-group="data">
+      <button class="devbtn" data-v="watch" data-on="1">Watch</button>
+      <button class="devbtn" data-v="phone">iPhone</button>
+      <button class="devbtn" data-v="new">New</button>
+    </div>
+    <h4>Readiness level</h4>
+    <div class="devrow" data-group="level">
+      <button class="devbtn" data-v="high">High</button>
+      <button class="devbtn" data-v="usual" data-on="1">Usual</button>
+      <button class="devbtn" data-v="low">Low</button>
+    </div>
+    <h4>Screen state</h4>
+    <div class="devrow" data-group="view">
+      <button class="devbtn" data-v="loaded" data-on="1">Loaded</button>
+      <button class="devbtn" data-v="loading">Loading</button>
+      <button class="devbtn" data-v="empty">Empty</button>
+    </div>
+    <h4>Frame</h4>
+    <div class="devrow" data-group="size">
+      <button class="devbtn" data-v="std" data-on="1">6.1&Prime;</button>
+      <button class="devbtn" data-v="mini">5.4&Prime;</button>
+    </div>
+    <h4>Fold guide</h4>
+    <div class="devrow" data-group="fold">
+      <button class="devbtn" data-v="0" data-on="1">Off</button>
+      <button class="devbtn" data-v="1">On</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   State
+   ============================================================ */
+const S = {
+  theme:"auto", time:"am", data:"watch", level:"usual",
+  view:"loaded", size:"std", fold:"0",
+  raw:false, unwell:false,
+  open:{ night:false, tonight:false },
+  reminder:false, winding:false,
+  _lastTime:null
+};
+
+/* ============================================================
+   Alex, 34. One dataset, used everywhere.
+   Times are minutes from 21:00 so the sleep clock and the bedtime
+   target sit on the same axis. Readiness is an integer, never a decimal.
+   Yesterday's readiness (71) exists in the fiction and is never rendered:
+   no day-over-day delta on anything HRV-derived.
+   ============================================================ */
+const NEED = 460;                     // 7h 40m personal sleep need
+const NEED_LO = 440, NEED_HI = 480;   // the one reference range: the personal goal range
+const GOAL_MIN = 450;                 // 7h 30m goal chosen at sign-up (new user only)
+const ALARM = 570;                    // 6:30 AM
+const STEP_LO = 7000, STEP_HI = 9000; // steps goal range, anchored at 7,000
+
+const LEVEL = {
+  high:  { sleep:455, bedMin:105, wakeMin:575, awake:15, woke:"6:35",
+           readiness:78, bandLo:56, bandHi:74, rVerdict:"Strong", rTone:"ok",
+           why:"Sleep landed inside your range.", targetMin:90 },
+  usual: { sleep:372, bedMin:165, wakeMin:578, awake:41, woke:"6:38",
+           readiness:62, bandLo:56, bandHi:74, rVerdict:"Usual", rTone:"neutral",
+           why:"Sleep was 1h 28m short.", targetMin:90 },
+  low:   { sleep:348, bedMin:185, wakeMin:560, awake:27, woke:"6:20",
+           readiness:41, bandLo:52, bandHi:70, rVerdict:"Below", rTone:"warn",
+           why:"Third short night in a row.", targetMin:60 }
+};
+
+const STEPS = { am:340, pm:5120, night:7240 };
+const CLOCK = { am:"7:04", pm:"2:12", night:"9:18" };
+const CLOCK_LONG = { am:"7:04 AM", pm:"2:12 PM", night:"9:18 PM" };
+
+/* six nights before last night; last night comes from LEVEL */
+const NIGHTS = [
+  { d:"WED", bed:125, wake:570, asleep:415 },
+  { d:"THU", bed:135, wake:565, asleep:400 },
+  { d:"FRI", bed:140, wake:610, asleep:440 },
+  { d:"SAT", bed:150, wake:605, asleep:425 },
+  { d:"SUN", bed:155, wake:590, asleep:415 },
+  { d:"MON", bed:165, wake:565, asleep:388 }
+];
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.prototype.slice.call((r||document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const pct = (v,lo,hi) => clamp((v-lo)/(hi-lo)*100, 0, 100);
+
+function hm(min){ const h=Math.floor(min/60), m=min%60;
+  return h + "h " + String(m).padStart(2,"0") + "m"; }
+function span(min){ const a=Math.abs(min), h=Math.floor(a/60), m=a%60;
+  return h ? (m ? h+"h "+m+"m" : h+"h") : (m+" min"); }
+function hoursWord(min){ const h=Math.floor(min/60), m=min%60;
+  if(m===0) return h + (h===1 ? " hour" : " hours");
+  return h + "h " + String(m).padStart(2,"0") + "m"; }
+function clockOf(min){                       // minutes from 21:00 -> "11:45 PM"
+  const t=(21*60+min)%1440, h=Math.floor(t/60), mm=t%60;
+  const ap = h>=12 ? "PM" : "AM"; let h12 = h%12; if(h12===0) h12=12;
+  return h12 + ":" + String(mm).padStart(2,"0") + " " + ap;
+}
+function clockShort(min){ return clockOf(min).replace(/ (AM|PM)$/,""); }
+
+const ICON = {
+  check:'<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.2 6.3 4.8 8.9 9.8 3.4"/></svg>',
+  chev:'<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5"/></svg>',
+  bell:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.2 7.5-2.2 7.5h16.4S18 14.5 18 8.5Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>',
+  moon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"/></svg>',
+  alert:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 21 19.4H3L12 3.6Z"/><path d="M12 9.6v4.2M12 16.6h.01"/></svg>',
+  tick:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 9.5 17.5 19.5 7"/></svg>'
+};
+
+/* ============================================================
+   The band bar. One value, exactly one reference range (the personal
+   goal range), read by position. Colour never carries the magnitude.
+   ============================================================ */
+function bandBar(o){
+  const bl = pct(o.bandLo,o.lo,o.hi), bh = pct(o.bandHi,o.lo,o.hi);
+  const mv = pct(o.value,o.lo,o.hi);
+  let s = '<div class="band" style="left:'+bl.toFixed(1)+'%;width:'+(bh-bl).toFixed(1)+'%"></div>';
+  if(o.progress) s += '<div class="prog" style="width:calc('+mv.toFixed(1)+'% - 2px)"></div>';
+  if(typeof o.ghost === "number")
+    s += '<div class="mark ghost" style="left:'+pct(o.ghost,o.lo,o.hi).toFixed(1)+'%"></div>';
+  s += '<div class="mark" style="left:'+mv.toFixed(1)+'%"></div>';
+  if(o.label) s += '<div class="bandlab" style="left:'+clamp((bl+bh)/2,14,86).toFixed(1)+'%">'+esc(o.label)+'</div>';
+  return '<div class="bar"><div class="track'+(o.tall?" tall":"")+'" role="img" aria-label="'+esc(o.aria)+'">'
+       + s + '</div><div class="barpad'+(o.label?"":" bare")+'"></div></div>';
+}
+
+/* ============================================================
+   Seven nights on one clock axis: duration and bedtime regularity
+   in a single positional picture. No line graph, no pie, no gauge.
+   ============================================================ */
+function chartRows(){
+  const L = LEVEL[S.level];
+  return NIGHTS.concat([{ d:"TUE", bed:L.bedMin, wake:L.wakeMin, asleep:L.sleep }]);
+}
+function nightsChart(){
+  const rows = chartRows();
+  const W=300, RH=15, GAP=5, TOP=14, LEFT=28, AX1=720;
+  const H = TOP + rows.length*(RH+GAP) + 20;
+  const x = m => LEFT + (m/AX1)*(W-LEFT-4);
+  let g = "";
+  [[0,"9 PM","start"],[240,"1 AM","middle"],[480,"5 AM","middle"],[720,"9 AM","end"]].forEach(a=>{
+    g += '<line class="grid" x1="'+x(a[0]).toFixed(1)+'" y1="'+TOP+'" x2="'+x(a[0]).toFixed(1)+'" y2="'+(H-18)+'"/>';
+    g += '<text class="axis" x="'+x(a[0]).toFixed(1)+'" y="'+(H-4)+'" text-anchor="'+a[2]+'">'+a[1]+'</text>';
+  });
+  rows.forEach((n,i)=>{
+    const y = TOP + i*(RH+GAP), last = i===rows.length-1;
+    g += '<text class="rowlab" x="0" y="'+(y+RH-3)+'">'+n.d+'</text>';
+    g += '<rect class="sleepbar'+(last?" last":"")+'" x="'+x(n.bed).toFixed(1)+'" y="'+y
+       + '" width="'+Math.max(3,x(n.wake)-x(n.bed)).toFixed(1)+'" height="'+RH+'" rx="4"/>';
+    g += '<line class="bedtick" x1="'+x(n.bed).toFixed(1)+'" y1="'+(y-2)+'" x2="'+x(n.bed).toFixed(1)+'" y2="'+(y+RH+2)+'"/>';
+  });
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'
+       + 'Seven nights drawn on a clock. Each bar is one night in bed, the tick on its left edge is bedtime.">'
+       + g + '</svg>';
+}
+
+/* ============================================================
+   Four fixed segments. Only the content inside them changes.
+   ============================================================ */
+function nowIndex(){ return S.time==="am" ? 1 : (S.time==="pm" ? 2 : 3); }
+function noticeOn(){ return S.level==="low" && S.data==="watch"; }
+
+function segNight(){
+  const L = LEVEL[S.level];
+  if(S.data === "phone"){
+    // honest absence, collapsed to one line. The reason is stated on the next node.
+    return { key:"night", title:"Last night", quiet:"not recorded" };
+  }
+  const isNew = S.data === "new";
+  const lo = isNew ? GOAL_MIN-10 : NEED_LO, hi = isNew ? GOAL_MIN+10 : NEED_HI;
+  const inBand = L.sleep >= lo && L.sleep <= hi;
+  return {
+    key:"night", title:"Last night",
+    value:hm(L.sleep),
+    verdict: inBand ? "Usual" : "Short", tone: inBand ? "neutral" : "warn",
+    bar: bandBar({ lo:240, hi:600, bandLo:lo, bandHi:hi, value:L.sleep,
+      aria:"Asleep "+hm(L.sleep)+" against your need of "+hm(isNew?GOAL_MIN:NEED)+". "
+        +(inBand?"Inside your range.":"Below your range.") }),
+    src: isNew ? "Measured against the 7h 30m goal you set. Your own need needs 7 nights." : null,
+    expand:"night"
+  };
+}
+
+function segMorning(){
+  const L = LEVEL[S.level];
+  if(S.data === "phone"){
+    return { key:"morning", title:"Morning",
+      value:"7,240", unit:"steps a day, last 7 days",
+      verdict:"Usual", tone:"neutral",
+      bar: bandBar({ lo:3000, hi:13000, bandLo:6400, bandHi:8900, value:7240, tall:true, label:"your range",
+        aria:"7,240 steps a day across the last 7 days, inside your range of 6,400 to 8,900." }),
+      why:"Your phone cannot read your morning. This is your week instead.",
+      src:"From your phone. The overnight signals are not here." };
+  }
+  if(S.data === "new"){
+    return { key:"morning", title:"Morning", at:"6:38",
+      value:"58", unit:"resting heart rate",
+      verdict:"Usual", tone:"neutral",
+      bar: bandBar({ lo:44, hi:74, bandLo:55, bandHi:60, value:58, tall:true, label:"your 4 mornings",
+        aria:"Resting heart rate 58, inside the 55 to 60 range of your four recorded mornings." }),
+      why:"In line with your four mornings so far.",
+      src:"Four mornings recorded. The range tightens as more arrive." };
+  }
+  return { key:"morning", title:"Morning", at:L.woke,
+    value:String(L.readiness), unit:"readiness",
+    verdict:L.rVerdict, tone:L.rTone,
+    bar: bandBar({ lo:30, hi:95, bandLo:L.bandLo, bandHi:L.bandHi, value:L.readiness, tall:true, label:"range",
+      aria:"Readiness "+L.readiness+" against your 7 day range of "+L.bandLo+" to "+L.bandHi+"." }),
+    why:L.why };
+}
+
+function segDay(){
+  const v = STEPS[S.time], started = S.time !== "am", met = v >= STEP_LO;
+  const bar = bandBar({ lo:0, hi:12000, bandLo:STEP_LO, bandHi:STEP_HI, value:v,
+    progress:true, tall:started, label: started ? "your goal" : null,
+    aria:"Steps "+v.toLocaleString("en-GB")+" against your goal range of 7,000 to 9,000." });
+  if(!started) return { key:"day", title:"Day ahead", slimBar:bar };
+  return { key:"day", title:"Day ahead",
+    value:v.toLocaleString("en-GB"), unit:"steps",
+    verdict: met ? "Met" : "On the way", tone: met ? "ok" : "neutral",
+    bar:bar, why: met ? "Goal met, and the evening is still yours." : "1,880 to go." };
+}
+
+function segTonight(){
+  const L = LEVEL[S.level];
+  const target = (S.data==="new" || S.data==="phone") ? 90 : L.targetMin;
+  const ghost  = S.data==="phone" ? undefined : L.bedMin;
+  const isNow  = S.time === "night";
+  // the target time IS the instruction; it is never restated as a sentence,
+  // so the one number in this node is never printed twice.
+  return { key:"tonight", title:"Tonight", isNow:isNow,
+    value:clockOf(target), unit:"lights out",
+    instruction: S.unwell ? "Rest today." : null,
+    // a future moment has nothing to explain yet; the reasoning is one tap down
+    why: isNow ? (ghost===undefined ? "The one thing left tonight." : "Earlier than last night.") : null,
+    bar: bandBar({ lo:0, hi:300, bandLo:target-20, bandHi:target+20, value:target,
+      ghost:ghost, tall:isNow, label:"target",
+      aria:"Tonight's target is "+clockOf(target)
+        + (ghost===undefined ? "." : ", against last night's bedtime of "+clockOf(ghost)+".") }),
+    expand:"tonight" };
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+function render(){
+  document.documentElement.setAttribute("data-theme", S.theme);
+  const ph = $("#phone");
+  ph.setAttribute("data-size", S.size);
+  ph.setAttribute("data-fold", S.fold);
+  $("#sbtime").textContent = CLOCK[S.time];
+
+  const thread = $("#thread"), foot = $("#foot");
+  thread.style.paddingLeft = S.raw ? "0" : "28px";
+  foot.style.marginLeft   = S.raw ? "0" : "28px";
+
+  if(S.view === "loading") return paintLoading(thread, foot);
+  if(S.view === "empty")   return paintEmpty(thread, foot);
+  if(S.raw)                return paintRaw(thread, foot);
+
+  const segs = [segNight(), segMorning(), segDay(), segTonight()];
+  const ni = nowIndex();
+  let html = "";
+  segs.forEach((seg,i)=>{
+    let mode = i===ni ? "now" : (i>ni ? "soon" : (i===ni-1 ? "full" : "compact"));
+    if(seg.key==="night" && noticeOn() && mode==="compact") mode = "full";
+    if(seg.quiet) mode = "compact";
+    html += paintNode(seg, mode, i, ni);
+  });
+  thread.innerHTML = html;
+  foot.innerHTML = '<span>Updated <span class="num">'+CLOCK_LONG[S.time]+'</span> from your '
+    + (S.data==="watch" ? "Apple Watch" : S.data==="phone" ? "iPhone" : "Apple Watch, four days in") + '.</span>';
+  wire();
+  if(S._lastTime !== S.time){ S._lastTime = S.time; centreOnNow(); }
+}
+
+function paintNode(seg, mode, i, ni){
+  const future = i > ni;
+  const dotCls = mode==="now" ? "dot now" : (future ? "dot future" : "dot done");
+  const dot = '<div class="'+dotCls+'" aria-hidden="true">'+(!future && mode!=="now" ? ICON.check : "")+'</div>';
+  const nodeCls = "node enter" + (future ? " future" : "") + (i===0 ? " first" : "");
+
+  /* compact: a past moment collapses to one line on the rail */
+  if(mode === "compact"){
+    let right = seg.quiet
+      ? '<span style="color:var(--tt)">'+esc(seg.quiet)+'</span>'
+      : '<span class="rv num">'+esc(seg.value)+'</span>'
+        + (seg.unit ? ' <span style="font-size:13px;color:var(--tt)">'+esc(seg.unit)+'</span>' : "")
+        + (seg.verdict ? ' <span class="verdict '+("v-"+(seg.tone||"neutral"))+'" style="font-size:12px;padding:3px 9px">'+esc(seg.verdict)+'</span>' : "");
+    return '<div class="'+nodeCls+'">'+dot+'<div class="railline">'
+         + '<span class="lab">'+esc(seg.title)+'</span>'+right+'</div></div>';
+  }
+
+  /* a future moment with nothing to report is a rail line with its goal shape only */
+  if(mode === "soon" && seg.slimBar){
+    return '<div class="'+nodeCls+'">'+dot+'<div class="railline">'
+         + '<span class="lab">'+esc(seg.title)+'</span>'
+         + '<span class="slim">'+seg.slimBar+'</span></div></div>';
+  }
+
+  const isHero = mode === "now";
+  const shell = "card" + (isHero ? " hero" : "") + (mode==="soon" ? " soon" : "");
+  let b = "";
+
+  /* health notice — pinned to position 1, full text, never blurred, never hedged */
+  if(seg.key==="night" && noticeOn()){
+    b += '<div class="notice"><h3><span style="color:var(--bad)">'+ICON.alert+'</span>Your resting heart rate has been up three mornings</h3>'
+      + '<p>About 6 bpm above your usual, and you slept less on each of those nights.</p>'
+      + '<p class="anchor">This pattern often shows up a day or two before a cold. It is not a reason to call a doctor.</p>'
+      + '<button class="btn-soft" id="unwellbtn" aria-pressed="'+(S.unwell?"true":"false")+'">'
+      + (S.unwell ? "Marked unwell" : "I feel unwell") + '</button></div>';
+  }
+
+  b += '<div class="eyeb"><span>'+esc(seg.title.toUpperCase())+'</span>'
+     + (!isHero && seg.at ? '<span class="at num">'+esc(seg.at)+'</span>' : "") + '</div>';
+
+  if(seg.value){
+    b += '<div class="valrow"><span class="val num">'+esc(seg.value)+'</span>'
+      + (seg.unit ? '<span class="unit">'+esc(seg.unit)+'</span>' : "")
+      + (seg.verdict ? '<span class="verdict v-'+(seg.tone||"neutral")+'">'+esc(seg.verdict)+'</span>' : "")
+      + '</div>';
+  } else if(seg.quiet){
+    b += '<div class="valrow"><span class="unit">'+esc(seg.quiet)+'</span></div>';
+  }
+
+  if(seg.bar) b += seg.bar;
+  if(seg.instruction) b += '<p class="instruction">'+esc(seg.instruction)+'</p>';
+  if(seg.why) b += '<p class="sub">'+esc(seg.why)+'</p>';
+  if(seg.src) b += '<p class="src">'+esc(seg.src)+'</p>';
+
+  /* the one and only instruction on this screen carries the only two buttons */
+  if(seg.key === "tonight"){
+    b += '<div class="actionrow">';
+    if(S.time === "night"){
+      b += '<button class="btn" id="donebtn" data-state="'+(S.winding?"done":"live")+'">'
+         + (S.winding ? ICON.tick+"Noted &middot; "+CLOCK_LONG.night : ICON.moon+"Winding down")+'</button>';
+    } else {
+      b += '<button class="btn" id="remindbtn" data-state="'+(S.reminder?"done":"live")+'">'
+         + (S.reminder ? ICON.tick+"Reminder set" : ICON.bell+"Remind")+'</button>';
+    }
+    b += '</div>';
+  }
+
+  if(seg.expand){
+    const k = seg.expand, open = S.open[k];
+    const label = k==="night" ? "Last week" : "Why this time";
+    b += '<button class="exp" data-exp="'+k+'" aria-expanded="'+(open?"true":"false")+'" aria-controls="p-'+k+'">'
+       + '<span>'+label+'</span>'+ICON.chev+'</button>'
+       + '<div class="panel'+(open?" open":"")+'" id="p-'+k+'"><div class="panelin">'
+       + (k==="night" ? panelNights() : panelTonight()) + '</div></div>';
+  }
+
+  return '<div class="'+nodeCls+'">'+dot+'<div class="'+shell+'">'+b+'</div></div>';
+}
+
+function panelNights(){
+  if(S.data==="phone")
+    return '<p class="sub" style="margin:0">Nothing to chart. Sleep needs a wrist device, or a sleep app writing into Health.</p>';
+  if(S.data==="new")
+    return '<p class="sub" style="margin:0">Four nights recorded. The chart starts at seven, so it is not drawn yet.</p>';
+  const rows = chartRows();
+  const drift = rows[6].bed - rows[0].bed;
+  const debt = rows.slice(2).reduce((a,n)=>a + Math.max(0, NEED - n.asleep), 0);
+  const cap = drift >= 20 ? ("Your bedtime has slid "+span(drift)+" later across the week.")
+            : drift <= -20 ? ("Your bedtime has pulled "+span(drift)+" earlier across the week.")
+            : "Your bedtime has held steady across the week.";
+  return '<p class="chartcap">'+cap+'</p>'
+       + '<p class="chartsub">Each bar is one night in bed. The tick on its left edge is when you went down.</p>'
+       + nightsChart()
+       + '<p class="sub">Across the last five nights you are <strong>'+span(debt)+'</strong> short. '
+       + 'Bedtime moving is doing more of that than any single night.</p>';
+}
+
+function panelTonight(){
+  if(S.data==="new")
+    return '<p class="sub" style="margin:0">10:30 is eight hours before the 6:30 alarm you set. After seven nights this becomes your measured need instead of your goal.</p>';
+  if(S.data==="phone")
+    return '<p class="sub" style="margin:0">10:30 is the target you chose when you joined, not a measurement. Your phone cannot check whether you kept it.</p>';
+  const L = LEVEL[S.level], d = L.bedMin - L.targetMin;
+  const rel = d <= 20 ? "About the same time as last night"
+            : span(d) + " earlier than last night";
+  return '<p class="sub" style="margin:0">'+rel+', and '+hoursWord(ALARM - L.targetMin)
+       + ' before your 6:30 alarm.</p>'
+       + '<p class="sub">You have gone to bed earlier <strong>6 times</strong>. Across those mornings your readiness averaged <strong>4 points</strong> higher.</p>'
+       + '<p class="src" style="margin-top:12px">One earlier night will not clear the week, and it does not need to.</p>';
+}
+
+/* ---------- escape hatch: readings only ---------- */
+function paintRaw(thread, foot){
+  const L = LEVEL[S.level];
+  const groups = [
+    ["Last night", S.data==="phone"
+      ? [["Time asleep","not recorded"]]
+      : [["Time asleep", hm(L.sleep)],
+         ["In bed", clockOf(L.bedMin)+" – "+clockOf(L.wakeMin)],
+         ["Awake during the night", L.awake+" min"]]],
+    ["This morning", S.data==="phone"
+      ? [["Walking pace, 7 day","4.8 km/h"]]
+      : [["Resting heart rate","58 bpm"],
+         ["Heart rate variability (SDNN)","48 ms"],
+         ["Breathing rate","14 breaths/min"]]],
+    ["Today so far",
+      [["Steps", STEPS[S.time].toLocaleString("en-GB")],
+       ["Distance", (S.time==="am"?"0.3":S.time==="pm"?"3.6":"5.1")+" km"],
+       ["Flights climbed", S.time==="am"?"2":S.time==="pm"?"9":"12"]]],
+    ["Earlier",
+      [["Yesterday","8,400 steps"],["Sunday","52 min run"]]]
+  ];
+  let h = '<p class="rawnote">Scores, bands and verdicts are off. These are the readings, nothing added.</p>';
+  groups.forEach(g=>{
+    h += '<div class="rawseg"><h3>'+esc(g[0])+'</h3>';
+    g[1].forEach(r=>{ h += '<div class="rawrow"><span>'+esc(r[0])+'</span><b class="num">'+esc(r[1])+'</b></div>'; });
+    h += '</div>';
+  });
+  thread.innerHTML = h;
+  foot.innerHTML = '<span>Turn scores back on under Display.</span>';
+}
+
+/* ---------- loading: the four slots are already in place ---------- */
+function paintLoading(thread, foot){
+  const t = ["Last night","Morning","Day ahead","Tonight"];
+  let h = "";
+  t.forEach((title,i)=>{
+    h += '<div class="node'+(i===0?" first":"")+'"><div class="dot future" aria-hidden="true"></div>'
+      + '<div class="card'+(i===1?" hero":"")+'">'
+      + '<div class="eyeb"><span>'+title.toUpperCase()+'</span></div>'
+      + '<div class="sk" style="height:34px;width:'+(i===1?"46%":"38%")+';margin-top:10px;border-radius:9px"></div>'
+      + '<div class="sk" style="height:12px;margin-top:15px;border-radius:9999px"></div>'
+      + (i===1?'<div class="sk" style="height:15px;width:68%;margin-top:18px"></div>':"")
+      + '</div></div>';
+  });
+  thread.innerHTML = h;
+  foot.innerHTML = '<span>Reading today from Health…</span>';
+}
+
+/* ---------- empty: no Health access at all ---------- */
+function paintEmpty(thread, foot){
+  const rows = [
+    ["Last night","Sleep will appear here."],
+    ["Morning","Your morning reading will appear here."],
+    ["Day ahead","Your day starts the moment you move."],
+    ["Tonight","The thread ends here every night, with one thing to do."]
+  ];
+  let h = "";
+  rows.forEach((r,i)=>{
+    h += '<div class="node future'+(i===0?" first":"")+'"><div class="dot future" aria-hidden="true"></div>'
+      + '<div class="card soon"><div class="eyeb"><span>'+r[0].toUpperCase()+'</span></div>'
+      + '<p class="sub" style="margin-top:8px">'+r[1]+'</p></div></div>';
+  });
+  h += '<div style="margin-top:20px"><button class="btn" id="grantbtn">Turn on Health access</button>'
+     + '<p class="src" style="max-width:36ch">Steps alone are enough to start the thread. The rest fills in as it arrives.</p></div>';
+  thread.innerHTML = h;
+  foot.innerHTML = "";
+  $("#grantbtn").addEventListener("click", ()=>{
+    setDev("view","loading");
+    setTimeout(()=>setDev("view","loaded"), 1200);
+  });
+}
+
+/* ============================================================
+   Behaviour
+   ============================================================ */
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove("show"), 2800);
+}
+
+function wire(){
+  $$("[data-exp]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k = b.getAttribute("data-exp");
+      S.open[k] = !S.open[k];
+      b.setAttribute("aria-expanded", S.open[k] ? "true" : "false");
+      const p = document.getElementById("p-"+k);
+      if(p) p.classList.toggle("open", S.open[k]);
+    });
+  });
+  const rb = $("#remindbtn");
+  if(rb) rb.addEventListener("click", ()=>{
+    S.reminder = !S.reminder;
+    const t = (S.data==="new"||S.data==="phone") ? 90 : LEVEL[S.level].targetMin;
+    toast(S.reminder ? "Reminder set for "+clockOf(t-30)+"." : "Reminder removed.");
+    render();
+  });
+  const db = $("#donebtn");
+  if(db) db.addEventListener("click", ()=>{
+    S.winding = !S.winding;
+    if(S.winding) toast("Noted. Nothing to keep up, nothing to break.");
+    render();
+  });
+  const ub = $("#unwellbtn");
+  if(ub) ub.addEventListener("click", ()=>{
+    S.unwell = !S.unwell;
+    toast(S.unwell ? "Tonight now says rest." : "Back to your usual advice.");
+    render();
+  });
+}
+
+function centreOnNow(){
+  const sc = $("#scroll"), nodes = $$("#thread .node"), ni = nowIndex();
+  if(!nodes[ni]) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const top = Math.max(0, nodes[ni].offsetTop - sc.clientHeight * 0.14);
+  if(reduce || typeof sc.scrollTo !== "function") sc.scrollTop = top;
+  else sc.scrollTo({ top:top, behavior:"smooth" });
+}
+
+/* ---------- sheet ---------- */
+function openSheet(o){
+  $("#sheet").classList.toggle("show", o);
+  $("#scrim").classList.toggle("show", o);
+  $("#sheet").setAttribute("aria-hidden", o ? "false" : "true");
+  if(o) setTimeout(()=>$("#rawsw").focus(), 280); else $("#menubtn").focus();
+}
+$("#menubtn").addEventListener("click", ()=>openSheet(true));
+$("#sheetclose").addEventListener("click", ()=>openSheet(false));
+$("#scrim").addEventListener("click", ()=>openSheet(false));
+$("#rawsw").addEventListener("click", ()=>{
+  S.raw = !S.raw;
+  $("#rawsw").setAttribute("aria-checked", S.raw ? "true" : "false");
+  render();
+  toast(S.raw ? "Scores off. Readings only." : "Scores back on.");
+});
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape" && $("#sheet").classList.contains("show")) openSheet(false);
+});
+
+/* ---------- tabs ---------- */
+$$(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    const n = t.getAttribute("data-tab");
+    if(n === "Today"){ $("#scroll").scrollTop = 0; return; }
+    toast(n + " is outside this prototype.");
+  });
+});
+
+/* ---------- dev toolbar ---------- */
+function setDev(group, v){
+  S[group] = v;
+  $$('[data-group="'+group+'"] .devbtn').forEach(b=>{
+    b.setAttribute("data-on", b.getAttribute("data-v") === String(v) ? "1" : "0");
+  });
+  if(group==="data" || group==="level" || group==="time"){
+    S.reminder = false; S.winding = false;
+    if(group==="level" && v!=="low") S.unwell = false;
+  }
+  if(group==="time") S._lastTime = null;
+  render();
+}
+$$(".devpanel .devrow").forEach(row=>{
+  const g = row.getAttribute("data-group");
+  $$(".devbtn", row).forEach(b=> b.addEventListener("click", ()=>setDev(g, b.getAttribute("data-v"))));
+});
+$("#devtoggle").addEventListener("click", ()=>{
+  const open = $("#devpanel").classList.toggle("show");
+  $("#devtoggle").setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+render();
+</script>
+</body>
+</html>

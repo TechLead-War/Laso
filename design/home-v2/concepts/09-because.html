@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — Concept 09 · Because</title>
+<style>
+/* ============================================================
+   TOKENS — verbatim from Common/Theme/AppColour.swift
+   ============================================================ */
+:root{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elev:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --t1:#1B1B20; --t2:#44444D; --t3:#5B5B65;
+  --bl:#E0E0E8; --bm:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --good:#0C7752; --fair:#8A6400; --poor:#C42B33;
+  --good-wash:rgba(12,119,82,.10); --fair-wash:rgba(138,100,0,.20); --poor-wash:rgba(196,43,51,.10);
+  --good-line:rgba(12,119,82,.22); --fair-line:rgba(138,100,0,.26); --poor-line:rgba(196,43,51,.22);
+  --cardshadow:0 1px 2px rgba(0,0,0,.12);
+  --ring:#0064CC;
+  --font:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --fontr:ui-rounded,-apple-system,"SF Pro Rounded","SF Pro Text",system-ui,sans-serif;
+}
+[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elev:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8;
+  --bl:#2E2E36; --bm:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --good:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+  --good-wash:rgba(61,204,153,.12); --fair-wash:rgba(227,180,90,.13); --poor-wash:rgba(224,92,100,.12);
+  --good-line:rgba(61,204,153,.26); --fair-line:rgba(227,180,90,.30); --poor-line:rgba(224,92,100,.26);
+  --cardshadow:none;
+  --ring:#4DA3FF;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font);
+  background:var(--sunken);
+  color:var(--t1);
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  min-height:100vh;
+}
+button{font:inherit;color:inherit;background:none;border:0;margin:0;padding:0;cursor:pointer;
+  font-variant-numeric:tabular-nums;}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* ============================================================
+   DEVICE FRAME
+   ============================================================ */
+.stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 0;}
+.device{
+  width:375px;height:812px;position:relative;overflow:hidden;
+  background:var(--base);
+  border-radius:44px;
+  box-shadow:0 0 0 10px #101014, 0 22px 60px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;
+}
+@media (max-width:520px){
+  .stage{padding:0;align-items:stretch;}
+  .device{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none;}
+}
+
+/* status bar */
+.statusbar{
+  height:47px;flex:0 0 47px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 8px;font-size:15px;font-weight:600;letter-spacing:.2px;color:var(--t1);
+  background:var(--base);
+}
+.statusbar .sb-icons{display:flex;align-items:center;gap:5px;}
+.statusbar svg{display:block;}
+
+/* header */
+.hdr{
+  flex:0 0 52px;height:52px;display:flex;align-items:center;padding:0 12px;
+  background:var(--base);position:relative;z-index:4;
+}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:-.4px;margin:0;}
+.hdr::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--bl);
+  opacity:0;transition:opacity .2s ease;
+}
+.hdr.scrolled::after{opacity:1;}
+
+/* scroll */
+.scroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;background:var(--base);
+  -webkit-overflow-scrolling:touch;
+  padding:16px 12px 28px;
+  display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* tab bar */
+.tabs{
+  flex:0 0 83px;height:83px;display:flex;align-items:flex-start;padding:8px 0 0;
+  background:var(--base);
+  background:color-mix(in srgb, var(--base) 82%, transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--bl);position:relative;z-index:5;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  min-height:48px;padding:4px 0;color:var(--t3);
+  transition:transform .08s ease-in;
+}
+.tab:active{transform:scale(.94);}
+.tab span{font-size:11px;font-weight:500;letter-spacing:.1px;}
+.tab[aria-current="page"]{color:var(--primary);}
+.tab[aria-current="page"] span{font-weight:600;}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{
+  background:var(--raised);border:1px solid var(--bl);border-radius:16px;
+  box-shadow:var(--cardshadow);padding:16px;
+  animation:rise .34s cubic-bezier(.22,.9,.3,1) both;
+}
+.card.hero{border-radius:24px;}
+@keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.card:nth-child(1){animation-delay:.00s}
+.card:nth-child(2){animation-delay:.04s}
+.card:nth-child(3){animation-delay:.08s}
+.card:nth-child(4){animation-delay:.12s}
+.card:nth-child(5){animation-delay:.16s}
+
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--t3);margin:0 0 8px;
+}
+.h-card{font-size:20px;font-weight:600;letter-spacing:-.3px;margin:0;line-height:1.2;}
+.lead{font-size:15px;line-height:1.42;color:var(--t2);margin:8px 0 0;}
+.foot{font-size:13px;line-height:1.42;color:var(--t3);margin:12px 0 0;}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.verdictline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.verdict{
+  font-family:var(--fontr);font-size:34px;font-weight:700;letter-spacing:-.8px;line-height:1.06;
+}
+.idx{
+  font-family:var(--fontr);font-size:22px;font-weight:600;color:var(--t3);letter-spacing:-.2px;
+}
+.tone-good{color:var(--good);} .tone-fair{color:var(--fair);} .tone-poor{color:var(--poor);}
+.tone-neutral{color:var(--t1);}
+
+/* band bar (positional, one reference range) */
+.bandwrap{margin-top:20px;}
+.bandbar{
+  position:relative;height:12px;border-radius:9999px;background:var(--subtle);
+  border:1px solid var(--bl);overflow:visible;
+}
+.bandbar .band{
+  position:absolute;top:-1px;bottom:-1px;border-radius:9999px;
+  background:var(--bm);
+}
+.bandbar .mark{
+  position:absolute;top:50%;width:14px;height:14px;border-radius:9999px;
+  transform:translate(-50%,-50%);
+  border:2.5px solid var(--raised);
+  transition:left .5s cubic-bezier(.22,.9,.3,1);
+}
+.mark.tone-good{background:var(--good);} .mark.tone-fair{background:var(--fair);}
+.mark.tone-poor{background:var(--poor);} .mark.tone-neutral{background:var(--t2);}
+.bandlabel{
+  position:relative;height:14px;margin-top:6px;font-size:11px;font-weight:600;color:var(--t3);
+}
+.bandlabel span{position:absolute;transform:translateX(-50%);white-space:nowrap;}
+
+/* because divider + toggle */
+.becausebar{
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+  min-height:44px;margin-top:24px;border-top:1px solid var(--bl);
+  padding-top:0;transition:transform .08s ease-in;
+}
+.becausebar:active{transform:scale(.99);}
+.becausebar .lbl{
+  font-size:13px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--t2);
+}
+.chev{transition:transform .25s cubic-bezier(.22,.9,.3,1);color:var(--t3);}
+.becausebar[aria-expanded="true"] .chev{transform:rotate(180deg);}
+
+/* contributor rows */
+.rows{display:flex;flex-direction:column;gap:16px;margin-top:8px;}
+.row .rname{font-size:13px;font-weight:600;color:var(--t2);letter-spacing:.1px;}
+.row .rval{
+  display:flex;align-items:baseline;gap:7px;margin-top:3px;flex-wrap:wrap;
+}
+.row .rbig{font-family:var(--fontr);font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.1;}
+.row .rtail{font-size:15px;font-weight:600;}
+.row .rverdict{font-size:17px;font-weight:600;letter-spacing:-.1px;}
+.row .rbar{margin-top:9px;}
+
+/* gap bar (value against personal need) */
+.gapbar{
+  position:relative;height:10px;border-radius:9999px;overflow:hidden;
+  background:repeating-linear-gradient(115deg,var(--fair-wash) 0 5px,transparent 5px 10px),var(--subtle);
+  border:1px solid var(--bl);
+}
+.gapbar .fill{
+  position:absolute;left:0;top:0;bottom:0;border-radius:9999px;
+  width:var(--fill);transition:width .6s cubic-bezier(.22,.9,.3,1);
+}
+.fill.tone-good{background:var(--good);} .fill.tone-fair{background:var(--fair);}
+.fill.tone-poor{background:var(--poor);} .fill.tone-neutral{background:var(--t2);}
+.gapbar.ok{background:var(--subtle);}
+
+/* pips (endowed progress) */
+.pips{display:flex;gap:5px;margin-top:9px;}
+.pip{flex:1;height:10px;border-radius:4px;background:var(--subtle);border:1px dashed var(--bm);}
+.pip.on{background:var(--primary);border:1px solid var(--primary);}
+
+/* ============================================================
+   BECAUSE LEDGER (expands in place)
+   ============================================================ */
+.ledgerwrap{
+  display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.22,.9,.3,1);
+}
+.ledgerwrap.open{grid-template-rows:1fr;}
+.ledgerclip{overflow:hidden;min-height:0;}
+.ledger{
+  margin-top:16px;padding:16px;border-radius:12px;
+  background:var(--elev);border:1px solid var(--bl);
+  opacity:0;transition:opacity .22s ease .06s;
+}
+.ledgerwrap.open .ledger{opacity:1;}
+.lblock{padding:0 0 14px;}
+.lblock + .lblock{border-top:1px solid var(--bl);padding-top:14px;}
+.lblock h4{
+  font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--t2);margin:0 0 7px;
+}
+.lblock p{font-size:15px;line-height:1.45;color:var(--t2);margin:0 0 5px;}
+.lblock p:last-child{margin-bottom:0;}
+.lblock p.anchor{color:var(--t3);}
+.notcounted{border-top:1px solid var(--bl);padding-top:14px;}
+.notcounted h4{color:var(--t3);}
+.notcounted p{color:var(--t3);}
+.limit{
+  margin-top:14px;padding-top:12px;border-top:1px dashed var(--bm);
+  font-size:13px;line-height:1.45;color:var(--t3);display:flex;gap:8px;
+}
+.limit svg{flex:0 0 auto;margin-top:2px;color:var(--t3);}
+
+/* ============================================================
+   ACTION CARD — the ONE instruction
+   ============================================================ */
+.actionicon{
+  width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:var(--primary);color:#fff;margin-bottom:12px;
+}
+[data-theme="dark"] .actionicon{color:#08080A;}
+.actionhead{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1.16;margin:0;}
+.proof{
+  display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;
+  font-size:15px;line-height:1.4;color:var(--t2);
+}
+.proof b{font-weight:700;color:var(--t1);white-space:nowrap;}
+.proof .dot{color:var(--bm);}
+.btnrow{display:flex;gap:8px;margin-top:16px;}
+.btn{
+  flex:1;min-height:46px;border-radius:12px;font-size:17px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:transform .08s ease-in,background .18s ease,opacity .18s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn.primary{background:var(--primary);color:#fff;}
+[data-theme="dark"] .btn.primary{color:#08080A;}
+.btn.ghost{background:var(--subtle);color:var(--t1);border:1px solid var(--bl);}
+.btn.ghost.set{background:var(--good-wash);border-color:var(--good-line);color:var(--good);}
+.btn.ghost.set span{font-size:15px;}
+.donebox{
+  display:flex;align-items:center;gap:10px;margin-top:16px;padding:12px;
+  border-radius:12px;background:var(--good-wash);border:1px solid var(--good-line);
+  font-size:15px;line-height:1.35;color:var(--t1);
+  animation:rise .3s cubic-bezier(.22,.9,.3,1) both;
+}
+.donebox svg{flex:0 0 auto;color:var(--good);}
+.donebox .undo{margin-left:auto;font-size:15px;font-weight:600;color:var(--primary);min-height:44px;
+  display:flex;align-items:center;padding:0 4px;}
+
+/* ============================================================
+   ALERT (position 1, never blurred, never badged)
+   ============================================================ */
+.alert{
+  background:var(--raised);border:1px solid var(--fair-line);border-left:4px solid var(--fair);
+  border-radius:16px;padding:16px;box-shadow:var(--cardshadow);
+  animation:rise .34s cubic-bezier(.22,.9,.3,1) both;
+}
+.alert .ahead{display:flex;gap:10px;align-items:flex-start;}
+.alert .ahead svg{flex:0 0 auto;color:var(--fair);margin-top:1px;}
+.alert h3{font-size:17px;font-weight:700;line-height:1.3;margin:0;letter-spacing:-.2px;}
+.alert p{font-size:15px;line-height:1.45;color:var(--t2);margin:10px 0 0;}
+.alert p.anchor{color:var(--t3);font-size:13px;}
+.alert p.effect{color:var(--t1);font-weight:600;font-size:15px;}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+.chartbox{margin-top:14px;}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible;}
+.gridline{stroke:var(--bl);stroke-width:1;}
+.bandrect{fill:var(--subtle);stroke:var(--bm);stroke-width:1;}
+[data-theme="dark"] .bandrect{fill:var(--elev);}
+.banddash{stroke:var(--bm);stroke-width:1;stroke-dasharray:3 3;}
+.stem{stroke:var(--bm);stroke-width:1.5;opacity:.55;}
+.dot-ok{fill:var(--t3);}
+.dot-out{fill:var(--fair);}
+.axlabel{font-size:11px;font-weight:600;fill:var(--t3);font-family:var(--font);}
+.bar-ok{fill:var(--t3);opacity:.55;}
+.bar-hit{fill:var(--good);}
+.bar-pending{fill:none;stroke:var(--bm);stroke-width:1;stroke-dasharray:2 3;}
+.goalline{stroke:var(--primary);stroke-width:1.5;stroke-dasharray:4 3;}
+
+/* ============================================================
+   STEPS CARD
+   ============================================================ */
+.metricline{display:flex;align-items:baseline;gap:9px;margin-top:10px;flex-wrap:wrap;}
+.metricline .mval{font-family:var(--fontr);font-size:28px;font-weight:700;letter-spacing:-.5px;}
+.metricline .mverdict{font-size:15px;font-weight:600;}
+
+/* ============================================================
+   FOOTER / ESCAPE HATCH
+   ============================================================ */
+.footer{display:flex;flex-direction:column;gap:10px;padding:4px 4px 0;}
+.hatch{
+  width:100%;min-height:46px;border-radius:12px;border:1px solid var(--bl);
+  background:var(--raised);display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:15px;font-weight:600;color:var(--t2);transition:transform .08s ease-in;
+}
+.hatch:active{transform:scale(.985);}
+.updated{font-size:12px;color:var(--t3);text-align:center;}
+
+/* ============================================================
+   NUMBERS-ONLY MODE
+   ============================================================ */
+.plainhead{font-size:20px;font-weight:600;letter-spacing:-.3px;margin:0;}
+.plainsub{font-size:15px;color:var(--t2);margin:8px 0 0;line-height:1.4;}
+.plaintable{margin-top:4px;}
+.plainrow{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:13px 0;border-bottom:1px solid var(--bl);
+}
+.plainrow:last-child{border-bottom:0;}
+.plainrow .k{font-size:15px;color:var(--t2);}
+.plainrow .v{font-size:17px;font-weight:600;font-family:var(--fontr);white-space:nowrap;}
+
+/* ============================================================
+   LOADING SKELETON
+   ============================================================ */
+.sk{background:var(--subtle);border-radius:8px;position:relative;overflow:hidden;}
+.sk::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:translateX(-100%);animation:shimmer 1.5s infinite;
+}
+[data-theme="dark"] .sk::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty{text-align:left;}
+.empty h2{font-size:22px;font-weight:700;letter-spacing:-.4px;margin:14px 0 0;}
+.empty p{font-size:15px;line-height:1.45;color:var(--t2);margin:10px 0 0;}
+.empty ul{margin:14px 0 0;padding:0 0 0 18px;color:var(--t2);font-size:15px;line-height:1.7;}
+
+/* placeholder tabs */
+.tabstub{padding:48px 8px;text-align:left;}
+.tabstub h2{font-size:20px;font-weight:600;margin:0;}
+.tabstub p{font-size:15px;color:var(--t2);line-height:1.45;margin:10px 0 0;}
+
+/* ============================================================
+   DEV TOOLBAR — not part of the design being judged
+   ============================================================ */
+.devbtn{
+  position:fixed;left:12px;bottom:12px;z-index:60;
+  width:38px;height:38px;border-radius:9999px;
+  background:rgba(20,20,26,.78);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:.42;transition:opacity .2s ease;
+}
+.devbtn:hover,.devbtn:focus-visible{opacity:1;}
+.devpanel{
+  position:fixed;left:12px;bottom:58px;z-index:61;width:236px;
+  background:rgba(24,24,30,.97);color:#fff;border-radius:14px;padding:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);
+  display:none;font-size:12px;
+}
+.devpanel.open{display:block;}
+.devpanel h5{margin:0 0 6px;font-size:10px;letter-spacing:.8px;text-transform:uppercase;opacity:.55;font-weight:700;}
+.devgroup{margin-bottom:11px;}
+.devgroup:last-child{margin-bottom:0;}
+.segs{display:flex;gap:4px;flex-wrap:wrap;}
+.seg{
+  flex:1;min-width:52px;min-height:30px;border-radius:8px;background:rgba(255,255,255,.09);
+  color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;
+  padding:0 6px;
+}
+.seg[aria-pressed="true"]{background:#4DA3FF;color:#08080A;}
+.seg[disabled]{opacity:.3;cursor:not-allowed;}
+@media (max-width:520px){ .devbtn{left:auto;right:10px;bottom:96px;} .devpanel{left:auto;right:10px;bottom:142px;} }
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="device">
+    <!-- status bar -->
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="sb-icons" aria-hidden="true">
+        <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="7.5" width="3" height="4.5" rx="1" fill="currentColor"/><rect x="4.6" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="9.2" y="2.5" width="3" height="9.5" rx="1" fill="currentColor"/><rect x="13.8" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 10.6 6.2 8.7a2.6 2.6 0 0 1 3.6 0L8 10.6Zm0-4.1a5 5 0 0 0-3.5 1.4L3.1 6.5a7 7 0 0 1 9.8 0l-1.4 1.4A5 5 0 0 0 8 6.5Zm0-3.6a8.6 8.6 0 0 0-6 2.4L.6 3.9a10.6 10.6 0 0 1 14.8 0L14 5.3a8.6 8.6 0 0 0-6-2.4Z" fill="currentColor"/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2.2 2.2 0 0 0 0-4Z" fill="currentColor" fill-opacity=".4"/></svg>
+      </span>
+    </div>
+
+    <!-- header: reading only, zero tap targets -->
+    <header class="hdr" id="hdr"><h1 id="hdrTitle">Today</h1></header>
+
+    <!-- scroll body -->
+    <main class="scroll" id="scroll"></main>
+
+    <!-- tab bar -->
+    <nav class="tabs" id="tabs" aria-label="Main"></nav>
+  </div>
+</div>
+
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel" aria-label="Open prototype controls">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r="2.2" fill="currentColor" stroke="none"/></svg>
+</button>
+<aside class="devpanel" id="devpanel" aria-label="Prototype controls">
+  <div class="devgroup"><h5>Theme</h5><div class="segs" id="segTheme"></div></div>
+  <div class="devgroup"><h5>Data available</h5><div class="segs" id="segData"></div></div>
+  <div class="devgroup"><h5>Screen state</h5><div class="segs" id="segScreen"></div></div>
+  <div class="devgroup"><h5>Readiness level</h5><div class="segs" id="segLevel"></div></div>
+</aside>
+
+<script>
+"use strict";
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const I = {
+  chev:'<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  moon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
+  walk:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.8"/><path d="m9 21 2-5 3-2-1-4 4 2 2 3"/><path d="m11 14-3-1-2 4"/></svg>',
+  rest:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2-5 3 10 2-5h6"/></svg>',
+  check:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>',
+  bell:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  info:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  alert:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg>',
+  list:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+  back:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>',
+  heart:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-4 3 8 2-4h7"/></svg>',
+  today:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 3v3M16 3v3"/></svg>',
+  live:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M6.5 6.5a7.8 7.8 0 0 0 0 11M17.5 6.5a7.8 7.8 0 0 1 0 11"/></svg>',
+  explore:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-1.8 4.2L9 15l1.8-4.2L15 9Z"/></svg>',
+  settings:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 15a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.6-1.1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21 11a2 2 0 1 1 0 4 1.6 1.6 0 0 0-1.6 1Z"/></svg>'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  theme:'auto',          // auto | light | dark
+  data:'full',           // full | phone | new
+  screen:'loaded',       // loaded | loading | empty
+  level:'mid',           // high | mid | low   (full data only)
+  tab:'today',
+  because:false,
+  numbersOnly:false,
+  done:false,
+  reminded:false
+};
+
+/* ============================================================
+   CONTENT MODEL
+   Every string here is traceable to something the app really computes.
+   ============================================================ */
+const NIGHTS_DRIFT = [74,65,90,72,98,80,86, 118,107,129,115,140,122,130];  // minutes past 9:00 pm
+const NIGHTS_LATE  = [74,65,90,72,98,80,86, 118,107,129,115,140,122,145];
+const NIGHTS_FIXED = [118,107,129,115,140,96,92, 88,84,90,112,82,86,86];
+const STEPS14 = [6200,8100,7400,5900,9300,7800,6600,8800,7200,9600,6800,8200,7900,8400];
+const NEWNIGHTS = [400,425,372];  // minutes asleep, 3 recorded nights
+
+const NOT_COUNTED_WATCH = [
+  'Blood oxygen. Nothing was recorded last night.',
+  'How you feel. We do not measure it, so it is not in this number.'
+];
+const LIMIT_LINKS = 'Links here are patterns in your own history, not proof.';
+
+const READY_BAR = {min:30,max:90,lo:58,hi:74,label:'usual'};
+
+function fullModel(level){
+  if(level==='high') return {
+    alert:null,
+    hero:{
+      label:'Readiness', verdict:'Strong', tone:'good', value:'78',
+      bar:Object.assign({},READY_BAR,{mark:78,tone:'good'}),
+      barAria:'Readiness 78, above your usual range of 58 to 74. Strong.',
+      rows:[
+        {name:'Sleep', big:'7h 45m', tail:'on target', tone:'good',
+         bar:{kind:'gap',fill:100,tone:'good'},
+         aria:'Sleep: 7 hours 45 minutes asleep against your 7 hour 40 minute need. On target.'},
+        {name:'Heart', verdict:'Steady', tone:'neutral',
+         bar:{kind:'band',min:48,max:64,lo:52,hi:59,mark:54,tone:'neutral'},
+         aria:'Heart: resting 54 beats per minute, inside your usual 52 to 59. Steady.'}
+      ],
+      because:[
+        {h:'Sleep · on target', l:[
+          '7h 45m asleep against your 7h 40m need.',
+          'In bed 10:26. Your usual is 10:30.',
+          'You were in bed by 10:30 on four of the last five nights. This is what that looks like.'
+        ]},
+        {h:'Heart · steady', l:[
+          '54 bpm resting. Your average is 55.',
+          'Your heart’s beat-to-beat variation sat inside your seven-day usual.'
+        ]},
+        {h:'Training · clear', l:[
+          'No hard session in three days.',
+          'Across your last 9 mornings this strong, readiness held the next day after a hard session.'
+        ]}
+      ],
+      notCounted:NOT_COUNTED_WATCH, limit:LIMIT_LINKS
+    },
+    action:{icon:'walk', head:'Train hard today, up to 40 minutes',
+      proofN:'Last 9 times', proofBody:'readiness held next morning',
+      doneMsg:'Marked done. Tomorrow morning we will tell you what it did.'},
+    chart:{kind:'nights', head:'Bedtime came back',
+      lead:'Bedtime moved 24 minutes earlier than the week before.',
+      series:NIGHTS_FIXED, usual:90, lastLabel:'last night',
+      foot:'Last 14 nights. Four of the last five were in bed by 10:30.'},
+    steps:STEPS_CARD()
+  };
+
+  if(level==='low') return {
+    alert:{
+      head:'Your resting heart rate has run higher for three mornings.',
+      body:'6 bpm above your average, and your heart’s beat-to-beat variation has been under your usual across the same three days.',
+      anchor:'This often shows up before a cold, and it often means nothing. It is not a medical alert.',
+      effect:'Today’s plan below is lighter because of it.'
+    },
+    hero:{
+      label:'Readiness', verdict:'Low', tone:'poor', value:'41',
+      bar:Object.assign({},READY_BAR,{mark:41,tone:'poor'}),
+      barAria:'Readiness 41, below your usual range of 58 to 74. Low.',
+      rows:[
+        {name:'Sleep', big:'2h 05m', tail:'short', tone:'poor',
+         bar:{kind:'gap',fill:73,tone:'poor'},
+         aria:'Sleep: 5 hours 35 minutes asleep against your 7 hour 40 minute need. 2 hours 5 minutes short.'},
+        {name:'Heart', verdict:'Above usual', tone:'fair',
+         bar:{kind:'band',min:48,max:70,lo:52,hi:59,mark:61,tone:'fair'},
+         aria:'Heart: resting 61 beats per minute, above your usual 52 to 59.'}
+      ],
+      because:[
+        {h:'Sleep · 2h 05m short', l:[
+          '5h 35m asleep against your 7h 40m need.',
+          'In bed 11:25. Your usual is 10:30.',
+          '6h 25m short in total across the last five nights.'
+        ]},
+        {h:'Heart · above usual', l:[
+          '61 bpm resting. Your average is 55.',
+          'That is 6 above, on the third morning in a row. Three mornings and 5 or more is the point where we say it out loud.',
+          'Your heart’s beat-to-beat variation has been under your seven-day usual across the same three days.'
+        ]},
+        {h:'Training · not the cause', l:[
+          'No hard session since Tuesday.',
+          'Your last 11 hard runs cost two mornings, and Tuesday is four days back. This is something else.'
+        ]}
+      ],
+      notCounted:NOT_COUNTED_WATCH, limit:LIMIT_LINKS
+    },
+    action:{icon:'rest', head:'Keep today easy. No hard session.',
+      proofN:'Last 5 times', proofBody:'readiness averaged +7 next morning',
+      doneMsg:'Marked done. Tomorrow morning we will tell you what it did.'},
+    chart:{kind:'nights', head:'Bedtime is drifting later',
+      lead:'Your wake time held. Bedtime moved 45 minutes later than the week before.',
+      series:NIGHTS_LATE, usual:90, lastLabel:'last night',
+      foot:'Last 14 nights. That drift is part of the missing sleep.'},
+    steps:STEPS_CARD()
+  };
+
+  return {
+    alert:null,
+    hero:{
+      label:'Readiness', verdict:'Moderate', tone:'fair', value:'62',
+      bar:Object.assign({},READY_BAR,{mark:62,tone:'fair'}),
+      barAria:'Readiness 62, in the lower half of your usual range of 58 to 74. Moderate.',
+      rows:[
+        {name:'Sleep', big:'1h 28m', tail:'short', tone:'fair',
+         bar:{kind:'gap',fill:81,tone:'fair'},
+         aria:'Sleep: 6 hours 12 minutes asleep against your 7 hour 40 minute need. 1 hour 28 minutes short.'},
+        {name:'Heart', verdict:'Steady', tone:'neutral',
+         bar:{kind:'band',min:48,max:64,lo:52,hi:59,mark:58,tone:'neutral'},
+         aria:'Heart: resting 58 beats per minute, inside your usual 52 to 59. Steady.'}
+      ],
+      because:[
+        {h:'Sleep · 1h 28m short', l:[
+          '6h 12m asleep against your 7h 40m need.',
+          'In bed 11:10. Your usual is 10:30.',
+          '4h 20m short in total across the last five nights.'
+        ]},
+        {h:'Heart · steady', l:[
+          '58 bpm resting. Your average is 55.',
+          'We do not call that a change until it is 5 or more above your average for three mornings.',
+          'Your heart’s beat-to-beat variation also sat under your seven-day usual.'
+        ]},
+        {h:'Training · still settling', l:[
+          'Hard run on Tuesday, your biggest in three weeks.',
+          'Across your last 11 hard runs, readiness sat lower for two mornings.'
+        ]}
+      ],
+      notCounted:NOT_COUNTED_WATCH, limit:LIMIT_LINKS
+    },
+    action:{icon:'moon', head:'Lights out by 10:30',
+      proofN:'Last 6 times', proofBody:'readiness averaged +5 next morning',
+      doneMsg:'Marked done. Tomorrow morning we will tell you what it did.'},
+    chart:{kind:'nights', head:'Bedtime is drifting later',
+      lead:'Your wake time held. Bedtime moved 40 minutes later than the week before.',
+      series:NIGHTS_DRIFT, usual:90, lastLabel:'last night',
+      foot:'Last 14 nights. That drift is where the missing sleep went.'},
+    steps:STEPS_CARD()
+  };
+}
+
+function STEPS_CARD(){
+  return {
+    head:'Steps yesterday', value:'8,400', verdict:'Above your goal', tone:'good',
+    bar:{kind:'band',min:0,max:12000,lo:7000,hi:10000,mark:8400,tone:'good',label:'goal'},
+    aria:'Steps yesterday 8,400, above your goal of 7,000.',
+    why:'Your goal is 7,000 because that is where the health benefit levels off.'
+  };
+}
+
+const PHONE_MODEL = {
+  alert:null,
+  hero:{
+    label:'Movement', verdict:'Good', tone:'good', value:'8,400 steps',
+    bar:{min:0,max:12000,lo:7000,hi:10000,mark:8400,label:'goal',tone:'good'},
+    barAria:'8,400 steps yesterday, above your goal of 7,000. Good.',
+    rows:[
+      {name:'Walking', verdict:'Steady', tone:'neutral',
+       bar:{kind:'band',min:3.8,max:5.6,lo:4.5,hi:4.9,mark:4.7,tone:'neutral'},
+       aria:'Walking: 4.7 kilometres an hour average pace, inside your usual 4.5 to 4.9. Steady.'},
+      {name:'This week', big:'900', tail:'more a day', tone:'good',
+       bar:{kind:'band',min:5500,max:9500,lo:7000,hi:8200,mark:8500,tone:'good'},
+       aria:'This week: 8,500 steps a day on average, above your usual weekly range of 7,000 to 8,200.'}
+    ],
+    because:[
+      {h:'Steps · above goal', l:[
+        '8,400 yesterday against your 7,000 goal.',
+        'Your weekday usual is 7,600.'
+      ]},
+      {h:'Walking · steady', l:[
+        '4.7 km/h average walking pace. Your usual is 4.5 to 4.9.'
+      ]},
+      {h:'This week · up', l:[
+        '8,500 steps a day this week against 7,600 the week before.',
+        'A week against a week is the shortest comparison we will make. One day on its own is noise.'
+      ]}
+    ],
+    notCounted:[
+      'Sleep, heart and recovery. No wearable has sent data in the last seven days.',
+      'How you feel. We do not measure it, so it is not in this number.'
+    ],
+    limit:'Your phone can see how you move, not how you slept. Links here are patterns in your own history, not proof.'
+  },
+  action:{icon:'walk', head:'Walk 20 minutes after lunch',
+    proofN:'Last 9 times', proofBody:'2,100 more steps that day',
+    doneMsg:'Marked done. Tomorrow morning we will tell you what it did.'},
+  chart:{kind:'steps', head:'Steps, last 14 days',
+    lead:'Ten of the last fourteen days cleared your 7,000 goal.',
+    series:STEPS14, goal:7000,
+    foot:'The goal line is 7,000, where the health benefit levels off.'},
+  steps:null
+};
+
+const NEW_MODEL = {
+  alert:null,
+  hero:{
+    label:'Sleep', verdict:'Short', tone:'fair', value:'6h 12m',
+    bar:{min:240,max:600,lo:420,hi:540,mark:372,label:'starting goal',tone:'fair'},
+    barAria:'6 hours 12 minutes asleep, below the starting goal of 7 to 9 hours. Short.',
+    rows:[
+      {name:'Nights recorded', verdict:'3 of 7', tone:'neutral',
+       bar:{kind:'pips',on:3,total:7},
+       aria:'Nights recorded: 3 of the 7 needed before your own ranges open.'},
+      {name:'Steps', big:'8,400', tail:'yesterday', tone:'good',
+       bar:{kind:'band',min:0,max:12000,lo:7000,hi:10000,mark:8400,tone:'good'},
+       aria:'Steps: 8,400 yesterday, above the 7,000 starting goal.'}
+    ],
+    because:[
+      {h:'Sleep · short', l:[
+        '6h 12m asleep against a starting goal of 7 hours, the general adult range.',
+        'We swap that for your own need once we have seven nights of yours.'
+      ]},
+      {h:'Nights recorded · 3 of 7', l:[
+        'Your own usual ranges open at seven nights. So do your heart baselines.',
+        'The early-warning check opens at fourteen.'
+      ]},
+      {h:'Steps · above goal', l:[
+        '8,400 yesterday against a 7,000 starting goal.',
+        'Steps need no history, so this one is already yours.'
+      ]}
+    ],
+    notCounted:[
+      'Your own usual. We do not have it yet, so this is a general adult range.',
+      'How you feel. We do not measure it, so it is not in this number.'
+    ],
+    limit:'Three nights in. Nothing here is compared to your own history yet.'
+  },
+  action:{icon:'moon', head:'Lights out by 10:30',
+    proofN:'Nothing to compare yet', proofBody:'your first result lands after seven nights',
+    doneMsg:'Marked done. It counts toward the seven nights.'},
+  chart:{kind:'newnights', head:'Nights recorded so far',
+    lead:'Three nights in. Four more and this becomes your own range.',
+    series:NEWNIGHTS, goal:420,
+    foot:'The line is 7 hours, the general adult range. It becomes your own number at seven nights.'},
+  steps:null
+};
+
+const PLAIN = {
+  full:[
+    ['Sleep last night','6h 12m'],
+    ['In bed','11:10 pm'],
+    ['Woke','5:38 am'],
+    ['Resting heart rate','58 bpm'],
+    ['Heart rate variability (SDNN)','48 ms'],
+    ['Steps yesterday','8,400'],
+    ['Exercise minutes yesterday','0'],
+    ['Bedtime, 7-day average','11:03 pm']
+  ],
+  phone:[
+    ['Steps yesterday','8,400'],
+    ['Distance yesterday','6.1 km'],
+    ['Flights climbed','11'],
+    ['Walking pace','4.7 km/h'],
+    ['Steps, 7-day average','8,500']
+  ],
+  'new':[
+    ['Sleep last night','6h 12m'],
+    ['In bed','11:10 pm'],
+    ['Woke','5:38 am'],
+    ['Resting heart rate','58 bpm'],
+    ['Steps yesterday','8,400'],
+    ['Nights recorded','3']
+  ]
+};
+
+function model(){
+  if(S.data==='phone') return PHONE_MODEL;
+  if(S.data==='new')   return NEW_MODEL;
+  return fullModel(S.level);
+}
+
+/* ============================================================
+   RENDER HELPERS
+   ============================================================ */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = (v,min,max) => Math.max(0,Math.min(100,((v-min)/(max-min))*100));
+
+function bandBar(b, big){
+  const l = pct(b.lo,b.min,b.max), r = pct(b.hi,b.min,b.max), m = pct(b.mark,b.min,b.max);
+  const h = big ? '' : 'style="height:10px"';
+  return `<div class="bandbar" ${h} aria-hidden="true">
+      <span class="band" style="left:${l.toFixed(1)}%;width:${(r-l).toFixed(1)}%"></span>
+      <span class="mark tone-${b.tone||'neutral'}" style="left:${m.toFixed(1)}%"></span>
+    </div>`
+    + (b.label ? `<div class="bandlabel" aria-hidden="true"><span style="left:${((l+r)/2).toFixed(1)}%">${esc(b.label)}</span></div>` : '');
+}
+
+function rowBar(b){
+  if(b.kind==='gap'){
+    const ok = b.fill>=100;
+    return `<div class="gapbar${ok?' ok':''}" aria-hidden="true"><span class="fill tone-${b.tone}" style="--fill:${Math.min(100,b.fill)}%"></span></div>`;
+  }
+  if(b.kind==='pips'){
+    let out='<div class="pips" aria-hidden="true">';
+    for(let i=0;i<b.total;i++) out += `<span class="pip${i<b.on?' on':''}"></span>`;
+    return out+'</div>';
+  }
+  return bandBar(b,false);
+}
+
+/* ---------- Hero ---------- */
+function heroCard(m){
+  const h = m.hero;
+  const rows = h.rows.map(r=>`
+    <div class="row">
+      <div class="rname">${esc(r.name)}</div>
+      <div class="rval">
+        ${r.big ? `<span class="rbig tone-${r.tone}">${esc(r.big)}</span>` : ''}
+        ${r.tail ? `<span class="rtail tone-${r.tone}">${esc(r.tail)}</span>` : ''}
+        ${r.verdict ? `<span class="rverdict tone-${r.tone}">${esc(r.verdict)}</span>` : ''}
+      </div>
+      <div class="rbar">${rowBar(r.bar)}<span class="sr">${esc(r.aria)}</span></div>
+    </div>`).join('');
+
+  const ledger = `
+    <div class="ledger">
+      ${h.because.map(b=>`<div class="lblock"><h4>${esc(b.h)}</h4>${b.l.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`).join('')}
+      <div class="notcounted"><h4>Not counted</h4>${h.notCounted.map(p=>`<p>${esc(p)}</p>`).join('')}</div>
+      <div class="limit">${I.info}<span>${esc(h.limit)}</span></div>
+    </div>`;
+
+  return `<section class="card hero" aria-labelledby="heroLbl">
+    <p class="eyebrow" id="heroLbl">${esc(h.label)}</p>
+    <div class="verdictline">
+      <span class="verdict tone-${h.tone}">${esc(h.verdict)}</span>
+      <span class="idx">${esc(h.value)}</span>
+    </div>
+    <div class="bandwrap">${bandBar(h.bar,true)}<span class="sr">${esc(h.barAria)}</span></div>
+
+    <button class="becausebar" id="becauseBtn" aria-expanded="${S.because}" aria-controls="ledgerWrap">
+      <span class="lbl">Because</span>${I.chev}
+    </button>
+
+    <div class="rows">${rows}</div>
+
+    <div class="ledgerwrap${S.because?' open':''}" id="ledgerWrap">
+      <div class="ledgerclip">${ledger}</div>
+    </div>
+  </section>`;
+}
+
+/* ---------- Action (the ONE instruction) ---------- */
+function actionCard(m){
+  const a = m.action;
+  const body = S.done
+    ? `<div class="donebox">${I.check}<span>${esc(a.doneMsg)}</span>
+         <button class="undo" id="undoBtn">Undo</button></div>`
+    : `<div class="btnrow">
+         <button class="btn primary" id="doneBtn">${I.check}<span>Done</span></button>
+         <button class="btn ghost${S.reminded?' set':''}" id="remindBtn">${I.bell}<span>${S.reminded?'Reminder set':'Remind'}</span></button>
+       </div>`;
+  return `<section class="card" aria-label="Today's one action">
+    <div class="actionicon" aria-hidden="true">${I[a.icon]}</div>
+    <h2 class="actionhead">${esc(a.head)}</h2>
+    <p class="proof"><b>${esc(a.proofN)}</b><span class="dot">·</span><span>${esc(a.proofBody)}</span></p>
+    ${body}
+  </section>`;
+}
+
+/* ---------- Alert ---------- */
+function alertCard(al){
+  return `<section class="alert" role="note" aria-label="Something we noticed">
+    <div class="ahead">${I.alert}<h3>${esc(al.head)}</h3></div>
+    <p>${esc(al.body)}</p>
+    <p class="anchor">${esc(al.anchor)}</p>
+    <p class="effect">${esc(al.effect)}</p>
+  </section>`;
+}
+
+/* ---------- Charts ---------- */
+/* All three charts share one geometry: a 240px plot lane on the left and a
+   68px label gutter on the right, so no label can ever land on a mark. */
+const CW=320, CH=136, PLOT_L=8, PLOT_R=248, BASE=112, PLOT_TOP=10, PLOT_BOT=108;
+
+function nightsChart(c){
+  const MIN=55, MAX=150;                       // minutes past 9:00 pm
+  const y = v => PLOT_BOT - (v-MIN)*((PLOT_BOT-PLOT_TOP)/(MAX-MIN));
+  const n = c.series.length;
+  const x = i => (PLOT_L+6) + i*(((PLOT_R-6)-(PLOT_L+6))/(n-1));
+  const bandTop=y(105), bandBot=y(75), mid=y(c.usual);
+  let marks='';
+  c.series.forEach((v,i)=>{
+    const cy=y(v), cx=x(i);
+    marks += `<line class="stem" x1="${cx.toFixed(1)}" y1="${mid.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>`;
+    marks += `<circle class="${v>105?'dot-out':'dot-ok'}" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${i===n-1?4.6:3.4}"/>`;
+  });
+  return `<div class="chartbox">
+    <svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Bedtime for the last 14 nights, plotted against your usual bedtime band centred on 10:30 pm. Later nights sit higher.">
+      <rect class="bandrect" x="${PLOT_L}" y="${bandTop.toFixed(1)}" width="${PLOT_R-PLOT_L}" height="${(bandBot-bandTop).toFixed(1)}" rx="6"/>
+      <line class="banddash" x1="${PLOT_L}" y1="${mid.toFixed(1)}" x2="${PLOT_R}" y2="${mid.toFixed(1)}"/>
+      ${marks}
+      <text class="axlabel" x="${PLOT_R+6}" y="${(mid+4).toFixed(1)}">usual 10:30</text>
+      <line class="gridline" x1="0" y1="${BASE}" x2="${PLOT_R}" y2="${BASE}"/>
+      <text class="axlabel" x="${PLOT_R}" y="${BASE+16}" text-anchor="end">${esc(c.lastLabel)}</text>
+    </svg>
+  </div>`;
+}
+
+function stepsChart(c){
+  const MAX=12000, n=c.series.length;
+  const slot=(PLOT_R-PLOT_L)/n, bw=slot-4;
+  const y = v => PLOT_BOT - (v/MAX)*(PLOT_BOT-PLOT_TOP);
+  let bars='';
+  c.series.forEach((v,i)=>{
+    const bx=PLOT_L+i*slot+2, by=y(v);
+    bars += `<rect class="${v>=c.goal?'bar-hit':'bar-ok'}" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${(PLOT_BOT-by).toFixed(1)}" rx="3"/>`;
+  });
+  const gy=y(c.goal);
+  return `<div class="chartbox">
+    <svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Daily steps for the last 14 days against your 7,000 goal line. Ten of the fourteen cleared it.">
+      ${bars}
+      <line class="goalline" x1="${PLOT_L}" y1="${gy.toFixed(1)}" x2="${PLOT_R}" y2="${gy.toFixed(1)}"/>
+      <text class="axlabel" x="${PLOT_R+6}" y="${(gy+4).toFixed(1)}">goal 7,000</text>
+      <line class="gridline" x1="0" y1="${BASE}" x2="${PLOT_R}" y2="${BASE}"/>
+      <text class="axlabel" x="${PLOT_R}" y="${BASE+16}" text-anchor="end">yesterday</text>
+    </svg>
+  </div>`;
+}
+
+function newNightsChart(c){
+  const MAX=600, TOTAL=7;
+  const slot=(PLOT_R-PLOT_L)/TOTAL, bw=slot-14;
+  const y = v => PLOT_BOT - (v/MAX)*(PLOT_BOT-PLOT_TOP);
+  let bars='';
+  for(let i=0;i<TOTAL;i++){
+    const bx=PLOT_L+i*slot+7;
+    if(i<c.series.length){
+      const by=y(c.series[i]);
+      bars += `<rect class="${c.series[i]>=c.goal?'bar-hit':'bar-ok'}" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${(PLOT_BOT-by).toFixed(1)}" rx="3"/>`;
+    }else{
+      bars += `<rect class="bar-pending" x="${bx.toFixed(1)}" y="${y(430).toFixed(1)}" width="${bw.toFixed(1)}" height="${(PLOT_BOT-y(430)).toFixed(1)}" rx="3"/>`;
+    }
+  }
+  const gy=y(c.goal);
+  return `<div class="chartbox">
+    <svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Three nights of sleep recorded out of the seven needed, against a 7 hour starting goal. Four slots are still open.">
+      ${bars}
+      <line class="goalline" x1="${PLOT_L}" y1="${gy.toFixed(1)}" x2="${PLOT_R}" y2="${gy.toFixed(1)}"/>
+      <text class="axlabel" x="${PLOT_R+6}" y="${(gy+4).toFixed(1)}">7 hours</text>
+      <line class="gridline" x1="0" y1="${BASE}" x2="${PLOT_R}" y2="${BASE}"/>
+      <text class="axlabel" x="${PLOT_R}" y="${BASE+16}" text-anchor="end">4 nights to go</text>
+    </svg>
+  </div>`;
+}
+
+function chartCard(c){
+  const svg = c.kind==='steps' ? stepsChart(c) : c.kind==='newnights' ? newNightsChart(c) : nightsChart(c);
+  return `<section class="card" aria-label="${esc(c.head)}">
+    <h3 class="h-card">${esc(c.head)}</h3>
+    <p class="lead">${esc(c.lead)}</p>
+    ${svg}
+    <p class="foot">${esc(c.foot)}</p>
+  </section>`;
+}
+
+function stepsCard(s){
+  return `<section class="card" aria-label="Steps yesterday">
+    <h3 class="h-card">${esc(s.head)}</h3>
+    <div class="metricline">
+      <span class="mval">${esc(s.value)}</span>
+      <span class="mverdict tone-${s.tone}">${esc(s.verdict)}</span>
+    </div>
+    <div style="margin-top:10px">${bandBar(s.bar,false)}<span class="sr">${esc(s.aria)}</span></div>
+    <p class="foot">${esc(s.why)}</p>
+  </section>`;
+}
+
+function footerBlock(){
+  return `<div class="footer">
+    <button class="hatch" id="hatchBtn">${I.list}<span>Show numbers only</span></button>
+    <p class="updated">Updated 9:38</p>
+  </div>`;
+}
+
+/* ---------- Numbers-only (escape hatch) ---------- */
+function numbersOnly(){
+  const rows = PLAIN[S.data].map(r=>`<div class="plainrow"><span class="k">${esc(r[0])}</span><span class="v">${esc(r[1])}</span></div>`).join('');
+  return `<section class="card">
+      <h2 class="plainhead">Numbers only</h2>
+      <p class="plainsub">Scores, bands and verdicts are off. These are the measurements as recorded, with nothing said about them.</p>
+    </section>
+    <section class="card"><div class="plaintable">${rows}</div></section>
+    <div class="footer">
+      <button class="hatch" id="hatchBtn">${I.back}<span>Turn verdicts back on</span></button>
+      <p class="updated">Updated 9:38</p>
+    </div>`;
+}
+
+/* ---------- Loading ---------- */
+function loading(){
+  const bar=(w,h,mt)=>`<div class="sk" style="width:${w};height:${h}px;margin-top:${mt}px"></div>`;
+  return `<section class="card hero" aria-busy="true" aria-label="Reading your data">
+      ${bar('34%',11,0)}${bar('58%',34,10)}${bar('100%',12,18)}${bar('26%',11,8)}
+      ${bar('100%',1,20)}${bar('30%',13,14)}${bar('46%',28,14)}${bar('100%',10,10)}
+      ${bar('30%',13,16)}${bar('34%',20,8)}${bar('100%',10,10)}
+    </section>
+    <section class="card" aria-hidden="true">${bar('36px',36,0)}${bar('78%',24,12)}${bar('62%',15,10)}${bar('100%',46,16)}</section>
+    <section class="card" aria-hidden="true">${bar('54%',20,0)}${bar('88%',15,10)}${bar('100%',110,14)}</section>
+    <p class="updated" style="margin-top:4px">Reading your last 14 days</p>`;
+}
+
+/* ---------- Empty ---------- */
+function emptyState(){
+  return `<section class="card empty">
+      <div class="actionicon" aria-hidden="true">${I.heart}</div>
+      <h2>Laso has no health data yet.</h2>
+      <p>Everything on this screen is a statement about your own numbers, so there is nothing honest to put here until there are some.</p>
+      <ul>
+        <li>Steps and walking work from your phone alone.</li>
+        <li>Sleep and heart need a watch or a sleep tracker.</li>
+        <li>Your own ranges open after seven nights.</li>
+      </ul>
+      <div class="btnrow"><button class="btn primary" id="connectBtn"><span>Connect Apple Health</span></button></div>
+    </section>
+    <p class="updated">Nothing has been read from Health yet.</p>`;
+}
+
+/* ---------- Tab stubs ---------- */
+function tabStub(name){
+  return `<div class="tabstub">
+    <h2>${esc(name)}</h2>
+    <p>This prototype builds the Today screen only. Tap Today to go back.</p>
+  </div>`;
+}
+
+/* ============================================================
+   MAIN RENDER
+   ============================================================ */
+const scroll = document.getElementById('scroll');
+const hdrTitle = document.getElementById('hdrTitle');
+
+const TABS = [
+  {id:'today', label:'Today', icon:'today'},
+  {id:'live', label:'Live', icon:'live'},
+  {id:'explore', label:'Explore', icon:'explore'},
+  {id:'settings', label:'Settings', icon:'settings'}
+];
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = TABS.map(t=>
+    `<button class="tab" data-tab="${t.id}" ${S.tab===t.id?'aria-current="page"':''}>${I[t.icon]}<span>${t.label}</span></button>`
+  ).join('');
+}
+
+function render(){
+  hdrTitle.textContent = TABS.find(t=>t.id===S.tab).label;
+
+  if(S.tab!=='today'){ scroll.innerHTML = tabStub(hdrTitle.textContent); renderTabs(); return; }
+  if(S.screen==='loading'){ scroll.innerHTML = loading(); renderTabs(); return; }
+  if(S.screen==='empty'){ scroll.innerHTML = emptyState(); renderTabs(); bindEmpty(); return; }
+  if(S.numbersOnly){ scroll.innerHTML = numbersOnly(); renderTabs(); bindHatch(); return; }
+
+  const m = model();
+  scroll.innerHTML =
+    (m.alert ? alertCard(m.alert) : '') +
+    heroCard(m) +
+    actionCard(m) +
+    chartCard(m.chart) +
+    (m.steps ? stepsCard(m.steps) : '') +
+    footerBlock();
+
+  renderTabs();
+  bindHome();
+}
+
+/* ============================================================
+   BINDINGS
+   ============================================================ */
+function bindHome(){
+  const b = document.getElementById('becauseBtn');
+  b.addEventListener('click', ()=>{
+    S.because = !S.because;
+    b.setAttribute('aria-expanded', String(S.because));
+    document.getElementById('ledgerWrap').classList.toggle('open', S.because);
+  });
+
+  const done = document.getElementById('doneBtn');
+  if(done) done.addEventListener('click', ()=>{ S.done = true; render(); });
+  const undo = document.getElementById('undoBtn');
+  if(undo) undo.addEventListener('click', ()=>{ S.done = false; S.reminded = false; render(); });
+  const remind = document.getElementById('remindBtn');
+  if(remind) remind.addEventListener('click', ()=>{ S.reminded = !S.reminded; render(); });
+
+  bindHatch();
+}
+function bindHatch(){
+  const h = document.getElementById('hatchBtn');
+  if(h) h.addEventListener('click', ()=>{ S.numbersOnly = !S.numbersOnly; scroll.scrollTop = 0; render(); });
+}
+function bindEmpty(){
+  const c = document.getElementById('connectBtn');
+  if(c) c.addEventListener('click', ()=>{
+    S.screen='loading'; renderSegs(); render();
+    setTimeout(()=>{ S.screen='loaded'; renderSegs(); render(); }, 1400);
+  });
+}
+
+document.getElementById('tabs').addEventListener('click', e=>{
+  const t = e.target.closest('[data-tab]');
+  if(!t) return;
+  S.tab = t.dataset.tab; scroll.scrollTop = 0; render();
+});
+
+/* header hairline on scroll */
+const hdr = document.getElementById('hdr');
+scroll.addEventListener('scroll', ()=> hdr.classList.toggle('scrolled', scroll.scrollTop > 4));
+
+/* ============================================================
+   THEME
+   ============================================================ */
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){
+  const dark = S.theme==='dark' || (S.theme==='auto' && mq.matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+}
+mq.addEventListener('change', ()=>{ if(S.theme==='auto') applyTheme(); });
+
+/* ============================================================
+   DEV TOOLBAR
+   ============================================================ */
+const devbtn = document.getElementById('devbtn');
+const devpanel = document.getElementById('devpanel');
+devbtn.addEventListener('click', ()=>{
+  const open = devpanel.classList.toggle('open');
+  devbtn.setAttribute('aria-expanded', String(open));
+});
+
+const SEGS = [
+  {el:'segTheme', key:'theme', opts:[['auto','Auto'],['light','Light'],['dark','Dark']]},
+  {el:'segData', key:'data', opts:[['full','Watch'],['phone','iPhone only'],['new','New user']]},
+  {el:'segScreen', key:'screen', opts:[['loaded','Loaded'],['loading','Loading'],['empty','Empty']]},
+  {el:'segLevel', key:'level', opts:[['high','High'],['mid','Moderate'],['low','Low']]}
+];
+
+function renderSegs(){
+  SEGS.forEach(g=>{
+    const dis = (g.key==='level' && S.data!=='full');
+    document.getElementById(g.el).innerHTML = g.opts.map(o=>
+      `<button class="seg" data-key="${g.key}" data-val="${o[0]}" aria-pressed="${S[g.key]===o[0]}" ${dis?'disabled':''}>${o[1]}</button>`
+    ).join('');
+  });
+}
+devpanel.addEventListener('click', e=>{
+  const b = e.target.closest('[data-key]');
+  if(!b || b.disabled) return;
+  S[b.dataset.key] = b.dataset.val;
+  if(b.dataset.key==='theme') applyTheme();
+  if(b.dataset.key==='data'){ S.because=false; S.done=false; S.reminded=false; S.numbersOnly=false; }
+  if(b.dataset.key==='level'){ S.done=false; S.reminded=false; }
+  if(b.dataset.key==='screen'){ S.tab='today'; }
+  renderSegs();
+  scroll.scrollTop = 0;
+  render();
+});
+
+/* boot */
+applyTheme();
+renderSegs();
+render();
+</script>
+</body>
+</html>

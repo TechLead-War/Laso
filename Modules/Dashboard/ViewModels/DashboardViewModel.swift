@@ -165,22 +165,12 @@ final class DashboardViewModel {
         /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
         /// describes the same series as the displayed weekly score.
         fileprivate(set) var cachedWeeklyScoreChange: Int?
-        /// Yesterday's stored score, kept separately from the delta above.
-        fileprivate(set) var cachedYesterdayScore: Int?
         /// Set by parent after each analysis refresh
         fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
         fileprivate(set) var categoryScores: [HealthScore] = []
 
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
         var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
-
-        /// Same delta as `scoreChangeFromYesterday` but keeping an explicit
-        /// zero. That one folds zero into nil so analytics and push stay quiet
-        /// on flat days; the Home chip has to show "same as yesterday" and
-        /// stay blank only when yesterday has no reading at all.
-        var scoreDeltaFromYesterday: Int? {
-            cachedYesterdayScore.map { overallScore.score - $0 }
-        }
 
         var recoveryState: RecoveryState {
             RecoveryState(score: overallScore.score)
@@ -467,15 +457,13 @@ final class DashboardViewModel {
     /// Personal health forecast cards (Paper 3: Conformal Prediction + Digital Twin)
     @MainActor var healthForecasts: [MetricForecast] = []
 
-    /// Activation sequence state (Paper 8: 8-Day Hook Window)
+    /// Activation sequence state (Paper 8: 8-Day Hook Window). The banner that
+    /// displayed it is gone; the state still advances so the milestone
+    /// analytics funnel other teams read keeps firing.
     @MainActor var activationState: ActivationSequenceManager.ActivationState = ActivationSequenceManager.loadState()
-    @MainActor var latestMilestoneEvent: ActivationSequenceManager.MilestoneEvent?
 
     /// Circadian biomarkers (Paper 7: Chronomedicine)
     @MainActor var circadianBiomarkers: CircadianHealthAnalyzer.CircadianBiomarkers?
-
-    /// Morning check-in adjustment applied to readiness (Paper 10: HRV + Subjective)
-    @MainActor var subjectiveReadinessAdjustment: Int = 0
 
     init(
         healthKitManager: HealthKitManager,
@@ -1180,7 +1168,6 @@ final class DashboardViewModel {
         scores.overallScore = analysisEngine.overallScore
         scores.categoryScores = analysisEngine.categoryScores
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
-        scores.cachedYesterdayScore = computeYesterdayScore()
         scores.rollingAverageScore = computeRollingAverageScore()
         scores.cachedWeeklyScoreChange = computeWeeklyScoreChange()
         scores.scoreExplanation = analysisEngine.scoreExplanation
@@ -1958,22 +1945,6 @@ final class DashboardViewModel {
         )
     }
 
-    /// Yesterday's own score, so a flat day can be told apart from a day with
-    /// no reading behind it. Same window the delta above uses.
-    @MainActor
-    private func computeYesterdayScore() -> Int? {
-        let cal = Date.cal
-        let today = cal.startOfDay(for: Date())
-        guard let yesterday = cal.date(byAdding: .day, value: -1, to: today) else { return nil }
-        // A stored zero means the day was never scored, not that the user scored
-        // zero, so it must not become a delta. The rest of the app applies the
-        // same `> 0` rule to a persisted score.
-        return scoreHistoryCached(days: 3)
-            .last { $0.date >= yesterday && $0.date < today }
-            .map(\.score)
-            .flatMap { $0 > 0 ? $0 : nil }
-    }
-
     /// EWMA-smoothed weekly score for the Explore tab.
     ///
     /// Why EWMA over completed days only: today's overall score is recomputed
@@ -2247,7 +2218,12 @@ final class DashboardViewModel {
             rationale: recommendation.rationale,
             supportingInsights: Array(sortedInsights.prefix(2)),
             proofSummary: proofSummary,
-            expectedBenefit: recommendation.expectedBenefit
+            expectedBenefit: recommendation.expectedBenefit,
+            // The advisor labels rungs 3-8 alike as "context_rules", so its
+            // rung-8 hardcoded default is only identifiable by its fixed
+            // headline; both sides resolve through the same Copy accessor.
+            isFallback: recommendation.source == "context_rules"
+                && recommendation.title == Copy.Home.SmartAction.defaultTitle
         )
 
         _cachedDailyAction = action
@@ -2564,6 +2540,10 @@ final class DashboardViewModel {
         var proofSummary: RecommendationEvaluator.ActionProofSummary?
         /// What doing this is forecast to change. Empty for rule-based actions.
         var expectedBenefit: String = ""
+        /// True when the advisor fell through every rung to the hardcoded
+        /// default, so the card can say so instead of dressing standard advice
+        /// as personal (KEEP-KILL fix row).
+        var isFallback: Bool = false
     }
 
     /// Snapshot of the three core recovery signals for the Today's Action detail view.
@@ -2677,12 +2657,18 @@ final class DashboardViewModel {
                 tone: high ? .concern : .good), high ? dev * 1.1 : dev * 0.6))
         }
 
+        // Out-of-range signals lead outright: the hero card blindly shows the
+        // first three rows, and a big deviation on a signal that reads fine
+        // (e.g. HRV well above baseline) must not push a concern off the card.
         // Swift's sort is not stable, so ties fall back to the order the signals
         // are appended above. Without it two equally relevant rows swap places
         // on every refresh and the list looks like it is jumping around.
         let withReading = candidates.enumerated()
             .sorted {
-                $0.element.relevance == $1.element.relevance
+                let lhsConcern = $0.element.reason.tone == .concern
+                let rhsConcern = $1.element.reason.tone == .concern
+                if lhsConcern != rhsConcern { return lhsConcern }
+                return $0.element.relevance == $1.element.relevance
                     ? $0.offset < $1.offset
                     : $0.element.relevance > $1.element.relevance
             }
@@ -2723,6 +2709,23 @@ final class DashboardViewModel {
             let days = Set(inWindow.map { MetricSample.localDayBucket(for: $0.date) }).count
             return SignalCoverage(metric: metric, daysWithData: days, window: window)
         }
+    }
+
+    /// The signals the readiness score is actually built from (`ReadinessScorer`
+    /// inputs: HRV, resting HR, sleep). Steps and blood oxygen are read for
+    /// coverage but feed no scorer input, so they must never appear in the
+    /// hero's honesty line (KEEP-KILL merge list).
+    private static let scoreFedSignals: [HealthMetric] = [
+        .sleepDuration, .heartRateVariability, .restingHeartRate
+    ]
+
+    /// Display names of score-fed signals with no reading in the coverage
+    /// window, for the hero card's one tappable coverage line.
+    @MainActor
+    func scoreFedMissingSignalNames() -> [String] {
+        signalCoverage()
+            .filter { $0.isMissing && Self.scoreFedSignals.contains($0.metric) }
+            .map(\.metric.displayName)
     }
 
     /// The rest context in force today, if any. Nothing expires on a timer here:
@@ -2845,7 +2848,6 @@ final class DashboardViewModel {
         )
 
         if let latest = newEvents.last {
-            latestMilestoneEvent = latest
             // Map activation sequence milestones to analytics milestones
             switch latest.milestone {
             case .firstCorrelation:
@@ -2870,13 +2872,6 @@ final class DashboardViewModel {
             anomalies: []
         )
         circadianBiomarkers = CircadianHealthAnalyzer.computeBiomarkers(from: context)
-    }
-
-    /// Apply morning check-in to readiness scoring (Paper 10)
-    @MainActor
-    func applyMorningCheckIn(_ checkIn: MorningCheckIn) {
-        MorningCheckInManager.record(checkIn)
-        subjectiveReadinessAdjustment = checkIn.readinessAdjustment
     }
 
     struct HealthDataQueryRequest {

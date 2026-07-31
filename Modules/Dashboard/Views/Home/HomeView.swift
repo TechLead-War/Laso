@@ -21,12 +21,12 @@ struct HomeView: View {
     @State private var showShareCard = false
     /// Yesterday's marked-done action result, surfaced this morning (loop closer).
     @State private var dailyResult: DailyActionResultStore.Result?
-    /// Master-streak milestone just crossed and not yet celebrated, if any.
-    @State private var streakMilestone: Int?
     /// Not @State on purpose: see `ScrollDepthTracker`. Every write here
     /// used to re-run this whole body while the user was scrolling.
     @State private var scrollDepth = ScrollDepthTracker()
-    @State private var showMorningCheckIn = false
+    /// The merged life-context affordance on the action card: false shows one
+    /// line, true expands the chip picker in place.
+    @State private var showContextPicker = false
     @State private var showSoftLockPaywall = false
     /// One-shot full live fetch on first appear. Without it, Home only starts the
     /// tiered refresh timers, which defer the slow tier (HRV, resting HR, sleep),
@@ -35,8 +35,19 @@ struct HomeView: View {
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
-    @State private var risksTracker = SectionTracker(section: .homeRisks, tab: .home)
     @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
+
+    /// KEEP-KILL condition on the intraday card: before this hour the usual-day
+    /// trace has no shape to compare against, so any verdict would be noise.
+    private static let intradayMinimumHour = 10
+    /// Founder override (KEEP-KILL): an action whose reminder lands at or after
+    /// this hour is evening-anchored — a morning "Mark done" would log a thing
+    /// that has not happened yet.
+    private static let eveningAnchorHour = 18
+    /// Under this age the footer renders a static caption. SwiftUI's relative
+    /// date style ticks continuously, and a fresh timestamp does not need a
+    /// live clock to be honest.
+    private static let freshRefreshWindowSeconds: TimeInterval = 15 * 60
 
 
     var body: some View {
@@ -56,7 +67,32 @@ struct HomeView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("screen.home")
         .background(AppColour.surfaceSunken.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        // The Ask Your Data door moved off the scroll (KEEP-KILL merge list)
+        // into the nav bar, so the bar is shown again after being hidden.
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Ask Your Data",
+                        type: .smartAction,
+                        screen: .home,
+                        metadata: ["source": "home_toolbar"]
+                    )
+                    if isSoftLocked {
+                        AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "ask_your_data", screen: .home)
+                        showSoftLockPaywall = true
+                    } else {
+                        navigationPath.append(Route.askYourData)
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .accessibilityLabel(Copy.Home.AskYourData.title)
+                .accessibilityHint(Copy.Home.opensAskYourDataHint)
+                .accessibilityIdentifier("home.askYourDataButton")
+            }
+        }
         // UI-test only: zero-size accessible triggers for sheets that otherwise
         // lack a stable, always-visible entry point (ScoreGuideSheet is not
         // wired to any gesture; the journal prompt only appears after 6pm).
@@ -101,9 +137,17 @@ struct HomeView: View {
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
         .onChange(of: viewModel.lastRefresh) { _, _ in
             rebuildMetricTilesFromLive()
+            // A cold start can reach Home before the first analysis lands, and
+            // the review card no longer loads itself (it renders only when a
+            // review exists), so rebuild it whenever a refresh completes.
+            weeklyReviewViewModel?.load()
         }
         .onAppear {
             ensureWeeklyReviewVM()
+            // Loaded here, not in the entry card: the card now renders only
+            // when a review exists, so its own onAppear could never run the
+            // load that produces one.
+            weeklyReviewViewModel?.load()
             if !didInitialLiveFetch {
                 didInitialLiveFetch = true
                 // Load HRV, resting HR and sleep right away so the Why list is
@@ -113,11 +157,6 @@ struct HomeView: View {
             startHomeRefresh()
             startReadinessRefresh()
             rebuildMetricTilesFromLive()
-            showMorningCheckIn = MorningCheckInManager.shouldShowCheckIn()
-                || (UITestMode.isEnabled && UITestMode.forceMorningCheckIn)
-            if let checkIn = MorningCheckInManager.todaysCheckIn() {
-                viewModel.subjectiveReadinessAdjustment = checkIn.readinessAdjustment
-            }
             refreshDailyResult()
             AppAnalytics.shared.trackFeatureOpen(.home)
         }
@@ -153,11 +192,6 @@ struct HomeView: View {
             guard scenePhase == .active else { return }
             startHomeRefresh()
             startReadinessRefresh()
-        }
-        // `initial: true` covers the streak already being computed when Home
-        // opens; the change side covers it landing after the first analysis pass.
-        .onChange(of: viewModel.gamificationEngine.streaks.masterStreak, initial: true) { _, _ in
-            refreshStreakMilestone()
         }
     }
 
@@ -220,98 +254,6 @@ struct HomeView: View {
         case .down:   direction = "down"
         }
         AppAnalytics.shared.trackDailyResultShown(direction: direction, delta: result.delta)
-    }
-
-    /// Resolve the milestone offer once per Home session. Guarded on
-    /// `streakMilestone == nil` so the repeated streak recomputes behind the
-    /// refresh timers cannot re-raise a card the user just dismissed.
-    private func refreshStreakMilestone() {
-        guard streakMilestone == nil,
-              let milestone = StreakMilestoneStore.pending(
-                streak: viewModel.gamificationEngine.streaks.masterStreak) else { return }
-        streakMilestone = milestone
-    }
-
-    /// Retires the milestone for good. Both dismissing and opening the share
-    /// sheet end the offer: it is tied to the moment, not to whether the user
-    /// actually posted.
-    private func closeStreakMilestone(_ milestone: Int) {
-        StreakMilestoneStore.markCelebrated(milestone)
-        withAnimation { streakMilestone = nil }
-    }
-
-    /// One time offer to share a streak the user has just crossed. Matches
-    /// `DailyActionResultCard` so the two never compete for weight above the fold.
-    private func streakMilestoneCard(_ milestone: Int) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(Copy.Home.streakMilestoneHeader)
-                .font(DS.Typography.captionSemibold)
-                .tracking(1.2)
-                .foregroundStyle(AppColour.success)
-
-            HStack(spacing: 12) {
-                Image(systemName: "flame.fill")
-                    .font(DS.Typography.title3)
-                    .foregroundStyle(AppColour.textOnAccent)
-                    .frame(width: 40, height: 40)
-                    .background(AppColour.success, in: RoundedRectangle(cornerRadius: 10))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(Copy.Home.streakMilestoneTitle(days: milestone))
-                        .font(DS.Typography.bodySemibold)
-                        .foregroundStyle(AppColour.textPrimary)
-
-                    Text(Copy.Home.streakMilestoneBody)
-                        .font(DS.Typography.footnote)
-                        .foregroundStyle(AppColour.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            HStack(spacing: DS.space3) {
-                Button {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: "Share",
-                        type: .shareCard,
-                        screen: .home,
-                        metadata: ["source": "streak_milestone", "milestone_days": milestone]
-                    )
-                    closeStreakMilestone(milestone)
-                    showShareCard = true
-                } label: {
-                    Text(Copy.Home.streakMilestoneShare)
-                        .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(AppColour.success)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home.streakMilestoneCard.share")
-
-                Button {
-                    // Same card_id as the Share button above so the offer has a
-                    // decline rate; without it a dismiss is indistinguishable
-                    // from never seeing the card.
-                    AppAnalytics.shared.trackBlockTap(
-                        title: "Dismiss",
-                        type: .shareCard,
-                        screen: .home,
-                        metadata: ["source": "streak_milestone", "milestone_days": milestone]
-                    )
-                    closeStreakMilestone(milestone)
-                } label: {
-                    Text(Copy.Home.streakMilestoneDismiss)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(AppColour.textTertiary)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(DS.cardPadding)
-        .cardStyle(tint: AppColour.success)
-        .padding(.horizontal, DS.screenPadding)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("home.streakMilestoneCard")
     }
 
     /// Opens the screen behind one Why row on the score card. Energy has no
@@ -426,13 +368,6 @@ struct HomeView: View {
         .padding(.bottom, DS.space2)
     }
 
-    /// Only show the "Connect Your Health Data" empty state after the initial load
-    /// has completed AND there is genuinely no data. This prevents the empty state
-    /// from flashing during startup before HealthKit data has been loaded.
-    private var shouldShowEmptyState: Bool {
-        viewModel.ui.hasCompletedInitialLoad && !hasData
-    }
-
     /// Uppercase tracked label that visually separates HomeView's sections.
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
@@ -446,60 +381,51 @@ struct HomeView: View {
     private var homeContent: some View {
         ScrollView(.vertical) {
             LazyVStack(spacing: DS.itemSpacing) {
-                // 1. Greeting header. context-aware with recovery state
-                CoachGreetingView()
-                .padding(.top, DS.space1)
-
-                if shouldShowEmptyState {
-                    connectHealthView
-                } else if hasData {
+                if hasData {
                     // ── Above the fold ──
 
-                    // 0b. What the watch cannot see. Sits above the action card
-                    // because an active rest chip overrides what that card says.
-                    LifeContextChipRow(store: viewModel.lifeContextStore)
-                        .onChange(of: viewModel.lifeContextStore.active) { _, _ in
-                            // The action is cached for the day, so without this
-                            // the card keeps yesterday's advice after a toggle.
-                            viewModel.invalidateDailyActionCache()
-                        }
+                    // 1. The app's only real safety signal leads the screen
+                    // when it exists (KEEP-KILL surviving-screen order), and is
+                    // never blurred behind a paywall.
+                    compactAlertBanner
+                        .padding(.top, DS.space1)
 
-                    // 0a. Yesterday's result. When present, the proof that
-                    // yesterday's action moved the score leads the screen — it
-                    // is the reason the user came back this morning.
+                    // 2. Yesterday's result. When present, the proof that
+                    // yesterday's action was logged leads the loop — it is the
+                    // reason the user came back this morning. Hosts the share
+                    // entry on up mornings (KEEP-KILL merge list).
                     if let dailyResult {
-                        DailyActionResultCard(result: dailyResult) {
+                        // No completions history exists yet (DailyActionCompletion
+                        // stores a single day marker), so the aggregate line stays
+                        // off rather than dressing thin data as a pattern.
+                        DailyActionResultCard(result: dailyResult, aggregate: nil) {
                             DailyActionResultStore.clear()
                             withAnimation { self.dailyResult = nil }
                         }
+
+                        if dailyResult.direction == .up, !shareTemplates.isEmpty {
+                            resultShareButton
+                        }
                     }
 
-                    // 0a2. A streak milestone just crossed. Sits with the other
-                    // above-the-fold moment cards and retires itself for good on
-                    // either button, so it can never become daily furniture.
-                    if let streakMilestone {
-                        streakMilestoneCard(streakMilestone)
-                    }
-
-                    // 0. Next Up. the daily action leads the screen: Laso's core
+                    // 3. Next Up. the daily action leads the screen: Laso's core
                     // promise is telling you what to do next, so the step comes
                     // before the score that explains it.
                     primaryActionCard
 
-                    // 1. Score card. live readiness score (updates every 30 min)
+                    // 4. Score card. live readiness score (updates every 30 min)
                     // shown as one ring plus the plain-word reasons behind it.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
                         summaryHead: viewModel.readinessSummary(score: liveReadinessScore).head,
                         summarySub: viewModel.readinessSummary(score: liveReadinessScore).sub,
                         whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
-                        hasLiveReadiness: hasLiveReadiness,
-                        scoreChange: viewModel.scores.scoreDeltaFromYesterday,
+                        isFallbackScore: !hasLiveReadiness,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
-                        scoreUncertainty: liveViewModel.recovery.readinessUncertainty,
+                        missingSignals: viewModel.scoreFedMissingSignalNames(),
                         // When live Recovery exists the tap opens the Recovery
-                        // explainer; otherwise the headline is the Daily Health
-                        // Score (fallback) so we open the matching guide.
+                        // explainer; otherwise the headline is the fallback
+                        // health score so we open the matching guide.
                         onTap: {
                             AppAnalytics.shared.trackBlockTap(
                                 title: "Recovery Score",
@@ -514,24 +440,8 @@ struct HomeView: View {
                             }
                         },
                         onTapWhy: { kind in openWhySignal(kind) },
-                        // No earned win means no share icon at all. Offering the
-                        // sheet with nothing in it would train users to ignore it.
-                        onShare: shareTemplates.isEmpty ? nil : {
-                            // Entry step of the share funnel: without this the
-                            // first event is the Share CTA inside the sheet, so
-                            // open-then-dismiss users were invisible.
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Share",
-                                type: .shareCard,
-                                screen: .home,
-                                metadata: ["source": "recovery_hero", "card_type": "template"]
-                            )
-                            showShareCard = true
-                        }
+                        onFixCoverage: { openHealthAppForCoverage() }
                     )
-                    .sheet(isPresented: $showShareCard) {
-                        ShareWinSheet(templates: shareTemplates)
-                    }
                     .onAppear {
                         recoveryTracker.appeared()
                         scrollDepth.record(10)
@@ -543,7 +453,7 @@ struct HomeView: View {
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
 
-                    // 1a-. Last seven days, right under the score they are the
+                    // 5. Last seven days, right under the score they are the
                     // history of. Tapping opens the full month in Biology.
                     WeekScoreStrip(scoresByDay: viewModel.cachedDailyScoresByDay) {
                         AppAnalytics.shared.trackBlockTap(
@@ -554,16 +464,23 @@ struct HomeView: View {
                         )
                         NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: nil)
                     }
+                    // Depth marker repointed from the deleted AskYourDataCard
+                    // onto a card that always renders, so the funnel keeps its
+                    // mid-scroll rung.
+                    .onAppear { scrollDepth.record(40) }
 
-                    // 1a--. When today actually happened. Every other number on
-                    // this screen is a daily total, so this is the only view of
-                    // the shape of the day. Hidden until the day has any energy
-                    // logged, since an all-zero chart says nothing.
-                    if liveViewModel.activity.intradayActiveEnergy.contains(where: { $0 > 0 }) {
-                        IntradayActivityCard(buckets: liveViewModel.activity.intradayActiveEnergy)
+                    // 6. When today actually happened, read against the user's
+                    // own usual day. Hidden until the day has energy logged AND
+                    // the morning has enough shape to compare against.
+                    if Date.cal.component(.hour, from: Date()) >= Self.intradayMinimumHour,
+                       liveViewModel.activity.intradayActiveEnergy.contains(where: { $0 > 0 }) {
+                        IntradayActivityCard(
+                            buckets: liveViewModel.activity.intradayActiveEnergy,
+                            usualBuckets: liveViewModel.usualIntradayEnergy
+                        )
                     }
 
-                    // 1a0. Sleep bank. The only running total on the screen, so
+                    // 7. Sleep bank. The only running total on the screen, so
                     // it sits right under the score it helps explain. Hidden
                     // entirely until the balance is big enough to act on.
                     if let bank = viewModel.sleepBank {
@@ -573,78 +490,14 @@ struct HomeView: View {
                                       nightsRecorded: bank.nightsRecorded)
                     }
 
-                    // 1a. What Apple Health has actually sent. Only rendered
-                    // when a signal is empty, so a full read carries no clutter.
-                    DataCoverageCard(coverage: viewModel.signalCoverage()) {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Check Health settings",
-                            type: .errorRetry,
-                            screen: .home,
-                            metadata: ["source": "data_coverage"]
-                        )
-                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-                        UIApplication.shared.open(url)
-                    }
-
-                    // 1b. Activation Progress (first 8 days. Paper 8)
-                    ActivationProgressBanner(
-                        state: viewModel.activationState,
-                        latestMilestone: viewModel.latestMilestoneEvent,
-                        onDismissCelebration: { viewModel.latestMilestoneEvent = nil }
-                    )
-
-                    // 1c. Morning Check-In (Paper 10: Subjective + Objective)
-                    if showMorningCheckIn {
-                        MorningCheckInView(
-                            onComplete: { checkIn in
-                                viewModel.applyMorningCheckIn(checkIn)
-                                withAnimation { showMorningCheckIn = false }
-                            },
-                            onDismiss: {
-                                MorningCheckInManager.markDismissedToday()
-                                withAnimation { showMorningCheckIn = false }
-                            }
-                        )
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-
-                    // 1d. Watch face complication nudge. Only when a watch is paired
+                    // 8. Watch face complication nudge. Only when a watch is paired
                     // with the app installed and the complication is not on the face.
                     WatchComplicationCard(linkState: PhoneWatchSession.shared.linkState)
-
-                    // 2d. Ask Your Data (Papers 1 & 2: PHIA)
-                    // Stays visible and tappable while soft locked; the tap
-                    // raises the unlock sheet instead of navigating.
-                    AskYourDataCard {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Ask Your Data",
-                            type: .smartAction,
-                            screen: .home,
-                            metadata: ["source": "home_card"]
-                        )
-                        if isSoftLocked {
-                            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: "ask_your_data", screen: .home)
-                            showSoftLockPaywall = true
-                        } else {
-                            navigationPath.append(Route.askYourData)
-                        }
-                    }
-                    // Depth marker on a card that always renders. The old 20
-                    // marker sat on the alert banner, which is absent for a
-                    // healthy user, so their depth jumped 10 -> 90.
-                    .onAppear { scrollDepth.record(40) }
-
-                    // 3. Compact alert banner (illness + health risks)
-                    // Each tracker is attached to its own sub-block inside the
-                    // banner, not here: the banner renders when either an
-                    // illness warning or a risk exists.
-                    compactAlertBanner
-                        .softLocked(isSoftLocked, feature: "home_alerts") { showSoftLockPaywall = true }
 
                     sectionHeader("VITALS")
                         .padding(.top, DS.space3)
 
-                    // 4. Metric Strip. horizontal scroll replacing 6 vertical cards
+                    // 9. Metric Strip. horizontal scroll replacing 6 vertical cards
                     MetricStripView(tiles: viewModel.cachedMetricTiles) { tile in
                         AppAnalytics.shared.trackBlockTap(
                             title: tile.label,
@@ -659,40 +512,44 @@ struct HomeView: View {
 
                     // ── Below the fold ──
 
-                    // The header used to render unconditionally while the card
-                    // below returns an empty Group with no review, so a new user
-                    // saw a heading with nothing under it.
-                    if weeklyReviewViewModel?.review != nil {
+                    // 10. Weekly Review. Header and card render together only
+                    // when a review exists, so a new user never sees a heading
+                    // with nothing under it.
+                    if let weeklyReviewViewModel, weeklyReviewViewModel.review != nil {
                         sectionHeader("REVIEW")
                             .padding(.top, DS.space3)
-                    }
 
-                    // 7. Weekly Review
-                    WeeklyReviewEntryCard(
-                        viewModel: weeklyReviewViewModel ?? WeeklyReviewViewModel(dashboardViewModel: viewModel)
-                    ) {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Weekly Review",
-                            type: .weeklyReviewCard,
-                            screen: .home,
-                            metadata: [
-                                "destination": "weekly_review",
-                                "score": liveReadinessScore
-                            ]
-                        )
-                        navigationPath.append(Route.weeklyReview)
+                        WeeklyReviewEntryCard(viewModel: weeklyReviewViewModel) {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Weekly Review",
+                                type: .weeklyReviewCard,
+                                screen: .home,
+                                metadata: [
+                                    "destination": "weekly_review",
+                                    "score": liveReadinessScore
+                                ]
+                            )
+                            navigationPath.append(Route.weeklyReview)
+                        }
+                        .onAppear { weeklyReviewTracker.appeared() }
+                        .onDisappear { weeklyReviewTracker.disappeared() }
+                        .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
                     }
-                    .onAppear { weeklyReviewTracker.appeared(); scrollDepth.record(90) }
-                    .onDisappear { weeklyReviewTracker.disappeared() }
-                    .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
 
                     // Last updated footer. always rendered so the user can confirm
                     // the screen is alive; falls back to a pull-to-refresh hint
-                    // when no sync has happened yet (very first launch).
+                    // when no sync has happened yet (very first launch). Fresh
+                    // timestamps render statically instead of ticking.
                     Group {
                         if let lastRefresh = viewModel.lastRefresh {
-                            Copy.Home.updatedAgo(lastRefresh)
-                                .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
+                            Group {
+                                if Date().timeIntervalSince(lastRefresh) < Self.freshRefreshWindowSeconds {
+                                    Text(Copy.Home.lastUpdatedAgo(lastRefresh))
+                                } else {
+                                    Copy.Home.updatedAgo(lastRefresh)
+                                }
+                            }
+                            .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
                         } else {
                             Copy.Home.pullToRefresh
                                 .accessibilityLabel(Copy.Home.notSyncedYetAccessibility)
@@ -700,6 +557,14 @@ struct HomeView: View {
                     }
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textTertiary)
+                    // The 90 rung moved off the review card, which now renders
+                    // on review weeks only; the footer always exists.
+                    .onAppear { scrollDepth.record(90) }
+                } else {
+                    // The empty state is the unconditional fallback for no data,
+                    // so the old blank gap state (greeting over nothing) is
+                    // unreachable. Startup loading is caught before homeContent.
+                    connectHealthView
                 }
             }
             .frame(maxWidth: .infinity)
@@ -707,6 +572,11 @@ struct HomeView: View {
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
         .contentMargins(.bottom, 32, for: .scrollContent)
+        // Attached to the scroll, not a card: both share entries (result card
+        // today, future earned moments) present the same tray.
+        .sheet(isPresented: $showShareCard) {
+            ShareWinSheet(templates: shareTemplates)
+        }
         .safeAreaInset(edge: .bottom) {
             if isSoftLocked {
                 softLockBottomBar
@@ -714,8 +584,54 @@ struct HomeView: View {
         }
     }
 
+    /// Share entry, result-card mornings only (KEEP-KILL merge list): the hero
+    /// icon is gone, and an up morning is the one earned moment left on Home.
+    private var resultShareButton: some View {
+        Button {
+            // Entry step of the share funnel: without this the first event is
+            // the Share CTA inside the sheet, so open-then-dismiss users were
+            // invisible.
+            AppAnalytics.shared.trackBlockTap(
+                title: "Share",
+                type: .shareCard,
+                screen: .home,
+                metadata: ["source": "daily_result", "card_type": "template"]
+            )
+            showShareCard = true
+        } label: {
+            Label(Copy.Common.shareHealthCard, systemImage: "square.and.arrow.up")
+                .font(DS.Typography.captionSemibold)
+                .foregroundStyle(AppColour.info)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, DS.screenPadding + DS.cardPadding)
+        .accessibilityIdentifier("home.dailyResultCard.share")
+    }
+
+    /// Opens the Health app so the user can fix a missing read permission.
+    /// `x-apple-health://` is the public Health scheme; if the open fails the
+    /// app settings screen is the fallback door. Never Laso's own settings —
+    /// that was the coverage card's wrong-door CTA (KEEP-KILL merge list).
+    private func openHealthAppForCoverage() {
+        AppAnalytics.shared.trackBlockTap(
+            title: "Check Health settings",
+            type: .errorRetry,
+            screen: .home,
+            metadata: ["source": "hero_coverage_line"]
+        )
+        guard let healthURL = URL(string: "x-apple-health://") else { return }
+        UIApplication.shared.open(healthURL) { success in
+            if !success, let settings = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settings)
+            }
+        }
+    }
+
     // MARK: - Empty State. Waiting For First Sync
 
+    // The empty-state impression fires inside HomeConnectHealthView itself;
+    // a second trackEmptyStateShown here double-counted the churn funnel.
     private var connectHealthView: some View {
         HomeConnectHealthView(
             deviceSourceManager: deviceSourceManager,
@@ -724,217 +640,233 @@ struct HomeView: View {
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
         }
-        .onAppear {
-            // Empty-state friction signal: fires when the user lands on Home
-            // without HealthKit data, so analytics can isolate "no-data churn"
-            // from authorized-but-engaged users.
-            AppAnalytics.shared.trackEmptyStateShown(
-                screen: .home,
-                reason: viewModel.healthKitManager.isAuthorized ? "authorized_no_data" : "not_authorized"
-            )
-        }
     }
 
-    // MARK: - Compact Alert Banner (illness + health risks merged)
+    // MARK: - Compact Alert Banner (illness early warning only)
 
+    // The risk rows were deleted (KEEP-KILL): a near-open >=15/100 filter must
+    // not ride the strict illness gate's credibility in the same red card. The
+    // narrative renders at full body size — a health warning is never the line
+    // that shrinks or truncates.
     @ViewBuilder
     private var compactAlertBanner: some View {
-        let warning = viewModel.analysis.topIllnessWarning
-        let risks = viewModel.analysis.todayHealthRisks
+        if let warning = viewModel.analysis.topIllnessWarning {
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Early Warning",
+                    type: .headlineInsight,
+                    screen: .home,
+                    metadata: [
+                        "severity": warning.severity.rawValue,
+                        "destination": "insights_detail"
+                    ]
+                )
+                illnessTracker.tapped(target: "early_warning")
+                navigationPath.append(Route.insightsDetail)
+            } label: {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.danger)
 
-        if warning != nil || !risks.isEmpty {
-            VStack(spacing: 6) {
-                if let warning {
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Early Warning",
-                            type: .headlineInsight,
-                            screen: .home,
-                            metadata: [
-                                "severity": warning.severity.rawValue,
-                                "destination": "insights_detail"
-                            ]
-                        )
-                        illnessTracker.tapped(target: "early_warning")
-                        navigationPath.append(Route.insightsDetail)
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-                                .font(DS.Typography.bodySemibold)
-                                .foregroundStyle(AppColour.danger)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(Copy.Home.earlyWarning)
-                                    .font(DS.Typography.footnoteMedium)
-                                    .foregroundStyle(AppColour.danger)
-                                Text(warning.narrative)
-                                    .font(DS.Typography.caption)
-                                    .foregroundStyle(AppColour.textSecondary)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.75)
-                            }
-
-                            Spacer()
-
-                            Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
-                                .font(DS.Typography.captionSemibold)
-                                .foregroundStyle(AppColour.textOnAccent)
-                                .padding(.horizontal, DS.badgeH)
-                                .padding(.vertical, DS.badgeV)
-                                .background(warning.severity == .critical ? AppColour.danger : warning.severity == .warning ? AppColour.warning : AppColour.scoreFair, in: Capsule())
-
-                            Image(systemName: "chevron.right")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(AppColour.textTertiary)
-                        }
-                        .padding(DS.space2 + 2)
-                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.Radius.md)
-                                .strokeBorder(AppColour.danger.opacity(0.2), lineWidth: 1)
-                        )
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Copy.Home.earlyWarning)
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(AppColour.danger)
+                        Text(warning.narrative)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .buttonStyle(.plain)
-                    .onAppear { illnessTracker.appeared() }
-                    .onDisappear { illnessTracker.disappeared() }
+
+                    Spacer()
+
+                    Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.textOnAccent)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(warning.severity == .critical ? AppColour.danger : warning.severity == .warning ? AppColour.warning : AppColour.scoreFair, in: Capsule())
+
+                    Image(systemName: "chevron.right")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
-
-                // Wrapped so the impression fires once for the risk block, not
-                // once per row, and only when a risk actually rendered.
-                if !risks.isEmpty {
-                    VStack(spacing: 6) {
-                        ForEach(risks.prefix(2)) { risk in
-                            Button {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: risk.riskType.displayName,
-                                    type: .homeRiskRow,
-                                    screen: .home,
-                                    metadata: [
-                                        "risk_id": risk.riskType.rawValue,
-                                        "risk_grade": risk.riskGrade.rawValue
-                                    ]
-                                )
-                                risksTracker.tapped(target: risk.riskType.rawValue)
-                                navigationPath.append(risk.riskType)
-                            } label: {
-                                HStack(spacing: 10) {
-                                    Image(systemName: risk.riskType.systemImageName)
-                                        .font(DS.Typography.body)
-                                        .foregroundStyle(risk.riskGrade.color)
-                                        .frame(width: 28, height: 28)
-                                        .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
-
-                                    Text(risk.riskType.displayName)
-                                        .font(DS.Typography.footnoteMedium)
-                                        .foregroundStyle(AppColour.textPrimary)
-
-                                    Spacer()
-
-                                    Text(risk.riskGrade.displayName)
-                                        .font(DS.Typography.captionSemibold)
-                                        .foregroundStyle(risk.riskGrade.color)
-
-                                    Image(systemName: "chevron.right")
-                                        .font(DS.Typography.caption)
-                                        .foregroundStyle(AppColour.textTertiary)
-                                }
-                                .padding(DS.space2 + 2)
-                                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: DS.Radius.md)
-                                        .strokeBorder(risk.riskGrade.color.opacity(DS.strokeAlpha), lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .onAppear { risksTracker.appeared() }
-                    .onDisappear { risksTracker.disappeared() }
-                }
+                .padding(DS.space2 + 2)
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.md)
+                        .strokeBorder(AppColour.danger.opacity(0.2), lineWidth: 1)
+                )
+                .padding(DS.cardPadding)
             }
-            .padding(DS.cardPadding)
+            .buttonStyle(.plain)
             .cardStyle(tint: AppColour.danger)
             .padding(.horizontal, DS.screenPadding)
+            .onAppear { illnessTracker.appeared() }
+            .onDisappear { illnessTracker.disappeared() }
         }
     }
 
     // MARK: - Next Up Card (single source of truth for what to do)
+
+    /// Icons the advisor only assigns to bedtime and wind-down actions. A walk
+    /// at noon is honestly done at noon, so the evening gate must key on what
+    /// the action IS, not on the reminder hour — the scheduler's default is an
+    /// evening time for every action, which gated daytime actions too.
+    private static let eveningAnchoredIcons: Set<String> = ["bed.double.fill", "moon.zzz.fill", "moon.fill"]
+
+    private func isEveningAnchored(_ action: DashboardViewModel.SmartAction) -> Bool {
+        Self.eveningAnchoredIcons.contains(action.icon)
+    }
+
+    private var isEveningNow: Bool {
+        Date.cal.component(.hour, from: Date()) >= Self.eveningAnchorHour
+    }
+
+    /// Mark done waits for the evening on evening-anchored actions: an 8am tap
+    /// would log a thing that has not happened yet.
+    private func markDoneWaitsForEvening(_ action: DashboardViewModel.SmartAction) -> Bool {
+        isEveningAnchored(action) && !isEveningNow
+    }
 
     @ViewBuilder
     private var primaryActionCard: some View {
         let action = viewModel.smartDailyAction(liveVM: liveViewModel)
         let actionRoute = Route.todaysAction
         VStack(alignment: .leading, spacing: 12) {
-            Text(Copy.Home.nextUpHeader)
-                .font(DS.Typography.captionSemibold)
-                .tracking(1.2)
-                .foregroundStyle(AppColour.scoreGood)
+            if actionDoneToday {
+                // Done state: the card gives the slot back, keeping only the
+                // one-line confirmation.
+                actionDoneLoggedRow(action: action)
+            } else {
+                Text(isEveningAnchored(action) && isEveningNow ? Copy.Home.nextUpHeaderTonight : Copy.Home.nextUpHeader)
+                    .font(DS.Typography.captionSemibold)
+                    .tracking(1.2)
+                    .foregroundStyle(AppColour.scoreGood)
 
-            // The action is the headline; tapping opens the full detail.
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: action.title,
-                    type: .homeDailyAction,
-                    screen: .home,
-                    metadata: [
-                        "source": action.source,
-                        "recovery_state": viewModel.recoveryState.rawValue,
-                        "routed_to": "\(actionRoute)"
-                    ]
-                )
-                navigationPath.append(actionRoute)
-            } label: {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(action.title)
-                        .font(DS.Typography.title3)
-                        .foregroundStyle(AppColour.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text(action.subtitle)
-                        .font(DS.Typography.footnote)
-                        .foregroundStyle(AppColour.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    // The payoff sits in its own row rather than in the sentence:
-                    // it is the one line that answers "what do I get", and keeping
-                    // it out of the paragraph stops the reason growing back into
-                    // the four-sentence block this card used to show.
-                    if !action.expectedBenefit.isEmpty {
-                        Label(action.expectedBenefit, systemImage: "arrow.up.right")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(AppColour.scoreGood)
+                // The action is the headline; tapping opens the full detail.
+                Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: action.title,
+                        type: .homeDailyAction,
+                        screen: .home,
+                        metadata: [
+                            "source": action.source,
+                            "recovery_state": viewModel.recoveryState.rawValue,
+                            "routed_to": "\(actionRoute)"
+                        ]
+                    )
+                    navigationPath.append(actionRoute)
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(action.title)
+                            .font(DS.Typography.title3)
+                            .foregroundStyle(AppColour.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
-                            .padding(.vertical, DS.space1 + 2)
-                            .padding(.horizontal, DS.space2)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                AppColour.scoreGood.opacity(0.10),
-                                in: RoundedRectangle(cornerRadius: DS.Radius.sm)
-                            )
-                            .padding(.top, 2)
+
+                        Text(action.subtitle)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // The advisor's hardcoded default is never dressed as
+                        // personal advice (KEEP-KILL fix row).
+                        if action.isFallback {
+                            Text(Copy.Home.nextUpFallbackNote)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        // The payoff sits in its own row rather than in the sentence:
+                        // it is the one line that answers "what do I get", and keeping
+                        // it out of the paragraph stops the reason growing back into
+                        // the four-sentence block this card used to show.
+                        if !action.expectedBenefit.isEmpty {
+                            Label(action.expectedBenefit, systemImage: "arrow.up.right")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.scoreGood)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.vertical, DS.space1 + 2)
+                                .padding(.horizontal, DS.space2)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    AppColour.scoreGood.opacity(0.10),
+                                    in: RoundedRectangle(cornerRadius: DS.Radius.sm)
+                                )
+                                .padding(.top, 2)
+                        }
                     }
                 }
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            HStack(spacing: 8) {
-                actionMarkDoneButton(action: action)
-                actionRemindButton(action: action)
+                // Before the evening the honest verb is Remind, so it leads and
+                // Mark done waits ghosted; in the evening Done leads.
+                HStack(spacing: 8) {
+                    if markDoneWaitsForEvening(action) {
+                        actionRemindButton(action: action)
+                        actionMarkDoneButton(action: action)
+                    } else {
+                        actionMarkDoneButton(action: action)
+                        actionRemindButton(action: action)
+                    }
+                }
+
+                if markDoneWaitsForEvening(action) {
+                    Text(Copy.Home.nextUpDoneTonightHint)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
+                }
             }
+
+            lifeContextSection
         }
         .padding(DS.cardPadding)
         .cardStyle()
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.todaysActionCard")
+        // On the card, not the button: marking done swaps the button subtree
+        // out for the confirmation row, which would drop the haptic with it.
+        .sensoryFeedback(.success, trigger: actionDoneToday) { _, new in new }
+        .onChange(of: viewModel.lifeContextStore.active) { _, _ in
+            // The action is cached for the day, so without this the card keeps
+            // yesterday's advice after a toggle.
+            viewModel.invalidateDailyActionCache()
+        }
         .onAppear {
             actionDoneToday = DailyActionCompletion.isDoneToday
         }
     }
 
+    /// The collapsed confirmation after Mark done. One row, no buttons: the
+    /// loop's next beat is tomorrow's result card, not more chrome today.
+    private func actionDoneLoggedRow(action: DashboardViewModel.SmartAction) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(DS.Typography.bodySemibold)
+                .foregroundStyle(AppColour.success)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(action.title)
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.textPrimary)
+                    .lineLimit(1)
+                Text(Copy.Home.nextUpDoneLogged)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("home.action.doneLogged")
+    }
+
     /// Primary green "Mark done" pill. Marks today's one thing done and records
     /// it so tomorrow morning can show whether it moved the score (loop closer).
+    /// Ghosted until the evening for evening-anchored actions.
     private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
             // Locked once done for the day: a mark can't be undone, it auto-resets
@@ -948,22 +880,22 @@ struct HomeView: View {
             actionDoneToday = true
         } label: {
             HStack(spacing: 7) {
-                Image(systemName: actionDoneToday ? "checkmark.circle.fill" : "checkmark")
+                Image(systemName: "checkmark")
                     .font(DS.Typography.captionSemibold)
-                Text(actionDoneToday ? Copy.Home.nextUpMarkedDone : Copy.Home.nextUpMarkDone)
+                Text(Copy.Home.nextUpMarkDone)
                     .font(DS.Typography.subheadlineSemibold)
             }
-            .foregroundStyle(actionDoneToday ? AppColour.textOnAccent : AppColour.scoreGood)
+            .foregroundStyle(markDoneWaitsForEvening(action) ? AppColour.textTertiary : AppColour.scoreGood)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
             .background(
-                actionDoneToday
-                    ? AnyShapeStyle(AppColour.success)
+                markDoneWaitsForEvening(action)
+                    ? AnyShapeStyle(AppColour.surfaceSubtle)
                     : AnyShapeStyle(AppColour.scoreGood.opacity(0.15)),
                 in: RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.success, trigger: actionDoneToday) { _, new in new }
+        .disabled(markDoneWaitsForEvening(action))
         .accessibilityIdentifier("home.action.markDone")
     }
 
@@ -1000,6 +932,152 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("home.action.remind")
+    }
+
+    // MARK: - Life Context (merged onto the action card)
+
+    /// Ordered active contexts. `store.active` is a Set, so `allCases` order
+    /// keeps the line stable across renders.
+    private var activeLifeContexts: [LifeContextStore.Context] {
+        LifeContextStore.Context.allCases.filter { viewModel.lifeContextStore.isActive($0) }
+    }
+
+    /// The merged LifeContextChipRow (KEEP-KILL merge list). Idle: one line.
+    /// Tapped: the chips inline. Active: the adjusted-for line that reopens the
+    /// picker, so the card whose advice a context overrides is where it lives.
+    @ViewBuilder
+    private var lifeContextSection: some View {
+        let store = viewModel.lifeContextStore
+        let active = activeLifeContexts
+
+        Divider().overlay(AppColour.borderLow)
+
+        if showContextPicker {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.space2) {
+                    ForEach(LifeContextStore.Context.allCases, id: \.self) { context in
+                        lifeContextChip(context)
+                    }
+                }
+            }
+            .accessibilityIdentifier("home.lifeContextChips")
+        } else if !active.isEmpty {
+            Button {
+                showContextPicker = true
+            } label: {
+                Text(Copy.Home.nextUpContextAdjusted(active.map(\.displayName).sentenceList))
+                    .font(DS.Typography.footnoteMedium)
+                    .foregroundStyle(AppColour.accent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home.lifeContext.active")
+        } else {
+            Button {
+                showContextPicker = true
+            } label: {
+                Text(Copy.Home.nextUpContextPrompt)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(Copy.Home.contextAddHint)
+            .accessibilityIdentifier("home.lifeContext.prompt")
+        }
+
+        // Nothing switches itself off, so the only thing keeping a stale
+        // context from suppressing advice for months is asking.
+        ForEach(store.needingConfirmation(), id: \.self) { context in
+            lifeContextConfirmRow(context)
+        }
+    }
+
+    private func lifeContextChip(_ context: LifeContextStore.Context) -> some View {
+        let store = viewModel.lifeContextStore
+        let isOn = store.isActive(context)
+        let tint = context.requiresRest ? AppColour.danger : AppColour.accent
+
+        return Button {
+            store.toggle(context)
+            AppAnalytics.shared.trackBlockTap(
+                title: context.rawValue,
+                type: .homeDailyAction,
+                screen: .home,
+                metadata: ["life_context": context.rawValue, "turned_on": !isOn]
+            )
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: context.systemImage)
+                    .font(DS.Typography.caption)
+                Text(lifeContextChipLabel(for: context, isOn: isOn))
+                    .font(DS.Typography.footnoteMedium)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(isOn ? tint : AppColour.textSecondary)
+            .padding(.horizontal, DS.space3)
+            .padding(.vertical, DS.space2)
+            .background(
+                Capsule().fill(isOn ? tint.opacity(DS.badgeBg) : AppColour.surfaceRaised)
+            )
+            .overlay(
+                Capsule().strokeBorder(isOn ? tint.opacity(0.45) : AppColour.borderLow, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(lifeContextChipLabel(for: context, isOn: isOn))
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .accessibilityHint(Copy.Home.contextAddHint)
+    }
+
+    /// An active chip shows the day it was switched on. That is a fact we know;
+    /// an end date would be a guess about how long the person stays injured.
+    private func lifeContextChipLabel(for context: LifeContextStore.Context, isOn: Bool) -> String {
+        guard isOn, let start = viewModel.lifeContextStore.startDate(for: context) else {
+            return context.displayName
+        }
+        return Copy.Home.contextSince(context.displayName, start.formatted(.dateTime.day().month(.abbreviated)))
+    }
+
+    private func lifeContextConfirmRow(_ context: LifeContextStore.Context) -> some View {
+        HStack(spacing: DS.space2) {
+            Text(Copy.Home.contextStillOn(context.displayName.lowercasedFirst))
+                .font(DS.Typography.footnote)
+                .foregroundStyle(AppColour.textSecondary)
+
+            Spacer(minLength: 8)
+
+            Button(Copy.Home.contextStillYes) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context Confirmed",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["life_context": context.rawValue, "still_on": true]
+                )
+                viewModel.lifeContextStore.confirm(context)
+            }
+            .font(DS.Typography.footnoteMedium)
+            .foregroundStyle(AppColour.accent)
+
+            Button(Copy.Home.contextStillNo) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context Confirmed",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["life_context": context.rawValue, "still_on": false]
+                )
+                viewModel.lifeContextStore.toggle(context)
+            }
+            .font(DS.Typography.footnoteMedium)
+            .foregroundStyle(AppColour.textSecondary)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, DS.space3)
+        .padding(.vertical, DS.space2)
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+        .accessibilityIdentifier("home.lifeContext.confirm")
     }
 
     // MARK: - First Launch Loading

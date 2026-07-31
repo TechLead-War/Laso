@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — Concept 02 · The Daily Briefing</title>
+<style>
+/* ============================================================
+   Laso design tokens — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elevated:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --tprim:#1B1B20; --tsec:#44444D; --tter:#5B5B65;
+  --blow:#E0E0E8; --bmed:#C9C9D3;
+  --primary:#0064CC; --optimal:#0C7752; --fair:#8A6400; --poor:#C42B33;
+  --cardshadow:0 1px 2px rgba(0,0,0,.12);
+  --outerbg:#D3D3DC;
+  --glass:rgba(248,248,251,.72);
+  --scrim:rgba(27,27,32,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+    --overlay:#33333B; --subtle:#17171C;
+    --tprim:#F2F2F6; --tsec:#C9C9D2; --tter:#ADADB8;
+    --blow:#2E2E36; --bmed:#414149;
+    --primary:#4DA3FF; --optimal:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+    --cardshadow:none;
+    --outerbg:#000;
+    --glass:rgba(27,27,33,.72);
+    --scrim:rgba(242,242,246,.07);
+  }
+}
+:root[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --tprim:#F2F2F6; --tsec:#C9C9D2; --tter:#ADADB8;
+  --blow:#2E2E36; --bmed:#414149;
+  --primary:#4DA3FF; --optimal:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+  --cardshadow:none;
+  --outerbg:#000;
+  --glass:rgba(27,27,33,.72);
+  --scrim:rgba(242,242,246,.07);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.45; color:var(--tprim);
+  background:var(--outerbg);
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
+  font-feature-settings:"tnum" 1;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:6px}
+
+/* ============================================================
+   Device frame
+   ============================================================ */
+.device{
+  position:relative; width:100%; max-width:430px; margin:0 auto;
+  height:100dvh; background:var(--sunken); overflow:hidden;
+  display:flex; flex-direction:column;
+}
+@media (min-width:470px){
+  body{padding:26px 0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .device{height:min(880px,calc(100vh - 52px));border-radius:44px;
+    box-shadow:0 32px 80px rgba(0,0,0,.38),0 0 0 10px #17171c,0 0 0 11px #3a3a42}
+}
+
+/* status bar */
+.statusbar{
+  flex:0 0 auto; height:47px; display:flex; align-items:flex-end; justify-content:space-between;
+  padding:0 26px 9px; font-size:15px; font-weight:600; letter-spacing:-.01em; color:var(--tprim);
+  position:relative; z-index:40;
+}
+.statusbar .icons{display:flex;align-items:center;gap:5px}
+.statusbar svg{display:block}
+
+/* compact scroll header (iOS large-title collapse) */
+.compactbar{
+  position:absolute; top:0; left:0; right:0; height:47px; z-index:35;
+  display:flex; align-items:flex-end; justify-content:center; padding-bottom:9px;
+  background:var(--glass); -webkit-backdrop-filter:saturate(180%) blur(22px);
+  backdrop-filter:saturate(180%) blur(22px);
+  border-bottom:.5px solid var(--blow);
+  opacity:0; transform:translateY(-8px); pointer-events:none;
+  transition:opacity .25s ease-in-out, transform .25s ease-in-out;
+}
+.compactbar.on{opacity:1;transform:translateY(0)}
+.compactbar b{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--tsec)}
+
+/* scroll region */
+.scroll{
+  flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+  padding:0 12px 26px; scroll-behavior:smooth;
+}
+@media (prefers-reduced-motion:reduce){.scroll{scroll-behavior:auto}}
+
+/* ============================================================
+   The sheet — one printed page, not a stack of cards
+   ============================================================ */
+.sheet{
+  background:var(--raised); border:1px solid var(--blow); border-radius:24px;
+  box-shadow:var(--cardshadow); overflow:hidden;
+}
+.slot{padding:20px}
+.slot + .slot{border-top:1px solid var(--blow)}
+
+/* slot 1 — the brief */
+.dateline{
+  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+  font-size:11px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--tter);
+}
+.dateline .dot{width:3px;height:3px;border-radius:9999px;background:var(--bmed);align-self:center}
+.dateline .sure{color:var(--tter);font-weight:600}
+.rule-hair{height:1px;background:var(--tprim);opacity:.85;margin:12px 0 16px}
+
+.headline{
+  font-size:32px; font-weight:700; letter-spacing:-.026em; line-height:1.13;
+  color:var(--tprim); text-wrap:balance;
+}
+.headline .verdict{color:var(--vc)}
+
+.numline{display:flex;align-items:baseline;gap:9px;margin-top:16px}
+.numline .k{font-size:17px;font-weight:600;color:var(--tsec);letter-spacing:-.01em}
+.numline .v{
+  font-size:36px;font-weight:700;letter-spacing:-.03em;color:var(--tprim);
+  font-family:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif;line-height:1;
+}
+
+/* positional rule — the pre-attentive channel. position + shape + colour */
+.posbar{margin-top:14px}
+.posbar svg{display:block;width:100%;height:26px}
+.axisrow{position:relative;height:15px;margin-top:7px}
+.axislabel{
+  position:absolute;transform:translateX(-50%);white-space:nowrap;
+  font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--tter);
+}
+.clause{margin-top:16px;font-size:17px;line-height:1.45;color:var(--tsec)}
+
+.disclose{
+  margin-top:8px; display:flex; align-items:center; gap:6px;
+  min-height:44px; font-size:15px; font-weight:600; color:var(--primary);
+  transition:transform .08s ease-in;
+}
+.disclose:active{transform:scale(.97)}
+.disclose svg{transition:transform .25s ease-in-out}
+.disclose[aria-expanded="true"] svg{transform:rotate(180deg)}
+.expando{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease-in-out}
+.expando.open{grid-template-rows:1fr}
+.expando > div{overflow:hidden}
+.whybox{background:var(--subtle);border-radius:16px;padding:16px;margin-top:2px}
+.whyrow + .whyrow{margin-top:14px;padding-top:14px;border-top:1px solid var(--blow)}
+.whyrow .n{font-size:15px;font-weight:600;color:var(--tprim)}
+.whyrow .d{font-size:15px;color:var(--tsec);margin-top:3px;line-height:1.42}
+.whynote{margin-top:14px;font-size:13px;color:var(--tter);line-height:1.45}
+
+/* section headings — layer-cake, front-loaded, left */
+.seclabel{
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--tter);margin-bottom:10px;
+}
+.seclabel.alarm{color:var(--poor)}
+.prose{font-size:17px;line-height:1.5;color:var(--tsec)}
+.prose + .prose{margin-top:10px}
+
+/* slot 2 — today, the one instruction */
+.todaybox{background:var(--subtle);border-radius:16px;padding:16px}
+.action{font-size:20px;font-weight:600;line-height:1.3;letter-spacing:-.015em;color:var(--tprim)}
+.btnrow{display:flex;gap:8px;margin-top:14px}
+.btn{
+  flex:1 1 0; min-height:44px; border-radius:12px; font-size:15px; font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .08s ease-in, background-color .2s ease-in-out;
+}
+.btn:active{transform:scale(.965)}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.ghost{background:var(--raised);color:var(--tprim);border:1px solid var(--bmed)}
+.btn.on{background:var(--optimal);color:#fff;border-color:transparent}
+.btn.set{background:var(--raised);color:var(--tter);border:1px solid var(--blow)}
+.proof{margin-top:12px;font-size:13px;line-height:1.45;color:var(--tter)}
+.donenote{margin-top:12px;display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--optimal);line-height:1.4}
+.donenote svg{flex:0 0 auto;margin-top:2px}
+
+/* slot 3 — notice variant */
+.notice{border-left:3px solid var(--poor);padding-left:13px;margin-left:-3px}
+.anchor{
+  margin-top:12px;background:var(--subtle);border-radius:12px;padding:12px 14px;
+  font-size:13px;line-height:1.5;color:var(--tter);
+}
+
+/* charts */
+.chartwrap{margin-top:12px;background:var(--subtle);border-radius:16px;padding:14px 10px 10px}
+.chartwrap svg{display:block;width:100%;height:auto}
+.caption{margin-top:10px;font-size:13px;line-height:1.45;color:var(--tter)}
+
+/* slot 5 — movement */
+.mvline{display:flex;align-items:baseline;gap:9px}
+.mvline .v{font-size:28px;font-weight:700;letter-spacing:-.025em;
+  font-family:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif}
+.mvline .k{font-size:15px;font-weight:600;color:var(--tsec)}
+
+/* unlock list (new-user state) */
+.unlock{list-style:none}
+.unlock li{display:flex;gap:11px;font-size:15px;color:var(--tsec);line-height:1.45}
+.unlock li + li{margin-top:12px}
+.unlock b{color:var(--tprim);font-weight:600}
+.unlock .tick{flex:0 0 7px;width:7px;height:7px;border-radius:9999px;background:var(--bmed);margin-top:8px}
+
+/* sign-off (colophon, outside the sheet) */
+.signoff{padding:18px 8px 6px}
+.signoff p{font-size:13px;line-height:1.5;color:var(--tter)}
+.escape{
+  margin-top:10px;min-height:44px;display:inline-flex;align-items:center;gap:7px;
+  font-size:15px;font-weight:600;color:var(--primary);
+  transition:transform .08s ease-in;
+}
+.escape:active{transform:scale(.97)}
+
+/* plain-numbers mode */
+.plainhead{font-size:13px;color:var(--tter);line-height:1.5;margin-bottom:4px}
+.prow{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:13px 0;border-bottom:1px solid var(--blow)}
+.prow:last-child{border-bottom:0}
+.prow .k{font-size:15px;color:var(--tsec)}
+.prow .v{font-size:17px;font-weight:600;color:var(--tprim);white-space:nowrap}
+
+/* empty / loading */
+.skel{background:var(--subtle);border-radius:8px;position:relative;overflow:hidden}
+.skel::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,var(--scrim),transparent);
+  animation:sweep 1.5s infinite}
+@keyframes sweep{to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.skel::after{animation:none}}
+.emptybtn{margin-top:18px;min-height:44px;width:100%;border-radius:12px;
+  background:var(--primary);color:#fff;font-size:16px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;transition:transform .08s ease-in}
+.emptybtn:active{transform:scale(.98)}
+
+/* stub screens for the other tabs */
+.stub{padding:64px 20px;text-align:left}
+.stub h2{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.stub p{margin-top:10px;font-size:17px;color:var(--tter)}
+
+/* ============================================================
+   Tab bar
+   ============================================================ */
+.tabbar{
+  flex:0 0 auto; display:flex; padding:8px 6px calc(18px + env(safe-area-inset-bottom));
+  background:var(--glass); -webkit-backdrop-filter:saturate(180%) blur(22px);
+  backdrop-filter:saturate(180%) blur(22px); border-top:.5px solid var(--blow);
+}
+.tab{
+  flex:1 1 0; min-height:48px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  justify-content:center; color:var(--tter); transition:transform .08s ease-in,color .2s;
+}
+.tab:active{transform:scale(.94)}
+.tab[aria-selected="true"]{color:var(--primary)}
+.tab span{font-size:11px;font-weight:600;letter-spacing:.01em}
+
+/* ============================================================
+   Fresh-print entrance
+   ============================================================ */
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.sheet.enter > .slot:nth-child(1){animation:rise .40s cubic-bezier(.2,.8,.3,1) both}
+.sheet.enter > .slot:nth-child(2){animation:rise .40s cubic-bezier(.2,.8,.3,1) .05s both}
+.sheet.enter > .slot:nth-child(3){animation:rise .40s cubic-bezier(.2,.8,.3,1) .10s both}
+.sheet.enter > .slot:nth-child(4){animation:rise .40s cubic-bezier(.2,.8,.3,1) .14s both}
+.sheet.enter > .slot:nth-child(5){animation:rise .40s cubic-bezier(.2,.8,.3,1) .18s both}
+.marker-anim{animation:mk .55s cubic-bezier(.2,.8,.3,1) both}
+@keyframes mk{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .sheet.enter > .slot,.marker-anim{animation:none!important}
+  *{transition-duration:.001ms!important}
+}
+
+/* ============================================================
+   Dev toolbar — not part of the design being judged
+   ============================================================ */
+#devBtn{
+  position:fixed; top:10px; right:10px; z-index:120; width:34px; height:34px;
+  border-radius:9999px; background:rgba(90,90,102,.55); color:#fff; opacity:.4;
+  display:flex; align-items:center; justify-content:center; transition:opacity .2s;
+}
+#devBtn:hover,#devBtn:focus-visible{opacity:1}
+#devPanel{
+  position:fixed; top:50px; right:10px; z-index:121; width:212px; padding:12px;
+  border-radius:14px; background:rgba(28,28,34,.94); color:#fff;
+  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+  box-shadow:0 12px 34px rgba(0,0,0,.42); display:none;
+}
+#devPanel.on{display:block}
+#devPanel h4{font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  opacity:.55;margin:10px 0 5px;font-weight:700}
+#devPanel h4:first-child{margin-top:0}
+.dgroup{display:flex;flex-wrap:wrap;gap:5px}
+.dbtn{padding:6px 9px;border-radius:7px;background:rgba(255,255,255,.11);
+  font-size:11.5px;font-weight:600;color:#fff}
+.dbtn[data-on="1"]{background:#4DA3FF;color:#04121f}
+.dbtn:disabled{opacity:.3;cursor:not-allowed}
+.dnote{font-size:10px;opacity:.5;margin-top:8px;line-height:1.4}
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2 6.1 9.1a2.8 2.8 0 0 1 3.8 0L8 11.2Zm3.6-4-1.4 1.5a4.7 4.7 0 0 0-4.4 0L4.4 7.2a6.7 6.7 0 0 1 7.2 0ZM14 4.4l-1.4 1.5a8.6 8.6 0 0 0-9.2 0L2 4.4a10.6 10.6 0 0 1 12 0Z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.2" stroke="currentColor" opacity=".38"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><path d="M24 4v4a2.1 2.1 0 0 0 0-4Z" fill="currentColor" opacity=".38"/></svg>
+    </span>
+  </div>
+
+  <div class="compactbar" id="compactbar"><b id="compacttext">Morning brief</b></div>
+
+  <main class="scroll" id="scroll">
+    <div id="stage"></div>
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Main">
+    <button class="tab" role="tab" data-tab="today" aria-selected="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h16v14H4z"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/><path d="M8 14h8"/></svg>
+      <span>Today</span>
+    </button>
+    <button class="tab" role="tab" data-tab="live" aria-selected="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12.5h4l2.2-5.6 3.4 10.4 2.3-6.1 1.6 3.3H21"/></svg>
+      <span>Live</span>
+    </button>
+    <button class="tab" role="tab" data-tab="explore" aria-selected="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.2 16.2 4 4"/></svg>
+      <span>Explore</span>
+    </button>
+    <button class="tab" role="tab" data-tab="settings" aria-selected="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+</div>
+
+<button id="devBtn" aria-label="Open prototype controls" aria-expanded="false">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+</button>
+<div id="devPanel" role="group" aria-label="Prototype controls">
+  <h4>Appearance</h4>
+  <div class="dgroup" data-key="theme">
+    <button class="dbtn" data-val="auto">Auto</button>
+    <button class="dbtn" data-val="light">Light</button>
+    <button class="dbtn" data-val="dark">Dark</button>
+  </div>
+  <h4>Screen state</h4>
+  <div class="dgroup" data-key="data">
+    <button class="dbtn" data-val="loaded">Loaded</button>
+    <button class="dbtn" data-val="loading">Loading</button>
+    <button class="dbtn" data-val="empty">Empty</button>
+  </div>
+  <h4>Hero data source</h4>
+  <div class="dgroup" data-key="hero">
+    <button class="dbtn" data-val="watch">Watch</button>
+    <button class="dbtn" data-val="phone">iPhone only</button>
+    <button class="dbtn" data-val="new">New user</button>
+  </div>
+  <h4>Which morning</h4>
+  <div class="dgroup" data-key="day">
+    <button class="dbtn" data-val="wed">Wed · steady</button>
+    <button class="dbtn" data-val="thu">Thu · strong</button>
+    <button class="dbtn" data-val="fri">Fri · below</button>
+  </div>
+  <p class="dnote">Three real mornings for one user. Days apply to the Watch source; the other two sources ship their own dated brief.</p>
+</div>
+
+<script>
+"use strict";
+
+/* =============================================================
+   STATE
+   ============================================================= */
+const S = { theme:"auto", data:"loaded", hero:"watch", day:"wed",
+            plain:false, done:false, remind:false, why:false, tab:"today" };
+
+/* =============================================================
+   FICTIONAL USER — Alex, 34. One consistent data set.
+   Usual sleep need 7h40m. Usual bedtime window 10:40–11:20 pm.
+   Resting heart rate 7-day average 55 bpm, usual range 52–59.
+   Heart rate variability (SDNN) 7-day average 54 ms, usual range 47–61.
+   Steps goal 7,000.
+   ============================================================= */
+
+const NIGHTS = {
+  wed:[
+    {label:"Thu", bed:"22:58", wake:"06:33"},
+    {label:"Fri", bed:"22:47", wake:"06:35"},
+    {label:"Sat", bed:"23:22", wake:"06:28"},
+    {label:"Sun", bed:"23:51", wake:"06:46"},
+    {label:"Mon", bed:"23:06", wake:"06:10"},
+    {label:"Tue", bed:"23:29", wake:"06:12"},
+    {label:"Last night", bed:"23:46", wake:"05:58", last:true}
+  ],
+  thu:[
+    {label:"Fri", bed:"22:47", wake:"06:35"},
+    {label:"Sat", bed:"23:22", wake:"06:28"},
+    {label:"Sun", bed:"23:51", wake:"06:46"},
+    {label:"Mon", bed:"23:06", wake:"06:10"},
+    {label:"Tue", bed:"23:29", wake:"06:12"},
+    {label:"Wed", bed:"23:46", wake:"05:58"},
+    {label:"Last night", bed:"22:41", wake:"06:32", last:true}
+  ],
+  fri:[
+    {label:"Sat", bed:"23:22", wake:"06:28"},
+    {label:"Sun", bed:"23:51", wake:"06:46"},
+    {label:"Mon", bed:"23:06", wake:"06:10"},
+    {label:"Tue", bed:"23:29", wake:"06:12"},
+    {label:"Wed", bed:"23:46", wake:"05:58"},
+    {label:"Thu", bed:"22:41", wake:"06:32"},
+    {label:"Last night", bed:"23:38", wake:"05:14", last:true}
+  ]
+};
+
+const DAYS = {
+
+  /* ---------- WEDNESDAY 29 JULY · readiness 62 · steady ---------- */
+  wed:{
+    date:"Wed 29 July", dateline:"WED 29 JULY", sure:"Nothing missing",
+    band:"fair", lead:"Steady,", rest:" short night.",
+    value:"62", marker:45,
+    clause:"Sleep 1h 28m short of your usual.",
+    why:[
+      ["Sleep","6 h 12 m against the 7 h 40 m you usually need. This moved it most."],
+      ["Heart rate variability","At the low edge of your usual range, a third night."],
+      ["Resting heart rate","Inside your usual range."]
+    ],
+    today:{
+      action:"Start winding down at 10:30 tonight.",
+      proof:"Done 6 times before. Your readiness averaged 4 points higher the next morning.",
+      remindLabel:"Remind me tonight", remindSet:"Reminder set for 10:15 pm"
+    },
+    slot3:{
+      label:"Overnight", alarm:false,
+      paras:["You fell asleep 40 minutes later than on Sunday and woke at your usual time.",
+             "Most of the shortfall came off the front of the night, not the back."],
+      anchor:null
+    },
+    chart:{
+      label:"The last seven nights",
+      interp:"Bedtime is drifting later. Your wake time has not moved.",
+      caption:"Each bar is one night, lights out to waking. The shaded column is your usual bedtime."
+    },
+    move:{label:"Yesterday", value:"8,400", unit:"steps", pct:70, band:"optimal",
+      bandStart:58, bandEnd:100, rangeLabel:"your goal",
+      verdict:"Past your 7,000 goal.",
+      note:"Your goal is set there because that is where most of the health benefit is already in place."},
+    signoff:"Written at 6:04 am from last night's data. Tomorrow's brief lands about the same time.",
+    plain:[["Time asleep last night","6 h 12 m"],["Lights out","11:46 pm"],["Woke","5:58 am"],
+      ["Sleep short of need, 5 nights","4 h 20 m"],["Resting heart rate","58 bpm"],
+      ["Resting heart rate, 7-day average","55 bpm"],["Heart rate variability (SDNN)","48 ms"],
+      ["Heart rate variability, 7-day average","54 ms"],["Steps yesterday","8,400"],
+      ["Distance yesterday","6.1 km"],["Exercise minutes yesterday","24"],["Last workout","Mon, 52 min run"]]
+  },
+
+  /* ---------- THURSDAY 30 JULY · readiness 74 · strong ---------- */
+  thu:{
+    date:"Thu 30 July", dateline:"THU 30 JULY", sure:"Nothing missing",
+    band:"optimal", lead:"Strong,", rest:" and well slept.",
+    value:"74", marker:68,
+    clause:"Sleep 7h 51m, your longest in nine days.",
+    why:[
+      ["Sleep","7 h 51 m against the 7 h 40 m you usually need. This lifted it most."],
+      ["Heart rate variability","Still at the low edge of your usual range, a fourth night."],
+      ["Resting heart rate","At the top of your usual range. Not a flag on its own."]
+    ],
+    today:{
+      action:"Take the hard session today, not tomorrow.",
+      proof:"Done 9 times before. Those days averaged 12 more exercise minutes.",
+      remindLabel:"Remind me later", remindSet:"Reminder set for 4:30 pm"
+    },
+    slot3:{
+      label:"Overnight", alarm:false,
+      paras:["You were asleep by 10:41 pm, the earliest start in nine days.",
+             "Your heart rate variability has not followed the sleep back up yet. It usually lags a day or two."],
+      anchor:null
+    },
+    chart:{
+      label:"The last seven nights",
+      interp:"One early night pulled the week back. The rest still start late.",
+      caption:"Each bar is one night, lights out to waking. The shaded column is your usual bedtime."
+    },
+    move:{label:"Yesterday", value:"11,200", unit:"steps", pct:93, band:"optimal",
+      bandStart:58, bandEnd:100, rangeLabel:"your goal",
+      verdict:"Well past your 7,000 goal.",
+      note:"Your goal is set there because that is where most of the health benefit is already in place."},
+    signoff:"Written at 6:38 am from last night's data. Tomorrow's brief lands about the same time.",
+    plain:[["Time asleep last night","7 h 51 m"],["Lights out","10:41 pm"],["Woke","6:32 am"],
+      ["Sleep short of need, 5 nights","3 h 35 m"],["Resting heart rate","59 bpm"],
+      ["Resting heart rate, 7-day average","55 bpm"],["Heart rate variability (SDNN)","49 ms"],
+      ["Heart rate variability, 7-day average","54 ms"],["Steps yesterday","11,200"],
+      ["Distance yesterday","8.4 km"],["Exercise minutes yesterday","41"],["Last workout","Wed, 38 min walk"]]
+  },
+
+  /* ---------- FRIDAY 31 JULY · readiness 41 · below usual + notice ---------- */
+  fri:{
+    date:"Fri 31 July", dateline:"FRI 31 JULY", sure:"Nothing missing",
+    band:"poor", lead:"Below", rest:" your usual.",
+    value:"41", marker:12,
+    clause:"Sleep 2h 04m short of your usual.",
+    why:[
+      ["Sleep","5 h 36 m against the 7 h 40 m you usually need. This moved it most."],
+      ["Resting heart rate","6 bpm above your usual, a second morning."],
+      ["Heart rate variability","Below your usual range, the same two mornings."]
+    ],
+    today:{
+      action:"Keep today easy. No hard session.",
+      proof:null,
+      remindLabel:"Remind me later", remindSet:"Reminder set for 5:00 pm"
+    },
+    slot3:{
+      label:"Heart and sleep both shifted", alarm:true,
+      paras:["For two mornings your resting heart rate has run above your usual, 6 bpm above it today, while your heart rate variability has stayed below.",
+             "Two signals moving together for two days usually means the body is either fighting something off or badly short on rest."],
+      anchor:"Doctors do not act on this pattern on its own. It starts to matter if it runs past about a week, or if you begin to feel unwell."
+    },
+    chart:{
+      label:"The last seven nights",
+      interp:"Thursday's long night did not carry into Friday.",
+      caption:"Each bar is one night, lights out to waking. The shaded column is your usual bedtime."
+    },
+    move:{label:"Yesterday", value:"4,100", unit:"steps", pct:34, band:"neutral",
+      bandStart:58, bandEnd:100, rangeLabel:"your goal",
+      verdict:"Under your 7,000 goal. Rest counts here.",
+      note:"Your goal is set there because that is where most of the health benefit is already in place."},
+    signoff:"Written at 5:20 am from last night's data. Tomorrow's brief lands about the same time.",
+    plain:[["Time asleep last night","5 h 36 m"],["Lights out","11:38 pm"],["Woke","5:14 am"],
+      ["Sleep short of need, 5 nights","4 h 54 m"],["Resting heart rate","61 bpm"],
+      ["Resting heart rate, 7-day average","55 bpm"],["Heart rate variability (SDNN)","44 ms"],
+      ["Heart rate variability, 7-day average","54 ms"],["Steps yesterday","4,100"],
+      ["Distance yesterday","2.9 km"],["Exercise minutes yesterday","9"],["Last workout","Wed, 38 min walk"]]
+  }
+};
+
+/* ---------- iPhone-only brief. Same slots. Real, labelled, lower confidence. ---------- */
+const PHONE = {
+  date:"Wed 29 July", dateline:"WED 29 JULY", sure:"Phone only",
+  band:"optimal", lead:"Moving", rest:" well this week.",
+  metric:"Steps yesterday", value:"8,400", marker:70,
+  clause:"1,400 over your 7,000 goal.",
+  why:[
+    ["What this brief is built on","Steps, distance, flights and walking pace, straight from your phone."],
+    ["What is not here","No sleep, no heart rate, no readiness. Those need a watch, and nothing on this screen pretends otherwise."],
+    ["Walking pace","1.34 m/s, inside your usual range all week."]
+  ],
+  whynote:"Steps is the one signal on this screen with direct evidence behind it, and your phone measures it as well as a watch does.",
+  today:{ action:"Add a 15 minute walk after lunch.",
+    proof:"Done 11 times before. Those days finished about 2,100 steps higher.",
+    remindLabel:"Remind me at noon", remindSet:"Reminder set for 12:30 pm" },
+  slot3:{ label:"Since yesterday", alarm:false,
+    paras:["Your phone has no sleep or heart data to read, so this brief covers movement only.",
+           "That is still the signal with the strongest evidence behind it, and it is measured well."],
+    anchor:null },
+  chart:{ label:"The last seven days", type:"steps",
+    interp:"You have cleared your goal on five of the last seven days.",
+    caption:"Each bar is one day. The shaded band is your goal, 7,000 and up." },
+  move:{label:"Also yesterday", value:"6.1", unit:"km walked", pct:76, band:"optimal",
+    bandStart:52, bandEnd:70, rangeLabel:"your usual",
+    verdict:"Above your usual 5.1 km.",
+    note:"Distance and pace come from your phone alone and need no wearable."},
+  signoff:"Written at 6:04 am from yesterday's data. Tomorrow's brief lands about the same time.",
+  plain:[["Steps yesterday","8,400"],["Steps, 7-day average","7,300"],["Distance yesterday","6.1 km"],
+    ["Flights climbed yesterday","11"],["Walking pace, 7-day average","1.34 m/s"],
+    ["Step length, 7-day average","74 cm"],["Walking steadiness","OK"],["Days recorded","412"]],
+  steps7:[5400,7400,6800,8900,7050,7150,8400]
+};
+
+/* ---------- Genuinely new user, second morning, no baselines ---------- */
+const NEWU = {
+  date:"Wed 29 July", dateline:"WED 29 JULY", sure:"Still learning your usual",
+  band:"neutral", lead:"First", rest:" numbers in.",
+  metric:"Steps yesterday", value:"6,240", marker:52,
+  clause:"On the way to 7,000.",
+  why:[
+    ["Why there is no readiness yet","Readiness compares last night against your own history. You have two nights recorded, so there is nothing to compare against."],
+    ["Why 7,000 and not your own goal","Until you have a week of data, this brief uses the general 7,000 mark. It switches to your own after that."],
+    ["What is already real","Steps, distance and last night's time asleep are measured, not estimated. They need no history at all."]
+  ],
+  whynote:"Nothing on this screen is a placeholder number. Anything that needs your history is simply not shown yet.",
+  today:{ action:"Take a 20 minute walk today.",
+    proof:null, remindLabel:"Remind me later", remindSet:"Reminder set for 2:00 pm" },
+  slot3:{ label:"Overnight", alarm:false,
+    paras:["Your second night is recorded: 7 h 02 m asleep, from 11:12 pm to 6:14 am.",
+           "After seven nights this brief can tell you what a usual night looks like for you, and start reading last night against it."],
+    anchor:null },
+  chart:{ label:"The last seven nights", type:"partial",
+    interp:"Two nights recorded. Five to go before your bedtime window appears.",
+    caption:"Each bar is one night, lights out to waking. The outlines are nights not yet recorded." },
+  move:{label:"What opens next", type:"unlock", items:[
+    ["After seven nights","Your own sleep need, your usual bedtime window, and readiness."],
+    ["After two weeks","Early warning when two signals shift together."],
+    ["After a month","The patterns that are specific to you."]
+  ]},
+  signoff:"Written at 6:20 am from last night's data. Tomorrow's brief lands about the same time.",
+  plain:[["Time asleep last night","7 h 02 m"],["Lights out","11:12 pm"],["Woke","6:14 am"],
+    ["Steps yesterday","6,240"],["Distance yesterday","4.6 km"],["Nights recorded","2"],["Days recorded","2"]],
+  nights:[
+    {label:"Tue", bed:"23:41", wake:"06:30"},
+    {label:"Last night", bed:"23:12", wake:"06:14", last:true}
+  ]
+};
+
+/* =============================================================
+   HELPERS
+   ============================================================= */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const bandVar = b => b === "optimal" ? "var(--optimal)"
+                   : b === "poor"    ? "var(--poor)"
+                   : b === "neutral" ? "var(--tsec)"
+                   : "var(--fair)";
+
+/* minutes measured from 22:00 on the evening the night began */
+function minFrom22(hhmm){
+  const [h,m] = hhmm.split(":").map(Number);
+  let t = h*60 + m;
+  if (t < 22*60) t += 24*60;
+  return t - 22*60;
+}
+
+/* ---- the pre-attentive channel: one positional bar, exactly one reference range ----
+   The axis carries no numbers and no zero. The only reference on it is the user's own
+   range, drawn as a slot. Verdict = marker position + marker colour + slot shape.       */
+function posBar(markerPct, band, bandStart, bandEnd, rangeLabel){
+  const c = bandVar(band);
+  const x = p => 3 + (p/100) * 294;
+  const anim = document.body.dataset.reduce === "1" ? "" : "marker-anim";
+  const centre = Math.min(84, Math.max(13, (bandStart + bandEnd) / 2));
+  const inside = markerPct >= bandStart && markerPct <= bandEnd;
+  return `
+  <div class="posbar">
+    <svg viewBox="0 0 300 26" role="img"
+         aria-label="Marker sits ${inside ? "inside" : markerPct < bandStart ? "below" : "above"} ${esc(rangeLabel)}">
+      <rect x="3" y="9" width="294" height="8" rx="4" fill="var(--subtle)"/>
+      <rect x="${x(bandStart).toFixed(1)}" y="7" width="${((bandEnd-bandStart)/100*294).toFixed(1)}" height="12"
+            rx="6" fill="var(--bmed)" opacity=".55"/>
+      <g class="${anim}">
+        <rect x="${(x(markerPct)-3.5).toFixed(1)}" y="1" width="7" height="24" rx="3.5"
+              fill="${c}" stroke="var(--raised)" stroke-width="1.5"/>
+      </g>
+    </svg>
+    <div class="axisrow"><span class="axislabel" style="left:${centre}%">${esc(rangeLabel)}</span></div>
+  </div>`;
+}
+
+/* ---- seven-night sleep chart: horizontal positional bars on a clock axis ---- */
+function sleepChart(rows, showBand){
+  const L = 66, R = 334, SPAN = R - L, MINS = 600;   /* 10 pm to 8 am */
+  const px = m => L + (m / MINS) * SPAN;
+  const H = 10 + rows.length * 20 + 26;
+  let s = `<svg viewBox="0 0 340 ${H}" role="img" aria-label="Seven nights of sleep, each bar drawn from lights out to waking">`;
+  if (showBand){
+    s += `<rect x="${px(40).toFixed(1)}" y="4" width="${((80-40)/MINS*SPAN).toFixed(1)}" height="${rows.length*20+2}"
+            fill="var(--bmed)" opacity=".38" rx="3"/>`;
+  }
+  [0,480].forEach(m => {
+    s += `<line x1="${px(m).toFixed(1)}" y1="4" x2="${px(m).toFixed(1)}" y2="${rows.length*20+6}"
+            stroke="var(--blow)" stroke-width="1"/>`;
+  });
+  rows.forEach((r,i) => {
+    const y = 10 + i*20;
+    const strong = !!r.last;
+    if (strong) s += `<rect x="0" y="${y-4}" width="340" height="19" rx="6" fill="var(--scrim)"/>`;
+    s += `<text x="0" y="${y+9}" font-size="11" font-weight="${strong?700:600}"
+            fill="${strong?'var(--tprim)':'var(--tter)'}">${esc(r.label)}</text>`;
+    if (r.ghost){
+      s += `<rect x="${L}" y="${y}" width="${SPAN}" height="11" rx="5.5" fill="none"
+              stroke="var(--bmed)" stroke-width="1" stroke-dasharray="3 4" opacity=".8"/>`;
+    } else {
+      const a = px(minFrom22(r.bed)), b = px(minFrom22(r.wake));
+      s += `<rect x="${a.toFixed(1)}" y="${y}" width="${Math.max(4,b-a).toFixed(1)}" height="11" rx="5.5"
+              fill="${strong?'var(--tprim)':'var(--tter)'}" opacity="${strong?'.92':'.45'}"/>`;
+    }
+  });
+  const yA = rows.length*20 + 22;
+  s += `<text x="${L}" y="${yA}" font-size="11" font-weight="600" fill="var(--tter)">10 PM</text>`;
+  s += `<text x="${px(480).toFixed(1)}" y="${yA}" font-size="11" font-weight="600" fill="var(--tter)" text-anchor="middle">6 AM</text>`;
+  s += `</svg>`;
+  return s;
+}
+
+/* ---- seven-day steps chart: same bar grammar, one goal range ---- */
+function stepsChart(vals, labels, goal, max){
+  const L = 66, R = 334, SPAN = R - L;
+  const px = v => L + Math.min(1, v/max) * SPAN;
+  const H = 10 + vals.length*20 + 26;
+  let s = `<svg viewBox="0 0 340 ${H}" role="img" aria-label="Seven days of steps against your goal of ${goal}">`;
+  s += `<rect x="${px(goal).toFixed(1)}" y="4" width="${(R-px(goal)).toFixed(1)}" height="${vals.length*20+2}"
+          fill="var(--bmed)" opacity=".3" rx="3"/>`;
+  s += `<line x1="${px(goal).toFixed(1)}" y1="4" x2="${px(goal).toFixed(1)}" y2="${vals.length*20+6}"
+          stroke="var(--bmed)" stroke-width="1.5"/>`;
+  vals.forEach((v,i) => {
+    const y = 10 + i*20, strong = i === vals.length-1;
+    if (strong) s += `<rect x="0" y="${y-4}" width="340" height="19" rx="6" fill="var(--scrim)"/>`;
+    s += `<text x="0" y="${y+9}" font-size="11" font-weight="${strong?700:600}"
+            fill="${strong?'var(--tprim)':'var(--tter)'}">${esc(labels[i])}</text>`;
+    s += `<rect x="${L}" y="${y}" width="${Math.max(4,px(v)-L).toFixed(1)}" height="11" rx="5.5"
+            fill="${strong?'var(--tprim)':'var(--tter)'}" opacity="${strong?'.92':'.45'}"/>`;
+  });
+  const yA = vals.length*20 + 22;
+  s += `<text x="${px(goal).toFixed(1)}" y="${yA}" font-size="11" font-weight="600" fill="var(--tter)" text-anchor="middle">goal</text>`;
+  s += `</svg>`;
+  return s;
+}
+
+/* =============================================================
+   CONTENT RESOLVER — one shape, three data sources
+   ============================================================= */
+function brief(){
+  if (S.hero === "phone"){
+    const b = Object.assign({}, PHONE);
+    b.chartRows = null; b.metricLabel = PHONE.metric;
+    b.bandStart = 58; b.bandEnd = 100; b.rangeLabel = "your goal";
+    return b;
+  }
+  if (S.hero === "new"){
+    const b = Object.assign({}, NEWU);
+    b.metricLabel = NEWU.metric;
+    b.bandStart = 58; b.bandEnd = 100; b.rangeLabel = "general goal";
+    return b;
+  }
+  const d = Object.assign({}, DAYS[S.day]);
+  d.metricLabel = "Readiness";
+  d.chartRows = NIGHTS[S.day];
+  d.bandStart = 35; d.bandEnd = 65; d.rangeLabel = "your usual";
+  d.whynote = "Readiness is a directional summary of last night, not a measurement.";
+  return d;
+}
+
+/* =============================================================
+   RENDER
+   ============================================================= */
+function render(fresh){
+  const stage = document.getElementById("stage");
+
+  if (S.tab !== "today"){
+    const name = {live:"Live", explore:"Explore", settings:"Settings"}[S.tab];
+    stage.innerHTML = `<div class="stub"><h2>${name}</h2>
+      <p>Not built in this prototype. Concept 02 is the Today screen.</p></div>`;
+    document.getElementById("compacttext").textContent = name;
+    return;
+  }
+
+  if (S.data === "loading"){ stage.innerHTML = loadingView(); return; }
+  if (S.data === "empty"){ stage.innerHTML = emptyView(); return; }
+
+  const b = brief();
+  document.getElementById("compacttext").textContent = "Morning brief · " + b.date;
+  stage.innerHTML = S.plain ? plainView(b) : briefView(b, fresh);
+}
+
+/* ---------- the brief ---------- */
+function briefView(b, fresh){
+  const c = bandVar(b.band);
+  const t = b.today;
+
+  /* slot 1 */
+  let s1 = `<section class="slot" style="--vc:${c}">
+    <div class="dateline"><span>${esc(b.dateline)}</span><span class="dot"></span><span class="sure">${esc(b.sure)}</span></div>
+    <div class="rule-hair"></div>
+    <h1 class="headline"><span class="verdict">${esc(b.lead)}</span>${esc(b.rest)}</h1>
+    <div class="numline">
+      <span class="k">${esc(b.metricLabel)}</span>
+      <span class="v">${esc(b.value)}</span>
+    </div>
+    ${posBar(b.marker, b.band, b.bandStart, b.bandEnd, b.rangeLabel)}
+    <p class="clause">${esc(b.clause)}</p>
+    <button class="disclose" data-act="why" aria-expanded="${S.why}" aria-controls="whypanel">
+      Why<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="expando${S.why?" open":""}" id="whypanel"><div><div class="whybox">
+      ${b.why.map(r => `<div class="whyrow"><div class="n">${esc(r[0])}</div><div class="d">${esc(r[1])}</div></div>`).join("")}
+      <p class="whynote">${esc(b.whynote)}</p>
+    </div></div></div>
+  </section>`;
+
+  /* slot 2 — the only instruction on the screen */
+  const doneBtn = S.done
+    ? `<button class="btn on" data-act="done" aria-pressed="true">
+         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg>Done</button>`
+    : `<button class="btn primary" data-act="done" aria-pressed="false">Mark done</button>`;
+  const remBtn = S.remind
+    ? `<button class="btn set" data-act="remind" aria-pressed="true">${esc(t.remindSet)}</button>`
+    : `<button class="btn ghost" data-act="remind" aria-pressed="false">${esc(t.remindLabel)}</button>`;
+
+  let s2 = `<section class="slot">
+    <div class="seclabel">Today</div>
+    <div class="todaybox">
+      <p class="action">${esc(t.action)}</p>
+      <div class="btnrow">${doneBtn}${remBtn}</div>
+      ${S.done ? `<p class="donenote"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg>Logged at 9:41 am. Tomorrow's brief will say whether it helped.</p>` : ""}
+      ${t.proof ? `<p class="proof">${esc(t.proof)}</p>` : ""}
+    </div>
+  </section>`;
+
+  /* slot 3 — narrative, or the health notice. Never below position 3, never blurred. */
+  const n = b.slot3;
+  let s3 = `<section class="slot">
+    <div class="${n.alarm ? "notice" : ""}">
+      <div class="seclabel${n.alarm ? " alarm" : ""}">${esc(n.label)}</div>
+      ${n.paras.map(p => `<p class="prose">${esc(p)}</p>`).join("")}
+      ${n.anchor ? `<p class="anchor">${esc(n.anchor)}</p>` : ""}
+    </div>
+  </section>`;
+
+  /* slot 4 — the chart, interpretation above the data */
+  let chartSvg;
+  if (b.chart.type === "steps"){
+    chartSvg = stepsChart(PHONE.steps7, ["Thu","Fri","Sat","Sun","Mon","Tue","Yesterday"], 7000, 12000);
+  } else if (b.chart.type === "partial"){
+    const rows = NEWU.nights.concat([{ghost:1,label:"—"},{ghost:1,label:"—"},{ghost:1,label:"—"},{ghost:1,label:"—"},{ghost:1,label:"—"}]);
+    chartSvg = sleepChart(rows, false);
+  } else {
+    chartSvg = sleepChart(b.chartRows, true);
+  }
+  let s4 = `<section class="slot">
+    <div class="seclabel">${esc(b.chart.label)}</div>
+    <p class="prose">${esc(b.chart.interp)}</p>
+    <div class="chartwrap">${chartSvg}</div>
+    <p class="caption">${esc(b.chart.caption)}</p>
+  </section>`;
+
+  /* slot 5 — movement, or what opens next for a brand-new user */
+  let s5;
+  if (b.move.type === "unlock"){
+    s5 = `<section class="slot">
+      <div class="seclabel">${esc(b.move.label)}</div>
+      <ul class="unlock">${b.move.items.map(i =>
+        `<li><span class="tick"></span><span><b>${esc(i[0])}</b> — ${esc(i[1])}</span></li>`).join("")}</ul>
+    </section>`;
+  } else {
+    s5 = `<section class="slot">
+      <div class="seclabel">${esc(b.move.label)}</div>
+      <div class="mvline"><span class="v">${esc(b.move.value)}</span><span class="k">${esc(b.move.unit)}</span></div>
+      <p class="clause" style="margin-top:8px">${esc(b.move.verdict)}</p>
+      ${posBar(b.move.pct, b.move.band, b.move.bandStart, b.move.bandEnd, b.move.rangeLabel)}
+      <p class="caption">${esc(b.move.note)}</p>
+    </section>`;
+  }
+
+  const enter = fresh && document.body.dataset.reduce !== "1" ? " enter" : "";
+  return `<div class="sheet${enter}">${s1}${s2}${s3}${s4}${s5}</div>
+    <div class="signoff">
+      <p>${esc(b.signoff)}</p>
+      <button class="escape" data-act="plain">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        Show plain numbers instead
+      </button>
+    </div>`;
+}
+
+/* ---------- escape hatch: scores off, raw numbers, no verdicts ---------- */
+function plainView(b){
+  return `<div class="sheet">
+    <section class="slot">
+      <div class="dateline"><span>${esc(b.dateline)}</span><span class="dot"></span><span class="sure">Plain numbers</span></div>
+      <div class="rule-hair"></div>
+      <p class="plainhead">Scores and verdicts are off. These are the measurements, ungraded, exactly as recorded.</p>
+      ${b.plain.map(r => `<div class="prow"><span class="k">${esc(r[0])}</span><span class="v">${esc(r[1])}</span></div>`).join("")}
+    </section>
+  </div>
+  <div class="signoff">
+    <p>Nothing on this list is compared, scored or interpreted.</p>
+    <button class="escape" data-act="plain">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+      Back to the brief
+    </button>
+  </div>`;
+}
+
+/* ---------- loading ---------- */
+function loadingView(){
+  const bar = (w,h,mt) => `<div class="skel" style="width:${w};height:${h}px;margin-top:${mt}px"></div>`;
+  return `<div class="sheet">
+    <section class="slot">
+      <div class="dateline"><span>WED 29 JULY</span><span class="dot"></span><span class="sure">Writing this morning's brief</span></div>
+      <div class="rule-hair"></div>
+      ${bar("86%",30,0)}${bar("62%",30,10)}${bar("46%",38,20)}${bar("100%",14,18)}${bar("74%",20,18)}
+    </section>
+    <section class="slot">${bar("22%",12,0)}${bar("92%",22,12)}${bar("100%",44,14)}</section>
+    <section class="slot">${bar("28%",12,0)}${bar("100%",18,12)}${bar("88%",18,8)}</section>
+  </div>
+  <div class="signoff"><p>Reading last night from Apple Health.</p></div>`;
+}
+
+/* ---------- empty: no health data at all. No name, no greeting, no fake numbers. ---------- */
+function emptyView(){
+  return `<div class="sheet">
+    <section class="slot">
+      <div class="dateline"><span>WED 29 JULY</span><span class="dot"></span><span class="sure">No data yet</span></div>
+      <div class="rule-hair"></div>
+      <h1 class="headline">No brief this morning.</h1>
+      <p class="clause">Laso cannot read any health data from this phone, so there is nothing honest to report.</p>
+      <button class="emptybtn" data-act="connect">Turn on Health access</button>
+    </section>
+    <section class="slot">
+      <div class="seclabel">What happens then</div>
+      <p class="prose">Your first sync pulls up to ten years of history, so tomorrow's brief can be a real one rather than an empty shell.</p>
+    </section>
+  </div>
+  <div class="signoff"><p>A brief will be waiting here every morning once data arrives.</p></div>`;
+}
+
+/* =============================================================
+   EVENTS
+   ============================================================= */
+document.getElementById("stage").addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const a = el.dataset.act;
+  if (a === "why"){
+    S.why = !S.why;
+    el.setAttribute("aria-expanded", String(S.why));
+    document.getElementById("whypanel").classList.toggle("open", S.why);
+    return;                                   /* animate in place, no re-render */
+  }
+  if (a === "done"){ S.done = !S.done; render(false); return; }
+  if (a === "remind"){ S.remind = !S.remind; render(false); return; }
+  if (a === "plain"){ S.plain = !S.plain; S.why = false; render(true); scrollTop(); return; }
+  if (a === "connect"){ S.data = "loading"; sync(); render(false);
+    setTimeout(() => { S.data = "loaded"; sync(); render(true); }, 1300); return; }
+});
+
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    S.tab = t.dataset.tab;
+    document.querySelectorAll(".tab").forEach(x =>
+      x.setAttribute("aria-selected", String(x.dataset.tab === S.tab)));
+    scrollTop();
+    render(true);
+  });
+});
+
+function scrollTop(){ document.getElementById("scroll").scrollTop = 0; }
+
+/* compact header on scroll */
+document.getElementById("scroll").addEventListener("scroll", e => {
+  document.getElementById("compactbar").classList.toggle("on", e.target.scrollTop > 74);
+});
+
+/* ---------- dev toolbar ---------- */
+const devBtn = document.getElementById("devBtn"), devPanel = document.getElementById("devPanel");
+devBtn.addEventListener("click", () => {
+  const on = devPanel.classList.toggle("on");
+  devBtn.setAttribute("aria-expanded", String(on));
+});
+devPanel.addEventListener("click", e => {
+  const b = e.target.closest(".dbtn");
+  if (!b || b.disabled) return;
+  const key = b.parentElement.dataset.key;
+  S[key] = b.dataset.val;
+  if (key === "hero" || key === "day" || key === "data"){ S.done = false; S.remind = false; S.why = false; S.plain = false; }
+  if (key !== "theme"){ S.tab = "today";
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x.dataset.tab === "today"))); }
+  sync(); scrollTop(); render(true);
+});
+
+function sync(){
+  document.querySelectorAll(".dgroup").forEach(g => {
+    g.querySelectorAll(".dbtn").forEach(b => b.dataset.on = (S[g.dataset.key] === b.dataset.val) ? "1" : "0");
+  });
+  const dayBtns = document.querySelector('[data-key="day"]');
+  const off = S.hero !== "watch" || S.data !== "loaded";
+  dayBtns.querySelectorAll(".dbtn").forEach(b => b.disabled = off);
+  if (S.theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", S.theme);
+}
+
+/* reduced motion flag read once, used by the SVG marker */
+document.body.dataset.reduce =
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "1" : "0";
+
+sync();
+render(true);
+</script>
+</body>
+</html>

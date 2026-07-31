@@ -17,30 +17,13 @@ struct WeeklyReviewEntryCard: View {
                             .foregroundStyle(AppColour.info)
 
                         VStack(alignment: .leading, spacing: DS.space1) {
+                            // No score, delta chip, or wins count here on purpose:
+                            // that "weekly" score was today's daily score, the delta
+                            // compared one arbitrary prior day, and "wins" counted
+                            // any 2% move. The step target is the one honest line.
                             Text(Copy.Reports.WeeklyReviewView.title)
                                 .font(DS.Typography.bodySemibold)
                                 .foregroundStyle(AppColour.textPrimary)
-
-                            HStack(spacing: DS.space1) {
-                                Text(Copy.Reports.WeeklyReviewView.score(review.currentScore))
-                                    .font(DS.Typography.footnote.monospacedDigit())
-                                    .foregroundStyle(AppColour.textSecondary)
-
-                                if let delta = viewModel.scoreDelta {
-                                    Text(delta >= 0 ? "(+\(delta))" : "(\(delta))")
-                                        .font(DS.Typography.footnoteMedium.monospacedDigit())
-                                        .foregroundStyle(delta >= 0 ? AppColour.success : AppColour.danger)
-                                }
-
-                                if viewModel.winsCount > 0 {
-                                    Text(Copy.Home.x)
-                                        .foregroundStyle(AppColour.textTertiary)
-
-                                    Text("\(viewModel.winsCount) win\(viewModel.winsCount == 1 ? "" : "s")")
-                                        .font(DS.Typography.footnote)
-                                        .foregroundStyle(AppColour.textSecondary)
-                                }
-                            }
 
                             if let coachPlan = review.coachPlan {
                                 Text(Copy.Reports.WeeklyReviewView.coachTarget(formatSteps(coachPlan.currentDailyStepTarget)))
@@ -61,7 +44,7 @@ struct WeeklyReviewEntryCard: View {
                 .buttonStyle(.dsPress)
                 .padding(.horizontal, DS.screenPadding)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(Copy.Home.weeklyReviewScoreWinsLabel(review.currentScore, viewModel.winsCount))
+                .accessibilityLabel(Copy.Reports.WeeklyReviewView.title)
                 .accessibilityHint(Copy.Home.opensYourWeeklyReviewHint)
                 .accessibilityIdentifier("home.weeklyReviewCard")
             }

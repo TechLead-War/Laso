@@ -36,8 +36,13 @@ final class SleepDebtTracker {
 
     /// Below this the balance is small enough that naming it would be noise
     /// rather than a finding, so the Home card stays quiet and the daily action
-    /// is left to the usual ranking.
-    static let actionableDebtHours: Double = 2.0
+    /// is left to the usual ranking. 2.0h over the 14-night window was 8.5
+    /// min/night — near-daily furniture, not a finding. Cumulative-restriction
+    /// studies show effects from roughly 20-30 min/night sustained (Van Dongen
+    /// 2003; Rupp 2009); 5h over 14 nights is about 21 min/night. This is a
+    /// product dial pending the real debtHours distribution pull
+    /// (KEEP-KILL dataNeeded #7: target roughly the worst ~20% of weeks).
+    static let actionableDebtHours: Double = 5.0
 
     /// The extra sleep the payback line is quoted against. A fixed, stated
     /// amount keeps the line plain arithmetic on the balance instead of a claim

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — Concept 01, The One Number</title>
+<style>
+/* ============================================================
+   LASO DESIGN TOKENS — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root{
+  --surface-sunken:#E4E4EC; --surface-base:#EEEEF4; --surface-raised:#F8F8FB;
+  --surface-elevated:#FCFCFD; --surface-overlay:#FEFEFF; --surface-subtle:#EAEAF1;
+  --text-primary:#1B1B20; --text-secondary:#44444D; --text-tertiary:#5B5B65;
+  --border-low:#E0E0E8; --border-medium:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --good:#0C7752; --fair:#8A6400; --poor:#C42B33;
+  --card-shadow:0 1px 2px rgba(0,0,0,.12);
+  --frame-bg:#D3D3DE;
+  --band-fill:#D8D8E4; --band-stroke:#BCBCCA;
+  --rail:#DCDCE6;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --surface-sunken:#08080A; --surface-base:#0F0F13; --surface-raised:#1B1B21;
+    --surface-elevated:#26262D; --surface-overlay:#33333B; --surface-subtle:#17171C;
+    --text-primary:#F2F2F6; --text-secondary:#C9C9D2; --text-tertiary:#ADADB8;
+    --border-low:#2E2E36; --border-medium:#414149;
+    --primary:#4DA3FF; --accent:#22D3EE;
+    --good:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+    --card-shadow:none;
+    --frame-bg:#000;
+    --band-fill:#33333E; --band-stroke:#4E4E5A;
+    --rail:#26262D;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-sunken:#08080A; --surface-base:#0F0F13; --surface-raised:#1B1B21;
+  --surface-elevated:#26262D; --surface-overlay:#33333B; --surface-subtle:#17171C;
+  --text-primary:#F2F2F6; --text-secondary:#C9C9D2; --text-tertiary:#ADADB8;
+  --border-low:#2E2E36; --border-medium:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --good:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+  --card-shadow:none;
+  --frame-bg:#000;
+  --band-fill:#33333E; --band-stroke:#4E4E5A;
+  --rail:#26262D;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  background:var(--frame-bg);
+  color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;line-height:1.4;
+}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.rounded-face{font-family:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif}
+
+/* ---------- phone frame ---------- */
+.phone{
+  position:relative;width:100%;max-width:100%;height:100dvh;
+  background:var(--surface-sunken);display:flex;flex-direction:column;overflow:hidden;
+}
+@media (min-width:600px){
+  body{padding:24px}
+  .phone{
+    width:375px;height:812px;border-radius:44px;
+    box-shadow:0 40px 90px rgba(0,0,0,.45), 0 0 0 10px #16161a, 0 0 0 11px #3a3a42;
+  }
+}
+
+/* ---------- status bar ---------- */
+.statusbar{
+  flex:0 0 auto;height:54px;padding:14px 26px 0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  font-size:15px;font-weight:600;letter-spacing:.2px;color:var(--text-primary);
+}
+.statusbar .icons{display:flex;align-items:center;gap:6px;margin-top:1px}
+.statusbar svg{display:block;fill:var(--text-primary)}
+
+/* ---------- header ---------- */
+.header{
+  flex:0 0 auto;height:52px;padding:0 12px;
+  display:flex;align-items:center;justify-content:flex-end;
+}
+.iconbtn{
+  width:44px;height:44px;border-radius:9999px;border:0;background:transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--text-tertiary);transition:background 160ms ease,color 160ms ease,transform 80ms ease-in;
+  -webkit-tap-highlight-color:transparent;
+}
+.iconbtn:hover{background:var(--surface-base)}
+.iconbtn:active{transform:scale(.9)}
+.iconbtn[aria-pressed="true"]{background:var(--surface-raised);color:var(--primary);box-shadow:var(--card-shadow)}
+.iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round}
+
+/* ---------- scrolling screen ---------- */
+.screen{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;
+  padding:0 12px 24px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none}
+.foldline{position:absolute;left:0;right:0;height:0;pointer-events:none;display:none;z-index:5}
+.foldline.on{display:block;border-top:1px dashed var(--poor)}
+.foldline.on::after{
+  content:"fold — 5.4\" viewport";position:absolute;right:12px;top:4px;
+  font-size:11px;font-weight:600;color:var(--poor);
+}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface-raised);border:1px solid var(--border-low);
+  box-shadow:var(--card-shadow);border-radius:16px;
+}
+.card--hero{border-radius:24px}
+.pressable{cursor:pointer;transition:transform 80ms ease-in,background 160ms ease}
+.pressable:active{transform:scale(.985);transition:transform 80ms ease-in}
+button.bare{border:0;background:none;font:inherit;color:inherit;text-align:left;width:100%;display:block;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--primary);outline-offset:3px;border-radius:12px}
+
+/* ---------- HERO ---------- */
+.hero{
+  margin-top:16px;padding:32px 24px 22px;
+  display:flex;flex-direction:column;
+}
+.hero__top{flex:0 0 auto}
+.hero__msg{flex:0 0 auto}
+.hero__foot{flex:0 0 auto}
+/* two smaller gaps read as composition; one big gap reads as an empty screen */
+.hero__gap{flex:1 1 0;min-height:14px}
+.hero__gap--b{flex:.8 1 0}
+
+.hero__label{
+  font-size:17px;font-weight:600;color:var(--text-secondary);
+  letter-spacing:-.01em;
+}
+.hero__row{display:flex;align-items:baseline;gap:14px;margin-top:10px;flex-wrap:wrap}
+.hero__value{
+  font-size:56px;font-weight:700;line-height:1.02;letter-spacing:-.035em;
+}
+.hero__unit{font-size:22px;font-weight:600;letter-spacing:-.01em;color:var(--text-secondary);margin-left:-8px}
+.hero__verdict{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:22px;font-weight:600;letter-spacing:-.01em;line-height:1.1;
+}
+.hero__verdict svg{width:15px;height:15px;fill:currentColor;flex:0 0 auto}
+
+/* positional bar */
+.bar{margin-top:22px}
+.bar__track{
+  position:relative;height:14px;border-radius:9999px;background:var(--surface-subtle);
+  border:1px solid var(--border-low);
+}
+.bar__band{
+  position:absolute;top:-1px;bottom:-1px;border-radius:9999px;
+  background:var(--band-fill);border:1px solid var(--band-stroke);
+}
+.bar__marker{
+  position:absolute;top:-8px;width:6px;height:30px;border-radius:3px;
+  transform:translateX(-3px);
+  box-shadow:0 0 0 3px var(--surface-raised);
+  transition:left 520ms cubic-bezier(.2,.75,.2,1);
+}
+.bar__labels{position:relative;height:18px;margin-top:10px}
+.bar__bandlabel{
+  position:absolute;transform:translateX(-50%);white-space:nowrap;
+  font-size:11px;font-weight:600;color:var(--text-tertiary);letter-spacing:.01em;
+}
+
+.hr{height:1px;background:var(--border-low);border:0}
+
+.hero__instruction{
+  font-size:17px;font-weight:600;line-height:1.32;letter-spacing:-.015em;color:var(--text-primary);
+}
+.hero__cause{
+  margin-top:7px;font-size:15px;line-height:1.35;color:var(--text-secondary);
+}
+.hero__anchor{
+  margin-top:12px;font-size:15px;line-height:1.35;color:var(--text-secondary);
+  padding-left:11px;border-left:3px solid var(--poor);
+}
+.hero__basisrow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px}
+.hero__basis{font-size:12px;color:var(--text-tertiary);line-height:1.3}
+.chev{width:22px;height:22px;flex:0 0 auto;stroke:var(--text-tertiary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 260ms cubic-bezier(.2,.75,.2,1)}
+.chev.open{transform:rotate(180deg)}
+
+/* expander */
+.exp{overflow:hidden;transition:height 300ms cubic-bezier(.2,.75,.2,1)}
+.exp__inner{padding-top:18px}
+
+.whyrow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:13px 0;border-top:1px solid var(--border-low)}
+.whyrow:first-child{border-top:0;padding-top:4px}
+.whyrow__name{font-size:15px;font-weight:600;color:var(--text-primary);letter-spacing:-.01em}
+.whyrow__verdict{font-size:15px;font-weight:600;text-align:right;white-space:nowrap}
+.whyrow__meta{font-size:13px;color:var(--text-tertiary);grid-column:1/-1;margin-top:-1px}
+.minibar{grid-column:1/-1;margin-top:9px;position:relative;height:8px;border-radius:9999px;background:var(--surface-subtle);border:1px solid var(--border-low)}
+.minibar__band{position:absolute;top:-1px;bottom:-1px;border-radius:9999px;background:var(--band-fill);border:1px solid var(--band-stroke)}
+.minibar__marker{position:absolute;top:-5px;width:4px;height:18px;border-radius:2px;transform:translateX(-2px);box-shadow:0 0 0 2px var(--surface-raised)}
+.whynote{margin-top:14px;font-size:13px;line-height:1.45;color:var(--text-tertiary)}
+
+/* ---------- WEEK CARD ---------- */
+.week{margin-top:24px;padding:18px 16px 16px}
+.week__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.week__title{font-size:17px;font-weight:600;letter-spacing:-.015em}
+.chartwrap{position:relative;margin-top:14px;padding-left:42px}
+.chart{display:block;width:100%;height:auto}
+.chart__bandlabel{
+  position:absolute;left:0;transform:translateY(-50%);
+  font-size:11px;font-weight:600;color:var(--text-tertiary);
+}
+.daylabels{display:flex;margin-top:6px;padding-left:42px}
+.daylabels span{flex:1 1 0;text-align:center;font-size:11px;color:var(--text-tertiary);font-weight:500}
+.daylabels span.today{color:var(--text-primary);font-weight:700}
+.week__read{margin-top:12px;font-size:15px;line-height:1.35;color:var(--text-secondary)}
+.week__lines{margin-top:12px;border-top:1px solid var(--border-low)}
+.week__line{display:flex;justify-content:space-between;gap:16px;padding:10px 0 0;font-size:15px;color:var(--text-secondary)}
+.week__line b{font-weight:600;color:var(--text-primary)}
+.week__note{margin-top:12px;font-size:13px;line-height:1.45;color:var(--text-tertiary)}
+
+/* ---------- footer ---------- */
+.footer{margin-top:20px;padding:0 4px;font-size:13px;color:var(--text-tertiary)}
+
+/* ---------- raw mode ---------- */
+.rawhead{margin-top:16px;padding:0 4px}
+.rawhead h1{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.rawhead p{margin-top:6px;font-size:15px;color:var(--text-secondary)}
+.rawcard{margin-top:16px;padding:4px 16px}
+.rawrow{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;border-top:1px solid var(--border-low)}
+.rawrow:first-child{border-top:0}
+.rawrow__k{font-size:15px;color:var(--text-secondary)}
+.rawrow__v{font-size:17px;font-weight:600}
+.btn{
+  margin-top:16px;width:100%;min-height:50px;border-radius:16px;border:1px solid var(--border-low);
+  background:var(--surface-raised);box-shadow:var(--card-shadow);
+  font-size:17px;font-weight:600;color:var(--primary);cursor:pointer;
+  transition:transform 80ms ease-in;-webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(.985)}
+.btn--filled{background:var(--primary);color:#fff;border-color:transparent}
+
+/* ---------- skeleton ---------- */
+.sk{background:var(--surface-subtle);border-radius:8px;position:relative;overflow:hidden}
+.sk::after{
+  content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+  animation:shimmer 1400ms infinite;
+}
+:root[data-theme="dark"] .sk::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sk::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent)}}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+
+/* ---------- tab bar (Liquid Glass, floating chrome only) ---------- */
+.tabbar{
+  flex:0 0 auto;height:83px;padding:8px 8px 22px;
+  display:flex;align-items:flex-start;
+  background:var(--surface-raised);
+  background:color-mix(in srgb, var(--surface-raised) 72%, transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  backdrop-filter:saturate(180%) blur(24px);
+  border-top:1px solid var(--border-low);
+}
+.tab{
+  flex:1 1 0;min-height:52px;border:0;background:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--text-tertiary);font-size:11px;font-weight:600;letter-spacing:.01em;
+  transition:color 160ms ease,transform 80ms ease-in;-webkit-tap-highlight-color:transparent;
+  border-radius:12px;
+}
+.tab:active{transform:scale(.94)}
+.tab[aria-current="page"]{color:var(--primary)}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{
+  position:fixed;right:14px;bottom:100px;z-index:60;width:34px;height:34px;border-radius:9999px;
+  border:1px solid rgba(255,255,255,.22);background:rgba(30,30,36,.62);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.42;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:opacity 200ms ease;
+}
+.devbtn:hover,.devbtn:focus-visible{opacity:1}
+.devbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.devpanel{
+  position:fixed;right:14px;bottom:142px;z-index:60;width:246px;padding:12px;
+  border-radius:14px;background:rgba(24,24,29,.94);color:#EDEDF2;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 40px rgba(0,0,0,.5);
+  font-size:11px;display:none;
+}
+.devpanel.open{display:block}
+.devpanel h4{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin:10px 0 6px;font-weight:700}
+.devpanel h4:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#EDEDF2;
+  border-radius:9999px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;
+}
+.chip[aria-pressed="true"]{background:#4DA3FF;border-color:#4DA3FF;color:#08080A}
+
+/* ---------- motion ---------- */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.anim{animation:rise 340ms cubic-bezier(.2,.75,.2,1) both}
+.d1{animation-delay:40ms}.d2{animation-delay:110ms}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- ============ status bar ============ -->
+  <div class="statusbar">
+    <span class="tnum">9:41</span>
+    <span class="icons" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.6 9.1a2.9 2.9 0 0 1 3.8 0zM8.5 6.1c-1.5 0-2.9.6-3.9 1.6L3.2 6.2a7.7 7.7 0 0 1 10.6 0l-1.4 1.5a5.4 5.4 0 0 0-3.9-1.6zM8.5 1.6c-2.7 0-5.2 1.1-7 2.9L.1 3.1A11.6 11.6 0 0 1 8.5.3c3.2 0 6.2 1.1 8.4 2.8l-1.4 1.4a10 10 0 0 0-7-2.9z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1"/><rect x="2" y="2" width="15" height="8" rx="2"/><path d="M23.4 4.1v3.8a2.1 2.1 0 0 0 0-3.8z" opacity=".38"/></svg>
+    </span>
+  </div>
+
+  <!-- ============ header ============ -->
+  <div class="header">
+    <button class="iconbtn" id="rawbtn" aria-pressed="false"
+            aria-label="Show raw numbers with no scores or advice">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3.5 8 20.5M16 3.5 14.5 20.5M3.5 9h17M2.8 15h17"/></svg>
+    </button>
+  </div>
+
+  <!-- ============ screen ============ -->
+  <div class="screen" id="screen">
+    <div class="foldline" id="foldline"></div>
+    <div id="main"></div>
+  </div>
+
+  <!-- ============ tab bar ============ -->
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab" aria-current="page" data-tab="Today">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+      Today
+    </button>
+    <button class="tab" data-tab="Live">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12.5h4l2.6-6.6 4 13.2 2.6-6.6h5.8"/></svg>
+      Live
+    </button>
+    <button class="tab" data-tab="Explore">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M15.6 8.4 13.8 13.8 8.4 15.6 10.2 10.2z"/></svg>
+      Explore
+    </button>
+    <button class="tab" data-tab="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17M3.5 12h17M3.5 16.5h17"/><circle cx="9" cy="7.5" r="2.1" fill="var(--surface-raised)"/><circle cx="15.5" cy="12" r="2.1" fill="var(--surface-raised)"/><circle cx="7.5" cy="16.5" r="2.1" fill="var(--surface-raised)"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<!-- ============ dev toolbar (not part of the design) ============ -->
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-label="Prototype controls">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+</button>
+<div class="devpanel" id="devpanel" role="dialog" aria-label="Prototype controls">
+  <h4>Theme</h4>
+  <div class="chips" data-group="theme">
+    <button class="chip" data-v="system">System</button>
+    <button class="chip" data-v="light">Light</button>
+    <button class="chip" data-v="dark">Dark</button>
+  </div>
+  <h4>Data state</h4>
+  <div class="chips" data-group="data">
+    <button class="chip" data-v="full">Watch + phone</button>
+    <button class="chip" data-v="phone">iPhone only</button>
+    <button class="chip" data-v="new">Brand new</button>
+    <button class="chip" data-v="loading">Loading</button>
+    <button class="chip" data-v="empty">Empty</button>
+  </div>
+  <h4>Reading (watch states)</h4>
+  <div class="chips" data-group="reading">
+    <button class="chip" data-v="high">High</button>
+    <button class="chip" data-v="moderate">Moderate</button>
+    <button class="chip" data-v="low">Low</button>
+    <button class="chip" data-v="attention">Needs attention</button>
+  </div>
+  <h4>Overlay</h4>
+  <div class="chips" data-group="fold">
+    <button class="chip" data-v="off">Fold line off</button>
+    <button class="chip" data-v="on">Fold line on</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  theme:'system',
+  data:'full',          // full | phone | new | loading | empty
+  reading:'moderate',   // high | moderate | low | attention
+  raw:false,
+  heroOpen:false,
+  weekOpen:false,
+  fold:false
+};
+
+const DAYS_INC_TODAY = ['Thu','Fri','Sat','Sun','Mon','Tue','Wed'];
+const DAYS_COMPLETED = ['Wed','Thu','Fri','Sat','Sun','Mon','Tue'];
+
+/* ============================================================
+   CONTENT MODELS
+   One fictional user: Alex, 34.
+   Every number below is internally consistent with every other.
+   ============================================================ */
+
+const FULL = {
+
+  moderate:{
+    label:'Readiness', value:'62', unit:null,
+    verdict:'Moderate', tone:'fair',
+    scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, marker:62, bandLabel:'usual',
+    instruction:'Sleep 40 minutes earlier tonight.',
+    cause:'Last night was 1h 28m under usual.',
+    basis:'From sleep and heart rate.',
+    why:{
+      rows:[
+        {name:'Sleep', value:'6h 12m', meta:'usual 7h 40m', verdict:'Short', tone:'fair',
+         scaleMin:4, scaleMax:10, bandLow:7.25, bandHigh:8.05, marker:6.2},
+        {name:'Heart rate variability', value:null, meta:'against your own usual range', verdict:'Below usual', tone:'fair',
+         scaleMin:0, scaleMax:100, bandLow:44, bandHigh:62, marker:36},
+        {name:'Resting heart rate', value:null, meta:'against your own usual range', verdict:'Above usual', tone:'fair',
+         scaleMin:0, scaleMax:100, bandLow:38, bandHigh:58, marker:68}
+      ],
+      note:'A hard run on Monday is still in the mix. Sleep is the bigger of the two, so sleep is what today asks for. Heart signals are read against your own last seven days, never against yesterday.'
+    },
+    week:{
+      days:DAYS_INC_TODAY, values:[66,73,78,69,64,71,62], todayIndex:6,
+      scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, bandLabel:'usual',
+      read:'Mostly inside your usual this week.',
+      lines:[['Your usual','58 to 74'],['This week','62 to 78']],
+      note:'Today sits lowest of the seven. One day inside a settled week is not a trend.'
+    }
+  },
+
+  high:{
+    label:'Readiness', value:'78', unit:null,
+    verdict:'Optimal', tone:'good',
+    scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, marker:78, bandLabel:'usual',
+    instruction:'Good day for a hard session.',
+    cause:'Last night ran 35 minutes over usual.',
+    basis:'From sleep and heart rate.',
+    why:{
+      rows:[
+        {name:'Sleep', value:'8h 15m', meta:'usual 7h 40m', verdict:'Long', tone:'good',
+         scaleMin:4, scaleMax:10, bandLow:7.25, bandHigh:8.05, marker:8.25},
+        {name:'Heart rate variability', value:null, meta:'against your own usual range', verdict:'Above usual', tone:'good',
+         scaleMin:0, scaleMax:100, bandLow:44, bandHigh:62, marker:72},
+        {name:'Resting heart rate', value:null, meta:'against your own usual range', verdict:'Inside usual', tone:'neutral',
+         scaleMin:0, scaleMax:100, bandLow:38, bandHigh:58, marker:44}
+      ],
+      note:'Three easier days in a row are showing up here. Nothing to do differently. Heart signals are read against your own last seven days, never against yesterday.'
+    },
+    week:{
+      days:DAYS_INC_TODAY, values:[66,73,70,69,64,71,78], todayIndex:6,
+      scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, bandLabel:'usual',
+      read:'Mostly inside your usual this week.',
+      lines:[['Your usual','58 to 74'],['This week','64 to 78']],
+      note:'Today sits highest of the seven, just above your usual range.'
+    }
+  },
+
+  low:{
+    label:'Readiness', value:'38', unit:null,
+    verdict:'Low', tone:'poor',
+    scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, marker:38, bandLabel:'usual',
+    instruction:'Keep today easy. Skip the workout.',
+    cause:'Last night was 2h 40m under usual.',
+    basis:'From sleep and heart rate.',
+    why:{
+      rows:[
+        {name:'Sleep', value:'5h 00m', meta:'usual 7h 40m', verdict:'Short', tone:'poor',
+         scaleMin:4, scaleMax:10, bandLow:7.25, bandHigh:8.05, marker:5.0},
+        {name:'Heart rate variability', value:null, meta:'against your own usual range', verdict:'Below usual', tone:'poor',
+         scaleMin:0, scaleMax:100, bandLow:44, bandHigh:62, marker:24},
+        {name:'Resting heart rate', value:null, meta:'against your own usual range', verdict:'Above usual', tone:'poor',
+         scaleMin:0, scaleMax:100, bandLow:38, bandHigh:58, marker:76}
+      ],
+      note:'Anything under 45 reads the same here. We do not grade degrees of a hard day, because the maths behind this number cannot tell 38 from 20. Heart signals are read against your own last seven days, never against yesterday.'
+    },
+    week:{
+      days:DAYS_INC_TODAY, values:[70,74,66,71,57,49,38], todayIndex:6,
+      scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, bandLabel:'usual',
+      read:'Below your usual for three days.',
+      lines:[['Your usual','58 to 74'],['This week','38 to 74']],
+      note:'Three short nights in a row will do this. It comes back the same way it went.'
+    }
+  },
+
+  attention:{
+    label:'Resting heart rate', value:'64', unit:'bpm',
+    verdict:'Above usual', tone:'poor',
+    scaleMin:48, scaleMax:72, bandLow:53, bandHigh:57, marker:64, bandLabel:'usual',
+    instruction:'Keep today easy and drink more water.',
+    cause:'Up for 3 mornings, heart rate variability down with it.',
+    anchor:'Common in the days before a cold. Worth easing off, not worth worrying about.',
+    basis:'From sleep and heart rate.',
+    why:{
+      rows:[
+        {name:'Readiness', value:'51', meta:'usual 58 to 74', verdict:'Moderate', tone:'fair',
+         scaleMin:32, scaleMax:86, bandLow:58, bandHigh:74, marker:51},
+        {name:'Sleep', value:'6h 40m', meta:'usual 7h 40m', verdict:'Short', tone:'fair',
+         scaleMin:4, scaleMax:10, bandLow:7.25, bandHigh:8.05, marker:6.67},
+        {name:'Heart rate variability', value:null, meta:'against your own usual range', verdict:'Below usual', tone:'poor',
+         scaleMin:0, scaleMax:100, bandLow:44, bandHigh:62, marker:22}
+      ],
+      note:'Three signals moved the same way for three days running. One morning on its own is never enough to say this. Heart signals are read against your own last seven days, never against yesterday.'
+    },
+    week:{
+      days:DAYS_INC_TODAY, values:[55,56,54,57,61,63,64], todayIndex:6,
+      scaleMin:48, scaleMax:72, bandLow:53, bandHigh:57, bandLabel:'usual',
+      read:'Above your usual for three days.',
+      lines:[['Your usual','53 to 57 bpm'],['This week','54 to 64 bpm']],
+      note:'The three days in a row are the reason this is on the screen at all.'
+    }
+  }
+};
+
+const PHONE = {
+  label:'Steps today', value:'1,240', unit:null,
+  verdict:'Just started', tone:'neutral',
+  scaleMin:0, scaleMax:12000, bandLow:6800, bandHigh:9400, marker:1240, bandLabel:'usual',
+  instruction:'Take a 20-minute walk this morning.',
+  cause:'You averaged 7,900 steps a day this week.',
+  basis:'From steps and walking only.',
+  why:{
+    rows:[
+      {name:'Steps this week', value:'7,900 a day', meta:'usual 6,800 to 9,400', verdict:'Steady', tone:'good',
+       scaleMin:0, scaleMax:12000, bandLow:6800, bandHigh:9400, marker:7900},
+      {name:'Walking speed', value:null, meta:'against your own usual range', verdict:'Inside usual', tone:'neutral',
+       scaleMin:0, scaleMax:100, bandLow:40, bandHigh:62, marker:52},
+      {name:'Flights climbed', value:'14 a day', meta:'usual 6 to 12', verdict:'Above usual', tone:'good',
+       scaleMin:0, scaleMax:24, bandLow:6, bandHigh:12, marker:14}
+    ],
+    note:'Sleep and heart readings need a wearable, so this screen does not read them. Nothing here is estimated from steps.'
+  },
+  week:{
+    days:DAYS_COMPLETED, values:[7600,8100,6400,9600,7200,8800,8400], todayIndex:-1,
+    scaleMin:0, scaleMax:12000, bandLow:6800, bandHigh:9400, bandLabel:'usual',
+    read:'Mostly inside your usual this week.',
+    lines:[['Your usual','6,800 to 9,400'],['This week','6,400 to 9,600']],
+    note:'Seven finished days. Today is still running, so it is not in here yet.'
+  }
+};
+
+const NEWU = {
+  label:'Steps today', value:'1,240', unit:null,
+  verdict:'Just started', tone:'neutral',
+  scaleMin:0, scaleMax:12000, bandLow:6500, bandHigh:8000, marker:1240, bandLabel:'goal',
+  instruction:'Take a 20-minute walk this morning.',
+  cause:'7,000 a day is where the big health gain sits.',
+  basis:'Your own usual range appears after seven days.',
+  why:{
+    rows:[
+      {name:'Steps', value:'1,240 so far', meta:'goal 7,000 a day', verdict:'Just started', tone:'neutral',
+       scaleMin:0, scaleMax:12000, bandLow:6500, bandHigh:8000, marker:1240},
+      {name:'Distance', value:'0.9 km so far', meta:'no range yet', verdict:'Just started', tone:'neutral',
+       scaleMin:0, scaleMax:9, bandLow:4.4, bandHigh:5.6, marker:0.9},
+      {name:'Flights climbed', value:'4 so far', meta:'no range yet', verdict:'Just started', tone:'neutral',
+       scaleMin:0, scaleMax:24, bandLow:6, bandHigh:12, marker:4}
+    ],
+    note:'The 7,000 mark is where the drop in risk of dying early stops getting steeper. It is a starting line, not your line. Yours replaces it after seven days.'
+  },
+  week:{
+    days:DAYS_INC_TODAY, values:[null,null,null,null,null,null,1240], todayIndex:6,
+    scaleMin:0, scaleMax:12000, bandLow:6500, bandHigh:8000, bandLabel:'goal',
+    read:'Your week fills in from here.',
+    lines:[['Goal','7,000 a day'],['Today so far','1,240']],
+    note:'Six days from now this shows your own shape instead of a starting line.'
+  }
+};
+
+const RAW_ROWS = {
+  full:[
+    ['Readiness','62'],
+    ['Sleep last night','6h 12m'],
+    ['Heart rate variability (SDNN)','48 ms'],
+    ['Resting heart rate','58 bpm'],
+    ['Steps yesterday','8,400'],
+    ['Exercise minutes yesterday','34'],
+    ['Sleep shortfall, last 5 nights','4h 20m']
+  ],
+  phone:[
+    ['Steps today so far','1,240'],
+    ['Distance today so far','0.9 km'],
+    ['Flights climbed today','4'],
+    ['Steps yesterday','8,400'],
+    ['Walking speed, 7-day average','5.1 km/h']
+  ],
+  new:[
+    ['Steps today so far','1,240'],
+    ['Distance today so far','0.9 km'],
+    ['Flights climbed today','4']
+  ],
+  loading:[],
+  empty:[]
+};
+
+function model(){
+  if(S.data==='phone') return PHONE;
+  if(S.data==='new')   return NEWU;
+  return FULL[S.reading];
+}
+
+/* ============================================================
+   SMALL RENDER HELPERS
+   ============================================================ */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toneVar = t => t==='good'?'var(--good)' : t==='fair'?'var(--fair)' : t==='poor'?'var(--poor)' : 'var(--text-secondary)';
+const pct = (v,min,max) => Math.max(0, Math.min(100, ((v-min)/(max-min))*100));
+
+/* redundant, non-colour channel: where the marker sits vs the one reference range */
+function glyph(m){
+  if(m.tone==='neutral') return '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
+  if(m.marker > m.bandHigh) return '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.8 14.4 12.4H1.6z"/></svg>';
+  if(m.marker < m.bandLow)  return '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.2 1.6 3.6h12.8z"/></svg>';
+  return '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="6.2" width="12.8" height="3.6" rx="1.8"/></svg>';
+}
+
+function barHTML(m){
+  const bl = pct(m.bandLow, m.scaleMin, m.scaleMax);
+  const bh = pct(m.bandHigh, m.scaleMin, m.scaleMax);
+  const mk = pct(m.marker, m.scaleMin, m.scaleMax);
+  const mid = Math.max(14, Math.min(86, (bl+bh)/2));
+  return `
+    <div class="bar">
+      <div class="bar__track" role="img"
+           aria-label="${esc(m.label)} ${esc(m.value)}${m.unit?' '+esc(m.unit):''}, ${esc(m.verdict)}, shown against your ${esc(m.bandLabel)} range">
+        <div class="bar__band" style="left:${bl}%;width:${bh-bl}%"></div>
+        ${m.marker===null?'':`<div class="bar__marker" style="left:${mk}%;background:${toneVar(m.tone)}"></div>`}
+      </div>
+      <div class="bar__labels"><span class="bar__bandlabel" style="left:${mid}%">${esc(m.bandLabel)}</span></div>
+    </div>`;
+}
+
+function miniBarHTML(r){
+  const bl = pct(r.bandLow, r.scaleMin, r.scaleMax);
+  const bh = pct(r.bandHigh, r.scaleMin, r.scaleMax);
+  const mk = pct(r.marker, r.scaleMin, r.scaleMax);
+  return `<div class="minibar" aria-hidden="true">
+      <div class="minibar__band" style="left:${bl}%;width:${bh-bl}%"></div>
+      <div class="minibar__marker" style="left:${mk}%;background:${toneVar(r.tone)}"></div>
+    </div>`;
+}
+
+/* ---- 7-day chart: same grammar as the hero bar, rotated ---- */
+function chartHTML(w, tone){
+  const VB_W = 280, VB_H = 158, TOP = 12, BOT = 146;
+  const y = v => BOT - ((v - w.scaleMin)/(w.scaleMax - w.scaleMin)) * (BOT - TOP);
+  const yBandTop = y(w.bandHigh), yBandBot = y(w.bandLow);
+  const step = VB_W / w.days.length;
+
+  let rails = '', marks = '';
+  w.days.forEach((d,i)=>{
+    const cx = step*i + step/2;
+    rails += `<rect x="${(cx-3).toFixed(1)}" y="${TOP}" width="6" height="${BOT-TOP}" rx="3" fill="var(--rail)"/>`;
+    const v = w.values[i];
+    if(v===null || v===undefined) return;
+    const isToday = i===w.todayIndex;
+    const fill = isToday ? toneVar(tone) : 'var(--text-tertiary)';
+    const h = isToday ? 17 : 13, wd = isToday ? 11 : 9;
+    marks += `<rect x="${(cx-wd/2).toFixed(1)}" y="${(y(v)-h/2).toFixed(1)}" width="${wd}" height="${h}" rx="${wd/2}" fill="${fill}"/>`;
+  });
+
+  const labelTopPct = ((yBandTop + yBandBot)/2) / VB_H * 100;
+
+  return `
+  <div class="chartwrap">
+    <svg class="chart" viewBox="0 0 ${VB_W} ${VB_H}" role="img"
+         aria-label="Last seven days, each day shown as a mark against your ${esc(w.bandLabel)} range. ${esc(w.read)}">
+      <rect x="0" y="${yBandTop.toFixed(1)}" width="${VB_W}" height="${Math.max(6,(yBandBot-yBandTop)).toFixed(1)}"
+            rx="6" fill="var(--band-fill)" stroke="var(--band-stroke)" stroke-width="1"/>
+      ${rails}
+      ${marks}
+    </svg>
+    <span class="chart__bandlabel" style="top:${labelTopPct}%">${esc(w.bandLabel)}</span>
+  </div>
+  <div class="daylabels" aria-hidden="true">
+    ${w.days.map((d,i)=>`<span class="${i===w.todayIndex?'today':''}">${i===w.todayIndex?'Today':esc(d)}</span>`).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   SCREEN RENDERERS
+   ============================================================ */
+
+function renderLoading(){
+  return `
+  <section class="card card--hero hero anim" style="min-height:${heroH()}px" aria-busy="true" aria-label="Loading today">
+    <div class="hero__top">
+      <div class="sk" style="width:104px;height:20px"></div>
+      <div class="sk" style="width:150px;height:56px;margin-top:14px;border-radius:12px"></div>
+      <div class="sk" style="width:100%;height:14px;margin-top:26px;border-radius:9999px"></div>
+      <div class="sk" style="width:44px;height:11px;margin-top:12px"></div>
+    </div>
+    <div class="hero__gap"></div>
+    <div class="hero__msg">
+      <hr class="hr" style="margin-bottom:20px">
+      <div class="sk" style="width:82%;height:20px"></div>
+      <div class="sk" style="width:64%;height:16px;margin-top:10px"></div>
+    </div>
+    <div class="hero__gap hero__gap--b"></div>
+    <div class="hero__foot">
+      <hr class="hr" style="margin:0 0 14px">
+      <div class="sk" style="width:46%;height:13px"></div>
+    </div>
+  </section>
+  <section class="card week anim d1" aria-hidden="true">
+    <div class="sk" style="width:96px;height:20px"></div>
+    <div class="sk" style="width:100%;height:180px;margin-top:14px;border-radius:12px"></div>
+    <div class="sk" style="width:70%;height:16px;margin-top:14px"></div>
+  </section>
+  <p class="footer">Reading Apple Health…</p>`;
+}
+
+function renderEmpty(){
+  const m = {label:'Steps today', value:'—', unit:null, verdict:'Not reading yet', tone:'neutral',
+             scaleMin:0, scaleMax:12000, bandLow:6500, bandHigh:8000, marker:null, bandLabel:'goal'};
+  return `
+  <section class="card card--hero hero anim" style="min-height:${heroH()}px">
+    <div class="hero__top">
+      <div class="hero__label">${m.label}</div>
+      <div class="hero__row">
+        <span class="hero__value tnum rounded-face" style="color:var(--text-tertiary)">—</span>
+        <span class="hero__verdict" style="color:var(--text-secondary)">${glyph(m)}Not reading yet</span>
+      </div>
+      ${barHTML(m)}
+    </div>
+    <div class="hero__gap"></div>
+    <div class="hero__msg">
+      <hr class="hr" style="margin-bottom:20px">
+      <div class="hero__instruction">Turn on Apple Health to start.</div>
+      <div class="hero__cause">Steps alone are enough for day one.</div>
+      <button class="btn btn--filled" data-act="connect">Connect Apple Health</button>
+    </div>
+    <div class="hero__gap hero__gap--b"></div>
+    <div class="hero__foot">
+      <hr class="hr" style="margin:0 0 14px">
+      <div class="hero__basisrow"><span class="hero__basis">Nothing is being read yet.</span></div>
+    </div>
+  </section>
+  <section class="card week anim d1">
+    <div class="week__head"><h2 class="week__title">Last 7 days</h2></div>
+    ${chartHTML({days:DAYS_INC_TODAY, values:[null,null,null,null,null,null,null], todayIndex:6,
+                 scaleMin:0, scaleMax:12000, bandLow:6500, bandHigh:8000, bandLabel:'goal',
+                 read:'Your week starts when data arrives.'},'neutral')}
+    <p class="week__read">Your week starts when data arrives.</p>
+  </section>
+  <p class="footer">Not connected · Wed 29 Jul 2026</p>`;
+}
+
+function renderRaw(){
+  const rows = RAW_ROWS[S.data] || [];
+  return `
+  <div class="rawhead anim">
+    <h1>Raw numbers</h1>
+    <p>Scores, colours and advice are off. These are the readings, unchanged.</p>
+  </div>
+  ${rows.length ? `<section class="card rawcard anim d1">
+    ${rows.map(r=>`<div class="rawrow"><span class="rawrow__k">${esc(r[0])}</span><span class="rawrow__v tnum">${esc(r[1])}</span></div>`).join('')}
+  </section>` : `<section class="card rawcard anim d1"><div class="rawrow"><span class="rawrow__k">Nothing recorded yet.</span></div></section>`}
+  <button class="btn anim d2" data-act="scoresOn">Turn scores back on</button>
+  <p class="footer">Updated 9:38 · Wed 29 Jul 2026</p>`;
+}
+
+function renderNormal(){
+  const m = model(), w = m.week;
+
+  const whyRows = m.why.rows.map(r=>`
+    <div class="whyrow">
+      <span class="whyrow__name">${esc(r.name)}</span>
+      <span class="whyrow__verdict" style="color:${toneVar(r.tone)}">${esc(r.verdict)}</span>
+      <span class="whyrow__meta">${r.value?`<span class="tnum">${esc(r.value)}</span> · `:''}${esc(r.meta)}</span>
+      ${miniBarHTML(r)}
+    </div>`).join('');
+
+  const weekLines = w.lines.map(l=>`<div class="week__line"><span>${esc(l[0])}</span><b class="tnum">${esc(l[1])}</b></div>`).join('');
+
+  return `
+  <!-- SLOT 1 — the one number -->
+  <section class="card card--hero hero anim" style="min-height:${heroH()}px">
+    <div class="hero__top">
+      <div class="hero__label">${esc(m.label)}</div>
+      <div class="hero__row">
+        <span class="hero__value tnum rounded-face" style="color:${toneVar(m.tone)}">${esc(m.value)}</span>
+        ${m.unit?`<span class="hero__unit">${esc(m.unit)}</span>`:''}
+        <span class="hero__verdict" style="color:${toneVar(m.tone)}">${glyph(m)}${esc(m.verdict)}</span>
+      </div>
+      ${barHTML(m)}
+    </div>
+
+    <div class="hero__gap"></div>
+
+    <div class="hero__msg">
+      <hr class="hr" style="margin-bottom:20px">
+      <p class="hero__instruction">${esc(m.instruction)}</p>
+      <p class="hero__cause">${esc(m.cause)}</p>
+      ${m.anchor?`<p class="hero__anchor">${esc(m.anchor)}</p>`:''}
+    </div>
+
+    <div class="hero__gap hero__gap--b"></div>
+
+    <div class="hero__foot">
+      <hr class="hr" style="margin:0 0 14px">
+      <button class="bare pressable" data-act="hero" aria-expanded="${S.heroOpen}" aria-controls="heroExp"
+              style="min-height:44px;display:flex;align-items:center">
+        <span class="hero__basisrow" style="width:100%">
+          <span class="hero__basis">${esc(m.basis)}</span>
+          <svg class="chev ${S.heroOpen?'open':''}" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="exp" id="heroExp" data-exp="hero" style="height:${S.heroOpen?'auto':'0px'}">
+        <div class="exp__inner">
+          ${whyRows}
+          <p class="whynote">${esc(m.why.note)}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLOT 2 — the one thing below the fold -->
+  <section class="card week anim d1">
+    <button class="bare pressable" data-act="week" aria-expanded="${S.weekOpen}" aria-controls="weekExp">
+      <span class="week__head" style="display:flex;min-height:44px">
+        <span class="week__title" role="heading" aria-level="2">Last 7 days</span>
+        <svg class="chev ${S.weekOpen?'open':''}" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+    </button>
+    ${chartHTML(w, m.tone)}
+    <p class="week__read">${esc(w.read)}</p>
+    <div class="exp" id="weekExp" data-exp="week" style="height:${S.weekOpen?'auto':'0px'}">
+      <div class="exp__inner">
+        <div class="week__lines">${weekLines}</div>
+        <p class="week__note">${esc(w.note)}</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer">Updated 9:38 · Wed 29 Jul 2026</p>`;
+}
+
+/* ============================================================
+   LAYOUT MATH — hero fills the fold, the next card peeks by 28px
+   ============================================================ */
+function heroH(){
+  const screen = document.getElementById('screen');
+  const h = screen ? screen.clientHeight : 623;
+  // hero fills the fold exactly; the next card shows 28px of its top edge as the scroll cue
+  return Math.max(360, h - 16 /*hero top margin*/ - 24 /*card gap*/ - 28 /*peek*/);
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const main = document.getElementById('main');
+
+function render(){
+  document.documentElement.dataset.theme = (S.theme==='system' ? '' : S.theme);
+
+  const rawbtn = document.getElementById('rawbtn');
+  rawbtn.setAttribute('aria-pressed', String(S.raw));
+  rawbtn.disabled = (S.data==='loading');
+  rawbtn.style.opacity = (S.data==='loading') ? '.35' : '';
+
+  if(S.data==='loading')      main.innerHTML = renderLoading();
+  else if(S.raw)              main.innerHTML = renderRaw();
+  else if(S.data==='empty')   main.innerHTML = renderEmpty();
+  else                        main.innerHTML = renderNormal();
+
+  // open expanders start at natural height; closed ones leave the a11y tree
+  main.querySelectorAll('.exp').forEach(el=>{
+    const open = (el.dataset.exp==='hero') ? S.heroOpen : S.weekOpen;
+    el.style.height = open ? (el.firstElementChild.offsetHeight + 'px') : '0px';
+    el.toggleAttribute('inert', !open);
+  });
+
+  placeFold();
+  syncChips();
+}
+
+function placeFold(){
+  const fl = document.getElementById('foldline');
+  const screen = document.getElementById('screen');
+  fl.classList.toggle('on', S.fold);
+  fl.style.top = screen.clientHeight + 'px';
+}
+
+/* ============================================================
+   INTERACTION
+   ============================================================ */
+function toggleExp(kind){
+  const el = main.querySelector(`.exp[data-exp="${kind}"]`);
+  if(!el) return;
+  const inner = el.firstElementChild;
+  const btn = main.querySelector(`[data-act="${kind}"]`);
+  const chev = btn ? btn.querySelector('.chev') : null;
+  const opening = (kind==='hero') ? !S.heroOpen : !S.weekOpen;
+
+  if(kind==='hero') S.heroOpen = opening; else S.weekOpen = opening;
+
+  el.toggleAttribute('inert', !opening);
+  el.style.height = el.offsetHeight + 'px';
+  void el.offsetHeight;
+  el.style.height = opening ? (inner.offsetHeight + 'px') : '0px';
+  if(btn) btn.setAttribute('aria-expanded', String(opening));
+  if(chev) chev.classList.toggle('open', opening);
+}
+
+main.addEventListener('click', e=>{
+  const t = e.target.closest('[data-act]');
+  if(!t) return;
+  const act = t.dataset.act;
+  if(act==='hero' || act==='week') toggleExp(act);
+  else if(act==='scoresOn'){ S.raw=false; render(); }
+  else if(act==='connect'){ S.data='loading'; render(); setTimeout(()=>{ S.data='new'; render(); }, 1400); }
+});
+
+document.getElementById('rawbtn').addEventListener('click', ()=>{
+  S.raw = !S.raw; S.heroOpen=false; S.weekOpen=false; render();
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.removeAttribute('aria-current'));
+    tab.setAttribute('aria-current','page');
+  });
+});
+
+/* ---- dev toolbar ---- */
+const devbtn = document.getElementById('devbtn');
+const devpanel = document.getElementById('devpanel');
+devbtn.addEventListener('click', ()=>{
+  const open = devpanel.classList.toggle('open');
+  devbtn.setAttribute('aria-expanded', String(open));
+});
+devpanel.addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  const group = chip.parentElement.dataset.group;
+  const v = chip.dataset.v;
+  if(group==='theme') S.theme = v;
+  else if(group==='data'){ S.data = v; if(v==='loading'||v==='empty') S.raw=false; S.heroOpen=false; S.weekOpen=false; }
+  else if(group==='reading'){ S.reading = v; if(S.data!=='full'){ S.data='full'; } S.heroOpen=false; S.weekOpen=false; }
+  else if(group==='fold') S.fold = (v==='on');
+  render();
+});
+function syncChips(){
+  devpanel.querySelectorAll('.chips').forEach(row=>{
+    const g = row.dataset.group;
+    const cur = g==='theme'?S.theme : g==='data'?S.data : g==='reading'?S.reading : (S.fold?'on':'off');
+    row.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c.dataset.v===cur)));
+  });
+}
+
+/* ---- keep hero sized to the fold ---- */
+let rt;
+window.addEventListener('resize', ()=>{ clearTimeout(rt); rt = setTimeout(render, 120); });
+
+/* ---- deep-link a state for review, e.g. #data=phone&theme=light&heroOpen=true ---- */
+location.hash.replace(/^#/,'').split('&').filter(Boolean).forEach(pair=>{
+  const [k,v] = pair.split('=');
+  if(!(k in S)) return;
+  S[k] = (v==='true') ? true : (v==='false') ? false : v;
+});
+
+render();
+</script>
+</body>
+</html>

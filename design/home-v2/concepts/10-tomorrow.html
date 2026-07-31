@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — Concept 10 — Tomorrow</title>
+<style>
+/* ============================================================
+   Laso design tokens — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root[data-theme="light"]{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elevated:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --t1:#1B1B20; --t2:#44444D; --t3:#5B5B65;
+  --bLow:#E0E0E8; --bMed:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --good:#0C7752; --fair:#8A6400; --poor:#C42B33;
+  --cardShadow:0 1px 2px rgba(0,0,0,0.12);
+  --tint:0.06; --tintB:0.20;
+  --neutralMark:#5B5B65;
+}
+:root[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elevated:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8;
+  --bLow:#2E2E36; --bMed:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --good:#3DCC99; --fair:#E3B45A; --poor:#E05C64;
+  --cardShadow:none;
+  --tint:0.10; --tintB:0.30;
+  --neutralMark:#ADADB8;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  overflow-x:hidden;
+  background:var(--sunken);
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  color:var(--t1);
+  -webkit-font-smoothing:antialiased;
+  font-size:17px; line-height:1.35;
+  font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;
+}
+.num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+     font-family:-apple-system,"SF Pro Rounded","SF Pro Text",system-ui,sans-serif;}
+
+/* ---------- phone frame ---------- */
+.stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;
+       background:var(--sunken);}
+.phone{width:100%;max-width:430px;min-height:100vh;position:relative;
+       background:var(--sunken);display:flex;flex-direction:column;overflow:hidden;}
+@media(min-width:520px){
+  .stage{padding:28px 16px;background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--base) 70%, transparent), var(--sunken));}
+  .phone{min-height:880px;max-height:880px;border-radius:44px;
+         box-shadow:0 24px 60px rgba(0,0,0,.28),0 0 0 10px #111318,0 0 0 11px #303440;}
+}
+
+/* ---------- status bar ---------- */
+.statusbar{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 26px 4px;font-size:15px;font-weight:600;color:var(--t1);flex:0 0 auto;}
+.statusbar .sb-r{display:flex;align-items:center;gap:5px}
+.statusbar svg{display:block}
+
+/* ---------- header ---------- */
+.hdr{flex:0 0 auto;padding:6px 12px 10px;display:flex;align-items:flex-end;
+     justify-content:space-between;gap:8px;}
+.hdr h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-0.4px;color:var(--t1)}
+.hdr .sub{margin:2px 0 0;font-size:13px;color:var(--t3);font-weight:500}
+
+/* ---------- scroll region ---------- */
+.feed{flex:1 1 auto;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+      padding:0 12px 108px;scroll-behavior:smooth;}
+.feed::-webkit-scrollbar{width:0}
+
+/* ---------- cards ---------- */
+.card{background:var(--raised);border:1px solid var(--bLow);border-radius:16px;
+      padding:16px;box-shadow:var(--cardShadow);margin-bottom:12px;}
+.card.hero{border-radius:24px;padding:20px 16px 14px}
+.card.tinted-warn{
+  background:color-mix(in srgb, var(--fair) calc(var(--tint)*100%), var(--raised));
+  border-color:color-mix(in srgb, var(--fair) calc(var(--tintB)*100%), var(--bLow));
+}
+.sect-gap{height:12px}
+
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--t3);margin:0 0 6px}
+.slotlabel{display:flex;align-items:baseline;gap:8px;margin:0 0 6px}
+.chip{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--t2);
+      background:var(--overlay);border:1px solid var(--bLow);border-radius:9999px;
+      padding:3px 9px;white-space:nowrap}
+
+.lede{margin:0;font-size:22px;line-height:1.24;font-weight:600;letter-spacing:-0.3px;color:var(--t1)}
+.lede .num{font-weight:700}
+.cause{margin:12px 0 0;font-size:15px;line-height:1.35;color:var(--t2)}
+.said{margin:0;font-size:17px;line-height:1.35;color:var(--t2)}
+
+/* ---------- positional rail ---------- */
+.rail-wrap{margin:16px 0 0;position:relative;padding-bottom:9px}
+.rail{position:relative;height:46px;border-radius:12px;background:var(--subtle);
+      overflow:hidden;border:1px solid var(--bLow)}
+.rail.sm{height:26px;border-radius:9px}
+.rail-ticks{position:absolute;inset:0;
+  background-image:repeating-linear-gradient(90deg,
+    color-mix(in srgb,var(--bMed) 70%,transparent) 0 1px, transparent 1px var(--tick));}
+/* the goal band sits ABOVE the fill so the one reference range is never occluded */
+.rail-band{position:absolute;top:0;bottom:0;z-index:2;
+  background:color-mix(in srgb,var(--t1) 20%,transparent);
+  border-left:2px solid color-mix(in srgb,var(--t1) 45%,transparent);
+  border-right:2px solid color-mix(in srgb,var(--t1) 45%,transparent);}
+.rail-fill{position:absolute;left:0;top:0;bottom:0;width:0;
+  -webkit-mask-image:linear-gradient(90deg,#000 var(--stop),transparent 100%);
+  mask-image:linear-gradient(90deg,#000 var(--stop),transparent 100%);
+  transition:width 700ms cubic-bezier(.22,1,.36,1);}
+.tone-good .rail-fill,.rail-fill.tone-good{background:var(--good)}
+.tone-fair .rail-fill,.rail-fill.tone-fair{background:var(--fair)}
+.tone-poor .rail-fill,.rail-fill.tone-poor{background:var(--poor)}
+.rail-fill.tone-none{background:var(--bMed)}
+.rail-mark{position:absolute;top:3px;bottom:3px;width:3px;border-radius:2px;z-index:3;
+  background:var(--t1);opacity:1;transform:translateX(-1.5px);
+  box-shadow:0 0 0 1.5px color-mix(in srgb,var(--raised) 80%,transparent);
+  transition:left 700ms cubic-bezier(.22,1,.36,1);}
+.rail-notch{position:absolute;bottom:0;width:0;height:0;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-bottom:7px solid var(--t1);transform:translateX(-5px);
+  transition:left 700ms cubic-bezier(.22,1,.36,1);}
+.legend{display:flex;align-items:center;gap:7px;margin:5px 0 0;font-size:13px;color:var(--t3);font-weight:500}
+.legend .sw{width:13px;height:13px;border-radius:3px;background:color-mix(in srgb,var(--t1) 12%,transparent);
+  border-left:2px solid var(--bMed);border-right:2px solid var(--bMed);flex:0 0 auto}
+.legend .dot{width:8px;height:8px;border-radius:9999px;background:var(--neutralMark);flex:0 0 auto}
+.legend .num{color:var(--t2);font-weight:600}
+
+/* ---------- buttons ---------- */
+.actions{display:flex;gap:8px;margin:14px 0 0;align-items:stretch}
+.btn{appearance:none;border:1px solid var(--bLow);background:var(--overlay);color:var(--t1);
+  font:inherit;font-size:16px;font-weight:600;border-radius:12px;min-height:44px;
+  padding:10px 16px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;transition:transform 80ms ease-in,background 160ms ease,opacity 160ms ease;}
+.btn:active{transform:scale(.965);transition:transform 80ms ease-in}
+.btn.primary{background:var(--primary);border-color:transparent;color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#08080A}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--primary);padding:10px 8px}
+.btn.grow{flex:1 1 auto}
+.btn.done{background:color-mix(in srgb,var(--good) 16%,var(--raised));
+  border-color:color-mix(in srgb,var(--good) 34%,var(--bLow));color:var(--good)}
+.btn svg{flex:0 0 auto}
+:focus-visible{outline:2.5px solid var(--primary);outline-offset:2px;border-radius:10px}
+
+/* ---------- expander ---------- */
+.exp{appearance:none;width:100%;background:none;border:0;padding:0;margin:0;font:inherit;
+  color:inherit;text-align:left;cursor:pointer;display:block;min-height:44px;
+  transition:transform 80ms ease-in}
+.exp:active{transform:scale(.985)}
+.exp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.exp-row .lbl{font-size:15px;font-weight:600;color:var(--primary)}
+.chev{transition:transform 250ms ease-in-out;color:var(--primary);flex:0 0 auto}
+.exp[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.panel{overflow:hidden;max-height:0;opacity:0;
+  transition:max-height 280ms ease-in-out,opacity 220ms ease-in-out,margin 280ms ease-in-out;}
+.panel.open{max-height:760px;opacity:1;margin-top:4px}
+.panel p{margin:0 0 10px;font-size:15px;line-height:1.42;color:var(--t2)}
+.panel p:last-child{margin-bottom:0}
+.hr{height:1px;background:var(--bLow);margin:12px 0}
+
+/* watched-signal rows */
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--bLow);font-size:15px}
+.wrow:last-child{border-bottom:0;padding-bottom:0}
+.wrow .k{color:var(--t1);font-weight:500}
+.wrow .v{color:var(--t3);font-weight:500;text-align:right}
+.wrow .v.out{color:var(--fair);font-weight:600}
+
+/* past mini rows */
+.past-row{margin:14px 0 0}
+.past-row:first-child{margin-top:6px}
+.past-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 7px}
+.past-head .k{font-size:15px;font-weight:600;color:var(--t1)}
+.past-head .n{font-size:20px;font-weight:700;color:var(--t1)}
+.past-said{margin:7px 0 0;font-size:14px;color:var(--t2)}
+
+/* proof rows */
+.proof{padding:12px 0;border-bottom:1px solid var(--bLow)}
+.proof:last-child{border-bottom:0;padding-bottom:0}
+.proof .k{font-size:15px;font-weight:600;color:var(--t1);margin:0}
+.proof .v{font-size:15px;color:var(--t2);margin:4px 0 0;line-height:1.4}
+
+/* ---------- attention card ---------- */
+.warn-head{display:flex;gap:11px;align-items:flex-start}
+.warn-ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;
+  align-items:center;justify-content:center;color:var(--fair);
+  background:color-mix(in srgb,var(--fair) 16%,transparent);margin-top:1px}
+.warn-title{margin:0;font-size:19px;line-height:1.26;font-weight:700;letter-spacing:-0.2px;color:var(--t1)}
+.warn-body{margin:11px 0 0;font-size:15px;line-height:1.44;color:var(--t2)}
+.warn-anchor{margin:9px 0 0;font-size:15px;line-height:1.44;color:var(--t3)}
+
+/* ---------- chart ---------- */
+.chart{width:100%;height:auto;display:block;margin:14px 0 0;overflow:visible}
+.chart text{font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;font-size:12px;
+  font-weight:600;fill:var(--t3);font-variant-numeric:tabular-nums}
+.chart .band{fill:color-mix(in srgb,var(--t1) 8%,transparent)}
+.chart .bandedge{stroke:var(--bMed);stroke-width:1.5}
+.chart .ghost{fill:none;stroke:var(--bMed);stroke-width:1.5;stroke-dasharray:4 4}
+.chart .night{fill:var(--neutralMark)}
+.chart .divider{stroke:var(--bMed);stroke-width:1;stroke-dasharray:2 4}
+.chart .barfill{fill:var(--neutralMark);opacity:.55}
+.chart .barfill.hi{opacity:.9}
+
+/* ---------- footer ---------- */
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:4px 4px 0;margin-bottom:8px}
+.foot .stamp{font-size:13px;color:var(--t3);font-weight:500}
+
+/* ---------- raw mode ---------- */
+.raw-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  padding:13px 0;border-bottom:1px solid var(--bLow)}
+.raw-row:last-child{border-bottom:0}
+.raw-row .k{font-size:16px;color:var(--t2)}
+.raw-row .v{font-size:17px;font-weight:600;color:var(--t1);white-space:nowrap}
+.raw-note{margin:0 0 4px;font-size:14px;color:var(--t3);line-height:1.4}
+
+/* ---------- skeleton ---------- */
+.sk{background:linear-gradient(90deg,var(--bLow) 0%,var(--subtle) 50%,var(--bLow) 100%);
+  background-size:220% 100%;animation:shim 1250ms linear infinite;border-radius:8px}
+@keyframes shim{0%{background-position:120% 0}100%{background-position:-120% 0}}
+
+/* ---------- empty ---------- */
+.empty-shape{height:46px;border-radius:12px;border:2px dashed var(--bMed);background:transparent}
+
+/* ---------- tab bar ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;
+  padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--base) 78%,transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+  border-top:1px solid var(--bLow);z-index:5}
+.tab{flex:1 1 0;appearance:none;background:none;border:0;font:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;min-height:48px;
+  padding:4px 0;color:var(--t3);transition:transform 80ms ease-in,color 160ms ease}
+.tab:active{transform:scale(.94)}
+.tab .lb{font-size:11px;font-weight:600;letter-spacing:.01em}
+.tab[aria-current="page"]{color:var(--primary)}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{position:fixed;left:10px;bottom:10px;z-index:60;width:34px;height:34px;
+  border-radius:9999px;border:1px solid var(--bMed);background:var(--overlay);color:var(--t3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.5;
+  transition:opacity 160ms ease}
+.devbtn:hover,.devbtn:focus-visible{opacity:1}
+.devpanel{position:fixed;left:10px;bottom:52px;z-index:60;width:212px;padding:12px;
+  background:var(--overlay);border:1px solid var(--bMed);border-radius:14px;
+  box-shadow:0 12px 32px rgba(0,0,0,.24);display:none}
+.devpanel.open{display:block}
+.devpanel h4{margin:0 0 5px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--t3);font-weight:700}
+.devpanel .grp{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px}
+.devpanel .grp:last-child{margin-bottom:0}
+.dv{appearance:none;border:1px solid var(--bLow);background:var(--raised);color:var(--t2);
+  font:inherit;font-size:11px;font-weight:600;border-radius:7px;padding:5px 8px;cursor:pointer}
+.dv[data-on="1"]{background:var(--primary);border-color:transparent;color:#fff}
+:root[data-theme="dark"] .dv[data-on="1"]{color:#08080A}
+
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+
+    <!-- status bar -->
+    <div class="statusbar" aria-hidden="true">
+      <span class="num">9:41</span>
+      <span class="sb-r">
+        <svg width="18" height="12" viewBox="0 0 18 12"><g fill="currentColor">
+          <rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.6" y="6" width="3" height="6" rx="1"/>
+          <rect x="9.2" y="3.4" width="3" height="8.6" rx="1"/><rect x="13.8" y="0" width="3" height="12" rx="1"/>
+        </g></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M1 4.2a10 10 0 0 1 14 0"/><path d="M3.6 6.9a6.4 6.4 0 0 1 8.8 0"/></g>
+          <circle cx="8" cy="10" r="1.3" fill="currentColor"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12">
+          <rect x="0.6" y="0.6" width="20" height="10.8" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.1"/>
+          <rect x="2.2" y="2.2" width="14.4" height="7.6" rx="2" fill="currentColor"/>
+          <path d="M22.4 4.2v3.6a2.1 2.1 0 0 0 0-3.6z" fill="currentColor" fill-opacity=".45"/></svg>
+      </span>
+    </div>
+
+    <!-- header -->
+    <header class="hdr">
+      <div>
+        <h1 id="hdrTitle">Wednesday</h1>
+        <p class="sub" id="hdrSub">Morning</p>
+      </div>
+    </header>
+
+    <!-- scrolling content, rendered by JS -->
+    <main class="feed" id="feed" tabindex="-1"></main>
+
+    <!-- tab bar -->
+    <nav class="tabbar" aria-label="Main">
+      <button class="tab" id="tabToday" aria-current="page" data-tab="Today">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="13.5" r="4"/><path d="M3 19.5h18M12 4v2.6M5.6 7.2l1.8 1.8M18.4 7.2l-1.8 1.8"/></svg>
+        <span class="lb">Today</span>
+      </button>
+      <button class="tab" data-tab="Live">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.5 12h4l2-5.5 3.6 11L15 12h6.5"/></svg>
+        <span class="lb">Live</span>
+      </button>
+      <button class="tab" data-tab="Explore">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.6"/><path d="M15.2 8.8l-2 4.4-4.4 2 2-4.4z"/></svg>
+        <span class="lb">Explore</span>
+      </button>
+      <button class="tab" data-tab="Settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+          <path d="M3.5 7h17M3.5 12h17M3.5 17h17"/><circle cx="9" cy="7" r="2.1" fill="var(--base)"/>
+          <circle cx="15" cy="12" r="2.1" fill="var(--base)"/><circle cx="8" cy="17" r="2.1" fill="var(--base)"/></svg>
+        <span class="lb">Settings</span>
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+<!-- dev toolbar (not part of the design under judgement) -->
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-controls="devpanel" aria-label="Prototype controls">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <path d="M4 7h16M4 12h16M4 17h16"/></svg>
+</button>
+<div class="devpanel" id="devpanel" role="group" aria-label="Prototype controls">
+  <h4>Theme</h4>
+  <div class="grp" data-k="theme">
+    <button class="dv" data-v="light">Light</button>
+    <button class="dv" data-v="dark">Dark</button>
+    <button class="dv" data-v="system">System</button>
+  </div>
+  <h4>Data state</h4>
+  <div class="grp" data-k="data">
+    <button class="dv" data-v="loaded">Loaded</button>
+    <button class="dv" data-v="loading">Loading</button>
+    <button class="dv" data-v="empty">Empty</button>
+  </div>
+  <h4>Hero source</h4>
+  <div class="grp" data-k="hardware">
+    <button class="dv" data-v="watch">Watch</button>
+    <button class="dv" data-v="phone">iPhone only</button>
+    <button class="dv" data-v="newuser">New user</button>
+  </div>
+  <h4>Outlook</h4>
+  <div class="grp" data-k="outlook">
+    <button class="dv" data-v="good">Good</button>
+    <button class="dv" data-v="ordinary">Ordinary</button>
+    <button class="dv" data-v="attention">Attention</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   State
+   ============================================================ */
+var S = {
+  theme:'system',
+  data:'loaded',        // loaded | loading | empty
+  hardware:'watch',     // watch | phone | newuser
+  outlook:'ordinary',   // good | ordinary | attention
+  raw:false,
+  open:{},              // expander id -> bool
+  reminded:false
+};
+
+var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme(){
+  var t = S.theme === 'system' ? (mq.matches ? 'dark' : 'light') : S.theme;
+  document.documentElement.setAttribute('data-theme', t);
+}
+mq.addEventListener('change', function(){ if(S.theme==='system'){ applyTheme(); render(); } });
+
+/* ============================================================
+   Fictional user — Alex, 34.  All states derive from this.
+   Wake 6:45.  Sleep need 7h 40m.  Last night 6h 12m (in bed 12:15am).
+   Sleep debt 4h 20m over 5 nights.  8,400 steps yesterday.
+   Resting heart rate 58 bpm (usual 55).  Bedtime 40 min later this week.
+   ============================================================ */
+
+/* Bedtimes are minutes after 10:00pm, oldest first, 14 nights.
+   All three outlooks share a 14-night median near 90 (11:30pm), so the
+   "your usual hour" band on the chart is 11pm to midnight in every state.
+   Every derived figure below assumes 15 minutes to fall asleep and a 6:45 wake. */
+var NIGHT = {
+  ordinary:{
+    bedtimes:[72,82,48,95,71,52,88,90,105,100,118,99,128,138],
+    lastAsleep:372, lastTxt:'6h 12m', needMin:460, needTxt:'7h 40m',
+    gap:'<span class="num">1h 28m</span> under your need of <span class="num">7h 40m</span>.',
+    gapTone:'fair', target:50, rhr:'58 bpm', hrv:'48 ms', inbed:'12:18 am'
+  },
+  good:{
+    bedtimes:[82,95,78,100,88,80,92,90,98,85,94,84,76,58],
+    lastAsleep:452, lastTxt:'7h 32m', needMin:440, needTxt:'7h 20m',
+    gap:'<span class="num">12m</span> past your need of <span class="num">7h 20m</span>.',
+    gapTone:'good', target:70, rhr:'55 bpm', hrv:'56 ms', inbed:'10:58 pm'
+  },
+  attention:{
+    bedtimes:[68,82,48,95,71,52,88,90,105,100,118,120,140,152],
+    lastAsleep:358, lastTxt:'5h 58m', needMin:490, needTxt:'8h 10m',
+    gap:'<span class="num">2h 12m</span> under your need of <span class="num">8h 10m</span>.',
+    gapTone:'poor', target:45, rhr:'61 bpm', hrv:'41 ms', inbed:'12:32 am'
+  }
+};
+function night(){ return NIGHT[S.outlook] || NIGHT.ordinary; }
+
+// minutes after 10:00pm -> spoken clock time, for the chart's screen-reader label
+function clockOf(m){
+  var total=(22*60+m)%(24*60), h=Math.floor(total/60), mm=total%60;
+  return (h%12===0?12:h%12)+':'+(mm<10?'0'+mm:mm)+(h<12?' am':' pm');
+}
+
+// steps per day, 14 days, last entry is today so far
+var STEPDAYS  = [6100,9200,7400,5300,8800,10400,6900,7700,4900,9100,9600,7100,8400,3100];
+
+/* ---- hero definitions ------------------------------------------------- */
+/* rail units: watch = minutes asleep, 0..600.  phone/new = steps, 0..12000 */
+
+var HERO = {
+  watch: {
+    ordinary: {
+      label:'Tonight', chip:null,
+      lede:'In bed by <span class="num">10:50</span> for a full night.',
+      rail:{max:600,tick:'10%',fill:460,taper:60,bandLo:440,bandHi:480,tone:'good'},
+      legend:'need <span class="num">7h 40m</span>',
+      cause:'Bedtime slid <span class="num">40</span> minutes this week.',
+      aria:'Sleep you would get tonight, landing inside your need of 7 hours 40 minutes. The soft end of the bar is how much it can shift.',
+      why:['You wake at 6:45 most days and you need about 7h 40m asleep. You usually take 15 minutes to drop off, so lights out at 10:50 covers it.',
+           'The soft end of the bar is how far this can shift from one night to the next. It is drawn from your own spread, not from a percentage.',
+           'None of this is a prediction. It is your wake time minus your need. Only the softness of the edge comes from a model.'],
+      bell:'10:35'
+    },
+    good: {
+      label:'Tonight', chip:null,
+      lede:'In bed by <span class="num">11:10</span> for a full night.',
+      rail:{max:600,tick:'10%',fill:440,taper:48,bandLo:420,bandHi:460,tone:'good'},
+      legend:'need <span class="num">7h 20m</span>',
+      cause:'Bedtime has held steady all week.',
+      aria:'Sleep you would get tonight, landing inside your need of 7 hours 20 minutes. The soft end of the bar is how much it can shift.',
+      why:['You wake at 6:45 most days. With no sleep to catch up on, your need sits at the low end, about 7h 20m, so you have room tonight.',
+           'The soft end of the bar is how far this can shift from one night to the next. It is drawn from your own spread, not from a percentage.',
+           'None of this is a prediction. It is your wake time minus your need. Only the softness of the edge comes from a model.'],
+      bell:'10:55'
+    },
+    attention: {
+      label:'Tonight', chip:null,
+      lede:'In bed by <span class="num">10:45</span> gets you close.',
+      rail:{max:600,tick:'10%',fill:465,taper:80,bandLo:470,bandHi:510,tone:'fair'},
+      legend:'need <span class="num">8h 10m</span>',
+      cause:'Five short nights have raised what you need.',
+      aria:'Sleep you would get tonight, a little short of your raised need of 8 hours 10 minutes. The soft end of the bar is how much it can shift.',
+      why:['Your need rises while your body is working harder, so tonight it is about 8h 10m rather than the usual 7h 40m.',
+           'One night cannot clear five short ones. The earliest bed you can manage moves you the furthest, and the rest comes back over the week.',
+           'The soft end of the bar is how far this can shift from one night to the next. It is wider tonight because your last few nights have been all over the place.'],
+      bell:'10:30'
+    }
+  },
+  phone: {
+    all: {
+      label:'Rest of today', chip:'iPhone only',
+      lede:'A walk before <span class="num">6</span> clears your goal.',
+      rail:{max:12000,tick:'16.6667%',fill:8200,taper:2800,bandLo:7000,bandHi:12000,tone:'good'},
+      legend:'goal <span class="num">7,000</span>',
+      cause:'<span class="num">900</span> steps behind your usual Tuesday.',
+      aria:'Steps you would reach by tonight, landing past your goal of 7,000. The soft end of the bar is how much it can shift.',
+      why:['Without a watch there is no sleep or heart data, so tonight cannot be about bedtime. Steps are the one thing your phone measures well on its own.',
+           'The soft end of the bar is wider here because a day can still go either way from mid-morning.',
+           'Your goal sits at 7,000 because that is where the benefit of walking more starts to level off.'],
+      bell:'5:00'
+    }
+  },
+  newuser: {
+    all: {
+      label:'Rest of today', chip:'Day 1',
+      lede:'A walk before <span class="num">6</span> passes your goal.',
+      rail:{max:12000,tick:'16.6667%',fill:8000,taper:5600,bandLo:7000,bandHi:12000,tone:'none'},
+      legend:'goal <span class="num">7,000</span>',
+      cause:'Nothing yet to compare with.',
+      aria:'Steps you might reach by tonight. The bar fades over a wide range because there is no history to narrow it.',
+      why:['This is your first day, so the bar fades over a wide range. That width is the honest answer: there is nothing of yours to narrow it with yet.',
+           'Your goal sits at 7,000 because that is where the benefit of walking more starts to level off. It becomes your own number once you have a week of days.',
+           'Sleep, heart rate and bedtime need about a week of nights before they can say anything true.'],
+      bell:'5:00'
+    }
+  }
+};
+
+function hero(){
+  var h = HERO[S.hardware];
+  return h.all ? h.all : h[S.outlook];
+}
+
+/* ---- tomorrow slot ---------------------------------------------------- */
+var TOMORROW = {
+  watch:{
+    good:      'Nothing unusual is building.',
+    ordinary:  'Nothing new is building.',
+    attention: 'Everything else is inside your usual range.'
+  },
+  phone:{ all:'Your walking has held steady this fortnight.' },
+  newuser:{ all:'Your pattern fills in over the next week.' }
+};
+function tomorrowLine(){
+  var t = TOMORROW[S.hardware];
+  return t.all ? t.all : t[S.outlook];
+}
+
+var WATCHED = {
+  watch:{
+    good:[['Resting heart rate','inside your usual'],['Heart rate variability','inside your usual'],['Sleep length','inside your usual'],['Steps','inside your usual']],
+    ordinary:[['Resting heart rate','inside your usual'],['Heart rate variability','inside your usual'],['Sleep length','short, five nights',true],['Steps','inside your usual']],
+    attention:[['Resting heart rate','above your usual',true],['Heart rate variability','below your usual',true],['Sleep length','short, five nights',true],['Steps','inside your usual'],['Breathing rate','inside your usual']]
+  },
+  phone:{ all:[['Steps','inside your usual'],['Walking distance','inside your usual'],['Walking speed','inside your usual'],['Sleep and heart','not measured on a phone']] },
+  newuser:{ all:[['Steps','counting from today'],['Everything else','needs about a week']] }
+};
+function watched(){ var w = WATCHED[S.hardware]; return w.all ? w.all : w[S.outlook]; }
+
+/* ============================================================
+   Rendering helpers
+   ============================================================ */
+function pct(v,max){ return (v/max)*100; }
+
+function railHTML(r, aria){
+  var end   = r.fill + r.taper/2;
+  var wPct  = Math.min(100, pct(end, r.max));
+  var stop  = Math.max(0, 100 - (r.taper / end) * 100);
+  var band  = 'left:'+pct(r.bandLo,r.max).toFixed(2)+'%;width:'+(pct(r.bandHi,r.max)-pct(r.bandLo,r.max)).toFixed(2)+'%';
+  var markL = pct(r.fill, r.max).toFixed(2)+'%';
+  return ''+
+  '<div class="rail-wrap">'+
+    '<div class="rail" role="img" aria-label="'+aria+'" style="--tick:'+r.tick+'">'+
+      '<div class="rail-ticks"></div>'+
+      '<div class="rail-band" style="'+band+'"></div>'+
+      '<div class="rail-fill tone-'+r.tone+'" data-w="'+wPct.toFixed(2)+'" style="--stop:'+stop.toFixed(2)+'%"></div>'+
+      '<div class="rail-mark" style="left:'+markL+'"></div>'+
+    '</div>'+
+    '<div class="rail-notch" style="left:'+markL+'"></div>'+
+  '</div>';
+}
+
+function miniRail(r, aria){
+  var end  = r.fill + (r.taper||0)/2;
+  var wPct = Math.min(100, pct(end, r.max));
+  var stop = r.taper ? Math.max(0, 100 - (r.taper/end)*100) : 100;
+  var band = 'left:'+pct(r.bandLo,r.max).toFixed(2)+'%;width:'+(pct(r.bandHi,r.max)-pct(r.bandLo,r.max)).toFixed(2)+'%';
+  return '<div class="rail sm" role="img" aria-label="'+aria+'" style="--tick:'+r.tick+'">'+
+    '<div class="rail-ticks"></div>'+
+    '<div class="rail-band" style="'+band+'"></div>'+
+    '<div class="rail-fill tone-'+r.tone+'" data-w="'+wPct.toFixed(2)+'" style="--stop:'+stop.toFixed(2)+'%"></div>'+
+    '<div class="rail-mark" style="left:'+pct(r.fill,r.max).toFixed(2)+'%"></div>'+
+  '</div>';
+}
+
+function chev(){
+  return '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+}
+
+function expander(id, label, inner){
+  var on = !!S.open[id];
+  return '<button class="exp" data-exp="'+id+'" aria-expanded="'+on+'" aria-controls="p-'+id+'">'+
+      '<div class="exp-row"><span class="lbl">'+label+'</span>'+chev()+'</div>'+
+    '</button>'+
+    '<div class="panel'+(on?' open':'')+'" id="p-'+id+'" role="region">'+inner+'</div>';
+}
+
+/* ---- the chart -------------------------------------------------------- */
+function bedtimeChart(){
+  // y: minutes after 10pm, domain 20..160 -> y 14..126
+  function Y(v){ return 14 + (v-20)*0.8; }
+  var N = night(), BEDTIMES = N.bedtimes;
+  var s = '', i, x;
+  s += '<rect class="band" x="46" y="'+Y(60).toFixed(1)+'" width="200" height="'+(Y(120)-Y(60)).toFixed(1)+'" rx="4"/>';
+  s += '<line class="bandedge" x1="46" y1="'+Y(60).toFixed(1)+'" x2="246" y2="'+Y(60).toFixed(1)+'"/>';
+  s += '<line class="bandedge" x1="46" y1="'+Y(120).toFixed(1)+'" x2="246" y2="'+Y(120).toFixed(1)+'"/>';
+  s += '<text x="42" y="'+(Y(60)+3.6).toFixed(1)+'" text-anchor="end">11pm</text>';
+  s += '<text x="42" y="'+(Y(120)+3.6).toFixed(1)+'" text-anchor="end">12am</text>';
+  for(i=0;i<BEDTIMES.length;i++){
+    x = 52 + i*(188/13);
+    s += '<circle class="night" cx="'+x.toFixed(1)+'" cy="'+Y(BEDTIMES[i]).toFixed(1)+'" r="3.4"/>';
+  }
+  s += '<line class="divider" x1="258" y1="8" x2="258" y2="132"/>';
+  // tonight: a tapered block, never a dot, because it is a window not a time
+  var target = N.target;
+  var spread = S.outlook==='attention' ? 22 : 18;
+  s += '<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">'+
+       '<stop offset="0%" stop-color="var(--primary)" stop-opacity="0"/>'+
+       '<stop offset="50%" stop-color="var(--primary)" stop-opacity=".85"/>'+
+       '<stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>'+
+       '</linearGradient></defs>';
+  var top = Y(Math.max(20,target-spread)), bot = Y(Math.min(160,target+spread));
+  s += '<line class="divider" x1="283" y1="'+(top-6).toFixed(1)+'" x2="283" y2="'+(bot+6).toFixed(1)+'"/>';
+  s += '<rect x="270" y="'+top.toFixed(1)+'" width="26" height="'+(bot-top).toFixed(1)+'" rx="9" fill="url(#tg)"/>';
+  s += '<text x="52" y="147" text-anchor="start">two weeks ago</text>';
+  s += '<text x="294" y="147" text-anchor="end">tonight</text>';
+  var drift = S.outlook==='good'
+    ? 'and the last few nights sit right where they usually do'
+    : 'and the last few nights sit later than that';
+  return '<svg class="chart" viewBox="0 0 340 152" role="img" aria-label="Your bedtime for the last fourteen nights. Most nights fall between 11pm and midnight, '+drift+'. Tonight\'s target sits at '+clockOf(target)+', drawn as a soft band rather than a dot because it is a window, not an exact time.">'+s+'</svg>';
+}
+
+function stepsChart(newUser){
+  function Y(v){ return 126 - (v/12000)*112; }
+  var s='', i, x, h;
+  s += '<rect class="band" x="46" y="'+Y(12000).toFixed(1)+'" width="248" height="'+(Y(7000)-Y(12000)).toFixed(1)+'" rx="4"/>';
+  s += '<line class="bandedge" x1="46" y1="'+Y(7000).toFixed(1)+'" x2="294" y2="'+Y(7000).toFixed(1)+'"/>';
+  if(newUser){
+    // empty goal-shapes, not blank space: a shape that says "fill me"
+    for(i=0;i<13;i++){
+      x = 50 + i*(244/14);
+      s += '<rect class="ghost" x="'+x.toFixed(1)+'" y="'+Y(7000).toFixed(1)+'" width="11" height="'+(126-Y(7000)).toFixed(1)+'" rx="3"/>';
+    }
+    x = 50 + 13*(244/14); h = 126 - Y(3100);
+    s += '<rect class="barfill hi" x="'+x.toFixed(1)+'" y="'+Y(3100).toFixed(1)+'" width="11" height="'+h.toFixed(1)+'" rx="3"/>';
+    s += '<text x="52" y="147" text-anchor="start">nothing here yet</text>';
+  } else {
+    for(i=0;i<STEPDAYS.length;i++){
+      x = 50 + i*(244/14);
+      h = 126 - Y(STEPDAYS[i]);
+      s += '<rect class="barfill'+(i===STEPDAYS.length-1?' hi':'')+'" x="'+x.toFixed(1)+'" y="'+Y(STEPDAYS[i]).toFixed(1)+'" width="11" height="'+h.toFixed(1)+'" rx="3"/>';
+    }
+    s += '<text x="52" y="147" text-anchor="start">two weeks ago</text>';
+  }
+  s += '<text x="294" y="147" text-anchor="end">today</text>';
+  var lbl = newUser
+    ? 'Your steps against your goal of seven thousand. Only today has a bar; the outlines to its left are the days still to come.'
+    : 'Your steps for the last fourteen days against your goal of seven thousand. Today is the short bar on the right and is still filling.';
+  return '<svg class="chart" viewBox="0 0 340 152" role="img" aria-label="'+lbl+'">'+s+'</svg>';
+}
+
+function chartHTML(){
+  if(S.hardware==='watch')   return bedtimeChart();
+  if(S.hardware==='phone')   return stepsChart(false);
+  return stepsChart(true);
+}
+function chartLegend(){
+  if(S.hardware==='watch'){
+    return '<div class="legend"><span class="sw"></span><span>your usual hour</span>'+
+           '<span style="width:10px"></span><span class="dot"></span><span>each night</span></div>';
+  }
+  return '<div class="legend"><span class="sw"></span><span>your goal, <span class="num">7,000</span> and up</span></div>';
+}
+
+/* ============================================================
+   Slots
+   ============================================================ */
+
+/* SLOT 1 — attention.  Renders only when something is actually building. */
+function slotAttention(){
+  if(!(S.hardware==='watch' && S.outlook==='attention')) return '';
+  return '<section class="card tinted-warn" aria-labelledby="warnT">'+
+    '<div class="warn-head">'+
+      '<span class="warn-ic" aria-hidden="true">'+
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12h4l2-5 3.6 11L15 12h6.5"/></svg>'+
+      '</span>'+
+      '<h2 class="warn-title" id="warnT">Resting heart rate has been up for three nights</h2>'+
+    '</div>'+
+    '<p class="warn-body">It is <span class="num">6</span> bpm above your usual and your heart rate variability is down with it. That pairing shows up before a cold, and after a hard week.</p>'+
+    '<p class="warn-anchor">Doctors are not usually concerned by this on its own. It matters if you also feel unwell.</p>'+
+  '</section>';
+}
+
+/* SLOT 2 — tonight.  The hero.  The only component that instructs. */
+function slotHero(){
+  var h = hero();
+  var bellLabel = S.reminded ? 'Reminder set' : 'Remind me';
+  var bellIcon = S.reminded
+    ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>'
+    : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 4.2 1.2 5.6 1.8 6.3.3.4 0 1-.5 1H4.7c-.5 0-.8-.6-.5-1C4.8 14.6 6 13.2 6 9z"/><path d="M10 19.4a2.2 2.2 0 0 0 4 0"/></svg>';
+
+  var whyInner = '';
+  for(var i=0;i<h.why.length;i++){ whyInner += '<p>'+h.why[i]+'</p>'; }
+  whyInner += '<p style="color:var(--t3)">Reminder would land at <span class="num">'+h.bell+'</span>.</p>';
+
+  return '<section class="card hero" aria-labelledby="heroT">'+
+    '<div class="slotlabel">'+
+      '<p class="eyebrow" id="heroT" style="margin:0">'+h.label+'</p>'+
+      (h.chip ? '<span class="chip">'+h.chip+'</span>' : '')+
+    '</div>'+
+    '<p class="lede">'+h.lede+'</p>'+
+    railHTML(h.rail, h.aria)+
+    '<div class="legend"><span class="sw"></span><span>'+h.legend+'</span></div>'+
+    '<p class="cause">'+h.cause+'</p>'+
+    '<div class="actions">'+
+      '<button class="btn grow '+(S.reminded?'done':'primary')+'" data-act="remind">'+bellIcon+'<span>'+bellLabel+'</span></button>'+
+      '<button class="btn ghost" data-exp="why" aria-expanded="'+(!!S.open.why)+'" aria-controls="p-why" aria-label="Why this time">Why'+chev()+'</button>'+
+    '</div>'+
+    '<div class="panel'+(S.open.why?' open':'')+'" id="p-why" role="region" aria-label="Why this time">'+
+      '<div class="hr"></div>'+whyInner+
+    '</div>'+
+  '</section>';
+}
+
+/* SLOT 3 — tomorrow.  Anticipation, never prediction.  Holds the chart. */
+function slotTomorrow(){
+  var rows = watched(), inner = '', i;
+  for(i=0;i<rows.length;i++){
+    inner += '<div class="wrow"><span class="k">'+rows[i][0]+'</span>'+
+             '<span class="v'+(rows[i][2]?' out':'')+'">'+rows[i][1]+'</span></div>';
+  }
+  return '<section class="card" aria-labelledby="tomT">'+
+    '<p class="eyebrow" id="tomT">Tomorrow</p>'+
+    '<p class="said">'+tomorrowLine()+'</p>'+
+    chartHTML()+
+    chartLegend()+
+    '<div class="hr"></div>'+
+    expander('watch','What is being watched','<div style="margin-top:2px">'+inner+'</div>')+
+  '</section>';
+}
+
+/* SLOT 4 — already decided.  The past, demoted on purpose. */
+function slotPast(){
+  var inner;
+  if(S.hardware==='newuser'){
+    inner = '<p style="margin-top:8px">Today is the first day on the record. There is no yesterday to show yet.</p>';
+  } else if(S.hardware==='phone'){
+    inner =
+      '<div class="past-row">'+
+        '<div class="past-head"><span class="k">Steps yesterday</span><span class="n num">8,400</span></div>'+
+        miniRail({max:12000,tick:'16.6667%',fill:8400,bandLo:7000,bandHi:12000,tone:'good'},'8,400 steps yesterday, past your goal of 7,000.')+
+        '<p class="past-said">Past your goal of <span class="num">7,000</span>. An ordinary Tuesday.</p>'+
+      '</div>'+
+      '<div class="past-row">'+
+        '<div class="past-head"><span class="k">Walking distance</span><span class="n num">6.1 km</span></div>'+
+        miniRail({max:10,tick:'20%',fill:6.1,bandLo:5,bandHi:10,tone:'good'},'6.1 kilometres walked yesterday, inside your usual range.')+
+        '<p class="past-said">Inside your usual range for a weekday.</p>'+
+      '</div>';
+  } else {
+    var N = night();
+    inner =
+      '<div class="past-row">'+
+        '<div class="past-head"><span class="k">Sleep last night</span><span class="n num">'+N.lastTxt+'</span></div>'+
+        miniRail({max:600,tick:'10%',fill:N.lastAsleep,bandLo:N.needMin-20,bandHi:N.needMin+20,tone:N.gapTone},
+                 'Sleep last night, '+N.lastTxt+', against your need of '+N.needTxt+'.')+
+        '<p class="past-said">'+N.gap+'</p>'+
+      '</div>'+
+      '<div class="past-row">'+
+        '<div class="past-head"><span class="k">Steps yesterday</span><span class="n num">8,400</span></div>'+
+        miniRail({max:12000,tick:'16.6667%',fill:8400,bandLo:7000,bandHi:12000,tone:'good'},'8,400 steps yesterday, past your goal of 7,000.')+
+        '<p class="past-said">Past your goal of <span class="num">7,000</span>. An ordinary Tuesday.</p>'+
+      '</div>';
+  }
+  var pastSummary = {good:'Last night was full. Yesterday was ordinary.',
+                     ordinary:'Last night was short. Yesterday was ordinary.',
+                     attention:'Last night was well short. Yesterday was ordinary.'};
+  var summary = S.hardware==='newuser' ? 'Nothing behind you yet.'
+              : (S.hardware==='phone' ? 'Yesterday was an ordinary day.'
+                                      : pastSummary[S.outlook]);
+  return '<section class="card" aria-labelledby="pastT">'+
+    '<p class="eyebrow" id="pastT">Already decided</p>'+
+    '<p class="said">'+summary+'</p>'+
+    '<div class="hr"></div>'+
+    expander('past','See last night and yesterday', inner)+
+  '</section>';
+}
+
+/* SLOT 5 — what moves tomorrow.  Aggregate evidence.  Never an instruction. */
+function slotLevers(){
+  var inner;
+  if(S.hardware==='watch'){
+    inner =
+      '<div class="proof"><p class="k">Nights you were in bed before <span class="num">11</span></p>'+
+      '<p class="v"><span class="num">6</span> in the last month. Those nights ran <span class="num">52</span> minutes longer than your other nights.</p></div>'+
+      '<div class="proof"><p class="k">Nights you logged a drink in the evening</p>'+
+      '<p class="v"><span class="num">4</span> in the last month. Those nights ran <span class="num">35</span> minutes shorter.</p></div>';
+  } else if(S.hardware==='phone'){
+    inner =
+      '<div class="proof"><p class="k">Days you walked in the afternoon</p>'+
+      '<p class="v"><span class="num">9</span> in the last month. Those days finished about <span class="num">2,100</span> steps higher.</p></div>'+
+      '<div class="proof"><p class="k">Days you took the stairs at work</p>'+
+      '<p class="v"><span class="num">7</span> in the last month. Those days finished about <span class="num">1,400</span> steps higher.</p></div>';
+  } else {
+    inner = '<p style="margin-top:8px">This fills in once there are a few weeks of days to compare. It only ever shows things you have actually done, counted up, never a single day.</p>';
+  }
+  return '<section class="card" aria-labelledby="levT">'+
+    '<p class="eyebrow" id="levT">What moves tomorrow</p>'+
+    '<p class="said">'+(S.hardware==='newuser' ? 'Nothing counted up yet.' : 'Two things that have changed your nights before.')+'</p>'+
+    '<div class="hr"></div>'+
+    expander('lev','See what your own days show', inner)+
+  '</section>';
+}
+
+/* footer */
+function slotFooter(){
+  return '<div class="foot">'+
+    '<span class="stamp">Updated just now</span>'+
+    '<button class="btn ghost" data-act="raw" style="min-height:44px">Show raw numbers</button>'+
+  '</div>';
+}
+
+/* ============================================================
+   Alternate whole-screen states
+   ============================================================ */
+function rawScreen(){
+  var rows;
+  if(S.hardware==='watch'){
+    var N = night();
+    rows = [['Sleep last night',N.lastTxt],['In bed',N.inbed],['Woke','6:45 am'],
+            ['Resting heart rate',N.rhr],['Heart rate variability (SDNN)',N.hrv],
+            ['Steps yesterday','8,400'],['Steps today','3,100'],['Walking distance yesterday','6.1 km']];
+  } else if(S.hardware==='phone'){
+    rows = [['Steps yesterday','8,400'],['Steps today','3,100'],
+            ['Walking distance yesterday','6.1 km'],['Flights climbed yesterday','11'],
+            ['Walking speed','4.6 km/h']];
+  } else {
+    rows = [['Steps today','3,100'],['Walking distance today','2.2 km'],['Flights climbed today','4']];
+  }
+  var body = '';
+  for(var i=0;i<rows.length;i++){
+    body += '<div class="raw-row"><span class="k">'+rows[i][0]+'</span><span class="v num">'+rows[i][1]+'</span></div>';
+  }
+  return '<section class="card" aria-labelledby="rawT">'+
+    '<p class="eyebrow" id="rawT">Raw numbers</p>'+
+    '<p class="raw-note">No scores, no bands, no advice. Just what the sensors recorded.</p>'+
+    '<div class="hr"></div>'+ body +
+  '</section>'+
+  '<div class="foot"><span class="stamp">Updated just now</span>'+
+  '<button class="btn ghost" data-act="raw" style="min-height:44px">Back to normal view</button></div>';
+}
+
+function loadingScreen(){
+  function sk(w,h,mt){ return '<div class="sk" style="width:'+w+';height:'+h+'px;margin-top:'+mt+'px"></div>'; }
+  return '<section class="card hero" aria-busy="true" aria-label="Tonight, loading">'+
+      sk('62px',13,0)+sk('88%',22,12)+sk('70%',22,7)+
+      '<div class="rail" style="margin-top:16px"><div class="sk" style="width:100%;height:100%"></div></div>'+
+      sk('42%',13,10)+sk('66%',15,12)+
+      '<div class="actions">'+sk('100%',44,0)+'</div>'+
+    '</section>'+
+    '<section class="card" aria-busy="true" aria-label="Tomorrow, loading">'+
+      sk('76px',13,0)+sk('58%',17,10)+
+      '<div class="sk" style="width:100%;height:132px;margin-top:14px"></div>'+
+    '</section>'+
+    '<section class="card" aria-busy="true" aria-label="Already decided, loading">'+
+      sk('104px',13,0)+sk('64%',17,10)+
+    '</section>';
+}
+
+function emptyScreen(){
+  return '<section class="card hero" aria-labelledby="emT">'+
+      '<div class="slotlabel"><p class="eyebrow" id="emT" style="margin:0">Tonight</p>'+
+      '<span class="chip">Not connected</span></div>'+
+      '<p class="lede">Nothing has synced yet.</p>'+
+      '<div class="rail-wrap"><div class="empty-shape" role="img" aria-label="An empty bar, waiting for your first day of data."></div></div>'+
+      '<div class="legend"><span class="sw"></span><span>your goal, once there is a day to fill it</span></div>'+
+      '<p class="cause">Steps start counting the moment you carry your phone.</p>'+
+      '<div class="actions"><button class="btn primary grow" data-act="connect">Connect Health data</button></div>'+
+    '</section>'+
+    '<section class="card"><p class="eyebrow">Tomorrow</p>'+
+      '<p class="said">Your pattern starts the first night you sleep with the watch on.</p>'+
+    '</section>'+
+    '<section class="card"><p class="eyebrow">Already decided</p>'+
+      '<p class="said">Nothing behind you yet.</p>'+
+    '</section>'+
+    '<div class="foot"><span class="stamp">Nothing to show yet</span></div>';
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+var feed = document.getElementById('feed');
+
+function render(){
+  applyTheme();
+  var html;
+  if(S.data==='loading')      html = loadingScreen();
+  else if(S.data==='empty')   html = emptyScreen();
+  else if(S.raw)              html = rawScreen();
+  else html = slotAttention() + slotHero() + slotTomorrow() + slotPast() + slotLevers() + slotFooter();
+
+  feed.innerHTML = html;
+
+  document.getElementById('hdrSub').textContent =
+    S.data==='loading' ? 'Syncing' : (S.raw ? 'Raw numbers' : 'Morning');
+
+  // animate rails in
+  var fills = feed.querySelectorAll('.rail-fill[data-w]');
+  requestAnimationFrame(function(){
+    for(var i=0;i<fills.length;i++){ fills[i].style.width = fills[i].getAttribute('data-w')+'%'; }
+  });
+
+  syncDev();
+}
+
+/* ---- interaction ------------------------------------------------------ */
+feed.addEventListener('click', function(e){
+  var expBtn = e.target.closest('[data-exp]');
+  if(expBtn){
+    var id = expBtn.getAttribute('data-exp');
+    S.open[id] = !S.open[id];
+    expBtn.setAttribute('aria-expanded', String(!!S.open[id]));
+    var panel = document.getElementById('p-'+id);
+    if(panel) panel.classList.toggle('open', !!S.open[id]);
+    return;
+  }
+  var act = e.target.closest('[data-act]');
+  if(!act) return;
+  var a = act.getAttribute('data-act');
+  if(a==='remind'){ S.reminded = !S.reminded; render(); }
+  else if(a==='raw'){ S.raw = !S.raw; S.open = {}; render(); feed.scrollTop = 0; }
+  else if(a==='connect'){
+    S.data='loading'; render();
+    setTimeout(function(){ S.data='loaded'; S.hardware='newuser'; render(); }, 1400);
+  }
+});
+
+/* tab bar */
+var tabs = document.querySelectorAll('.tab');
+for(var t=0;t<tabs.length;t++){
+  tabs[t].addEventListener('click', function(){
+    for(var j=0;j<tabs.length;j++){ tabs[j].removeAttribute('aria-current'); }
+    this.setAttribute('aria-current','page');
+    if(this.getAttribute('data-tab')!=='Today'){
+      document.getElementById('hdrTitle').textContent = this.getAttribute('data-tab');
+      document.getElementById('hdrSub').textContent = 'Not built in this prototype';
+      feed.innerHTML = '<section class="card"><p class="eyebrow">'+this.getAttribute('data-tab')+'</p>'+
+        '<p class="said">This prototype only builds the Home screen. Tap Today to go back.</p></section>';
+    } else {
+      document.getElementById('hdrTitle').textContent = 'Wednesday';
+      render();
+    }
+  });
+}
+
+/* ---- dev toolbar ------------------------------------------------------ */
+var devbtn = document.getElementById('devbtn'), devpanel = document.getElementById('devpanel');
+devbtn.addEventListener('click', function(){
+  var on = devpanel.classList.toggle('open');
+  devbtn.setAttribute('aria-expanded', String(on));
+});
+devpanel.addEventListener('click', function(e){
+  var b = e.target.closest('.dv'); if(!b) return;
+  var k = b.parentNode.getAttribute('data-k');
+  S[k] = b.getAttribute('data-v');
+  if(k!=='theme' && k!=='data'){ S.raw = false; S.open = {}; S.reminded = false; }
+  if(k==='data' && S.data!=='loaded'){ S.raw = false; }
+  document.getElementById('hdrTitle').textContent = 'Wednesday';
+  for(var j=0;j<tabs.length;j++){ tabs[j].removeAttribute('aria-current'); }
+  document.getElementById('tabToday').setAttribute('aria-current','page');
+  render();
+});
+function syncDev(){
+  var groups = devpanel.querySelectorAll('.grp');
+  for(var i=0;i<groups.length;i++){
+    var k = groups[i].getAttribute('data-k');
+    var bs = groups[i].querySelectorAll('.dv');
+    for(var j=0;j<bs.length;j++){
+      bs[j].setAttribute('data-on', bs[j].getAttribute('data-v')===S[k] ? '1' : '0');
+    }
+  }
+}
+
+render();
+</script>
+</body>
+</html>

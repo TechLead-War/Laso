@@ -33,6 +33,13 @@ final class LiveViewModel {
     var isStreaming = false
     var lastUpdate: Date?
 
+    /// The 14-day average intraday active-energy shape, same bucket layout as
+    /// `activity.intradayActiveEnergy`. Empty until the first fetch lands.
+    var usualIntradayEnergy: [Double] = []
+    /// Day guard: yesterday's average shape cannot change during the day, so
+    /// re-running a 14-day statistics collection on every home fetch is waste.
+    @ObservationIgnored private var usualIntradayFetchDay: Date?
+
     private var heartRateQuery: HKAnchoredObjectQuery?
     private var bloodOxygenQuery: HKAnchoredObjectQuery?
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
@@ -247,6 +254,24 @@ final class LiveViewModel {
             guard let self else { return }
             guard let buckets = await healthKitManager.fetchIntradayBuckets(.activeCalories) else { return }
             activity.intradayActiveEnergy = buckets
+        }
+        fetchUsualIntradayEnergyIfNeeded()
+    }
+
+    /// Refreshes the usual-day overlay at most once per day.
+    private func fetchUsualIntradayEnergyIfNeeded() {
+        let today = Date.cal.startOfDay(for: Date())
+        guard usualIntradayFetchDay != today else { return }
+        usualIntradayFetchDay = today
+        Task { [weak self] in
+            guard let self else { return }
+            if let usual = await healthKitManager.fetchUsualIntradayShape(.activeCalories) {
+                usualIntradayEnergy = usual
+            } else {
+                // Locked health DB or empty history: clear the guard so the
+                // next home fetch retries instead of waiting for tomorrow.
+                usualIntradayFetchDay = nil
+            }
         }
     }
 

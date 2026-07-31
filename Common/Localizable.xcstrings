@@ -10,18 +10,22 @@
     "·" : {
 
     },
-    "(%lld)" : {
-
-    },
-    "(+%lld)" : {
-
-    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld"
           }
         }
       }
@@ -193,16 +197,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld more insight%2$@ with Pro"
-          }
-        }
-      }
-    },
-    "%lld win%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld win%2$@"
           }
         }
       }

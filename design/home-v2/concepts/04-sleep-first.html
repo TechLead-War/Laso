@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home — Sleep and body clock first</title>
+<style>
+/* ============================================================
+   Laso Home v2 — Concept 04 "Sleep and body clock first"
+   Tokens verbatim from design/home-v2/DESIGN-TOKENS.md
+   ============================================================ */
+
+:root{
+  --surface-sunken:#E4E4EC;
+  --surface-base:#EEEEF4;
+  --surface-raised:#F8F8FB;
+  --surface-elevated:#FCFCFD;
+  --surface-overlay:#FEFEFF;
+  --surface-subtle:#EAEAF1;
+  --text-primary:#1B1B20;
+  --text-secondary:#44444D;
+  --text-tertiary:#5B5B65;
+  --border-low:#E0E0E8;
+  --border-medium:#C9C9D3;
+  --primary:#0064CC;
+  --accent:#0E7490;
+  --success:#0C7752;
+  --warning:#8A6400;
+  --danger:#C42B33;
+
+  --card-shadow:0 1px 2px rgba(0,0,0,0.12);
+  --tint-wash:rgba(0,100,204,0.04);
+  --tint-border:rgba(0,100,204,0.18);
+  --warn-wash:rgba(138,100,0,0.06);
+  --warn-border:rgba(138,100,0,0.22);
+  --ink-soft:rgba(27,27,32,0.55);
+  --glass:rgba(252,252,253,0.82);
+
+  --r-chip:4px; --r-input:8px; --r-tile:12px; --r-card:16px; --r-sheet:20px; --r-hero:24px; --r-pill:9999px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --surface-sunken:#08080A;
+    --surface-base:#0F0F13;
+    --surface-raised:#1B1B21;
+    --surface-elevated:#26262D;
+    --surface-overlay:#33333B;
+    --surface-subtle:#17171C;
+    --text-primary:#F2F2F6;
+    --text-secondary:#C9C9D2;
+    --text-tertiary:#ADADB8;
+    --border-low:#2E2E36;
+    --border-medium:#414149;
+    --primary:#4DA3FF;
+    --accent:#22D3EE;
+    --success:#3DCC99;
+    --warning:#E3B45A;
+    --danger:#E05C64;
+    --card-shadow:none;
+    --tint-wash:rgba(77,163,255,0.06);
+    --tint-border:rgba(77,163,255,0.22);
+    --warn-wash:rgba(227,180,90,0.07);
+    --warn-border:rgba(227,180,90,0.26);
+    --ink-soft:rgba(242,242,246,0.55);
+    --glass:rgba(38,38,45,0.82);
+  }
+}
+
+:root[data-theme="dark"]{
+  --surface-sunken:#08080A;
+  --surface-base:#0F0F13;
+  --surface-raised:#1B1B21;
+  --surface-elevated:#26262D;
+  --surface-overlay:#33333B;
+  --surface-subtle:#17171C;
+  --text-primary:#F2F2F6;
+  --text-secondary:#C9C9D2;
+  --text-tertiary:#ADADB8;
+  --border-low:#2E2E36;
+  --border-medium:#414149;
+  --primary:#4DA3FF;
+  --accent:#22D3EE;
+  --success:#3DCC99;
+  --warning:#E3B45A;
+  --danger:#E05C64;
+  --card-shadow:none;
+  --tint-wash:rgba(77,163,255,0.06);
+  --tint-border:rgba(77,163,255,0.22);
+  --warn-wash:rgba(227,180,90,0.07);
+  --warn-border:rgba(227,180,90,0.26);
+  --ink-soft:rgba(242,242,246,0.55);
+  --glass:rgba(38,38,45,0.82);
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--surface-sunken);
+  color:var(--text-primary);
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  font-size:17px;
+  line-height:1.35;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum" 1;
+  font-variant-numeric:tabular-nums;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+@media (min-width:520px){
+  body{background:#c9c9d3;padding:32px 0;align-items:center;}
+  :root[data-theme="dark"] body,
+  html:not([data-theme="light"]) body{}
+}
+@media (min-width:520px) and (prefers-color-scheme:dark){
+  html:not([data-theme="light"]) body{background:#040406;}
+}
+@media (min-width:520px){
+  html[data-theme="dark"] body{background:#040406;}
+  html[data-theme="light"] body{background:#c9c9d3;}
+}
+
+/* ---------- phone frame ---------- */
+.frame{
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  background:var(--surface-sunken);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+@media (min-width:520px){
+  .frame{
+    min-height:0;
+    height:900px;
+    border-radius:44px;
+    box-shadow:0 24px 70px rgba(0,0,0,.34), 0 0 0 10px #1a1a1f, 0 0 0 11px #37373f;
+  }
+}
+
+/* ---------- status bar ---------- */
+.statusbar{
+  height:50px;flex:0 0 50px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 8px;
+  font-size:15px;font-weight:600;letter-spacing:.2px;
+  color:var(--text-primary);
+  background:var(--surface-sunken);
+}
+.statusbar .sb-right{display:flex;align-items:center;gap:5px;}
+.statusbar svg{display:block;}
+
+/* ---------- scroll area ---------- */
+.scroll{
+  flex:1 1 auto;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:0 12px 108px;
+  scrollbar-width:thin;
+}
+.scroll::-webkit-scrollbar{width:0;}
+
+/* ---------- header ---------- */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 4px 16px;
+  min-height:60px;
+}
+.hdr h1{
+  margin:0;font-size:28px;font-weight:700;letter-spacing:-.4px;
+  color:var(--text-primary);
+}
+.iconbtn{
+  width:44px;height:44px;border-radius:var(--r-pill);
+  border:1px solid var(--border-low);
+  background:var(--surface-raised);
+  color:var(--text-secondary);
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),background .25s ease,color .25s ease;
+}
+.iconbtn:active{transform:scale(.9);transition:transform .08s ease-in;}
+.iconbtn[aria-pressed="true"]{
+  background:var(--text-primary);color:var(--surface-raised);border-color:var(--text-primary);
+}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface-raised);
+  border:1px solid var(--border-low);
+  border-radius:var(--r-card);
+  box-shadow:var(--card-shadow);
+  padding:16px;
+  margin-bottom:12px;
+}
+.card.hero{
+  border-radius:var(--r-hero);
+  background:
+    linear-gradient(var(--tint-wash),var(--tint-wash)),
+    var(--surface-raised);
+  border-color:var(--tint-border);
+  padding:24px 16px 20px;
+}
+.card.notice{
+  background:linear-gradient(var(--warn-wash),var(--warn-wash)),var(--surface-raised);
+  border-color:var(--warn-border);
+  border-radius:var(--r-card);
+}
+
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--text-tertiary);margin:0 0 10px;
+}
+.lead{
+  font-size:17px;font-weight:600;color:var(--text-secondary);margin:0;
+}
+.bignum{
+  font-family:-apple-system,"SF Pro Rounded",system-ui,sans-serif;
+  font-size:56px;font-weight:700;letter-spacing:-1.6px;line-height:1.02;
+  color:var(--text-primary);
+  margin:6px 0 0;display:flex;align-items:baseline;gap:7px;
+}
+.bignum .unit{font-size:22px;font-weight:700;letter-spacing:-.2px;color:var(--text-secondary);}
+.why{
+  font-size:15px;line-height:1.4;color:var(--text-secondary);
+  margin:16px 0 0;
+}
+.why b{font-weight:600;color:var(--text-primary);}
+
+.divider{height:1px;background:var(--border-low);margin:22px -16px 20px;}
+
+.rowlabel{
+  font-size:13px;font-weight:600;letter-spacing:.2px;color:var(--text-tertiary);
+  margin:0 0 6px;text-transform:none;
+}
+.rowval{
+  font-family:-apple-system,"SF Pro Rounded",system-ui,sans-serif;
+  font-size:28px;font-weight:700;letter-spacing:-.5px;color:var(--text-primary);margin:0;
+}
+.rowverdict{
+  font-size:13px;color:var(--text-secondary);margin:10px 0 0;
+}
+.rowverdict b{font-weight:600;color:var(--text-primary);}
+
+.source{
+  font-size:11px;color:var(--text-tertiary);margin:20px 0 0;
+  display:flex;align-items:center;gap:6px;
+}
+.source svg{flex:0 0 auto;opacity:.8;}
+
+/* endowed-progress pips (new user only) */
+.pips{display:flex;gap:4px;align-items:center;margin-left:2px;}
+.pips i{width:6px;height:6px;border-radius:50%;background:var(--border-medium);display:block;}
+.pips i.on{background:var(--primary);}
+
+/* ---------- primary button ---------- */
+.btn{
+  margin-top:20px;
+  width:100%;min-height:52px;
+  border-radius:var(--r-pill);
+  border:1px solid transparent;
+  background:var(--primary);
+  color:#fff;
+  font-family:inherit;font-size:17px;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),background .25s ease;
+}
+:root[data-theme="dark"] .btn,
+html:not([data-theme="light"]) .btn{}
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]) .btn{color:#06121F;}
+}
+html[data-theme="dark"] .btn{color:#06121F;}
+html[data-theme="light"] .btn{color:#fff;}
+.btn:active{transform:scale(.97);transition:transform .08s ease-in;}
+.btn.done{
+  background:transparent;border-color:var(--border-medium);color:var(--text-secondary);
+}
+html[data-theme="dark"] .btn.done{color:var(--text-secondary);}
+.btn svg{flex:0 0 auto;}
+
+/* ---------- expander ---------- */
+.expander{
+  margin-top:14px;
+  border-top:1px solid var(--border-low);
+  padding-top:4px;
+}
+.exp-btn{
+  width:100%;min-height:44px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:none;border:0;padding:0;margin:0;cursor:pointer;
+  font-family:inherit;font-size:15px;font-weight:600;color:var(--primary);
+  text-align:left;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.exp-btn:active{transform:scale(.985);transition:transform .08s ease-in;}
+.exp-btn .chev{transition:transform .25s ease;color:var(--primary);}
+.exp-btn[aria-expanded="true"] .chev{transform:rotate(180deg);}
+/* grid-rows 0fr -> 1fr animates to the content's natural height, so long copy
+   at large Dynamic Type can never be clipped by a magic max-height */
+.exp-body{
+  display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .28s ease-in-out,opacity .2s ease;
+  opacity:0;
+}
+.exp-body.open{grid-template-rows:1fr;opacity:1;}
+.exp-body > .exp-inner{overflow:hidden;min-height:0;}
+.exp-inner{padding:0;}   /* padding here would survive the 0fr collapse */
+.exp-inner p{
+  margin:6px 0 10px;font-size:15px;line-height:1.45;color:var(--text-secondary);
+}
+.exp-inner p:last-child{margin-bottom:0;}
+
+/* ---------- metric rows inside "Everything else" ---------- */
+.mrow{padding:14px 0 0;}
+.mrow + .mrow{border-top:1px solid var(--border-low);margin-top:14px;}
+.mrow .rowval{font-size:22px;}
+.mrow .rowverdict{margin-top:4px;}
+
+/* ---------- charts ---------- */
+.chart{width:100%;display:block;margin:16px 0 0;}
+.chartnote{font-size:11px;color:var(--text-tertiary);margin:8px 0 0;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 0;font-size:11px;color:var(--text-tertiary);}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.swatch{width:12px;height:8px;border-radius:2px;display:inline-block;}
+.swatch.band{background:var(--tint-border);}
+.swatch.bar{background:var(--ink-soft);border-radius:4px;}
+
+/* ---------- verdict chip ---------- */
+.verdictline{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 0;}
+.verdictword{
+  font-size:20px;font-weight:600;letter-spacing:-.2px;color:var(--text-primary);margin:0;
+}
+.cardhead{
+  font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--text-tertiary);margin:0 0 6px;
+}
+.cardbody{font-size:15px;line-height:1.42;color:var(--text-secondary);margin:8px 0 0;}
+
+/* ---------- notice ---------- */
+.notice h2{
+  margin:0;font-size:17px;font-weight:600;line-height:1.35;color:var(--text-primary);
+}
+.notice .tagrow{display:flex;align-items:center;gap:7px;margin:0 0 8px;}
+.notice .tagrow svg{color:var(--warning);flex:0 0 auto;}
+.notice .tagrow span{
+  font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--warning);
+}
+.notice p{margin:8px 0 0;font-size:15px;line-height:1.45;color:var(--text-secondary);}
+.notice .anchor{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--warn-border);
+  font-size:13px;color:var(--text-tertiary);
+}
+
+/* ---------- raw mode ---------- */
+.rawhdr{
+  font-size:13px;color:var(--text-tertiary);margin:0 0 12px;padding:0 4px;
+}
+.rawrow{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding:12px 0;border-bottom:1px solid var(--border-low);
+}
+.rawrow:last-child{border-bottom:0;}
+.rawrow dt{font-size:15px;color:var(--text-secondary);margin:0;}
+.rawrow.stack{display:block;}
+.rawrow.stack dd{text-align:left;margin-top:6px;}
+.rawrow dd{
+  margin:0;font-size:17px;font-weight:600;color:var(--text-primary);
+  font-family:-apple-system,"SF Pro Rounded",system-ui,sans-serif;
+  text-align:right;
+}
+.rawlist{margin:0;}
+
+/* ---------- footer ---------- */
+.foot{
+  padding:6px 4px 4px;font-size:11px;color:var(--text-tertiary);
+  display:flex;align-items:center;gap:6px;
+}
+
+/* ---------- skeleton ---------- */
+.sk{
+  background:linear-gradient(90deg,var(--surface-subtle) 25%,var(--border-low) 37%,var(--surface-subtle) 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.5s ease-in-out infinite;
+  border-radius:8px;display:block;
+}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+/* ---------- tab bar ---------- */
+.tabbar{
+  position:absolute;left:0;right:0;bottom:0;
+  height:84px;
+  display:flex;align-items:flex-start;
+  padding:8px 8px 0;
+  background:var(--glass);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+  backdrop-filter:saturate(180%) blur(22px);
+  border-top:1px solid var(--border-low);
+}
+.tab{
+  flex:1;min-height:48px;
+  background:none;border:0;padding:6px 0 0;margin:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.1px;
+  color:var(--text-tertiary);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),color .2s ease;
+}
+.tab:active{transform:scale(.92);transition:transform .08s ease-in;}
+.tab[aria-current="page"]{color:var(--primary);}
+
+/* ---------- placeholder for non-Today tabs ---------- */
+.placeholder{
+  margin-top:80px;text-align:center;padding:0 24px;
+}
+.placeholder p{font-size:17px;color:var(--text-secondary);margin:0 0 18px;}
+.placeholder button{
+  min-height:48px;padding:0 22px;border-radius:var(--r-pill);
+  border:1px solid var(--border-medium);background:var(--surface-raised);
+  font-family:inherit;font-size:17px;font-weight:600;color:var(--text-primary);cursor:pointer;
+}
+
+/* ---------- toast ---------- */
+.toast{
+  position:absolute;left:50%;bottom:100px;transform:translate(-50%,14px);
+  background:var(--surface-overlay);border:1px solid var(--border-low);
+  box-shadow:0 8px 26px rgba(0,0,0,.18);
+  border-radius:var(--r-pill);padding:11px 18px;
+  font-size:15px;font-weight:500;color:var(--text-primary);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease-in-out,transform .25s ease-in-out;
+  max-width:88%;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+/* ---------- dev toolbar (not part of the design) ---------- */
+.devbtn{
+  position:absolute;right:10px;bottom:96px;
+  width:34px;height:34px;border-radius:var(--r-pill);
+  background:var(--surface-overlay);border:1px solid var(--border-medium);
+  color:var(--text-tertiary);opacity:.55;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:40;
+}
+.devbtn:hover{opacity:1;}
+.devpanel{
+  position:absolute;right:8px;bottom:136px;width:236px;z-index:41;
+  background:var(--surface-overlay);border:1px solid var(--border-medium);
+  border-radius:var(--r-tile);box-shadow:0 12px 34px rgba(0,0,0,.28);
+  padding:10px;display:none;
+}
+.devpanel.open{display:block;}
+.devpanel h3{margin:0 0 8px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;}
+.devgrp{margin-bottom:8px;}
+.devgrp > label{display:block;font-size:10px;color:var(--text-tertiary);margin-bottom:3px;letter-spacing:.3px;}
+.seg{display:flex;gap:3px;flex-wrap:wrap;}
+.seg button{
+  flex:1 1 auto;min-width:38px;padding:5px 5px;border-radius:6px;
+  border:1px solid var(--border-low);background:var(--surface-raised);
+  font-family:inherit;font-size:10px;font-weight:600;color:var(--text-secondary);cursor:pointer;
+}
+.seg button[data-on="1"]{background:var(--primary);border-color:var(--primary);color:#fff;}
+html[data-theme="dark"] .seg button[data-on="1"]{color:#06121F;}
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]) .seg button[data-on="1"]{color:#06121F;}
+}
+
+/* ---------- focus ---------- */
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:6px;}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <!-- ================= status bar ================= -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="sb-right" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2 6.05 9.05a2.9 2.9 0 0 1 3.9 0L8 11.2Zm0-4.4a5 5 0 0 0-3.5 1.4L3.1 6.75a7 7 0 0 1 9.8 0L11.5 8.2A5 5 0 0 0 8 6.8Zm0-3.9c-2.4 0-4.6.9-6.3 2.4L.3 3.9A11 11 0 0 1 15.7 3.9l-1.4 1.4A9 9 0 0 0 8 2.9Z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".6" y=".6" width="21" height="10.8" rx="3.1" stroke="currentColor" stroke-opacity=".4" stroke-width="1.1"/><rect x="2.2" y="2.2" width="16" height="7.6" rx="1.9" fill="currentColor"/><path d="M23.4 4.1c1 .3 1.6 1 1.6 1.9s-.6 1.6-1.6 1.9V4.1Z" fill="currentColor" fill-opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <!-- ================= scrolling content ================= -->
+  <main class="scroll" id="scroll">
+    <!-- header -->
+    <div class="hdr">
+      <h1>Wednesday</h1>
+      <button class="iconbtn" id="rawBtn" type="button" aria-pressed="false"
+              aria-label="Show raw numbers without verdicts">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+          <path d="M9 4 7.5 20M16.5 4 15 20M4.5 9h15M3.5 15h15"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="slots"></div>
+  </main>
+
+  <!-- ================= tab bar ================= -->
+  <nav class="tabbar" id="tabbar" aria-label="Main">
+    <button class="tab" type="button" data-tab="today" aria-current="page">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3.5l9 7"/><path d="M5.5 9.7V20h13V9.7"/><path d="M9.8 20v-5.6h4.4V20"/></svg>
+      Today
+    </button>
+    <button class="tab" type="button" data-tab="live">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12.5h4l2.2-5.6 3.4 10.4L15 12.5h6"/></svg>
+      Live
+    </button>
+    <button class="tab" type="button" data-tab="explore">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.2"/><path d="M16.4 16.4 21 21"/></svg>
+      Explore
+    </button>
+    <button class="tab" type="button" data-tab="settings">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 14.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.56-1.1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.03Z"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ================= dev toolbar (excluded from the design) ================= -->
+  <button class="devbtn" id="devBtn" type="button" aria-label="Prototype controls" aria-expanded="false">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg>
+  </button>
+  <div class="devpanel" id="devPanel">
+    <h3>Prototype controls</h3>
+    <div class="devgrp"><label>Theme</label><div class="seg" data-key="theme">
+      <button type="button" data-val="auto">Auto</button><button type="button" data-val="light">Light</button><button type="button" data-val="dark">Dark</button>
+    </div></div>
+    <div class="devgrp"><label>Screen</label><div class="seg" data-key="screen">
+      <button type="button" data-val="loaded">Loaded</button><button type="button" data-val="loading">Loading</button><button type="button" data-val="empty">Empty</button>
+    </div></div>
+    <div class="devgrp"><label>Hero data</label><div class="seg" data-key="source">
+      <button type="button" data-val="watch">Watch</button><button type="button" data-val="phone">iPhone only</button><button type="button" data-val="newuser">New user</button>
+    </div></div>
+    <div class="devgrp"><label>Time of day</label><div class="seg" data-key="time">
+      <button type="button" data-val="morning">Morning</button><button type="button" data-val="evening">Evening</button>
+    </div></div>
+    <div class="devgrp"><label>Nights</label><div class="seg" data-key="level">
+      <button type="button" data-val="steady">Steady</button><button type="button" data-val="ordinary">Ordinary</button><button type="button" data-val="drifting">Drifting</button>
+    </div></div>
+    <div class="devgrp"><label>Health notice</label><div class="seg" data-key="notice">
+      <button type="button" data-val="off">Off</button><button type="button" data-val="on">On</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   1. STATE
+   ============================================================ */
+const state = {
+  theme:'auto', screen:'loaded', source:'watch',
+  time:'morning', level:'drifting', notice:'off',
+  raw:false, tab:'today',
+  open:{ why:false, else:false },
+  reminderSet:false
+};
+
+/* ============================================================
+   2. DATA
+   Every night is stored as bedtime (minutes past midnight of the
+   evening) and wake time (minutes past midnight of the morning).
+   Durations, drift, counts and verdicts are all DERIVED so no two
+   numbers on the screen can contradict each other.
+   ============================================================ */
+
+// Usual windows, learned from the personal baseline.
+const BED_WIN  = { lo: 22*60+15, hi: 22*60+55 };   // 10:15 - 10:55 PM
+const WAKE_WIN = { lo: 5*60+55,  hi: 6*60+40  };   // 5:55 - 6:40 AM
+const TARGET_BED = 22*60+30;                        // 10:30 PM (centre of the window)
+const SLEEP_NEED = 7*60+40;                         // 7h 40m, personalised
+const NEED_BAND  = { lo: 7*60+20, hi: 8*60 };       // the ONE reference range for hours
+
+const DOW = ['W','T','F','S','S','M','T','W','T','F','S','S','M','T'];
+
+const NIGHTSETS = {
+  drifting:{
+    bed:  [1340,1350,1335,1355,1345,1340,1360,1370,1365,1340,1385,1400,1415,1433],
+    wake: [ 380, 385, 365, 390, 375, 370, 395, 390, 380, 360, 375, 380, 370, 365]
+  },
+  ordinary:{
+    bed:  [1340,1350,1335,1355,1345,1340,1360,1370,1355,1385,1350,1390,1360,1365],
+    wake: [ 380, 385, 365, 390, 375, 370, 395, 385, 380, 390, 370, 395, 375, 360]
+  },
+  steady:{
+    bed:  [1340,1350,1335,1390,1345,1340,1360,1370,1365,1340,1355,1345,1350,1340],
+    wake: [ 380, 385, 365, 395, 375, 370, 395, 390, 385, 365, 385, 375, 380, 365]
+  }
+};
+
+// iPhone-only: no sleep data exists at all. What the phone genuinely has is
+// the hour of your first movement, from hourly step bins.
+const FIRST_MOVE = [385,392,378,401,388,383,396,390,399,382,405,398,387,394]; // minutes
+const MOVE_WIN = { lo: 6*60+10, hi: 6*60+40 };
+
+// Genuinely new user: two recorded nights, no personal window yet.
+const NEWUSER = {
+  bed:[1390,1365], wake:[400,385],
+  provisional:{ lo: 22*60, hi: 23*60 },        // a common adult window, labelled as such
+  provisionalHours:{ lo: 7*60, hi: 8*60+30 }
+};
+
+/* ============================================================
+   3. HELPERS
+   ============================================================ */
+const pad = n => String(n).padStart(2,'0');
+function hm(mins){ return Math.floor(mins/60)+'h '+pad(Math.round(mins%60))+'m'; }
+function clock(mins){
+  let m = ((mins%1440)+1440)%1440;
+  let h = Math.floor(m/60), mm = m%60;
+  const ap = h>=12 ? 'PM' : 'AM';
+  let h12 = h%12; if(h12===0) h12=12;
+  return h12+':'+pad(mm)+' '+ap;
+}
+function clockShort(mins){
+  let m = ((mins%1440)+1440)%1440;
+  let h = Math.floor(m/60), mm = m%60;
+  const ap = h>=12 ? 'PM' : 'AM';
+  let h12 = h%12; if(h12===0) h12=12;
+  return (mm===0 ? h12 : h12+':'+pad(mm)) + ' ' + ap;
+}
+function avg(a){ return a.reduce((x,y)=>x+y,0)/a.length; }
+// an averaged or counted-back time is not accurate to the minute, so never print it as if it were
+function round5(mins){ return Math.round(mins/5)*5; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/** Derive every fact this screen prints from the raw nights. */
+function deriveNights(set){
+  const n = set.bed.length;
+  const dur = set.bed.map((b,i)=> set.wake[i] + 1440 - b);
+  const inside = set.bed.filter(b => b>=BED_WIN.lo && b<=BED_WIN.hi).length;
+  const firstHalf = set.bed.slice(0,7), lastHalf = set.bed.slice(7);
+  const drift = Math.round(avg(lastHalf) - avg(firstHalf));
+  const last5 = dur.slice(-5);
+  const shortfall = Math.round(SLEEP_NEED - avg(last5));
+  const wakeShift = Math.round(Math.abs(avg(set.wake.slice(7)) - avg(set.wake.slice(0,7))));
+  const lateRun = (()=>{ let c=0; for(let i=n-1;i>=0;i--){ if(set.bed[i]>BED_WIN.hi) c++; else break; } return c; })();
+  return { n, dur, inside, drift, shortfall, wakeShift, lateRun,
+           lastDur:dur[n-1], lastBed:set.bed[n-1], lastWake:set.wake[n-1] };
+}
+
+/* ============================================================
+   4. CHART BUILDERS  (hand-built SVG, no library)
+   ============================================================ */
+
+/* -- hero clock rail: 9:30 PM to 12:30 AM -------------------- */
+function railSVG(opts){
+  const T0 = 21*60+30, SPAN = 180;
+  const x = t => 8 + 304 * ((t - T0) / SPAN);
+  const bandLo = Math.max(8, x(opts.win.lo)), bandHi = Math.min(312, x(opts.win.hi));
+  const tx = x(opts.target);
+  const tone = opts.tone === 'warn' ? 'var(--warning)' : 'var(--primary)';
+  let dots = '';
+  (opts.dots||[]).forEach((d,i,arr)=>{
+    const last = i === arr.length-1;
+    const cx = Math.min(314, Math.max(6, x(d)));
+    dots += `<circle cx="${cx.toFixed(1)}" cy="48" r="${last?4.5:3}" fill="var(--text-tertiary)" opacity="${last?0.95:0.28+0.06*i}"/>`;
+  });
+  let arrow = '';
+  if(opts.arrow && opts.dots && opts.dots.length){
+    const from = Math.min(314, x(opts.dots[opts.dots.length-1])) - 8;
+    const to = tx + 8;
+    arrow = `<path d="M${from.toFixed(1)} 22 Q ${((from+to)/2).toFixed(1)} 8 ${to.toFixed(1)} 22"
+                fill="none" stroke="${tone}" stroke-width="1.8" stroke-linecap="round"/>
+             <path d="M${(to+6).toFixed(1)} 18.5 L${to.toFixed(1)} 22 L${(to+6).toFixed(1)} 25.5"
+                fill="none" stroke="${tone}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  const dash = opts.dashed ? ' stroke-dasharray="4 3"' : '';
+  return `<svg class="chart" viewBox="0 0 320 88" role="img" aria-label="${esc(opts.alt)}" style="height:auto">
+    <rect x="8" y="44" width="304" height="8" rx="4" fill="var(--surface-subtle)"/>
+    <rect x="${bandLo.toFixed(1)}" y="40" width="${(bandHi-bandLo).toFixed(1)}" height="16" rx="8"
+          fill="var(--tint-border)" stroke="${tone}" stroke-opacity=".45" stroke-width="1"${dash}/>
+    ${dots}
+    <rect x="${(tx-2.5).toFixed(1)}" y="34" width="5" height="28" rx="2.5" fill="${tone}"/>
+    <circle cx="${tx.toFixed(1)}" cy="48" r="12" fill="${tone}" fill-opacity=".13"/>
+    ${arrow}
+    <text x="${((bandLo+bandHi)/2).toFixed(1)}" y="76" text-anchor="middle"
+          font-size="11" font-weight="600" fill="var(--text-tertiary)"
+          font-family="-apple-system,system-ui,sans-serif">${esc(opts.bandLabel)}</text>
+  </svg>`;
+}
+
+/* -- number line with one goal band and one marker ----------- */
+function numberLine(opts){
+  const x = v => 2 + 316 * ((v - opts.min) / (opts.max - opts.min));
+  const lo = Math.max(2, x(opts.band.lo)), hi = Math.min(318, x(opts.band.hi));
+  const mx = Math.min(316, Math.max(4, x(opts.value)));
+  const dash = opts.dashed ? ' stroke-dasharray="4 3"' : '';
+  const marker = opts.noMarker ? ''
+    : `<rect x="${(mx-2.5).toFixed(1)}" y="2" width="5" height="20" rx="2.5" fill="var(--text-primary)"/>`;
+  return `<svg class="chart" viewBox="0 0 320 24" role="img" aria-label="${esc(opts.alt)}" style="height:auto">
+    <rect x="2" y="9" width="316" height="6" rx="3" fill="var(--surface-subtle)"/>
+    <rect x="${lo.toFixed(1)}" y="5" width="${Math.max(6,hi-lo).toFixed(1)}" height="14" rx="7"
+          fill="var(--tint-border)" stroke="var(--primary)" stroke-opacity=".45" stroke-width="1"${dash}/>
+    ${marker}
+  </svg>`;
+}
+
+/* -- 14-night sleep timing chart ----------------------------- */
+function nightsSVG(set, opts){
+  const T0 = 21*60+30, SPAN = 600;                 // 9:30 PM -> 7:30 AM
+  const L = 24, W = 296;
+  const x = t => L + W * ((t - T0) / SPAN);
+  const PITCH = 16, TOP = 6, H = TOP + 14*PITCH + 26;
+  const offset = 14 - set.bed.length;             // partial history sits in the newest rows
+  const win = opts.bedWin || BED_WIN, wwin = opts.wakeWin || WAKE_WIN;
+  const dash = opts.dashed ? ' stroke-dasharray="4 3"' : '';
+
+  let bands = '';
+  if(!opts.hideBands){
+    const b1 = x(win.lo), b2 = x(win.hi);
+    const w1 = x(wwin.lo + 1440), w2 = x(wwin.hi + 1440);
+    bands =
+      `<rect x="${b1.toFixed(1)}" y="${TOP-2}" width="${(b2-b1).toFixed(1)}" height="${14*PITCH}" rx="4"
+             fill="var(--tint-border)" stroke="var(--primary)" stroke-opacity=".35" stroke-width="1"${dash}/>
+       <rect x="${w1.toFixed(1)}" y="${TOP-2}" width="${(w2-w1).toFixed(1)}" height="${14*PITCH}" rx="4"
+             fill="var(--tint-border)" stroke="var(--primary)" stroke-opacity=".35" stroke-width="1"${dash}/>`;
+  }
+
+  let bars = '';
+  for(let i=0;i<14;i++){
+    const y = TOP + i*PITCH;
+    bars += `<text x="0" y="${y+9}" font-size="11" font-weight="600" fill="var(--text-tertiary)"
+                 font-family="-apple-system,system-ui,sans-serif">${DOW[i]}</text>`;
+    if(i >= offset){
+      const idx = i - offset;
+      const bx = x(set.bed[idx]), wx = x(set.wake[idx] + 1440);
+      const last = idx === set.bed.length-1;
+      bars += `<rect x="${bx.toFixed(1)}" y="${y}" width="${Math.max(4,wx-bx).toFixed(1)}" height="9" rx="4.5"
+                 fill="var(--text-secondary)" opacity="${last?0.95:0.5}"/>`;
+      if(last){
+        bars += `<circle cx="${bx.toFixed(1)}" cy="${y+4.5}" r="4.5" fill="var(--text-primary)"/>`;
+      }
+    } else {
+      bars += `<rect x="${L}" y="${y+3}" width="${W}" height="2" rx="1" fill="var(--border-low)"/>`;
+    }
+  }
+
+  const tick1 = x(22*60), tick2 = x(6*60 + 1440);
+  const axis = `
+    <line x1="${tick1.toFixed(1)}" y1="${TOP-4}" x2="${tick1.toFixed(1)}" y2="${TOP+14*PITCH+2}" stroke="var(--border-low)" stroke-width="1"/>
+    <line x1="${tick2.toFixed(1)}" y1="${TOP-4}" x2="${tick2.toFixed(1)}" y2="${TOP+14*PITCH+2}" stroke="var(--border-low)" stroke-width="1"/>
+    <text x="${tick1.toFixed(1)}" y="${TOP+14*PITCH+18}" text-anchor="middle" font-size="11" font-weight="600"
+          fill="var(--text-tertiary)" font-family="-apple-system,system-ui,sans-serif">10 PM</text>
+    <text x="${tick2.toFixed(1)}" y="${TOP+14*PITCH+18}" text-anchor="middle" font-size="11" font-weight="600"
+          fill="var(--text-tertiary)" font-family="-apple-system,system-ui,sans-serif">6 AM</text>`;
+
+  return `<svg class="chart" viewBox="0 0 320 ${H}" role="img" aria-label="${esc(opts.alt)}" style="height:auto">
+    ${bands}${axis}${bars}
+  </svg>`;
+}
+
+/* -- iPhone-only: first movement each morning ---------------- */
+function morningsSVG(){
+  const T0 = 5*60+30, SPAN = 150;                  // 5:30 - 8:00 AM
+  const L = 24, W = 296;
+  const x = t => L + W * ((t - T0) / SPAN);
+  const PITCH = 16, TOP = 6, H = TOP + 14*PITCH + 26;
+  const b1 = x(MOVE_WIN.lo), b2 = x(MOVE_WIN.hi);
+  let out = `<rect x="${b1.toFixed(1)}" y="${TOP-2}" width="${(b2-b1).toFixed(1)}" height="${14*PITCH}" rx="4"
+                fill="var(--tint-border)" stroke="var(--primary)" stroke-opacity=".35" stroke-width="1"/>`;
+  const t1 = x(6*60), t2 = x(7*60);
+  out += `<line x1="${t1.toFixed(1)}" y1="${TOP-4}" x2="${t1.toFixed(1)}" y2="${TOP+14*PITCH+2}" stroke="var(--border-low)"/>
+          <line x1="${t2.toFixed(1)}" y1="${TOP-4}" x2="${t2.toFixed(1)}" y2="${TOP+14*PITCH+2}" stroke="var(--border-low)"/>
+          <text x="${t1.toFixed(1)}" y="${TOP+14*PITCH+18}" text-anchor="middle" font-size="11" font-weight="600"
+                fill="var(--text-tertiary)" font-family="-apple-system,system-ui,sans-serif">6 AM</text>
+          <text x="${t2.toFixed(1)}" y="${TOP+14*PITCH+18}" text-anchor="middle" font-size="11" font-weight="600"
+                fill="var(--text-tertiary)" font-family="-apple-system,system-ui,sans-serif">7 AM</text>`;
+  for(let i=0;i<14;i++){
+    const y = TOP + i*PITCH;
+    out += `<text x="0" y="${y+9}" font-size="11" font-weight="600" fill="var(--text-tertiary)"
+                font-family="-apple-system,system-ui,sans-serif">${DOW[i]}</text>`;
+    const cx = x(FIRST_MOVE[i]);
+    const last = i===13;
+    out += `<circle cx="${cx.toFixed(1)}" cy="${y+4.5}" r="${last?5.5:4.5}" fill="var(--text-secondary)" opacity="${last?0.95:0.5}"/>`;
+  }
+  return `<svg class="chart" viewBox="0 0 320 ${H}" role="img"
+     aria-label="Fourteen mornings. A dot marks when you first started moving. The shaded stripe is your usual window."
+     style="height:auto">${out}</svg>`;
+}
+
+/* ============================================================
+   5. CONTENT BUILDERS PER STATE
+   ============================================================ */
+
+const ICON_INFO = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg>`;
+const ICON_BELL = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.6a6 6 0 1 0-12 0c0 6-2 7.4-2 7.4h16s-2-1.4-2-7.4Z"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>`;
+const ICON_CHECK = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg>`;
+const ICON_CHEV = `<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5 12 15.5 18 9.5"/></svg>`;
+const ICON_LINK = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7"/><path d="M14 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/></svg>`;
+const ICON_WARN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3Z"/><path d="M12 10v4M12 17.2v.1"/></svg>`;
+
+/* ---- the hero, in all three data states, morning and evening ---- */
+function buildHero(){
+  if(state.source === 'watch')   return heroWatch();
+  if(state.source === 'phone')   return heroPhone();
+  return heroNew();
+}
+
+function heroWatch(){
+  const set = NIGHTSETS[state.level];
+  const d = deriveNights(set);
+  const drifting = d.drift >= 25;                 // arrow + amber only when the nudge is real
+  const tone = drifting ? 'warn' : 'primary';
+  const whyText = d.drift >= 10
+    ? `Bedtime slipped <b>${d.drift} minutes</b> later.`
+    : `Bedtime held inside your usual window.`;
+
+  const evening = state.time === 'evening';
+  const wind = TARGET_BED - 45;
+  const mark = evening ? wind : TARGET_BED;      // the rail marker always shows the big number
+  const rail = railSVG({
+    win: BED_WIN, target: mark, dots: set.bed.slice(7),
+    tone, arrow: drifting, bandLabel:'usual',
+    alt:`Your usual lights-out window runs ${clockShort(BED_WIN.lo)} to ${clockShort(BED_WIN.hi)}. Tonight's mark sits at ${clockShort(mark)}. The dots are your last seven bedtimes; they have moved later than the window.`
+  });
+
+  if(evening){
+    return heroShell({
+      eyebrow:'Tonight',
+      lead:'Wind down',
+      big: clock(wind),
+      rail,
+      why: whyText,
+      rowLabel:'Usual wake',
+      rowVal: clock(round5(avg(set.wake))),
+      rowChart: numberLine({
+        min:5*60+15, max:7*60+30, band:WAKE_WIN, value:round5(avg(set.wake)),
+        alt:'Your wake time sits inside your usual morning window.'
+      }),
+      rowVerdict:`inside your usual window`,
+      source:`From ${d.n} nights.`,
+      btn: state.reminderSet ? `Reminder set for ${clock(wind-15)}` : `Remind me at ${clockShort(wind)}`
+    });
+  }
+
+  return heroShell({
+    eyebrow:'Tonight',
+    lead:'Lights out',
+    big: clock(TARGET_BED),
+    rail,
+    why: whyText,
+    rowLabel:'Last night',
+    rowVal: hm(d.lastDur),
+    rowChart: numberLine({
+      min:4*60, max:9*60, band:NEED_BAND, value:d.lastDur,
+      alt:`You slept ${hm(d.lastDur)}. Your usual is ${hm(SLEEP_NEED)}. The shaded stretch is your own range.`
+    }),
+    rowVerdict: d.lastDur < NEED_BAND.lo
+      ? `short of usual <b>${hm(SLEEP_NEED)}</b>`
+      : `inside your usual <b>${hm(SLEEP_NEED)}</b>`,
+    source:`From ${d.n} nights.`,
+    btn: state.reminderSet ? `Reminder set for ${clock(TARGET_BED-15)}` : 'Remind me'
+  });
+}
+
+function heroPhone(){
+  const usualMove = round5(avg(FIRST_MOVE));
+  const derivedBed = round5(usualMove + 1440 - 8*60);          // count back 8 hours
+  const spread = Math.round(Math.max(...FIRST_MOVE) - Math.min(...FIRST_MOVE));
+  const last = FIRST_MOVE[FIRST_MOVE.length-1];
+
+  const rail = railSVG({
+    win:{lo:derivedBed-20, hi:derivedBed+20}, target:derivedBed, dots:[], tone:'primary',
+    arrow:false, dashed:true, bandLabel:'estimated',
+    alt:`An estimated lights-out window around ${clockShort(derivedBed)}, counted back from when you usually start moving.`
+  });
+
+  const heroBody = {
+    eyebrow:'Tonight',
+    lead:'Lights out',
+    big: clock(derivedBed),
+    rail,
+    why:`Your mornings have held within <b>${spread} minutes</b>.`,
+    rowLabel:'Up and moving',
+    rowVal: clock(last),
+    rowChart: numberLine({
+      min:5*60+30, max:8*60, band:MOVE_WIN, value:last,
+      alt:'Your first movement this morning sits inside your usual window.'
+    }),
+    rowVerdict:'inside your usual window',
+    source:'From when your phone starts moving. Less exact than a watch.',
+    btn: state.reminderSet ? `Reminder set for ${clock(derivedBed-15)}` : 'Remind me'
+  };
+
+  if(state.time === 'evening'){
+    heroBody.lead = 'Wind down';
+    heroBody.big = clock(derivedBed - 45);
+    heroBody.rowLabel = 'Usual first movement';
+    heroBody.rowVal = clock(usualMove);
+    heroBody.rowChart = numberLine({ min:5*60+30, max:8*60, band:MOVE_WIN, value:usualMove,
+      alt:'Your usual first movement sits in the middle of your window.' });
+    heroBody.rowVerdict = 'the middle of your window';
+    heroBody.btn = state.reminderSet ? `Reminder set for ${clock(derivedBed-60)}` : `Remind me at ${clockShort(derivedBed-45)}`;
+  }
+  return heroShell(heroBody);
+}
+
+function heroNew(){
+  const p = NEWUSER.provisional;
+  const mid = Math.round((p.lo + p.hi)/2);
+  const dur = NEWUSER.wake[1] + 1440 - NEWUSER.bed[1];
+  const rail = railSVG({
+    win:p, target:mid, dots:NEWUSER.bed, tone:'primary', arrow:false, dashed:true,
+    bandLabel:'starting point',
+    alt:`A common starting window between ${clockShort(p.lo)} and ${clockShort(p.hi)}, with the two nights recorded so far.`
+  });
+  const body = {
+    eyebrow:'Tonight',
+    lead:'Lights out',
+    big: clock(mid),
+    rail,
+    why:`Nights that start at the same time build your own window.`,
+    rowLabel:'Last night',
+    rowVal: hm(dur),
+    rowChart: numberLine({
+      min:4*60, max:10*60, band:NEWUSER.provisionalHours, value:dur, dashed:true,
+      alt:'You slept inside a common adult range. Your own range is not set yet.'
+    }),
+    rowVerdict:'inside a common range',
+    source:`From ${NEWUSER.bed.length} nights. Yours appears at 7.`,
+    pips:{on:NEWUSER.bed.length, total:7},
+    btn: state.reminderSet ? `Reminder set for ${clock(mid-15)}` : 'Remind me'
+  };
+  if(state.time === 'evening'){
+    body.lead = 'Wind down';
+    body.big = clock(mid - 45);
+    body.rowLabel = 'Tomorrow';
+    body.rowVal = clock(NEWUSER.wake[1]);
+    body.rowChart = numberLine({ min:5*60+30, max:8*60, band:{lo:6*60,hi:7*60}, value:NEWUSER.wake[1], dashed:true,
+      alt:'A common wake window. Yours is not set yet.' });
+    body.rowVerdict = 'a common wake window';
+    body.btn = state.reminderSet ? `Reminder set for ${clock(mid-60)}` : `Remind me at ${clockShort(mid-45)}`;
+  }
+  return heroShell(body);
+}
+
+function heroShell(o){
+  const pips = o.pips
+    ? `<span class="pips" aria-hidden="true">${Array.from({length:o.pips.total},(_,i)=>`<i class="${i<o.pips.on?'on':''}"></i>`).join('')}</span>`
+    : '';
+  return `
+  <section class="card hero" aria-labelledby="heroLead">
+    <p class="eyebrow">${esc(o.eyebrow)}</p>
+    <p class="lead" id="heroLead">${esc(o.lead)}</p>
+    <p class="bignum">${esc(o.big.replace(/ (AM|PM)$/,''))}<span class="unit">${o.big.slice(-2)}</span></p>
+    ${o.rail}
+    <p class="why">${o.why}</p>
+    <div class="divider"></div>
+    <p class="rowlabel">${esc(o.rowLabel)}</p>
+    <p class="rowval">${esc(o.rowVal)}</p>
+    ${o.rowChart}
+    <p class="rowverdict">${o.rowVerdict}</p>
+    <p class="source">${ICON_INFO}<span>${esc(o.source)}</span>${pips}</p>
+    <button class="btn ${state.reminderSet?'done':''}" type="button" id="remindBtn">
+      ${state.reminderSet?ICON_CHECK:ICON_BELL}<span>${esc(o.btn)}</span>
+    </button>
+  </section>`;
+}
+
+/* ---- the nights card ---- */
+function buildNights(){
+  if(state.source === 'phone'){
+    const spread = Math.round(Math.max(...FIRST_MOVE) - Math.min(...FIRST_MOVE));
+    const inside = FIRST_MOVE.filter(t=>t>=MOVE_WIN.lo && t<=MOVE_WIN.hi).length;
+    return nightsShell({
+      head:'Mornings', verdict:'Steady',
+      body:`${inside} of the last 14 mornings started inside your usual half hour, and the whole fortnight sits inside ${spread} minutes.`,
+      chart: morningsSVG(),
+      legendBar:'a morning',
+      why:[
+        `Starting the day at close to the same time is the part of sleep timing your phone can see without a watch.`,
+        `It reads the hour your step count first moves, so it is a rough stand-in for waking, not a measurement of sleep.`,
+        `Holding that time steady is what keeps a body clock in place, and it is the piece most people can actually control.`
+      ]
+    });
+  }
+  if(state.source === 'newuser'){
+    return nightsShell({
+      head:'Nights', verdict:'Building',
+      body:`Two nights recorded so far. After seven, the shaded stripes move to your own bedtime and wake window instead of a common one.`,
+      chart: nightsSVG(NEWUSER, {dashed:true, bedWin:NEWUSER.provisional,
+        wakeWin:{lo:6*60, hi:7*60},
+        alt:'Two recorded nights against a common starting window. The remaining rows are waiting.'}),
+      legendBar:'a night', legendBand:'common starting window',
+      why:[
+        `Going to bed at close to the same time each night tracks with better long-term health than the number of hours does.`,
+        `It needs only your bedtime and wake time, which is the part a watch measures well.`,
+        `Seven nights is the point where your own window is steady enough to draw. Until then the stripe is a common adult one, marked with a dashed edge.`
+      ]
+    });
+  }
+
+  const set = NIGHTSETS[state.level];
+  const d = deriveNights(set);
+  const verdict = d.inside >= 13 ? 'Steady' : (d.inside >= 10 ? 'Mostly steady' : 'Drifting');
+  const WORDS = ['','night ran','two nights ran','three nights ran','four nights ran'];
+  const tail = d.lateRun > 0 ? ` The last ${WORDS[d.lateRun] || 'few nights ran'} later.` : '';
+
+  const wakeLine = d.wakeShift <= 10
+    ? `Your wake time barely moved across the fortnight. Your bedtime is the part that moves, so any lost hours come off the front of the night.`
+    : `Your wake time moved about ${d.wakeShift} minutes across the fortnight, and your bedtime moved ${Math.abs(d.drift)}.`;
+  const sleepLine = d.shortfall >= 10
+    ? `Across the last five nights that came to roughly ${d.shortfall} minutes less sleep a night than your usual.`
+    : (d.shortfall > -10
+        ? `Across the last five nights you have been landing close to your usual hours.`
+        : `Across the last five nights you have been landing a little over your usual hours.`);
+
+  return nightsShell({
+    head:'Nights', verdict,
+    body:`${d.inside} of the last ${d.n} nights started inside your usual window.${tail}`,
+    chart: nightsSVG(set, {alt:`Fourteen nights. Each bar runs from lights out to waking. The two shaded stripes are your usual bedtime and wake windows.`}),
+    legendBar:'a night',
+    why:[
+      `Going to bed at close to the same time each night tracks with better long-term health than the number of hours does.`,
+      `It needs only your bedtime and wake time, which is the part a watch measures well. It does not depend on sleep stages, which are far less reliable.`,
+      wakeLine,
+      sleepLine
+    ]
+  });
+}
+
+function nightsShell(o){
+  return `
+  <section class="card" aria-labelledby="nightsHead">
+    <p class="cardhead" id="nightsHead">${esc(o.head)}</p>
+    <div class="verdictline"><p class="verdictword">${esc(o.verdict)}</p></div>
+    <p class="cardbody">${esc(o.body)}</p>
+    ${o.chart}
+    <div class="legend">
+      <span><i class="swatch band"></i>${esc(o.legendBand || 'your usual window')}</span>
+      <span><i class="swatch bar"></i>${esc(o.legendBar)}</span>
+    </div>
+    <div class="expander">
+      <button class="exp-btn" type="button" data-exp="why" aria-expanded="${state.open.why}" aria-controls="expWhy">
+        <span>Why this matters</span>${ICON_CHEV}
+      </button>
+      <div class="exp-body ${state.open.why?'open':''}" id="expWhy">
+        <div class="exp-inner">${o.why.map(p=>`<p>${esc(p)}</p>`).join('')}</div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---- everything else ---- */
+function buildElse(){
+  const noticeOn = state.notice === 'on' && state.source === 'watch';
+  const rhr = noticeOn ? 61 : 58;
+
+  let rows = '';
+  if(state.source === 'phone'){
+    rows = metricRow('Steps yesterday','8,400', numberLine({min:0,max:12000,band:{lo:7000,hi:9000},value:8400,
+      alt:'Steps sat inside your goal range.'}),'Inside your goal range.')
+      + metricRow('Flights climbed','11', numberLine({min:0,max:24,band:{lo:8,hi:16},value:11,
+      alt:'Flights climbed sat inside your usual range.'}),'Inside your usual range.');
+  } else if(state.source === 'newuser'){
+    rows = metricRow('Steps today','6,900', numberLine({min:0,max:12000,band:{lo:7000,hi:9000},value:6900,dashed:true,
+      alt:'Steps are just under a common starting goal range.'}),'Just under a common starting range.')
+      + `<div class="mrow"><p class="rowlabel">Resting heart rate</p><p class="rowverdict">Needs a week of nights before it means anything.</p></div>`;
+  } else {
+    rows = metricRow('Steps yesterday','8,400', numberLine({min:0,max:12000,band:{lo:7000,hi:9000},value:8400,
+      alt:'Steps sat inside your goal range.'}),'Inside your goal range.')
+      + metricRow('Resting heart rate', rhr+' bpm', numberLine({min:45,max:75,band:{lo:53,hi:59},value:rhr,
+      alt: noticeOn ? 'Resting heart rate sits above your usual range.' : 'Resting heart rate sits inside your usual range.'}),
+      noticeOn ? 'Above your usual range, three nights running.' : 'Inside your usual range.');
+  }
+
+  const summary = state.source === 'newuser'
+    ? 'Steps are running close to a common starting range.'
+    : (noticeOn
+        ? 'Movement is inside your usual range. Heart rate is not.'
+        : (state.source==='phone'
+            ? 'Movement sat inside your usual range yesterday.'
+            : 'Movement and heart rate both sat inside your usual range.'));
+
+  return `
+  <section class="card" aria-labelledby="elseHead">
+    <p class="cardhead" id="elseHead">Everything else</p>
+    <p class="cardbody">${esc(summary)}</p>
+    <div class="expander">
+      <button class="exp-btn" type="button" data-exp="else" aria-expanded="${state.open.else}" aria-controls="expElse">
+        <span>Show the numbers</span>${ICON_CHEV}
+      </button>
+      <div class="exp-body ${state.open.else?'open':''}" id="expElse">
+        <div class="exp-inner">${rows}</div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function metricRow(label,val,chart,verdict){
+  return `<div class="mrow">
+    <p class="rowlabel">${esc(label)}</p>
+    <p class="rowval">${esc(val)}</p>
+    ${chart}
+    <p class="rowverdict">${esc(verdict)}</p>
+  </div>`;
+}
+
+/* ---- health notice (slot 1, never blurred, never below position 3) ---- */
+function buildNotice(){
+  if(state.notice !== 'on' || state.source !== 'watch') return '';
+  return `
+  <section class="card notice" aria-labelledby="noticeHead">
+    <div class="tagrow">${ICON_WARN}<span>Noticed</span></div>
+    <h2 id="noticeHead">Your resting heart rate has run above your usual for three nights.</h2>
+    <p>It has sat around 61 beats a minute against your usual 53 to 59, and your breathing rate has run a little higher too. Two signals moving together for three nights is the pattern this one waits for.</p>
+    <p class="anchor">This most often follows a hard week, a late run of nights, or the start of a cold. Doctors do not usually act on a change this size unless it lasts more than a week.</p>
+  </section>`;
+}
+
+/* ---- raw mode: the escape hatch ---- */
+function buildRaw(){
+  let rows;
+  if(state.source === 'phone'){
+    rows = [
+      ['First movement today', clock(FIRST_MOVE[13])],
+      ['First movement, 7 days', FIRST_MOVE.slice(7).map(clockShort).join(', ')],
+      ['Steps yesterday','8,400'],
+      ['Flights climbed','11']
+    ];
+  } else if(state.source === 'newuser'){
+    rows = [
+      ['Asleep last night', hm(NEWUSER.wake[1]+1440-NEWUSER.bed[1])],
+      ['Lights out', clock(NEWUSER.bed[1])],
+      ['Up', clock(NEWUSER.wake[1])],
+      ['Nights recorded','2'],
+      ['Steps today','6,900']
+    ];
+  } else {
+    const d = deriveNights(NIGHTSETS[state.level]);
+    rows = [
+      ['Asleep last night', hm(d.lastDur)],
+      ['Lights out', clock(d.lastBed)],
+      ['Up', clock(d.lastWake)],
+      ['Asleep, last 7 nights', d.dur.slice(7).map(hm).join(', ')],
+      ['Steps yesterday','8,400'],
+      ['Resting heart rate', (state.notice==='on'?61:58)+' bpm']
+    ];
+  }
+  return `<p class="rawhdr">Verdicts and targets are off. These are the readings, nothing else.</p>
+  <section class="card"><dl class="rawlist">${
+    rows.map(r=>`<div class="rawrow${String(r[1]).length>22?' stack':''}"><dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd></div>`).join('')
+  }</dl></section>`;
+}
+
+/* ---- loading and empty ---- */
+function buildLoading(){
+  return `
+  <section class="card hero" aria-busy="true">
+    <p class="eyebrow">Tonight</p>
+    <p class="lead">Lights out</p>
+    <span class="sk" style="height:52px;width:62%;margin:6px 0 4px;border-radius:12px"></span>
+    <span class="sk" style="height:16px;width:100%;margin:16px 0 6px"></span>
+    <span class="sk" style="height:12px;width:44%"></span>
+    <div class="divider"></div>
+    <span class="sk" style="height:12px;width:28%;margin-bottom:8px"></span>
+    <span class="sk" style="height:26px;width:40%;margin-bottom:10px"></span>
+    <span class="sk" style="height:10px;width:100%"></span>
+    <p class="source">${ICON_INFO}<span>Reading your last two weeks of nights.</span></p>
+  </section>
+  <section class="card">
+    <p class="cardhead">Nights</p>
+    <span class="sk" style="height:22px;width:38%;margin-bottom:12px"></span>
+    ${Array.from({length:14},(_,i)=>`<span class="sk" style="height:8px;width:${52+((i*13)%34)}%;margin:0 0 6px ${((i*7)%22)}%"></span>`).join('')}
+  </section>
+  <section class="card">
+    <p class="cardhead">Everything else</p>
+    <span class="sk" style="height:14px;width:74%"></span>
+  </section>`;
+}
+
+function buildEmpty(){
+  return `
+  <section class="card hero">
+    <p class="eyebrow">Tonight</p>
+    <p class="lead">Lights out</p>
+    <p class="bignum" style="color:var(--text-tertiary)">--:--<span class="unit">PM</span></p>
+    ${railSVG({win:{lo:22*60,hi:23*60},target:22*60+30,dots:[],tone:'primary',arrow:false,dashed:true,bandLabel:'starting point',
+      alt:'An empty clock rail with a common starting window drawn on it.'})}
+    <p class="why">Laso reads sleep times from Apple Health.</p>
+    <div class="divider"></div>
+    <p class="rowlabel">Last night</p>
+    <p class="rowval" style="color:var(--text-tertiary)">--</p>
+    ${numberLine({min:4*60,max:10*60,band:{lo:7*60,hi:8*60+30},value:4*60,dashed:true,noMarker:true,alt:'An empty hours line with a common range drawn on it.'})}
+    <p class="rowverdict">nothing recorded yet</p>
+    <p class="source">${ICON_INFO}<span>No sleep times shared yet.</span></p>
+    <button class="btn" type="button" id="connectBtn">${ICON_LINK}<span>Connect Apple Health</span></button>
+  </section>
+  <section class="card">
+    <p class="cardhead">Nights</p>
+    <div class="verdictline"><p class="verdictword">Waiting</p></div>
+    <p class="cardbody">Your bedtimes and wake times will fill these rows in. The two stripes become your own windows after seven nights.</p>
+    ${nightsSVG({bed:[],wake:[]},{dashed:true,bedWin:{lo:22*60,hi:23*60},wakeWin:{lo:6*60,hi:7*60},
+      alt:'Fourteen empty rows waiting for nights, with a common starting window drawn behind them.'})}
+    <div class="legend"><span><i class="swatch band"></i>common starting window</span></div>
+  </section>
+  <section class="card">
+    <p class="cardhead">Everything else</p>
+    <p class="cardbody">Steps come straight from your phone and will appear here today.</p>
+  </section>`;
+}
+
+/* ============================================================
+   6. RENDER
+   ============================================================ */
+function render(){
+  // theme
+  const root = document.documentElement;
+  if(state.theme === 'auto') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', state.theme);
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(t=>{
+    if(t.dataset.tab === state.tab) t.setAttribute('aria-current','page');
+    else t.removeAttribute('aria-current');
+  });
+
+  const slots = document.getElementById('slots');
+
+  if(state.tab !== 'today'){
+    const name = state.tab.charAt(0).toUpperCase()+state.tab.slice(1);
+    slots.innerHTML = `<div class="placeholder">
+      <p>${esc(name)} is outside this prototype.</p>
+      <button type="button" id="backToday">Back to Today</button></div>`;
+    document.getElementById('backToday').addEventListener('click',()=>{ state.tab='today'; render(); });
+    return;
+  }
+
+  document.getElementById('rawBtn').setAttribute('aria-pressed', String(state.raw));
+
+  let html;
+  if(state.screen === 'loading')      html = buildLoading();
+  else if(state.screen === 'empty')   html = buildEmpty();
+  else if(state.raw)                  html = buildRaw();
+  else html = buildNotice() + buildHero() + buildNights() + buildElse();
+
+  if(state.screen === 'loaded'){
+    html += `<div class="foot">${ICON_INFO}<span>Updated 7:12 AM</span></div>`;
+  }
+  slots.innerHTML = html;
+  wireSlots();
+}
+
+function wireSlots(){
+  const remind = document.getElementById('remindBtn');
+  if(remind){
+    remind.addEventListener('click', ()=>{
+      state.reminderSet = !state.reminderSet;
+      render();
+      const again = document.getElementById('remindBtn');
+      if(again) again.focus();                       // the card re-renders, so focus has to come back
+      toast(state.reminderSet ? 'Reminder set. One nudge, then nothing.' : 'Reminder off.');
+    });
+  }
+  const connect = document.getElementById('connectBtn');
+  if(connect){
+    connect.addEventListener('click', ()=>{
+      state.screen = 'loading'; render(); syncDev();
+      setTimeout(()=>{ state.screen='loaded'; render(); syncDev(); toast('Sleep times connected.'); }, 1400);
+    });
+  }
+  document.querySelectorAll('.exp-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const key = b.dataset.exp;
+      state.open[key] = !state.open[key];
+      b.setAttribute('aria-expanded', String(state.open[key]));
+      const body = document.getElementById(b.getAttribute('aria-controls'));
+      body.classList.toggle('open', state.open[key]);
+    });
+  });
+}
+
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   7. WIRING
+   ============================================================ */
+document.getElementById('rawBtn').addEventListener('click', ()=>{
+  state.raw = !state.raw;
+  render();
+  toast(state.raw ? 'Scores and verdicts hidden.' : 'Verdicts back on.');
+});
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    state.tab = t.dataset.tab;
+    document.getElementById('scroll').scrollTop = 0;
+    render();
+  });
+});
+
+const devBtn = document.getElementById('devBtn');
+const devPanel = document.getElementById('devPanel');
+devBtn.addEventListener('click', ()=>{
+  const open = devPanel.classList.toggle('open');
+  devBtn.setAttribute('aria-expanded', String(open));
+});
+
+document.querySelectorAll('.devpanel .seg').forEach(seg=>{
+  seg.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    const key = seg.dataset.key;
+    state[key] = b.dataset.val;
+    if(key === 'source' || key === 'screen'){ state.raw = false; state.reminderSet = false; }
+    if(key === 'source' && b.dataset.val !== 'watch'){ state.notice = 'off'; }
+    if(key === 'notice' && b.dataset.val === 'on'){ state.source = 'watch'; state.screen = 'loaded'; }
+    state.tab = 'today';
+    syncDev(); render();
+  });
+});
+
+function syncDev(){
+  document.querySelectorAll('.devpanel .seg').forEach(seg=>{
+    const key = seg.dataset.key;
+    seg.querySelectorAll('button').forEach(b=>{
+      b.dataset.on = (state[key] === b.dataset.val) ? '1' : '0';
+    });
+  });
+}
+
+syncDev();
+render();
+</script>
+</body>
+</html>

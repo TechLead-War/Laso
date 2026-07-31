@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home — 00, Current shipping Today screen (baseline)</title>
+<style>
+/* ============================================================
+   LASO DESIGN TOKENS — verbatim from DESIGN-TOKENS.md +
+   AppColour.swift. Nothing here is invented.
+   ============================================================ */
+:root{
+  --surface-sunken:#E4E4EC; --surface-base:#EEEEF4; --surface-raised:#F8F8FB;
+  --surface-elevated:#FCFCFD; --surface-overlay:#FEFEFF; --surface-subtle:#EAEAF1;
+  --text-primary:#1B1B20; --text-secondary:#44444D; --text-tertiary:#5B5B65;
+  --border-low:#E0E0E8; --border-medium:#C9C9D3; --border-high:#A8A8B4; --border-focus:#6E6E7A;
+  --primary:#0064CC; --info:#0064CC; --accent:#0E7490;
+  --success:#0C7752; --warning:#8A6400; --danger:#C42B33;
+  --score-optimal:#0E7A52; --score-good:#0C7752; --score-fair:#8A6400; --score-poor:#C42B33;
+  --cat-sleep:#545BD6; --cat-activity:#8A5A00; --cat-stress:#6D4BD6; --cat-heart:#B93A3A;
+  --vitality-green:#0D7C55;
+  --track-neutral:#8A8A96; --chart-zero:#75757F;
+  --text-on-accent:#FFFFFF;
+  --card-shadow:0 1px 4px rgba(20,20,26,.10);
+  --shadow-ambient:rgba(20,20,26,.10);
+  --frame-bg:#D3D3DE;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --surface-sunken:#08080A; --surface-base:#0F0F13; --surface-raised:#1B1B21;
+    --surface-elevated:#26262D; --surface-overlay:#33333B; --surface-subtle:#17171C;
+    --text-primary:#F2F2F6; --text-secondary:#C9C9D2; --text-tertiary:#ADADB8;
+    --border-low:#2E2E36; --border-medium:#414149; --border-high:#5C5C68; --border-focus:#8E8E9A;
+    --primary:#4DA3FF; --info:#4DA3FF; --accent:#22D3EE;
+    --success:#3DCC99; --warning:#E3B45A; --danger:#E05C64;
+    --score-optimal:#33C48D; --score-good:#3DCC99; --score-fair:#E3B45A; --score-poor:#E05C64;
+    --cat-sleep:#818CF8; --cat-activity:#FBBF24; --cat-stress:#A78BFA; --cat-heart:#F87171;
+    --vitality-green:#34D399;
+    --track-neutral:#73737E; --chart-zero:#85858F;
+    --text-on-accent:#0B0B0E;
+    /* shadowAmbient dark = black 40%. Still applied by cardStyle(), just
+       near-invisible against a near-black page, which is the point. */
+    --card-shadow:0 1px 4px rgba(0,0,0,.40);
+    --shadow-ambient:rgba(0,0,0,.40);
+    --frame-bg:#000;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-sunken:#08080A; --surface-base:#0F0F13; --surface-raised:#1B1B21;
+  --surface-elevated:#26262D; --surface-overlay:#33333B; --surface-subtle:#17171C;
+  --text-primary:#F2F2F6; --text-secondary:#C9C9D2; --text-tertiary:#ADADB8;
+  --border-low:#2E2E36; --border-medium:#414149; --border-high:#5C5C68; --border-focus:#8E8E9A;
+  --primary:#4DA3FF; --info:#4DA3FF; --accent:#22D3EE;
+  --success:#3DCC99; --warning:#E3B45A; --danger:#E05C64;
+  --score-optimal:#33C48D; --score-good:#3DCC99; --score-fair:#E3B45A; --score-poor:#E05C64;
+  --cat-sleep:#818CF8; --cat-activity:#FBBF24; --cat-stress:#A78BFA; --cat-heart:#F87171;
+  --vitality-green:#34D399;
+  --track-neutral:#73737E; --chart-zero:#85858F;
+  --text-on-accent:#0B0B0E;
+  --card-shadow:0 1px 4px rgba(0,0,0,.40);
+  --shadow-ambient:rgba(0,0,0,.40);
+  --frame-bg:#000;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  background:var(--frame-bg); color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;line-height:1.4;
+}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.rnd{font-family:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif}
+
+/* ---------- phone frame ---------- */
+.phone{position:relative;width:100%;max-width:100%;height:100dvh;
+  background:var(--surface-sunken);display:flex;flex-direction:column;overflow:hidden}
+@media (min-width:600px){
+  body{padding:24px}
+  .phone{width:375px;height:812px;border-radius:44px;
+    box-shadow:0 40px 90px rgba(0,0,0,.45), 0 0 0 10px #16161a, 0 0 0 11px #3a3a42}
+}
+
+/* ---------- status bar ---------- */
+.statusbar{flex:0 0 auto;height:54px;padding:14px 26px 0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  font-size:15px;font-weight:600;letter-spacing:.2px;color:var(--text-primary)}
+.statusbar .icons{display:flex;align-items:center;gap:6px;margin-top:1px}
+.statusbar svg{display:block;fill:var(--text-primary)}
+
+/* ---------- scroll ---------- */
+.screen{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;
+  padding:0 0 32px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+/* LazyVStack(spacing: DS.itemSpacing = 12) */
+.stack{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.pad{padding-left:12px;padding-right:12px}   /* DS.screenPadding = 12 */
+
+/* ---------- generic card (cardStyle) — DS.cardRadius = 24 ---------- */
+.card{background:var(--surface-raised);border:1px solid var(--border-low);
+  box-shadow:var(--card-shadow);border-radius:24px;padding:16px}
+/* cardStyle(tint:) = surfaceRaised + tint at DS.tintBg 4% + tint at DS.strokeAlpha 18% stroke */
+.card--tint-success{background:color-mix(in srgb, var(--success) 4%, var(--surface-raised));
+  border-color:color-mix(in srgb, var(--success) 18%, transparent)}
+.card--tint-warning{background:color-mix(in srgb, var(--warning) 4%, var(--surface-raised));
+  border-color:color-mix(in srgb, var(--warning) 18%, transparent)}
+.card--tint-danger{background:color-mix(in srgb, var(--danger) 4%, var(--surface-raised));
+  border-color:color-mix(in srgb, var(--danger) 18%, transparent)}
+.card--tint-good{background:color-mix(in srgb, var(--score-good) 4%, var(--surface-raised));
+  border-color:color-mix(in srgb, var(--score-good) 18%, transparent)}
+
+button.bare{border:0;background:none;font:inherit;color:inherit;text-align:left;
+  width:100%;display:block;-webkit-tap-highlight-color:transparent;cursor:pointer}
+/* .bare is element+class, so flex layouts need to out-specify it */
+button.alert-row,button.risk-row,button.wr{display:flex}
+button.tile{display:flex;flex-direction:column;width:96px}
+.press{transition:transform 80ms ease-in}
+.press:active{transform:scale(.97)}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- type scale (DS.Typography) ---------- */
+.t-title{font-size:28px;font-weight:700}
+.t-title2{font-size:22px;font-weight:600}
+.t-title3{font-size:20px;font-weight:600}
+.t-headline{font-size:17px;font-weight:600}
+.t-body{font-size:17px}
+.t-bodysemi{font-size:17px;font-weight:600}
+.t-callout{font-size:16px}
+.t-calloutsemi{font-size:16px;font-weight:600}
+.t-sub{font-size:15px}
+.t-subsemi{font-size:15px;font-weight:600}
+.t-foot{font-size:13px}
+.t-footmed{font-size:13px;font-weight:500}
+.t-cap{font-size:12px}
+.t-capmed{font-size:12px;font-weight:500}
+.t-capsemi{font-size:12px;font-weight:600}
+.t-cap2{font-size:11px}
+.t-cap2semi{font-size:11px;font-weight:600}
+.sec{color:var(--text-secondary)} .ter{color:var(--text-tertiary)}
+.track{letter-spacing:1.2px} .track18{letter-spacing:1.8px} .track14{letter-spacing:1.4px}
+
+/* ---------- 1. greeting ---------- */
+.greet{padding:2px 12px 0}
+.greet h1{font-size:22px;font-weight:700;letter-spacing:-.2px}
+.greet p{font-size:17px;color:var(--text-secondary);margin-top:2px}
+
+/* ---------- 2. life context chips ---------- */
+.chiprow{display:flex;flex-direction:column;gap:8px}
+.chipscroll{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chipscroll::-webkit-scrollbar{display:none}
+.chips{display:flex;gap:8px;padding:0 12px;width:max-content}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;
+  padding:8px 12px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;
+  background:var(--surface-raised);border:1px solid var(--border-low);color:var(--text-secondary);
+  transition:transform 80ms ease-in,background 160ms ease}
+.chip:active{transform:scale(.96)}
+.chip svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.chip[aria-pressed="true"]{color:var(--primary);
+  background:color-mix(in srgb, var(--primary) 12%, transparent);
+  border-color:color-mix(in srgb, var(--primary) 45%, transparent)}
+.chip[aria-pressed="true"][data-rest="1"]{color:var(--danger);
+  background:color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color:color-mix(in srgb, var(--danger) 45%, transparent)}
+.confirm{display:flex;align-items:center;gap:8px;background:var(--surface-raised);
+  border-radius:12px;padding:8px 12px;margin:0 12px}
+.confirm .q{font-size:13px;color:var(--text-secondary);flex:1 1 auto}
+.confirm button{border:0;background:none;font-size:13px;font-weight:500;cursor:pointer;padding:6px 2px}
+.confirm .yes{color:var(--primary)} .confirm .no{color:var(--text-secondary)}
+
+/* ---------- moment cards (result / milestone) ---------- */
+.moment-head{font-size:12px;font-weight:600;letter-spacing:1.2px}
+.moment-row{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.moment-ico{flex:0 0 auto;width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:var(--text-on-accent)}
+.moment-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.moment-title{font-size:17px;font-weight:600}
+.moment-sub{font-size:13px;color:var(--text-secondary);margin-top:3px}
+.moment-actions{display:flex;gap:12px;margin-top:10px}
+.linkbtn{border:0;background:none;font-size:12px;cursor:pointer;padding:6px 0}
+
+/* ---------- 5. Next Up ---------- */
+.nextup-head{color:var(--score-good);font-size:12px;font-weight:600;letter-spacing:1.2px}
+.nextup-title{font-size:20px;font-weight:600;margin-top:12px}
+.nextup-sub{font-size:13px;color:var(--text-secondary);margin-top:8px}
+.nextup-btns{display:flex;gap:8px;margin-top:12px}
+.pill-done{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:0;border-radius:13px;padding:11px 12px;font-size:15px;font-weight:600;cursor:pointer;
+  color:var(--score-good);background:color-mix(in srgb, var(--score-good) 15%, transparent)}
+.pill-done[data-done="1"]{background:var(--success);color:var(--text-on-accent)}
+.pill-remind{display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:13px;
+  padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;
+  color:var(--text-secondary);background:var(--surface-subtle);white-space:nowrap}
+.pill-done svg,.pill-remind svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 6. Recovery hero ---------- */
+.hero{position:relative;background:var(--surface-raised);border:1px solid var(--border-low);
+  box-shadow:var(--card-shadow);border-radius:24px;padding:20px}
+.hero-top{display:flex;align-items:center;gap:16px}
+.ringcol{flex:0 0 132px;width:132px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}
+.ringwrap{position:relative;width:132px;height:132px;display:flex;align-items:center;justify-content:center}
+.glow{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+.ringnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+/* HealthScoreRing: numeral = size * 0.28 = 29pt, label = size * 0.12 = 12.5pt medium */
+.ringnum .n{font-size:29px;font-weight:700;line-height:1}
+.ringnum .l{font-size:12.5px;font-weight:500;color:var(--text-secondary);margin-top:2px}
+.rangerow{font-size:12px;color:var(--text-tertiary);text-align:center}
+/* max-width: the chip lives inside ringColumn's .frame(width: 132), so lineLimit(2)
+   is what stops "3 up from yesterday" running past the ring. */
+.chip-delta{display:inline-flex;align-items:center;gap:3px;border-radius:9999px;padding:4px 8px;
+  max-width:100%;font-size:12px;font-weight:600;text-align:center;line-height:1.2}
+.chip-delta svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.confrow{width:100%;display:flex;flex-direction:column;gap:5px;align-items:center}
+.confrow .txt{font-size:12px;color:var(--text-tertiary);text-align:center}
+.confbar{width:100%;height:4px;border-radius:9999px;background:var(--track-neutral);overflow:hidden}
+.confbar i{display:block;height:100%;border-radius:9999px}
+.whycol{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.whylabel{font-size:12px;font-weight:600;letter-spacing:1.4px;color:var(--text-tertiary);padding-bottom:2px}
+.whyrow{display:flex;align-items:center;gap:9px;padding:9px 0;cursor:pointer;width:100%;
+  border:0;background:none;text-align:left;-webkit-tap-highlight-color:transparent}
+.whyrow .dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%}
+/* layoutPriority(1) on the label + minimumScaleFactor(0.8) on both: the signal
+   name survives, the reading beside it is what gives way. */
+.whyrow .lab{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  flex:0 1 auto;flex-shrink:.25;min-width:0}
+.whyrow .val{font-size:13px;color:var(--text-secondary);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;flex-shrink:4;min-width:0;
+  margin-left:auto;padding-left:6px;text-align:right}
+.whyrow.nodata .lab,.whyrow.nodata .val{color:var(--text-tertiary)}
+.whydiv{height:1px;background:var(--border-low)}
+.missing{font-size:12px;color:var(--text-tertiary);padding-top:10px}
+.herodiv{height:1px;background:var(--border-low);margin:14px 0}
+.summary{cursor:pointer;border:0;background:none;text-align:left;width:100%;padding:0}
+.summary .h{font-size:17px;font-weight:600}
+.summary .s{font-size:15px;color:var(--text-secondary);margin-top:2px}
+/* The app's target, not the 44pt guideline: a 13pt symbol + padding(10) = ~37x39. */
+.sharebtn{position:absolute;top:6px;right:6px;width:37px;height:39px;border:0;background:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+.sharebtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 7. Sleep bank ---------- */
+.sb-title{font-size:11px;color:var(--text-tertiary)}
+.sb-balance{display:flex;align-items:baseline;gap:8px;margin-top:10px}
+.sb-balance .big{font-size:28px;font-weight:700;color:var(--warning)}
+.sb-behind{margin-left:auto;font-size:12px;color:var(--warning);border-radius:9999px;
+  padding:4px 10px;background:color-mix(in srgb, var(--warning) 12%, transparent)}
+.sb-against{font-size:12px;color:var(--text-tertiary);margin-top:4px}
+.sb-chart{display:flex;align-items:center;gap:4px;height:52px;margin-top:16px}
+.sb-night{flex:1 1 0;display:flex;flex-direction:column;height:52px}
+.sb-half{flex:0 0 25.5px;height:25.5px;display:flex;justify-content:center;position:relative}
+.sb-half.up{align-items:flex-end}
+.sb-half.down{align-items:flex-start}
+.sb-half i{display:block;width:8px;border-radius:9999px}
+.sb-zero{height:1px;background:var(--chart-zero)}
+.sb-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--text-tertiary);margin-top:6px}
+.sb-payback{display:flex;align-items:flex-start;gap:8px;background:var(--surface-subtle);
+  border-radius:12px;padding:16px;margin-top:14px}
+.sb-payback svg{width:14px;height:14px;flex:0 0 auto;margin-top:2px;color:var(--accent);stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sb-payback span{font-size:13px;color:var(--text-secondary)}
+.sb-thin{font-size:11px;color:var(--text-tertiary);margin-top:8px}
+
+/* ---------- 8. Data coverage ---------- */
+/* The ForEach is flattened into the outer VStack(spacing: DS.space2), so every
+   row AND every divider carries an 8pt gap. */
+.cov-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.cov-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.cov-row .n{font-size:15px;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cov-row .v{font-size:13px;font-weight:500;flex:0 0 auto}
+.cov-row.missing .n{color:var(--text-tertiary)}
+.cov-hint{font-size:12px;color:var(--text-tertiary);padding-top:2px}
+
+/* ---------- 9. Activation banner ---------- */
+.act-bar{border-radius:12px;padding:8px 12px;background:var(--surface-raised);
+  border:1px solid var(--border-low);box-shadow:var(--card-shadow)}
+.act-top{display:flex;align-items:center;gap:8px}
+.act-top .d{font-size:13px;font-weight:500;color:var(--text-secondary);flex:1 1 auto}
+.act-top .p{font-size:12px;font-weight:600;color:var(--primary)}
+.act-dots{position:relative;height:6px;margin-top:8px;display:flex;align-items:center;justify-content:space-between}
+.act-dots .line{position:absolute;left:3px;right:3px;top:2px;height:2px;display:flex;gap:0}
+.act-dots .line i{flex:1 1 0;height:2px;border-radius:4px;background:var(--track-neutral)}
+.act-dots .line i.on{background:var(--primary)}
+.act-dots .dot{position:relative;width:6px;height:6px;border-radius:50%;background:var(--track-neutral)}
+.act-dots .dot.on{background:var(--primary)}
+.celebrate{display:flex;align-items:flex-start;gap:12px;border-radius:16px;padding:12px;
+  background:var(--surface-raised);border:1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  box-shadow:0 8px 18px var(--shadow-ambient);margin-bottom:8px}
+.celebrate .ico{flex:0 0 auto;width:40px;height:40px;border-radius:8px;background:var(--primary);
+  color:var(--text-on-accent);display:flex;align-items:center;justify-content:center}
+.celebrate .ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 10. Morning check-in ---------- */
+.ci{background:var(--surface-raised);border:.5px solid var(--border-low);border-radius:16px;padding:16px;
+  display:flex;flex-direction:column;gap:16px}
+.ci-head{display:flex;align-items:flex-start;gap:8px}
+.ci-head .t{font-size:17px;font-weight:600}
+.ci-head .s{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.ci-q{display:flex;flex-direction:column;gap:4px}
+.ci-q .lab{display:flex;align-items:center;gap:4px;font-size:16px;font-weight:600;color:var(--text-secondary)}
+.ci-q .lab svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ci-opts{display:flex;gap:0}
+.ci-opt{flex:1 1 0;border:1px solid transparent;background:none;border-radius:8px;padding:4px 0;
+  font-size:17px;line-height:1.3;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;
+  transition:background 150ms ease}
+.ci-opt[aria-pressed="true"]{background:color-mix(in srgb, var(--primary) 12%, transparent);
+  border-color:color-mix(in srgb, var(--primary) 30%, transparent)}
+.ci-done{border:0;border-radius:8px;padding:8px;background:var(--primary);color:var(--text-on-accent);
+  font-size:17px;font-weight:600;cursor:pointer;width:100%}
+.xbtn{flex:0 0 auto;width:24px;height:24px;border:0;background:none;cursor:pointer;color:var(--text-tertiary);
+  display:flex;align-items:center;justify-content:center}
+.xbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+
+/* ---------- 11. Watch complication ---------- */
+.wc-top{display:flex;align-items:flex-start;gap:12px}
+.wc-top .ico{flex:0 0 36px;color:var(--score-good);display:flex;justify-content:center;padding-top:2px}
+.wc-top .ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wc-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.wc-step{display:flex;align-items:flex-start;gap:8px}
+.wc-step .num{flex:0 0 16px;text-align:center;font-size:11px;color:var(--text-secondary)}
+.wc-step .txt{font-size:13px;color:var(--text-secondary)}
+
+/* ---------- 12. Ask your data ---------- */
+.ayd{display:flex;flex-direction:column;gap:8px;cursor:pointer;width:100%;border:0;background:none;text-align:left}
+.ayd .cap{font-size:11px;font-weight:600;letter-spacing:1.8px;color:var(--text-tertiary)}
+.ayd .pill{display:flex;align-items:center;gap:12px;border:1px solid var(--border-high);
+  border-radius:9999px;padding:16px 20px}
+.ayd .pill span{flex:1 1 auto;font-size:17px;font-style:italic;color:var(--text-secondary)}
+.ayd .pill svg{flex:0 0 auto;width:16px;height:16px;color:var(--text-secondary);stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- 13. Compact alert banner ---------- */
+.alert-inner{display:flex;flex-direction:column;gap:6px}
+.alert-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;
+  background:var(--surface-raised);border:1px solid color-mix(in srgb, var(--danger) 20%, transparent);
+  width:100%;cursor:pointer;text-align:left}
+.alert-row .warnico{flex:0 0 auto;color:var(--danger)}
+.alert-row .warnico svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.alert-row .body{flex:1 1 auto;min-width:0}
+.alert-row .k{font-size:13px;font-weight:500;color:var(--danger)}
+.alert-row .n{font-size:12px;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sev{flex:0 0 auto;font-size:12px;font-weight:600;border-radius:9999px;padding:4px 8px;color:var(--text-on-accent)}
+.chev{flex:0 0 auto;color:var(--text-tertiary)}
+.chev svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.risk-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;
+  background:var(--surface-raised);width:100%;cursor:pointer;text-align:left}
+.risk-row .ri{flex:0 0 auto;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.risk-row .ri svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.risk-row .rn{flex:1 1 auto;font-size:13px;font-weight:500}
+.risk-row .rg{flex:0 0 auto;font-size:12px;font-weight:600}
+
+/* ---------- 15. metric strip ---------- */
+.stripwrap{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.stripwrap::-webkit-scrollbar{display:none}
+.strip{display:flex;gap:10px;padding:4px 12px;width:max-content}
+/* frame(width: 96) then padding(.vertical, 10): no horizontal inset, radius = DS.cardRadius 24 */
+.tile{flex:0 0 96px;width:96px;border-radius:24px;background:var(--surface-raised);
+  border:1px solid var(--border-low);box-shadow:0 2px 8px var(--shadow-ambient);
+  padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+  transition:transform 80ms ease-in}
+.tile:active{transform:scale(.96)}
+.tile .ti{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-on-accent)}
+.tile .ti svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* width:100% so the 96pt frame is what the labels have to fit inside, as in SwiftUI */
+.tile .tv{width:100%;font-size:20px;font-weight:600;line-height:1.15;text-align:center;font-variant-numeric:tabular-nums}
+.tile .tl{width:100%;font-size:12px;font-weight:500;color:var(--text-secondary);text-align:center;line-height:1.15}
+.tile .tb{width:100%;font-size:12px;font-weight:600;text-align:center;line-height:1.15}
+
+/* ---------- 17. weekly review ---------- */
+/* Not cardStyle(): a bare surfaceRaised fill at DS.cardRadius, no border, no shadow. */
+.wr{display:flex;align-items:center;gap:12px;background:var(--surface-raised);border-radius:24px;
+  padding:16px;width:100%;border:0;cursor:pointer;text-align:left}
+.wr .ci2{flex:0 0 auto;color:var(--info)}
+/* DS.Typography.mediumIcon = 36pt */
+.wr .ci2 svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.wr .meta{display:flex;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap}
+
+/* ---------- 18. footer ---------- */
+.footer{text-align:center;font-size:12px;color:var(--text-tertiary);padding:4px 12px}
+
+/* ---------- soft lock ---------- */
+.locked{position:relative}
+.locked > .lockinner{filter:blur(10px);pointer-events:none;user-select:none}
+.lockbadge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:6px 10px;
+  font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:color-mix(in srgb, var(--primary) 12%, var(--surface-raised));z-index:2}
+.lockbadge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round}
+.lockhit{position:absolute;inset:0;z-index:3;border:0;background:transparent;cursor:pointer}
+.softbar{flex:0 0 auto;padding:0 12px 8px}
+.softbar .box{background:var(--surface-elevated);border:1px solid var(--border-high);
+  border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.softbar .p{font-size:12px;color:var(--text-secondary)}
+.softbar button{width:100%;border:0;border-radius:12px;background:var(--primary);
+  color:var(--text-on-accent);font-size:17px;font-weight:600;padding:12px;cursor:pointer}
+
+/* ---------- loading / empty ---------- */
+.center{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:32px;padding:24px;text-align:center}
+.orb{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center}
+.orb .r1,.orb .r2{position:absolute;border-radius:50%}
+.orb .r1{width:120px;height:120px;background:color-mix(in srgb, var(--info) 10%, transparent);
+  animation:pulse1 1200ms ease-in-out infinite alternate}
+.orb .r2{width:160px;height:160px;background:color-mix(in srgb, var(--info) 5%, transparent);
+  animation:pulse2 1500ms ease-in-out infinite alternate}
+.orb .core{position:relative;width:80px;height:80px;border-radius:50%;
+  background:color-mix(in srgb, var(--info) 12%, transparent);color:var(--info);
+  display:flex;align-items:center;justify-content:center}
+.orb .core svg{width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pulse1{from{transform:scale(.9)}to{transform:scale(1.3)}}
+@keyframes pulse2{from{transform:scale(1)}to{transform:scale(1.5)}}
+.emptybtn{border:0;border-radius:12px;background:var(--primary);color:var(--text-on-accent);
+  font-size:20px;font-weight:600;padding:14px 24px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.emptybtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- tab bar ---------- */
+.tabbar{flex:0 0 auto;height:83px;padding:8px 8px 22px;display:flex;align-items:flex-start;
+  background:color-mix(in srgb, var(--surface-raised) 72%, transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
+  border-top:1px solid var(--border-low)}
+.tab{flex:1 1 0;min-height:52px;border:0;background:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--text-tertiary);font-size:11px;font-weight:600;border-radius:12px;
+  transition:color 160ms ease,transform 80ms ease-in;-webkit-tap-highlight-color:transparent}
+.tab:active{transform:scale(.94)}
+.tab[aria-current="page"]{color:var(--primary)}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- sheet (every exit lands here) ---------- */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none}
+.scrim.open{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--surface-elevated);
+  border-radius:20px 20px 0 0;padding:20px 20px 32px;max-height:74%;overflow-y:auto;
+  transform:translateY(101%);transition:transform 250ms ease-in-out;box-shadow:0 -8px 30px rgba(0,0,0,.3)}
+.sheet.open{transform:translateY(0)}
+.sheet .grabber{width:36px;height:5px;border-radius:9999px;background:var(--border-medium);margin:0 auto 16px}
+.sheet h3{font-size:22px;font-weight:600;margin-bottom:8px}
+.sheet .kind{font-size:11px;font-weight:600;letter-spacing:1.2px;color:var(--text-tertiary);margin-bottom:6px}
+.sheet p{font-size:15px;color:var(--text-secondary);margin-bottom:12px}
+.sheet .closebtn{width:100%;border:0;border-radius:12px;background:var(--primary);
+  color:var(--text-on-accent);font-size:17px;font-weight:600;padding:12px;cursor:pointer;margin-top:8px}
+.toast{position:absolute;left:50%;bottom:100px;transform:translate(-50%,12px);z-index:45;
+  background:var(--surface-overlay);border:1px solid var(--border-low);border-radius:12px;
+  padding:10px 14px;font-size:13px;color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.28);
+  opacity:0;pointer-events:none;transition:opacity 200ms ease,transform 200ms ease}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- dev toolbar (NOT part of the design) ---------- */
+.devbtn{position:fixed;right:14px;bottom:100px;z-index:60;width:34px;height:34px;border-radius:9999px;
+  border:1px solid rgba(255,255,255,.22);background:rgba(30,30,36,.62);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.42;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:opacity 200ms ease}
+.devbtn:hover,.devbtn:focus-visible{opacity:1}
+.devbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.devpanel{position:fixed;right:14px;bottom:142px;z-index:60;width:238px;padding:12px;
+  border-radius:14px;background:rgba(24,24,29,.94);color:#EDEDF2;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 40px rgba(0,0,0,.5);font-size:11px;display:none}
+.devpanel.open{display:block}
+.devpanel h4{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin:10px 0 6px;font-weight:700}
+.devpanel h4:first-child{margin-top:0}
+.devchips{display:flex;flex-wrap:wrap;gap:5px}
+.devchip{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#EDEDF2;
+  border-radius:9999px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer}
+.devchip[aria-pressed="true"]{background:#EDEDF2;color:#16161a}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- ================= status bar ================= -->
+  <div class="statusbar">
+    <span class="tnum">9:41</span>
+    <span class="icons" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.6 9.1a2.9 2.9 0 0 1 3.8 0zM8.5 6.1c-1.5 0-2.9.6-3.9 1.6L3.2 6.2a7.7 7.7 0 0 1 10.6 0l-1.4 1.5a5.4 5.4 0 0 0-3.9-1.6zM8.5 1.6c-2.7 0-5.2 1.1-7 2.9L.1 3.1A11.6 11.6 0 0 1 8.5.3c3.2 0 6.2 1.1 8.4 2.8l-1.4 1.4a10 10 0 0 0-7-2.9z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="1"/><rect x="2" y="2" width="15" height="8" rx="2"/><path d="M23.4 4.1v3.8a2.1 2.1 0 0 0 0-3.8z" opacity=".38"/></svg>
+    </span>
+  </div>
+
+  <!-- ================= LOADING state (firstLaunchLoadingView) ================= -->
+  <div class="center hidden" id="state-loading">
+    <div class="orb">
+      <span class="r2"></span><span class="r1"></span>
+      <span class="core"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3.2 3.2 0 0 0-3.2 3.2A2.9 2.9 0 0 0 6 9.5a2.9 2.9 0 0 0 .9 2.1A3 3 0 0 0 6 13.8a3 3 0 0 0 2.3 2.9A2.8 2.8 0 0 0 11 20a2.6 2.6 0 0 0 1-.2V3.7a3 3 0 0 0-1-.2z"/><path d="M15.2 6.7A3.2 3.2 0 0 0 12 3.5M18 9.5a2.9 2.9 0 0 0-2.8-2.8M18 13.8a2.9 2.9 0 0 0 0-4.3M15.7 16.7A3 3 0 0 0 18 13.8M13 20a2.8 2.8 0 0 0 2.7-3.3"/></svg></span>
+    </div>
+    <div>
+      <p class="t-body" style="font-weight:500"><span id="loadText">Syncing your past year of health data</span><span id="loadDots"></span></p>
+      <p class="t-foot ter" style="margin-top:8px">This only happens once</p>
+    </div>
+  </div>
+
+  <!-- ================= EMPTY state (HomeConnectHealthView) ================= -->
+  <div class="center hidden" id="state-empty">
+    <span style="color:var(--warning)"><svg viewBox="0 0 24 24" width="64" height="64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M6.5 12h2.2l1.3-2.6 2 5.2 1.4-2.6h3.1"/></svg></span>
+    <div>
+      <h2 class="t-title2">Waiting for Health Data</h2>
+      <p class="t-body sec" style="margin-top:8px;padding:0 24px">Make sure your watch or health app is sharing with Apple Health.</p>
+    </div>
+    <button class="emptybtn" id="emptyRefresh">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4.5h-4.5"/></svg>
+      Refresh Now
+    </button>
+  </div>
+
+  <!-- ================= LOADED state = homeContent ================= -->
+  <div class="screen" id="state-loaded">
+    <div class="stack" id="stack">
+
+      <!-- 1. CoachGreetingView -->
+      <header class="greet" id="b-greeting">
+        <h1>Morning, Alex</h1>
+        <p>Tuesday, April 26</p>
+      </header>
+
+      <!-- 2. LifeContextChipRow -->
+      <div class="chiprow" id="b-context">
+        <div class="chipscroll">
+          <div class="chips" role="group" aria-label="What is going on">
+            <button class="chip" data-ctx="injured" data-rest="1" aria-pressed="false" data-name="Injured">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M10 10.5h.01M13.5 10.5h.01M10 13.5h.01M13.5 13.5h.01"/></svg>
+              <span>Injured</span>
+            </button>
+            <button class="chip" data-ctx="unwell" data-rest="1" aria-pressed="false" data-name="Unwell">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v9.2a2.6 2.6 0 1 0 0 0z"/><circle cx="12" cy="16.5" r="3.2"/></svg>
+              <span>Unwell</span>
+            </button>
+            <button class="chip" data-ctx="travelling" data-rest="0" aria-pressed="false" data-name="Travelling">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13.5 21 8l-1.2 3.4-6.3 2 .9 5.1-1.7.6-2.5-4.7-4 1.3z"/></svg>
+              <span>Travelling</span>
+            </button>
+            <button class="chip" data-ctx="poorSleepWeek" data-rest="0" aria-pressed="true" data-name="Sleeping badly" data-since="Apr 20">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/><path d="M14 3.5h4l-4 4h4"/></svg>
+              <!-- start.formatted(.dateTime.day().month(.abbreviated)) is locale-ordered;
+                   the greeting above is en_US, so this reads "Apr 20", not "20 Apr". -->
+              <span class="ctx-label">Sleeping badly since Apr 20</span>
+            </button>
+          </div>
+        </div>
+        <div id="confirmRows"></div>
+      </div>
+
+      <!-- 3. DailyActionResultCard -->
+      <div class="pad" id="b-result">
+        <div class="card card--tint-warning">
+          <div class="moment-head" style="color:var(--warning)">YESTERDAY'S RESULT</div>
+          <div class="moment-row">
+            <span class="moment-ico" style="background:var(--warning)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17v-4.5A2.5 2.5 0 0 1 5.5 10H21v7"/><path d="M3 17h18M6.5 10V7.5A1.5 1.5 0 0 1 8 6h3a1.5 1.5 0 0 1 1.5 1.5V10"/></svg>
+            </span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div class="moment-title">Go to bed 30 minutes earlier tonight</div>
+              <div class="moment-sub">Your recovery dipped 9. Rest is part of the plan too.</div>
+            </div>
+          </div>
+          <div class="moment-actions">
+            <button class="linkbtn" style="color:var(--warning)" data-dismiss="b-result">Got it</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. streakMilestoneCard -->
+      <div class="pad" id="b-milestone">
+        <div class="card card--tint-success">
+          <div class="moment-head" style="color:var(--success)">STREAK MILESTONE</div>
+          <div class="moment-row">
+            <span class="moment-ico" style="background:var(--success)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2.4 3.3 1 5.2.2 6.2-1 1.2-1.7 2.2-1.7 3.4a2.3 2.3 0 0 0 4.6 0c0-.5-.1-1-.3-1.4 2 1.4 3.2 3.5 3.2 5.8a6 6 0 0 1-12 0c0-4.4 3.2-6.6 4.6-9.2.8-1.5 1.4-3 1.4-4.8z"/></svg>
+            </span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div class="moment-title">7 days in a row</div>
+              <div class="moment-sub">You hit activity, sleep and recovery on every one of those days.</div>
+            </div>
+          </div>
+          <div class="moment-actions">
+            <button class="linkbtn" style="color:var(--success);font-weight:600" data-sheet="share" data-src="streak">Share this</button>
+            <button class="linkbtn ter" data-dismiss="b-milestone">No thanks</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. primaryActionCard — NEXT UP -->
+      <div class="pad" id="b-nextup">
+        <div class="card">
+          <div class="nextup-head">NEXT UP · TODAY</div>
+          <button class="bare press" data-sheet="todaysAction" style="margin-top:0">
+            <div class="nextup-title">Get to bed early tonight</div>
+            <div class="nextup-sub">You are 4h 20m down on sleep. 6 early nights clear it.</div>
+            <!-- No benefit row: the sleep_bank branch of DashboardSmartActionAdvisor
+                 leaves expectedBenefit empty, and primaryActionCard only renders the
+                 green payoff pill when it is non-empty. -->
+          </button>
+          <div class="nextup-btns">
+            <button class="pill-done" id="markDone" data-done="0">
+              <svg viewBox="0 0 24 24" aria-hidden="true" id="doneIcon"><path d="M5 12.5 10 17.5 19 7"/></svg>
+              <span id="doneLabel">Mark done</span>
+            </button>
+            <button class="pill-remind" id="remindBtn">
+              <svg viewBox="0 0 24 24" aria-hidden="true" id="remindIcon"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+              <span id="remindLabel">Remind 9:30 PM</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. RecoveryHeroCard -->
+      <div class="pad locked-host" id="b-hero" data-lock="home_recovery_score">
+        <div class="lockinner">
+          <div class="hero">
+            <button class="sharebtn" data-sheet="share" data-src="hero" aria-label="Share health card">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5V4M8.5 7.5 12 4l3.5 3.5"/><path d="M5.5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>
+            </button>
+
+            <div class="hero-top">
+              <!-- ring column -->
+              <div class="ringcol" role="button" tabindex="0" data-sheet="recoveryInfo"
+                   aria-label="Readiness 62. 3 up from yesterday. Opens score breakdown">
+                <div class="ringwrap">
+                  <!-- RadialGradient(startRadius: 6, endRadius: 66) over a 132pt circle -->
+                  <span class="glow" style="background:radial-gradient(circle closest-side at 50% 50%, color-mix(in srgb, var(--score-fair) 28%, transparent) 9%, transparent 100%)"></span>
+                  <!-- Circle() inscribes the 104pt frame (r=52) and the 9pt stroke is
+                       centred on that path, so it bleeds 4.5pt out: outer diameter 113. -->
+                  <svg width="113" height="113" viewBox="0 0 113 113" aria-hidden="true">
+                    <circle cx="56.5" cy="56.5" r="52" fill="none" stroke="var(--track-neutral)" stroke-width="9"/>
+                    <!-- r=52 => circumference 326.7. Readiness 62 => 202.6 filled. -->
+                    <circle cx="56.5" cy="56.5" r="52" fill="none" stroke="var(--score-fair)" stroke-width="9"
+                            stroke-linecap="round" stroke-dasharray="202.6 124.1"
+                            transform="rotate(-90 56.5 56.5)"/>
+                  </svg>
+                  <span class="ringnum"><span class="n rnd tnum" style="color:var(--score-fair)">62</span><span class="l rnd">Readiness</span></span>
+                </div>
+                <div class="rangerow tnum">Likely 54 to 70</div>
+                <span class="chip-delta" style="color:var(--success);background:color-mix(in srgb, var(--success) 12%, transparent)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+                  <span class="tnum">3 up from yesterday</span>
+                </span>
+                <div class="confrow">
+                  <span class="txt tnum">Based on 4 of 5 signals</span>
+                  <span class="confbar"><i style="width:80%;background:var(--success)"></i></span>
+                </div>
+              </div>
+
+              <!-- why column -->
+              <div class="whycol">
+                <div class="whylabel">Why</div>
+                <button class="whyrow" data-sheet="why" data-dest="sleep_coach">
+                  <span class="dot" style="background:var(--warning)"></span>
+                  <span class="lab">Sleep was short</span>
+                  <span class="val tnum">6h 12m</span>
+                </button>
+                <div class="whydiv"></div>
+                <button class="whyrow" data-sheet="why" data-dest="heartRateVariability">
+                  <span class="dot" style="background:var(--warning)"></span>
+                  <span class="lab">Heart is working hard</span>
+                  <span class="val tnum">6 ms below usual</span>
+                </button>
+                <div class="whydiv"></div>
+                <button class="whyrow" data-sheet="why" data-dest="score_explainer">
+                  <span class="dot" style="background:var(--success)"></span>
+                  <span class="lab">Energy is good</span>
+                  <span class="val">Good</span>
+                </button>
+                <div class="whydiv"></div>
+                <button class="whyrow" data-sheet="why" data-dest="restingHeartRate">
+                  <span class="dot" style="background:var(--warning)"></span>
+                  <span class="lab">Resting heart rate is up</span>
+                  <span class="val tnum">3 bpm above usual</span>
+                </button>
+                <div class="whydiv"></div>
+                <button class="whyrow nodata" data-sheet="why" data-dest="stress_monitor">
+                  <span class="dot" style="background:var(--text-tertiary)"></span>
+                  <span class="lab">Stress</span>
+                  <span class="val">None yet</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="missing">Stress not recorded yet. Wear your watch tonight and tomorrow is a full read.</div>
+
+            <div class="herodiv"></div>
+            <button class="summary" data-sheet="recoveryInfo">
+              <span class="h">About usual today.</span>
+              <div class="s">A steady day suits you.</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. SleepBankCard — zero tap targets, and no .padding(.horizontal,
+           DS.screenPadding) in the Swift, so it alone runs flush to both edges. -->
+      <div id="b-sleepbank">
+        <div class="card">
+          <div class="sb-title">SLEEP BANK · LAST 14 NIGHTS</div>
+          <div class="sb-balance">
+            <span class="big rnd tnum">-4h 20m</span>
+            <span class="sb-behind">Behind</span>
+          </div>
+          <div class="sb-against tnum">Against your usual 7h 40m a night</div>
+          <div class="sb-chart" id="sbChart" aria-hidden="true"></div>
+          <div class="sb-axis"><span>14 nights ago</span><span>Last night</span></div>
+          <div class="sb-payback">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17v-4.5A2.5 2.5 0 0 1 5.5 10H21v7"/><path d="M3 17h18M6.5 10V7.5A1.5 1.5 0 0 1 8 6h3a1.5 1.5 0 0 1 1.5 1.5V10"/></svg>
+            <span class="tnum">45 minutes extra for 6 nights puts you back to level</span>
+          </div>
+          <div class="sb-thin tnum">Built from 12 recorded nights</div>
+        </div>
+      </div>
+
+      <!-- 8. DataCoverageCard -->
+      <div class="pad" id="b-coverage">
+        <div class="card">
+          <div class="moment-head ter">WHAT WE ARE READING</div>
+          <div class="cov-list">
+            <div class="cov-row"><span class="n">Sleep Duration</span><span class="v tnum" style="color:var(--success)">12 of 14 days</span></div>
+            <div class="whydiv"></div>
+            <div class="cov-row"><span class="n">Heart Rate Variability</span><span class="v tnum" style="color:var(--success)">11 of 14 days</span></div>
+            <div class="whydiv"></div>
+            <div class="cov-row"><span class="n">Resting Heart Rate</span><span class="v tnum" style="color:var(--success)">13 of 14 days</span></div>
+            <div class="whydiv"></div>
+            <div class="cov-row"><span class="n">Steps</span><span class="v tnum" style="color:var(--success)">14 of 14 days</span></div>
+            <div class="whydiv"></div>
+            <div class="cov-row missing"><span class="n">Blood Oxygen</span><span class="v" style="color:var(--danger)">Nothing yet</span></div>
+          </div>
+          <div class="cov-hint" style="margin-top:8px">Blood Oxygen has sent nothing. Either it is switched off for Laso in the Health app, or your watch has not recorded it.</div>
+          <button class="linkbtn" style="color:var(--accent);font-weight:500;font-size:13px;margin-top:8px" data-sheet="settings">Check Health settings</button>
+        </div>
+      </div>
+
+      <!-- 9. ActivationProgressBanner -->
+      <div class="pad" id="b-activation">
+        <div id="celebrateHost">
+          <div class="celebrate" id="celebrateCard">
+            <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 14.5 6.7 17.3a3.9 3.9 0 1 1-5.5-5.5l2.8-2.8"/><path d="M14.5 9.5l2.8-2.8a3.9 3.9 0 1 1 5.5 5.5l-2.8 2.8" transform="translate(-1.5 -1.5)"/><path d="M8.8 15.2l6.4-6.4"/></svg></span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div class="t-bodysemi">Correlation Discovered</div>
+              <div class="t-foot sec" style="margin-top:4px">Found a link between two of your metrics. Your body is an interconnected system.</div>
+            </div>
+            <button class="xbtn" id="celebrateX" aria-label="Dismiss milestone celebration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+        </div>
+        <div class="act-bar">
+          <div class="act-top">
+            <span class="d">Almost there. Correlation Discovered unlocking soon</span>
+            <span class="p tnum">71%</span>
+          </div>
+          <div class="act-dots" id="actDots"></div>
+        </div>
+      </div>
+
+      <!-- 10. MorningCheckInView -->
+      <div class="pad" id="b-checkin">
+        <div class="ci">
+          <div class="ci-head">
+            <div style="flex:1 1 auto">
+              <div class="t">Good Morning</div>
+              <div class="s">How are you feeling today?</div>
+            </div>
+            <button class="xbtn" data-dismiss="b-checkin" aria-label="Dismiss morning check-in"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="ci-q" data-q="sleep">
+              <div class="lab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/></svg>Sleep quality</div>
+              <div class="ci-opts"></div>
+            </div>
+            <div class="ci-q" data-q="energy">
+              <div class="lab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2.5 5 13.5h5.5L10 21.5l8-11h-5.5z"/></svg>Energy level</div>
+              <div class="ci-opts"></div>
+            </div>
+            <div class="ci-q" data-q="soreness">
+              <div class="lab"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.2" r="1.8"/><path d="M13 7v5l3.5 3.5M13 12l-3.5 2.5-1 6M16.5 15.5l1.5 5.5M8 9.5l5-2 4 2.5"/></svg>Body soreness</div>
+              <div class="ci-opts"></div>
+            </div>
+          </div>
+          <button class="ci-done hidden" id="ciDone">Done</button>
+        </div>
+      </div>
+
+      <!-- 11. WatchComplicationCard -->
+      <div class="pad" id="b-watch">
+        <div class="card card--tint-good">
+          <div class="wc-top">
+            <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="3"/><path d="M9 6.5 9.5 3h5l.5 3.5M9 17.5l.5 3.5h5l.5-3.5"/></svg></span>
+            <div style="flex:1 1 auto;min-width:0">
+              <div class="t-bodysemi">Put your score on your watch face</div>
+              <div class="t-foot sec" style="margin-top:4px">See your readiness by raising your wrist, without opening the app.</div>
+            </div>
+            <button class="xbtn" data-dismiss="b-watch" aria-label="Hide this tip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="wc-steps">
+            <div class="wc-step"><span class="num tnum">1</span><span class="txt">Press and hold your watch face</span></div>
+            <div class="wc-step"><span class="num tnum">2</span><span class="txt">Tap Edit, then swipe to Complications</span></div>
+            <div class="wc-step"><span class="num tnum">3</span><span class="txt">Tap a slot and choose Laso</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. AskYourDataCard -->
+      <div class="pad" id="b-ask">
+        <button class="ayd press" data-sheet="askYourData">
+          <span class="cap">CONCIERGE</span>
+          <span class="pill">
+            <!-- conciergePrompts[dayOfYear % 7]; 26 April = day 116, 116 % 7 = 4 -->
+            <span>How does exercise shift my recovery?</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13.5 6l6 6-6 6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <!-- 13. compactAlertBanner -->
+      <div class="pad locked-host" id="b-alerts" data-lock="home_alerts">
+        <div class="lockinner">
+          <div class="card card--tint-danger">
+            <div class="alert-inner">
+              <button class="alert-row bare" data-sheet="insightsDetail">
+                <span class="warnico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v6c0 4.4 3.1 8.1 7.5 9 4.4-.9 7.5-4.6 7.5-9V6z"/><path d="M8.8 12.2 11 14.4l4.2-4.4"/></svg></span>
+                <span class="body">
+                  <span class="k">Worth Noticing</span>
+                  <span class="n tnum">Your resting heart rate has trended 5% above baseline for 3 days (58 vs 55 bpm), while your heart rate variability dropped 11% below baseline over 3 days (48 vs 54 ms). Several health numbers shifted at the same time. Your body may be under extra stress.</span>
+                </span>
+                <span class="sev" style="background:var(--warning)">Moderate</span>
+                <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+              </button>
+
+              <button class="risk-row bare" data-sheet="risk" data-name="Sleep Pattern"
+                      style="border:1px solid color-mix(in srgb, var(--score-fair) 18%, transparent)">
+                <!-- foregroundStyle/background are risk.riskGrade.color, not the
+                     riskType category tint. "Worth a look" = .elevated = scoreFair. -->
+                <span class="ri" style="color:var(--score-fair);background:color-mix(in srgb, var(--score-fair) 12%, transparent)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/><path d="M14 3.5h4l-4 4h4"/></svg>
+                </span>
+                <span class="rn">Sleep Pattern</span>
+                <span class="rg" style="color:var(--score-fair)">Worth a look</span>
+                <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+              </button>
+
+              <button class="risk-row bare" data-sheet="risk" data-name="Training Load Pattern"
+                      style="border:1px solid color-mix(in srgb, var(--score-good) 18%, transparent)">
+                <!-- "Mostly steady" = .moderate = scoreGood -->
+                <span class="ri" style="color:var(--score-good);background:color-mix(in srgb, var(--score-good) 12%, transparent)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5c1.4 1.9.6 3-.1 3.6-.6.7-1 1.3-1 2a1.4 1.4 0 0 0 2.7 0c0-.3 0-.6-.2-.8 1.2.8 1.9 2 1.9 3.4a3.5 3.5 0 0 1-7 0c0-2.6 1.9-3.9 2.7-5.4z"/></svg>
+                </span>
+                <span class="rn">Training Load Pattern</span>
+                <span class="rg" style="color:var(--score-good)">Mostly steady</span>
+                <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 14. sectionHeader("VITALS") -->
+      <div class="pad" id="b-vitalshdr" style="padding-top:12px">
+        <div class="t-capsemi ter track">VITALS</div>
+      </div>
+
+      <!-- 15. MetricStripView -->
+      <div class="locked-host" id="b-strip" data-lock="home_vitals">
+        <div class="lockinner">
+          <div class="stripwrap">
+            <div class="strip">
+              <button class="tile bare" data-sheet="metric" data-name="Vitality"
+                      style="border-color:color-mix(in srgb, var(--vitality-green) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--vitality-green)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="14" cy="4.2" r="1.8"/><path d="M14 7v5l3.5 3.5M14 12l-4 2.5-1 6M17.5 15.5l1.5 5.5M9 9.5l5-2 4 2.5"/></svg></span>
+                <span class="tv tnum">31</span>
+                <span class="tl">Vitality</span>
+                <span class="tb" style="color:var(--vitality-green)">3y younger</span>
+              </button>
+
+              <button class="tile bare" data-sheet="metric" data-name="Sleep"
+                      style="border-color:color-mix(in srgb, var(--warning) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--warning)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/></svg></span>
+                <span class="tv tnum">6h 12m</span>
+                <span class="tl">Sleep</span>
+                <span class="tb" style="color:var(--warning)">Fair</span>
+              </button>
+
+              <!-- tile.color = strainLevel.color; .high maps to scorePoor, not the
+                   activity category tint. -->
+              <button class="tile bare" data-sheet="metric" data-name="Strain"
+                      style="border-color:color-mix(in srgb, var(--score-poor) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--score-poor)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2.4 3.3 1 5.2.2 6.2-1 1.2-1.7 2.2-1.7 3.4a2.3 2.3 0 0 0 4.6 0c0-.5-.1-1-.3-1.4 2 1.4 3.2 3.5 3.2 5.8a6 6 0 0 1-12 0c0-4.4 3.2-6.6 4.6-9.2.8-1.5 1.4-3 1.4-4.8z"/></svg></span>
+                <span class="tv tnum">14.2</span>
+                <span class="tl">Strain</span>
+                <span class="tb" style="color:var(--score-poor)">High</span>
+              </button>
+
+              <button class="tile bare" data-sheet="metric" data-name="Brain"
+                      style="border-color:color-mix(in srgb, var(--score-optimal) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--score-optimal)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3.2 3.2 0 0 0-3.2 3.2A2.9 2.9 0 0 0 6 9.5a2.9 2.9 0 0 0 .9 2.1A3 3 0 0 0 6 13.8a3 3 0 0 0 2.3 2.9A2.8 2.8 0 0 0 11 20a2.6 2.6 0 0 0 1-.2z"/><path d="M15.2 6.7A3.2 3.2 0 0 0 12 3.5M18 9.5a2.9 2.9 0 0 0-2.8-2.8M18 13.8a2.9 2.9 0 0 0 0-4.3M15.7 16.7A3 3 0 0 0 18 13.8M13 20a2.8 2.8 0 0 0 2.7-3.3"/></svg></span>
+                <span class="tv tnum">85</span>
+                <span class="tl">Brain</span>
+                <span class="tb" style="color:var(--score-optimal)">Sharp</span>
+              </button>
+
+              <!-- stress.score is the 0-100 scale StressLevel grades at 25/50/75, and
+                   the badge is level.displayName ("Mild Stress"), not a bare word.
+                   .mild maps to scoreGood. -->
+              <button class="tile bare" data-sheet="metric" data-name="Stress"
+                      style="border-color:color-mix(in srgb, var(--score-good) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--score-good)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12.5h3.8l2-5 3 10 2.3-5h6.9"/></svg></span>
+                <span class="tv tnum">34.0</span>
+                <span class="tl">Stress</span>
+                <span class="tb" style="color:var(--score-good)">Mild Stress</span>
+              </button>
+
+              <!-- tile.color = currentPhase.color and icon = currentPhase.icon;
+                   follicular is AppColour.success + arrow.up.circle.fill. -->
+              <button class="tile bare" data-sheet="metric" data-name="Cycle"
+                      style="border-color:color-mix(in srgb, var(--success) 18%, var(--border-low))">
+                <span class="ti" style="background:var(--success)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 16V8M8.5 11.5 12 8l3.5 3.5"/></svg></span>
+                <span class="tv tnum">Day 12</span>
+                <span class="tl">Cycle</span>
+                <span class="tb" style="color:var(--success)">Follicular</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 16. sectionHeader("REVIEW") -->
+      <div class="pad" id="b-reviewhdr" style="padding-top:12px">
+        <div class="t-capsemi ter track">REVIEW</div>
+      </div>
+
+      <!-- 17. WeeklyReviewEntryCard -->
+      <div class="pad locked-host" id="b-weekly" data-lock="home_weekly_review">
+        <div class="lockinner">
+          <button class="wr bare press" data-sheet="weeklyReview">
+            <span class="ci2"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.8v3.4M16 2.8v3.4"/><circle cx="16.5" cy="15.5" r="3.4"/><path d="M16.5 14v1.6l1.1.8"/></svg></span>
+            <span style="flex:1 1 auto;min-width:0">
+              <span class="t-bodysemi" style="display:block">Your Weekly Review</span>
+              <span class="meta">
+                <span class="t-foot sec tnum">Score 72</span>
+                <span class="t-footmed tnum" style="color:var(--success)">(+4)</span>
+                <span class="ter">·</span>
+                <span class="t-foot sec tnum">3 wins</span>
+              </span>
+              <span class="t-cap sec tnum" style="display:block;margin-top:4px">Coach target: 8,500/day</span>
+            </span>
+            <span class="chev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 18. last-updated footer -->
+      <div class="footer tnum" id="b-footer">Updated 3 minutes ago</div>
+
+    </div>
+  </div>
+
+  <!-- ================= soft lock bottom bar (safeAreaInset) ================= -->
+  <div class="softbar hidden" id="softbar">
+    <div class="box">
+      <span class="p tnum">Patterns found in your data: 12</span>
+      <button data-sheet="paywall" data-src="home_unlock_bar">Unlock my report</button>
+    </div>
+  </div>
+
+  <!-- ================= tab bar ================= -->
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab" aria-current="page" data-tab="Today">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+      Today
+    </button>
+    <button class="tab" data-tab="Live">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12.5h4l2.6-6.6 4 13.2 2.6-6.6h5.8"/></svg>
+      Live
+    </button>
+    <button class="tab" data-tab="Explore">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M15.6 8.4 13.8 13.8 8.4 15.6 10.2 10.2z"/></svg>
+      Explore
+    </button>
+    <button class="tab" data-tab="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17M3.5 12h17M3.5 16.5h17"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <!-- ================= sheet + toast ================= -->
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grabber"></div>
+    <div class="kind" id="sheetKind"></div>
+    <h3 id="sheetTitle"></h3>
+    <div id="sheetBody"></div>
+    <button class="closebtn" id="sheetClose">Close</button>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+
+<!-- ================= dev toolbar (NOT part of the design) ================= -->
+<button class="devbtn" id="devbtn" aria-expanded="false" aria-label="Prototype controls">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+</button>
+<div class="devpanel" id="devpanel" role="dialog" aria-label="Prototype controls">
+  <h4>Theme</h4>
+  <div class="devchips" data-group="theme">
+    <button class="devchip" data-v="system">System</button>
+    <button class="devchip" data-v="light">Light</button>
+    <button class="devchip" data-v="dark">Dark</button>
+  </div>
+  <h4>Data state</h4>
+  <div class="devchips" data-group="state">
+    <button class="devchip" data-v="loaded">Loaded</button>
+    <button class="devchip" data-v="loading">Loading</button>
+    <button class="devchip" data-v="empty">Empty</button>
+  </div>
+  <h4>Soft lock (paywall declined)</h4>
+  <div class="devchips" data-group="lock">
+    <button class="devchip" data-v="off">Off</button>
+    <button class="devchip" data-v="on">On</button>
+  </div>
+  <h4>Restore</h4>
+  <div class="devchips" data-group="reset">
+    <button class="devchip" data-v="reset">Reset all blocks</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Reproduction of the shipping HomeView. No redesign.
+   Fictional user: Alex, 34.
+   Readiness 62 today / 71 yesterday. HRV 48 ms (7d avg 54).
+   Resting HR 58 bpm (baseline 55). Slept 6h 12m vs 7h 40m need.
+   Sleep debt 4h 20m. 8,400 steps yesterday. Hard run 2 days ago.
+   ============================================================ */
+
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+
+const S = { theme:'system', state:'loaded', lock:'off' };
+
+/* ---------- 7. Sleep bank: 14 nights, deficit in minutes.
+   null = no reading, which draws nothing (unworn watch).
+   Sum of recorded deficits = 260 min = 4h 20m behind.        ---------- */
+const DEFICITS = [-20, 15, null, -10, 25, 5, -15, null, 17, 12, 48, 55, 40, 88];
+const BASELINE_MIN = 460;                 // 7h 40m
+const REFERENCE = BASELINE_MIN * 0.25;    // full bar = 25% of baseline
+const HALF = 25.5;                        // (chartHeight 52 - 1) / 2
+
+function buildSleepChart(){
+  const host = $('#sbChart');
+  host.innerHTML = DEFICITS.map(function(d){
+    let up = 0, down = 0;
+    if (d !== null){
+      const h = Math.max(2, HALF * Math.min(1, Math.abs(d)/REFERENCE));
+      if (d < 0) up = h; else down = h;
+    }
+    return '<span class="sb-night">'
+      + '<span class="sb-half up">'   + (up   ? '<i style="height:'+up.toFixed(1)  +'px;background:var(--success)"></i>' : '') + '</span>'
+      + '<span class="sb-zero"></span>'
+      + '<span class="sb-half down">' + (down ? '<i style="height:'+down.toFixed(1)+'px;background:var(--warning)"></i>' : '') + '</span>'
+      + '</span>';
+  }).join('');
+}
+
+/* ---------- 9. Activation banner: day 5, 8 dots, 7 connectors ---------- */
+function buildActivationDots(){
+  const day = 5;
+  let lines = '';
+  for (let i=0;i<7;i++) lines += '<i class="'+(i<day?'on':'')+'"></i>';
+  let dots = '';
+  for (let d=1;d<=8;d++) dots += '<span class="dot '+(d<=day?'on':'')+'"></span>';
+  $('#actDots').innerHTML = '<span class="line">'+lines+'</span>'+dots;
+}
+
+/* ---------- 10. Morning check-in: 3 rows x 5 emoji = 15 targets ---------- */
+const EMOJI = {
+  sleep:    ['\u{1F62B}','\u{1F615}','\u{1F610}','\u{1F60A}','\u{1F634}'],
+  energy:   ['\u{1FAAB}','\u{1F62E}‍\u{1F4A8}','\u{1F610}','\u{1F4AA}','⚡'],
+  soreness: ['\u{1F635}','\u{1F623}','\u{1F610}','\u{1F44C}','\u{1F938}']
+};
+const LABELS = { sleep:'Sleep quality', energy:'Energy level', soreness:'Body soreness' };
+const checkIn = { sleep:0, energy:0, soreness:0 };
+
+function buildCheckIn(){
+  $$('.ci-q').forEach(function(q){
+    const key = q.dataset.q;
+    q.querySelector('.ci-opts').innerHTML = EMOJI[key].map(function(e,i){
+      return '<button class="ci-opt" data-k="'+key+'" data-v="'+(i+1)+'" aria-pressed="false" '
+           + 'aria-label="'+LABELS[key]+' rating '+(i+1)+' of 5">'+e+'</button>';
+    }).join('');
+  });
+}
+function refreshCheckIn(){
+  $$('.ci-opt').forEach(function(b){
+    b.setAttribute('aria-pressed', String(checkIn[b.dataset.k] === Number(b.dataset.v)));
+  });
+  const complete = checkIn.sleep>0 && checkIn.energy>0 && checkIn.soreness>0;
+  $('#ciDone').classList.toggle('hidden', !complete);
+}
+
+/* ---------- minimumScaleFactor(0.8): SwiftUI shrinks a one-line Text rather
+   than wrapping it. CSS has no equivalent, so this is the same rule in JS. ---------- */
+function fitText(el, basePx, minScale){
+  el.style.fontSize = basePx + 'px';
+  let scale = 1;
+  let guard = 0;
+  while (el.scrollWidth > el.clientWidth + 0.5 && scale > minScale && guard < 12){
+    scale -= 0.05; guard++;
+    el.style.fontSize = (basePx * scale).toFixed(2) + 'px';
+  }
+}
+function fitAll(){
+  $$('.whyrow .lab').forEach(function(el){ fitText(el, 15, 0.8); });
+  $$('.whyrow .val').forEach(function(el){ fitText(el, 13, 0.8); });
+  $$('.chip-delta span').forEach(function(el){ fitText(el, 12, 0.8); });
+  $$('.tile .tv').forEach(function(el){ fitText(el, 20, 0.8); });
+  $$('.tile .tb').forEach(function(el){ fitText(el, 12, 0.8); });
+}
+
+/* ---------- sheet: every exit off this screen lands here ---------- */
+const SHEETS = {
+  recoveryInfo: { kind:'SHEET · RecoveryInfoSheet', title:'How Readiness Works',
+    body:'Each morning your Readiness is locked in from last night’s sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops. Take off the Apple Watch and the drop pauses, but your morning Readiness still stays on the screen.<p class="t-foot ter tnum">Ready 67 to 100 · Steady 45 to 66 · Low below 45</p>' },
+  todaysAction: { kind:'PUSH · Route.todaysAction', title:'Today’s Action',
+    body:'Do Today · What’s off today · What’s leading to what · Your coach’s notes · Today’s Workout.<p class="t-foot ter">A 4h 20m shortfall built up over the last two weeks weighs on recovery more than anything you can do in the gym today, so tonight’s sleep is the action.</p>' },
+  askYourData:  { kind:'PUSH · Route.askYourData', title:'Ask Your Data',
+    body:'Ask anything about your health…<p class="t-foot ter">Try asking: How is my sleep this week? · What affects my heart calm signal the most? · Am I getting enough deep sleep?</p>' },
+  insightsDetail:{ kind:'PUSH · Route.insightsDetail', title:'Worth Noticing',
+    body:'The full early-warning detail for the multi-metric pattern flagged on Home.' },
+  weeklyReview: { kind:'PUSH · Route.weeklyReview', title:'Weekly Review',
+    body:'Weekly averages · Best and worst days · This week’s wins · Key discovery · Watch outs · Coach plan · Next week outlook.' },
+  share:        { kind:'SHEET · ShareWinSheet', title:'Share a win',
+    body:'Templates built from the wins Alex has actually earned: 7-day streak, readiness, last night’s sleep, vitality age.' },
+  paywall:      { kind:'SHEET · PaywallView', title:'Unlock my report',
+    body:'source: soft_lock_home. The blurred cards unlock after purchase.' },
+  settings:     { kind:'EXTERNAL · UIApplication.openSettingsURLString', title:'iOS Settings',
+    body:'Opens the Health data permission screen for Laso outside the app.' }
+};
+const WHY_DEST = {
+  sleep_coach:          { kind:'PUSH · Route.sleepCoach',              title:'Sleep Coach' },
+  heartRateVariability: { kind:'PUSH · HealthMetric.heartRateVariability', title:'Heart Rate Variability' },
+  restingHeartRate:     { kind:'PUSH · HealthMetric.restingHeartRate', title:'Resting Heart Rate' },
+  stress_monitor:       { kind:'PUSH · Route.stressMonitor',           title:'Stress Monitor' },
+  score_explainer:      { kind:'SHEET · RecoveryInfoSheet',            title:'How Readiness Works' }
+};
+const METRIC_DEST = {
+  Vitality:'PUSH · Route.vitalityDetail', Sleep:'PUSH · Route.sleepCoach',
+  Strain:'PUSH · Route.strainDetail',     Brain:'PUSH · Route.brainHealth',
+  Stress:'PUSH · Route.stressMonitor',    Cycle:'PUSH · Route.cycleDetail'
+};
+
+let lastFocus = null;
+function openSheet(kind, title, body){
+  lastFocus = document.activeElement;
+  $('#sheetKind').textContent = kind;
+  $('#sheetTitle').textContent = title;
+  $('#sheetBody').innerHTML = '<p>'+body+'</p>';
+  $('#scrim').classList.add('open');
+  $('#sheet').classList.add('open');
+  $('#sheetClose').focus();
+}
+function closeSheet(){
+  $('#scrim').classList.remove('open');
+  $('#sheet').classList.remove('open');
+  if (lastFocus) lastFocus.focus();
+}
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+}
+
+/* ---------- soft lock ---------- */
+function applyLock(){
+  const on = S.lock === 'on';
+  $('#softbar').classList.toggle('hidden', !on);
+  $$('.locked-host').forEach(function(host){
+    host.classList.toggle('locked', on);
+    const existing = host.querySelector('.lockbadge');
+    const hit = host.querySelector('.lockhit');
+    if (on && !existing){
+      const badge = document.createElement('span');
+      badge.className = 'lockbadge';
+      badge.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.4"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>Unlock to read';
+      host.appendChild(badge);
+      const b = document.createElement('button');
+      b.className = 'lockhit';
+      b.setAttribute('aria-label','Unlock '+host.dataset.lock);
+      b.addEventListener('click', function(){
+        openSheet(SHEETS.paywall.kind, SHEETS.paywall.title, 'feature: '+host.dataset.lock+'. '+SHEETS.paywall.body);
+      });
+      host.appendChild(b);
+    }
+    if (!on){ if (existing) existing.remove(); if (hit) hit.remove(); }
+  });
+}
+
+/* ---------- states ---------- */
+let dotTimer = null;
+function applyState(){
+  const loaded = S.state === 'loaded';
+  $('#state-loaded').classList.toggle('hidden', !loaded);
+  $('#state-loading').classList.toggle('hidden', S.state !== 'loading');
+  $('#state-empty').classList.toggle('hidden', S.state !== 'empty');
+  $('#softbar').classList.toggle('hidden', !(loaded && S.lock === 'on'));
+  clearInterval(dotTimer);
+  if (S.state === 'loading'){
+    let n = 0;
+    dotTimer = setInterval(function(){ n = (n % 3) + 1; $('#loadDots').textContent = '.'.repeat(n); }, 500);
+  }
+}
+function applyTheme(){
+  if (S.theme === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', S.theme);
+}
+function syncDevChips(){
+  $$('.devchips').forEach(function(g){
+    const key = g.dataset.group;
+    if (key === 'reset') return;
+    $$('.devchip', g).forEach(function(c){ c.setAttribute('aria-pressed', String(S[key] === c.dataset.v)); });
+  });
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+buildSleepChart();
+buildActivationDots();
+buildCheckIn();
+refreshCheckIn();
+applyTheme(); applyState(); applyLock(); syncDevChips(); fitAll();
+window.addEventListener('resize', fitAll);
+
+/* 2. life context chips */
+$$('.chip').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    const on = chip.getAttribute('aria-pressed') === 'true';
+    chip.setAttribute('aria-pressed', String(!on));
+    const label = chip.querySelector('.ctx-label') || chip.querySelector('span:last-child');
+    const name = chip.dataset.name;
+    label.textContent = !on ? name + ' since Apr 26' : name;
+    if (!on) chip.dataset.since = 'Apr 26';
+    renderConfirmRows();
+    toast('Daily action cache invalidated');
+  });
+});
+function renderConfirmRows(){
+  // The shipping row only appears for a context that has been on past the
+  // 3-day confirmation cadence. Here: the pre-set "Sleeping badly since Apr 20".
+  const host = $('#confirmRows');
+  const stale = $$('.chip').filter(function(c){
+    return c.getAttribute('aria-pressed') === 'true' && c.dataset.since === 'Apr 20';
+  });
+  host.innerHTML = stale.map(function(c){
+    const lower = c.dataset.name.charAt(0).toLowerCase() + c.dataset.name.slice(1);
+    return '<div class="confirm" data-ctx="'+c.dataset.ctx+'">'
+         + '<span class="q">Still '+lower+'?</span>'
+         + '<button class="yes">Yes</button>'
+         + '<button class="no">No, all better</button></div>';
+  }).join('');
+}
+renderConfirmRows();
+$('#confirmRows').addEventListener('click', function(e){
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const row = btn.closest('.confirm');
+  const chip = $('.chip[data-ctx="'+row.dataset.ctx+'"]');
+  if (btn.classList.contains('no')){
+    chip.setAttribute('aria-pressed','false');
+    chip.querySelector('.ctx-label').textContent = chip.dataset.name;
+    toast('Turned off. Daily action cache invalidated');
+  } else {
+    chip.dataset.since = 'Apr 26';
+    toast('Confirmed for another 3 days');
+  }
+  row.remove();
+});
+
+/* 3 / 4 / 10 / 11 dismissables */
+$$('[data-dismiss]').forEach(function(b){
+  b.addEventListener('click', function(){
+    const el = document.getElementById(b.dataset.dismiss);
+    if (el) el.remove();
+  });
+});
+
+/* 5. Next Up buttons */
+$('#markDone').addEventListener('click', function(){
+  if (this.dataset.done === '1') return;      // locked once done for the day
+  this.dataset.done = '1';
+  $('#doneLabel').textContent = 'Done';
+  $('#doneIcon').innerHTML = '<circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M7.8 12.3 10.8 15.2 16.4 9.2" stroke="var(--surface-raised)"/>';
+  toast('Marked done. Tomorrow shows what it moved');
+});
+$('#remindBtn').addEventListener('click', function(){
+  $('#remindLabel').textContent = 'Reminder set';
+  $('#remindIcon').innerHTML = '<path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2H4.4z" fill="currentColor" stroke="none"/><path d="M10 20a2 2 0 0 0 4 0"/>';
+  toast('Reminder set for 9:30 PM');
+});
+
+/* 6 / 12 / 13 / 15 / 17 exits + streak share */
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-sheet]');
+  if (!el) return;
+  const key = el.dataset.sheet;
+  if (key === 'why'){
+    const d = WHY_DEST[el.dataset.dest];
+    openSheet(d.kind, d.title, 'Opened from the Why row on the Recovery card.');
+  } else if (key === 'metric'){
+    const n = el.dataset.name;
+    openSheet(METRIC_DEST[n], n, 'Metric detail screen for the '+n+' tile.');
+  } else if (key === 'risk'){
+    const n = el.dataset.name;
+    openSheet('PUSH · risk.riskType', n, 'Health risk detail screen.');
+  } else {
+    const s = SHEETS[key];
+    if (s) openSheet(s.kind, s.title, s.body);
+  }
+});
+$$('.ringcol').forEach(function(r){
+  r.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); r.click(); }
+  });
+});
+
+/* 9. activation celebration auto-dismisses after 4s, as shipped */
+const celebrateTimer = setTimeout(function(){
+  const c = $('#celebrateCard'); if (c) c.remove();
+}, 4000);
+$('#celebrateX').addEventListener('click', function(){
+  clearTimeout(celebrateTimer);
+  const c = $('#celebrateCard'); if (c) c.remove();
+});
+
+/* 10. check-in */
+$('#b-checkin').addEventListener('click', function(e){
+  const b = e.target.closest('.ci-opt');
+  if (!b) return;
+  checkIn[b.dataset.k] = Number(b.dataset.v);
+  refreshCheckIn();
+});
+$('#ciDone').addEventListener('click', function(){
+  const el = $('#b-checkin');
+  toast('Check-in saved. Readiness adjusted');
+  if (el) el.remove();
+});
+
+/* tab bar */
+$$('.tab').forEach(function(t){
+  t.addEventListener('click', function(){
+    $$('.tab').forEach(function(x){ x.removeAttribute('aria-current'); });
+    t.setAttribute('aria-current','page');
+    if (t.dataset.tab !== 'Today') toast(t.dataset.tab + ' tab');
+  });
+});
+
+/* empty-state refresh */
+$('#emptyRefresh').addEventListener('click', function(){
+  S.state = 'loading'; applyState(); syncDevChips();
+  setTimeout(function(){ S.state = 'loaded'; applyState(); syncDevChips(); }, 2200);
+});
+
+/* sheet close */
+$('#sheetClose').addEventListener('click', closeSheet);
+$('#scrim').addEventListener('click', closeSheet);
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ closeSheet(); $('#devpanel').classList.remove('open'); $('#devbtn').setAttribute('aria-expanded','false'); }
+});
+
+/* dev toolbar */
+$('#devbtn').addEventListener('click', function(){
+  const open = $('#devpanel').classList.toggle('open');
+  this.setAttribute('aria-expanded', String(open));
+});
+$$('.devchips').forEach(function(g){
+  g.addEventListener('click', function(e){
+    const c = e.target.closest('.devchip'); if (!c) return;
+    if (g.dataset.group === 'reset'){ location.reload(); return; }
+    S[g.dataset.group] = c.dataset.v;
+    applyTheme(); applyState(); applyLock(); syncDevChips();
+  });
+});
+</script>
+</body>
+</html>

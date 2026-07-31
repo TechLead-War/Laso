@@ -5,7 +5,8 @@ import SwiftUI
 /// The complication never appears on its own, so without this most people who
 /// install the watch app never see their score on the face. Shown only when there
 /// is actually a watch to put it on, and it goes away for good once they add it or
-/// dismiss it. The same steps stay on the Apple Watch device screen either way.
+/// dismiss it. Collapsed to a single line; the full steps live on the Apple Watch
+/// device screen (DeviceDetailView), which is where they always were.
 struct WatchComplicationCard: View {
 
     let linkState: WatchLinkState
@@ -23,38 +24,26 @@ struct WatchComplicationCard: View {
 
     var body: some View {
         if shouldShow {
-            VStack(alignment: .leading, spacing: DS.space3) {
-                HStack(alignment: .top, spacing: DS.space3) {
-                    Image(systemName: "applewatch.watchface")
-                        .font(DS.Typography.bodySemibold)
-                        .foregroundStyle(AppColour.scoreGood)
-                        .frame(width: 36)
+            HStack(spacing: DS.space3) {
+                Image(systemName: "applewatch.watchface")
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.scoreGood)
 
-                    VStack(alignment: .leading, spacing: DS.space1) {
-                        Text(Copy.Devices.WatchComplication.title)
-                            .font(DS.Typography.bodySemibold)
-                            .foregroundStyle(AppColour.textPrimary)
+                Text(Copy.Devices.WatchComplication.title)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text(Copy.Devices.WatchComplication.subtitle)
-                            .font(DS.Typography.footnote)
-                            .foregroundStyle(AppColour.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(DS.Typography.calloutSemibold)
-                            .foregroundStyle(AppColour.textTertiary)
-                            .frame(width: 24, height: 24)
-                    }
-                    .accessibilityLabel(Copy.Devices.WatchComplication.dismissLabel)
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textTertiary)
+                        .frame(width: 24, height: 24)
                 }
-
-                WatchComplicationSteps()
+                .accessibilityLabel(Copy.Devices.WatchComplication.dismissLabel)
             }
             .padding(DS.cardPadding)
             .cardStyle(tint: AppColour.scoreGood)

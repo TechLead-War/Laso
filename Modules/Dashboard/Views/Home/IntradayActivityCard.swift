@@ -18,16 +18,33 @@ struct IntradayActivityCard: View {
     /// stretches, not gaps.
     let buckets: [Double]
 
+    /// The user's 14-day average day in the same bucket layout, drawn faintly
+    /// under today's ticks so today reads against the user's own baseline.
+    let usualBuckets: [Double]?
+
     // Scanned once in init rather than per read — the header number, the peak
     // label, the accessibility string and every tick height all ask for these.
     private let total: Double
     private let peak: Double
+    /// One vertical scale for both layers — heights are only comparable if a
+    /// kcal is the same number of points in each. An averaged usual day almost
+    /// never out-peaks a raw single day, so the top rule stays today's peak in
+    /// practice.
+    private let scalePeak: Double
 
-    init(buckets: [Double]) {
+    init(buckets: [Double], usualBuckets: [Double]? = nil) {
         self.buckets = buckets
+        self.usualBuckets = usualBuckets
         self.total = buckets.reduce(0, +)
         self.peak = buckets.max() ?? 0
+        self.scalePeak = max(buckets.max() ?? 0, usualBuckets?.max() ?? 0)
     }
+
+    /// ±15% band around the usual cumulative before the day is called ahead or
+    /// behind. WHY: fourteen day-samples of a noisy activity series give a wide
+    /// usual range; a narrower band would flip the verdict on ordinary
+    /// day-to-day variation and teach the user to ignore it.
+    private static let verdictBand = 0.15
 
     /// Quarter points of the day. Positions come from the fraction, not a bucket
     /// index, so the labels stay put whatever the resolution.
@@ -54,10 +71,22 @@ struct IntradayActivityCard: View {
             }
             .foregroundStyle(AppColour.accent)
 
+            if let verdict = verdictText {
+                Text(verdict)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+
             plot
                 .padding(.top, DS.space2)
 
             axis
+
+            if showsUsualOverlay {
+                Text(Copy.Home.intradayUsualLegend)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textTertiary)
+            }
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -72,8 +101,10 @@ struct IntradayActivityCard: View {
             ticks
             // The peak, printed against the top rule it corresponds to, so the
             // tallest tick has a number and every other height is readable
-            // against it.
-            if peak > 0 {
+            // against it. Suppressed on the rare day the usual overlay sets the
+            // scale instead — printing today's peak against a taller rule would
+            // mislabel it.
+            if peak > 0, peak >= scalePeak {
                 Text(Copy.Home.intradayPeak(Int(peak.rounded())))
                     .font(DS.Typography.caption2)
                     .foregroundStyle(AppColour.textTertiary)
@@ -109,12 +140,51 @@ struct IntradayActivityCard: View {
             BaselineShape()
                 .stroke(AppColour.accent.opacity(0.55), style: Self.dash)
 
+            // The usual-day trace sits under today's so today always wins the
+            // pixel where they overlap. Same single-Path draw as today's layer.
+            if showsUsualOverlay, let usual = usualBuckets {
+                TickShape(buckets: usual, peak: scalePeak)
+                    .fill(AppColour.accent.opacity(Self.usualOverlayOpacity))
+            }
+
             // One path for all 96 ticks. They never overlap and share one solid
             // colour, so a single fill draws exactly what 96 Rectangles did
             // without 96 view identities and layout entries.
-            TickShape(buckets: buckets, peak: peak)
+            TickShape(buckets: buckets, peak: scalePeak)
                 .fill(AppColour.accent)
         }
+    }
+
+    /// Faint enough to read as context under today's solid ticks, strong
+    /// enough to survive both colour schemes.
+    private static let usualOverlayOpacity = 0.22
+
+    private var showsUsualOverlay: Bool {
+        usualBuckets?.contains { $0 > 0 } ?? false
+    }
+
+    /// Today's cumulative burn up to the current bucket against the usual
+    /// cumulative to the same time of day. Nil until both series exist and the
+    /// usual day has recorded anything by this hour.
+    private var verdictText: String? {
+        guard showsUsualOverlay, let usual = usualBuckets, !buckets.isEmpty else { return nil }
+        let now = Date()
+        let dayStart = Date.cal.startOfDay(for: now)
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        // Fraction of the day, not a bucket index: the two arrays can disagree
+        // on count on a DST day, so each maps the fraction into its own layout.
+        let fraction = now.timeIntervalSince(dayStart) / dayEnd.timeIntervalSince(dayStart)
+        let todaySum = cumulative(of: buckets, upTo: fraction)
+        let usualSum = cumulative(of: usual, upTo: fraction)
+        guard usualSum > 0 else { return nil }
+        if todaySum >= usualSum * (1 + Self.verdictBand) { return Copy.Home.intradayVerdictAhead }
+        if todaySum <= usualSum * (1 - Self.verdictBand) { return Copy.Home.intradayVerdictBehind }
+        return Copy.Home.intradayVerdictUsual
+    }
+
+    private func cumulative(of series: [Double], upTo fraction: Double) -> Double {
+        let index = min(series.count - 1, max(0, Int(fraction * Double(series.count))))
+        return series.prefix(index + 1).reduce(0, +)
     }
 
     private struct BaselineShape: Shape {
@@ -183,7 +253,13 @@ struct IntradayActivityCard: View {
     for index in 66...76 { sample[index] = Double.random(in: 3...14) }
     sample[70] = 21
 
-    return IntradayActivityCard(buckets: sample)
+    // A smoother, lower usual day, the shape a 14-day average actually has.
+    var usual = [Double](repeating: 0, count: 96)
+    for index in 26...38 { usual[index] = Double.random(in: 1...5) }
+    for index in 42...58 { usual[index] = Double.random(in: 0.5...3) }
+    for index in 64...80 { usual[index] = Double.random(in: 2...7) }
+
+    return IntradayActivityCard(buckets: sample, usualBuckets: usual)
         .padding()
         .background(AppColour.surfaceSunken)
 }

@@ -2,32 +2,47 @@ import SwiftUI
 
 /// Score card: one readiness ring with a plain-word state, a one-line summary,
 /// and the "Why" list of the real signals behind it. Deliberately simple — the
-/// number never appears without a plain reason.
+/// number never appears without a plain reason, and the missing-signals line is
+/// the card's one honesty device.
 struct RecoveryHeroCard: View {
     let score: Int
     /// Bold heading under the orb, e.g. "Higher than usual today."
     var summaryHead: String = ""
     /// Lighter sub line under the heading, e.g. "Good to push a little."
     var summarySub: String = ""
-    /// The real reasons behind the score (sleep, heart, energy).
+    /// The real reasons behind the score, ranked by the caller; the card shows
+    /// at most the best three and the ring tap owns the rest.
     var whyReasons: [DashboardViewModel.RecoveryWhyReason] = []
-    var hasLiveReadiness: Bool = true
-    /// Points gained or lost since yesterday. Nil when yesterday has no score,
-    /// which renders nothing rather than a misleading zero.
-    var scoreChange: Int? = nil
+    /// True when live readiness is absent and the ring carries the daily score
+    /// instead. The label and narration must never say "Readiness" then — a
+    /// relabeled fallback was the B3 contradiction.
+    var isFallbackScore: Bool = false
     var isWearingWatch: Bool = true
-    /// Score points the model held back because signals were missing. When it is
-    /// meaningful the card shows a range rather than a single number, so a thin
-    /// day cannot read as confidently as a complete one. Nil or zero shows the
-    /// plain score.
-    var scoreUncertainty: Int? = nil
+    /// Scorer-fed signals with no reading today. Non-empty renders the one
+    /// tappable coverage line at the card's foot.
+    var missingSignals: [String] = []
     var onTap: (() -> Void)? = nil
     /// Opens the detail screen for one signal in the Why list.
     var onTapWhy: ((DashboardViewModel.RecoveryWhyReason.Kind) -> Void)? = nil
-    var onShare: (() -> Void)? = nil
+    /// Opens the Health-app instruction screen for the missing signals.
+    var onFixCoverage: (() -> Void)? = nil
+
+    /// The screen never shows more Why rows than a glance can hold; the rest
+    /// live behind the ring tap.
+    private static let maxWhyRows = 3
 
     private var recoveryState: DashboardViewModel.RecoveryState {
         DashboardViewModel.RecoveryState(score: score)
+    }
+
+    private var visibleWhyReasons: [DashboardViewModel.RecoveryWhyReason] {
+        Array(whyReasons.prefix(Self.maxWhyRows))
+    }
+
+    /// Ring label follows the score's real identity, so a daily-score fallback
+    /// can never wear the Readiness name.
+    private var ringLabel: String {
+        isFallbackScore ? Copy.Common.healthScore : Copy.Home.scoreReadyLabel
     }
 
     /// No morning lock today and the watch is off — nothing legitimate to show.
@@ -44,23 +59,11 @@ struct RecoveryHeroCard: View {
                 cardContent
             }
         }
-        .overlay(alignment: .topTrailing) {
-            if let onShare, !shouldShowWearWatch, score > 0 {
-                Button(action: onShare) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(DS.Typography.footnoteMedium)
-                        .foregroundStyle(AppColour.textSecondary)
-                        .padding(10)
-                }
-                .accessibilityLabel(Copy.Common.shareHealthCard)
-                .accessibilityIdentifier("home.recoveryCard.share")
-                .padding(.top, 6)
-                .padding(.trailing, 6)
-            }
-        }
         .padding(.horizontal, DS.screenPadding)
         .onAppear {
-            guard isWearingWatch, hasLiveReadiness, score > 0 else { return }
+            // Activation counts real readiness sightings only; a fallback daily
+            // score is not the moment the milestone celebrates.
+            guard isWearingWatch, !isFallbackScore, score > 0 else { return }
             if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
                 EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
             } else {
@@ -99,10 +102,6 @@ struct RecoveryHeroCard: View {
 
     // MARK: - Card Content
 
-    private var ringTint: Color {
-        hasLiveReadiness ? recoveryState.color : AppColour.scoreGood
-    }
-
     /// The card is a stack of separate buttons, not one big button, because a
     /// Button nested inside another Button's label never receives the tap.
     private var cardContent: some View {
@@ -113,10 +112,10 @@ struct RecoveryHeroCard: View {
                 Button { onTap?() } label: { ringColumn }
                     .buttonStyle(.dsPress)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(Copy.Home.scoreReadyLabel) \(score)" + (scoreChange.map { ". \(changeChipText($0))" } ?? ""))
+                    .accessibilityLabel("\(ringLabel) \(score)")
                     .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
 
-                if !whyReasons.isEmpty {
+                if !visibleWhyReasons.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(Copy.Home.scoreWhyLabel)
                             .font(DS.Typography.captionSemibold)
@@ -124,14 +123,14 @@ struct RecoveryHeroCard: View {
                             .foregroundStyle(AppColour.textTertiary)
                             .padding(.bottom, 2)
 
-                        ForEach(Array(whyReasons.enumerated()), id: \.element.id) { index, reason in
+                        ForEach(Array(visibleWhyReasons.enumerated()), id: \.element.id) { index, reason in
                             Button { onTapWhy?(reason.kind) } label: { whyRow(reason) }
                                 .buttonStyle(.dsPress)
                                 .accessibilityElement(children: .combine)
                                 .accessibilityLabel("\(reason.label), \(reason.value)")
                                 .accessibilityHint(Copy.Home.viewDetailsHint(reason.kind.displayName))
 
-                            if index < whyReasons.count - 1 {
+                            if index < visibleWhyReasons.count - 1 {
                                 Divider().overlay(AppColour.borderLow)
                             }
                         }
@@ -139,8 +138,6 @@ struct RecoveryHeroCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-
-            missingSignalsRow
 
             // Plain-word takeaway kept as a footer so it is never dropped.
             if !summaryHead.isEmpty || !summarySub.isEmpty {
@@ -166,6 +163,8 @@ struct RecoveryHeroCard: View {
                 .accessibilityLabel("\(summaryHead) \(summarySub)")
                 .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
             }
+
+            coverageRow
         }
         .padding(DS.cardPadding + 4)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -176,142 +175,47 @@ struct RecoveryHeroCard: View {
     }
 
     private var ringColumn: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                // Soft glow via a radial gradient (cheap) rather than a
-                // Gaussian blur, which re-renders offscreen every frame and
-                // makes scrolling lag.
-                Circle()
-                    .fill(RadialGradient(
-                        colors: [ringTint.opacity(0.28), .clear],
-                        center: .center, startRadius: 6, endRadius: 66))
-                    .frame(width: 132, height: 132)
-                    .allowsHitTesting(false)
-                HealthScoreRing(
-                    score: score,
-                    label: Copy.Home.scoreReadyLabel,
-                    size: 104,
-                    lineWidth: 9,
-                    tint: hasLiveReadiness ? recoveryState.color : nil
-                )
-            }
-
-            scoreRangeRow
-            changeChip
-            confidenceRow
+        ZStack {
+            // Soft glow via a radial gradient (cheap) rather than a
+            // Gaussian blur, which re-renders offscreen every frame and
+            // makes scrolling lag. Same RecoveryState colour as the ring,
+            // so a red morning can never glow green.
+            Circle()
+                .fill(RadialGradient(
+                    colors: [recoveryState.color.opacity(0.28), .clear],
+                    center: .center, startRadius: 6, endRadius: 66))
+                .frame(width: 132, height: 132)
+                .allowsHitTesting(false)
+            HealthScoreRing(
+                score: score,
+                label: ringLabel,
+                size: 104,
+                lineWidth: 9,
+                tint: recoveryState.color
+            )
         }
         .frame(width: 132)
         .contentShape(Rectangle())
     }
 
-    /// The band the reading actually sits in on a thin day. Hidden once the
-    /// model had enough signals to hold the number still, so a complete day
-    /// stays clean.
+    /// The card's one honesty device: names the scorer-fed signals with no
+    /// reading and opens the screen that fixes them. Silent on a full read.
     @ViewBuilder
-    private var scoreRangeRow: some View {
-        if let scoreUncertainty, scoreUncertainty >= Self.minimumUncertaintyToShowRange {
-            Text(Copy.Home.scoreRange(max(0, score - scoreUncertainty),
-                                      min(100, score + scoreUncertainty)))
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .accessibilityIdentifier("home.recoveryCard.scoreRange")
-        }
-    }
-
-    /// Below this the band is narrower than the rounding on the score itself, so
-    /// printing it would suggest more precision than it removes.
-    private static let minimumUncertaintyToShowRange = 3
-
-    private var signalsWithData: Int {
-        whyReasons.filter { $0.tone != .noData }.count
-    }
-
-    /// How much of the score is real readings today. Counted off the rows the
-    /// card is already showing, so the number can never drift from the list.
-    ///
-    /// The bar carries the weight the sentence alone could not: a score built on
-    /// one signal used to render exactly as confidently as one built on five.
-    @ViewBuilder
-    private var confidenceRow: some View {
-        if !whyReasons.isEmpty {
-            let fraction = Double(signalsWithData) / Double(whyReasons.count)
-            VStack(spacing: 5) {
-                Text(Copy.Home.scoreConfidence(signalsWithData, whyReasons.count))
+    private var coverageRow: some View {
+        if !missingSignals.isEmpty {
+            Button { onFixCoverage?() } label: {
+                Text(Copy.Home.coverageInlineMissing(missingSignals.sentenceList))
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(AppColour.trackNeutral)
-                        Capsule()
-                            .fill(certaintyTint(fraction))
-                            .frame(width: max(4, geo.size.width * fraction))
-                    }
-                }
-                .frame(height: 4)
-                .accessibilityHidden(true)   // the sentence above already says it
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .padding(.top, 12)
+            .accessibilityLabel(Copy.Home.coverageInlineMissing(missingSignals.sentenceList))
+            .accessibilityIdentifier("home.recoveryCard.missingSignals")
         }
-    }
-
-    private func certaintyTint(_ fraction: Double) -> Color {
-        if fraction >= 0.8 { return AppColour.success }
-        if fraction >= 0.4 { return AppColour.warning }
-        return AppColour.danger
-    }
-
-    /// Names the signals with no reading and the one thing that fixes them.
-    /// Silent when every signal reported, so a full read carries no clutter.
-    @ViewBuilder
-    private var missingSignalsRow: some View {
-        let missing = whyReasons.filter { $0.tone == .noData }.map(\.kind.displayName)
-        if !missing.isEmpty {
-            Text(Copy.Home.scoreMissingSignals(missing.sentenceList))
-                .font(DS.Typography.caption)
-                .foregroundStyle(AppColour.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 10)
-                .accessibilityIdentifier("home.recoveryCard.missingSignals")
-        }
-    }
-
-    /// Yesterday comparison. Up, down and flat each read differently; a missing
-    /// yesterday shows nothing at all.
-    @ViewBuilder
-    private var changeChip: some View {
-        if let scoreChange {
-            let tint: Color = scoreChange == 0
-                ? AppColour.textSecondary
-                : (scoreChange > 0 ? AppColour.success : AppColour.danger)
-
-            HStack(spacing: 3) {
-                if scoreChange != 0 {
-                    Image(systemName: scoreChange > 0 ? "arrow.up" : "arrow.down")
-                        .font(DS.Typography.caption2)
-                }
-                Text(changeChipText(scoreChange))
-                    .font(DS.Typography.captionSemibold)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.8)
-            }
-            .foregroundStyle(tint)
-            .padding(.horizontal, DS.badgeH)
-            .padding(.vertical, DS.badgeV)
-            .background(tint.opacity(DS.badgeBg), in: Capsule())
-        }
-    }
-
-    private func changeChipText(_ change: Int) -> String {
-        if change > 0 { return Copy.Home.scoreChangeUp(change) }
-        if change < 0 { return Copy.Home.scoreChangeDown(abs(change)) }
-        return Copy.Home.scoreChangeSame
     }
 
     // MARK: - Why Row
@@ -364,11 +268,9 @@ struct RecoveryHeroCard: View {
         whyReasons: [
             .init(kind: .sleep, label: "Sleep was short", value: "5h 40m", tone: .concern),
             .init(kind: .heart, label: "Heart is calm", value: "Good", tone: .good),
-            .init(kind: .energy, label: "Energy is low", value: "Below usual", tone: .concern),
-            .noData(kind: .restingHR),
-            .noData(kind: .stress)
+            .init(kind: .energy, label: "Energy is low", value: "Below usual", tone: .concern)
         ],
-        scoreChange: 4
+        missingSignals: ["Resting HR", "Stress"]
     )
     .padding(.vertical)
     .background(Color.black)

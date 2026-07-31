@@ -699,6 +699,84 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
+    /// Two full weeks: the shortest window where weekday and weekend rhythms
+    /// both appear twice, so one unusual Saturday cannot pass as "usual".
+    static let usualIntradayWindowDays = 14
+
+    /// The user's usual intraday shape: the previous `days` full days (today
+    /// excluded — a partial day would drag every bucket after "now" toward zero)
+    /// at the same bucket resolution as `fetchIntradayBuckets`, averaged per
+    /// bucket across the days that actually recorded anything. Nil when the
+    /// whole window is empty.
+    ///
+    /// One statistics collection over the whole span, not one query per day:
+    /// same HealthKit cost shape as `fetchIntradayBuckets`, fourteen times the
+    /// rows. Each statistic is binned by its offset inside its own day, so the
+    /// two DST days (23/25 h) still land their buckets on the wall-clock slot
+    /// they belong to instead of drifting the rest of the window by an hour.
+    func fetchUsualIntradayShape(
+        _ metric: HealthMetric,
+        days: Int = HealthKitManager.usualIntradayWindowDays,
+        bucketMinutes: Int = 15
+    ) async -> [Double]? {
+        let config = HealthKitMetricRegistry.config(for: metric)
+        guard let quantityType = config.quantityType, bucketMinutes > 0, days > 0 else { return nil }
+
+        let endDate = Date.cal.startOfDay(for: Date())
+        guard let startDate = Date.cal.date(byAdding: .day, value: -days, to: endDate) else { return nil }
+
+        let bucketSeconds = Double(bucketMinutes) * 60
+        let bucketCount = max(1, Int((24.0 * 3600 / bucketSeconds).rounded()))
+
+        return await withCheckedContinuation { continuation in
+            var interval = DateComponents()
+            interval.minute = bucketMinutes
+
+            let query = HKStatisticsCollectionQuery(
+                quantityType: quantityType,
+                quantitySamplePredicate: HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate),
+                options: config.statisticsOption == .cumulativeSum ? .cumulativeSum : .discreteAverage,
+                // Midnight, so bucket boundaries land on the hours the card's axis labels.
+                anchorDate: startDate,
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, error in
+                guard let results, error == nil else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let calendar = Date.cal
+                var sums = [Double](repeating: 0, count: bucketCount)
+                // Divide by days that recorded anything, not by the window
+                // length: a user with five days of history gets their real
+                // usual shape, not one deflated to five fourteenths.
+                var contributingDays = Set<Date>()
+                results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                    let raw = config.statisticsOption == .cumulativeSum
+                        ? statistics.sumQuantity()?.doubleValue(for: config.unit)
+                        : statistics.averageQuantity()?.doubleValue(for: config.unit)
+                    guard let raw, raw > 0 else { return }
+                    let dayStart = calendar.startOfDay(for: statistics.startDate)
+                    let index = Int(statistics.startDate.timeIntervalSince(dayStart) / bucketSeconds)
+                    guard sums.indices.contains(index) else { return }
+                    sums[index] += raw * config.valueScale
+                    contributingDays.insert(dayStart)
+                }
+
+                guard !contributingDays.isEmpty else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let dayCount = Double(contributingDays.count)
+                continuation.resume(returning: sums.map { $0 / dayCount })
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
     // MARK: - Hourly Data (Circadian Analysis)
 
     func fetchHourlySamples(_ metric: HealthMetric, days: Int = 30) async -> [[Double]]? {

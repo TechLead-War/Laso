@@ -1,26 +1,34 @@
 import SwiftUI
 
-/// Shows the result of yesterday's marked-done action: the action plus how this
-/// morning's recovery score moved. This is the payoff that closes the daily
-/// loop and gives the user a reason to come back and act again.
+/// Shows that yesterday's marked-done action was logged, plus the aggregated
+/// proof once enough completions exist. The next-morning delta was removed on
+/// purpose: DailyActionResultStore declares a ±2 dead band, so quoting a one
+/// morning "+2" claimed causation from inside its own noise floor.
 struct DailyActionResultCard: View {
-    let result: DailyActionResultStore.Result
-    let onDismiss: () -> Void
-
-    private var tint: Color {
-        switch result.direction {
-        case .up:     return AppColour.success
-        case .steady: return AppColour.info
-        case .down:   return AppColour.warning
-        }
+    /// Aggregated proof across completions, built by the caller from evaluated
+    /// history. `ActionProofSummary` only carries pre-rendered lines, not these
+    /// three fields, so the card names exactly what its copy template needs.
+    struct Aggregate {
+        let times: Int
+        let payoff: String
+        let weeks: Int
     }
 
+    let result: DailyActionResultStore.Result
+    /// nil until at least `minimumCompletionsForAggregate` completions exist.
+    let aggregate: Aggregate?
+    let onDismiss: () -> Void
+
+    /// Below this many completions an aggregate is one or two data points
+    /// dressed as a pattern, so the card states the plain fact instead
+    /// (KEEP-KILL fix row: aggregated proof at n>=3, fact only below).
+    static let minimumCompletionsForAggregate = 3
+
     private var resultLine: String {
-        switch result.direction {
-        case .up:     return Copy.Home.dailyResultUp(delta: result.delta)
-        case .steady: return Copy.Home.dailyResultSteady
-        case .down:   return Copy.Home.dailyResultDown(delta: abs(result.delta))
+        if let aggregate {
+            return Copy.Home.dailyResultAggregate(aggregate.times, aggregate.payoff, aggregate.weeks)
         }
+        return Copy.Home.dailyResultLogged
     }
 
     var body: some View {
@@ -28,14 +36,14 @@ struct DailyActionResultCard: View {
             Text(Copy.Home.dailyResultHeader)
                 .font(DS.Typography.captionSemibold)
                 .tracking(1.2)
-                .foregroundStyle(tint)
+                .foregroundStyle(AppColour.info)
 
             HStack(spacing: 12) {
                 Image(systemName: result.record.actionIcon)
                     .font(DS.Typography.title3)
                     .foregroundStyle(AppColour.textOnAccent)
                     .frame(width: 40, height: 40)
-                    .background(tint, in: RoundedRectangle(cornerRadius: 10))
+                    .background(AppColour.info, in: RoundedRectangle(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(result.record.actionTitle)
@@ -63,12 +71,12 @@ struct DailyActionResultCard: View {
             } label: {
                 Text(Copy.Home.dailyResultDismiss)
                     .font(DS.Typography.caption)
-                    .foregroundStyle(tint)
+                    .foregroundStyle(AppColour.info)
             }
             .buttonStyle(.plain)
         }
         .padding(DS.cardPadding)
-        .cardStyle(tint: tint)
+        .cardStyle(tint: AppColour.info)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(Copy.Home.dailyResultHeader). \(result.record.actionTitle). \(resultLine)")

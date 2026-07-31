@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laso Home v2 — Concept 03, The Body Budget</title>
+<style>
+/* ============================================================
+   Laso design tokens — verbatim from DESIGN-TOKENS.md
+   ============================================================ */
+:root{
+  --sunken:#E4E4EC; --base:#EEEEF4; --raised:#F8F8FB; --elev:#FCFCFD;
+  --overlay:#FEFEFF; --subtle:#EAEAF1;
+  --t1:#1B1B20; --t2:#44444D; --t3:#5B5B65;
+  --bl:#E0E0E8; --bm:#C9C9D3;
+  --primary:#0064CC; --accent:#0E7490;
+  --ok:#0C7752; --warn:#8A6400; --bad:#C42B33;
+  --card-shadow:0 1px 2px rgba(0,0,0,.12);
+  --ghost:#C9C9D3;
+  --hatch:rgba(0,100,204,.16);
+  --ok-wash:rgba(12,119,82,.10);
+  --warn-wash:rgba(138,100,0,.07);
+  --warn-edge:rgba(138,100,0,.28);
+  --glass:rgba(252,252,253,.82);
+}
+html[data-theme="dark"]{
+  --sunken:#08080A; --base:#0F0F13; --raised:#1B1B21; --elev:#26262D;
+  --overlay:#33333B; --subtle:#17171C;
+  --t1:#F2F2F6; --t2:#C9C9D2; --t3:#ADADB8;
+  --bl:#2E2E36; --bm:#414149;
+  --primary:#4DA3FF; --accent:#22D3EE;
+  --ok:#3DCC99; --warn:#E3B45A; --bad:#E05C64;
+  --card-shadow:none;
+  --ghost:#414149;
+  --hatch:rgba(77,163,255,.20);
+  --ok-wash:rgba(61,204,153,.12);
+  --warn-wash:rgba(227,180,90,.09);
+  --warn-edge:rgba(227,180,90,.34);
+  --glass:rgba(27,27,33,.80);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{height:100%}
+body{
+  font-family:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  background:var(--sunken);
+  color:var(--t1);
+  font-size:17px; line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;
+}
+.num{font-family:-apple-system,"SF Pro Rounded",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+
+/* ---------- desktop phone frame ---------- */
+.stage{min-height:100%;display:flex;align-items:center;justify-content:center;padding:0}
+.phone{
+  width:100%;max-width:430px;height:100dvh;max-height:100dvh;
+  background:var(--sunken);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+@media (min-width:520px) and (min-height:760px){
+  .stage{padding:24px}
+  .phone{height:844px;max-height:calc(100dvh - 48px);border-radius:44px;
+    box-shadow:0 0 0 10px #1c1c1e,0 0 0 11px #3a3a3c,0 30px 70px rgba(0,0,0,.42)}
+}
+
+/* ---------- status bar ---------- */
+.statusbar{
+  flex:0 0 auto;height:52px;display:flex;align-items:flex-end;
+  justify-content:space-between;padding:0 24px 8px;color:var(--t1);
+  font-size:15px;font-weight:600;letter-spacing:.2px;
+}
+.statusbar .right{display:flex;align-items:center;gap:5px}
+.statusbar svg{display:block}
+
+/* ---------- header ---------- */
+.hdr{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:4px 12px 10px 16px;
+}
+.hdr h1{font-size:28px;font-weight:700;letter-spacing:-.4px;line-height:1.15}
+.hdr .sub{font-size:13px;color:var(--t3);font-weight:500;margin-top:1px}
+.iconbtn{
+  width:44px;height:44px;border-radius:9999px;border:1px solid var(--bl);
+  background:var(--raised);color:var(--t2);display:grid;place-items:center;
+  cursor:pointer;transition:transform 80ms ease-in,background 160ms;
+}
+.iconbtn:active{transform:scale(.92);transition:transform 80ms ease-in}
+.iconbtn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---------- scroll region ---------- */
+.scroll{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:2px 12px 24px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--raised);border:1px solid var(--bl);border-radius:16px;
+  box-shadow:var(--card-shadow);padding:16px;margin-bottom:12px;
+}
+.card.hero{border-radius:24px;padding:24px 20px 8px}
+.card h2{font-size:17px;font-weight:600;color:var(--t2);letter-spacing:-.1px}
+.card .lede{font-size:17px;color:var(--t2);line-height:1.45;margin-top:8px}
+.meta{font-size:13px;color:var(--t3);font-weight:500}
+
+/* ---------- hero ---------- */
+.hero .amount{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+.hero .amount .v{font-size:84px;font-weight:700;letter-spacing:-3.4px;line-height:.92;color:var(--t1)}
+.hero .amount .v.range{font-size:54px;letter-spacing:-2px}
+.hero .amount .v.range.wide{font-size:40px;letter-spacing:-1.4px}
+.hero .amount .u{font-size:22px;font-weight:600;color:var(--t3);letter-spacing:-.2px}
+
+.bar{margin-top:28px;position:relative}
+.blocks{display:grid;gap:3px;height:62px}
+.blk{border-radius:4px;background:var(--subtle);border:1px solid var(--bl);
+  position:relative;overflow:hidden}
+.blk.off{visibility:hidden}
+.blk.rng{border-style:dashed;border-color:var(--bm);
+  background:repeating-linear-gradient(135deg,transparent 0 4px,var(--hatch) 4px 8px)}
+.blk .fill{position:absolute;inset:0 auto 0 0;background:var(--ok);
+  transform-origin:left center;transition:width 520ms cubic-bezier(.22,.9,.3,1)}
+.ruler{position:relative;height:14px;margin-top:12px}
+.ruler .line{position:absolute;left:0;top:6px;height:1px;
+  background:repeating-linear-gradient(90deg,var(--ghost) 0 3px,transparent 3px 6px)}
+.ruler .tick{position:absolute;top:0;width:1px;height:13px;background:var(--bm)}
+.labels{position:relative;height:18px;margin-top:8px}
+.labels span{position:absolute;top:0;font-size:12px;font-weight:600;color:var(--t3);white-space:nowrap}
+.labels .spent{color:var(--ok)}
+
+.verdict{margin-top:26px;font-size:21px;font-weight:600;letter-spacing:-.3px;line-height:1.28}
+.verdict em{font-style:normal;color:var(--ok)}
+.cause{margin-top:7px;font-size:16px;color:var(--t2);line-height:1.35}
+
+/* ---------- expander ---------- */
+.exp{border-top:1px solid var(--bl);margin-top:20px}
+.card.hero .exp{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}
+.exp>button{
+  width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;background:none;border:0;cursor:pointer;color:var(--primary);
+  font:600 15px/1.3 inherit;font-family:inherit;padding:0;text-align:left;
+}
+.exp>button .chev{transition:transform 260ms cubic-bezier(.22,.9,.3,1);flex:0 0 auto}
+.exp>button[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.expbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows 280ms cubic-bezier(.22,.9,.3,1)}
+.exp>button[aria-expanded="true"]+.expbody{grid-template-rows:1fr}
+.expbody>div{overflow:hidden}
+.expinner{padding:2px 0 16px}
+
+/* derivation table */
+.deriv{display:flex;flex-direction:column;gap:0}
+.drow{display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  padding:9px 0;border-bottom:1px solid var(--bl);font-size:15px;color:var(--t2);line-height:1.35}
+.drow:last-child{border-bottom:0}
+.drow .d{font-weight:600;flex:0 0 auto;color:var(--t1);white-space:nowrap}
+.drow .d.minus{color:var(--warn)}
+.drow .d.plus{color:var(--ok)}
+.drow .d.flat{color:var(--t3);font-weight:500}
+.drow.total{border-top:1px solid var(--bm);border-bottom:0;margin-top:2px;padding-top:11px;
+  font-size:16px;color:var(--t1);font-weight:600}
+.provenance{margin-top:12px;font-size:13px;color:var(--t3);line-height:1.45}
+
+/* ---------- alert ---------- */
+.card.alert{
+  background:var(--raised);border:1px solid var(--warn-edge);
+  background-image:linear-gradient(var(--warn-wash),var(--warn-wash));
+}
+.alert .top{display:flex;gap:10px;align-items:flex-start}
+.alert .top svg{flex:0 0 auto;margin-top:2px;color:var(--warn)}
+.alert h2{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.25px;line-height:1.25}
+.alert .body{margin-top:8px;font-size:16px;color:var(--t2);line-height:1.45}
+.alert .anchor{margin-top:10px;font-size:15px;font-weight:600;color:var(--t2);
+  background:var(--subtle);border-radius:8px;padding:9px 11px;line-height:1.35}
+
+/* ---------- chart ---------- */
+.chartwrap{margin-top:14px}
+.chartwrap svg{display:block;width:100%;height:auto}
+.chartwrap rect.sp{transform-box:fill-box;transform-origin:bottom;
+  animation:grow 480ms cubic-bezier(.22,.9,.3,1) both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.legend{display:flex;gap:16px;margin-top:10px;font-size:12px;font-weight:600;color:var(--t3)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;
+  vertical-align:-1px}
+.legend .l1 i{background:var(--subtle);border:1px solid var(--bm)}
+.legend .l2 i{background:var(--ok)}
+.caption{margin-top:10px;font-size:15px;color:var(--t2);line-height:1.45}
+
+/* ---------- proof ---------- */
+.proof .big{display:flex;align-items:baseline;gap:7px;margin-top:10px}
+.proof .big .v{font-size:36px;font-weight:700;letter-spacing:-1px;color:var(--ok);line-height:1}
+.proof .big .u{font-size:17px;font-weight:600;color:var(--t3)}
+
+/* ---------- tonight ---------- */
+.pairs{display:flex;gap:0;margin-top:12px;border:1px solid var(--bl);border-radius:12px;
+  background:var(--elev);overflow:hidden}
+.pair{flex:1 1 0;padding:11px 12px}
+.pair+.pair{border-left:1px solid var(--bl)}
+.pair .k{font-size:12px;font-weight:600;color:var(--t3);letter-spacing:.1px}
+.pair .v{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-top:2px;color:var(--t1)}
+.tag{display:inline-block;margin-top:12px;font-size:15px;font-weight:600;color:var(--warn)}
+.tag.good{color:var(--ok)}
+
+/* ---------- raw mode ---------- */
+.rawhead{padding:2px 4px 14px}
+.rawhead p{font-size:15px;color:var(--t3);line-height:1.45;margin-top:6px}
+.rawlist{background:var(--raised);border:1px solid var(--bl);border-radius:16px;
+  box-shadow:var(--card-shadow);overflow:hidden}
+.rawrow{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding:13px 16px;border-bottom:1px solid var(--bl)}
+.rawrow:last-child{border-bottom:0}
+.rawrow .k{font-size:16px;color:var(--t2)}
+.rawrow .v{font-size:17px;font-weight:600;color:var(--t1);white-space:nowrap}
+.backbtn{width:100%;min-height:48px;margin-top:14px;border-radius:12px;border:1px solid var(--bl);
+  background:var(--raised);color:var(--primary);font:600 16px/1 inherit;font-family:inherit;
+  cursor:pointer;transition:transform 80ms ease-in}
+.backbtn:active{transform:scale(.98)}
+
+/* ---------- footer ---------- */
+.foot{padding:4px 6px 8px;font-size:12px;color:var(--t3);font-weight:500}
+
+/* ---------- empty ---------- */
+.cta{width:100%;min-height:48px;margin-top:14px;border-radius:12px;border:0;
+  background:var(--primary);color:#fff;font:600 16px/1 inherit;font-family:inherit;
+  cursor:pointer;transition:transform 80ms ease-in}
+.cta:active{transform:scale(.98)}
+
+/* ---------- skeleton ---------- */
+.sk{background:var(--subtle);border-radius:8px;position:relative;overflow:hidden}
+.sk::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:translateX(-100%);animation:shim 1.5s infinite}
+html[data-theme="dark"] .sk::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+@keyframes shim{100%{transform:translateX(100%)}}
+
+/* ---------- tab bar ---------- */
+.tabs{
+  flex:0 0 auto;display:flex;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--bl);
+  background:var(--glass);backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+}
+.tab{flex:1 1 0;min-height:48px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;background:none;border:0;cursor:pointer;
+  color:var(--t3);font:600 11px/1 inherit;font-family:inherit;border-radius:12px;
+  transition:transform 80ms ease-in,color 160ms}
+.tab:active{transform:scale(.9)}
+.tab[aria-current="page"]{color:var(--primary)}
+
+/* ---------- dev toolbar ---------- */
+.devbtn{position:absolute;right:8px;bottom:80px;width:30px;height:30px;border-radius:9999px;
+  border:1px solid var(--bm);background:var(--overlay);color:var(--t3);
+  display:grid;place-items:center;cursor:pointer;opacity:.4;z-index:40;
+  transition:opacity 160ms,transform 80ms ease-in}
+.devbtn:hover{opacity:1}
+.devbtn:active{transform:scale(.9)}
+.devpanel{position:absolute;right:10px;bottom:118px;width:230px;z-index:41;
+  background:var(--overlay);border:1px solid var(--bm);border-radius:14px;padding:10px;
+  box-shadow:0 12px 34px rgba(0,0,0,.3);display:none;font-size:11px}
+.devpanel.open{display:block}
+.devpanel .grp{margin-bottom:8px}
+.devpanel .grp:last-child{margin-bottom:0}
+.devpanel .lbl{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:4px}
+.devpanel .opts{display:flex;flex-wrap:wrap;gap:4px}
+.devpanel button.opt{padding:5px 8px;border-radius:6px;border:1px solid var(--bl);
+  background:var(--raised);color:var(--t2);font:600 11px/1 inherit;font-family:inherit;cursor:pointer}
+.devpanel button.opt[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ---------- a11y ---------- */
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.enter{animation:rise 380ms cubic-bezier(.22,.9,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::after,*::before{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="phone">
+
+  <!-- status bar -->
+  <div class="statusbar" aria-hidden="true">
+    <span class="num">9:41</span>
+    <span class="right">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1.2 4.2a11 11 0 0 1 14.6 0"/><path d="M3.9 7a7.2 7.2 0 0 1 9.2 0"/><path d="M6.6 9.7a3.4 3.4 0 0 1 3.8 0"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x=".6" y=".6" width="22" height="11.8" rx="3.4" stroke="currentColor" stroke-opacity=".38"/><rect x="2.2" y="2.2" width="15.5" height="8.6" rx="2.2" fill="currentColor"/><path d="M24.4 4.4v4.2a2.3 2.3 0 0 0 0-4.2z" fill="currentColor" fill-opacity=".45"/></svg>
+    </span>
+  </div>
+
+  <!-- header -->
+  <header class="hdr">
+    <div>
+      <h1 id="hdrTitle">Tuesday</h1>
+      <div class="sub" id="hdrSub">Body budget</div>
+    </div>
+    <button class="iconbtn" id="rawToggle" aria-pressed="false"
+            aria-label="Turn scores off and show raw numbers with no verdict">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+    </button>
+  </header>
+
+  <!-- scrolling content -->
+  <main class="scroll" id="scroll"></main>
+
+  <!-- tab bar -->
+  <nav class="tabs" aria-label="Main">
+    <button class="tab" aria-current="page" data-tab="Today">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="4.2"/><path d="M3 9.5h18M8 2.8v3.2M16 2.8v3.2"/></svg>
+      Today
+    </button>
+    <button class="tab" data-tab="Live">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.5h4l2.4-6.6 3.9 13.2 2.3-6.6h6.4"/></svg>
+      Live
+    </button>
+    <button class="tab" data-tab="Explore">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/></svg>
+      Explore
+    </button>
+    <button class="tab" data-tab="Settings">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7.5h7M15.5 7.5H20M4 16.5h3.5M12 16.5H20"/><circle cx="13" cy="7.5" r="2.4"/><circle cx="9.5" cy="16.5" r="2.4"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <!-- dev toolbar (not part of the design being judged) -->
+  <button class="devbtn" id="devbtn" aria-label="Prototype controls" aria-expanded="false">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg>
+  </button>
+  <div class="devpanel" id="devpanel" role="group" aria-label="Prototype controls">
+    <div class="grp"><div class="lbl">Theme</div><div class="opts" data-k="theme">
+      <button class="opt" data-v="auto">Auto</button><button class="opt" data-v="light">Light</button><button class="opt" data-v="dark">Dark</button></div></div>
+    <div class="grp"><div class="lbl">Screen state</div><div class="opts" data-k="render">
+      <button class="opt" data-v="loaded">Loaded</button><button class="opt" data-v="loading">Loading</button><button class="opt" data-v="empty">Empty</button></div></div>
+    <div class="grp"><div class="lbl">Data source</div><div class="opts" data-k="data">
+      <button class="opt" data-v="watch">Watch</button><button class="opt" data-v="phone">iPhone only</button><button class="opt" data-v="new">New user</button></div></div>
+    <div class="grp"><div class="lbl">Budget size</div><div class="opts" data-k="day">
+      <button class="opt" data-v="big">Big</button><button class="opt" data-v="usual">Usual</button><button class="opt" data-v="small">Small</button><button class="opt" data-v="attention">Attention</button></div></div>
+    <div class="grp"><div class="lbl">Time of day</div><div class="opts" data-k="time">
+      <button class="opt" data-v="morning">Morning</button><button class="opt" data-v="evening">Evening</button></div></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  theme:'auto',      // auto | light | dark
+  render:'loaded',   // loaded | loading | empty
+  data:'watch',      // watch | phone | new
+  day:'small',       // big | usual | small | attention   (ignored unless data==='watch')
+  time:'morning',    // morning | evening
+  raw:false,         // escape hatch: scores off, raw numbers, no verdict
+  tab:'Today',
+  open:{}            // expander id -> bool
+};
+
+/* ============================================================
+   FICTIONAL USER — Alex, 34.  Every number below traces to the
+   prototype spec and stays internally consistent.
+   Slept 6h12m of a 7h40m need.  Sleep debt 4h20m over 5 nights
+   (7h40m - 6h48m = 52 min x 5 = 4h20m).  RHR 58, usual 55-60.
+   Hard run Sunday.  8,400 steps yesterday.  Bedtime +40 min drift.
+   ============================================================ */
+
+/* ---- watch: budget in minutes, 5 min per block, 14-block scale ---- */
+const WATCH = {
+  big:{
+    budget:65, usual:50, step:5, cols:14, unit:'min',
+    spent:{morning:14, evening:71},
+    size:'A bigger day.', cause:'Sleep 25m above your need.',
+    instruction:'Spend it all.',
+    rows:[
+      ['Your best-rested days','60 min','flat'],
+      ['Slept 8h 05m, need 7h 40m','+5 min','plus'],
+      ['No hard session in three days','no change','flat'],
+      ['Resting heart rate 55, usual 55–60','no change','flat']
+    ], total:'65 min'
+  },
+  usual:{
+    budget:45, usual:50, step:5, cols:14, unit:'min',
+    spent:{morning:9, evening:47},
+    size:'About your usual day.', cause:'Sleep 25m short.',
+    instruction:'Spend it all.',
+    rows:[
+      ['Your best-rested days','60 min','flat'],
+      ['Slept 7h 15m, need 7h 40m','−5 min','minus'],
+      ['Hard run Sunday, 96 min','−10 min','minus'],
+      ['Resting heart rate 57, usual 55–60','no change','flat']
+    ], total:'45 min'
+  },
+  small:{
+    budget:30, usual:50, step:5, cols:14, unit:'min',
+    spent:{morning:12, evening:34},
+    size:'A smaller day.', cause:'Sleep 1h 28m short.',
+    instruction:'Spend it all.',
+    rows:[
+      ['Your best-rested days','60 min','flat'],
+      ['Slept 6h 12m, need 7h 40m','−20 min','minus'],
+      ['Hard run Sunday, 96 min','−10 min','minus'],
+      ['Resting heart rate 58, usual 55–60','no change','flat']
+    ], total:'30 min'
+  },
+  attention:{
+    budget:20, usual:50, step:5, cols:14, unit:'min',
+    spent:{morning:8, evening:19},
+    size:'A much smaller day.', cause:'Sleep 1h 52m short.',
+    instruction:'Spend some, keep the rest.',
+    rows:[
+      ['Your best-rested days','60 min','flat'],
+      ['Slept 5h 48m, need 7h 40m','−25 min','minus'],
+      ['Hard run Sunday, 96 min','−5 min','minus'],
+      ['Resting heart rate 64 for three nights, usual 55–60','−10 min','minus']
+    ], total:'20 min',
+    alert:true
+  }
+};
+
+/* ---- iPhone only: budget in steps, 1,000 per block, 10-block scale ---- */
+const PHONE = {
+  budget:6000, budgetHi:8000, usual:7600, step:1000, cols:10, unit:'steps',
+  spent:{morning:1850, evening:7200},
+  size:'Close to your usual.', cause:'No wrist data, so this is a range.',
+  instruction:'Spend it all.',
+  rows:[
+    ['Your usual day, last two weeks','7,600 steps','flat'],
+    ['A phone counts steps, not effort minutes','—','flat'],
+    ['Held between 6,000 and 8,000, where the health benefit levels off','—','flat'],
+    ['No heart or sleep data, so it stays a range','—','flat']
+  ], total:'6,000–8,000 steps'
+};
+
+/* ---- genuinely new: no baselines yet ---- */
+const NEWUSER = {
+  budget:20, budgetHi:40, usual:null, step:5, cols:14, unit:'min',
+  spent:{morning:6, evening:24},
+  size:'A first budget.', cause:'No history yet, so this is a range.',
+  instruction:'Spend it all.',
+  rows:[
+    ['No sleep or heart history yet','—','flat'],
+    ['The standard 30 minutes a day, World Health Organization','30 min','flat'],
+    ['Held as a range until you have a week of your own','20–40 min','flat']
+  ], total:'20–40 min'
+};
+
+/* ---- 14 days: budget set, minutes spent ---- */
+const HIST_WATCH = [
+  {d:'W',b:50,s:46},{d:'T',b:55,s:58},{d:'F',b:45,s:22},{d:'S',b:60,s:71},
+  {d:'S',b:40,s:38},{d:'M',b:50,s:44},{d:'T',b:55,s:52},{d:'W',b:50,s:18},
+  {d:'T',b:55,s:57},{d:'F',b:45,s:31},{d:'S',b:60,s:55},{d:'S',b:55,s:96},
+  {d:'M',b:30,s:26},{d:'T',b:30,s:12,today:true}
+];
+const HIST_PHONE = [
+  {d:'W',b:7500,s:7100},{d:'T',b:7500,s:8300},{d:'F',b:7000,s:4200},{d:'S',b:8000,s:11200},
+  {d:'S',b:7000,s:5900},{d:'M',b:7500,s:7000},{d:'T',b:7500,s:8100},{d:'W',b:7000,s:3600},
+  {d:'T',b:7500,s:7900},{d:'F',b:7000,s:5100},{d:'S',b:8000,s:9400},{d:'S',b:7500,s:12800},
+  {d:'M',b:7000,s:8400},{d:'T',b:7000,s:1850,today:true}
+];
+const HIST_NEW = [
+  {d:'S',b:30,s:22},{d:'M',b:30,s:41},{d:'T',b:30,s:6,today:true}
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => n.toLocaleString('en-US');
+
+function cfg(){
+  if(S.data==='phone') return PHONE;
+  if(S.data==='new')   return NEWUSER;
+  return WATCH[S.day];
+}
+function hist(){
+  if(S.data==='phone') return HIST_PHONE;
+  if(S.data==='new')   return HIST_NEW;
+  return HIST_WATCH;
+}
+function spentNow(){ return cfg().spent[S.time]; }
+
+/* ============================================================
+   BLOCK BAR — the hero's one visual.
+   Fixed block width, so bar LENGTH is the pre-attentive channel.
+   Exactly one reference range is drawn: today's budget.
+   The dashed rule is a ruler to "your usual", not a second range.
+   ============================================================ */
+function blockBar(){
+  const c = cfg();
+  const hi = c.budgetHi || c.budget;
+  const spent = spentNow();
+  const cols = c.cols, step = c.step;
+
+  let blocks = '';
+  for(let i=0;i<cols;i++){
+    const lo = i*step;
+    let cls = 'blk';
+    if(lo >= hi) cls += ' off';
+    else if(c.budgetHi && lo >= c.budget) cls += ' rng';
+    const f = Math.max(0, Math.min(1, (spent - lo)/step));
+    const fill = (lo < hi && f > 0)
+      ? `<span class="fill" data-w="${(f*100).toFixed(1)}" style="width:0"></span>` : '';
+    blocks += `<span class="${cls}">${fill}</span>`;
+  }
+
+  const pct = v => (v/(cols*step))*100;
+  const spentPct = Math.min(100, pct(Math.min(spent, cols*step)));
+  const usualPct = c.usual!=null ? Math.min(100, pct(c.usual)) : null;
+
+  let ruler = '';
+  if(usualPct!=null){
+    ruler = `<div class="ruler">
+        <span class="line" style="width:${usualPct.toFixed(1)}%"></span>
+        <span class="tick" style="left:calc(${usualPct.toFixed(1)}% - 1px)"></span>
+      </div>`;
+  } else {
+    ruler = `<div class="ruler"></div>`;
+  }
+
+  // labels: spent trails the fill edge, usual is centred on the ruler tick
+  const spentLabel = `<span class="spent num" style="left:${Math.min(50,Math.max(0,spentPct-5)).toFixed(1)}%">${
+      c.unit==='steps' ? fmt(spent) : spent} spent</span>`;
+  const usualLabel = usualPct!=null
+    ? `<span class="num" style="left:${usualPct.toFixed(1)}%;transform:translateX(-50%)">usual ${
+        c.unit==='steps' ? fmt(c.usual) : c.usual}</span>`
+    : '';
+
+  return `<div class="bar">
+    <div class="blocks" style="grid-template-columns:repeat(${cols},1fr)">${blocks}</div>
+    ${ruler}
+    <div class="labels">${spentLabel}${usualLabel}</div>
+  </div>`;
+}
+
+/* ============================================================
+   SVG CHART — 14 days of budgets and spends.
+   Positional bars. Overspend is drawn, and it is not a failure.
+   ============================================================ */
+function chartSVG(){
+  const rows = hist();
+  const c = cfg();
+  const data = rows.map((r,i)=> i===rows.length-1
+      ? {...r, b:(c.budgetHi? Math.round((c.budget+c.budgetHi)/2) : c.budget), s:spentNow()}
+      : r);
+
+  const W=311, H=142, base=112, top=10, plot=base-top;
+  const cols=14, colW=W/cols, barW=13, off=(colW-barW)/2;
+  const max = Math.max(...data.map(d=>Math.max(d.b,d.s))) * 1.06;
+  const y = v => base - (v/max)*plot;
+
+  let g='';
+  // "usual" reference line — one line, labelled with a word, no number
+  if(c.usual!=null){
+    const uy = y(c.usual);
+    g += `<line x1="0" y1="${uy.toFixed(1)}" x2="${W}" y2="${uy.toFixed(1)}"
+            stroke="var(--ghost)" stroke-width="1" stroke-dasharray="3 4"/>
+          <text x="0" y="${(uy-5).toFixed(1)}" font-size="11" font-weight="600"
+            fill="var(--t3)">usual</text>`;
+  }
+  g += `<line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="var(--bl)" stroke-width="1"/>`;
+
+  data.forEach((d,i)=>{
+    const x = i*colW + off;
+    const bh = base - y(d.b), sh = base - y(Math.min(d.s,d.b));
+    const over = Math.max(0, d.s - d.b);
+    // budget track
+    g += `<rect x="${x.toFixed(1)}" y="${y(d.b).toFixed(1)}" width="${barW}" height="${Math.max(2,bh).toFixed(1)}"
+            rx="3" fill="var(--subtle)" stroke="var(--bl)" stroke-width="1"/>`;
+    // spent
+    if(sh>0.5){
+      g += `<rect class="sp" style="animation-delay:${(i*22)}ms" x="${x.toFixed(1)}" y="${(base-sh).toFixed(1)}"
+              width="${barW}" height="${sh.toFixed(1)}" rx="3" fill="var(--ok)" opacity="${d.today?'1':'.88'}"/>`;
+    }
+    // overspend, drawn above the track, celebrated not punished
+    if(over>0){
+      const oy = y(d.s), oh = y(d.b)-y(d.s);
+      g += `<rect class="sp" style="animation-delay:${(i*22)+90}ms" x="${x.toFixed(1)}" y="${oy.toFixed(1)}"
+              width="${barW}" height="${oh.toFixed(1)}" rx="3" fill="var(--ok)" opacity=".42"/>`;
+    }
+    // day letter
+    g += `<text x="${(i*colW+colW/2).toFixed(1)}" y="${base+18}" text-anchor="middle"
+            font-size="11" font-weight="${d.today?'700':'600'}"
+            fill="${d.today?'var(--t1)':'var(--t3)'}">${d.d}</text>`;
+    if(d.today){
+      g += `<circle cx="${(i*colW+colW/2).toFixed(1)}" cy="${base+27}" r="2" fill="var(--primary)"/>`;
+    }
+  });
+
+  const label = S.data==='new'
+    ? 'Bar chart. Three days recorded so far, each showing the budget set and the minutes spent.'
+    : `Bar chart, ${data.length} days. Each day shows the budget set and how much of it was spent. Today is the last bar.`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" preserveAspectRatio="xMidYMid meet">${g}</svg>`;
+}
+
+/* ============================================================
+   PIECES
+   ============================================================ */
+function expander(id, label, inner){
+  const open = !!S.open[id];
+  return `<div class="exp">
+    <button type="button" data-exp="${id}" aria-expanded="${open}" aria-controls="${id}-body">
+      <span>${esc(label)}</span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="expbody" id="${id}-body"><div><div class="expinner">${inner}</div></div></div>
+  </div>`;
+}
+
+function derivTable(){
+  const c = cfg();
+  const rows = c.rows.map(([k,v,kind])=>
+    `<div class="drow"><span>${esc(k)}</span><span class="d ${kind}">${esc(v)}</span></div>`).join('');
+  const note =
+    S.data==='watch'
+      ? `Built from your own history: your sleep need, your last two weeks of sessions and your own
+         resting heart rate range. No forecast, no probability. The mark on the bar is your usual day,
+         50 minutes &mdash; the middle of your last two weeks. The 60 above it is what your
+         best-rested days reach.`
+    : S.data==='phone'
+      ? `Built from your own two weeks of steps and nothing else. No forecast, no probability.`
+      : `Built from a published guideline, not from you, because there is not enough of you yet.
+         No forecast, no probability.`;
+  return `<div class="deriv">${rows}
+    <div class="drow total"><span>Today</span><span class="d">${esc(c.total)}</span></div>
+  </div>
+  <p class="provenance">${note}</p>`;
+}
+
+/* ---- SLOT A: attention. Renders at position 1 or not at all. ---- */
+function slotAlert(){
+  if(S.render!=='loaded' || S.data!=='watch' || !WATCH[S.day].alert) return '';
+  return `<section class="card alert enter" aria-labelledby="alertH">
+    <div class="top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.2" stroke-linecap="round"><path d="M12 8.5v4.6M12 16.6h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <h2 id="alertH">Your resting heart rate has been higher for three nights</h2>
+    </div>
+    <p class="body">64 bpm against your usual 55&ndash;60, with shorter sleep on the same nights.
+      This is what the days before a cold often look like. It is also what a hot bedroom,
+      a late drink or a stressful week look like.</p>
+    <p class="anchor">Most people do not need to do anything about this. If it lasts a week,
+      or a fever joins it, that is when to call someone.</p>
+    ${expander('exp-alert','What was noticed',`
+      <div class="deriv">
+        <div class="drow"><span>Resting heart rate, three nights</span><span class="d minus">64 vs 55–60 bpm</span></div>
+        <div class="drow"><span>Time asleep, three nights</span><span class="d minus">5h 48m vs 7h 40m need</span></div>
+        <div class="drow"><span>Steps, three nights</span><span class="d flat">no change</span></div>
+        <div class="drow"><span>Breathing rate, three nights</span><span class="d flat">no change</span></div>
+      </div>
+      <p class="provenance">Two of five signals moved together for three nights running.
+      One night on its own is never enough to say anything.</p>`)}
+  </section>`;
+}
+
+/* ---- SLOT B: the hero. State and instruction merged. ---- */
+function slotHero(){
+  const c = cfg();
+
+  if(S.render==='loading'){
+    return `<section class="card hero" aria-busy="true" aria-label="Loading today's budget">
+      <div class="sk" style="width:120px;height:20px"></div>
+      <div class="sk" style="width:190px;height:70px;margin-top:14px;border-radius:12px"></div>
+      <div class="sk" style="width:100%;height:52px;margin-top:24px;border-radius:8px"></div>
+      <div class="sk" style="width:70%;height:22px;margin-top:26px"></div>
+      <div class="sk" style="width:45%;height:18px;margin-top:8px"></div>
+      <div style="height:22px"></div>
+    </section>`;
+  }
+
+  if(S.render==='empty'){
+    return `<section class="card hero enter" aria-labelledby="heroH">
+      <h2 id="heroH">Today's budget</h2>
+      <div class="amount"><span class="v num range">20&ndash;40</span><span class="u">min</span></div>
+      ${blockBarEmpty()}
+      <p class="verdict">A standard day. <em>Spend it all.</em></p>
+      <p class="cause">Health access is off, so this is the World Health Organization's
+        30 minutes a day, held as a range.</p>
+      <button class="cta" id="grantBtn">Turn on Health access</button>
+      <div style="height:12px"></div>
+    </section>`;
+  }
+
+  const isRange = !!c.budgetHi;
+  const plain = isRange
+    ? (c.unit==='steps' ? `${fmt(c.budget)}-${fmt(c.budgetHi)}` : `${c.budget}-${c.budgetHi}`)
+    : String(c.unit==='steps' ? fmt(c.budget) : c.budget);
+  const val = plain.replace('-','&ndash;');
+  const sizeCls = !isRange ? '' : (plain.length > 7 ? 'range wide' : 'range');
+
+  return `<section class="card hero enter" aria-labelledby="heroH">
+    <h2 id="heroH">Today's budget</h2>
+    <div class="amount">
+      <span class="v num ${sizeCls}">${val}</span>
+      <span class="u">${c.unit}</span>
+    </div>
+    ${blockBar()}
+    <p class="verdict">${esc(c.size)} <em>${esc(c.instruction)}</em></p>
+    <p class="cause">${esc(c.cause)}</p>
+    ${expander('exp-why','Why this size', derivTable())}
+  </section>`;
+}
+
+function blockBarEmpty(){
+  let blocks='';
+  for(let i=0;i<14;i++){
+    let cls='blk';
+    if(i>=8) cls+=' off';
+    else if(i>=4) cls+=' rng';
+    blocks+=`<span class="${cls}"></span>`;
+  }
+  return `<div class="bar"><div class="blocks" style="grid-template-columns:repeat(14,1fr)">${blocks}</div>
+    <div class="ruler"></div><div class="labels"></div></div>`;
+}
+
+/* ---- SLOT C: two weeks ---- */
+function slotChart(){
+  if(S.render==='loading'){
+    return `<section class="card" aria-busy="true" aria-label="Loading history">
+      <div class="sk" style="width:90px;height:18px"></div>
+      <div class="sk" style="width:100%;height:120px;margin-top:16px;border-radius:10px"></div>
+    </section>`;
+  }
+  if(S.render==='empty'){
+    return `<section class="card enter"><h2>Two weeks</h2>
+      <p class="caption">No days recorded yet. The shape fills in from the day access is on.</p></section>`;
+  }
+
+  let caption, expanderBody, expLabel;
+  if(S.data==='phone'){
+    caption = 'Budgets ran 6,000 to 8,000 steps. You spent past the budget on seven days &mdash; that is allowed.';
+    expLabel = 'How the budget moves';
+    expanderBody = `<p class="caption" style="margin-top:0">Without wrist data the budget barely moves.
+      It sits in the same range every day, and your own weekday pattern is the only thing that shifts it.</p>`;
+  } else if(S.data==='new'){
+    caption = 'Three days so far. After a week of sleep the budget stops being a range and becomes yours.';
+    expLabel = 'What happens next';
+    expanderBody = `<p class="caption" style="margin-top:0">Seven nights of sleep is the point where
+      your own need, your own resting heart rate range and your own best-rested ceiling can be worked out.
+      Until then the budget stays the standard 30 minutes, held as a range.</p>`;
+  } else {
+    caption = 'Budgets ran 30 to 60 minutes. You spent past the budget on four days &mdash; that is allowed.';
+    expLabel = 'How the budget moves';
+    expanderBody = `<div class="deriv">
+        <div class="drow"><span>Sleep was the biggest change</span><span class="d">9 of 14 days</span></div>
+        <div class="drow"><span>A recent hard session was the biggest change</span><span class="d">5 of 14 days</span></div>
+        <div class="drow"><span>Resting heart rate changed it</span><span class="d flat">on none of them</span></div>
+      </div>
+      <p class="provenance">Sleep is the lever. That is not advice, it is what your own two weeks did.</p>`;
+  }
+
+  return `<section class="card enter" aria-labelledby="chartH">
+    <h2 id="chartH">Two weeks</h2>
+    <div class="chartwrap">${chartSVG()}</div>
+    <div class="legend">
+      <span class="l1"><i></i>budget</span>
+      <span class="l2"><i></i>spent</span>
+    </div>
+    <p class="caption">${caption}</p>
+    ${expander('exp-chart', expLabel, expanderBody)}
+  </section>`;
+}
+
+/* ---- SLOT D: what spending buys (aggregate proof, never n=1) ---- */
+function slotProof(){
+  if(S.render==='loading'){
+    return `<section class="card" aria-busy="true" aria-label="Loading">
+      <div class="sk" style="width:150px;height:18px"></div>
+      <div class="sk" style="width:110px;height:34px;margin-top:12px;border-radius:8px"></div>
+      <div class="sk" style="width:100%;height:16px;margin-top:12px"></div>
+      <div class="sk" style="width:72%;height:16px;margin-top:6px"></div>
+    </section>`;
+  }
+  if(S.render==='empty'){
+    return `<section class="card enter"><h2>What spending buys</h2>
+      <p class="caption">Nothing to compare yet.</p></section>`;
+  }
+  if(S.data==='new'){
+    return `<section class="card enter" aria-labelledby="proofH">
+      <h2 id="proofH">What spending buys</h2>
+      <p class="lede">Not enough days yet to say what spending does for you.
+        This slot fills with your own record, never with a general claim.</p>
+    </section>`;
+  }
+  if(S.data==='phone'){
+    return `<section class="card enter" aria-labelledby="proofH">
+      <h2 id="proofH">What spending buys</h2>
+      <p class="lede">Sleep is what this compares against, and a phone cannot see sleep.
+        So this stays blank rather than saying something we cannot measure.</p>
+    </section>`;
+  }
+  return `<section class="card proof enter" aria-labelledby="proofH">
+    <h2 id="proofH">What spending buys</h2>
+    <div class="big"><span class="v num">20</span><span class="u">more minutes asleep</span></div>
+    <p class="lede">Measured across your last eight weeks: nights after a fully spent budget,
+      against every other night.</p>
+  </section>`;
+}
+
+/* ---- SLOT E: tonight's refill (the one time-of-day slot) ---- */
+function slotTonight(){
+  if(S.render==='loading'){
+    return `<section class="card" aria-busy="true" aria-label="Loading">
+      <div class="sk" style="width:130px;height:18px"></div>
+      <div class="sk" style="width:100%;height:62px;margin-top:14px;border-radius:12px"></div>
+      <div class="sk" style="width:40%;height:16px;margin-top:12px"></div>
+    </section>`;
+  }
+  if(S.render==='empty'){
+    return `<section class="card enter"><h2>Tonight's refill</h2>
+      <p class="caption">No sleep recorded yet.</p></section>`;
+  }
+  if(S.data==='phone'){
+    return `<section class="card enter" aria-labelledby="tonH">
+      <h2 id="tonH">Tonight's refill</h2>
+      <p class="lede">A phone cannot see your sleep, so the budget refills to the same range each morning.
+        Anything that writes sleep into Health will change that.</p>
+    </section>`;
+  }
+  if(S.data==='new'){
+    return `<section class="card enter" aria-labelledby="tonH">
+      <h2 id="tonH">Tonight's refill</h2>
+      <p class="lede">Tonight is night one. Seven of them and the refill becomes your own number
+        instead of the standard one.</p>
+    </section>`;
+  }
+
+  const lede = S.time==='morning'
+    ? 'Overnight is when the budget refills.'
+    : 'The refill starts the moment you fall asleep.';
+  const c = WATCH[S.day];
+  const avg = S.day==='attention' ? '6h 21m' : (S.day==='big' ? '7h 34m' : (S.day==='usual' ? '7h 04m' : '6h 48m'));
+  const short = S.day==='big' ? false : true;
+
+  return `<section class="card enter" aria-labelledby="tonH">
+    <h2 id="tonH">Tonight's refill</h2>
+    <p class="lede">${lede}</p>
+    <div class="pairs">
+      <div class="pair"><div class="k">You need</div><div class="v num">7h 40m</div></div>
+      <div class="pair"><div class="k">Five-night average</div><div class="v num">${avg}</div></div>
+    </div>
+    <span class="tag ${short?'':'good'}">${short?'Running short.':'Holding steady.'}</span>
+    ${expander('exp-bed','Bedtime',`
+      <div class="deriv">
+        <div class="drow"><span>Your usual bedtime</span><span class="d">10:40 pm</span></div>
+        <div class="drow"><span>This week it has drifted</span><span class="d minus">about 40 min later</span></div>
+      </div>
+      <p class="provenance">Bedtimes within about half an hour of your usual are the pattern linked
+      to the best long-term outcomes in the largest study of it &mdash; larger, in that study,
+      than how long you sleep.</p>`)}
+  </section>`;
+}
+
+/* ---- footer ---- */
+function slotFoot(){
+  if(S.render==='loading') return '';
+  return `<p class="foot">Updated just now &middot; Laso reads Health on your phone only.</p>`;
+}
+
+/* ---- escape hatch view: raw values, no scores, no verdicts ---- */
+function rawView(){
+  const rows = S.data==='phone' ? [
+      ['Steps, today','1,850'],
+      ['Steps, yesterday','8,400'],
+      ['Distance, yesterday','6.1 km'],
+      ['Flights climbed, yesterday','11'],
+      ['Walking speed, 7-day average','1.42 m/s']
+    ] : S.data==='new' ? [
+      ['Steps, today','740'],
+      ['Time asleep, last night','not recorded'],
+      ['Resting heart rate','not recorded'],
+      ['Days of history','3']
+    ] : [
+      ['Exercise minutes, today','12'],
+      ['Time asleep, last night','6h 12m'],
+      ['Time asleep, 7-day average','6h 48m'],
+      ['Steps, yesterday','8,400'],
+      ['Resting heart rate, last night','58 bpm'],
+      ['Heart rate variability (SDNN), last night','48 ms'],
+      ['Breathing rate, last night','14.2 br/min'],
+      ['Longest workout, last 7 days','96 min, Sunday']
+    ];
+  return `<div class="rawhead">
+      <h2 style="font-size:22px;font-weight:700;letter-spacing:-.3px">Just the numbers</h2>
+      <p>Scores, budgets and verdicts are off. These are the values as recorded, with nothing said about them.</p>
+    </div>
+    <div class="rawlist">${rows.map(([k,v])=>
+      `<div class="rawrow"><span class="k">${esc(k)}</span><span class="v num">${esc(v)}</span></div>`).join('')}</div>
+    <button class="backbtn" id="backBtn">Turn the budget back on</button>
+    <p class="foot" style="margin-top:14px">This setting stays off until you turn it back on.</p>`;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function applyTheme(){
+  const dark = S.theme==='dark' ||
+    (S.theme==='auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+}
+
+function render(){
+  applyTheme();
+
+  const sub = $('#hdrSub');
+  sub.textContent = S.raw ? 'Raw values' : (S.render==='loading' ? 'Reading Health…' : '');
+  sub.style.display = sub.textContent ? '' : 'none';
+
+  $('#rawToggle').setAttribute('aria-pressed', String(S.raw));
+
+  const main = $('#scroll');
+  main.innerHTML = S.tab!=='Today'
+    ? otherTab()
+    : (S.raw ? rawView()
+             : slotAlert() + slotHero() + slotChart() + slotProof() + slotTonight() + slotFoot());
+
+  // grow the spend fill after paint so the bar reads as filling, not as already full
+  requestAnimationFrame(()=>{
+    $$('.blk .fill', main).forEach(f=>{ f.style.width = f.dataset.w + '%'; });
+  });
+
+  $$('.tab').forEach(t=>{
+    if(t.dataset.tab===S.tab) t.setAttribute('aria-current','page');
+    else t.removeAttribute('aria-current');
+  });
+
+  // dev panel pressed states
+  $$('.devpanel .opts').forEach(g=>{
+    const k = g.dataset.k;
+    $$('button.opt', g).forEach(b=> b.setAttribute('aria-pressed', String(S[k]===b.dataset.v)));
+  });
+}
+
+function otherTab(){
+  return `<section class="card enter" style="margin-top:80px;text-align:left">
+    <h2>${esc(S.tab)}</h2>
+    <p class="lede">This prototype is the Home screen only. ${esc(S.tab)} is a separate screen.</p>
+    <button class="backbtn" data-goto="Today">Back to Today</button>
+  </section>`;
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.addEventListener('click', e=>{
+  const exp = e.target.closest('[data-exp]');
+  if(exp){
+    const id = exp.dataset.exp;
+    S.open[id] = !S.open[id];
+    exp.setAttribute('aria-expanded', String(S.open[id]));
+    return;
+  }
+
+  if(e.target.closest('#rawToggle')){ S.raw = !S.raw; render(); $('#scroll').scrollTop = 0; return; }
+  if(e.target.closest('#backBtn'))  { S.raw = false;  render(); $('#scroll').scrollTop = 0; return; }
+
+  if(e.target.closest('#grantBtn')){ S.render='loading'; render();
+    setTimeout(()=>{ S.render='loaded'; render(); }, 1100); return; }
+
+  const tab = e.target.closest('.tab');
+  if(tab){ S.tab = tab.dataset.tab; render(); $('#scroll').scrollTop = 0; return; }
+
+  const goto = e.target.closest('[data-goto]');
+  if(goto){ S.tab = goto.dataset.goto; render(); return; }
+
+  const devbtn = e.target.closest('#devbtn');
+  if(devbtn){
+    const p = $('#devpanel'); const open = p.classList.toggle('open');
+    devbtn.setAttribute('aria-expanded', String(open));
+    return;
+  }
+
+  const opt = e.target.closest('.devpanel button.opt');
+  if(opt){
+    const k = opt.parentElement.dataset.k;
+    S[k] = opt.dataset.v;
+    if(k==='render' && S.render==='loading'){
+      render();
+      setTimeout(()=>{ if(S.render==='loading'){ S.render='loaded'; render(); } }, 1600);
+      return;
+    }
+    render();
+    return;
+  }
+
+  if(!e.target.closest('#devpanel')){
+    const p = $('#devpanel');
+    if(p.classList.contains('open')){ p.classList.remove('open'); $('#devbtn').setAttribute('aria-expanded','false'); }
+  }
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+  if(S.theme==='auto') applyTheme();
+});
+
+render();
+</script>
+</body>
+</html>

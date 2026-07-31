@@ -1,0 +1,152 @@
+[
+  {
+    "slug": "01-one-number",
+    "philosophy": "The screen answers one question with one number, one sentence and one cause, and then it ends \u2014 because the design goal is that the user closes the app satisfied in five seconds, not that they stay.",
+    "strongest": "When the illness gate fires, the health warning BECOMES the hero rather than sitting beside it \u2014 same slot, same shape, resting heart rate replaces readiness as the one number, with the harm anchor inline. It satisfies N6 (position 1, never blurred or hedged) and N1 (still exactly one instruction) with zero added blocks, and it works inside any concept's hierarchy because it consumes a slot instead of requesting one.",
+    "drawback": "One number is one point of failure: on the morning the model disagrees with how the user feels, nothing else on the screen can rescue the relationship, and this concept deliberately removed the cards that used to dilute that complaint. It also fails the ~15% who came for data (they get two expanders and an escape hatch, everything else is on Explore), and it fails anyone whose relevant metric is not the hero \u2014 T10 is resolved as no pinning, so a user tracking blood pressure, glucose or a menstrual cycle can never put that on top. Secondary risk: a full-viewport hero reads as underfilled to a first-time viewer before they learn the shape, which is exactly the \"huge block of empty space\" complaint Google Health earned.",
+    "counts": {
+      "cards_above_fold": 1,
+      "total_blocks": 4,
+      "numbers_on_screen": 6,
+      "numbers_above_fold": 3,
+      "tap_targets": 7,
+      "exits": 3,
+      "words_above_fold": 20
+    }
+  },
+  {
+    "slug": "02-daily-briefing",
+    "philosophy": "The app writes you a dated one-page dispatch while you sleep, and the Home Screen is that dispatch \u2014 a masthead, a headline verdict, the one thing to do, the story behind it, and a sign-off \u2014 visibly authored, visibly new every morning.",
+    "strongest": "The masthead rule IS the positional bar: a full-width horizontal rule under the headline whose axis has no numbers and no zero, carrying only the user's own range as a recessed slot with a coloured tick at today's position. It is simultaneously the editorial device that separates dateline from story and the 0-1s pre-attentive channel (position + shape + colour, no text, no digits). It resolves F12 (exactly one reference range, personal), F14 (positional bar, colour never sole channel), F2 (no cross-person read) and N7 (no score floor at zero) in one object, and it drops into any concept that needs a glanceable verdict without a ring or gauge.",
+    "drawback": "It fails the data-maximalist who wants six numbers before breakfast (one number, 12 total \u2014 the opposite of Whoop's 83% DAU/MAU dense-scroll bet), and it fails the low-graph-literacy reader in slot 3, where the prose lede is slow for the ~1 in 3 users with both low graph literacy and low numeracy. But the deeper liability is that its identity is prose: voice is a permanent editorial cost. Three authored mornings prove the voice can vary; production has to prove it varies for 365, in every language, at AX5 on a 375px screen. If the templating layer ever slips into sameness, this becomes exactly the AI paragraph C9/F16 ban \u2014 just written by a rule engine instead of a model. And it keeps \"Readiness\" on the screen at all, which a stricter reading of F5 would delete in favour of time-asleep as the hero.",
+    "counts": {
+      "cards_above_fold": 3,
+      "total_blocks": 6,
+      "numbers_on_screen": 12,
+      "numbers_above_fold": 3,
+      "tap_targets": 8,
+      "exits": 3,
+      "words_above_fold": 24
+    }
+  },
+  {
+    "slug": "03-body-budget",
+    "philosophy": "Today comes with an amount of effort you can afford to spend, and spending all of it is the good outcome \u2014 so the screen shows you the amount, in a unit you already own (minutes, or steps on an iPhone), and nothing else: there is no 0-100 score anywhere on this screen, not even behind a tap.",
+    "strongest": "The visible subtraction ledger: render the hero number as its own arithmetic \u2014 \"your best-rested days 60 min, slept 6h 12m of a 7h 40m need \u221220, hard run Sunday 96 min \u221210, resting heart rate 58 in your usual 55-60 no change, today 30 min\" \u2014 inside one inline expander. It kills the \"confident conclusions without showing its work\" complaint (Bevel) and the \"nobody explains on the home screen\" open lane (all six wearable apps) without a paragraph, without a probability, without a second card, and without a navigation exit. It is unit-agnostic and would drop into any other concept's hero unchanged.",
+    "drawback": "It fails two people. First, the quantified-self power user: no HRV, strain, readiness, sleep stages, forecasts or correlations survive anywhere on the screen, so someone who bought Laso to watch their SDNN trend has to switch the interpretive layer off to see one line of it. Second, and more seriously, it fails a rigorous scientific reviewer on the budget's weights \u2014 a budget implies a forecast of capacity, and while every input is real (personal sleep need, workout duration, RHR vs baseline) and the card says \"no forecast, no probability\", the coefficients (\u221220 min for a 1h28m sleep shortfall, \u221210 min for a hard session two days back) are Laso's judgement with no DOI behind them, and the screen only admits that inside a collapsed expander. Related: \"20 more minutes asleep\" is an association users will read as causal no matter how carefully it is phrased. Also, iPhone-only users get a different unit (steps) from Watch users (minutes) \u2014 labelled and explained, but not comparable between two people in the same house \u2014 and neither unit has an honest meaning for a wheelchair user or a swimmer.",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 6,
+      "numbers_on_screen": 12,
+      "numbers_above_fold": 4,
+      "tap_targets": 8,
+      "exits": 3,
+      "words_above_fold": 19
+    }
+  },
+  {
+    "slug": "04-sleep-first",
+    "philosophy": "Sleep timing is the biggest lever most people actually own, so the screen shows two clock quantities \u2014 when to go to bed tonight, and how last night landed \u2014 and carries no score of any kind anywhere.",
+    "strongest": "\"Remedy above, reading below\" \u2014 the F8-safe way to show a bad number. The largest element is the forward-looking fix the user can still act on (tonight's lights-out time), and the negative reading (6h 12m) is physically positioned underneath it at half the type size with no grade, no colour and no band word. The bad number cannot be reached without first reading its own remedy. This is a layout rule, not a copy rule, so any concept can adopt it for any harm-prone metric \u2014 sleep, weight, resting heart rate \u2014 without changing its philosophy.",
+    "drawback": "It fails the athlete outright \u2014 no strain, load, readiness, HRV, VO2max or workout appears anywhere, so a user who opens Laso to decide whether to do intervals today gets no answer and will churn. More seriously, it fails anyone whose sleep timing is not theirs to choose: a shift worker, a parent of a newborn, a carer, someone on call. For them the hero is a permanent instruction they cannot follow, and \"Bedtime slipped 40 minutes later\" reads as an accusation about a night spent with a sick child. The escape hatch is the only mitigation and it is a blunt one; the real fix is a \"my nights are not mine to set\" mode that switches the hero to wake-time consistency alone, and it is not built. Two further exposures: the iPhone-only hero is genuinely the weakest state (no HealthKit sleep exists at all, so the target is counted back eight hours from a step-derived first-movement time \u2014 honest and labelled, but a user comparing the two states will notice), and on a steady week the screen has almost no chromatic event at all, which some users will read as the app having nothing to say (Garmin's 2024 desaturation lost exactly that feedback and users noticed).",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 5,
+      "numbers_on_screen": 10,
+      "numbers_above_fold": 5,
+      "tap_targets": 8,
+      "exits": 3,
+      "words_above_fold": 19
+    }
+  },
+  {
+    "slug": "05-mission-control",
+    "philosophy": "Density is not the enemy of calm, uninterpretable density is; so put the comparison and the plain-word verdict inside every single element, let colour carry the pre-attentive load, and lock the whole thing to one rigid grid so twenty-two numbers are scanned chromatically in one sweep instead of parsed one at a time.",
+    "strongest": "The four-row tile grammar: label, value, one shaded reference range with its single numeric anchor, plain-word verdict \u2014 identical geometry on every tile in every state, with the tile non-interactive by design. It drives element interactivity to zero, which is the mechanism the brief's number budget is actually proxying for, and any other concept can adopt it without adopting the density. Its corollary is equally portable: because every tile is complete in itself, none of them needs to be tappable, which is how this screen gets to 5 tap targets and 3 exits while showing more than any other.",
+    "drawback": "It fails the anxious tracker and the brand-new user. Between 3.0% strict and 14.0% lenient of a general sample meet an orthosomnia definition, and this screen is a graded verdict on 22 things at once \u2014 more surface to worry about, with the one-tap scores-off escape hatch as the only mitigation, and one that requires the user to notice they are being harmed. On a genuinely new day-3 account the grid is honest but still shows three locked cells, so it loses badly to Apple Fitness's three rings on first-launch comprehension. It also degrades worst under Dynamic Type: at AX5 the two-column grid must collapse to one column, and when it does, the 'one sweep' property that justifies the entire density argument is gone and the screen becomes the long scroll it was arguing against. Finally, on a low-readiness morning the board renders five warning-coloured tiles at once, which is F8's concern rendered four extra times.",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 6,
+      "numbers_on_screen": 22,
+      "numbers_above_fold": 8,
+      "tap_targets": 5,
+      "exits": 3,
+      "words_above_fold": 31
+    }
+  },
+  {
+    "slug": "06-todays-story",
+    "philosophy": "Home is not a dashboard of metrics, it is a single thread through the twenty-four hours around now \u2014 last night, this morning, the day ahead, tonight \u2014 where each moment carries one number and one meaning, and the thread always ends with the one thing to do tonight.",
+    "strongest": "Causality runs along the thread: each moment's explanation points back at the moment directly above it (\"Morning 62 \u2014 Sleep was 1h 28m short\"), so the screen explains itself for free with no extra card, no AI paragraph and no second instruction. Paired with the density rule \u2014 the node you are standing in is dominant, the one before it is full, everything earlier collapses to a rail line, everything later is drawn in dashes \u2014 this makes the screen genuinely different at 7am and 9pm while the structure stays byte-identical every morning.",
+    "drawback": "It fails anyone whose day does not start in the morning and end at night. A night-shift worker's thread is wrong at every node, and the concept has no answer for that. It also fails the quantified-self user who opens the app to compare HRV, respiratory rate and deep sleep \u2014 six numbers is a deliberate starvation diet and none of those appear on Home. Two narrower failures: a user opening the app at 11pm finds a stale instruction because no fourth time state is modelled, and the 9pm auto-scroll moves content under the user's thumb, which is the concept working and also a real usability risk that needs testing rather than designer confidence.",
+    "counts": {
+      "cards_above_fold": 3,
+      "total_blocks": 6,
+      "numbers_on_screen": 6,
+      "numbers_above_fold": 5,
+      "tap_targets": 8,
+      "exits": 4,
+      "words_above_fold": 20
+    }
+  },
+  {
+    "slug": "07-coach",
+    "philosophy": "Someone has already read your data, has exactly one thing to say, and says it with your number set inside the sentence, so the verdict lands before you read a word and the reason is one tap away without leaving the screen.",
+    "strongest": "Split the glance from the reading into two halves of one element: a large positional band carrying the verdict with zero text (position + shape + colour, one reference range, two words of label), and directly beneath it the sentence with the measured number set inline at display size. The verdict lands in under a second with no reading, and the number is never a thing you have to travel past prose to reach, because the prose is its label. Any concept that wants a sentence on the home screen can adopt this and stop paying the Fitbit tax.",
+    "drawback": "It fails the quantified-self user completely: someone who opens Laso to see whether HRV moved gets nothing, because every index is gone and their raw number exists only behind the plain-numbers escape hatch, stripped of all context. It also fails anyone whose real limiter is not the one the 8-rung action ladder picked, because a single hero quantity with deliberately no second opinion on the page means that when the coach is wrong, the screen is wrong loudly and there is nothing beside it to correct the impression. The old screen's three contradictory instructions were a bug, but they were also, accidentally, a hedge. Secondary failures: the 46px inline number inside a 30px sentence is the most fragile element at AX text sizes, and the first-person voice is a persona that ages and localises badly and risks reading as an AI even though nothing here is presented as one.",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 7,
+      "numbers_on_screen": 11,
+      "numbers_above_fold": 3,
+      "tap_targets": 7,
+      "exits": 3,
+      "words_above_fold": 17
+    }
+  },
+  {
+    "slug": "08-the-band",
+    "philosophy": "Every signal is a position inside your own range, drawn in a unit you already own \u2014 there is no score, no grade, and no way to fail this screen.",
+    "strongest": "The reference range is drawn, never printed \u2014 and every band is rendered at the identical x-position on every bar (34-66% of the track), so four signals read as one pre-attentive column of markers with zero text, and four bars cost only four numbers above the fold instead of twelve. Any concept showing more than one signal can steal this: it is what makes a multi-signal hero survive the 5-number above-fold budget, and it converts the uncertainty widget into pure geometry (wider band = less confident) so it also solves T9 for free.",
+    "drawback": "It fails the power user who came for a number: someone tracking a training block wants Readiness 72 and a delta, and this screen refuses both permanently. It fails the low-motivation user, because a design with no failure state gives them nothing to push against \u2014 Gentler Streak's own documented risk is the opposite of anxiety, and this forgoes the gamification lever that survived withdrawal in a 1,062-patient RCT. It is also silent about drift *inside* the band: a user sliding from the top to the bottom of their sleep range reads 'inside' both weeks, and the only place that shows is the 14-day chart below the fold \u2014 I did not solve this, because solving it means a daily delta, which F1 bans. Relatedly, three of the four bands are built from the user's own recent behaviour, so a bedtime that has drifted an hour later over six months will eventually be 'inside' the range at 1:30am; only the sleep band is anchored to a computed need rather than to habit.",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 5,
+      "numbers_on_screen": 7,
+      "numbers_above_fold": 4,
+      "tap_targets": 8,
+      "exits": 3,
+      "words_above_fold": 44
+    }
+  },
+  {
+    "slug": "09-because",
+    "philosophy": "Every element on this screen is a causal statement, and the app shows its work in place, because the loudest complaint across four of six competitor recovery apps is \"the score does not match how I feel and it will not tell me why.\"",
+    "strongest": "The \"Not counted\" section inside the explanation ledger: naming, in plain words, what the app looked at and deliberately excluded, including the line \"How you feel. We do not measure it, so it is not in this number.\" It resolves the category's number-one complaint by conceding it rather than arguing, costs almost nothing, and drops into any concept that has an expandable explanation.",
+    "drawback": "It fails the person whose morning has no story: on a flat, ordinary day the causes are small and the ledger reads like a shrug, so a concept whose entire thesis is explanation is weakest exactly when there is nothing to explain. It also fails anyone who wants to log or browse, since there is no input anywhere and only three exits. And the deepest risk is structural, not fixable by design: explanations become trust heuristics that increase over-reliance when the advice is wrong, so this screen will be more persuasive than a bare number on the days the model is wrong too, with only a single correlational limit line and the \"Not counted\" list guarding against it. Two smaller costs: the one uncertainty mechanism is invisible until the user taps Because, and the new-user state leads with \"Sleep, Short\" on night three, which brushes against the ban on leading with a bad number.",
+    "counts": {
+      "cards_above_fold": 3,
+      "total_blocks": 5,
+      "numbers_on_screen": 11,
+      "numbers_above_fold": 5,
+      "tap_targets": 8,
+      "exits": 3,
+      "words_above_fold": 20
+    }
+  },
+  {
+    "slug": "10-tomorrow",
+    "philosophy": "This morning is already decided, so the screen leads with tonight and tomorrow \u2014 the only part of your health you can still change while you are looking at it \u2014 and it never predicts, it states what is currently building and what you can still move.",
+    "strongest": "Uncertainty as a tapered edge whose WIDTH is the confidence, never a number: the un-backtested forecaster is allowed to set only the fade width, so the screen can be honest about a weak model without ever stating a probability, and it degrades correctly on its own \u2014 a day-1 user's fade covers half the bar, which is the honest picture with zero apology copy. Any concept can bolt this onto its hero bar and delete its confidence percentage.",
+    "drawback": "It fails the person who wants to know how they are \u2014 there is no \"how am I\" number anywhere, and someone who opens Whoop for a recovery percentage will find this screen evasive no matter how honest it is. It fails athletes entirely (no strain, load, zones or VO2max). Most seriously, it is a bedtime app for Watch users: shift workers, new parents and carers who cannot control their bedtime get an instruction they cannot follow every single day, which is worse than no instruction, and the build offers no mitigation beyond the escape hatch. The iPhone-only and day-1 hero also changes subject (bedtime to steps) rather than only lowering confidence \u2014 labelled and structurally identical, but a strict reading of N5 could call that a substitution.",
+    "counts": {
+      "cards_above_fold": 2,
+      "total_blocks": 6,
+      "numbers_on_screen": 5,
+      "numbers_above_fold": 5,
+      "tap_targets": 6,
+      "exits": 3,
+      "words_above_fold": 30
+    }
+  }
+]
