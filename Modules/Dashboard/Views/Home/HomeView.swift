@@ -963,6 +963,14 @@ struct HomeView: View {
             .accessibilityIdentifier("home.lifeContextChips")
         } else if !active.isEmpty {
             Button {
+                // The picker-open step was invisible in the funnel, so chip
+                // toggle rates could not be computed against opens.
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["source": "context_picker_open", "active_count": active.count]
+                )
                 showContextPicker = true
             } label: {
                 Text(Copy.Home.nextUpContextAdjusted(active.map(\.displayName).sentenceList))
@@ -975,6 +983,12 @@ struct HomeView: View {
             .accessibilityIdentifier("home.lifeContext.active")
         } else {
             Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Life Context",
+                    type: .homeDailyAction,
+                    screen: .home,
+                    metadata: ["source": "context_picker_open", "active_count": 0]
+                )
                 showContextPicker = true
             } label: {
                 Text(Copy.Home.nextUpContextPrompt)

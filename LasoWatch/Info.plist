@@ -24,6 +24,8 @@
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Laso reads your heart rate, activity and sleep on your watch so it can tell you how your body is doing without needing your iPhone nearby.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Laso saves workouts and health measurements you record on your watch back to Apple Health so your records stay complete.</string>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>

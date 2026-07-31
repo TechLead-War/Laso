@@ -2872,9 +2872,10 @@ final class DashboardViewModel {
             hasPredictions: orch.tomorrowRiskPrediction != nil
         )
 
-        if let latest = newEvents.last {
-            // Map activation sequence milestones to analytics milestones
-            switch latest.milestone {
+        // Every event, not just the last: firstPrediction and fullUnlock land in
+        // the same day-7 pass, and `.last` permanently swallowed the earlier one.
+        for event in newEvents {
+            switch event.milestone {
             case .firstCorrelation:
                 AppAnalytics.shared.trackActivationMilestone(.firstCorrelation)
             case .firstPrediction:

@@ -5,8 +5,6 @@ enum AppSection: String {
     // Home (5)
     case homeRecovery = "home_recovery"
     case homeIllness = "home_illness"
-    case homeBodyInsights = "home_body_insights"
-    case homeRisks = "home_risks"
     case homeWeeklyReview = "home_weekly_review"
 
     // Explore (6)
@@ -43,7 +41,6 @@ enum AppSection: String {
     case metricDetailComparison = "metric_detail_comparison"
 
     // Correlations (2)
-    case correlationsFilters = "correlations_filters"
     case correlationsList = "correlations_list"
 
     // Settings (8)
@@ -68,10 +65,6 @@ enum AppSection: String {
     case liveWorkout = "live_workout"
 
     // Simulation (4)
-    case simulationScoreHero = "simulation_score_hero"
-    case simulationRoi = "simulation_roi"
-    case simulationSliders = "simulation_sliders"
-    case simulationImpact = "simulation_impact"
 
     // Health State Timeline (5)
     case healthStateCurrent = "health_state_current"

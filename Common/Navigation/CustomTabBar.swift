@@ -50,21 +50,14 @@ struct CustomTabBar: View {
         let isSelected = selectedTab == tab
 
         Button {
-            let fromTab = selectedTab
             // Written bare: inside a `withAnimation` the tab root's structural
             // switch got the default opacity transition, so both screen trees
             // stayed mounted and composited for the full 0.32 s and the outgoing
             // tab lost its state. The spring is scoped to the button below.
             selectedTab = tab
-            AppAnalytics.shared.trackBlockTap(
-                title: tab.label,
-                type: blockType(for: tab),
-                screen: feature(for: fromTab),
-                metadata: [
-                    "from_tab": fromTab.rawValue,
-                    "to_tab": tab.rawValue
-                ]
-            )
+            // ContentView's onChange(of: selectedTab) is the single emitter for
+            // tab switches: it covers this bar AND the iOS 26 system bar, so
+            // firing here too double-counted every switch on iOS 17-25.
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: tab.systemImageName)

@@ -1,3 +1,4 @@
+import FirebaseCrashlytics
 import Foundation
 #if os(iOS)
 import UIKit
@@ -249,29 +250,11 @@ final class AmplitudeProvider: AnalyticsProvider, @unchecked Sendable {
             ])
         }
 
-        let crashSignals: [Int32] = [SIGABRT, SIGBUS, SIGSEGV, SIGFPE, SIGILL, SIGTRAP]
-        for sig in crashSignals {
-            signal(sig) { signalNumber in
-                let signalName: String
-                switch signalNumber {
-                case SIGABRT: signalName = "SIGABRT"
-                case SIGBUS:  signalName = "SIGBUS"
-                case SIGSEGV: signalName = "SIGSEGV"
-                case SIGFPE:  signalName = "SIGFPE"
-                case SIGILL:  signalName = "SIGILL"
-                case SIGTRAP: signalName = "SIGTRAP"
-                default:      signalName = "SIGNAL_\(signalNumber)"
-                }
-                AmplitudeProvider.persistCrash([
-                    "crash_type": "signal",
-                    "signal_name": signalName,
-                    "signal_number": Int(signalNumber)
-                ])
-                // Re-raise so the default handler still produces the crash report.
-                signal(signalNumber, SIG_DFL)
-                raise(signalNumber)
-            }
-        }
+        // Signal handlers deliberately NOT installed: Crashlytics owns the
+        // fatal signals, and installing ours on top made it warn at every
+        // launch that its reporting would be interfered with. Signal crashes
+        // are detected next launch via `didCrashDuringPreviousExecution`
+        // in `reportPendingCrashIfAny` instead.
     }
 
     /// First access happens at install time (launch), so the directory is
@@ -300,7 +283,19 @@ final class AmplitudeProvider: AnalyticsProvider, @unchecked Sendable {
     /// Tracks the crash persisted by the previous run, if any. The file is
     /// removed before parsing so a corrupt payload cannot retrigger forever.
     private func reportPendingCrashIfAny() {
-        guard let data = try? Data(contentsOf: Self.pendingCrashURL) else { return }
+        guard let data = try? Data(contentsOf: Self.pendingCrashURL) else {
+            // No persisted NSException payload. If Crashlytics saw a crash last
+            // run it was a signal (or watchdog) kill — report it without
+            // details rather than not at all; Crashlytics keeps the full
+            // report. Signal handlers are no longer installed here because two
+            // owners of the same signals broke Crashlytics' reporting.
+            if Crashlytics.crashlytics().didCrashDuringPreviousExecution() {
+                amplitude?.track(eventType: "app_crash", eventProperties: [
+                    "crash_type": "signal_via_crashlytics"
+                ])
+            }
+            return
+        }
         try? FileManager.default.removeItem(at: Self.pendingCrashURL)
         guard let props = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         amplitude?.track(eventType: "app_crash", eventProperties: props)

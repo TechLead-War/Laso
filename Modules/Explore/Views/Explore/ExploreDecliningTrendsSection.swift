@@ -68,17 +68,22 @@ struct ExploreDecliningTrendsSection: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: highlight.metric.displayName,
-                    type: .exploreDecliningMetric,
-                    screen: .explore,
-                    metadata: [
-                        "metric_id": highlight.metric.rawValue,
-                        "highlight_type": highlight.typeLabel,
-                        "has_causal_chain": canExpand
-                    ]
-                )
+                // Emitted only for the expand toggle, which never leaves this
+                // view. The chainless tap falls through to `onHighlightTapped`,
+                // whose owner is the single emitter — firing here too counted
+                // that tap twice.
                 if canExpand {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: highlight.metric.displayName,
+                        type: .exploreDecliningMetric,
+                        screen: .explore,
+                        metadata: [
+                            "metric_id": highlight.metric.rawValue,
+                            "highlight_type": highlight.typeLabel,
+                            "has_causal_chain": true,
+                            "action": isExpanded ? "collapse" : "expand"
+                        ]
+                    )
                     withAnimation(.easeInOut(duration: 0.2)) {
                         if isExpanded {
                             expandedMetricIDs.remove(highlight.metric.rawValue)

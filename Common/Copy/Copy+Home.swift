@@ -256,9 +256,6 @@ extension Copy {
         // Yesterday's result: the loop-closer shown the morning after an action
         // is marked done, reporting how the readiness score moved.
         static var dailyResultHeader: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_header", default: "YESTERDAY'S RESULT") }
-        static func dailyResultUp(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_up", default: "Your recovery is +%d higher this morning."), delta) }
-        static var dailyResultSteady: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_steady", default: "Your recovery held steady. Small steps add up.") }
-        static func dailyResultDown(delta: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_daily_result_down", default: "Your recovery dipped %d. Rest is part of the plan too."), delta) }
         static var dailyResultDismiss: String { RemoteConfigManager.shared.copyString("copy_home_daily_result_dismiss", default: "Got it") }
         /// The honest replacement for the n=1 next-morning delta: a plain fact
         /// when the record is thin, so the card never claims causation from one
@@ -273,11 +270,6 @@ extension Copy {
 
         // Streak milestone: the one time offer to share a streak the user has
         // just crossed. Shown once per milestone, never again.
-        static var streakMilestoneHeader: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_header", default: "STREAK MILESTONE") }
-        static func streakMilestoneTitle(days: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_streak_milestone_title", default: "%d days in a row"), days) }
-        static var streakMilestoneBody: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_body", default: "You hit activity, sleep and recovery on every one of those days.") }
-        static var streakMilestoneShare: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_share", default: "Share this") }
-        static var streakMilestoneDismiss: String { RemoteConfigManager.shared.copyString("copy_home_streak_milestone_dismiss", default: "No thanks") }
 
         // MARK: - Intraday activity + week strip
 
@@ -713,7 +705,6 @@ extension Copy {
         static func viewDetailsHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_view_details_hint", default: "View %@ details"), p0) }
         static func ratingOf5Label(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_rating_of5_label", default: "%@ rating %d of 5"), p0, p1) }
         static func selectsOutOf5Hint(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_selects_out_of5_hint", default: "Selects %d out of 5"), p0) }
-        static func weeklyReviewScoreWinsLabel(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_weekly_review_score_wins_label", default: "Weekly Review. Score %d. %d wins."), p0, p1) }
         static func dayText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text", default: "%@/day"), p0) }
         static func dayText2(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text2", default: "%@/day"), p0) }
         static func dayText3(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text3", default: "%@/day"), p0) }

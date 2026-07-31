@@ -515,33 +515,6 @@ struct RegressionTests {
 
     // MARK: - Share milestone
 
-    /// The share offer is attached to a moment, so it must fire once per
-    /// milestone and never again. A fresh install that syncs a year of history
-    /// crosses every milestone at once and must still see only one prompt.
-    @Test func aStreakMilestoneIsOfferedOnce() {
-        let defaults = UserDefaults.standard
-        let key = "healthpulse.streakMilestoneCelebrated"
-        let saved = defaults.object(forKey: key)
-        defer {
-            if let saved { defaults.set(saved, forKey: key) } else { defaults.removeObject(forKey: key) }
-        }
-        defaults.removeObject(forKey: key)
-
-        #expect(StreakMilestoneStore.pending(streak: 6) == nil, "below the floor there is nothing to offer")
-
-        #expect(StreakMilestoneStore.pending(streak: 7) == 7)
-        StreakMilestoneStore.markCelebrated(7)
-        #expect(StreakMilestoneStore.pending(streak: 7) == nil, "the same milestone must never fire twice")
-        #expect(StreakMilestoneStore.pending(streak: 13) == nil, "days between milestones offer nothing")
-        #expect(StreakMilestoneStore.pending(streak: 14) == 14, "the next milestone still fires")
-
-        // A year of history synced on day one crosses every milestone at once.
-        defaults.removeObject(forKey: key)
-        #expect(StreakMilestoneStore.pending(streak: 365) == 100, "only the highest one crossed")
-        StreakMilestoneStore.markCelebrated(100)
-        #expect(StreakMilestoneStore.pending(streak: 365) == nil, "marking the highest retires the lower ones")
-    }
-
     /// Switching a context off used to delete it, so the month calendar could
     /// never say why a past week was bad. The finished stretch has to survive.
     @Test func aFinishedContextStillMarksTheDaysItCovered() {

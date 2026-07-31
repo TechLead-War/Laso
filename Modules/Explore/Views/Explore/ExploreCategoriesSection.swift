@@ -13,15 +13,9 @@ struct ExploreCategoriesSection: View {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
                     Button {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: item.category.displayName,
-                            type: .exploreCategoryRow,
-                            screen: .explore,
-                            metadata: [
-                                "category": item.category.rawValue,
-                                "score": item.score ?? 0
-                            ]
-                        )
+                        // The owner of `onCategoryTapped` is the single emitter
+                        // for this tap. Firing here too double-counted every
+                        // category tap under a second block type.
                         onCategoryTapped(item.category, item.score)
                     } label: {
                         ExploreCategoryRow(

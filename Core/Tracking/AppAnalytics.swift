@@ -1209,7 +1209,10 @@ final class AppAnalytics {
         case askedHealthQuery = "asked_health_query"
     }
 
-    func trackCoreAction(_ action: CoreAction, screen: AppFeature) {
+    /// `source` names the surface that actually produced the action when it is
+    /// not the screen (e.g. the watch check-in records on the phone with no
+    /// screen on display). Nil keeps the parameter out of the payload.
+    func trackCoreAction(_ action: CoreAction, screen: AppFeature, source: String? = nil) {
         session.recordCoreAction(action.rawValue)
 
         // Consolidated taxonomy event: every meaningful product action also emits
@@ -1222,14 +1225,16 @@ final class AppAnalytics {
         // Score reaction: capture what the user does after seeing their score
         trackScoreReaction(nextAction: action.rawValue, nextScreen: screen)
 
-        logEvent("core_action_completed", parameters: [
+        var coreActionParameters: [String: Any] = [
             "action": action.rawValue,
             "screen": screen.rawValue,
             "session_number": session.totalSessions,
             "core_actions_this_session": session.coreActionsThisSession.count,
             "lifetime_core_actions": session.lifetimeCoreActions,
             "days_since_install": session.daysSinceInstall
-        ])
+        ]
+        if let source { coreActionParameters["source"] = source }
+        logEvent("core_action_completed", parameters: coreActionParameters)
 
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
 
@@ -3101,6 +3106,7 @@ final class AppAnalytics {
             logEvent("ghost_session", parameters: [
                 "session_id": stats.sessionId,
                 "session_number": stats.sessionNumber,
+                "opened_from": SessionTracker.SessionSource(rawValue: stats.sessionSource).map(Self.openedFrom(for:)) ?? "unknown",
                 "duration_sec": durationSec,
                 "screens_viewed": screensVisited,
                 "days_since_install": session.daysSinceInstall,
@@ -3119,6 +3125,7 @@ final class AppAnalytics {
         logEvent("session_quality", parameters: [
             "session_id": stats.sessionId,
             "session_number": stats.sessionNumber,
+            "opened_from": SessionTracker.SessionSource(rawValue: stats.sessionSource).map(Self.openedFrom(for:)) ?? "unknown",
             "quality": quality,
             "duration_sec": durationSec,
             "screens_viewed": screensVisited,
@@ -3373,6 +3380,7 @@ final class AppAnalytics {
             logEvent("pre_churn_signal", parameters: [
                 "session_id": stats.sessionId,
                 "session_number": stats.sessionNumber,
+                "opened_from": SessionTracker.SessionSource(rawValue: stats.sessionSource).map(Self.openedFrom(for:)) ?? "unknown",
                 "avg_engagement_score": avgScore,
                 "trend": "declining_3_sessions",
                 "latest_score": engagementScore,
@@ -3500,7 +3508,7 @@ final class AppAnalytics {
     /// These are replaced with the metric's generic HealthCategory before sending to PostHog
     /// so that specific conditions (e.g. "bloodPressure", "menstrualFlow") are never transmitted.
     private static let metricParameterKeys: Set<String> = [
-        "metric", "metric_a", "metric_b", "alert_metric",
+        "metric", "metric_a", "metric_b", "metric_id", "alert_metric",
         "nutrition_metric", "outcome_metric", "metric_preview"
     ]
 

@@ -53,7 +53,9 @@ final class MorningCheckInManager {
     @MainActor
     static func record(_ checkIn: MorningCheckIn) {
         save(checkIn)
-        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+        // Watch is the only remaining recorder; "source" stops this
+        // masquerading as on-screen Home activity.
+        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home, source: "watch")
 
         // First-ever check-in is the denied branch's value moment; fire once via
         // a one-shot flag so history pruning can never replay it.

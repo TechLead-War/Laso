@@ -109,6 +109,13 @@ struct RenewalReminderSheet: View {
                 "will_auto_renew": reminder.willAutoRenew
             ])
         }
+        // Without the matching close, paywall open/close pairs go unbalanced and
+        // dwell-time analysis silently drops every renewal-reminder session.
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.paywall, metadata: [
+                "subscreen": "renewal_reminder"
+            ])
+        }
     }
 }
 

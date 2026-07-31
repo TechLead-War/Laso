@@ -31,7 +31,9 @@ struct PersonalHealthForecastCard: View {
                 VStack(spacing: 8) {
                     ForEach(Array(forecasts.prefix(3))) { forecast in
                         Button {
-                            AppAnalytics.shared.trackBlockTap(title: "Forecast Metric", type: .metricRow, screen: .home, metadata: ["source": "health_forecast", "metric": forecast.metric.rawValue])
+                            // Owner of `onTapMetric` emits with the real host
+                            // screen. This card fired a second event stamped
+                            // .home after the card moved to Explore.
                             onTapMetric(forecast.metric)
                         } label: {
                             forecastRow(forecast)

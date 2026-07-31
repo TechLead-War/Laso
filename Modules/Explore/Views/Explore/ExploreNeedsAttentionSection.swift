@@ -29,15 +29,8 @@ struct ExploreNeedsAttentionSection: View {
 
                     ForEach(Array(negativeFactors.prefix(3).enumerated()), id: \.offset) { _, factor in
                         Button {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: factor.metric.displayName,
-                                type: .exploreNeedsAttentionMetric,
-                                screen: .explore,
-                                metadata: [
-                                    "metric_id": factor.metric.rawValue,
-                                    "impact": factor.impact
-                                ]
-                            )
+                            // Owner of `onFactorTapped` is the single emitter;
+                            // firing here too double-counted the tap.
                             onFactorTapped(factor)
                         } label: {
                             HStack(spacing: 10) {
@@ -81,15 +74,7 @@ struct ExploreNeedsAttentionSection: View {
                         HStack(spacing: 0) {
                             ForEach(weakCategories.prefix(4), id: \.category) { contrib in
                                 Button {
-                                    AppAnalytics.shared.trackBlockTap(
-                                        title: contrib.category.displayName,
-                                        type: .exploreWeakCategory,
-                                        screen: .explore,
-                                        metadata: [
-                                            "category": contrib.category.rawValue,
-                                            "score": contrib.score
-                                        ]
-                                    )
+                                    // Owner emits; see note above.
                                     onWeakCategoryTapped(contrib)
                                 } label: {
                                     VStack(spacing: DS.space1) {
