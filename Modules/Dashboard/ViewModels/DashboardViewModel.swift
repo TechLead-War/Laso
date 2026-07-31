@@ -115,6 +115,30 @@ final class DashboardViewModel {
     /// the start of each refresh and after saving a new analysis snapshot.
     @MainActor private var _cachedScoreHistory: [(date: Date, score: Int)]?
 
+    /// Pre-fills every trend row's verdict memo off the main thread. Rows in
+    /// Explore's lazy stack first render mid-scroll, and an unwarmed memo put
+    /// the baseline maths (~1 ms per row at 90 days) inside a scroll frame.
+    /// The maths runs detached over value-type copies; only the memo writes
+    /// come back to the main actor.
+    @MainActor
+    private func warmTrendVerdicts(_ byTimeframe: [Int: [TrendMetricItem]]) {
+        let inputs = byTimeframe.values.flatMap { items in
+            items.map { (metric: $0.metric, samples: $0.sparklineSamples) }
+        }
+        guard !inputs.isEmpty else { return }
+        let items = byTimeframe.values.flatMap { $0 }
+        Task.detached(priority: .utility) {
+            let verdicts = inputs.map {
+                TrendMetricItem.computeVerdict(metric: $0.metric, samples: $0.samples)
+            }
+            await MainActor.run {
+                for (item, verdict) in zip(items, verdicts) {
+                    item.seedVerdict(verdict)
+                }
+            }
+        }
+    }
+
     /// Whether cycle tracking applies to this user. Read before the flow query is
     /// launched and reused for the tracker's own gate, so the two cannot drift.
     @MainActor
@@ -1228,6 +1252,7 @@ final class DashboardViewModel {
                 30: computeTrendMetrics(days: 30),
                 90: computeTrendMetrics(days: 90),
             ]
+            warmTrendVerdicts(trends.cachedTrendMetricsByTimeframe)
         }
 
         // Update analysis state

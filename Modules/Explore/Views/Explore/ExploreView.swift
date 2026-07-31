@@ -32,14 +32,14 @@ struct ExploreView: View {
         // body pass for nine categories.
         let insightCounts = insightCountsByCategory
         ScrollView {
-            // Lazy on purpose. A plain VStack evaluated every section body on
-            // every pass, and a pass measured 2.13 ms across the 9 passes a
-            // single refresh triggers. It also makes the per-section `onAppear`
-            // handlers below honest: they used to all fire the instant the tab
-            // opened, so `maxScrollDepth` reported 90 for a user who never
-            // scrolled and every SectionTracker logged an impression nobody saw.
-            // Expect a step change in those two metrics from this build on.
-            LazyVStack(spacing: 24) {
+            // The first three sections are pinned in a plain VStack: they sit
+            // in the viewport at tab open, so laziness buys them nothing — and
+            // it actively hurts the calendar. A LazyVStack destroys children
+            // that scroll off, so every scroll past Your Trends tore down the
+            // most expensive draw in the app (88 ms first build, its own
+            // comment) and rebuilt it mid-scroll on the way back. `.equatable()`
+            // cannot help there: recycling destroys identity, not just state.
+            VStack(spacing: 24) {
                 if hasScoreData {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
@@ -105,7 +105,16 @@ struct ExploreView: View {
                     // not moved.
                     .equatable()
                     .padding(.horizontal)
+                }
+            }
 
+            // Everything below the fold stays lazy: a plain VStack evaluated
+            // every section body on every pass (2.13 ms across the 9 passes a
+            // refresh triggers), and lazy `onAppear`s keep the SectionTracker
+            // impressions and `maxScrollDepth` honest for sections the user
+            // actually has to scroll to.
+            LazyVStack(spacing: 24) {
+                if hasScoreData {
                     // 4. Your Trends. prominent trend-first section
                     if !trendMetrics.isEmpty {
                         ExploreYourTrendsSection(

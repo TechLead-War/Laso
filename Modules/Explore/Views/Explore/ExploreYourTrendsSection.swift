@@ -157,13 +157,26 @@ struct TrendMetricItem: Identifiable {
     /// reads them. Nothing here is safe to call off the main thread.
     var verdict: MetricVerdict? {
         if verdictCache.isComputed { return verdictCache.value }
-        let computed = MetricVerdict.make(
-            metric: metric,
-            series: MetricTimeSeries(metric: metric, samples: sparklineSamples)
-        )
+        let computed = Self.computeVerdict(metric: metric, samples: sparklineSamples)
         verdictCache.value = computed
         verdictCache.isComputed = true
         return computed
+    }
+
+    /// Pure over value types, so the warmer can run it off the main thread.
+    static func computeVerdict(metric: HealthMetric, samples: [MetricSample]) -> MetricVerdict? {
+        MetricVerdict.make(
+            metric: metric,
+            series: MetricTimeSeries(metric: metric, samples: samples)
+        )
+    }
+
+    /// Lets the view model pre-fill the memo after building items off the render
+    /// path. Rows in the lazy stack first render mid-scroll, and computing the
+    /// verdict there put baseline maths inside a scroll frame.
+    func seedVerdict(_ value: MetricVerdict?) {
+        verdictCache.value = value
+        verdictCache.isComputed = true
     }
 
     var trendColor: Color {
