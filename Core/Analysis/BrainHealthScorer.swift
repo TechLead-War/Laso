@@ -425,6 +425,20 @@ final class BrainHealthScorer {
             allSeries: allSeries,
             hrvSeries: hrvSeries
         )
+
+        // The hero score and the chart's Today bar must be one number. The
+        // per-day history formula legitimately differs from the full model
+        // (single-day HRV, fitness and circadian defaulted to 50), which put
+        // two competing scores for today on the same screen. Today's entry is
+        // therefore pinned to the score shown at the top; past days stay on
+        // the per-day formula.
+        let today = Date.cal.startOfDay(for: Date())
+        if let last = weeklyHistory.indices.last,
+           Date.cal.isDate(weeklyHistory[last].date, inSameDayAs: today) {
+            weeklyHistory[last].score = finalScore
+        } else {
+            weeklyHistory.append((date: today, score: finalScore))
+        }
     }
 
     // MARK: - Subscale Computations

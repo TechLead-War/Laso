@@ -71,7 +71,25 @@ struct HomeView: View {
         // into the nav bar, so the bar is shown again after being hidden.
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                // The journal check-in previously had no visible entry point at
+                // all: it opened only from the evening notification deep link.
+                // The Daily Mirror capture lives inside it, so it needs a door
+                // that exists every day, not only when a notification lands.
+                Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Open journal check-in",
+                        type: .mirrorCaptureStarted,
+                        screen: .home,
+                        metadata: ["source": "home_toolbar"]
+                    )
+                    showJournalEntry = true
+                } label: {
+                    Image(systemName: "camera")
+                }
+                .accessibilityLabel(Copy.Mirror.journalCardCTA)
+                .accessibilityIdentifier("home.journalEntryButton")
+
                 Button {
                     AppAnalytics.shared.trackBlockTap(
                         title: "Ask Your Data",
@@ -469,7 +487,15 @@ struct HomeView: View {
 
                     // 5. Last seven days, right under the score they are the
                     // history of. Tapping opens the full month in Biology.
-                    WeekScoreStrip(scoresByDay: viewModel.cachedDailyScoresByDay) {
+                    // Today's dial is pinned to the exact score the ring above
+                    // shows: the stored snapshot carries the analysis score,
+                    // which is a different model from the live readiness score,
+                    // and two numbers for today on one screen reads as a bug.
+                    WeekScoreStrip(scoresByDay: {
+                        var scores = viewModel.cachedDailyScoresByDay
+                        scores[Date.cal.startOfDay(for: .now)] = liveReadinessScore
+                        return scores
+                    }()) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Week Strip",
                             type: .exploreCalendarDay,

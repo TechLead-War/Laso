@@ -64,6 +64,8 @@ struct WeeklyReviewEntryCard: View {
 struct WeeklyReviewView: View {
     let viewModel: WeeklyReviewViewModel
 
+    @State private var mirrorFullPhoto: UIImage?
+
     // Section trackers
     @State private var scoreTracker = SectionTracker(section: .weeklyReviewScore, tab: .weeklyReview)
     @State private var winsTracker = SectionTracker(section: .weeklyReviewWins, tab: .weeklyReview)
@@ -88,6 +90,9 @@ struct WeeklyReviewView: View {
 
                     // Best & worst days
                     bestWorstDaysSection(review)
+
+                    // Daily Mirror faces of the week
+                    mirrorWeekSection
 
                     // Personal records / wins
                     personalRecordsSection(review)
@@ -160,6 +165,71 @@ struct WeeklyReviewView: View {
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.weeklyReview)
+        }
+    }
+
+    // MARK: - Daily Mirror week strip
+
+    /// The last seven days as faces. Only drawn when the week has at least one
+    /// capture; a row of seven empty slots would read as a scolding. Tapping a
+    /// face opens it full screen.
+    @ViewBuilder
+    private var mirrorWeekSection: some View {
+        let store = MirrorPhotoStore.shared
+        let days = (0..<7).map { Date.now.daysAgo(6 - $0) }
+        let capturedCount = days.filter { store.hasPhoto(on: $0) }.count
+
+        if capturedCount > 0 {
+            VStack(alignment: .leading, spacing: DS.itemSpacing) {
+                HStack {
+                    Text(Copy.Mirror.weeklyStripTitle)
+                        .font(DS.Typography.headline)
+                    Spacer()
+                    Text(Copy.Mirror.weeklyStripCount(capturedCount, days.count))
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
+                }
+
+                HStack(spacing: DS.space1) {
+                    ForEach(days, id: \.self) { day in
+                        VStack(spacing: DS.space1) {
+                            ZStack {
+                                if let photo = store.image(on: day) {
+                                    Button {
+                                        mirrorFullPhoto = photo
+                                    } label: {
+                                        Image(uiImage: photo)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    }
+                                    .buttonStyle(.plain)
+                                } else {
+                                    Rectangle()
+                                        .fill(AppColour.surfaceSubtle)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+
+                            Text(day.formatted(.dateTime.weekday(.narrow)))
+                                .font(DS.Typography.caption2Medium)
+                                .foregroundStyle(AppColour.textTertiary)
+                        }
+                    }
+                }
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+            .padding(.horizontal, DS.screenPadding)
+            .fullScreenCover(isPresented: Binding(
+                get: { mirrorFullPhoto != nil },
+                set: { if !$0 { mirrorFullPhoto = nil } }
+            )) {
+                if let photo = mirrorFullPhoto {
+                    MirrorPhotoViewer(photo: photo) { mirrorFullPhoto = nil }
+                }
+            }
         }
     }
 

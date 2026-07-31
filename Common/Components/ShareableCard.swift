@@ -24,6 +24,9 @@ struct ShareTemplate: Identifiable, Equatable {
         /// option in the tray, which is not a choice.
         case recovery, sleep, bodyAge
         case rings
+        /// Daily Mirror then-vs-now pair. The only card carrying the user's own
+        /// face, so it appears in the tray only when picked deliberately.
+        case mirror
     }
 
     /// What the card draws. The gated wins are a single headline; `rings` keeps
@@ -31,6 +34,10 @@ struct ShareTemplate: Identifiable, Equatable {
     enum Content: Equatable {
         case headline(accent: String, plain: String, sub: String)
         case rings(vitalityAge: Int?, realAge: Int?, recovery: Int?, sleepSeconds: Double?)
+        /// The photos themselves are loaded from `MirrorPhotoStore` at render
+        /// time; carrying only the days keeps this value type Equatable and
+        /// keeps photo bytes out of the template tray.
+        case mirrorPair(firstDay: Date, firstScore: Int?, latestDay: Date, latestScore: Int?)
     }
 
     let kind: Kind
@@ -53,6 +60,7 @@ struct ShareTemplate: Identifiable, Equatable {
         case .sleep:     return Copy.Common.shareChipSleep
         case .bodyAge:   return Copy.Common.shareChipAge
         case .rings:     return Copy.Common.shareChipToday
+        case .mirror:    return Copy.Mirror.shareChip
         }
     }
 }
@@ -73,6 +81,9 @@ enum ShareTemplateGates {
     /// HealthKit rounds sleep, so exact equality with the all-time high would
     /// almost never fire. Within a minute counts as tying the record.
     static let bestSleepToleranceHours: Double = 1.0 / 60.0
+    /// Two mirror photos a few days apart show no visible change. Two weeks is
+    /// the floor where a then-vs-now pair reads as progress.
+    static let minMirrorDaysApart = 14
 }
 
 /// Builds the tray, strongest win first, with the rings card last. Every win
@@ -86,7 +97,8 @@ enum ShareTemplateBuilder {
         masterStreak: Int,
         actionResult: DailyActionResultStore.Result?,
         lastNightSleepSeconds: Double?,
-        allTimeBestSleepHours: Double?
+        allTimeBestSleepHours: Double?,
+        mirrorPair: (firstDay: Date, firstScore: Int?, latestDay: Date, latestScore: Int?)? = nil
     ) -> [ShareTemplate] {
         var templates: [ShareTemplate] = []
 
@@ -149,6 +161,17 @@ enum ShareTemplateBuilder {
                     captionYears: nil
                 ))
             }
+        }
+
+        if let pair = mirrorPair,
+           pair.firstDay.daysBetween(pair.latestDay) >= ShareTemplateGates.minMirrorDaysApart {
+            templates.append(ShareTemplate(
+                kind: .mirror,
+                chip: "\(pair.firstDay.daysBetween(pair.latestDay))",
+                content: .mirrorPair(firstDay: pair.firstDay, firstScore: pair.firstScore,
+                                     latestDay: pair.latestDay, latestScore: pair.latestScore),
+                captionYears: nil
+            ))
         }
 
         // Everyday cards, after the earned wins and before the rings card. They
@@ -396,6 +419,9 @@ struct ShareableTemplateCard: View {
                                recovery: recovery, sleepSeconds: sleepSeconds, photo: photo)
         case .headline(let accent, let plain, let sub):
             headlineCard(accent: accent, plain: plain, sub: sub)
+        case .mirrorPair(let firstDay, let firstScore, let latestDay, let latestScore):
+            ShareableMirrorPairCard(firstDay: firstDay, firstScore: firstScore,
+                                    latestDay: latestDay, latestScore: latestScore)
         }
     }
 
@@ -474,18 +500,127 @@ struct ShareableTemplateCard: View {
     }
 }
 
+// MARK: - Mirror Pair Card (then vs now)
+
+/// Story-sized card with the user's first and latest Daily Mirror photos side
+/// by side. Only offered from the template tray, so the photos appear in a
+/// share only when the user deliberately picked this card and saw them.
+struct ShareableMirrorPairCard: View {
+    let firstDay: Date
+    let firstScore: Int?
+    let latestDay: Date
+    let latestScore: Int?
+
+    private var headline: String {
+        if let firstScore, let latestScore, latestScore > firstScore {
+            return Copy.Mirror.sharePointsUp(latestScore - firstScore)
+        }
+        return Copy.Mirror.shareDaysApart(firstDay.daysBetween(latestDay))
+    }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text(Copy.Common.laso.uppercased())
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .tracking(3)
+                        .foregroundStyle(.white.opacity(0.85))
+                    Spacer()
+                }
+                .padding(.horizontal, DS.space6)
+                .padding(.top, 30)
+
+                Spacer()
+
+                HStack(spacing: DS.space3) {
+                    pairPhoto(day: firstDay, score: firstScore)
+                    pairPhoto(day: latestDay, score: latestScore)
+                }
+                .padding(.horizontal, DS.space5)
+
+                Spacer().frame(height: 30)
+
+                Text(headline)
+                    .font(.system(size: 40, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AppColour.scoreOptimal)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                Spacer()
+
+                Text(Copy.Common.shareCardFooter)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.bottom, 26)
+            }
+        }
+        .frame(width: 390, height: 693)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        // Statically dark artwork, same as every other share card.
+        .environment(\.colorScheme, .dark)
+    }
+
+    @ViewBuilder
+    private func pairPhoto(day: Date, score: Int?) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            if let image = MirrorPhotoStore.shared.image(on: day) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 165, height: 260)
+                    .clipped()
+            } else {
+                // A pair template whose photo was deleted between tray build
+                // and render draws its slot empty rather than inventing one.
+                Rectangle()
+                    .fill(.white.opacity(0.08))
+                    .frame(width: 165, height: 260)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(day.formatted(.dateTime.day().month(.abbreviated)))
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+                if let score {
+                    Text("\(score)")
+                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                }
+            }
+            .shadow(color: .black.opacity(0.7), radius: 4)
+            .padding(DS.space3)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+    }
+}
+
 // MARK: - Camera capture
 
-/// Minimal camera wrapper for the share card's "take a photo" option. iOS
-/// shows the camera permission prompt on first use; a denial simply returns
-/// the user to the sheet with no photo.
+/// Minimal camera wrapper for the share card's "take a photo" option and the
+/// Daily Mirror capture. iOS shows the camera permission prompt on first use;
+/// a denial simply returns the user to the sheet with no photo.
+///
+/// `dismissesOnCapture` stays true for the share flow, where this view is its
+/// own presentation. Daily Mirror embeds it inside a staged flow and passes
+/// false, because `dismiss` there would tear down the whole flow instead of
+/// moving to the confirm step.
 struct CameraCaptureView: UIViewControllerRepresentable {
+    var cameraDevice: UIImagePickerController.CameraDevice = .rear
+    var dismissesOnCapture = true
     let onCapture: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = .camera
+        if UIImagePickerController.isCameraDeviceAvailable(cameraDevice) {
+            picker.cameraDevice = cameraDevice
+        }
         picker.delegate = context.coordinator
         return picker
     }
@@ -503,7 +638,9 @@ struct CameraCaptureView: UIViewControllerRepresentable {
             if let image = info[.originalImage] as? UIImage {
                 parent.onCapture(image)
             }
-            parent.dismiss()
+            if parent.dismissesOnCapture {
+                parent.dismiss()
+            }
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

@@ -103,7 +103,8 @@ struct HealthStateTimelineView: View {
                     Text(state.label)
                         .font(DS.Typography.title3.weight(.bold))
 
-                    Text("\(state.daysInState) day\(state.daysInState == 1 ? "" : "s") in this state")
+                    let streak = max(1, viewModel.currentStateStreakDays)
+                    Text("\(streak) day\(streak == 1 ? "" : "s") in this state")
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(AppColour.textSecondary)
                 }

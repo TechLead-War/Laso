@@ -47,6 +47,7 @@ enum AppFeature: String, Hashable {
     case askYourData = "ask_your_data"
     case notificationsSettings = "notifications_settings"
     case exploreDaySheet = "explore_day_sheet"
+    case mirrorCapture = "mirror_capture"
 }
 
 /// Actionable block/card types. only user-initiated taps and meaningful interactions.
@@ -131,6 +132,11 @@ enum BlockType: String {
     case onboardingProfileSkip = "onboarding_profile_skip"
     case onboardingNotifications = "onboarding_notifications"
     case scoreGuideGotIt = "score_guide_got_it"
+
+    // Daily Mirror. user taps
+    case mirrorCaptureStarted = "mirror_capture_started"
+    case mirrorPhotoSaved = "mirror_photo_saved"
+    case mirrorArchiveDeleted = "mirror_archive_deleted"
 
     // Navigation
     case tabHome = "tab_home"

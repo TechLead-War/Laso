@@ -27,9 +27,31 @@ final class HealthStateTimelineViewModel {
         mlOrchestrator.healthStates
     }
 
-    /// Current health state
+    /// Current health state, reconciled with the smoothed timeline. The raw
+    /// classifier and the Viterbi-smoothed history can disagree on today by
+    /// design, which put two different labels for the same day on one screen.
+    /// The timeline is what the user reads day by day, so the hero follows it.
     var currentState: HealthState? {
-        mlOrchestrator.currentHealthState
+        guard let raw = mlOrchestrator.currentHealthState else { return nil }
+        if let smoothedLabel = stateHistory.last?.label,
+           smoothedLabel != raw.label,
+           let smoothed = states.first(where: { $0.label == smoothedLabel }) {
+            return smoothed
+        }
+        return raw
+    }
+
+    /// Consecutive most-recent days in the current smoothed state. The
+    /// `daysInState` on `HealthState` is a lifetime cluster-membership count,
+    /// which reads as nonsense next to "in this state".
+    var currentStateStreakDays: Int {
+        guard let last = stateHistory.last else { return 0 }
+        var streak = 0
+        for entry in stateHistory.reversed() {
+            guard entry.label == last.label else { break }
+            streak += 1
+        }
+        return streak
     }
 
     /// Transition matrix

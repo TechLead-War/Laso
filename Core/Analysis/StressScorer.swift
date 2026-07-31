@@ -371,12 +371,18 @@ final class StressScorer {
             history.append((date: dayStart, score: min(StressScale.maxScore, max(0.0, score))))
         }
 
-        // Today has no HRV reading of its own until the watch syncs, and the loop
-        // above drops any day it cannot score. The gauge still shows a value for
-        // today from the recent daily mean, so carry that same value into the
-        // history, otherwise the chart ends yesterday and disagrees with the gauge.
-        if history.last?.date != today, let current = currentStress {
-            history.append((date: today, score: current.score))
+        // The gauge and the chart's Today bar must be one number. The per-day
+        // formula above legitimately differs from the gauge's (baseline window
+        // includes vs excludes today, raw-sample vs per-day means, heartRate
+        // fallback), so whenever a current score exists it overwrites today's
+        // entry instead of only filling a missing one. Past days stay on the
+        // per-day formula.
+        if let current = currentStress {
+            if history.last?.date == today, let last = history.indices.last {
+                history[last].score = current.score
+            } else {
+                history.append((date: today, score: current.score))
+            }
         }
 
         dailyStressHistory = history

@@ -92,7 +92,7 @@ extension Copy {
         static func showMoreTips(_ count: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleep_coach_show_more_tips", default: "Show %d more tips"), count) }
 
         // MARK: - Lifted interpolated view literals
-        static func sleepInBedLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_sleep_in_bed_label", default: "%@ sleep: %@ in bed"), p0, p1) }
+        static func sleepInBedLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_sleep_in_bed_label", default: "%@ sleep: %@ asleep"), p0, p1) }
         static func mNapText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_m_nap_text", default: "+%dm nap"), p0) }
         static func daytimeNapMinutesCountedInLabel(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_sleepcoach_daytime_nap_minutes_counted_in_label", default: "Daytime nap %d minutes, counted in sleep balance"), p0) }
     }

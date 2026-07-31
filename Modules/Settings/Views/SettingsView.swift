@@ -370,6 +370,8 @@ struct SettingsView: View {
                 .onAppear { dataStorageTracker.appeared() }
                 .onDisappear { dataStorageTracker.disappeared() }
 
+            mirrorRow
+
             exportRow
                 .onAppear { exportTracker.appeared() }
                 .onDisappear { exportTracker.disappeared() }
@@ -377,6 +379,25 @@ struct SettingsView: View {
             Text(Copy.Settings.yourData)
         } footer: {
             Text(Copy.Settings.dataStorageFooter)
+        }
+    }
+
+    /// Daily Mirror archive management. Only shown once the user has captured
+    /// something; before that there is nothing here to see or delete.
+    @ViewBuilder
+    private var mirrorRow: some View {
+        if MirrorPhotoStore.shared.photoCount > 0 {
+            NavigationLink {
+                MirrorSettingsView()
+            } label: {
+                settingsRow(
+                    icon: "camera.fill",
+                    iconColor: AppColour.accent,
+                    title: Copy.Mirror.settingsTitle,
+                    subtitle: "\(MirrorPhotoStore.shared.photoCount) · \(ByteCountFormatter.string(fromByteCount: MirrorPhotoStore.shared.diskBytes, countStyle: .file))"
+                )
+            }
+            .accessibilityIdentifier("settings.row.dailyMirror")
         }
     }
 

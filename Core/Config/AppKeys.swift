@@ -159,6 +159,12 @@ enum AppKeys {
         static let morningLockConfidencePrefix = "laso.readiness.morning_lock_confidence."
     }
 
+    // MARK: - Daily Mirror
+
+    enum Mirror {
+        static let explainerSeen = "laso.mirror.explainer_seen"
+    }
+
     // MARK: - Referral
 
     enum Referral {

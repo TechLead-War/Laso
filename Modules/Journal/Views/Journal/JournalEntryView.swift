@@ -11,6 +11,7 @@ struct JournalEntryView: View {
     @State private var value: Double = 0
     @State private var notes: String = ""
     @State private var showConfirmation = false
+    @State private var showMirrorCapture = false
 
     private let columns = [
         GridItem(.adaptive(minimum: 80), spacing: 12)
@@ -22,6 +23,8 @@ struct JournalEntryView: View {
                 VStack(spacing: 24) {
                     // Category picker grid
                     categoryGrid
+
+                    mirrorCard
 
                     // Value input (shown after category selection)
                     if let category = selectedCategory {
@@ -141,6 +144,72 @@ struct JournalEntryView: View {
         .buttonStyle(.dsPress)
         .accessibilityLabel(category.displayName)
         .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
+    }
+
+    // MARK: - Daily Mirror card
+
+    /// One optional capture per day, never a gate on saving the entry. Hidden
+    /// where no camera exists (simulator) because a capture card that cannot
+    /// capture is dead weight.
+    @ViewBuilder
+    private var mirrorCard: some View {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let store = MirrorPhotoStore.shared
+            let capturedToday = store.hasPhoto(on: .now)
+
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Capture today's you",
+                    type: .mirrorCaptureStarted,
+                    screen: .journalEntry,
+                    metadata: ["is_retake": capturedToday]
+                )
+                showMirrorCapture = true
+            } label: {
+                HStack(spacing: DS.space3) {
+                    if capturedToday, let photo = store.image(on: .now) {
+                        Image(uiImage: photo)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: DS.iconSize, height: DS.iconSize)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.iconRadius))
+                    } else {
+                        Image(systemName: "camera.fill")
+                            .font(DS.Typography.mediumIcon)
+                            .foregroundStyle(AppColour.primary)
+                            .frame(width: DS.iconSize, height: DS.iconSize)
+                    }
+
+                    VStack(alignment: .leading, spacing: DS.space1) {
+                        Text(capturedToday ? Copy.Mirror.journalCardDone : Copy.Mirror.journalCardCTA)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
+                        if store.currentStreak > 0 {
+                            Text(Copy.Mirror.streakDays(store.currentStreak))
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textSecondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: capturedToday ? "checkmark.circle.fill" : "chevron.right")
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(capturedToday ? AppColour.success : AppColour.textTertiary)
+                }
+                .padding(DS.cardPadding)
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.cardRadius)
+                        .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
+                )
+            }
+            .buttonStyle(.dsPress)
+            .accessibilityLabel(capturedToday ? Copy.Mirror.journalCardDone : Copy.Mirror.journalCardCTA)
+            .fullScreenCover(isPresented: $showMirrorCapture) {
+                MirrorCaptureSheet()
+            }
+        }
     }
 
     // MARK: - Value Input

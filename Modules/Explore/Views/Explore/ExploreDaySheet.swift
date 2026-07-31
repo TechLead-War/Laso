@@ -11,12 +11,14 @@ struct ExploreDaySheet: View {
     let detail: DashboardViewModel.DayDetail
 
     @Environment(\.dismiss) private var dismiss
+    @State private var showFullPhoto = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     scoreHeader
+                    mirrorPhoto
                     contextRow
                     if !detail.signals.isEmpty {
                         signalsSection
@@ -70,6 +72,30 @@ struct ExploreDaySheet: View {
                     .foregroundStyle(AppColour.textTertiary)
             }
             .accessibilityElement(children: .combine)
+        }
+    }
+
+    /// The Daily Mirror photo from that day, when one exists. The overlay the
+    /// user picked is already baked into the stored image. The card is a crop;
+    /// tapping opens the uncropped photo full screen.
+    @ViewBuilder
+    private var mirrorPhoto: some View {
+        if let photo = MirrorPhotoStore.shared.image(on: detail.date) {
+            Button {
+                showFullPhoto = true
+            } label: {
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 260)
+                    .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Copy.Mirror.journalCardDone)
+            .fullScreenCover(isPresented: $showFullPhoto) {
+                MirrorPhotoViewer(photo: photo) { showFullPhoto = false }
+            }
         }
     }
 

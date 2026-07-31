@@ -401,7 +401,7 @@ struct SleepCoachView: View {
                 historyBar(day, isExpanded: isExpanded)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), day.bedToWakeHours.hoursAsClock))
+            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), day.actual.hoursAsClock))
             .accessibilityHint(isExpanded ? "Tap to collapse stage breakdown" : "Tap to show stage breakdown")
 
             if let napMinutes = day.napMinutes, napMinutes > 0 {
@@ -445,9 +445,12 @@ struct SleepCoachView: View {
                 .foregroundStyle(day.wakeTime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .leading)
 
-            Text(day.bedToWakeHours.hoursAsClock)
+            // Asleep hours, not bed-to-wake: this is the number the bar and
+            // the goal colour actually judge, so printing time-in-bed here put
+            // a warning tint on a value that never missed the goal.
+            Text(day.actual.hoursAsClock)
                 .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
-                .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
+                .foregroundStyle(day.actual >= adjustedNeed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
                 .frame(width: 46, alignment: .trailing)
 
             Image(systemName: "chevron.right")
@@ -513,9 +516,11 @@ struct SleepCoachView: View {
     private func sleepBar(_ day: DayEntry) -> some View {
         GeometryReader { geo in
             let maxHours: Double = 12
-            let neededFrac = max(0, min(1, day.needed / maxHours))
+            // The goal tick and verdict follow the hero's adjusted need, so the
+            // rows and the headline number cannot name two different targets.
+            let neededFrac = max(0, min(1, adjustedNeed / maxHours))
             let actualFrac = max(0, min(1, day.actual / maxHours))
-            let goalMet = day.actual >= day.needed
+            let goalMet = day.actual >= adjustedNeed
             let accent: Color = goalMet ? AppColour.categorySleep : AppColour.warning
 
             ZStack(alignment: .leading) {
