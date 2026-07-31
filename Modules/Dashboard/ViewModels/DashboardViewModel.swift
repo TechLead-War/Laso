@@ -2194,7 +2194,8 @@ final class DashboardViewModel {
             actionResult: actionResult,
             lastNightSleepSeconds: liveVM.sleep.lastNightSleepDuration > 0
                 ? liveVM.sleep.lastNightSleepDuration : nil,
-            allTimeBestSleepHours: analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh
+            allTimeBestSleepHours: analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh,
+            mirrorPair: MirrorPhotoStore.shared.progressPair
         )
     }
 
@@ -2494,10 +2495,27 @@ final class DashboardViewModel {
 
         // HRV & RHR: read latest daily value from HealthKitManager.timeSeries, same
         // source of truth as AlertEvaluator.swift:156/221 and RecoveryAnalyzer.swift:36.
+        // RHR carries the evaluator's staleness gate too: the island's night act
+        // shows it as tonight's number, so a days-old reading must drop out rather
+        // than render as current.
         let hrvValue: Int? = healthKitManager.timeSeries[.heartRateVariability]?.latestValue
             .map { Int($0.rounded()) }
-        let rhrValue: Int? = healthKitManager.timeSeries[.restingHeartRate]?.latestValue
-            .map { Int($0.rounded()) }
+        let rhrSeries = healthKitManager.timeSeries[.restingHeartRate]
+        let rhrIsFresh = rhrSeries.map { !$0.isStale(thresholdDays: 1) } ?? false
+        let rhrLatestRaw: Double? = rhrIsFresh ? rhrSeries?.latestValue : nil
+        let rhrValue: Int? = rhrLatestRaw.map { Int($0.rounded()) }
+
+        // Guardian baseline mirrors AlertEvaluator's spike rule: 7 day mean off
+        // the same non-stale series, passed unrounded so the island's threshold
+        // math matches the push's exactly.
+        let rhrBaselineRaw: Double? = {
+            guard rhrIsFresh, let series = rhrSeries else { return nil }
+            let avg7d = series.mean(lastDays: 7)
+            return avg7d > 0 ? avg7d : nil
+        }()
+        let debtHours: Double? = sleepDebtTracker.isReady
+            ? sleepDebtTracker.currentDebt?.totalDebtHours
+            : nil
 
         TodayScoreLiveActivityManager.shared.updateOrStart(
             overallScore: score,
@@ -2506,7 +2524,12 @@ final class DashboardViewModel {
             steps: stepsValue,
             stepsGoal: 10000,
             hrvMs: hrvValue,
-            restingHR: rhrValue
+            restingHR: rhrValue,
+            targetBedtime: sleepNeedCalculator.currentNeed?.recommendedBedtime,
+            sleepDebtHours: debtHours,
+            rhrLatestRaw: rhrLatestRaw,
+            rhrBaseline7dRaw: rhrBaselineRaw,
+            spikeAlertsEnabled: persistence.loadPreferences().heartRateSpikeAlertsEnabled
         )
 
         // Evaluate wind-down sleep outcome after each refresh. The tracker no-ops

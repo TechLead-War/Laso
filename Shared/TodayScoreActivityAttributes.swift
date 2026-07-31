@@ -132,6 +132,43 @@ enum CoachActionKind: String, Codable, Hashable, Sendable {
     }
 }
 
+/// Guardian takeover: when a signal crosses a line the island stops being a
+/// coach and becomes an alert. The decision (thresholds, baselines, user
+/// toggles) is made app-side in `TodayScoreLiveActivityManager`; the widget
+/// only renders the payload it is handed, so no clinical logic lives in the
+/// widget target.
+enum GuardianAlertKind: String, Codable, Hashable, Sendable {
+    /// Resting heart rate above the user's 7 day average by the remote spike
+    /// multiplier. `value` is the current bpm, `baseline` the 7 day average.
+    case restingHRElevated
+    /// Sleep debt at or past the actionable threshold, surfaced only in the
+    /// evening act when the user can still do something about it tonight.
+    /// `value` is the debt in minutes.
+    case sleepDebt
+
+    var symbolName: String {
+        switch self {
+        case .restingHRElevated: return "heart.fill"
+        case .sleepDebt:         return "moon.zzz.fill"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .restingHRElevated: return TodayScoreCopy.alertRestingHRTitle
+        case .sleepDebt:         return TodayScoreCopy.alertSleepDebtTitle
+        }
+    }
+}
+
+struct GuardianAlert: Codable, Hashable, Sendable {
+    var kind: GuardianAlertKind
+    /// bpm for `restingHRElevated`, minutes of debt for `sleepDebt`.
+    var value: Int
+    /// 7 day average bpm; only set for `restingHRElevated`.
+    var baseline: Int?
+}
+
 /// User-facing copy for the Today's Score Live Activity that is not already a
 /// member of `CoachMode` / `CoachActionKind` / `TodayScoreTint`.
 ///
@@ -151,6 +188,22 @@ enum TodayScoreCopy {
     /// score data is older than the staleness window so the user knows the ring is
     /// no longer live. Inline literal because the widget target does not link Firebase.
     static let staleAgeTemplate = "Updated %@ ago"
+
+    // Guardian alert takeover strings. Inline literals for the same reason as
+    // above: the widget target has no Firebase, so Remote Config cannot reach here.
+    static let alertRestingHRTitle = "Heart rate is elevated"
+    static let alertSleepDebtTitle = "Sleep debt"
+    /// `%d` is the 7 day average bpm shown under an elevated resting HR value.
+    static let alertBaselineTemplate = "Usual for you is about %d bpm"
+    static let bpmAtRest = "bpm at rest"
+    static let sleepDebtCaption = "of sleep owed"
+    /// Trailing label in the evening act once the recommended bedtime has passed.
+    static let pastBedtime = "In bed"
+    /// VoiceOver label on the live bedtime countdown timers.
+    static let bedtimeCountdownAccessibility = "Time until bedtime"
+    /// `%@` is the bedtime as a local clock time. VoiceOver label on the static
+    /// bedtime clock shown while more than an hour remains.
+    static let bedtimeAccessibilityTemplate = "Bedtime %@"
 }
 
 #if canImport(ActivityKit)
@@ -174,6 +227,12 @@ struct TodayScoreActivityAttributes: ActivityAttributes {
         var insight: String
         /// Which App Intent button the expanded region should render (or `.noop`).
         var actionKind: CoachActionKind
+        /// Tonight's recommended bedtime from `SleepNeedCalculator`. Drives the
+        /// evening act's live countdown; nil falls back to showing the score.
+        var targetBedtime: Date?
+        /// Guardian takeover payload. Non-nil switches every island surface
+        /// from coach rendering to alert rendering.
+        var alert: GuardianAlert?
 
         var stepsProgress: Double {
             guard stepsGoal > 0 else { return 0 }

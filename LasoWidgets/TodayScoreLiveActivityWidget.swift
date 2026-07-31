@@ -21,35 +21,39 @@ struct TodayScoreLiveActivityWidget: Widget {
                 // it), and ALL wide content — ring, mode label, insight, stats, action —
                 // lives in the full-width, roomy .bottom card. Researched region model.
                 DynamicIslandExpandedRegion(.leading) {
-                    Image(systemName: context.state.mode.symbolName)
+                    Image(systemName: context.state.alert?.kind.symbolName ?? context.state.mode.symbolName)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(bandColor(for: context.state))
-                        .accessibilityLabel(context.state.mode.headline)
+                        .foregroundStyle(heroTint(for: context.state))
+                        .accessibilityLabel(context.state.alert?.kind.title ?? context.state.mode.headline)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     CoachStamp(state: context.state)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    CoachExpandedCard(state: context.state)
+                    if let alert = context.state.alert {
+                        GuardianAlertCard(state: context.state, alert: alert)
+                    } else {
+                        CoachExpandedCard(state: context.state)
+                    }
                 }
             } compactLeading: {
-                CompactLeadingRing(state: context.state)
-                    .accessibilityLabel(context.state.mode.headline)
-                    .widgetURL(Self.todaysActionURL)
+                CompactActGlyph(state: context.state)
+                    .widgetURL(Self.compactURL(for: context.state))
             } compactTrailing: {
-                Text("\(context.state.overallScore)")
-                    // Fixed size + scale-to-fit: the compact pill is the only place a
-                    // scaling font remained; a 3-digit score (100) at large text widens
-                    // the pill and crowds the leading ring.
-                    .font(.system(size: 18, weight: .bold).monospacedDigit())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .foregroundStyle(scoreTint(for: context.state))
-                    .contentTransition(.numericText())
-                    .accessibilityLabel(scoreAccessibilityLabel(for: context.state))
-                    .widgetURL(Self.todaysActionURL)
+                CompactActValue(state: context.state)
+                    .widgetURL(Self.compactURL(for: context.state))
             } minimal: {
-                MinimalModeBadge(state: context.state)
+                if let alert = context.state.alert {
+                    ZStack {
+                        Circle().stroke(alertTint(alert), lineWidth: 1.5)
+                        Image(systemName: alert.kind.symbolName)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(alertTint(alert))
+                    }
+                    .accessibilityLabel(alert.kind.title)
+                } else {
+                    MinimalModeBadge(state: context.state)
+                }
             }
         }
     }
@@ -57,6 +61,153 @@ struct TodayScoreLiveActivityWidget: Widget {
     /// Deep link target for the dashboard surface. `onOpenURL` (added by D3) maps
     /// this via `Route.fromUITestIdentifier` to `Route.todaysAction`.
     private static let todaysActionURL = URL(string: "laso://route/todaysAction")
+    /// Evening act target: the sleep surface, where the bedtime countdown leads.
+    private static let sleepCoachURL = URL(string: "laso://route/sleepCoach")
+
+    /// Evening taps land on the sleep surface; every other act (and any alert)
+    /// lands on today's action.
+    private static func compactURL(for state: TodayScoreActivityAttributes.ContentState) -> URL? {
+        state.alert == nil && state.mode == .evening ? sleepCoachURL : todaysActionURL
+    }
+}
+
+// MARK: - Compact (one glyph on the left, one number on the right)
+
+/// Leading half of the compact pill. One glyph per act: sunrise, a filling step
+/// ring, moon, zzz — or the alert glyph during a Guardian takeover. The pill
+/// deliberately never carries more than one glyph and one value.
+private struct CompactActGlyph: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        if let alert = state.alert {
+            Image(systemName: alert.kind.symbolName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(alertTint(alert))
+                .accessibilityLabel(alert.kind.title)
+        } else if state.mode == .day {
+            // Step ring fills toward the goal through the day, brand blue so it
+            // never reads as a score band.
+            ZStack {
+                Circle()
+                    .stroke(AppColour.trackOnInverse, lineWidth: 2.5)
+                Circle()
+                    .trim(from: 0, to: state.stepsProgress)
+                    .stroke(AppColour.primary, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Image(systemName: "figure.walk")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(AppColour.primary)
+            }
+            .accessibilityLabel(state.mode.headline)
+        } else {
+            Image(systemName: state.mode.symbolName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(actGlyphTint(for: state))
+                .accessibilityLabel(state.mode.headline)
+        }
+    }
+}
+
+/// Trailing half of the compact pill: the one number the current act is about.
+/// Morning = score, day = steps, evening = live bedtime countdown, night = a
+/// dimmed resting heart rate. Guardian alerts take the slot over entirely.
+private struct CompactActValue: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        if let alert = state.alert {
+            switch alert.kind {
+            case .restingHRElevated:
+                Text("\(alert.value)")
+                    .font(.system(size: 18, weight: .bold).monospacedDigit())
+                    .foregroundStyle(alertTint(alert))
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .accessibilityLabel("\(alert.kind.title). \(alert.value) \(TodayScoreCopy.bpmUnit)")
+            case .sleepDebt:
+                Text(debtDisplay(minutes: alert.value))
+                    .font(.system(size: 14, weight: .bold).monospacedDigit())
+                    .foregroundStyle(alertTint(alert))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .accessibilityLabel("\(alert.kind.title). \(debtDisplay(minutes: alert.value))")
+            }
+        } else {
+            switch state.mode {
+            case .morning:
+                scoreText
+            case .day:
+                Text(stepsDisplay(state.steps))
+                    .font(.system(size: 15, weight: .bold).monospacedDigit())
+                    .foregroundStyle(AppColour.primary)
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .accessibilityLabel("\(state.steps) \(CoachMode.day.secondaryLabel)")
+            case .evening:
+                if let bedtime = state.targetBedtime {
+                    switch BedtimePhase.of(bedtime) {
+                    case .past:
+                        Text(TodayScoreCopy.pastBedtime)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColour.scorePoor)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .accessibilityLabel(TodayScoreCopy.pastBedtime)
+                    case .finalHour:
+                        // Self-advancing countdown, no push needed. Live only in
+                        // the final hour: under an hour it is at most "59:59"
+                        // and fits the slot; the h:mm:ss form of a longer
+                        // interval overflows it (timer Text keeps its width
+                        // rather than scaling down).
+                        Text(timerInterval: WidgetStyle.timerRange(to: bedtime), countsDown: true)
+                            .font(.system(size: 14, weight: .bold).monospacedDigit())
+                            .foregroundStyle(AppColour.warning)
+                            .frame(minWidth: 40, maxWidth: 48, alignment: .trailing)
+                            .lineLimit(1)
+                            .accessibilityLabel(TodayScoreCopy.bedtimeCountdownAccessibility)
+                    case .ahead:
+                        // More than an hour out: the target time says more than
+                        // a long countdown would, and it fits.
+                        Text(WidgetStyle.timeString(from: bedtime))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColour.warning)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .accessibilityLabel(String(format: TodayScoreCopy.bedtimeAccessibilityTemplate, WidgetStyle.timeString(from: bedtime)))
+                    }
+                } else {
+                    scoreText
+                }
+            case .night:
+                if let rhr = state.restingHR {
+                    Text("\(rhr) \(TodayScoreCopy.bpmUnit)")
+                        .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .accessibilityLabel("\(CoachMode.night.headline). \(rhr) \(TodayScoreCopy.bpmUnit)")
+                } else {
+                    scoreText
+                }
+            }
+        }
+    }
+
+    /// Score number in the band tint — the morning act's value and every act's
+    /// fallback when its own signal is missing. Night dims it with the rest of
+    /// the act so the island visibly goes to sleep.
+    private var scoreText: some View {
+        Text("\(state.overallScore)")
+            .font(.system(size: 18, weight: .bold).monospacedDigit())
+            .foregroundStyle(state.mode == .night ? AppColour.textOnInverseSecondary : scoreTint(for: state))
+            .contentTransition(.numericText())
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .accessibilityLabel(scoreAccessibilityLabel(for: state))
+    }
 }
 
 // MARK: - Lock Screen
@@ -65,7 +216,9 @@ private struct CoachLockScreenView: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = bandColor(for: state)
+        // A Guardian alert retints the whole card so the lock screen and the
+        // island tell the same story.
+        let tint = heroTint(for: state)
 
         VStack(spacing: 12) {
             HStack(alignment: .center, spacing: 16) {
@@ -86,10 +239,10 @@ private struct CoachLockScreenView: View {
 
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
-                        Image(systemName: state.mode.symbolName)
+                        Image(systemName: state.alert?.kind.symbolName ?? state.mode.symbolName)
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(tint)
-                        Text(state.mode.headline)
+                        Text(state.alert?.kind.title ?? state.mode.headline)
                             .font(.caption2.weight(.semibold))
                             .textCase(.uppercase)
                             .tracking(0.8)
@@ -293,16 +446,44 @@ private struct CoachModePill: View {
 
 /// Small tertiary time stamp (HTML `.stamp`). Switches to the honest "Updated Nh
 /// ago" phrase once the data is stale so an old reading never shows a fresh time.
+/// In the evening act it becomes the live bedtime countdown instead — the slot is
+/// narrow (it flanks the camera) so the compact timer format is the widest it gets.
 private struct CoachStamp: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        Text(staleAgePhrase(state) ?? WidgetStyle.timeString(from: state.lastUpdated))
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(AppColour.textOnInverseSecondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .padding(.trailing, 4)
+        if state.alert == nil,
+           state.mode == .evening,
+           let bedtime = state.targetBedtime,
+           BedtimePhase.of(bedtime) == .finalHour {
+            // Live countdown only inside the final hour — the same width rule as
+            // the compact slot: "59:59" fits this narrow region, "4:52:10" does not.
+            Text(timerInterval: WidgetStyle.timerRange(to: bedtime), countsDown: true)
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .foregroundStyle(AppColour.warning)
+                .frame(maxWidth: 52, alignment: .trailing)
+                .lineLimit(1)
+                .accessibilityLabel(TodayScoreCopy.bedtimeCountdownAccessibility)
+                .padding(.trailing, 4)
+        } else if state.alert == nil,
+                  state.mode == .evening,
+                  let bedtime = state.targetBedtime,
+                  BedtimePhase.of(bedtime) == .ahead {
+            Text(WidgetStyle.timeString(from: bedtime))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(AppColour.warning)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .accessibilityLabel(String(format: TodayScoreCopy.bedtimeAccessibilityTemplate, WidgetStyle.timeString(from: bedtime)))
+                .padding(.trailing, 4)
+        } else {
+            Text(staleAgePhrase(state) ?? WidgetStyle.timeString(from: state.lastUpdated))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(AppColour.textOnInverseSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.trailing, 4)
+        }
     }
 }
 
@@ -338,6 +519,81 @@ private struct CoachExpandedCard: View {
                     CoachWeakChip(pillar: state.weakestPillar, score: weakest)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Guardian Alert Card (expanded bottom takeover)
+
+/// Expanded takeover for a Guardian alert: the offending value huge on the left,
+/// the claim and its evidence on the right, one calming action below. All copy is
+/// either a widget literal or the app-side insight carried in ContentState.
+private struct GuardianAlertCard: View {
+    let state: TodayScoreActivityAttributes.ContentState
+    let alert: GuardianAlert
+
+    var body: some View {
+        let tint = alertTint(alert)
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(valueDisplay)
+                        .font(.system(size: 34, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(tint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(caption)
+                        .font(.system(size: 9, weight: .semibold))
+                        .textCase(.uppercase)
+                        .tracking(0.5)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(alert.kind.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(evidence)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true, fixedType: true)
+        }
+    }
+
+    private var valueDisplay: String {
+        switch alert.kind {
+        case .restingHRElevated: return "\(alert.value)"
+        case .sleepDebt:         return debtDisplay(minutes: alert.value)
+        }
+    }
+
+    private var caption: String {
+        switch alert.kind {
+        case .restingHRElevated: return TodayScoreCopy.bpmAtRest
+        case .sleepDebt:         return TodayScoreCopy.sleepDebtCaption
+        }
+    }
+
+    /// The supporting line beside the big value. The resting HR alert states the
+    /// user's own baseline from the payload; sleep debt reuses the app-side
+    /// insight sentence so the island and the lock screen agree word for word.
+    private var evidence: String {
+        switch alert.kind {
+        case .restingHRElevated:
+            if let baseline = alert.baseline {
+                return String(format: TodayScoreCopy.alertBaselineTemplate, baseline)
+            }
+            return state.insight
+        case .sleepDebt:
+            return state.insight
         }
     }
 }
@@ -406,13 +662,6 @@ private struct CoachStatRow: View {
             }
         }
     }
-
-    private func stepsDisplay(_ steps: Int) -> String {
-        if steps >= 10_000 {
-            return String(format: "%.1fK", Double(steps) / 1_000)
-        }
-        return "\(steps)"
-    }
 }
 
 private struct StatCell: View {
@@ -475,31 +724,6 @@ private struct CoachWeakChip: View {
         .background(AppColour.surfaceInverseRaised, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(pillar) \(score)")
-    }
-}
-
-// MARK: - Compact Leading Ring
-
-/// Small score ring for the Dynamic Island compact leading slot. Mirrors the
-/// orb's inner arc (surface backing + faint track + band-coloured score arc)
-/// so the compact and expanded presentations read as the same gauge. Greys to
-/// `textTertiary` when the data is stale, matching every other surface.
-private struct CompactLeadingRing: View {
-    let state: TodayScoreActivityAttributes.ContentState
-
-    var body: some View {
-        let tint = scoreTint(for: state)
-        let progress = max(0, min(1, Double(state.overallScore) / 100.0))
-        ZStack {
-            Circle()
-                .fill(AppColour.surfaceInverseRaised)
-            Circle()
-                .stroke(AppColour.trackOnInverse, lineWidth: 2.5)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-        }
     }
 }
 
@@ -599,6 +823,62 @@ private func scoreTint(for state: TodayScoreActivityAttributes.ContentState) -> 
     isStale(state) ? AppColour.textOnInverseSecondary : bandColor(for: state)
 }
 
+/// Which rendering the bedtime slot gets, decided at archive time. `past` and
+/// the phase boundaries only re-evaluate on the next push — the manager arms a
+/// boundary re-push at bedtime−1h and at bedtime so the flips actually land.
+private enum BedtimePhase: Equatable {
+    case past, finalHour, ahead
+
+    static func of(_ bedtime: Date, now: Date = Date()) -> BedtimePhase {
+        let remaining = bedtime.timeIntervalSince(now)
+        if remaining <= 0 { return .past }
+        if remaining <= 3600 { return .finalHour }
+        return .ahead
+    }
+}
+
+/// Guardian tints: acute heart signals read as danger, sleep debt as caution.
+private func alertTint(_ alert: GuardianAlert) -> Color {
+    switch alert.kind {
+    case .restingHRElevated: return AppColour.danger
+    case .sleepDebt:         return AppColour.warning
+    }
+}
+
+/// The one accent driving a surface's chrome: the alert tint during a Guardian
+/// takeover, the score band otherwise.
+private func heroTint(for state: TodayScoreActivityAttributes.ContentState) -> Color {
+    if let alert = state.alert { return alertTint(alert) }
+    return bandColor(for: state)
+}
+
+/// Compact glyph tint per act: morning wears the score band, evening wears the
+/// caution amber of its countdown, night dims with the rest of the act. The day
+/// act draws its own step ring and never reaches here.
+private func actGlyphTint(for state: TodayScoreActivityAttributes.ContentState) -> Color {
+    switch state.mode {
+    case .morning, .day: return scoreTint(for: state)
+    case .evening:       return AppColour.warning
+    case .night:         return AppColour.textOnInverseSecondary
+    }
+}
+
+private func stepsDisplay(_ steps: Int) -> String {
+    if steps >= 10_000 {
+        return String(format: "%.1fK", Double(steps) / 1_000)
+    }
+    return "\(steps)"
+}
+
+/// "5h 10m" style phrase from a minute count, dropping the empty unit.
+private func debtDisplay(minutes: Int) -> String {
+    let hours = minutes / 60
+    let mins = minutes % 60
+    if hours == 0 { return "\(mins)m" }
+    if mins == 0 { return "\(hours)h" }
+    return "\(hours)h \(mins)m"
+}
+
 private func scoreAccessibilityLabel(for state: TodayScoreActivityAttributes.ContentState) -> String {
     String(format: TodayScoreCopy.ringAccessibilityTemplate, state.overallScore, state.mode.headline)
 }
@@ -649,14 +929,16 @@ private func staleAgePhrase(_ state: TodayScoreActivityAttributes.ContentState) 
 private func previewState(
     _ score: Int, _ tint: TodayScoreTint, _ mode: CoachMode,
     _ action: CoachActionKind, _ insight: String,
-    weakest: String = "Mobility", weakestScore: Int? = 69, hrv: Int? = 53, ageHours: Double = 0
+    weakest: String = "Mobility", weakestScore: Int? = 69, hrv: Int? = 53, ageHours: Double = 0,
+    bedtime: Date? = nil, alert: GuardianAlert? = nil
 ) -> TodayScoreActivityAttributes.ContentState {
     .init(
         overallScore: score, scoreTint: tint,
         weakestPillar: weakest, weakestPillarScore: weakestScore,
         steps: 6400, stepsGoal: 10000, hrvMs: hrv, restingHR: 57,
         lastUpdated: Date(timeIntervalSinceNow: -ageHours * 3600),
-        mode: mode, heroValue: score, insight: insight, actionKind: action
+        mode: mode, heroValue: score, insight: insight, actionKind: action,
+        targetBedtime: bedtime, alert: alert
     )
 }
 
@@ -664,15 +946,33 @@ private func previewState(
     TodayScoreLiveActivityWidget()
 } contentStates: {
     previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
-    previewState(61, .fair, .evening, .windDown, "Sleep is your limiter today. Wind down a little earlier.", weakest: "Sleep", weakestScore: 48, hrv: 44)
+    previewState(61, .fair, .evening, .windDown, "In bed by 10:30 PM sets up tomorrow.", weakest: "Sleep", weakestScore: 48, hrv: 44, bedtime: Date(timeIntervalSinceNow: 47 * 60))
     previewState(42, .poor, .morning, .breathe, "Low recovery. Keep it easy and breathe.", weakest: "HRV", weakestScore: 38, hrv: 38)
     previewState(75, .good, .morning, .noop, "Open Laso to refresh. This reading is from yesterday.", ageHours: 22)
+    previewState(75, .good, .day, .breathe, "Resting heart rate 82 is above your usual 64. Two slow minutes can help.", alert: GuardianAlert(kind: .restingHRElevated, value: 82, baseline: 64))
+    previewState(61, .fair, .evening, .windDown, "An earlier night tonight starts paying it back.", weakest: "Sleep", weakestScore: 48, bedtime: Date(timeIntervalSinceNow: 47 * 60), alert: GuardianAlert(kind: .sleepDebt, value: 310, baseline: nil))
 }
 
 #Preview("Island Expanded", as: .dynamicIsland(.expanded), using: TodayScoreActivityAttributes()) {
     TodayScoreLiveActivityWidget()
 } contentStates: {
     previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
-    previewState(42, .poor, .morning, .breathe, "Low recovery. Keep it easy and breathe.", weakest: "HRV", weakestScore: 38, hrv: 38)
+    previewState(75, .good, .day, .breathe, "Steady strain. One short reset keeps you sharp.")
+    previewState(61, .fair, .evening, .windDown, "In bed by 10:30 PM sets up tomorrow.", weakest: "Sleep", weakestScore: 48, bedtime: Date(timeIntervalSinceNow: 47 * 60))
+    previewState(70, .good, .night, .noop, "Resting heart rate 57. Resume at sunrise.")
+    previewState(75, .good, .day, .breathe, "Resting heart rate 82 is above your usual 64. Two slow minutes can help.", alert: GuardianAlert(kind: .restingHRElevated, value: 82, baseline: 64))
+    previewState(61, .fair, .evening, .windDown, "An earlier night tonight starts paying it back.", bedtime: Date(timeIntervalSinceNow: 47 * 60), alert: GuardianAlert(kind: .sleepDebt, value: 310, baseline: nil))
+}
+
+#Preview("Island Compact", as: .dynamicIsland(.compact), using: TodayScoreActivityAttributes()) {
+    TodayScoreLiveActivityWidget()
+} contentStates: {
+    previewState(78, .good, .morning, .setIntention, "HRV is high after deep sleep. Good day to push.")
+    previewState(75, .good, .day, .breathe, "Steady strain. One short reset keeps you sharp.")
+    previewState(61, .fair, .evening, .windDown, "In bed by 10:30 PM sets up tomorrow.", bedtime: Date(timeIntervalSinceNow: 47 * 60))
+    previewState(61, .fair, .evening, .windDown, "In bed by 10:30 PM sets up tomorrow.", bedtime: Date(timeIntervalSinceNow: 4 * 3600))
+    previewState(70, .good, .night, .noop, "Resting heart rate 57. Resume at sunrise.")
+    previewState(75, .good, .day, .breathe, "Resting heart rate 82 is above your usual 64.", alert: GuardianAlert(kind: .restingHRElevated, value: 82, baseline: 64))
+    previewState(61, .fair, .evening, .windDown, "An earlier night tonight starts paying it back.", alert: GuardianAlert(kind: .sleepDebt, value: 310, baseline: nil))
 }
 #endif

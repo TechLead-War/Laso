@@ -207,6 +207,14 @@ final class WindDownLiveActivityManager {
         return abs(stored - bedtime.timeIntervalSince1970) < 5 * 60
     }
 
+    /// Whether the user swipe-dismissed tonight's wind-down for this bedtime.
+    /// TodayScore's evening act consults this before showing its own countdown
+    /// to the same bedtime — resurrecting a dismissed countdown on a different
+    /// surface would override the user's choice.
+    func userDismissed(bedtime: Date) -> Bool {
+        wasDismissed(for: bedtime)
+    }
+
     private func markDismissed(for bedtime: Date) {
         UserDefaults.standard.set(bedtime.timeIntervalSince1970, forKey: Self.dismissedBedtimeKey)
     }
