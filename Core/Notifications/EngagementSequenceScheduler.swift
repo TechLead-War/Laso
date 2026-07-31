@@ -60,18 +60,33 @@ enum EngagementSequenceScheduler {
 
     /// Call from the view / view model when the user hits an activation moment.
     /// Idempotent. Safe to call on every appearance, only the first transition is recorded.
+    ///
+    /// The second sighting must fall on a LATER day than the first. Callers fire
+    /// this from `onAppear`, which re-runs on every tab switch and scroll
+    /// recycle, so without the day check one session against a single score
+    /// satisfied both gates and Day 5 sent the hard "your setup is progressing"
+    /// copy to a user who had seen one score.
     static func markActivation(_ moment: Activation) {
         switch moment {
         case .firstRecoveryScore:
             guard !defaults.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) else { return }
             defaults.set(true, forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+            defaults.set(Date.cal.startOfDay(for: Date()), forKey: AppKeys.Engagement.firstRecoveryScoreSeenDay)
         case .secondRecoveryScore:
             guard !defaults.bool(forKey: AppKeys.Engagement.secondRecoveryScoreSeen) else { return }
             // Require the first one to be set before the second, keeps the order clean.
             guard defaults.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) else {
                 defaults.set(true, forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+                defaults.set(Date.cal.startOfDay(for: Date()), forKey: AppKeys.Engagement.firstRecoveryScoreSeenDay)
                 return
             }
+            // Installs from before the day stamp existed have no recorded first
+            // day; stamp today and let the second sighting come tomorrow.
+            guard let firstDay = defaults.object(forKey: AppKeys.Engagement.firstRecoveryScoreSeenDay) as? Date else {
+                defaults.set(Date.cal.startOfDay(for: Date()), forKey: AppKeys.Engagement.firstRecoveryScoreSeenDay)
+                return
+            }
+            guard Date.cal.startOfDay(for: Date()) > firstDay else { return }
             defaults.set(true, forKey: AppKeys.Engagement.secondRecoveryScoreSeen)
         }
     }
@@ -160,6 +175,9 @@ enum EngagementSequenceScheduler {
             guard scheduled else { return }
 
             defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
+            // The sequence moved on, so a later re-entry into the gate we just
+            // left is a new state and must be reported again.
+            defaults.removeObject(forKey: AppKeys.Engagement.lastGateLogSignature)
 
             if nextDay >= 7 {
                 defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
@@ -176,6 +194,7 @@ enum EngagementSequenceScheduler {
             // has fully passed and we do not want to send it late.
             logGate(day: nextDay, reason: reason)
             defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
+            defaults.removeObject(forKey: AppKeys.Engagement.lastGateLogSignature)
             if nextDay >= 7 {
                 defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
             }
@@ -205,13 +224,29 @@ enum EngagementSequenceScheduler {
     }
 
     /// True when the user has not opened the app in the last 48 hours.
-    /// Uses `SessionTracker`'s last active date, which is the single source of
-    /// truth for app presence. Treats "no record yet" as active (post onboarding).
+    /// Treats "no record yet" as active (post onboarding).
+    ///
+    /// `lastAppOpenedAt` is a real timestamp written on every foreground, so it
+    /// answers this exactly. `SessionTracker`'s `lastActiveDate` is truncated to
+    /// midnight, so measuring 48h from it charged the user for the hours before
+    /// their last open and paused people who had been away barely a day; it is
+    /// kept only as the fallback for installs with no timestamp yet.
     private static var isUserInactive48h: Bool {
+        let openedAt = defaults.double(forKey: AppKeys.Notifications.lastAppOpenedAt)
+        if openedAt > 0 {
+            return Date().timeIntervalSince(Date(timeIntervalSince1970: openedAt)) > inactivityPauseSeconds
+        }
         guard let last = defaults.object(forKey: AppKeys.Session.lastActiveDate) as? Date else {
             return false
         }
-        return Date().timeIntervalSince(last) > inactivityPauseSeconds
+        // Day-granular fallback: a stored day says nothing about the hour inside
+        // it, so only a fully missed second day proves 48h of silence.
+        let daysAway = Date.cal.dateComponents(
+            [.day],
+            from: Date.cal.startOfDay(for: last),
+            to: Date.cal.startOfDay(for: Date())
+        ).day ?? 0
+        return daysAway >= 3
     }
 
     // MARK: - Gate Decision
@@ -269,6 +304,13 @@ enum EngagementSequenceScheduler {
     }
 
     private static func logGate(day: Int, reason: String) {
+        // One event per gate state, not per evaluation. `scheduleNext` runs on
+        // every launch and background refresh, so a user stuck behind the same
+        // gate would otherwise inflate the suppressed metric with duplicates.
+        let signature = "\(day):\(reason)"
+        guard defaults.string(forKey: AppKeys.Engagement.lastGateLogSignature) != signature else { return }
+        defaults.set(signature, forKey: AppKeys.Engagement.lastGateLogSignature)
+
         let identifier = AppConstants.NotificationID.engagementPrefix + "day\(day)"
         Task { @MainActor in
             AppAnalytics.shared.trackNotificationSuppressed(
@@ -439,9 +481,13 @@ enum EngagementSequenceScheduler {
                     if let first = samples.first, let last = samples.last {
                         let change = ((last.value - first.value) / max(first.value, 0.01)) * 100
                         if abs(change) > 10, trendInfo == nil {
+                            // A rise is only good for a higher-is-better metric;
+                            // calling a climbing resting heart rate "improving"
+                            // is the same sign mistake the celebration copy had.
+                            let isBetter = (change > 0) == metric.higherIsBetter
                             trendInfo = (
                                 metric: metric.displayName.lowercased(),
-                                direction: change > 0 ? "improving" : "declining"
+                                direction: isBetter ? Copy.Notifications.trendWordImproving : Copy.Notifications.trendWordDeclining
                             )
                         }
                     }

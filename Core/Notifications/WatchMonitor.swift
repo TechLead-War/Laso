@@ -2,7 +2,7 @@ import Foundation
 import HealthKit
 import UserNotifications
 
-/// Monitors Apple Watch wearing status and battery via HealthKit background delivery.
+/// Monitors Apple Watch wearing status via HealthKit background delivery.
 ///
 /// **How it works (all background-capable, no foreground required):**
 ///
@@ -15,9 +15,6 @@ import UserNotifications
 ///
 /// 3. When data stops (watch removed, battery dead, out of range), no more pushes
 ///    happen and the scheduled notification fires automatically. no app needed.
-///
-/// 4. Battery: checked from HealthKit sample metadata on each background delivery.
-///    If available and below threshold, a notification is sent immediately.
 @MainActor
 final class WatchMonitor {
     static let shared = WatchMonitor()
@@ -30,6 +27,7 @@ final class WatchMonitor {
     private let lastWatchDataKey = AppKeys.Watch.lastWatchDataTime
     private let lastObserverProcessingKey = AppKeys.Watch.lastObserverProcessing
     private let lastScheduleRefreshKey = AppKeys.Watch.lastScheduleRefresh
+    private let notWornAlertedAnchorKey = AppKeys.Watch.notWornAlertedAnchor
 
     /// Cached preferences to avoid repeated Keychain + AES-GCM decryption
     private var cachedPreferences: NotificationPreferences?
@@ -103,8 +101,11 @@ final class WatchMonitor {
             }
             // Fires in BACKGROUND. hop to MainActor to call isolated state.
             Task { @MainActor [weak self] in
-                self?.onHeartRateDelivery()
-                completionHandler()
+                guard let self else {
+                    completionHandler()
+                    return
+                }
+                self.onHeartRateDelivery(completion: completionHandler)
             }
         }
 
@@ -122,9 +123,16 @@ final class WatchMonitor {
 
     /// Called every time HealthKit delivers new heart rate data. foreground OR background.
     /// This is the single entry point for all watch monitoring logic.
-    private func onHeartRateDelivery() {
+    ///
+    /// `completion` is HealthKit's background-delivery acknowledgement: iOS may
+    /// suspend the app the instant it runs, so it must fire only after the
+    /// sample query has stamped the freshness key, and exactly once per call.
+    private func onHeartRateDelivery(completion: (() -> Void)? = nil) {
         guard let healthStore,
-              let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
+              let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else {
+            completion?()
+            return
+        }
 
         let now = Date()
         let freshnessWindow = RemoteConfigManager.shared.watchDataFreshnessHours * 3600
@@ -147,6 +155,7 @@ final class WatchMonitor {
             let processedRecently = lastProcessed > 0 &&
                 now.timeIntervalSince(Date(timeIntervalSince1970: lastProcessed)) < observerProcessingInterval
             if processedRecently {
+                completion?()
                 return
             }
         }
@@ -163,9 +172,13 @@ final class WatchMonitor {
             limit: 3,
             sortDescriptors: [sortDescriptor]
         ) { [weak self] _, samples, error in
-            guard let samples, error == nil else { return }
+            guard let samples, error == nil else {
+                completion?()
+                return
+            }
 
             Task { @MainActor [weak self] in
+                defer { completion?() }
                 guard let self else { return }
                 for sample in samples {
                     if self.isFromAppleWatch(sample: sample) {
@@ -239,6 +252,7 @@ final class WatchMonitor {
             // reschedule (e.g. cold auth cache at launch) leaves the previous
             // alarm armed instead of deleting it.
             NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
+            UserDefaults.standard.removeObject(forKey: notWornAlertedAnchorKey)
             return
         }
 
@@ -251,9 +265,20 @@ final class WatchMonitor {
         // non-positive interval, so an already-overdue alarm fires in a minute.
         let lastSeen = UserDefaults.standard.double(forKey: lastWatchDataKey)
         var fireIn = thresholdSeconds
+        var isOverdueGap = false
         if lastSeen > 0 {
             let elapsed = Date().timeIntervalSince(Date(timeIntervalSince1970: lastSeen))
-            fireIn = max(thresholdSeconds - elapsed, 60)
+            let remaining = thresholdSeconds - elapsed
+            if remaining < 60 {
+                // Gap already past the threshold, so this alarm fires in a
+                // minute. One alert per gap: without the anchor a watch left on
+                // the charger re-armed on every foreground and pushed each time.
+                if UserDefaults.standard.double(forKey: notWornAlertedAnchorKey) == lastSeen { return }
+                isOverdueGap = true
+                fireIn = 60
+            } else {
+                fireIn = remaining
+            }
         }
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false)
@@ -262,7 +287,6 @@ final class WatchMonitor {
             body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),
             identifier: scheduledNotWornIdentifier,
             trigger: trigger,
-            maxPerDay: 1,
             bypassCap: true
         )
         // Stamp the refresh throttle only for a schedule that happened, so a
@@ -270,6 +294,9 @@ final class WatchMonitor {
         // out the full refresh interval.
         if scheduled {
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastScheduleRefreshKey)
+            if isOverdueGap {
+                UserDefaults.standard.set(lastSeen, forKey: notWornAlertedAnchorKey)
+            }
         }
     }
 
@@ -287,8 +314,6 @@ final class WatchMonitor {
             }
         }
     }
-
-    // MARK: - Battery Check (Background-Capable)
 
     // MARK: - Foreground Re-evaluation
 

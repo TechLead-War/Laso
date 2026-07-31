@@ -185,6 +185,15 @@ enum WakeUpTimeDetector {
             return safe
         }
 
+        // A nil detection means "no sleep data OR the query failed" — the two are
+        // indistinguishable here. Keep a wake time we once detected rather than
+        // letting one HealthKit hiccup move the user's morning notifications to
+        // the 7 a.m. guess. The stamp still advances so the query stays throttled.
+        if defaults.string(forKey: AppKeys.Engagement.wakeTimeSource) == "detected" {
+            defaults.set(Date(), forKey: AppKeys.Engagement.lastWakeDetection)
+            return persistedWakeTime
+        }
+
         // Fallback. The stamp is written here too: a user with no sleep data
         // would otherwise re-run the full query on every single refresh.
         defaults.set(fallbackHour, forKey: AppKeys.Engagement.detectedWakeHour)

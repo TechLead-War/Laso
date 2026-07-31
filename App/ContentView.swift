@@ -206,6 +206,18 @@ struct ContentView: View {
                 // landed so the delivery funnel is accurate.
                 NotificationManager.shared.recordAppOpen()
                 Task { await NotificationManager.shared.store?.reconcileDeliveredNotifications() }
+                // Advance the engagement drip on foreground too. Its only other
+                // call site is the background refresh task, so a user with
+                // Background App Refresh off (or never granted a BG slot) stayed
+                // stuck on Day 1 forever and a paused sequence never resumed.
+                Task {
+                    guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+                    await EngagementSequenceScheduler.start(
+                        healthStore: liveViewModel.healthKitManager.healthStore,
+                        dataStore: NotificationManager.shared.store,
+                        userName: UserProfileStore.shared.storedName()
+                    )
+                }
                 // Navigate to any route staged by a remote-push tap.
                 if let route = NotificationRouter.shared.consumePending() {
                     navigate(to: route)

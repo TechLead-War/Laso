@@ -135,6 +135,11 @@ extension Copy {
         static func improvementTitle(metric: String, percent: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_improvement_title", default: "Your %@ is up %@%%"), metric, percent), max: titleMax)
         }
+        /// Improvement on a lower-is-better metric (resting heart rate, respiratory
+        /// rate), where the good news is a fall and "up" would read as the opposite.
+        static func improvementTitleDown(metric: String, percent: String) -> String {
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_improvement_title_down", default: "Your %@ is down %@%%"), metric, percent), max: titleMax)
+        }
         static func improvementBody(metric: String) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_improvement_body", default: "Your %@ got better this week. Keep it going."), metric), max: bodyMax)
         }
@@ -488,6 +493,8 @@ extension Copy {
 
         static var trendWordUp: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_up", default: "up") }
         static var trendWordDown: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_down", default: "down") }
+        static var trendWordImproving: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_improving", default: "improving") }
+        static var trendWordDeclining: String { RemoteConfigManager.shared.copyString("copy_notifications_trend_word_declining", default: "declining") }
 
         static func engagementDay5Title(percent: Int) -> String {
             clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_engagement_day5_title", default: "Your setup is %d%% done"), percent), max: titleMax)

@@ -111,6 +111,10 @@ enum AppKeys {
         static let lastWatchDataTime        = "healthpulse.watchMonitor.lastWatchDataTime"
         static let lastObserverProcessing   = "healthpulse.watchMonitor.lastObserverProcessing"
         static let lastScheduleRefresh      = "healthpulse.watchMonitor.lastScheduleRefresh"
+        /// The `lastWatchDataTime` value an overdue "not worn" push was already
+        /// armed for. Without it every foreground re-armed the same wear gap and
+        /// a watch left on the charger pushed once per app open.
+        static let notWornAlertedAnchor     = "healthpulse.watchMonitor.notWornAlertedAnchor"
         /// Set when the user dismisses the "add the complication" card. Permanent:
         /// the same steps stay available on the Apple Watch device screen.
         static let complicationPromptDismissed = "laso.watch.complicationPromptDismissed"
@@ -246,10 +250,18 @@ enum AppKeys {
         // Activation gates (Headspace pattern: 0 to 1 activation moment, not calendar).
         // Day 2 gate: user has opened the app and seen their first real Recovery score.
         static let firstRecoveryScoreSeen  = "laso.engagement.first_recovery_score_seen"
+        // Day the first sighting happened. The second sighting must land on a
+        // later day, otherwise a tab switch back to Home satisfies both gates in
+        // one minute and Day 5 claims personalization it does not have.
+        static let firstRecoveryScoreSeenDay = "laso.engagement.first_recovery_score_seen_day"
         // Day 5 gate: user has seen a second Recovery score (baseline in progress).
         static let secondRecoveryScoreSeen = "laso.engagement.second_recovery_score_seen"
         // Sequence paused when user goes dark for 48+ hours. Re engagement track takes over.
         static let sequencePaused          = "laso.engagement.sequence_paused"
+        // Last "<day>:<reason>" gate log emitted. The drip re-evaluates on every
+        // launch, so without this a user parked behind one gate for a week
+        // reports the same suppressed event dozens of times.
+        static let lastGateLogSignature    = "laso.engagement.last_gate_log_signature"
     }
 
     // MARK: - User Profile

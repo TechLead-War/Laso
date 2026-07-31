@@ -88,7 +88,11 @@ enum AppConstants {
         /// user dropped out (Journey 1). Spaced so the three reminders never land
         /// inside one frequency-cap day.
         static let abandonment2h: TimeInterval = 2 * 60 * 60
-        static let abandonment24h: TimeInterval = 24 * 60 * 60
+        // 26h, not 24h: at 24h the second reminder is only 22h after the first,
+        // so an evening drop-out whose 2h reminder is pushed out of quiet hours
+        // collides with it on the same fire day and loses the same-day priority
+        // contest. 26h puts both at the same wall-clock hour, one day apart.
+        static let abandonment24h: TimeInterval = 26 * 60 * 60
         static let abandonment72h: TimeInterval = 72 * 60 * 60
 
         /// Delay after a no-trial paid activation before the welcome push.

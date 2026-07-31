@@ -17,7 +17,9 @@ enum ContextCompressor {
         case .bodyTemperature, .appleSleepingWristTemperature: return String(format: "%.1f°F", value)
         case .weight: return String(format: "%.1f lbs", value)
         case .vo2Max: return String(format: "%.1f", value)
-        case .bloodOxygen: return String(format: "%.0f%%", value * 100)
+        // Already percent points on ingest (registry valueScale 100), so no
+        // second multiply.
+        case .bloodOxygen: return String(format: "%.0f%%", value)
         case .exerciseMinutes, .mindfulMinutes: return String(format: "%.0f min", value)
         case .activeCalories, .basalCalories, .totalCaloriesIntake: return String(format: "%.0f kcal", value)
         case .waterIntake: return String(format: "%.0f mL", value)

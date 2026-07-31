@@ -57,7 +57,15 @@ enum TrialScheduler {
         if let trialEnd,
            let reminderDate = Date.cal.date(byAdding: .hour, value: -24, to: trialEnd),
            reminderDate > now {
-            let daysLeft = max(1, Date.cal.dateComponents([.day], from: now, to: trialEnd).day ?? 1)
+            // Counted from the day the reminder FIRES, not from today: measuring
+            // from now titled a push landing 24h before the charge with the full
+            // trial length ("7 days left") and made the ends-tomorrow copy
+            // unreachable for every trial longer than two days.
+            let daysLeft = max(1, Date.cal.dateComponents(
+                [.day],
+                from: Date.cal.startOfDay(for: reminderDate),
+                to: Date.cal.startOfDay(for: trialEnd)
+            ).day ?? 1)
             manager.scheduleNotification(
                 title: Copy.Notifications.trialRenewalTitle(daysLeft: daysLeft),
                 body: Copy.Notifications.trialRenewalBody,
@@ -143,15 +151,17 @@ enum TrialScheduler {
 
     /// Retire the pending save push, e.g. when the user turns auto-renew back on.
     static func cancelCancelledSave() {
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: [AppConstants.NotificationID.cancelledSave])
+        // Through the manager, not the center directly: a raw remove leaves the
+        // cancelled push still holding its fire day's cap slot.
+        NotificationManager.shared.cancelNotification(identifier: AppConstants.NotificationID.cancelledSave)
     }
 
     /// Cancel every trial-lifecycle and win-back notification. Called on
     /// purchase so a paying user never sees a trial nudge.
     static func cancelAll() {
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: AppConstants.NotificationID.trialAll)
+        for identifier in AppConstants.NotificationID.trialAll {
+            NotificationManager.shared.cancelNotification(identifier: identifier)
+        }
     }
 
     /// Retire all trial pushes AND reset the win-back one-shot flag so a later

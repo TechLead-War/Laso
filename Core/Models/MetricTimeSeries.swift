@@ -21,7 +21,10 @@ struct MetricTimeSeries: Identifiable {
             case .heartRateVariability:
                 return sample.value > 5 && sample.value < 250
             case .bloodOxygen:
-                return sample.value >= 0.5 && sample.value <= 1.0
+                // Percent points, not a 0–1 fraction: HealthKitMetricRegistry
+                // scales SpO2 by 100 on ingest. The fraction range dropped every
+                // real reading, which silently killed the SpO2 alerts.
+                return sample.value >= 50 && sample.value <= 100
             case .respiratoryRate:
                 return sample.value > 5 && sample.value < 50
             case .bodyTemperature:

@@ -80,6 +80,7 @@ final class NotificationManager: @unchecked Sendable {
         if identifier == id.repermission { return "repermission" }
         if identifier == id.nonTrialWelcome { return "non_trial_welcome" }
         if identifier == id.cancelledSave { return "cancelled_save" }
+        if identifier == id.actionReminder { return "action_reminder" }
         if id.abandonmentAll.contains(identifier) { return "onboarding_abandonment" }
         if id.trialAll.contains(identifier) { return "trial" }
 
@@ -119,6 +120,14 @@ final class NotificationManager: @unchecked Sendable {
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             cachedAuthorized = granted
+            if granted {
+                // APNS registration otherwise only ran at cold launch behind an
+                // already-authorized check, so a user who granted here (during
+                // onboarding) had no device token for the rest of the install
+                // session and every remote push was undeliverable.
+                PushNotificationManager.shared.registerForRemoteNotifications()
+                PushNotificationManager.shared.refreshOnLaunch()
+            }
             await MainActor.run {
                 AppAnalytics.shared.updateNotificationProperties(enabled: granted)
                 if willPrompt {
@@ -334,7 +343,7 @@ final class NotificationManager: @unchecked Sendable {
                 // analytics rather than silently swallowed.
                 if let self, !isDailySummary, !bypassCap {
                     self.gateLock.lock()
-                    self.frequencyCap.releaseSlot(at: fireDate)
+                    self.frequencyCap.releaseSlot(identifier: identifier)
                     if severity != .critical {
                         self.fatigueTracker.clearBest(identifier: identifier, fireDate: fireDate)
                     }
@@ -410,15 +419,16 @@ final class NotificationManager: @unchecked Sendable {
                 // user really saw it.
                 if let previous, previous.fireDate > Date() {
                     center.removePendingNotificationRequests(withIdentifiers: [previous.identifier])
-                    frequencyCap.releaseSlot(at: previous.fireDate)
+                    frequencyCap.releaseSlot(identifier: previous.identifier)
                     fatigueTracker.clearFired(identifier: previous.identifier)
+                    Self.rearmAfterEviction(identifier: previous.identifier)
                     let previousType = Self.notificationType(previous.identifier)
                     Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: previousType, identifier: previous.identifier, reason: "priority_pushed_down") }
                 }
             }
         }
 
-        guard frequencyCap.reserveSlot(maxPerDay: budget, fireDate: fireDate) else {
+        guard frequencyCap.reserveSlot(identifier: identifier, maxPerDay: budget, fireDate: fireDate) else {
             Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
             return false
         }
@@ -445,9 +455,45 @@ final class NotificationManager: @unchecked Sendable {
         return staticBudget
     }
 
-    /// Cancel a specific notification
+    /// Cancel a specific notification and refund everything its schedule
+    /// reserved. Without the refund a cancelled future notification keeps
+    /// holding its fire day's cap slot and its best-candidate entry, so later
+    /// real notifications are suppressed with `"frequency_cap"` or
+    /// `"priority_pushed_down"` on a day that is actually empty.
     func cancelNotification(identifier: String) {
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        gateLock.lock()
+        // No reservation means the notification bypassed the cap (daily summary,
+        // bypassCap) or was already refunded, so there is nothing to give back.
+        if let fireDate = frequencyCap.releaseSlot(identifier: identifier) {
+            fatigueTracker.clearBest(identifier: identifier, fireDate: fireDate)
+        }
+        fatigueTracker.clearFired(identifier: identifier)
+        gateLock.unlock()
+    }
+
+    /// Undo the one-shot arm state a scheduler committed when its notification
+    /// was accepted. An eviction cancels a request the user never saw, and the
+    /// scheduler already burned its flag on the earlier `true` return, so
+    /// without this the notification can never be armed again.
+    private static func rearmAfterEviction(identifier: String) {
+        let defaults = UserDefaults.standard
+        let id = AppConstants.NotificationID.self
+        switch identifier {
+        case id.answerReady:
+            defaults.set(false, forKey: AppKeys.Prediction.answerReadyFired)
+        case id.repermission:
+            defaults.set(false, forKey: AppKeys.Prediction.repermissionFired)
+        default:
+            // Engagement drip: roll the sequence back one day so the next pass
+            // re-schedules the evicted day instead of skipping it.
+            guard identifier.hasPrefix(id.engagementPrefix),
+                  let day = Int(identifier.dropFirst(id.engagementPrefix.count + 3)),
+                  defaults.integer(forKey: AppKeys.Engagement.lastScheduledDay) == day
+            else { return }
+            defaults.set(day - 1, forKey: AppKeys.Engagement.lastScheduledDay)
+            defaults.set(false, forKey: AppKeys.Engagement.sequenceCompleted)
+        }
     }
 
     /// Get pending notification count

@@ -75,10 +75,9 @@ enum NotificationRepromptManager {
     }
 
     /// Call when the re-prompt banner is displayed to the user.
+    /// The impression event belongs to the banner view, which fires it on
+    /// appear; emitting it here as well double-counted every impression.
     static func recordRepromptShown() {
         defaults.set(Date().timeIntervalSince1970, forKey: AppKeys.Notifications.repromptLastShownDate)
-        Task { @MainActor in
-            AppAnalytics.shared.trackBlockTap(title: "Notification Reprompt Shown", type: .dataSyncEvent, screen: .home, metadata: ["source": "notification_reprompt", "event": "reprompt_shown"])
-        }
     }
 }

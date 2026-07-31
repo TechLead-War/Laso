@@ -637,7 +637,6 @@ extension RemoteConfigManager {
         // Watch monitor
         "watch_data_freshness_hours":      2 as NSNumber,
         "watch_not_worn_threshold_hours":  1 as NSNumber,
-        "watch_battery_low_threshold":     0.10 as NSNumber,
 
         // Notification optimizer
         "notification_daily_budget":            3 as NSNumber,

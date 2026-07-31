@@ -2239,8 +2239,6 @@ final class AppAnalytics {
             : 0
 
         let cal = Date.cal
-        let parts = identifier.split(separator: ".")
-        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_presented", parameters: [
             "notification_id": sanitizedNotificationID(identifier),
@@ -2250,7 +2248,7 @@ final class AppAnalytics {
             "hour_presented_local": cal.component(.hour, from: now),
             "day_of_week": cal.component(.weekday, from: now),
             "alert_metric": alertMetricSegment(identifier),
-            "alert_subtype": alertSubtype
+            "alert_subtype": alertSubtypeSegment(identifier)
         ])
     }
 
@@ -2258,14 +2256,12 @@ final class AppAnalytics {
     /// Fired from didReceive when actionIdentifier == UNNotificationDismissActionIdentifier.
     func trackNotificationDismissed(identifier: String) {
         let type = NotificationManager.notificationType(identifier)
-        let parts = identifier.split(separator: ".")
-        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_dismissed", parameters: [
             "notification_id": sanitizedNotificationID(identifier),
             "notification_type": type,
             "alert_metric": alertMetricSegment(identifier),
-            "alert_subtype": alertSubtype
+            "alert_subtype": alertSubtypeSegment(identifier)
         ])
     }
 
@@ -2289,6 +2285,19 @@ final class AppAnalytics {
         return parts.count >= 3 ? String(parts[2]) : "none"
     }
 
+    /// `alert_subtype` (severity/direction) for a notification identifier, or
+    /// "none" when the id is not an alert. Guarded like `alertMetricSegment`
+    /// because a blind `parts[3]` slice gave unrelated families a subtype that
+    /// shares no value space with a severity — the watch not-worn alarm shipped
+    /// "scheduled" as its alert_subtype.
+    private func alertSubtypeSegment(_ identifier: String) -> String {
+        guard Self.alertMetricTypes.contains(NotificationManager.notificationType(identifier)) else {
+            return "none"
+        }
+        let parts = identifier.split(separator: ".")
+        return parts.count >= 4 ? String(parts[3]) : "none"
+    }
+
     /// center.add() threw. Distinct from notification_suppressed (cap/filter). `error` is the
     /// NSError.localizedDescription, not user-facing. Fired from the schedule error branch.
     func trackNotificationFailed(type: String, identifier: String, error: String) {
@@ -2301,7 +2310,9 @@ final class AppAnalytics {
 
     /// A notification drove a downstream goal completion. The conversion-window decision
     /// belongs to the caller (RemoteConfigManager.shared.notificationConversionWindowHours);
-    /// this method only records the attributed event. No caller wired this batch.
+    /// this method only records the attributed event. Called from
+    /// `attributePendingNotificationConversion`, which `trackCoreAction` fires on
+    /// every completed core action.
     func trackNotificationConverted(identifier: String, goal: String) {
         logEvent("notification_converted", parameters: [
             "notification_id": sanitizedNotificationID(identifier),
@@ -3531,6 +3542,19 @@ final class AppAnalytics {
         "query_text"
     ]
 
+    /// Spike notification ids (`healthpulse.spike.rhr.elevated`) carry a short
+    /// abbreviation where every other alert family carries a HealthMetric
+    /// rawValue. Without this table the same metric lands in two incomparable
+    /// Amplitude buckets: the raw abbreviation from spikes, the anonymised
+    /// category from everything else.
+    private static let metricAbbreviations: [String: String] = [
+        "rhr": HealthMetric.restingHeartRate.rawValue,
+        "hr": HealthMetric.heartRate.rawValue,
+        "hrv": HealthMetric.heartRateVariability.rawValue,
+        "spo2": HealthMetric.bloodOxygen.rawValue,
+        "rr": HealthMetric.respiratoryRate.rawValue
+    ]
+
     /// Replaces a recognizable HealthMetric rawValue with its parent category name.
     /// Returns the original string unchanged when no matching metric is found.
     private func anonymizeMetricValue(_ value: String) -> String {
@@ -3541,7 +3565,7 @@ final class AppAnalytics {
                 .map { anonymizeMetricValue(String($0).trimmingCharacters(in: .whitespaces)) }
                 .joined(separator: ",")
         }
-        if let metric = HealthMetric(rawValue: value) {
+        if let metric = HealthMetric(rawValue: Self.metricAbbreviations[value] ?? value) {
             return metric.category.rawValue
         }
         return value

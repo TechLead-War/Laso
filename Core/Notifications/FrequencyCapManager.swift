@@ -5,6 +5,16 @@ final class FrequencyCapManager {
     private let defaults = UserDefaults.standard
     private let key = AppKeys.Notifications.notificationLog
 
+    /// One reserved delivery slot, tagged with the notification that owns it.
+    /// The identifier is what lets a cancelled or evicted request refund its
+    /// OWN slot: refunding "the nearest entry that day" would either hand back
+    /// a slot the caller never reserved or silently leave a phantom entry
+    /// holding the day's budget.
+    private struct Reservation: Codable {
+        let id: String
+        let fireDate: Date
+    }
+
     /// Atomically check the cap for the day the notification will FIRE and,
     /// if there is room, immediately record a slot. Returns `true` only when
     /// a slot was reserved.
@@ -14,58 +24,70 @@ final class FrequencyCapManager {
     /// that schedules reminders firing 2h, 24h, and 72h out therefore reserves
     /// three independent days instead of collapsing to one.
     ///
+    /// A re-schedule of the same identifier on the same day REPLACES its own
+    /// reservation: iOS replaces the pending request with the same identifier,
+    /// so keeping both entries would have the notification compete with itself
+    /// on spacing and lose.
+    ///
     /// The atomic reserve replaces the previous check-then-record split, which
     /// left a TOCTOU window where two near-simultaneous schedules could both
     /// pass the check before either recorded, overshooting the cap.
-    func reserveSlot(maxPerDay: Int, fireDate: Date = Date(), minimumSpacingHours: Double = 4) -> Bool {
+    func reserveSlot(identifier: String, maxPerDay: Int, fireDate: Date = Date(), minimumSpacingHours: Double = 4) -> Bool {
         var log = prunedLog()
-        let sameDay = log.filter { Date.cal.isDate($0, inSameDayAs: fireDate) }
+        log.removeAll { $0.id == identifier && Date.cal.isDate($0.fireDate, inSameDayAs: fireDate) }
+        let sameDay = log.filter { Date.cal.isDate($0.fireDate, inSameDayAs: fireDate) }
         guard sameDay.count < maxPerDay else { return false }
         // Spacing is between deliveries on the same day; entries on other days
         // are irrelevant to when this one lands.
-        let tooClose = sameDay.contains { abs(fireDate.timeIntervalSince($0)) / 3600 < minimumSpacingHours }
+        let tooClose = sameDay.contains { abs(fireDate.timeIntervalSince($0.fireDate)) / 3600 < minimumSpacingHours }
         guard !tooClose else { return false }
-        log.append(fireDate)
+        log.append(Reservation(id: identifier, fireDate: fireDate))
         saveLog(log)
         return true
     }
 
-    /// Roll back the reserved slot whose fire time is `fireDate`. Called when
-    /// a schedule fails to enqueue or when a pending request is evicted by a
-    /// higher-priority same-day winner.
+    /// Roll back the slot reserved by `identifier`, returning the fire date it
+    /// held. Called when a schedule fails to enqueue, when a pending request is
+    /// evicted by a higher-priority same-day winner, and when a scheduler
+    /// cancels its own pending notification.
     ///
-    /// Matches the nearest same-day entry rather than requiring exact
-    /// equality: the JSON round-trip through UserDefaults can shave a ULP off
-    /// the stored timestamp. Refunding by timestamp (not "latest of the day")
-    /// keeps the spacing log honest when the day holds entries firing later
-    /// than the one being refunded.
-    func releaseSlot(at fireDate: Date) {
+    /// Returns nil when the identifier holds no reservation (a bypassCap or
+    /// daily-summary notification, or one already refunded), so callers can
+    /// skip the rest of their rollback instead of guessing.
+    @discardableResult
+    func releaseSlot(identifier: String) -> Date? {
         var log = prunedLog()
-        let sameDay = log.indices.filter { Date.cal.isDate(log[$0], inSameDayAs: fireDate) }
-        guard let index = sameDay.min(by: {
-            abs(log[$0].timeIntervalSince(fireDate)) < abs(log[$1].timeIntervalSince(fireDate))
-        }) else { return }
+        guard let index = log.firstIndex(where: { $0.id == identifier }) else { return nil }
+        let fireDate = log[index].fireDate
         log.remove(at: index)
         saveLog(log)
+        return fireDate
     }
 
     /// The stored fire timestamps with past days dropped. Future-dated
     /// entries are kept: they hold slots for the days pending notifications
     /// will fire on.
-    private func prunedLog() -> [Date] {
+    private func prunedLog() -> [Reservation] {
         let startOfToday = Date.cal.startOfDay(for: Date())
-        return loadLog().filter { $0 >= startOfToday }
+        return loadLog().filter { $0.fireDate >= startOfToday }
     }
 
-    private func loadLog() -> [Date] {
-        guard let data = defaults.data(forKey: key),
-              let dates = try? JSONDecoder().decode([Date].self, from: data) else {
-            return []
+    private func loadLog() -> [Reservation] {
+        guard let data = defaults.data(forKey: key) else { return [] }
+        if let entries = try? JSONDecoder().decode([Reservation].self, from: data) {
+            return entries
         }
-        return dates
+        // Builds before the identifier was stored wrote a bare [Date]. Keep
+        // those slots so an upgrade does not hand every user a free extra
+        // notification today; they carry no identifier, so they can only expire
+        // rather than be refunded, which is the safe direction.
+        if let dates = try? JSONDecoder().decode([Date].self, from: data) {
+            return dates.map { Reservation(id: "", fireDate: $0) }
+        }
+        return []
     }
 
-    private func saveLog(_ log: [Date]) {
+    private func saveLog(_ log: [Reservation]) {
         if let data = try? JSONEncoder().encode(log) {
             defaults.set(data, forKey: key)
         }

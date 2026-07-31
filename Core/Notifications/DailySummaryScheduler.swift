@@ -56,15 +56,7 @@ struct DailySummaryScheduler {
 
         // Detected wake-up time, already clamped to a sane morning band.
         let wakeTime = WakeUpTimeDetector.persistedWakeTime
-        var dateComponents = DateComponents()
-        dateComponents.hour = wakeTime.hour
-        dateComponents.minute = wakeTime.minute
-        dateComponents.calendar = Date.cal
-
-        let trigger = UNCalendarNotificationTrigger(
-            dateMatching: dateComponents,
-            repeats: true
-        )
+        guard let trigger = nextOccurrenceTrigger(hour: wakeTime.hour, minute: wakeTime.minute) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
@@ -90,13 +82,10 @@ struct DailySummaryScheduler {
         let title = Copy.Notifications.eveningSummaryTitle(strainLevel: strainLevel)
         let body = Copy.Notifications.eveningSummaryBody(strainLevel: strainLevel, score: score)
 
-        var dateComponents = preferences.eveningSummaryTime
-        dateComponents.calendar = Date.cal
-
-        let trigger = UNCalendarNotificationTrigger(
-            dateMatching: dateComponents,
-            repeats: true
-        )
+        guard let trigger = nextOccurrenceTrigger(
+            hour: preferences.eveningSummaryTime.hour ?? 20,
+            minute: preferences.eveningSummaryTime.minute ?? 0
+        ) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
@@ -106,6 +95,25 @@ struct DailySummaryScheduler {
             trigger: trigger,
             maxPerDay: preferences.maxNotificationsPerDay
         )
+    }
+
+    /// A one-shot trigger for the next time the clock hits `hour:minute`.
+    ///
+    /// Deliberately not `repeats: true`: both summaries bake the day's score,
+    /// delta, streak and strain into the content at schedule time, and iOS
+    /// replays a repeating request without the app running, so a user who
+    /// stopped opening the app was told the same frozen numbers every morning
+    /// forever. Each foreground refresh re-arms the next one with fresh data.
+    private static func nextOccurrenceTrigger(hour: Int, minute: Int) -> UNCalendarNotificationTrigger? {
+        var match = DateComponents()
+        match.hour = hour
+        match.minute = minute
+        guard let next = Date.cal.nextDate(after: Date(), matching: match, matchingPolicy: .nextTime) else {
+            return nil
+        }
+        var fire = Date.cal.dateComponents([.year, .month, .day, .hour, .minute], from: next)
+        fire.calendar = Date.cal
+        return UNCalendarNotificationTrigger(dateMatching: fire, repeats: false)
     }
 
     private static func firstSentence(_ text: String) -> String {

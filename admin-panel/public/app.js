@@ -150,7 +150,6 @@ const ALERTS = [
 const WATCH = [
   { key: "watch_data_freshness_hours",         label: "Data Freshness Lookback (hrs)",   type: "number" },
   { key: "watch_not_worn_threshold_hours",     label: "Not-Worn Threshold (hrs)",        type: "number" },
-  { key: "watch_battery_low_threshold",        label: "Battery Low Threshold (0-1)",     type: "number" },
 ];
 
 const NOTIFICATIONS = [
@@ -224,7 +223,6 @@ const DEFAULTS = {
   "alert_heart_cap_per_day":    "3",
   "watch_data_freshness_hours":    "2",
   "watch_not_worn_threshold_hours":"1",
-  "watch_battery_low_threshold":   "0.10",
   "notification_daily_budget":         "3",
   "notification_fatigue_threshold":    "0.15",
   "notification_min_priority_score":   "10",

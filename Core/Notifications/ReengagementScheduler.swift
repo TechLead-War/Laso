@@ -14,20 +14,13 @@ enum ReengagementScheduler {
     /// Cancel any pending re-engagement notification and schedule a new one
     /// 3 days from now. Call this on every session start.
     ///
-    /// Builds the request through `center.add()` directly (it needs the richest
-    /// snapshot copy, which `NotificationManager.scheduleNotification` cannot
-    /// build), so it does not inherit the manager's authorization gate. Without
-    /// the check below a fresh install — where the permission prompt has not run
-    /// yet — would schedule into the void: iOS silently drops the request until
-    /// permission is granted, which never happens for this id. Gate here so the
-    /// notification is only enqueued once the user has actually granted.
+    /// The two gates below run before the manager's own copies for a reason:
+    /// the authorization call refreshes the manager's cached flag, which on a
+    /// fresh install still says "not granted", and the kill-switch branch also
+    /// has to retire a request queued before the switch flipped — it would
+    /// otherwise still fire up to three days later.
     static func reschedule() {
         Task {
-            // This builder bypasses NotificationManager.scheduleNotification, so
-            // the remote kill switch must be re-checked here. Re-engagement is
-            // never critical, so kill_notifications always blocks it. A request
-            // queued before the switch flipped would still fire up to 3 days
-            // later, so cancel it before skipping.
             let notifType = NotificationManager.notificationType(identifier)
             guard !RemoteConfigManager.shared.killNotifications else {
                 cancel()
@@ -47,21 +40,16 @@ enum ReengagementScheduler {
     }
 
     private static func performReschedule() {
-        let center = UNUserNotificationCenter.current()
-
-        // Cancel existing. we always push the timer forward
-        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        // Cancel existing. we always push the timer forward. Through the manager
+        // so the old request's cap slot is refunded before the new one reserves.
+        NotificationManager.shared.cancelNotification(identifier: identifier)
 
         // Build content using the richest snapshot we have, in priority order:
         // 1) HRV + trend + score (data-grounded loss frame, Headspace ML pattern)
         // 2) Last recovery score only (score-only loss frame)
         // 3) Generic "insights ready" copy (cold-start fallback)
-        let content = UNMutableNotificationContent()
-        content.sound = .default
-        // Standard category so a swipe-dismiss fires didReceive (tracked as a
-        // dismissal). This builder bypasses NotificationManager's central one,
-        // so the category is set here directly.
-        content.categoryIdentifier = AppConstants.NotificationCategory.standard
+        let title: String
+        let body: String
 
         let defaults = UserDefaults.standard
         let lastScore = defaults.integer(forKey: AppKeys.Notifications.lastRecoveryScore)
@@ -75,59 +63,43 @@ enum ReengagementScheduler {
         let daysInactive = Int(delaySeconds / (24 * 60 * 60))
 
         if lastScore > 0, lastHRV > 0, let trend = lastTrend {
-            content.title = Copy.Notifications.healthSnapshot
-            content.body = Copy.Notifications.lapsedLossFrameBody(
+            title = Copy.Notifications.healthSnapshot
+            body = Copy.Notifications.lapsedLossFrameBody(
                 score: lastScore,
                 hrvMs: lastHRV,
                 trend: trend,
                 daysInactive: daysInactive
             )
         } else if lastScore > 0 {
-            content.title = Copy.Notifications.healthSnapshot
-            content.body = Copy.Notifications.lapsedScoreOnlyBody(
+            title = Copy.Notifications.healthSnapshot
+            body = Copy.Notifications.lapsedScoreOnlyBody(
                 score: lastScore,
                 daysInactive: daysInactive
             )
         } else {
-            content.title = Copy.Notifications.insightsReady
-            content.body = Copy.Notifications.insightsReadyBody
+            title = Copy.Notifications.insightsReady
+            body = Copy.Notifications.insightsReadyBody
         }
 
-        // Last-open + 72h lands at the same clock time the user last opened
-        // the app, which can be the middle of the night. Push a quiet-hours
-        // fire time forward to the window's end (e.g. 02:00 -> 07:00) using
-        // the same rule the central manager applies.
-        let target = NotificationManager.shared.quietHoursAdjusted(Date().addingTimeInterval(delaySeconds))
-        let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: max(60, target.timeIntervalSinceNow),
-            repeats: false
-        )
-
-        let request = UNNotificationRequest(
+        // Scheduled through the central manager, not `center.add`: the direct
+        // enqueue skipped the frequency cap, fatigue suppression and same-day
+        // priority, so this push could land on a day already at its cap and
+        // never consumed a slot, letting a later alert overflow the day too.
+        // Quiet hours, the deferral event and the scheduled/failed events all
+        // come from the manager now.
+        // Last-open + 72h lands at the same clock time the user last opened the
+        // app, which can be the middle of the night; the manager's quiet-hours
+        // deferral moves it to the window's end.
+        NotificationManager.shared.scheduleNotification(
+            title: title,
+            body: body,
             identifier: identifier,
-            content: content,
-            trigger: trigger
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(60, delaySeconds), repeats: false)
         )
-
-        // Mirror the central manager's success/error tracking: scheduled stamps
-        // `target` (the quiet-hours-adjusted fire time the trigger was built
-        // from, not the enqueue time) so a later presented/opened measures the
-        // user's response latency rather than the 3-day lead.
-        let notifType = NotificationManager.notificationType(identifier)
-        center.add(request) { error in
-            Task { @MainActor in
-                if let error {
-                    AppAnalytics.shared.trackNotificationFailed(type: notifType, identifier: identifier, error: error.localizedDescription)
-                } else {
-                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, fireDate: target)
-                }
-            }
-        }
     }
 
     /// Cancel the re-engagement notification (e.g. if user disables notifications).
     static func cancel() {
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: [identifier])
+        NotificationManager.shared.cancelNotification(identifier: identifier)
     }
 }

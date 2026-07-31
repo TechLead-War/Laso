@@ -219,7 +219,7 @@ final class BackgroundRefreshCoordinator {
         AnswerReadyScheduler.checkAndFire(store: store)
         // Journey 5: denied-branch re-permission once the user has logged enough
         // check-ins, restating their own words.
-        RepermissionScheduler.checkAndFire()
+        RepermissionScheduler.checkAndFire(store: store)
 
         // Wind-down needs a real target bedtime. Full housekeeping does not run
         // in BG, so derive one from the stored sleep history. A nil store here

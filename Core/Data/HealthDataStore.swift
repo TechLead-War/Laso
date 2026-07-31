@@ -855,17 +855,30 @@ final class HealthDataStore {
 
     // MARK: - Notification Events
 
-    /// Record that a notification was sent
+    /// Record that a notification was sent.
+    /// Static-identifier notifications (daily summary, wind-down, weekly summary)
+    /// are rescheduled under the same id, and notificationId is unique: inserting
+    /// a fresh instance upserts over the existing row and wipes its presented,
+    /// opened, actionTaken and deliveredConfirmed fields. Update the sent-side
+    /// fields in place instead, and insert only for an id never seen before.
     func recordNotificationSent(id: String, type: String) {
         let now = Date()
         let cal = Date.cal
-        modelContext?.insert(StoredNotificationEvent(
-            notificationId: id,
-            typeRawValue: type,
-            sentDate: now,
-            hourSent: cal.component(.hour, from: now),
-            dayOfWeek: cal.component(.weekday, from: now)
-        ))
+        let predicate = #Predicate<StoredNotificationEvent> { $0.notificationId == id }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        if let event = try? modelContext?.fetch(descriptor).first {
+            event.sentDate = now
+            event.hourSent = cal.component(.hour, from: now)
+            event.dayOfWeek = cal.component(.weekday, from: now)
+        } else {
+            modelContext?.insert(StoredNotificationEvent(
+                notificationId: id,
+                typeRawValue: type,
+                sentDate: now,
+                hourSent: cal.component(.hour, from: now),
+                dayOfWeek: cal.component(.weekday, from: now)
+            ))
+        }
         saveContext("swiftdata_save_notification_sent")
     }
 

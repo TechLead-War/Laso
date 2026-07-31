@@ -922,6 +922,16 @@ struct SettingsView: View {
         saveDebounceTask?.cancel()
         let task = DispatchWorkItem { [preferences] in
             persistence.savePreferences(preferences)
+            // Retire the pending requests here, not at the next housekeeping
+            // pass: these are repeating notifications, so a user who turns the
+            // toggle off and does not reopen the app keeps getting them every
+            // day and the switch reads as broken.
+            let manager = NotificationManager.shared
+            let id = AppConstants.NotificationID.self
+            if !preferences.dailySummaryEnabled { manager.cancelNotification(identifier: id.dailySummary) }
+            if !preferences.eveningSummaryEnabled { manager.cancelNotification(identifier: id.eveningSummary) }
+            if !preferences.weeklySummaryEnabled { manager.cancelNotification(identifier: id.weeklySummary) }
+            if !preferences.windDownEnabled { manager.cancelNotification(identifier: id.windDown) }
         }
         saveDebounceTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: task)

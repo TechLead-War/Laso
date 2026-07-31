@@ -94,7 +94,7 @@ final class AlertEvaluator {
         // with the switch on), so instead of returning here the send funnel
         // mutes non-critical severities only.
         suppressNonCritical = RemoteConfigManager.shared.killAnomalyAlerts
-            || (preferences.dailySummaryEnabled && isNearDailySummaryTime(preferences.dailySummaryTime))
+            || (preferences.dailySummaryEnabled && isNearDailySummaryTime())
 
         // Hard cap: real-time alerts get at most 1 slot per day.
         // The daily summary (repeating) uses the other slot → total max 2/day.
@@ -223,9 +223,12 @@ final class AlertEvaluator {
             }
         }
 
-        // Check heart rate for spikes above threshold
+        // Check heart rate for spikes above threshold. Stale series skipped for
+        // the same reason as resting HR: a late backfill of an old reading must
+        // not fire a fresh "seek care" alert about an episode already over.
         if let hrSeries = timeSeries[.heartRate],
-           let latestHR = hrSeries.latestValue {
+           let latestHR = hrSeries.latestValue,
+           !hrSeries.isStale(thresholdDays: 1) {
             // Threshold spikes require sub-daily granularity; skip if only daily aggregates exist.
             if hasSubdailyResolution(hrSeries) {
                 let avg7d = hrSeries.mean(lastDays: 7)
@@ -322,9 +325,12 @@ final class AlertEvaluator {
             }
         }
 
-        // Check respiratory rate spikes
+        // Check respiratory rate spikes. Stale series skipped: a five-day-old
+        // reading of 31 syncing late would otherwise fire a critical, cap-
+        // bypassing "contact a healthcare provider" push.
         if let rrSeries = timeSeries[.respiratoryRate],
-           let latestRR = rrSeries.latestValue {
+           let latestRR = rrSeries.latestValue,
+           !rrSeries.isStale(thresholdDays: 1) {
             let avg7d = rrSeries.mean(lastDays: 7)
             let triage = SafetyTriageEngine.assess(
                 metric: .respiratoryRate,
@@ -395,8 +401,17 @@ final class AlertEvaluator {
 
         // Celebrate the most improved metric
         if let (metric, trend) = strongImprovements.max(by: { abs($0.value.weekOverWeekChange) < abs($1.value.weekOverWeekChange) }) {
+            // `weekOverWeekChange` is the raw signed change and TrendAnalyzer
+            // flips it only when classifying direction, so a lower-is-better
+            // metric (resting heart rate, respiratory rate) improves by falling.
+            // The word must follow the sign, not the magnitude.
+            let change = trend.weekOverWeekChange
+            let percent = String(format: "%.0f", abs(change))
+            let title = change < 0
+                ? Copy.Notifications.improvementTitleDown(metric: metric.displayName, percent: percent)
+                : Copy.Notifications.improvementTitle(metric: metric.displayName, percent: percent)
             NotificationManager.shared.scheduleNotification(
-                title: Copy.Notifications.improvementTitle(metric: metric.displayName, percent: String(format: "%.0f", abs(trend.weekOverWeekChange))),
+                title: title,
                 body: Copy.Notifications.improvementBody(metric: metric.displayName.lowercased()),
                 identifier: "healthpulse.celebration.\(metric.rawValue)",
                 maxPerDay: maxPerDay,
@@ -563,14 +578,18 @@ final class AlertEvaluator {
         }
     }
 
-    /// Returns true if the current time is within 1 hour of the daily summary time.
-    private func isNearDailySummaryTime(_ summaryTime: DateComponents) -> Bool {
+    /// Returns true if the current time is within 1 hour of the daily summary
+    /// time. Reads the wake anchor the summary is actually scheduled from, not a
+    /// separate preference: the two drifted apart and the mute window sat on an
+    /// hour no summary ever fired at.
+    private func isNearDailySummaryTime() -> Bool {
         let cal = Date.cal
         let now = Date()
+        let summaryTime = WakeUpTimeDetector.persistedWakeTime
         let hour = cal.component(.hour, from: now)
         let minute = cal.component(.minute, from: now)
         let nowMinutes = hour * 60 + minute
-        let summaryMinutes = (summaryTime.hour ?? 8) * 60 + (summaryTime.minute ?? 0)
+        let summaryMinutes = summaryTime.hour * 60 + summaryTime.minute
         let diff = abs(nowMinutes - summaryMinutes)
         return diff <= 60 || diff >= (24 * 60 - 60) // handle midnight wrap
     }

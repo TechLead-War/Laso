@@ -6,13 +6,10 @@ struct NotificationPreferences: Codable, Equatable {
     // types stay opt-in. Note: flipping a default here only affects users
     // with no stored preferences — existing users keep their saved values.
 
+    // The morning summary's time is the wake anchor in `WakeUpTimeDetector`,
+    // which is what the scheduler reads and what Settings now writes; a second
+    // preference here only ever drifted from it.
     var dailySummaryEnabled: Bool = true
-    var dailySummaryTime: DateComponents = {
-        var c = DateComponents()
-        c.hour = 8
-        c.minute = 0
-        return c
-    }()
 
     var eveningSummaryEnabled: Bool = true
     var eveningSummaryTime: DateComponents = {
@@ -62,7 +59,7 @@ struct NotificationPreferences: Codable, Equatable {
 extension NotificationPreferences {
     /// Coding keys must handle the Set<HealthMetric> properly
     enum CodingKeys: String, CodingKey {
-        case dailySummaryEnabled, dailySummaryTime, eveningSummaryEnabled, eveningSummaryTime
+        case dailySummaryEnabled, eveningSummaryEnabled, eveningSummaryTime
         case windDownEnabled
         case weeklySummaryEnabled, weeklySummaryDay
         case criticalAlertsEnabled, warningAlertsEnabled, maxNotificationsPerDay

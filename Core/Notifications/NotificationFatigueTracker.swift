@@ -105,7 +105,12 @@ struct NotificationFatigueTracker {
     func recordAppOpen(now: Date = Date()) {
         defaults.set(now.timeIntervalSince1970, forKey: AppKeys.Notifications.lastAppOpenedAt)
 
-        guard let firedAt = lastNonCriticalFiredAt else { return }
+        // `firedAt` is the trigger's FUTURE fire date, so an open before it is
+        // not a response to it. Without the lower bound every foreground while
+        // a notification is still pending wiped the stamp and the streak, and
+        // the fatigue window could never open. Same ordering rule as
+        // `evaluateDismissStreakLazy`.
+        guard let firedAt = lastNonCriticalFiredAt, now >= firedAt else { return }
         let window = AppConstants.NotificationFatigue.openResponseWindow
         if now.timeIntervalSince(firedAt) <= window {
             setStreak(0)

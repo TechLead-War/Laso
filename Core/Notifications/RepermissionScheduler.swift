@@ -29,7 +29,7 @@ enum RepermissionScheduler {
     /// next foreground session (which always passes the store) re-evaluates
     /// with nothing lost.
     @MainActor
-    static func checkAndFire(store: HealthDataStore? = nil) {
+    static func checkAndFire(store: HealthDataStore?) {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: AppKeys.Prediction.repermissionFired) else { return }
 

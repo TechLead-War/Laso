@@ -7,10 +7,21 @@ struct NotificationsSettingsView: View {
     let hasAppleWatchSource: Bool
 
     @State private var showThresholds = false
+    /// Mirrors the wake anchor the morning summary actually fires at. The old
+    /// picker wrote a preference no scheduler ever read, so changing the time
+    /// did nothing.
+    @State private var summaryTime: Date = Self.dateFor(WakeUpTimeDetector.persistedWakeTime)
     @State private var tracker = SectionTracker(section: .settingsNotifications, tab: .settings)
     @State private var alertsTracker = SectionTracker(section: .settingsAlerts, tab: .settings)
     @State private var metricAlertsTracker = SectionTracker(section: .settingsMetricAlerts, tab: .settings)
 
+
+    private static func dateFor(_ time: (hour: Int, minute: Int)) -> Date {
+        var comps = DateComponents()
+        comps.hour = time.hour
+        comps.minute = time.minute
+        return Date.cal.date(from: comps) ?? Date()
+    }
 
     var body: some View {
         Form {
@@ -47,21 +58,25 @@ struct NotificationsSettingsView: View {
             if preferences.dailySummaryEnabled {
                 DatePicker(
                     Copy.Settings.summaryTime,
-                    selection: Binding(
-                        get: { Date.cal.date(from: preferences.dailySummaryTime) ?? Date() },
-                        set: { newDate in
-                            let components = Date.cal.dateComponents([.hour, .minute], from: newDate)
-                            preferences.dailySummaryTime = components
-                            let hour = components.hour ?? 0
-                            let minute = components.minute ?? 0
-                            AppAnalytics.shared.trackSettingChanged(
-                                name: "daily_summary_time",
-                                value: String(format: "%02d:%02d", hour, minute)
-                            )
-                        }
-                    ),
+                    selection: $summaryTime,
                     displayedComponents: .hourAndMinute
                 )
+                .onChange(of: summaryTime) { _, newDate in
+                    let picked = Date.cal.dateComponents([.hour, .minute], from: newDate)
+                    WakeUpTimeDetector.userAnchor = (hour: picked.hour ?? 0, minute: picked.minute ?? 0)
+                    // The anchor is clamped to the morning band where the summary
+                    // keeps its quiet-hours exemption, so snap the control back to
+                    // what was really stored instead of showing a time that would
+                    // silently never fire.
+                    let stored = WakeUpTimeDetector.persistedWakeTime
+                    if stored.hour != picked.hour || stored.minute != picked.minute {
+                        summaryTime = Self.dateFor(stored)
+                    }
+                    AppAnalytics.shared.trackSettingChanged(
+                        name: "daily_summary_time",
+                        value: String(format: "%02d:%02d", stored.hour, stored.minute)
+                    )
+                }
             }
 
             Toggle(Copy.Settings.weeklySummary, isOn: $preferences.weeklySummaryEnabled)
