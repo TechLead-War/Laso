@@ -17,8 +17,13 @@ struct MirrorSettingsView: View {
             } else {
                 Section {
                     LabeledContent(Copy.Mirror.settingsPhotos, value: "\(store.photoCount)")
-                    LabeledContent(Copy.Mirror.settingsSpace, value: ByteCountFormatter.string(fromByteCount: store.diskBytes, countStyle: .file))
+                    if let firstDay = store.allDays.first {
+                        LabeledContent(Copy.Mirror.settingsSince, value: firstDay.formatted(.dateTime.day().month(.abbreviated).year()))
+                    }
                     LabeledContent(Copy.Mirror.settingsStreak, value: Copy.Mirror.streakDays(store.longestStreak))
+                    // The MB figure stays: the on-device privacy promise includes
+                    // never surprising the user about what the archive costs.
+                    LabeledContent(Copy.Mirror.settingsSpace, value: ByteCountFormatter.string(fromByteCount: store.diskBytes, countStyle: .file))
                 }
 
                 Section {

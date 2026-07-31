@@ -66,8 +66,9 @@ extension Copy {
         // MARK: - Settings
 
         static var settingsTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_title", default: "Daily Mirror") }
-        static var settingsPhotos: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_photos", default: "Photos stored") }
-        static var settingsSpace: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_space", default: "Space used") }
+        static var settingsPhotos: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_photos", default: "Memories captured") }
+        static var settingsSince: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_since", default: "Your story started") }
+        static var settingsSpace: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_space", default: "Space your memories take") }
         static var settingsStreak: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_streak", default: "Longest streak") }
         static var settingsDeleteAll: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_all", default: "Delete entire archive") }
         static var settingsDeleteConfirmTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_confirm_title", default: "Delete all Daily Mirror photos?") }
