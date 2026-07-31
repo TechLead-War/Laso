@@ -414,7 +414,7 @@ struct MetricDetailView: View {
                 HStack(spacing: 0) {
                     // This month
                     VStack(spacing: 6) {
-                        Text(viewModel.metric.formatValue(comp.thisMonthAvg))
+                        Text(viewModel.metric.formatWithUnit(comp.thisMonthAvg))
                             .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                         Text(comp.thisMonthLabel)
                             .font(DS.Typography.caption2)
@@ -436,7 +436,7 @@ struct MetricDetailView: View {
 
                     // Last month
                     VStack(spacing: 6) {
-                        Text(viewModel.metric.formatValue(comp.lastMonthAvg))
+                        Text(viewModel.metric.formatWithUnit(comp.lastMonthAvg))
                             .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(.secondary)
                         Text(comp.lastMonthLabel)

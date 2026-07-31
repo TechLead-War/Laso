@@ -6,7 +6,7 @@ struct BaselineCalculator {
     /// Compute baseline from a time series (uses 30-90 days of data)
     static func compute(series: MetricTimeSeries) -> UserBaseline? {
         // Use 30-90 days of data
-        let samples = series.samples(lastDays: 90)
+        let samples = series.completedDaySamples(lastDays: 90)
         let values = samples.map(\.value)
 
         guard values.count >= 7 else { return nil } // Need at least a week of data

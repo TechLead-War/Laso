@@ -285,7 +285,7 @@ struct LiveHeartRateSection: View {
             AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
-                        Text(Copy.Live.xText(Int(v)))
+                        Text(Copy.Common.xText(Int(v)))
                             .font(DS.Typography.caption2)
                             .foregroundStyle(AppColour.textTertiary)
                     }

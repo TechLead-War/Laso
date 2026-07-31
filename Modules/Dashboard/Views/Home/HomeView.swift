@@ -440,7 +440,21 @@ struct HomeView: View {
                             }
                         },
                         onTapWhy: { kind in openWhySignal(kind) },
-                        onFixCoverage: { openHealthAppForCoverage() }
+                        onFixCoverage: { openHealthAppForCoverage() },
+                        // No earned win means no share icon at all. Offering the
+                        // sheet with nothing in it would train users to ignore it.
+                        onShare: shareTemplates.isEmpty ? nil : {
+                            // Entry step of the share funnel: without this the
+                            // first event is the Share CTA inside the sheet, so
+                            // open-then-dismiss users were invisible.
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Share",
+                                type: .shareCard,
+                                screen: .home,
+                                metadata: ["source": "recovery_hero", "card_type": "template"]
+                            )
+                            showShareCard = true
+                        }
                     )
                     .onAppear {
                         recoveryTracker.appeared()

@@ -75,6 +75,7 @@
 		227F4E2EC3D21CF365A6766C /* PremiumShowcaseDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1844D157779B2A88AC7F84 /* PremiumShowcaseDataProvider.swift */; };
 		22D19718B85B75EDDC061633 /* ExploreScoreHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D901E75F4ECF2BFD747AD3F9 /* ExploreScoreHeroSection.swift */; };
 		24C57C91594478F097ADEEB9 /* BiologicalAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F306262364B569E960A18DA5 /* BiologicalAgeAnalyzer.swift */; };
+		255D5C427DD3139F0BE4287E /* UnitLabelChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60768137EE537F4D774E939B /* UnitLabelChecks.swift */; };
 		25B9C4D143D9219F0DF6D78A /* NotificationRepromptBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9135AB9785666485017DA2D /* NotificationRepromptBanner.swift */; };
 		268F02E787681E98625C517F /* ScoreGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E191C477794DD8ED3B5F34F /* ScoreGuideSheet.swift */; };
 		26CDE9DD7326658BD23E2745 /* LasoWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */; };
@@ -727,6 +728,7 @@
 		5D0F7C779FB01DC2B695AE5F /* Copy+Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Analysis.swift"; sourceTree = "<group>"; };
 		5D382D5C85F21F7AF16A0859 /* ShareButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareButton.swift; sourceTree = "<group>"; };
 		5F802C354021292ED8AC2D89 /* LiveHeartRateTimelineReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeartRateTimelineReducer.swift; sourceTree = "<group>"; };
+		60768137EE537F4D774E939B /* UnitLabelChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitLabelChecks.swift; sourceTree = "<group>"; };
 		60A38DC63EDF5882A08302CF /* SampleDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataProvider.swift; sourceTree = "<group>"; };
 		60EEBCBC7F8B24E469CA038E /* ExploreHealthStateLinkSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreHealthStateLinkSection.swift; sourceTree = "<group>"; };
 		6129398803D9F5EB1C5F30B0 /* HealthScorerConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorerConfig.swift; sourceTree = "<group>"; };
@@ -1127,6 +1129,7 @@
 			isa = PBXGroup;
 			children = (
 				2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */,
+				60768137EE537F4D774E939B /* UnitLabelChecks.swift */,
 			);
 			path = LasoUITests;
 			sourceTree = "<group>";
@@ -3135,6 +3138,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63FC2E3DCFDEF52CEC50E30D /* LasoUITests.swift in Sources */,
+				255D5C427DD3139F0BE4287E /* UnitLabelChecks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3203,7 +3207,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 102;
+				CURRENT_PROJECT_VERSION = 103;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3222,7 +3226,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.94;
+				MARKETING_VERSION = 1.2.95;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3293,7 +3297,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 102;
+				CURRENT_PROJECT_VERSION = 103;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3306,7 +3310,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.94;
+				MARKETING_VERSION = 1.2.95;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

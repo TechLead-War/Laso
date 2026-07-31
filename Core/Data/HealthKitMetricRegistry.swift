@@ -105,7 +105,8 @@ struct HealthKitMetricRegistry {
                 quantityType: HKQuantityType(.atrialFibrillationBurden),
                 unit: .percent(),
                 strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
+                statisticsOption: .discreteAverage,
+                valueScale: 100  // HealthKit gives this as 0–1; Severity thresholds are percent points (1, 5)
             )
         case .peripheralPerfusionIndex:
             return MetricConfig(

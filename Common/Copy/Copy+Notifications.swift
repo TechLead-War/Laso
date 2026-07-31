@@ -59,7 +59,7 @@ extension Copy {
 
         static var hrvLowTitle: String { clip(RemoteConfigManager.shared.copyString("copy_notifications_hrv_low_title", default: "Your body needs more rest"), max: titleMax) }
         static func hrvLowBody(current: Int, dropPercent: Int) -> String {
-            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_hrv_low_body", default: "Your recovery is %d, about %d%% below usual. Take it easy and sleep early tonight."), current, dropPercent), max: bodyMax)
+            clip(String(format: RemoteConfigManager.shared.copyString("copy_notifications_hrv_low_body", default: "Your heart recovery is %d ms, about %d%% below usual. Take it easy tonight."), current, dropPercent), max: bodyMax)
         }
 
         // MARK: - Blood Oxygen
@@ -362,7 +362,7 @@ extension Copy {
 
         /// HRV lead-in for the wind-down body, shown only when the last HRV reading is low.
         static func windDownHRVHint(ms: Int) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_notifications_wind_down_hrv_hint", default: "Your recovery is low (%d), so an early night will help."), ms)
+            String(format: RemoteConfigManager.shared.copyString("copy_notifications_wind_down_hrv_hint", default: "Your heart recovery is low (%d ms), so an early night will help."), ms)
         }
 
         /// Body for the wind-down push. Always includes the specific bedtime as a hard number.
@@ -414,9 +414,9 @@ extension Copy {
             let templates = RemoteConfigManager.shared.copyArray(
                 "copy_notifications_lapsed_loss_frame_variants",
                 default: [
-                    "Your sleep trend was %@. Your last recovery was %d. See what changed.",
-                    "Your last score was %d. Recovery %d, %@. See what is new.",
-                    "Your recovery was %@ at %d. See where it is today."
+                    "Your sleep trend was %@. Heart recovery was %d ms. See what changed.",
+                    "Your last score was %d. Heart recovery %d ms, %@. See what is new.",
+                    "Your heart recovery was %@ at %d ms. See where it is today."
                 ]
             )
             guard !templates.isEmpty else { return "" }
@@ -441,7 +441,7 @@ extension Copy {
                 default: [
                     "Your last score was %d out of 100. See what changed while you were away.",
                     "You were at %d out of 100 last time. See where you stand today.",
-                    "Your last reading was %d. See what changed."
+                    "Your last health score was %d out of 100. See what changed."
                 ]
             )
             guard !templates.isEmpty else { return "" }

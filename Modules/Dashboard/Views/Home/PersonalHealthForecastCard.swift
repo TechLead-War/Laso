@@ -145,38 +145,15 @@ struct MetricForecast: Identifiable {
     }
 
     var predictedValueFormatted: String {
-        formatMetricValue(predictedValue, metric: metric)
+        metric.formatWithUnit(predictedValue)
     }
 
+    /// Only the upper bound carries the unit so the row stays one line on small devices.
     var rangeDescription: String {
-        let lower = formatMetricValue(lowerBound, metric: metric)
-        let upper = formatMetricValue(upperBound, metric: metric)
-        return "Expected: \(lower) – \(upper)"
+        "Expected: \(metric.formatValue(lowerBound)) – \(metric.formatWithUnit(upperBound))"
     }
 
     enum Direction { case up, down, stable }
-
-    private func formatMetricValue(_ value: Double, metric: HealthMetric) -> String {
-        switch metric {
-        case .steps:
-            return "\(Int(value))"
-        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore:
-            let h = value / 3600
-            return String(format: "%.1fh", h)
-        case .heartRateVariability:
-            return String(format: "%.0fms", value)
-        case .heartRate, .restingHeartRate:
-            return String(format: "%.0f bpm", value)
-        case .vo2Max:
-            return String(format: "%.1f", value)
-        case .weight:
-            return String(format: "%.1f", value)
-        default:
-            if value >= 1000 { return String(format: "%.0f", value) }
-            if value >= 10 { return String(format: "%.1f", value) }
-            return String(format: "%.2f", value)
-        }
-    }
 }
 
 // MARK: - Forecast Builder (bridges MLOrchestrator → View)

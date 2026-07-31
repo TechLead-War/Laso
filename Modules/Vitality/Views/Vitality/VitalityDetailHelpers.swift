@@ -85,9 +85,11 @@ func vitalityPersonalizationTint(for scorer: VitalityScorer) -> Color {
 }
 
 func vitalityMetricDeltaLabel(_ component: VitalityComponent, chronologicalAge: Int) -> String {
-    // The metric age is clamped at the youngest reference row here, so the year
-    // gap is a floor and not a reading. Say top of range instead of a number.
+    // The metric age is clamped at a reference row on either end here, so the
+    // year gap is a floor or a ceiling and not a reading. Name the end of the
+    // scale instead of a number we cannot support.
     if component.isBeyondYoungestReference { return Copy.Vitality.metricTopOfRange }
+    if component.isBelowOldestReference { return Copy.Vitality.metricBelowRange }
 
     let delta = component.delta(chronologicalAge: chronologicalAge)
     if delta < 0 { return Copy.Vitality.metricYounger(abs(delta)) }
@@ -117,14 +119,19 @@ func vitalityFormatMetricValue(_ value: Double, unit: String, metric: HealthMetr
     return unit.isEmpty ? raw : "\(raw) \(unit)"
 }
 
+/// Marker position on the red-to-green bar. 0 is the oldest reference age, 1 the
+/// youngest.
+///
+/// Driven by the metric age, so the bar and the age label beside it are on one
+/// scale. This used to be a ±60% band around the population median, which put a
+/// narrow-range metric like sleep efficiency near the middle of the bar while its
+/// label read "+10y older", and ranked a metric with a 54 year gap above one with
+/// a 16 year gap.
 func vitalityMetricGaugePosition(_ component: VitalityComponent) -> Double {
-    let median = component.populationMedian
-    let current = component.currentValue
-    let higherIsBetter = component.healthMetric?.higherIsBetter ?? true
-    let range = max(0.0001, median * 0.6)
-    let raw = (current - (median - range)) / (2 * range)
-    let normalized = max(0, min(1, raw))
-    return higherIsBetter ? normalized : (1 - normalized)
+    let youngest = Double(VitalityNorms.youngestReferenceAge)
+    let oldest = Double(VitalityNorms.oldestReferenceAge)
+    let span = max(1, oldest - youngest)
+    return max(0, min(1, (oldest - Double(component.metricAge)) / span))
 }
 
 func vitalitySectionHeader(icon: String, title: String) -> some View {

@@ -282,12 +282,35 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// True when the day's value builds up hour by hour, so today's sample only
+    /// holds the hours that have already happened. Every average, baseline and
+    /// trend must skip today for these, otherwise a morning reads as a collapse
+    /// and the same number "recovers" by bedtime. Sleep also sums, but a night
+    /// has already finished when it lands on a day, so it is not listed here.
+    var accumulatesDuringDay: Bool {
+        switch self {
+        case .steps, .activeCalories, .basalCalories, .exerciseMinutes, .standHours,
+             .distanceWalkingRunning, .flightsClimbed, .distanceCycling, .distanceSwimming,
+             .swimmingStrokeCount, .appleMoveTime, .numberOfTimesFallen,
+             .mindfulMinutes, .timeInDaylight, .waterIntake, .caffeineIntake,
+             .proteinIntake, .fiberIntake, .sugarIntake, .sodiumIntake,
+             .totalCaloriesIntake, .carbohydrateIntake, .fatIntake, .insulinDelivery,
+             .workoutCount, .workoutDuration:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Whether a higher value is better for this metric
     var higherIsBetter: Bool {
         switch self {
         case .heartRateVariability, .vo2Max, .steps, .activeCalories, .exerciseMinutes,
              .standHours, .distanceWalkingRunning, .flightsClimbed, .walkingSpeed,
-             .walkingStepLength, .sleepDuration, .sleepREM, .sleepDeep,
+             // Light sleep is counted in hours, not as a share of the night, so
+             // it rises and falls with total sleep. Treating less of it as an
+             // improvement made a collapse in total sleep show up as a win.
+             .walkingStepLength, .sleepDuration, .sleepREM, .sleepDeep, .sleepCore,
              .bloodOxygen, .heartRateRecovery, .workoutCount, .workoutDuration,
              .distanceCycling, .distanceSwimming, .swimmingStrokeCount, .appleMoveTime,
              .leanBodyMass, .peakExpiratoryFlowRate, .forcedVitalCapacity,
@@ -300,7 +323,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage,
              .sleepAwake, .walkingAsymmetry, .bmi, .bodyFatPercentage,
              .bloodPressureSystolic, .bloodPressureDiastolic, .respiratoryRate,
-             .bodyTemperature, .basalCalories, .sleepCore,
+             .bodyTemperature, .basalCalories,
              .atrialFibrillationBurden, .walkingDoubleSupportPercentage,
              .electrodermalActivity, .peripheralPerfusionIndex,
              .appleSleepingWristTemperature, .waistCircumference,

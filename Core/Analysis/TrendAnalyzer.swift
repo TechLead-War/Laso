@@ -115,7 +115,9 @@ struct TrendAnalyzer {
     /// and inflection in a single reverse pass through the sorted samples, avoiding
     /// repeated O(n) scans for each statistic.
     static func analyze(series: MetricTimeSeries, higherIsBetter: Bool, days: Int?) -> TrendResult {
-        let allSamples = series.sortedSamples  // already sorted chronologically
+        // Today is dropped for metrics that are still filling up, otherwise the
+        // hours that have not happened yet read as a decline every morning.
+        let allSamples = series.completedDaySamples(lastDays: 365)
         guard !allSamples.isEmpty else {
             return TrendResult(direction: .stable, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, inflection: .steady)
         }

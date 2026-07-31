@@ -705,9 +705,9 @@ extension Copy {
         static func viewDetailsHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_view_details_hint", default: "View %@ details"), p0) }
         static func ratingOf5Label(_ p0: String, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_rating_of5_label", default: "%@ rating %d of 5"), p0, p1) }
         static func selectsOutOf5Hint(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_selects_out_of5_hint", default: "Selects %d out of 5"), p0) }
-        static func dayText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text", default: "%@/day"), p0) }
-        static func dayText2(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text2", default: "%@/day"), p0) }
-        static func dayText3(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text3", default: "%@/day"), p0) }
+        static func dayText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text", default: "%@ steps/day"), p0) }
+        static func dayText2(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text2", default: "%@ steps/day"), p0) }
+        static func dayText3(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_day_text3", default: "%@ steps/day"), p0) }
         static func insightLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_insight_label", default: "%@ insight: %@"), p0, p1) }
         static func ofMetricsText(_ p0: Int, _ p1: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_of_metrics_text", default: "%d of %d metrics"), p0, p1) }
         static func confidenceText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_home_confidence_text", default: "%@ confidence"), p0) }

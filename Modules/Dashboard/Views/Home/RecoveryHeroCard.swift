@@ -26,6 +26,9 @@ struct RecoveryHeroCard: View {
     var onTapWhy: ((DashboardViewModel.RecoveryWhyReason.Kind) -> Void)? = nil
     /// Opens the Health-app instruction screen for the missing signals.
     var onFixCoverage: (() -> Void)? = nil
+    /// Nil hides the share icon entirely — the caller passes nil when there is
+    /// no earned win to share.
+    var onShare: (() -> Void)? = nil
 
     /// The screen never shows more Why rows than a glance can hold; the rest
     /// live behind the ring tap.
@@ -57,6 +60,20 @@ struct RecoveryHeroCard: View {
                     .buttonStyle(.dsPress)
             } else {
                 cardContent
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if let onShare, !shouldShowWearWatch, score > 0 {
+                Button(action: onShare) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .padding(10)
+                }
+                .accessibilityLabel(Copy.Common.shareHealthCard)
+                .accessibilityIdentifier("home.recoveryCard.share")
+                .padding(.top, 6)
+                .padding(.trailing, 6)
             }
         }
         .padding(.horizontal, DS.screenPadding)

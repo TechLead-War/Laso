@@ -69,6 +69,100 @@ struct RegressionTests {
         #expect(interior.age > 20 && interior.age < 40, "an interior value interpolates")
     }
 
+    /// Steps and Exercise both printed a confident "Age 80, +55y older" for two
+    /// completely different values, because anything worse than the oldest row
+    /// clamped to it and the clamp was not flagged.
+    @Test func metricWorseThanOldestReferenceIsFlagged() {
+        // Higher is better: the oldest row holds the smallest value.
+        let stepsLike = [(age: 20, value: 10000.0), (age: 80, value: 4500.0)]
+        let farBelow = VitalityNorms.metricAge(value: 2488, table: stepsLike, higherIsBetter: true)
+        #expect(farBelow.age == 80)
+        #expect(farBelow.isBelowOldestReference,
+                "a value worse than the oldest row is a ceiling, not a reading")
+        #expect(!farBelow.isBeyondYoungestReference)
+
+        // Lower is better: the oldest row holds the largest value.
+        let rhrLike = [(age: 20, value: 63.0), (age: 80, value: 76.0)]
+        let farAbove = VitalityNorms.metricAge(value: 120, table: rhrLike, higherIsBetter: false)
+        #expect(farAbove.age == 80)
+        #expect(farAbove.isBelowOldestReference)
+
+        // Sitting exactly on the oldest row is still a real reading.
+        #expect(!VitalityNorms.metricAge(value: 4500, table: stepsLike, higherIsBetter: true).isBelowOldestReference)
+    }
+
+    /// The metric gauge ran off a ±60% band around the population median, so a
+    /// metric 54 years old sat further right than one 16 years old, and the bar
+    /// disagreed with the age printed next to it.
+    @Test func metricGaugeFollowsTheAgeScale() {
+        func component(age: Int) -> VitalityComponent {
+            VitalityComponent(
+                metric: "test", metricAge: age, currentValue: 1, unit: "",
+                populationMedian: 1, isBeyondYoungestReference: false,
+                isBelowOldestReference: false, healthMetric: nil
+            )
+        }
+
+        let young = vitalityMetricGaugePosition(component(age: 25))
+        let middle = vitalityMetricGaugePosition(component(age: 50))
+        let old = vitalityMetricGaugePosition(component(age: 79))
+
+        #expect(young > middle && middle > old,
+                "a younger metric age must always sit further along the bar")
+        #expect(vitalityMetricGaugePosition(component(age: 20)) == 1.0)
+        #expect(vitalityMetricGaugePosition(component(age: 80)) == 0.0)
+        #expect(vitalityMetricGaugePosition(component(age: 95)) == 0.0, "past the table the bar pins, it does not wrap")
+    }
+
+    /// Every step and calorie average was dragged down by however much of today
+    /// had not happened yet, so the daily score sagged each morning and
+    /// "recovered" by bedtime.
+    @Test func todaysPartialDayIsExcludedFromStatistics() {
+        let today = Date.cal.startOfDay(for: Date()).addingTimeInterval(3600)
+        let yesterday = today.addingTimeInterval(-86_400)
+        let dayBefore = today.addingTimeInterval(-2 * 86_400)
+
+        let steps = MetricTimeSeries(metric: .steps, samples: [
+            MetricSample(date: dayBefore, value: 10000),
+            MetricSample(date: yesterday, value: 10000),
+            MetricSample(date: today, value: 1000)   // barely into the day
+        ])
+        let completed = steps.completedDaySamples(lastDays: 7)
+        #expect(completed.count == 2, "today must not count as a finished day for steps")
+        #expect(completed.mean(of: \.value) == 10000)
+        #expect(steps.samples(lastDays: 7).count == 3, "the raw window still has today for live views")
+
+        // Resting heart rate does not build up over the day, so today stays in.
+        let rhr = MetricTimeSeries(metric: .restingHeartRate, samples: [
+            MetricSample(date: yesterday, value: 60),
+            MetricSample(date: today, value: 62)
+        ])
+        #expect(rhr.completedDaySamples(lastDays: 7).count == 2)
+
+        // A night's sleep is already finished when it lands on a day.
+        #expect(!HealthMetric.sleepDuration.accumulatesDuringDay)
+    }
+
+    /// A 63% fall in light sleep was listed under "This Week's Wins" while the
+    /// same night's drop in REM was listed as a concern.
+    @Test func lessLightSleepIsNotAWin() {
+        #expect(HealthMetric.sleepCore.higherIsBetter,
+                "light sleep is counted in hours, so less of it tracks less total sleep")
+    }
+
+    /// The mobility age thresholds were written in m/s while walking speed is
+    /// stored in km/h, so every real reading cleared the top anchor and the
+    /// component always returned the youngest bracket.
+    @Test func walkingSpeedAgeAnchorsMatchTheStoredUnit() {
+        // A brisk 5.2 km/h walk is fast; a 3.0 km/h shuffle is not. If the
+        // anchors were still in m/s both would land on the same young age.
+        #expect(BiologicalAgeConfig.walkingSpeedYoungAnchor > 4.0,
+                "anchors must be km/h to match HealthKitMetricRegistry")
+        #expect(BiologicalAgeConfig.walkingSpeedSlowAnchor > 3.0)
+        #expect(BiologicalAgeConfig.walkingSpeedYoungAnchor > BiologicalAgeConfig.walkingSpeedMidAnchor)
+        #expect(BiologicalAgeConfig.walkingSpeedMidAnchor > BiologicalAgeConfig.walkingSpeedSlowAnchor)
+    }
+
     // MARK: - Notifications
 
     /// The "good morning" summary fired at about 23:40 every night, because the

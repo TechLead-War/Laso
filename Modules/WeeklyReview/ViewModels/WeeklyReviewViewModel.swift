@@ -54,6 +54,8 @@ final class WeeklyReviewViewModel {
             scoreTrend: scoreTrend,
             wins: wins,
             watchOuts: watchOuts,
+            winCount: summary.topImproved.count,
+            alertCount: summary.topDeclined.count,
             coachPlan: coachPlan
         )
         lastUpdated = Date()
@@ -67,7 +69,7 @@ final class WeeklyReviewViewModel {
     }
 
     var winsCount: Int {
-        review?.wins.count ?? 0
+        review?.winCount ?? 0
     }
 
     // MARK: - Progressive Coach

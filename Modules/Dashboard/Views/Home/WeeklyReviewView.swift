@@ -232,7 +232,7 @@ struct WeeklyReviewView: View {
 
             weeklyStatColumn(
                 label: "Wins",
-                value: "\(review.wins.count)",
+                value: "\(review.winCount)",
                 color: AppColour.success
             )
 
@@ -240,8 +240,8 @@ struct WeeklyReviewView: View {
 
             weeklyStatColumn(
                 label: "Alerts",
-                value: "\(review.watchOuts.count)",
-                color: review.watchOuts.isEmpty ? AppColour.textSecondary : AppColour.warning
+                value: "\(review.alertCount)",
+                color: review.alertCount == 0 ? AppColour.textSecondary : AppColour.warning
             )
         }
     }
@@ -273,7 +273,7 @@ struct WeeklyReviewView: View {
                 .font(DS.Typography.title3)
                 .padding(.horizontal, DS.screenPadding)
 
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 // Best day. top win
                 if let topWin = review.wins.first {
                     dayHighlightCard(
@@ -310,6 +310,8 @@ struct WeeklyReviewView: View {
                     .font(DS.Typography.calloutSemibold)
                     .foregroundStyle(color)
                     .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
 
             Text(metric)
@@ -325,7 +327,7 @@ struct WeeklyReviewView: View {
             }
             .foregroundStyle(color)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(DS.cardPadding)
         .cardStyle(tint: color)
     }

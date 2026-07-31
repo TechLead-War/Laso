@@ -19,7 +19,9 @@ struct VitalityImprovementSection: View {
     }
 
     private func improvementCard(_ component: VitalityComponent) -> some View {
-        let impact = max(component.delta(chronologicalAge: scorer.chronologicalAge), 0)
+        // Same label as the contributions row: a clamped metric age has no year
+        // gap behind it, so the badge must not print one either.
+        let impact = vitalityMetricDeltaLabel(component, chronologicalAge: scorer.chronologicalAge)
         let icon = component.healthMetric?.systemImageName ?? "arrow.up.circle.fill"
 
         return VStack(alignment: .leading, spacing: 8) {
@@ -35,7 +37,7 @@ struct VitalityImprovementSection: View {
 
                 Spacer()
 
-                Text(Copy.Vitality.yText(impact))
+                Text(impact)
                     .font(.caption.weight(.bold).monospacedDigit())
                     .foregroundStyle(AppColour.textOnAccent)
                     .padding(.horizontal, DS.badgeH + 2)
@@ -98,7 +100,7 @@ struct VitalityDataMaturityBanner: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text(Copy.Vitality.xText(Int(progress * 100)))
+                Text(Copy.Vitality.progressPercent(Int(progress * 100)))
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(vitalityWhoopGreen)
             }

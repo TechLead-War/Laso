@@ -374,6 +374,10 @@ final class DashboardViewModel {
         )
     }
 
+    /// Recorded days each side of a period comparison must have before the change
+    /// is worth quoting.
+    static let minimumPeriodComparisonDays = 3
+
     func periodSummary(for period: TimePeriod) -> PeriodSummary {
         let days = period.days
         var improved: [MetricChange] = []
@@ -388,10 +392,13 @@ final class DashboardViewModel {
         let prevStart = Date.cal.date(byAdding: .day, value: -days * 2, to: now) ?? now
 
         for (metric, series) in healthKitManager.timeSeries {
-            let currentSamples = series.samples(lastDays: days)
+            let currentSamples = series.completedDaySamples(lastDays: days)
             let previousSamples = series.samples(from: prevStart, until: prevEnd)
 
-            guard !currentSamples.isEmpty, !previousSamples.isEmpty else { continue }
+            // One day against one day is noise, and printing it as a headline
+            // percentage was how a fresh install produced "63% better this week".
+            guard currentSamples.count >= Self.minimumPeriodComparisonDays,
+                  previousSamples.count >= Self.minimumPeriodComparisonDays else { continue }
 
             let currentAvg = currentSamples.map(\.value).mean
             let previousAvg = previousSamples.map(\.value).mean
@@ -1625,7 +1632,7 @@ final class DashboardViewModel {
         let vColor: Color = vDelta <= 0 ? AppColour.vitalityWhoopGreen : (vDelta <= 3 ? AppColour.vitalityPaceYellow : AppColour.vitalityPaceRed)
         tiles.append(MetricTile(
             id: "vitality_detail", icon: "figure.run", label: "Vitality",
-            value: "\(vitalityScorer.vitalityAge)",
+            value: "\(vitalityScorer.vitalityAge) \(Copy.Vitality.yrs)",
             badge: vBadge, color: vColor, route: .vitalityDetail
         ))
         }

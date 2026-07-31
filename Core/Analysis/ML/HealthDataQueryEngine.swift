@@ -557,7 +557,7 @@ final class HealthDataQueryEngine {
         }
 
         let actionAdvice = trendActionAdvice(metric: metric, pctChange: pctChange, sentiment: sentiment)
-        let answer = Copy.Analysis.HealthDataQuery.trendingAnswer(action: actionAdvice, metric: metric.displayName, direction: direction, period: period.displayName, avg: formatValue(avg, metric: metric))
+        let answer = Copy.Analysis.HealthDataQuery.trendingAnswer(action: actionAdvice, metric: metric.displayName, direction: direction, period: period.displayName, avg: metric.formatWithUnit(avg))
 
         return QueryResult(
             answer: answer,
@@ -599,7 +599,7 @@ final class HealthDataQueryEngine {
         let comparisonAction = better
             ? Copy.Analysis.HealthDataQuery.comparisonKeepUp
             : (abs(pctDiff) < 3 ? Copy.Analysis.HealthDataQuery.comparisonHoldingSteady : Copy.Analysis.HealthDataQuery.comparisonGetBack(period: periodB.displayName))
-        let answer = Copy.Analysis.HealthDataQuery.comparisonAnswer(action: comparisonAction, metric: metric.displayName, periodA: periodA.displayName, verdict: verdict, periodB: periodB.displayName, avgA: formatValue(avgA, metric: metric), avgB: formatValue(avgB, metric: metric))
+        let answer = Copy.Analysis.HealthDataQuery.comparisonAnswer(action: comparisonAction, metric: metric.displayName, periodA: periodA.displayName, verdict: verdict, periodB: periodB.displayName, avgA: metric.formatWithUnit(avgA), avgB: metric.formatWithUnit(avgB))
 
         return QueryResult(
             answer: answer,
@@ -682,7 +682,7 @@ final class HealthDataQueryEngine {
                     let latest = recent.last?.value ?? avg
                     let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
                     return QueryResult(
-                        answer: Copy.Analysis.HealthDataQuery.forecastNoModel(metric: metric.displayName, avg: formatValue(avg, metric: metric), latest: formatValue(latest, metric: metric), when: when),
+                        answer: Copy.Analysis.HealthDataQuery.forecastNoModel(metric: metric.displayName, avg: metric.formatWithUnit(avg), latest: metric.formatWithUnit(latest), when: when),
                         dataPoints: [
                             .init(label: "7-day avg", value: avg, unit: metric.unit),
                             .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: latest, unit: metric.unit),
@@ -702,7 +702,7 @@ final class HealthDataQueryEngine {
 
         let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
         let forecastAction = forecastActionAdvice(metric: metric, predicted: result.value, context: ctx)
-        let answer = Copy.Analysis.HealthDataQuery.forecastAnswer(action: forecastAction, metric: metric.displayName, value: formatValue(result.value, metric: metric), when: when)
+        let answer = Copy.Analysis.HealthDataQuery.forecastAnswer(action: forecastAction, metric: metric.displayName, value: metric.formatWithUnit(result.value), when: when)
 
         return QueryResult(
             answer: answer,
@@ -743,7 +743,7 @@ final class HealthDataQueryEngine {
         let top = anomalies[0]
         let dir = (ctx.baselines[top.metric].map { top.value > $0.mean } ?? true) ? "higher" : "lower"
         let anomalyAction = anomalyActionAdvice(metric: top.metric, isHigh: dir == "higher")
-        var answer = Copy.Analysis.HealthDataQuery.anomalyAnswer(action: anomalyAction, metric: top.metric.displayName, value: formatValue(top.value, metric: top.metric), dir: dir)
+        var answer = Copy.Analysis.HealthDataQuery.anomalyAnswer(action: anomalyAction, metric: top.metric.displayName, value: top.metric.formatWithUnit(top.value), dir: dir)
         if anomalies.count > 1 {
             let others = anomalies.dropFirst().prefix(2).map { $0.metric.displayName }.joined(separator: " and ")
             answer += " Your \(others) \(anomalies.count > 2 ? "are" : "is") also outside the usual range."
@@ -776,7 +776,7 @@ final class HealthDataQueryEngine {
         let label = seeking == .best ? "best" : "worst"
 
         let suffix = seeking == .best ? Copy.Analysis.HealthDataQuery.prBestSuffix : Copy.Analysis.HealthDataQuery.prWorstSuffix
-        let answer = Copy.Analysis.HealthDataQuery.prAnswer(label: label, metric: metric.displayName, value: formatValue(target.value, metric: metric), dateStr: dateStr, suffix: suffix)
+        let answer = Copy.Analysis.HealthDataQuery.prAnswer(label: label, metric: metric.displayName, value: metric.formatWithUnit(target.value), dateStr: dateStr, suffix: suffix)
 
         return QueryResult(
             answer: answer,
@@ -804,7 +804,7 @@ final class HealthDataQueryEngine {
 
         if let baseline = ctx.baselines[m] {
             let dev = (avg - baseline.mean) / max(1, baseline.standardDeviation)
-            let latestStr = formatValue(latest, metric: m)
+            let latestStr = m.formatWithUnit(latest)
             if dev > 1 {
                 answer = m.higherIsBetter
                     ? Copy.Analysis.HealthDataQuery.statusKeepDoing(metric: m.displayName, latest: latestStr)
@@ -817,7 +817,7 @@ final class HealthDataQueryEngine {
                 answer = Copy.Analysis.HealthDataQuery.statusOnBaseline(metric: m.displayName, latest: latestStr)
             }
         } else {
-            answer = Copy.Analysis.HealthDataQuery.statusLearning(metric: m.displayName, latest: formatValue(latest, metric: m), avg: formatValue(avg, metric: m))
+            answer = Copy.Analysis.HealthDataQuery.statusLearning(metric: m.displayName, latest: m.formatWithUnit(latest), avg: m.formatWithUnit(avg))
         }
 
         return QueryResult(
@@ -859,7 +859,7 @@ final class HealthDataQueryEngine {
                 let label = metric.displayName
                 if let baseline = ctx.baselines[metric] {
                     let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
-                    let valueStr = formatValue(latest.value, metric: metric)
+                    let valueStr = metric.formatWithUnit(latest.value)
                     if dev > 1 {
                         highlights.append(Copy.Analysis.HealthDataQuery.highlightHigh(label: label, value: valueStr))
                     } else if dev < -1 {
@@ -868,7 +868,7 @@ final class HealthDataQueryEngine {
                         highlights.append(Copy.Analysis.HealthDataQuery.highlightNormal(label: label, value: valueStr))
                     }
                 } else {
-                    highlights.append(Copy.Analysis.HealthDataQuery.highlightDefault(label: label, value: formatValue(latest.value, metric: metric)))
+                    highlights.append(Copy.Analysis.HealthDataQuery.highlightDefault(label: label, value: metric.formatWithUnit(latest.value)))
                 }
                 dataPoints.append(.init(label: label, value: latest.value, unit: metric.unit))
                 if dataPoints.count >= 4 { break }
@@ -942,7 +942,7 @@ final class HealthDataQueryEngine {
             if !warnings.isEmpty {
                 warnings.sort { $0.deviation > $1.deviation }
                 let top = warnings[0]
-                let answer = Copy.Analysis.HealthDataQuery.riskOutsideRange(metric: top.metric.displayName, value: formatValue(top.value, metric: top.metric))
+                let answer = Copy.Analysis.HealthDataQuery.riskOutsideRange(metric: top.metric.displayName, value: top.metric.formatWithUnit(top.value))
                 return QueryResult(
                     answer: answer,
                     dataPoints: warnings.prefix(3).map {
@@ -1014,7 +1014,7 @@ final class HealthDataQueryEngine {
         if let ideal = ctx.idealDay, !ideal.targets.isEmpty {
             let topTargets = ideal.targets.prefix(4)
             let targetLines = topTargets.map { target -> String in
-                "\(target.metric.displayName): aim for \(formatValue(target.targetValue, metric: target.metric))"
+                "\(target.metric.displayName): aim for \(target.metric.formatWithUnit(target.targetValue))"
             }
             let targetList = targetLines.joined(separator: "; ")
 
@@ -1137,7 +1137,7 @@ final class HealthDataQueryEngine {
             answer = Copy.Analysis.HealthDataQuery.patternCycleAdvice(metric: top.metric.displayName, type: top.patternType.rawValue)
         }
         if let peakVal = top.peakMeanValue, let troughVal = top.troughMeanValue {
-            answer += " The swing is about \(formatValue(peakVal - troughVal, metric: top.metric)) \(top.metric.unit) between highs and lows."
+            answer += " The swing is about \(top.metric.formatWithUnit(peakVal - troughVal)) between highs and lows."
         }
 
         if strong.count > 1 {
@@ -1168,7 +1168,7 @@ final class HealthDataQueryEngine {
                 let recent = recentSamples(from: sleepSeries, days: 7)
                 if !recent.isEmpty {
                     let avgSleep = recent.valueMean
-                    answer += Copy.Analysis.HealthDataQuery.circadianRecentSleep(avg: formatValue(avgSleep, metric: .sleepDuration))
+                    answer += Copy.Analysis.HealthDataQuery.circadianRecentSleep(avg: HealthMetric.sleepDuration.formatWithUnit(avgSleep))
                     dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs"))
                 }
             }
@@ -1370,7 +1370,7 @@ final class HealthDataQueryEngine {
             let avg: Double? = recent.isEmpty ? nil : recent.valueMean
             var answer = "I haven't mapped out the causal drivers for your \(metric.displayName) yet."
             if let avg = avg {
-                answer += " Your recent average is \(formatValue(avg, metric: metric)). As I gather more history, I'll identify what specifically makes it go up or down."
+                answer += " Your recent average is \(metric.formatWithUnit(avg)). As I gather more history, I'll identify what specifically makes it go up or down."
             }
             return QueryResult(
                 answer: answer,
@@ -1682,35 +1682,6 @@ final class HealthDataQueryEngine {
             .sorted { $0.date < $1.date }
     }
 
-    private func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        switch metric {
-        case .steps:
-            return "\(Int(value))"
-        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore:
-            let hours = value / 3600
-            return String(format: "%.1fh", hours)
-        case .heartRateVariability:
-            return String(format: "%.0fms", value)
-        case .bodyTemperature, .appleSleepingWristTemperature:
-            return String(format: "%.1f°F", value)
-        case .weight:
-            return String(format: "%.1f lbs", value)
-        case .vo2Max:
-            return String(format: "%.1f", value)
-        case .bloodOxygen:
-            return String(format: "%.0f%%", value * 100)
-        case .exerciseMinutes, .mindfulMinutes:
-            return String(format: "%.0f min", value)
-        case .activeCalories, .basalCalories, .totalCaloriesIntake:
-            return String(format: "%.0f kcal", value)
-        case .waterIntake:
-            return String(format: "%.0f mL", value)
-        default:
-            if value > 1000 { return String(format: "%.0f", value) }
-            if value > 10 { return String(format: "%.1f", value) }
-            return String(format: "%.2f", value)
-        }
-    }
 
     private func noDataResult(for metric: HealthMetric) -> QueryResult {
         QueryResult(

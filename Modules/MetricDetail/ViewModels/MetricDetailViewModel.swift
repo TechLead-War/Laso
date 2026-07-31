@@ -54,7 +54,7 @@ final class MetricDetailViewModel {
     var averageValue: String {
         guard let series = timeSeries else { return "--" }
         let avg = series.mean(lastDays: selectedTimeRange)
-        return metric.formatValue(avg)
+        return metric.formatWithUnit(avg)
     }
 
     var trendDirection: TrendDirection {

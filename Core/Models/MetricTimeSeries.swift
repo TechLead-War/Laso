@@ -126,6 +126,19 @@ struct MetricTimeSeries: Identifiable {
         return Array(samples[startIndex...])
     }
 
+    /// Samples within the last N days, with today dropped for metrics that are
+    /// still filling up (see `HealthMetric.accumulatesDuringDay`).
+    ///
+    /// This is the window every average, baseline and trend should use. Reach for
+    /// `samples(lastDays:)` only where today's partial value is the point, such as
+    /// a live ring or a "so far today" readout.
+    func completedDaySamples(lastDays days: Int) -> [MetricSample] {
+        let recent = samples(lastDays: days)
+        guard metric.accumulatesDuringDay else { return recent }
+        let todayStart = Date.cal.startOfDay(for: Date())
+        return recent.filter { $0.date < todayStart }
+    }
+
     /// Mean value over the last N days
     func mean(lastDays days: Int) -> Double {
         samples(lastDays: days).mean(of: \.value)

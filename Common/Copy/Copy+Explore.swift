@@ -184,7 +184,7 @@ extension Copy {
         // MARK: - Lifted interpolated view literals
         static func categoryLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_category_label", default: "%@ category"), p0) }
         static func opensTheCategoryDetailHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_opens_the_category_detail_hint", default: "Opens the %@ category detail"), p0) }
-        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_x_text", default: "%d"), p0) }
+        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_x_text", default: "%d pts"), p0) }
         static func needsAttentionLabel(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_needs_attention_label", default: "%@, needs attention"), p0) }
         static func impactValue(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_impact_value", default: "Impact %d. %@"), p0, p1) }
         static func xText2(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_explore_x_text2", default: "%d"), p0) }

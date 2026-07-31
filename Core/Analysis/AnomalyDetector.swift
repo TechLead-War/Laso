@@ -76,7 +76,7 @@ struct AnomalyDetector {
         var results: [AnomalyResult] = []
 
         for (metric, series) in timeSeries {
-            let recentSamples = series.samples(lastDays: 3)
+            let recentSamples = series.completedDaySamples(lastDays: 3)
             guard let baseline = baselines[metric],
                   !recentSamples.isEmpty else {
                 continue

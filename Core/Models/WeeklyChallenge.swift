@@ -5,8 +5,12 @@ struct WeeklyReview {
     let currentScore: Int
     let previousScore: Int?
     let scoreTrend: TrendDirection
+    /// The few shown on screen. `winCount` / `alertCount` hold how many there
+    /// actually were, so the stat row does not report the display cap as a total.
     let wins: [DashboardViewModel.MetricChange]
     let watchOuts: [DashboardViewModel.MetricChange]
+    let winCount: Int
+    let alertCount: Int
     let coachPlan: ProgressiveCoachPlan?
 }
 

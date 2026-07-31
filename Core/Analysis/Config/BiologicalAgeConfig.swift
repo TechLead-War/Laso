@@ -79,17 +79,21 @@ enum BiologicalAgeConfig {
     static let rhythmOlderBracketAgeSpan: Double = 25
     static let rhythmMidAge: Double = 50
 
-    // MARK: - Mobility (walking speed m/s, double support %)
+    // MARK: - Mobility (walking speed km/h, double support %)
 
-    static let walkingSpeedYoungAnchor: Double = 1.4
-    static let walkingSpeedMidAnchor: Double = 1.2
-    static let walkingSpeedSlowAnchor: Double = 1.0
+    // Walking speed is stored in km/h (`HealthKitMetricRegistry`). These anchors
+    // were written in m/s, which every real reading cleared, so the mobility
+    // component always returned the youngest bracket. 1.4 / 1.2 / 1.0 m/s below.
+    static let walkingSpeedYoungAnchor: Double = 5.04
+    static let walkingSpeedMidAnchor: Double = 4.32
+    static let walkingSpeedSlowAnchor: Double = 3.6
     static let walkingSpeedYoungAge: Double = 25
-    static let walkingSpeedMidBracketSpan: Double = 0.2
+    /// 0.2 m/s per bracket, in km/h.
+    static let walkingSpeedMidBracketSpan: Double = 0.72
     static let walkingSpeedMidBracketAgeSpan: Double = 15
-    static let walkingSpeedSlowBracketSpan: Double = 0.2
+    static let walkingSpeedSlowBracketSpan: Double = 0.72
     static let walkingSpeedSlowBracketAgeSpan: Double = 15
-    static let walkingSpeedVerySlowBracketSpan: Double = 0.2
+    static let walkingSpeedVerySlowBracketSpan: Double = 0.72
     static let walkingSpeedVerySlowBracketAgeSpan: Double = 20
     static let walkingSpeedMidAge: Double = 40
     static let walkingSpeedSlowAge: Double = 55

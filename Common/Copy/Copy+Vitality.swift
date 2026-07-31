@@ -64,6 +64,9 @@ extension Copy {
         /// Shown when the value beats the youngest row in the reference table.
         /// We cannot say how many years younger, so we do not print a number.
         static var metricTopOfRange: String { RemoteConfigManager.shared.copyString("copy_vitality_metric_top_of_range", default: "Top of range") }
+        /// Shown when the value is worse than the oldest row in the reference
+        /// table. The age is a ceiling there, so a year gap would be invented.
+        static var metricBelowRange: String { RemoteConfigManager.shared.copyString("copy_vitality_metric_below_range", default: "Below range") }
 
         // MARK: - Sections
 
@@ -125,7 +128,7 @@ extension Copy {
 
         // MARK: - Lifted interpolated view literals
         static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_x_text", default: "%d"), p0) }
+        static func progressPercent(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_progress_percent", default: "%d%%"), p0) }
         static func xText2(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_x_text2", default: "%d"), p0) }
-        static func yText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_y_text", default: "+%dy"), p0) }
     }
 }

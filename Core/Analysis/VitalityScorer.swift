@@ -80,6 +80,11 @@ enum VitalityNorms {
         (70, 28), (75, 29), (80, 30)
     ]
 
+    /// Age span every table above covers. The metric gauge maps an age onto this
+    /// span so the bar and the age label are on one scale.
+    static let youngestReferenceAge = 20
+    static let oldestReferenceAge = 80
+
     // MARK: - Interpolation
 
     /// Given a value and a norm table, find the "metric age". the age at
@@ -91,21 +96,20 @@ enum VitalityNorms {
     ///   - table: Age-value reference table, sorted by age ascending.
     ///   - higherIsBetter: If true, higher values map to younger ages.
     /// - Returns: Interpolated metric age (clamped to 18...95) and whether the
-    ///   value is better than the youngest row in the table.
+    ///   value fell outside either end of the table.
     ///
-    /// Values better than the youngest row are clamped to that row's age. We do
-    /// not extrapolate past it: there is no reference data below age 20, so any
-    /// number we produced there would be invented. The flag lets the UI say the
-    /// value is top of range instead of printing a year gap we cannot support.
-    /// The old end is left clamped and unflagged on purpose. Stopping at the
-    /// oldest row understates how far off the value is, which errs against the
-    /// user's favour, while an unflagged young clamp would overstate a benefit.
+    /// Values past either end are clamped to that end's age. We do not
+    /// extrapolate: there is no reference data below age 20 or above age 80, so
+    /// any number produced there would be invented. Both flags let the UI say
+    /// the value is off the end of the scale instead of printing a year gap we
+    /// cannot support. The old end used to be clamped and unflagged, which is
+    /// how two different bad values both printed a confident "+55y older".
     static func metricAge(
         value: Double,
         table: [(age: Int, value: Double)],
         higherIsBetter: Bool
-    ) -> (age: Int, isBeyondYoungestReference: Bool) {
-        guard table.count >= 2 else { return (50, false) }
+    ) -> (age: Int, isBeyondYoungestReference: Bool, isBelowOldestReference: Bool) {
+        guard table.count >= 2 else { return (50, false, false) }
 
         // For "higher is better" metrics, the table values decrease with age.
         // For "lower is better" metrics, the table values increase with age.
@@ -121,16 +125,20 @@ enum VitalityNorms {
             sortedTable = table
         }
 
-        guard let firstEntry = sortedTable.first, let lastEntry = sortedTable.last else { return (50, false) }
+        guard let firstEntry = sortedTable.first, let lastEntry = sortedTable.last else { return (50, false, false) }
 
         // If value is below the minimum or above the maximum, clamp.
         // After the sort above, the youngest reference row sits at the end for
-        // higher-is-better metrics and at the start for lower-is-better ones.
+        // higher-is-better metrics and at the start for lower-is-better ones,
+        // so which end a clamp means "great" and which means "off the scale"
+        // flips with the metric's direction.
         if value <= firstEntry.value {
-            return (firstEntry.age, !higherIsBetter && value < firstEntry.value)
+            let past = value < firstEntry.value
+            return (firstEntry.age, !higherIsBetter && past, higherIsBetter && past)
         }
         if value >= lastEntry.value {
-            return (lastEntry.age, higherIsBetter && value > lastEntry.value)
+            let past = value > lastEntry.value
+            return (lastEntry.age, higherIsBetter && past, !higherIsBetter && past)
         }
 
         // Find the bracketing pair and interpolate
@@ -147,11 +155,11 @@ enum VitalityNorms {
                     fraction = (value - lower.value) / valueDelta
                 }
                 let interpolatedAge = Double(lower.age) + fraction * Double(upper.age - lower.age)
-                return (max(18, min(95, Int(interpolatedAge.rounded()))), false)
+                return (max(18, min(95, Int(interpolatedAge.rounded()))), false, false)
             }
         }
 
-        return (50, false) // Fallback
+        return (50, false, false) // Fallback
     }
 }
 
@@ -169,6 +177,10 @@ struct VitalityComponent: Identifiable {
     /// `metricAge` is a floor rather than a reading. The UI shows "top of
     /// range" for these instead of a year gap that has no data behind it.
     let isBeyondYoungestReference: Bool
+    /// True when the value is worse than the oldest row, so `metricAge` is a
+    /// ceiling rather than a reading. Same treatment at the other end: the UI
+    /// says the value is off the scale rather than quoting a year gap.
+    let isBelowOldestReference: Bool
     let healthMetric: HealthMetric?
 
     /// How many years this component adds (positive) or subtracts (negative) vs chronological age
@@ -414,6 +426,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "mL/kg/min",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .vo2Max
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -432,6 +445,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "bpm",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .restingHeartRate
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -450,6 +464,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "ms",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .heartRateVariability
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -476,6 +491,7 @@ final class VitalityScorer {
                         currentValue: efficiency, unit: "%",
                         populationMedian: median,
                         isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                        isBelowOldestReference: norm.isBelowOldestReference,
                         healthMetric: .sleepDuration
                     ))
                     weightedAgeSum += Double(norm.age) * w
@@ -503,6 +519,7 @@ final class VitalityScorer {
                         currentValue: deepPct, unit: "%",
                         populationMedian: median,
                         isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                        isBelowOldestReference: norm.isBelowOldestReference,
                         healthMetric: .sleepDeep
                     ))
                     weightedAgeSum += Double(norm.age) * w
@@ -523,6 +540,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "km/h",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .walkingSpeed
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -541,6 +559,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "steps",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .steps
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -559,6 +578,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "min/day",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .exerciseMinutes
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -577,6 +597,7 @@ final class VitalityScorer {
                 currentValue: avg, unit: "%",
                 populationMedian: median,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
+                isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .bodyFatPercentage
             ))
             weightedAgeSum += Double(norm.age) * w
@@ -596,8 +617,9 @@ final class VitalityScorer {
                 currentValue: avg, unit: "",
                 populationMedian: VitalityNorms.bmiOptimal,
                 // BMI age comes from distance to the optimal point, not a norm
-                // table, so there is no youngest reference row to clamp at.
+                // table, so there is no reference row at either end to clamp at.
                 isBeyondYoungestReference: false,
+                isBelowOldestReference: false,
                 healthMetric: .bmi
             ))
             weightedAgeSum += Double(bmiAge) * w
@@ -731,7 +753,7 @@ final class VitalityScorer {
 
     /// Get the average value from the most recent N days, requiring at least 3 data points
     private func recentAverage(_ series: MetricTimeSeries, days: Int) -> Double? {
-        let recent = series.samples(lastDays: days)
+        let recent = series.completedDaySamples(lastDays: days)
         guard recent.count >= 3 else { return nil }
         return recent.mean(of: \.value)
     }

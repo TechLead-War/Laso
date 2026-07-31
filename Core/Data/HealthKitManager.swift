@@ -311,6 +311,14 @@ final class HealthKitManager: @unchecked Sendable {
         let sleepBackfillKey = "Laso.HealthKitManager.sleepWakeDayBackfill"
         let needsSleepBackfill = !isFirstSync && !UserDefaults.standard.bool(forKey: sleepBackfillKey)
 
+        // AFib burden was stored as HealthKit's raw 0-1 fraction while every
+        // threshold that reads it is in percent points, so a real 50% burden
+        // read as 0.5 and tripped nothing. Rows written before the scale was
+        // fixed are on the old scale, and an incremental sync never revisits
+        // them, so they are read back once.
+        let afibRescaleKey = "Laso.HealthKitManager.afibPercentRescale"
+        let needsAfibRescale = !isFirstSync && !UserDefaults.standard.bool(forKey: afibRescaleKey)
+
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
 
@@ -334,13 +342,14 @@ final class HealthKitManager: @unchecked Sendable {
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
                 let lastSync = syncDates[metric]
-                let rewriteSleepHistory = needsSleepBackfill && sleepStageMetrics.contains(metric)
+                let rewriteHistory = (needsSleepBackfill && sleepStageMetrics.contains(metric))
+                    || (needsAfibRescale && metric == .atrialFibrillationBurden)
 
                 // Skip stale metrics: if the metric was synced within the last day AND
                 // its most recent data is older than 7 days, skip it -- unless it's a
                 // core metric or every 7th sync (to catch newly-appearing data).
                 if !isFirstSync,
-                   !rewriteSleepHistory,
+                   !rewriteHistory,
                    !coreMetrics.contains(metric),
                    syncCount % 7 != 0,
                    let lastSync,
@@ -356,7 +365,7 @@ final class HealthKitManager: @unchecked Sendable {
 
                 group.addTask { [self] in
                     let startDate: Date
-                    if let lastSync, !rewriteSleepHistory {
+                    if let lastSync, !rewriteHistory {
                         startDate = Date.cal.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
                         // Fetch all available HealthKit history (up to 10 years) so the
@@ -398,6 +407,9 @@ final class HealthKitManager: @unchecked Sendable {
         // history on the old rule.
         if needsSleepBackfill, sleepStageMetrics.isSubset(of: fetchedMetrics) {
             UserDefaults.standard.set(true, forKey: sleepBackfillKey)
+        }
+        if needsAfibRescale, fetchedMetrics.contains(.atrialFibrillationBurden) {
+            UserDefaults.standard.set(true, forKey: afibRescaleKey)
         }
 
         finalizeInMemoryTimeSeries(
