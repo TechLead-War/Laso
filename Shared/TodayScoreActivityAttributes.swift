@@ -204,6 +204,26 @@ enum TodayScoreCopy {
     /// `%@` is the bedtime as a local clock time. VoiceOver label on the static
     /// bedtime clock shown while more than an hour remains.
     static let bedtimeAccessibilityTemplate = "Bedtime %@"
+
+    // Per-act expanded island strings. Inline literals for the same reason as
+    // above: the widget target has no Firebase, so Remote Config cannot reach here.
+    static let verdictExcellent = "Green light. Push hard."
+    static let verdictGood = "Good day to push."
+    static let verdictFair = "Steady day. Pace yourself."
+    static let verdictPoor = "Recovery comes first."
+    static let toGoCaption = "to go"
+    /// `%d` is the minutes of walking that close the remaining step gap.
+    static let walkTemplate = "= %d min walk"
+    /// `%@` is the clock time when the remaining steps would be done.
+    static let doneByTemplate = "done by %@"
+    static let goalDoneHeadline = "Goal done. Bonus ground."
+    /// `%@` is tonight's recommended bedtime as a local clock time.
+    static let untilLightsOutTemplate = "Until lights out · %@"
+    static let nightWatchLine = "Tracking quietly. Your verdict is ready at sunrise."
+    /// `%d` is how many bpm the current resting heart rate sits above the 7 day usual.
+    static let alertAboveTemplate = "%d above your usual"
+    /// `%1$d` is the usual bpm, `%2$d` the current bpm.
+    static let alertUsualNowTemplate = "usual %1$d → now %2$d"
 }
 
 #if canImport(ActivityKit)

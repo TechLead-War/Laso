@@ -30,10 +30,18 @@ struct TodayScoreLiveActivityWidget: Widget {
                     CoachStamp(state: context.state)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
+                    // One purpose-built card per act instead of a shared template:
+                    // the morning reveal, the day transit rail, the evening moon
+                    // countdown, the quiet night watch, and the alert monitor.
                     if let alert = context.state.alert {
-                        GuardianAlertCard(state: context.state, alert: alert)
+                        GuardianMonitorCard(state: context.state, alert: alert)
                     } else {
-                        CoachExpandedCard(state: context.state)
+                        switch context.state.mode {
+                        case .morning:  MorningRevealCard(state: context.state)
+                        case .day:      DayMomentumCard(state: context.state)
+                        case .evening:  EveningDescentCard(state: context.state)
+                        case .night:    NightWatchCard(state: context.state)
+                        }
                     }
                 }
             } compactLeading: {
@@ -410,35 +418,275 @@ private struct CoachOrbRing: View {
     }
 }
 
-// MARK: - Mode Pill (expanded leading)
+// MARK: - Morning Reveal (expanded bottom, morning act)
 
-/// Tint-tinted capsule with the mode glyph and headline — the HTML `.modepill`
-/// (accent at ~18% background). Reuses `state.mode.symbolName` / `.headline` so
-/// the eyebrow always matches the time-of-day mode driving the rest of the card.
-private struct CoachModePill: View {
+/// The daily reveal: score ring on the left, a hard verdict line and the
+/// insight as proof on the right. No stat rows — one verdict, one reason.
+/// Fixed point sizes throughout the expanded cards: the island has a hard
+/// 160 pt height cap and ignores `.dynamicTypeSize`, so scaled fonts would
+/// grow the card past the cap and clip the action row.
+private struct MorningRevealCard: View {
     let state: TodayScoreActivityAttributes.ContentState
+
+    private var verdict: String {
+        switch TodayScoreTint.from(score: state.overallScore) {
+        case .excellent: return TodayScoreCopy.verdictExcellent
+        case .good:      return TodayScoreCopy.verdictGood
+        case .fair:      return TodayScoreCopy.verdictFair
+        case .poor:      return TodayScoreCopy.verdictPoor
+        }
+    }
 
     var body: some View {
         let tint = bandColor(for: state)
-        // Fixed point sizes (not Dynamic Type styles): the expanded island has a
-        // hard 160 pt height cap and ignores `.dynamicTypeSize`, so scaling fonts
-        // would grow the card past the cap and the system would clip the bottom
-        // action row. Fixed sizes keep the card height constant at any text size.
-        HStack(spacing: 6) {
-            Image(systemName: state.mode.symbolName)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(tint)
-            Text(state.mode.headline)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppColour.textOnInverse)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 14) {
+                CoachExpandedRing(state: state)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verdict)
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(AppColour.textOnInverse)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(state.insight)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true, fixedType: true)
         }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background(tint.opacity(0.18), in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(state.mode.headline)
+    }
+}
+
+// MARK: - Day Momentum (expanded bottom, day act)
+
+/// A transit line for the day: steps remaining as the hero, translated into a
+/// walk with a finish time, over a rail with station dots that light up as
+/// they are passed and a walker glyph at the current position.
+private struct DayMomentumCard: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    /// Average casual walking cadence, ~100 steps/min (Tudor-Locke 2018).
+    private static let walkStepsPerMinute = 100
+
+    private var stepsToGo: Int { max(0, state.stepsGoal - state.steps) }
+    private var walkMinutes: Int { max(1, stepsToGo / Self.walkStepsPerMinute) }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                if stepsToGo > 0 {
+                    Text(stepsToGo.formatted())
+                        .font(.system(size: 26, weight: .heavy, design: .rounded).monospacedDigit())
+                        .foregroundStyle(AppColour.primary)
+                        .contentTransition(.numericText())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(TodayScoreCopy.toGoCaption)
+                        .font(.system(size: 11, weight: .semibold))
+                        .textCase(.uppercase)
+                        .tracking(0.5)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(String(format: TodayScoreCopy.walkTemplate, walkMinutes))
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(AppColour.textOnInverse)
+                        Text(String(format: TodayScoreCopy.doneByTemplate,
+                                    WidgetStyle.timeString(from: Date(timeIntervalSinceNow: Double(walkMinutes) * 60))))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(AppColour.textOnInverseSecondary)
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                } else {
+                    Text(TodayScoreCopy.goalDoneHeadline)
+                        .font(.system(size: 15, weight: .heavy))
+                        .foregroundStyle(AppColour.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: 8)
+                    Text(stepsDisplay(state.steps))
+                        .font(.system(size: 15, weight: .bold).monospacedDigit())
+                        .foregroundStyle(AppColour.textOnInverse)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            StepRail(progress: state.stepsProgress)
+
+            CoachActionBar(kind: state.actionKind, tint: AppColour.primary, fullWidth: true, fixedType: true)
+        }
+    }
+}
+
+/// The day rail: filled track to the current step progress, station dots at
+/// each fifth of the goal that light up once passed, a walker at the current
+/// position, and a flag at the finish.
+private struct StepRail: View {
+    let progress: Double
+
+    private static let stations: [Double] = [0.2, 0.4, 0.6, 0.8]
+
+    var body: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let midY = geo.size.height / 2
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColour.trackOnInverse.opacity(0.35))
+                    .frame(height: 4)
+                Capsule()
+                    .fill(AppColour.primary)
+                    .frame(width: max(8, width * progress), height: 4)
+                ForEach(Self.stations, id: \.self) { stop in
+                    Circle()
+                        .fill(progress >= stop ? AppColour.primary : AppColour.surfaceInverseRaised)
+                        .overlay(Circle().strokeBorder(progress >= stop ? AppColour.primary : AppColour.trackOnInverse, lineWidth: 1.5))
+                        .frame(width: 9, height: 9)
+                        .position(x: width * stop, y: midY)
+                }
+                Image(systemName: "flag.checkered")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(progress >= 1 ? AppColour.primary : AppColour.textOnInverseSecondary)
+                    .position(x: width - 5, y: midY)
+                Image(systemName: "figure.walk")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppColour.primary)
+                    .position(x: min(width - 14, max(7, width * progress)), y: midY - 12)
+            }
+        }
+        .frame(height: 30)
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Evening Descent (expanded bottom, evening act)
+
+/// The wind-down countdown under a glowing moon. The countdown is the hero:
+/// live in the final hour via `Text(timerInterval:)`, the bedtime clock while
+/// further out, and the calm "In bed" state once bedtime has passed.
+private struct EveningDescentCard: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 14) {
+                moon
+                VStack(alignment: .leading, spacing: 3) {
+                    bedtimeHero
+                    Text(state.insight)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            CoachActionBar(kind: state.actionKind, tint: AppColour.warning, fullWidth: true, fixedType: true)
+        }
+    }
+
+    /// Warm gradient disc with a soft bloom — the evening act's identity mark.
+    private var moon: some View {
+        Circle()
+            .fill(RadialGradient(
+                colors: [Color(red: 0.96, green: 0.92, blue: 0.81), AppColour.warning],
+                center: .init(x: 0.35, y: 0.3), startRadius: 2, endRadius: 34
+            ))
+            .frame(width: 46, height: 46)
+            .background {
+                // RadialGradient bloom, not .blur — widgets do not render blur.
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [AppColour.warning.opacity(0.35), .clear],
+                        center: .center, startRadius: 10, endRadius: 44
+                    ))
+                    .frame(width: 88, height: 88)
+            }
+            .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var bedtimeHero: some View {
+        if let bedtime = state.targetBedtime {
+            switch BedtimePhase.of(bedtime) {
+            case .finalHour:
+                Text(timerInterval: WidgetStyle.timerRange(to: bedtime), countsDown: true)
+                    .font(.system(size: 24, weight: .heavy, design: .rounded).monospacedDigit())
+                    .foregroundStyle(AppColour.warning)
+                    .frame(maxWidth: 96, alignment: .leading)
+                    .lineLimit(1)
+                    .accessibilityLabel(TodayScoreCopy.bedtimeCountdownAccessibility)
+                capLine(for: bedtime)
+            case .ahead:
+                Text(WidgetStyle.timeString(from: bedtime))
+                    .font(.system(size: 24, weight: .heavy, design: .rounded).monospacedDigit())
+                    .foregroundStyle(AppColour.warning)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .accessibilityLabel(String(format: TodayScoreCopy.bedtimeAccessibilityTemplate, WidgetStyle.timeString(from: bedtime)))
+                capLine(for: bedtime)
+            case .past:
+                Text(TodayScoreCopy.pastBedtime)
+                    .font(.system(size: 20, weight: .heavy))
+                    .foregroundStyle(AppColour.scorePoor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        } else {
+            // No bedtime yet: the score carries the act instead of a countdown.
+            Text("\(state.overallScore)")
+                .font(.system(size: 24, weight: .heavy, design: .rounded).monospacedDigit())
+                .foregroundStyle(scoreTint(for: state))
+                .accessibilityLabel(scoreAccessibilityLabel(for: state))
+        }
+    }
+
+    private func capLine(for bedtime: Date) -> some View {
+        Text(String(format: TodayScoreCopy.untilLightsOutTemplate, WidgetStyle.timeString(from: bedtime)))
+            .font(.system(size: 9, weight: .bold))
+            .textCase(.uppercase)
+            .tracking(0.8)
+            .foregroundStyle(AppColour.textOnInverseSecondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+    }
+}
+
+// MARK: - Night Watch (expanded bottom, night act)
+
+/// Deliberate restraint: one dim resting heart rate and the promise of the
+/// morning reveal. No button, no colour, nothing to act on.
+private struct NightWatchCard: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        VStack(spacing: 6) {
+            if let rhr = state.restingHR {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(rhr)")
+                        .font(.system(size: 26, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                    Text(TodayScoreCopy.bpmUnit)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(CoachMode.night.headline). \(rhr) \(TodayScoreCopy.bpmUnit)")
+            }
+            Text(TodayScoreCopy.nightWatchLine)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(AppColour.textOnInverseSecondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
     }
 }
 
@@ -487,58 +735,23 @@ private struct CoachStamp: View {
     }
 }
 
-// MARK: - Expanded Card (the whole briefing, in the roomy bottom region)
+// MARK: - Guardian Monitor Card (expanded bottom takeover)
 
-/// The full score card — ring on the left, mode pill + insight + hairline 3-stat row
-/// on the right, then a full-width action capsule beside the weakest-pillar chip. It
-/// all lives in the bottom region because that is the only region clear of the camera
-/// and wide enough to hold it without truncating any label.
-private struct CoachExpandedCard: View {
-    let state: TodayScoreActivityAttributes.ContentState
-
-    var body: some View {
-        let tint = bandColor(for: state)
-        VStack(spacing: 8) {
-            HStack(alignment: .center, spacing: 13) {
-                CoachExpandedRing(state: state)
-                VStack(alignment: .leading, spacing: 3) {
-                    CoachModePill(state: state)
-                    Text(state.insight)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppColour.textOnInverse)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    CoachStatRow(state: state)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            HStack(spacing: 9) {
-                CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true, fixedType: true)
-                if let weakest = state.weakestPillarScore {
-                    CoachWeakChip(pillar: state.weakestPillar, score: weakest)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Guardian Alert Card (expanded bottom takeover)
-
-/// Expanded takeover for a Guardian alert: the offending value huge on the left,
-/// the claim and its evidence on the right, one calming action below. All copy is
-/// either a widget literal or the app-side insight carried in ContentState.
-private struct GuardianAlertCard: View {
+/// A bedside monitor, not a card: the offending value huge on the left, the
+/// gap to the user's own baseline as the claim, and for heart alerts a static
+/// ECG trace underneath. One calming action below. All copy is either a
+/// widget literal or the app-side insight carried in ContentState.
+private struct GuardianMonitorCard: View {
     let state: TodayScoreActivityAttributes.ContentState
     let alert: GuardianAlert
 
     var body: some View {
         let tint = alertTint(alert)
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             HStack(alignment: .center, spacing: 14) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(valueDisplay)
-                        .font(.system(size: 34, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 32, weight: .heavy, design: .rounded).monospacedDigit())
                         .foregroundStyle(tint)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -551,19 +764,27 @@ private struct GuardianAlertCard: View {
                         .minimumScaleFactor(0.7)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(alert.kind.title)
-                        .font(.system(size: 13, weight: .semibold))
+                    Text(claim)
+                        .font(.system(size: 14, weight: .heavy))
                         .foregroundStyle(tint)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Text(evidence)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 12, weight: .medium).monospacedDigit())
                         .foregroundStyle(AppColour.textOnInverseSecondary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+
+            if alert.kind == .restingHRElevated {
+                ECGTrace()
+                    .stroke(tint.opacity(0.9), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+                    .frame(height: 20)
+                    .accessibilityHidden(true)
+            }
+
             CoachActionBar(kind: state.actionKind, tint: tint, fullWidth: true, fixedType: true)
         }
     }
@@ -582,19 +803,52 @@ private struct GuardianAlertCard: View {
         }
     }
 
-    /// The supporting line beside the big value. The resting HR alert states the
-    /// user's own baseline from the payload; sleep debt reuses the app-side
-    /// insight sentence so the island and the lock screen agree word for word.
-    private var evidence: String {
-        switch alert.kind {
-        case .restingHRElevated:
-            if let baseline = alert.baseline {
-                return String(format: TodayScoreCopy.alertBaselineTemplate, baseline)
-            }
-            return state.insight
-        case .sleepDebt:
-            return state.insight
+    /// Headline claim: the gap to the user's own baseline when we have one,
+    /// otherwise the alert title.
+    private var claim: String {
+        if alert.kind == .restingHRElevated, let baseline = alert.baseline {
+            return String(format: TodayScoreCopy.alertAboveTemplate, alert.value - baseline)
         }
+        return alert.kind.title
+    }
+
+    /// The supporting line: usual → now for heart alerts with a baseline; the
+    /// app-side insight sentence otherwise, so the island and the lock screen
+    /// agree word for word.
+    private var evidence: String {
+        if alert.kind == .restingHRElevated, let baseline = alert.baseline {
+            return String(format: TodayScoreCopy.alertUsualNowTemplate, baseline, alert.value)
+        }
+        return state.insight
+    }
+}
+
+/// Static ECG trace (P-QRS-T beats) for the heart alert. Live Activities render
+/// statically between pushes, so the trace is drawn once, not animated.
+private struct ECGTrace: Shape {
+    private static let beats = 3.0
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let baseline = rect.height * 0.68
+        let amplitude = rect.height * 0.6
+        for x in stride(from: 0.0, through: rect.width, by: 1.0) {
+            let phase = (x / rect.width * Self.beats).truncatingRemainder(dividingBy: 1)
+            let point = CGPoint(x: x, y: baseline - Self.beatValue(phase) * amplitude)
+            if x == 0 { path.move(to: point) } else { path.addLine(to: point) }
+        }
+        return path
+    }
+
+    /// Gaussian bumps approximating one P-QRS-T complex over phase 0...1.
+    private static func beatValue(_ p: Double) -> Double {
+        var y = 0.0
+        y += 0.06 * exp(-pow((p - 0.18) / 0.035, 2))
+        y -= 0.10 * exp(-pow((p - 0.335) / 0.014, 2))
+        y += 0.85 * exp(-pow((p - 0.36) / 0.012, 2))
+        y -= 0.18 * exp(-pow((p - 0.385) / 0.015, 2))
+        y += 0.14 * exp(-pow((p - 0.62) / 0.05, 2))
+        return y
     }
 }
 
@@ -617,113 +871,6 @@ private struct CoachExpandedRing: View {
                     ))
                     .frame(width: 80, height: 80)
             }
-    }
-}
-
-// MARK: - Stat Row (3 stats, hairline dividers)
-
-/// Up to three supporting stats with thin vertical hairline rules between them
-/// (HTML `.stat-row`). Each cell is a bold monospaced value + tiny unit over an
-/// UPPERCASE caption. Stats are built ONLY from fields the ContentState actually
-/// carries — missing optionals (HRV / resting HR) are dropped, never faked.
-private struct CoachStatRow: View {
-    let state: TodayScoreActivityAttributes.ContentState
-
-    /// (value, unit?, caption) tuples. Order is mode-led: the day mode leads with
-    /// the effort metric (Steps); recovery modes lead with HRV / resting HR.
-    private var stats: [(value: String, unit: String?, caption: String)] {
-        var out: [(String, String?, String)] = []
-        switch state.mode {
-        case .day:
-            out.append((stepsDisplay(state.steps), nil, CoachMode.day.secondaryLabel))
-            if let hr = state.restingHR { out.append(("\(hr)", TodayScoreCopy.bpmUnit, CoachMode.night.headline)) }
-            if let hrv = state.hrvMs { out.append(("\(hrv)", TodayScoreCopy.msUnit, CoachMode.morning.secondaryLabel)) }
-        case .morning, .evening, .night:
-            if let hrv = state.hrvMs { out.append(("\(hrv)", TodayScoreCopy.msUnit, CoachMode.morning.secondaryLabel)) }
-            if let hr = state.restingHR { out.append(("\(hr)", TodayScoreCopy.bpmUnit, CoachMode.night.headline)) }
-            out.append((stepsDisplay(state.steps), nil, CoachMode.day.secondaryLabel))
-        }
-        return Array(out.prefix(3))
-    }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
-                if index > 0 {
-                    // Hairline rule, inset top/bottom so it never spans full height.
-                    Rectangle()
-                        .fill(AppColour.borderOnInverse)
-                        .frame(width: 1)
-                        .padding(.vertical, 3)
-                }
-                StatCell(value: stat.value, unit: stat.unit, caption: stat.caption)
-                    .padding(.leading, index == 0 ? 0 : 10)
-                    .padding(.trailing, index == stats.count - 1 ? 0 : 10)
-            }
-        }
-    }
-}
-
-private struct StatCell: View {
-    let value: String
-    let unit: String?
-    let caption: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(value)
-                    .font(.system(size: 13, weight: .bold).monospacedDigit())
-                    .foregroundStyle(AppColour.textOnInverse)
-                    .contentTransition(.numericText())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if let unit {
-                    Text(unit)
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(AppColour.textOnInverseSecondary)
-                }
-            }
-            Text(caption)
-                .font(.system(size: 9, weight: .semibold))
-                .textCase(.uppercase)
-                .tracking(0.4)
-                .foregroundStyle(AppColour.textOnInverseSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-// MARK: - Weakest-Pillar Chip
-
-/// HTML `.chip-weak`: a soft pill with a fixed amber warning dot, the pillar
-/// name, then the bold score. Dot is always `AppColour.warning` (#F59E0B) per
-/// spec, independent of the score band tint.
-private struct CoachWeakChip: View {
-    let pillar: String
-    let score: Int
-
-    var body: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(AppColour.warning)
-                .frame(width: 7, height: 7)
-            Text(pillar)
-                .foregroundStyle(AppColour.textOnInverseSecondary)
-            Text("\(score)")
-                .foregroundStyle(AppColour.textOnInverse)
-                .monospacedDigit()
-        }
-        .font(.system(size: 12, weight: .semibold))
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
-        .padding(.horizontal, 10)
-        .frame(height: 30)
-        .background(AppColour.surfaceInverseRaised, in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(pillar) \(score)")
     }
 }
 
