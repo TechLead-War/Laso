@@ -276,6 +276,7 @@
 		8B079806005F278D357FEE59 /* ExploreCategoriesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5191829FC28306EE5A291C59 /* ExploreCategoriesSection.swift */; };
 		8B6E849DDFA27D77A725B020 /* LogWaterIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5F3A0F4CD90E01AAF02501 /* LogWaterIntent.swift */; };
 		8C2F98506A716A91F420ADD8 /* DSButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A1A7577FDD788EC8AF159A /* DSButton.swift */; };
+		8C4B4B79E3CEC07A3027EBE4 /* MirrorReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85195E35C956E279969003B2 /* MirrorReminderScheduler.swift */; };
 		8D031A75B4B18A3538CCA759 /* DeviceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 897234C216882401D79A8646 /* DeviceDetailView.swift */; };
 		8D05B790D6A4DC2B69405F83 /* AppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B1749FB7A1F18CD22BDBFF /* AppStateStore.swift */; };
 		8DEF96442347A39F27ACDCB8 /* HealthKitRepromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E739780C8B13C8A2E5E14 /* HealthKitRepromptManager.swift */; };
@@ -387,6 +388,7 @@
 		C71A55E39174630EE464CCBD /* MLOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */; };
 		C7729BA468CFB0B2CA3D1F92 /* CopyOverridesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474720A7DEC11561E860BC07 /* CopyOverridesStore.swift */; };
 		C782912B245ACF19023C1CCC /* DashboardHousekeepingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFF271AA73B1889E41C4880 /* DashboardHousekeepingService.swift */; };
+		C7C6F710A2D0AB9556574F36 /* MirrorMomentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5F67125732D1258530187F /* MirrorMomentManager.swift */; };
 		C7D79CD9DC6D3923059DF163 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72E987E767FDDCAFD0451FF5 /* RemoteConfigManager.swift */; };
 		C86B3F008099763930CA1616 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8057ABB26B05E77B38085142 /* PushNotificationManager.swift */; };
 		C87835AC65B9194A7CB1D558 /* Double+Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3540CCB130E2D1A1A6AC55 /* Double+Duration.swift */; };
@@ -405,6 +407,7 @@
 		CDBB5DF98B410B1273C6768F /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 16587D2E046AB7E7BE441D31 /* FirebaseCrashlytics */; };
 		CE7F07DBB5858DE366AB6FFE /* SleepPerformanceAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03826FF97545DE1AEFA2749F /* SleepPerformanceAnalyzer.swift */; };
 		CE931EE205D9D3EC766EEE84 /* StressMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D82C406619CC236860AF7A /* StressMonitorView.swift */; };
+		CEAD4A8820CF25835AF7D35B /* MirrorStreakWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C088AD74A58F36F968DE75F /* MirrorStreakWidget.swift */; };
 		CF4BD545FCD09955B9BFDBCA /* MetricDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F6915E5718E8B9919DC3FD /* MetricDetailViewModel.swift */; };
 		D07D78A3F57EC3CF24DD643A /* Severity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3254C3E60CC25BD7A45302CE /* Severity.swift */; };
 		D21C631F7EDE8F1E73FED4B3 /* DriverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 076BF1861B9106B431D075CA /* DriverRowView.swift */; };
@@ -422,6 +425,7 @@
 		D82461D0E561C8E398C707C9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */; };
 		D90EF9449A1AEE381B9D76DB /* GamificationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C26B901CE5943C0FAB49B3F /* GamificationEngine.swift */; };
 		D9BAC84D95D7B021323F136B /* LasoWatchWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87265F0F32A45A18AFE6E6B /* LasoWatchWidgetsBundle.swift */; };
+		DA9EF1A93EE3677AC99E17AC /* MirrorMomentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCEEA950B21917873ABAAB8 /* MirrorMomentSheet.swift */; };
 		DBBDD4A8400537CA537D1C3B /* SimulationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27369D353E6DFA9CA67FB111 /* SimulationTypes.swift */; };
 		DDE8252144F3179CC3950AC3 /* WeeklyBarChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77CE5FA8601EAC1B9F63D8E /* WeeklyBarChart.swift */; };
 		DE338F2D3474162C64A66233 /* IntelligenceAlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84946F896C3C96E80C9C236A /* IntelligenceAlertEvaluator.swift */; };
@@ -594,6 +598,7 @@
 		0E503FF45AC5FA46CF0FC82B /* CloudBackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupManager.swift; sourceTree = "<group>"; };
 		0F02F815419870D1E521D8DE /* Copy+Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Onboarding.swift"; sourceTree = "<group>"; };
 		0FA1030BD03E084328E4919D /* CognitiveEnergyAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CognitiveEnergyAnalyzer.swift; sourceTree = "<group>"; };
+		0FCEEA950B21917873ABAAB8 /* MirrorMomentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorMomentSheet.swift; sourceTree = "<group>"; };
 		10473A4E47171198AA83332A /* SessionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTracker.swift; sourceTree = "<group>"; };
 		10DF2AE29DB7BA726167CD5E /* LogWorkoutIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWorkoutIntent.swift; sourceTree = "<group>"; };
 		122379A3ADDC67E84B6C60B3 /* OnboardingV2Screens14ToDone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Screens14ToDone.swift; sourceTree = "<group>"; };
@@ -673,6 +678,7 @@
 		3A5D8C4A6668F3E76A40E24D /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
 		3A6023E6422F4DC43D3171E1 /* WeeklyReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewViewModel.swift; sourceTree = "<group>"; };
 		3BC12905F26E546B850B843B /* TodayWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWorkoutView.swift; sourceTree = "<group>"; };
+		3C088AD74A58F36F968DE75F /* MirrorStreakWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorStreakWidget.swift; sourceTree = "<group>"; };
 		3CA950386F1DA720B5736CC9 /* AppLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockManager.swift; sourceTree = "<group>"; };
 		3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccelerateHelpers.swift; sourceTree = "<group>"; };
 		3DBF894D61F74B87706B9396 /* WakeUpTimeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeUpTimeDetector.swift; sourceTree = "<group>"; };
@@ -807,6 +813,7 @@
 		84946F896C3C96E80C9C236A /* IntelligenceAlertEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceAlertEvaluator.swift; sourceTree = "<group>"; };
 		84A0CA4192244918F8673806 /* LiveRefreshPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRefreshPlanner.swift; sourceTree = "<group>"; };
 		85029EA7381AF020B487F0E6 /* WellbeingTrendAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingTrendAnalyzer.swift; sourceTree = "<group>"; };
+		85195E35C956E279969003B2 /* MirrorReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorReminderScheduler.swift; sourceTree = "<group>"; };
 		8544B094AAEAF9BA1286F5D7 /* NotificationOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationOptimizer.swift; sourceTree = "<group>"; };
 		85AE63D6C8945FC98959C13F /* AppIntegrityGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntegrityGuard.swift; sourceTree = "<group>"; };
 		85C4DCA79B6E9E9EACDDDAE9 /* InsightFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightFactory.swift; sourceTree = "<group>"; };
@@ -882,6 +889,7 @@
 		A92433E9D50DFCC64AE7CEAE /* WeekScoreStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekScoreStrip.swift; sourceTree = "<group>"; };
 		A97775C40E61B1F730B33BE0 /* HealthScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScorer.swift; sourceTree = "<group>"; };
 		A9A065E46C9925CCA2364C4A /* PredictionVerdictEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionVerdictEngine.swift; sourceTree = "<group>"; };
+		AA5F67125732D1258530187F /* MirrorMomentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorMomentManager.swift; sourceTree = "<group>"; };
 		AB16F524F28FEB59FDDE3039 /* OnboardingV2Foundation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingV2Foundation.swift; sourceTree = "<group>"; };
 		AB234C0335F57B5C4F4C3812 /* ExploreDaySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreDaySheet.swift; sourceTree = "<group>"; };
 		AB6EC0D3B23B332FF109D674 /* Copy+Strain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Strain.swift"; sourceTree = "<group>"; };
@@ -1095,6 +1103,7 @@
 				712A5C77EBC5B8A45B51E1F1 /* Info.plist */,
 				C674C7F8E78BA0DE27E10F98 /* LasoWidgets.entitlements */,
 				EDB108A1ADD5CA7F2A023528 /* LasoWidgetsBundle.swift */,
+				3C088AD74A58F36F968DE75F /* MirrorStreakWidget.swift */,
 				FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */,
 				8AC848012439448B750C74C9 /* TodayScoreLiveActivityWidget.swift */,
 				9B1126FDF9B9F9CB1B17EA3B /* WidgetStyle.swift */,
@@ -1403,6 +1412,7 @@
 				B15735738BDFA91C28F42354 /* FrequencyCapManager.swift */,
 				84946F896C3C96E80C9C236A /* IntelligenceAlertEvaluator.swift */,
 				D5CA49C6E7F5AAE50F74BA43 /* MetricCue.swift */,
+				85195E35C956E279969003B2 /* MirrorReminderScheduler.swift */,
 				ABADFB768D9AA25EA2D32F26 /* NotificationFatigueTracker.swift */,
 				A063270DE935D1F0AB38584D /* NotificationManager.swift */,
 				8544B094AAEAF9BA1286F5D7 /* NotificationOptimizer.swift */,
@@ -2055,6 +2065,7 @@
 			isa = PBXGroup;
 			children = (
 				99E62CC2603255CF0D0DB6DF /* MirrorCaptureSheet.swift */,
+				0FCEEA950B21917873ABAAB8 /* MirrorMomentSheet.swift */,
 				F5B2C63FCAD32635EA9F6DB2 /* MirrorOverlay.swift */,
 				48E49716A7B7885C25DA5044 /* MirrorPhotoViewer.swift */,
 				E739CB60C9A73A47694CCD8B /* MirrorSettingsView.swift */,
@@ -2407,6 +2418,7 @@
 		FD93F26CA70562A492087147 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				AA5F67125732D1258530187F /* MirrorMomentManager.swift */,
 				F7103B6451DAE1FA564160CC /* MirrorPhotoStore.swift */,
 			);
 			path = Services;
@@ -2948,9 +2960,12 @@
 				6A6F6442958A6B981E7ACD5D /* MetricTimeSeries.swift in Sources */,
 				7BEC1B924C438F6A599BC5BA /* MetricVerdict.swift in Sources */,
 				4FEC81F0FA006DD563BDC6D2 /* MirrorCaptureSheet.swift in Sources */,
+				C7C6F710A2D0AB9556574F36 /* MirrorMomentManager.swift in Sources */,
+				DA9EF1A93EE3677AC99E17AC /* MirrorMomentSheet.swift in Sources */,
 				9865CFFF72EBCCDB0BC6FB9C /* MirrorOverlay.swift in Sources */,
 				CC69B4FA6EBC04E9EFE85250 /* MirrorPhotoStore.swift in Sources */,
 				46DADEDD9DD914C3C006DE2D /* MirrorPhotoViewer.swift in Sources */,
+				8C4B4B79E3CEC07A3027EBE4 /* MirrorReminderScheduler.swift in Sources */,
 				C104837AB96C279AE75FB3F0 /* MirrorSettingsView.swift in Sources */,
 				3E1CFCD5745CBC35847E8DA6 /* MobilityDeclineAnalyzer.swift in Sources */,
 				AE6E38759529A4B54E74627F /* ModelEvaluationStore.swift in Sources */,
@@ -3147,6 +3162,7 @@
 				6D8D2592F69941A1BB2FF413 /* BreathworkLiveActivityWidget.swift in Sources */,
 				27720027262656F0611D239A /* CoachActionIntents.swift in Sources */,
 				A5999F3949D0A6196202784C /* LasoWidgetsBundle.swift in Sources */,
+				CEAD4A8820CF25835AF7D35B /* MirrorStreakWidget.swift in Sources */,
 				488ABDA144D7BD1039A5D655 /* RemoteConfigKeys.swift in Sources */,
 				0C58379FB86A770813A9DEF8 /* TodayScoreActivityAttributes.swift in Sources */,
 				700A0D89CE0021F628DC7EAF /* TodayScoreLiveActivityWidget.swift in Sources */,
@@ -3263,7 +3279,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 111;
+				CURRENT_PROJECT_VERSION = 112;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3282,7 +3298,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.103;
+				MARKETING_VERSION = 1.2.104;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3353,7 +3369,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 111;
+				CURRENT_PROJECT_VERSION = 112;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3366,7 +3382,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.103;
+				MARKETING_VERSION = 1.2.104;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

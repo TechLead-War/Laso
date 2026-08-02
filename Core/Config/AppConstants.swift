@@ -13,6 +13,8 @@ enum AppConstants {
         static let windDown = "healthpulse.windDown"
         /// One-off reminder the user sets from the Next Up action card.
         static let actionReminder = "healthpulse.actionReminder"
+        /// Opt-in Daily Mirror reminder; one id per scheduled day (prefix + 0...6).
+        static let mirrorReminderPrefix = "healthpulse.mirror.reminder."
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
 

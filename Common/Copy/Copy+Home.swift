@@ -675,6 +675,7 @@ extension Copy {
         static var opensDetailedMetricViewHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_detailed_metric_view_hint", default: "Opens detailed metric view") }
         static var openScoreGuideButton: String { RemoteConfigManager.shared.copyString("copy_home_open_score_guide_button", default: "Open Score Guide") }
         static var openJournalEntryButton: String { RemoteConfigManager.shared.copyString("copy_home_open_journal_entry_button", default: "Open Journal") }
+        static var openMirrorMomentButton: String { RemoteConfigManager.shared.copyString("copy_home_open_mirror_moment_button", default: "Open Mirror Moment") }
         static var retryLoadingHealthDataHint: String { RemoteConfigManager.shared.copyString("copy_home_retry_loading_health_data_hint", default: "Retry loading health data") }
         static var opensScoreBreakdownHint: String { RemoteConfigManager.shared.copyString("copy_home_opens_score_breakdown_hint", default: "Opens score breakdown") }
         static var dismissMorningCheckInLabel: String { RemoteConfigManager.shared.copyString("copy_home_dismiss_morning_check_in_label", default: "Dismiss morning check-in") }

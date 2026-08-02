@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var showJournalEntry = false
+    @State private var showMirrorMoment = false
     @State private var showRecoveryInfo = false
     @State private var actionDoneToday = false
     @State private var actionReminderSet = false
@@ -86,6 +87,19 @@ struct HomeView: View {
                     showJournalEntry = true
                 } label: {
                     Image(systemName: "camera")
+                        .overlay(alignment: .topTrailing) {
+                            // During a prompt quiet period the sheet stays
+                            // away; this passive dot is the only reminder
+                            // until today is captured. Reading `revision`
+                            // subscribes this body to the manager's state.
+                            if MirrorMomentManager.shared.revision >= 0,
+                               MirrorMomentManager.shared.showsQuietBadge() {
+                                Circle()
+                                    .fill(AppColour.primary)
+                                    .frame(width: 7, height: 7)
+                                    .offset(x: 3, y: -3)
+                            }
+                        }
                 }
                 .accessibilityLabel(Copy.Mirror.journalCardCTA)
                 .accessibilityIdentifier("home.journalEntryButton")
@@ -134,6 +148,20 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showJournalEntry) {
             JournalEntryView()
+        }
+        .sheet(isPresented: $showMirrorMoment) {
+            MirrorMomentSheet()
+        }
+        // The Mirror Moment fires only after the score has rendered (an
+        // arrival overlay is the most-rejected prompt pattern), at most once
+        // per calendar day, and never on top of another sheet.
+        .task(id: viewModel.ui.isLoading) {
+            guard !viewModel.ui.isLoading else { return }
+            MirrorPhotoStore.shared.syncWidgetSnapshot()
+            MirrorReminderScheduler.refreshIfEnabled()
+            try? await Task.sleep(for: .seconds(0.8))
+            guard !Task.isCancelled else { return }
+            presentMirrorMomentIfDue()
         }
         .sheet(isPresented: $showSoftLockPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared, source: "soft_lock_home")
@@ -199,6 +227,12 @@ struct HomeView: View {
                 // Only force an immediate fetch after true background return.
                 if oldPhase == .background {
                     liveViewModel.fetchHomeDataTiered()
+                    // An app kept in memory overnight never re-runs the load
+                    // task, so day rollover is caught here: the first
+                    // foreground of a new day is the Mirror Moment's cue.
+                    if !viewModel.ui.isLoading {
+                        presentMirrorMomentIfDue()
+                    }
                 }
             } else {
                 stopHomeRefresh()
@@ -1227,6 +1261,21 @@ struct HomeView: View {
     /// production UI does not offer as a direct tap target. Only compiled into
     /// the tree when running under `UITestMode`; in production this returns an
     /// `EmptyView` and has zero visual or accessibility impact.
+    /// Present the Mirror Moment when the manager's rules allow it and no
+    /// other sheet holds the screen. The manager owns every frequency rule;
+    /// this only owns "nothing else is up right now".
+    private func presentMirrorMomentIfDue() {
+        guard !viewModel.ui.showDiscovery, !showJournalEntry, !showScoreGuide,
+              !showSoftLockPaywall, !showRecoveryInfo, !showShareCard,
+              !showMirrorMoment else { return }
+        let manager = MirrorMomentManager.shared
+        guard manager.shouldShow(cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera)) else { return }
+        // The sheet stamps the day itself in onAppear: stamping here would
+        // burn the daily impression even when presentation loses a race to a
+        // root-level sheet the guard above cannot see.
+        showMirrorMoment = true
+    }
+
     @ViewBuilder
     private var uiTestHiddenTriggers: some View {
         if UITestMode.isEnabled {
@@ -1235,6 +1284,8 @@ struct HomeView: View {
                     .accessibilityIdentifier("uitest.openScoreGuide")
                 Button(Copy.Home.openJournalEntryButton) { showJournalEntry = true }
                     .accessibilityIdentifier("uitest.openJournalEntry")
+                Button(Copy.Home.openMirrorMomentButton) { showMirrorMoment = true }
+                    .accessibilityIdentifier("uitest.openMirrorMoment")
             }
             .opacity(0.001)
             .frame(width: 1, height: 1)

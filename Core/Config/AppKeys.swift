@@ -168,6 +168,19 @@ enum AppKeys {
 
     enum Mirror {
         static let explainerSeen = "laso.mirror.explainer_seen"
+
+        // Mirror Moment: the once-a-day capture prompt on first home open.
+        static let momentLastShownDay      = "laso.mirror.moment_last_shown_day"
+        static let momentDismissStreak     = "laso.mirror.moment_dismiss_streak"
+        static let momentQuietUntil        = "laso.mirror.moment_quiet_until"
+        static let momentOptedOut          = "laso.mirror.moment_opted_out"
+        static let momentFirstRunSeen      = "laso.mirror.moment_first_run_seen"
+        static let momentCopyVariant       = "laso.mirror.moment_copy_variant"
+        static let momentCopyVariantDay    = "laso.mirror.moment_copy_variant_day"
+        static let reminderEnabled         = "laso.mirror.reminder_enabled"
+        static let reminderWindowStartMins = "laso.mirror.reminder_window_start"
+        static let reminderWindowEndMins   = "laso.mirror.reminder_window_end"
+        static let reminderLastRolledDay   = "laso.mirror.reminder_last_rolled_day"
     }
 
     // MARK: - Referral
@@ -301,6 +314,7 @@ enum AppKeys {
         static let intelligence = "laso.widget.intelligence"
         static let recoveryDebt = "laso.widget.recoveryDebt"
         static let lastUpdate   = "laso.widget.lastUpdate"
+        static let mirror       = "laso.widget.mirror"
     }
 
     // MARK: - Data Retention

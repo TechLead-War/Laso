@@ -31,7 +31,10 @@ final class MirrorPhotoStore {
     private let directory: URL
 
     /// Fixed-locale key formatter: the key is a filename, so it must not follow
-    /// the device locale's calendar or digits.
+    /// the device locale's calendar or digits. The time zone is re-read on
+    /// every use in `dayKey(for:)`: the app-wide `Date.cal` freezes its zone
+    /// at first access, and a key computed in a stale zone would disagree
+    /// with the widget's fresh-zone key after the user travels.
     private static let keyFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -55,7 +58,10 @@ final class MirrorPhotoStore {
     // MARK: - Reads
 
     static func dayKey(for date: Date) -> String {
-        keyFormatter.string(from: Date.cal.startOfDay(for: date))
+        if keyFormatter.timeZone != TimeZone.current {
+            keyFormatter.timeZone = TimeZone.current
+        }
+        return keyFormatter.string(from: Calendar.current.startOfDay(for: date))
     }
 
     func hasPhoto(on date: Date) -> Bool {
@@ -89,19 +95,55 @@ final class MirrorPhotoStore {
         }
     }
 
+    /// Rest days: missed days the streak walk silently covers, capped per
+    /// calendar month. A visible but limited reserve makes people persist more
+    /// than rigid rules (Sharif & Shu 2017; Duolingo's streak freeze), and one
+    /// missed day genuinely does not break habit formation (Lally et al. 2010).
+    static let restDaysPerMonth = 2
+
     /// Consecutive captured days ending today (or yesterday, so the streak does
-    /// not read as broken before tonight's capture happens).
+    /// not read as broken before tonight's capture happens). Up to
+    /// `restDaysPerMonth` missed days per calendar month are covered without
+    /// adding to the count, so a single miss keeps the run alive.
     var currentStreak: Int {
+        guard let earliest = allDays.first else { return 0 }
         var day = Date.cal.startOfDay(for: .now)
         if !hasPhoto(on: day) {
             day = day.daysAgo(1)
         }
         var streak = 0
-        while hasPhoto(on: day) {
-            streak += 1
+        var restUsed: [Int: Int] = [:]
+        while day >= earliest {
+            if hasPhoto(on: day) {
+                streak += 1
+            } else {
+                let comps = Date.cal.dateComponents([.year, .month], from: day)
+                let monthKey = (comps.year ?? 0) * 100 + (comps.month ?? 0)
+                guard restUsed[monthKey, default: 0] < Self.restDaysPerMonth else { break }
+                restUsed[monthKey, default: 0] += 1
+            }
             day = day.daysAgo(1)
         }
         return streak
+    }
+
+    /// Captures in the current calendar month. Shown on the prompt after a
+    /// streak break instead of a zero, because highlighting a broken streak
+    /// measurably reduces persistence (Silverman & Barasch 2023).
+    var capturesThisMonth: Int {
+        let monthPrefix = String(Self.dayKey(for: .now).prefix(7))
+        return metaByDay.keys.filter { $0.hasPrefix(monthPrefix) }.count
+    }
+
+    /// Mirrors streak state into the App Group so the home screen widget stays
+    /// honest. Called on every archive mutation and on each home open.
+    func syncWidgetSnapshot() {
+        WidgetDataStore.shared.saveMirror(WidgetMirrorSnapshot(
+            streak: currentStreak,
+            dayKey: Self.dayKey(for: .now),
+            capturedToday: hasPhoto(on: .now),
+            updatedAt: .now
+        ))
     }
 
     var longestStreak: Int {
@@ -139,6 +181,7 @@ final class MirrorPhotoStore {
 
         metaByDay[Self.dayKey(for: date)] = Meta(score: score, streak: streak)
         try persistIndex()
+        syncWidgetSnapshot()
     }
 
     func delete(on date: Date) throws {
@@ -148,6 +191,7 @@ final class MirrorPhotoStore {
         }
         metaByDay[Self.dayKey(for: date)] = nil
         try persistIndex()
+        syncWidgetSnapshot()
     }
 
     func deleteAll() throws {
@@ -159,6 +203,7 @@ final class MirrorPhotoStore {
         }
         metaByDay = [:]
         try persistIndex()
+        syncWidgetSnapshot()
     }
 
     // MARK: - Private

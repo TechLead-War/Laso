@@ -19,6 +19,13 @@ struct MirrorCaptureSheet: View {
 
     private let store = MirrorPhotoStore.shared
 
+    /// The streak the finished photo is stamped with. On a retake, today is
+    /// already inside currentStreak, so adding one would bake tomorrow's
+    /// number into today's photo.
+    private var stampStreak: Int {
+        store.hasPhoto(on: .now) ? store.currentStreak : store.currentStreak + 1
+    }
+
     init() {
         let seen = UserDefaults.standard.bool(forKey: AppKeys.Mirror.explainerSeen)
         _stage = State(initialValue: seen ? .camera : .explainer)
@@ -147,7 +154,7 @@ struct MirrorCaptureSheet: View {
                         filter: filter,
                         date: .now,
                         score: ReadinessStore().loadCachedScore(),
-                        streak: store.currentStreak + 1
+                        streak: stampStreak
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl))
@@ -204,12 +211,15 @@ struct MirrorCaptureSheet: View {
 
     private func save(_ image: UIImage) {
         let score = ReadinessStore().loadCachedScore()
-        let streak = store.currentStreak + 1
+        let streak = stampStreak
         let finished = MirrorPhotoRenderer.render(
             photo: image, filter: filter, date: .now, score: score, streak: streak
         )
         do {
             try store.save(finished, score: score, streak: streak)
+            // A capture from any door ends the prompt's quiet period and
+            // dismissal count: the user is engaged again.
+            MirrorMomentManager.shared.recordCaptured()
             AppAnalytics.shared.trackBlockTap(
                 title: "Save mirror photo",
                 type: .mirrorPhotoSaved,

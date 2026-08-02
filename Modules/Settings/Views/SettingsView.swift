@@ -420,23 +420,23 @@ struct SettingsView: View {
         }
     }
 
-    /// Daily Mirror archive management. Only shown once the user has captured
-    /// something; before that there is nothing here to see or delete.
-    @ViewBuilder
+    /// Daily Mirror archive management plus the prompt and reminder controls.
+    /// Always shown: the opt-out toggle must be reachable before the first
+    /// capture, not only after it.
     private var mirrorRow: some View {
-        if MirrorPhotoStore.shared.photoCount > 0 {
-            NavigationLink {
-                MirrorSettingsView()
-            } label: {
-                settingsRow(
-                    icon: "camera.fill",
-                    iconColor: AppColour.accent,
-                    title: Copy.Mirror.settingsTitle,
-                    subtitle: "\(MirrorPhotoStore.shared.photoCount) · \(ByteCountFormatter.string(fromByteCount: MirrorPhotoStore.shared.diskBytes, countStyle: .file))"
-                )
-            }
-            .accessibilityIdentifier("settings.row.dailyMirror")
+        NavigationLink {
+            MirrorSettingsView()
+        } label: {
+            settingsRow(
+                icon: "camera.fill",
+                iconColor: AppColour.accent,
+                title: Copy.Mirror.settingsTitle,
+                subtitle: MirrorPhotoStore.shared.photoCount > 0
+                    ? "\(MirrorPhotoStore.shared.photoCount) · \(ByteCountFormatter.string(fromByteCount: MirrorPhotoStore.shared.diskBytes, countStyle: .file))"
+                    : Copy.Mirror.journalCardCTA
+            )
         }
+        .accessibilityIdentifier("settings.row.dailyMirror")
     }
 
     private var storageRow: some View {
@@ -950,6 +950,14 @@ struct SettingsView: View {
         encryptedStore.remove(forKey: "healthpulse.userProfile")
 
         healthDataStore.deleteAllData()
+
+        // Both live outside the defaults domain wiped below: pending mirror
+        // reminders sit in the system notification store and would keep
+        // firing selfie prompts for a week after deletion, and the mirror
+        // photos sit in Application Support and would resurface with the old
+        // streak after re-onboarding.
+        MirrorReminderScheduler.disable()
+        try? MirrorPhotoStore.shared.deleteAll()
 
         if let bundleId = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleId)

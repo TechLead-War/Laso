@@ -31,6 +31,7 @@ enum AppFeature: String, Hashable {
     case inviteFriends = "invite_friends"
     case performanceProfile = "performance_profile"
     case journalEntry = "journal_entry"
+    case mirrorMoment = "mirror_moment"
     case expandedJournal = "expanded_journal"
     case journalInsights = "journal_insights"
     case annualReport = "annual_report"
@@ -139,6 +140,12 @@ enum BlockType: String {
     case mirrorPhotoSaved = "mirror_photo_saved"
     case mirrorPhotoOpened = "mirror_photo_opened"
     case mirrorArchiveDeleted = "mirror_archive_deleted"
+    case mirrorMomentCapture = "mirror_moment_capture"
+    case mirrorMomentNotToday = "mirror_moment_not_today"
+    case mirrorMomentCommit = "mirror_moment_commit"
+    case mirrorMomentLater = "mirror_moment_later"
+    case mirrorPromptToggled = "mirror_prompt_toggled"
+    case mirrorReminderToggled = "mirror_reminder_toggled"
 
     // Navigation
     case tabHome = "tab_home"

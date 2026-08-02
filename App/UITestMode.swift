@@ -13,6 +13,7 @@ enum UITestMode {
     private static let showPaywallFlag = "--ui-test-show-paywall"
     private static let forceProLockFlag = "--ui-test-force-pro-lock"
     private static let forceMorningCheckInFlag = "--ui-test-force-morning-checkin"
+    private static let forceMirrorMomentFlag = "--ui-test-force-mirror-moment"
     private static let premiumShowcaseFlag = "--ui-test-premium-showcase"
     private static let subscribedFlag = "--ui-test-subscribed"
     private static let initialTabPrefix = "--ui-test-initial-tab="
@@ -77,6 +78,13 @@ enum UITestMode {
     /// 5 AM to 11 AM time window so the card can be captured in any test run.
     static var forceMorningCheckIn: Bool {
         ProcessInfo.processInfo.arguments.contains(forceMorningCheckInFlag)
+    }
+
+    /// When true, HomeView presents the Mirror Moment sheet regardless of the
+    /// once-a-day and camera-availability rules, so the flow can be exercised
+    /// on the simulator (which has no camera).
+    static var forceMirrorMoment: Bool {
+        ProcessInfo.processInfo.arguments.contains(forceMirrorMomentFlag)
     }
 
     /// When true, AppContainer seeds PremiumShowcaseDataProvider (thriving values)
@@ -227,6 +235,7 @@ enum UITestMode {
     static var forceShowPaywall: Bool { false }
     static var forceProLock: Bool { false }
     static var forceMorningCheckIn: Bool { false }
+    static var forceMirrorMoment: Bool { false }
     static var premiumShowcase: Bool { false }
     static var forceSubscribed: Bool { false }
     static var initialTab: String? { nil }

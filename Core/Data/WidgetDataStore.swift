@@ -39,6 +39,52 @@ struct WidgetRecoveryDebtSnapshot: Codable {
     let updatedAt: Date
 }
 
+struct WidgetMirrorSnapshot: Codable {
+    let streak: Int
+    /// Day key ("2026-08-02") of the day this snapshot describes. The widget
+    /// compares it against its own today key, so "captured today" can never
+    /// leak across midnight while the app stays closed.
+    let dayKey: String
+    let capturedToday: Bool
+    let updatedAt: Date
+
+    /// Snapshots older than this many days describe a streak that is provably
+    /// over: two rest days per calendar month can chain across a month
+    /// boundary, so 2 * 2 + 1 missed days is the largest survivable gap.
+    /// (Mirrors MirrorPhotoStore.restDaysPerMonth, which the widget target
+    /// cannot see.)
+    static let staleAfterDays = 5
+
+    /// Days between the snapshot's day and `date`, or nil when the stored key
+    /// does not parse. Runs in the widget process, so it uses a fresh
+    /// calendar, never the app's cached one.
+    func ageInDays(asOf date: Date = Date()) -> Int? {
+        guard let snapshotDay = Self.keyFormatter().date(from: dayKey) else { return nil }
+        let calendar = Calendar.current
+        return calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: snapshotDay),
+            to: calendar.startOfDay(for: date)
+        ).day
+    }
+
+    /// Same fixed-locale format the app's photo store uses for day keys. The
+    /// widget runs in its own process and cannot reach MirrorPhotoStore, so the
+    /// formatter lives in this shared file.
+    static func todayKey(for date: Date = Date()) -> String {
+        keyFormatter().string(from: Calendar.current.startOfDay(for: date))
+    }
+
+    private static func keyFormatter() -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }
+}
+
 private extension WidgetReadinessSnapshot {
     func matchesContent(of other: Self) -> Bool {
         score == other.score && grade == other.grade && dayType == other.dayType
@@ -156,6 +202,15 @@ final class WidgetDataStore {
         }
         saveRecoveryDebt(snapshot)
         return true
+    }
+
+    func saveMirror(_ snapshot: WidgetMirrorSnapshot) {
+        save(snapshot, forKey: AppKeys.Widget.mirror)
+        WidgetCenter.shared.reloadTimelines(ofKind: "MirrorStreakWidget")
+    }
+
+    func loadMirror() -> WidgetMirrorSnapshot? {
+        load(forKey: AppKeys.Widget.mirror)
     }
 
     func markLastUpdate() {
