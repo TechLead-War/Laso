@@ -16,6 +16,11 @@ enum AppKeys {
         static let paywallDeclined             = "healthpulse.paywallDeclined"
         /// Raw value of `ThemePreference`. Absent means follow the device.
         static let themePreference             = "healthpulse.themePreference"
+        static let appLockEnabled              = "healthpulse.appLockEnabled"
+        /// Raw value of `AppLockManager.LockTiming`. Absent means lock right away.
+        static let appLockTiming               = "healthpulse.appLockTiming"
+        /// Epoch seconds when App Lock was turned on. Feeds days_active on disable.
+        static let appLockEnabledAt            = "healthpulse.appLockEnabledAt"
     }
 
     // MARK: - Session & Lifecycle

@@ -48,6 +48,7 @@ enum AppFeature: String, Hashable {
     case notificationsSettings = "notifications_settings"
     case exploreDaySheet = "explore_day_sheet"
     case mirrorCapture = "mirror_capture"
+    case appLock = "app_lock"
 }
 
 /// Actionable block/card types. only user-initiated taps and meaningful interactions.
@@ -226,6 +227,7 @@ enum BlockType: String {
     case settingsTermsLink = "settings_terms_link"
     case settingsAcknowledgements = "settings_acknowledgements"
     case settingsSiri = "settings_siri"
+    case settingsAppLock = "settings_app_lock"
     case settingsDeleteData = "settings_delete_data"
     case acknowledgementSourceLink = "acknowledgement_source_link"
 
@@ -2039,6 +2041,19 @@ final class AppAnalytics {
         logEvent("setting_changed", parameters: [
             "setting_name": name,
             "new_value": stringValue
+        ])
+    }
+
+    func trackAppLockEnabled(timing: String, method: String) {
+        logEvent("app_lock_enabled", parameters: [
+            "lock_timing": timing,
+            "unlock_method": method
+        ])
+    }
+
+    func trackAppLockDisabled(daysActive: Int) {
+        logEvent("app_lock_disabled", parameters: [
+            "days_active": daysActive
         ])
     }
 

@@ -115,6 +115,7 @@ struct SettingsView: View {
                 referralSection
                 subscriptionSection
                 dataSection
+                privacySection
                 notificationsSection
                 supportSection
                 aboutSection
@@ -379,6 +380,43 @@ struct SettingsView: View {
             Text(Copy.Settings.yourData)
         } footer: {
             Text(Copy.Settings.dataStorageFooter)
+        }
+    }
+
+    // MARK: - Privacy Section
+
+    private var appLockManager: AppLockManager { AppLockManager.shared }
+
+    private var privacySection: some View {
+        Section {
+            NavigationLink {
+                AppLockSettingsView()
+            } label: {
+                settingsRow(
+                    icon: "lock.fill",
+                    iconColor: AppColour.accent,
+                    title: Copy.Settings.appLock,
+                    subtitle: appLockManager.isEnabled
+                        ? Copy.Settings.appLockStatusOn(appLockManager.unlockMethodName)
+                        : Copy.Settings.appLockStatusOff
+                )
+            }
+            .accessibilityIdentifier("settings.row.appLock")
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "App Lock",
+                    type: .settingsAppLock,
+                    screen: .settings,
+                    metadata: [
+                        "destination": "app_lock",
+                        "enabled": appLockManager.isEnabled
+                    ]
+                )
+            })
+        } header: {
+            Text(Copy.Settings.privacy)
+        } footer: {
+            Text(Copy.Settings.appLockRowFooter(appLockManager.unlockMethodName))
         }
     }
 

@@ -56,6 +56,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Laso uses your camera only when you choose to take a photo, for your share card or your Daily Mirror. Photos never leave your device unless you share them.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Laso locks the app with Face ID so only you can see your health data.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>

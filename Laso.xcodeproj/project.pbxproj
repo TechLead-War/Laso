@@ -24,6 +24,7 @@
 		0B241C38AC72F42837C9BB10 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		0BA034199EEE6FDFC960B61A /* AnalysisSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904302FDB500593CF09CC92A /* AnalysisSummaryWidget.swift */; };
 		0BC728283F344678988F17BA /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2528F279EF11BFB08AE04FB /* UserBaseline.swift */; };
+		0BD3BF955035E67798C85F53 /* AppLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE167940479D769EC2E6956F /* AppLockSettingsView.swift */; };
 		0C16CC0888FD046F4CB534DA /* InsightsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC920152F8808345BE3999F /* InsightsDetailView.swift */; };
 		0C2352F05719A8A87D6083AB /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 809504B6D7C45516EF0C8447 /* FirebaseFirestore */; };
 		0C58379FB86A770813A9DEF8 /* TodayScoreActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB1A666E09691C20AB1B964 /* TodayScoreActivityAttributes.swift */; };
@@ -456,6 +457,7 @@
 		ECE35010F12F68B525CBA2EB /* OnboardingAbandonmentScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF65F1DEF8141B3AF16D780 /* OnboardingAbandonmentScheduler.swift */; };
 		ED4D58D4C2BBEA008EE7B2D2 /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233D9210207A5576939CE250 /* ExploreView.swift */; };
 		EE2C582EDF480EA346B57D98 /* OnboardingHealthSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */; };
+		EEFF0C391F9617E8F6E744E0 /* AppLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA950386F1DA720B5736CC9 /* AppLockManager.swift */; };
 		EF7B83B980E7F3DD1DA44495 /* PersonalHealthForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */; };
 		F0E669E7CEA290C532C2CA8C /* TodayBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2630646758E72C032CFF3399 /* TodayBriefingView.swift */; };
 		F103F39A09D6DC89E6DFF702 /* Copy+Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5621DF431F6BE1049533CFAC /* Copy+Paywall.swift */; };
@@ -671,6 +673,7 @@
 		3A5D8C4A6668F3E76A40E24D /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
 		3A6023E6422F4DC43D3171E1 /* WeeklyReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewViewModel.swift; sourceTree = "<group>"; };
 		3BC12905F26E546B850B843B /* TodayWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWorkoutView.swift; sourceTree = "<group>"; };
+		3CA950386F1DA720B5736CC9 /* AppLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockManager.swift; sourceTree = "<group>"; };
 		3D6244DC773B390884AB9495 /* AccelerateHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccelerateHelpers.swift; sourceTree = "<group>"; };
 		3DBF894D61F74B87706B9396 /* WakeUpTimeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeUpTimeDetector.swift; sourceTree = "<group>"; };
 		3E0FF72B5323F23F5726B0CD /* AnalysisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisEngine.swift; sourceTree = "<group>"; };
@@ -975,6 +978,7 @@
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DD5FB10DF230EF3F82639ED0 /* RemoteConfigTemplate.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RemoteConfigTemplate.md; sourceTree = "<group>"; };
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
+		DE167940479D769EC2E6956F /* AppLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockSettingsView.swift; sourceTree = "<group>"; };
 		DE55E2E0C2CAA16959B74003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
 		DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
@@ -1336,6 +1340,7 @@
 				C2C7BCB77296C0CC52749362 /* AppContainer.swift */,
 				A260467379612091A6B0F24B /* AppDelegate.swift */,
 				42DD4F97763CFD162113D17E /* AppLaunchCoordinator.swift */,
+				3CA950386F1DA720B5736CC9 /* AppLockManager.swift */,
 				42D638D228E17F85750AAEC2 /* AppStartupCoordinator.swift */,
 				91B1749FB7A1F18CD22BDBFF /* AppStateStore.swift */,
 				368FC2819DDF1775D1DCEF84 /* BackgroundRefreshCoordinator.swift */,
@@ -2039,6 +2044,7 @@
 			isa = PBXGroup;
 			children = (
 				BF86987B6B0814201D9BB63B /* AcknowledgementsView.swift */,
+				DE167940479D769EC2E6956F /* AppLockSettingsView.swift */,
 				0A18A6F9AA87258F79A4CA40 /* NotificationsSettingsView.swift */,
 				246EB96A91A1CDEB84FE85E5 /* SettingsView.swift */,
 			);
@@ -2717,6 +2723,8 @@
 				1411297400144370DE69A867 /* AppIntegrityGuard.swift in Sources */,
 				0D205F8554E0EC6B9D8D6F5D /* AppKeys.swift in Sources */,
 				2FA97BD414E1C68FF9177EBF /* AppLaunchCoordinator.swift in Sources */,
+				EEFF0C391F9617E8F6E744E0 /* AppLockManager.swift in Sources */,
+				0BD3BF955035E67798C85F53 /* AppLockSettingsView.swift in Sources */,
 				1950AF944ADD8EF215AD4FD4 /* AppSecrets.swift in Sources */,
 				E1497BD5785876B576405F1D /* AppStartupCoordinator.swift in Sources */,
 				8D05B790D6A4DC2B69405F83 /* AppStateStore.swift in Sources */,
@@ -3255,7 +3263,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 110;
+				CURRENT_PROJECT_VERSION = 111;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3274,7 +3282,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.102;
+				MARKETING_VERSION = 1.2.103;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3345,7 +3353,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 110;
+				CURRENT_PROJECT_VERSION = 111;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3358,7 +3366,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.102;
+				MARKETING_VERSION = 1.2.103;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

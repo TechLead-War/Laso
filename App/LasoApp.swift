@@ -5,6 +5,7 @@ import AppIntents
 @main
 struct LasoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var container: AppContainer
 
@@ -158,6 +159,22 @@ struct LasoApp: App {
                 container.healthKitManager.stopDashboardObservers()
                 WatchMonitor.shared.stopMonitoring()
                 PhoneWatchSession.shared.clearForAccountWipe()
+                AppLockManager.shared.resetForAccountWipe()
+            }
+            // App Lock rides scene transitions: cover on resign, arm the relock
+            // timer on background, lock or clear the cover on return.
+            .task { AppLockManager.shared.onLaunch() }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                switch newPhase {
+                case .inactive:
+                    if oldPhase == .active { AppLockManager.shared.sceneWillResignActive() }
+                case .background:
+                    AppLockManager.shared.sceneDidEnterBackground()
+                case .active:
+                    AppLockManager.shared.sceneDidActivate()
+                @unknown default:
+                    break
+                }
             }
             // Appearance is applied to the window by ThemeManager, not with
             // .preferredColorScheme — see ThemeManager for why "System" cannot

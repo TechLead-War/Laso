@@ -12,6 +12,13 @@ struct ReadinessIntent: AppIntent {
     static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        // App Lock promises health data stays behind Face ID; Siri must not
+        // read it out while the lock is on.
+        if AppLockManager.isLockActive {
+            return .result(dialog: IntentDialog(stringLiteral: Copy.Settings.appLockSiriLocked)) {
+                IntentSnippetViews.ErrorSnippet(message: Copy.Settings.lockedTitle)
+            }
+        }
         await MainActor.run {
             AppAnalytics.shared.trackBlockTap(
                 title: "Check Readiness",

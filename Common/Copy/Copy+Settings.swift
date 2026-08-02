@@ -178,6 +178,42 @@ extension Copy {
         static var themeSystem: String { RemoteConfigManager.shared.copyString("copy_settings_theme_system", default: "System") }
         static var themeFooter: String { RemoteConfigManager.shared.copyString("copy_settings_theme_footer", default: "System follows your device setting, including its light and dark schedule.") }
 
+        // MARK: - App Lock
+
+        static var privacy: String { RemoteConfigManager.shared.copyString("copy_settings_privacy", default: "Privacy") }
+        static var appLock: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock", default: "App Lock") }
+        static var appLockStatusOff: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_status_off", default: "Off") }
+        static func appLockStatusOn(_ method: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_settings_app_lock_status_on", default: "%@ on"), method)
+        }
+        static func appLockRowFooter(_ method: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_settings_app_lock_row_footer", default: "Lock Laso with %@ so only you can open it."), method)
+        }
+        static func requireUnlock(_ method: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_settings_app_lock_require", default: "Require %@"), method)
+        }
+        static func appLockFooterBiometric(_ method: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_settings_app_lock_footer_biometric", default: "Your health scores, sleep, stress and mirror photos stay visible only to you. If %@ fails, your phone passcode unlocks the app."), method)
+        }
+        static var appLockFooterPasscode: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_footer_passcode", default: "Your health scores, sleep, stress and mirror photos stay visible only to you.") }
+        static var lockAfterLeaving: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_after_leaving", default: "Lock after leaving the app") }
+        static var lockRightAway: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_right_away", default: "Right away") }
+        static var lockAfterOneMinute: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_after_one_minute", default: "After 1 minute") }
+        static var lockAfterFiveMinutes: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_after_five_minutes", default: "After 5 minutes") }
+        static var lockTimingFooter: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_timing_footer", default: "Right away is safest when you hand your phone to someone.") }
+        static var lockedTitle: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_locked_title", default: "Laso is locked") }
+        static var lockedSubtitle: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_locked_subtitle", default: "Your health data stays private. Unlock to continue.") }
+        static func unlockWith(_ method: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_settings_app_lock_unlock_with", default: "Unlock with %@"), method)
+        }
+        static var appLockAuthReason: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_auth_reason", default: "Unlock your health data") }
+        static var appLockNoPasscodeTitle: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_no_passcode_title", default: "No phone passcode") }
+        static var appLockNoPasscodeMessage: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_no_passcode_message", default: "Set a passcode on your phone in Settings first. App Lock needs it as a backup way to unlock.") }
+        static var appLockSiriLocked: String { RemoteConfigManager.shared.copyString("copy_settings_app_lock_siri_locked", default: "Laso is locked. Open the app and unlock to see this.") }
+        static var faceID: String { RemoteConfigManager.shared.copyString("copy_settings_face_id", default: "Face ID") }
+        static var touchID: String { RemoteConfigManager.shared.copyString("copy_settings_touch_id", default: "Touch ID") }
+        static var passcode: String { RemoteConfigManager.shared.copyString("copy_settings_passcode", default: "Passcode") }
+
         // MARK: - Lifted interpolated view literals
         static func xText(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_settings_x_text", default: "%@ %@"), p0, p1) }
         static func perDayValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_settings_per_day_value", default: "%d per day"), p0) }
