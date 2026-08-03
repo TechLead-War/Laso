@@ -15,7 +15,21 @@ struct MirrorCaptureSheet: View {
 
     @State private var stage: Stage
     @State private var filter: MirrorFilter = .stamp
+    @State private var look: MirrorLook = .original
     @State private var saveFailed = false
+    @State private var photosSaveFailed = false
+    @State private var score: Int? = ReadinessStore().loadCachedScore()
+
+    /// Screen-sized copy of the capture, plus the colour look currently applied
+    /// to it and one thumbnail per look for the strip. All three are built once
+    /// per capture so switching looks costs a few milliseconds, not a full
+    /// camera frame re-filtered on the main thread.
+    @State private var previewBase: UIImage?
+    @State private var lookedPreview: UIImage?
+    @State private var lookThumbs: [MirrorLook: UIImage] = [:]
+
+    private static let previewMaxPixel: CGFloat = 1080
+    private static let lookThumbMaxPixel: CGFloat = 160
 
     private let store = MirrorPhotoStore.shared
 
@@ -51,6 +65,12 @@ struct MirrorCaptureSheet: View {
         }
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.mirrorCapture) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.mirrorCapture) }
+        // Sits on the root, not on the confirm screen: the copy to Photos
+        // finishes after the replay has already replaced it, and a silent
+        // failure would leave the user believing the photo is backed up.
+        .alert(Copy.Mirror.photosSaveFailed, isPresented: $photosSaveFailed) {
+            Button(Copy.Buttons.done, role: .cancel) {}
+        }
     }
 
     // MARK: - First run explainer
@@ -124,7 +144,7 @@ struct MirrorCaptureSheet: View {
         }
     }
 
-    // MARK: - Filter confirm
+    // MARK: - Look and filter confirm
 
     private func confirm(_ image: UIImage) -> some View {
         VStack(spacing: DS.space4) {
@@ -146,14 +166,14 @@ struct MirrorCaptureSheet: View {
             // the stamp can never collide with the controls below. The overlay
             // sizes to the fitted photo rect, which is exactly the rect the
             // baked JPEG uses.
-            Image(uiImage: image)
+            Image(uiImage: lookedPreview ?? image)
                 .resizable()
                 .scaledToFit()
                 .overlay(
                     MirrorOverlay(
                         filter: filter,
                         date: .now,
-                        score: ReadinessStore().loadCachedScore(),
+                        score: score,
                         streak: stampStreak
                     )
                 )
@@ -162,6 +182,7 @@ struct MirrorCaptureSheet: View {
 
             Spacer(minLength: 0)
 
+            lookStrip
             filterChips
 
             Button {
@@ -181,42 +202,118 @@ struct MirrorCaptureSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.ignoresSafeArea())
         .environment(\.colorScheme, .dark)
+        .onAppear { prepareLookPreviews(image) }
         .alert(Copy.Mirror.saveFailed, isPresented: $saveFailed) {
             Button(Copy.Buttons.done, role: .cancel) {}
         }
     }
 
-    private var filterChips: some View {
-        HStack(spacing: DS.space2) {
-            ForEach(MirrorFilter.allCases) { candidate in
-                Button {
-                    filter = candidate
-                } label: {
-                    Text(candidate.label)
-                        .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(filter == candidate ? Color.black : .white)
-                        .padding(.horizontal, DS.space3)
-                        .padding(.vertical, DS.space2)
-                        .background(
-                            filter == candidate ? Color.white : .white.opacity(0.15),
-                            in: Capsule()
-                        )
+    /// Colour looks, shown as live thumbnails of this capture: a name alone
+    /// ("Fade") does not tell anyone what the photo will look like.
+    private var lookStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.space3) {
+                ForEach(MirrorLook.allCases) { candidate in
+                    Button {
+                        select(candidate)
+                    } label: {
+                        VStack(spacing: DS.space1) {
+                            lookThumb(candidate)
+                            Text(candidate.label)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(look == candidate ? .white : .white.opacity(0.6))
+                        }
+                    }
+                    .accessibilityAddTraits(look == candidate ? .isSelected : [])
                 }
-                .accessibilityAddTraits(filter == candidate ? .isSelected : [])
             }
+            .padding(.horizontal, DS.space4)
+        }
+        .sensoryFeedback(.selection, trigger: look)
+    }
+
+    @ViewBuilder
+    private func lookThumb(_ candidate: MirrorLook) -> some View {
+        let side: CGFloat = 52
+        Group {
+            if let thumb = lookThumbs[candidate] {
+                Image(uiImage: thumb)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color.white.opacity(0.15)
+            }
+        }
+        .frame(width: side, height: side)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        .overlay {
+            RoundedRectangle(cornerRadius: DS.Radius.sm)
+                .strokeBorder(look == candidate ? Color.white : .clear, lineWidth: 2)
+        }
+    }
+
+    /// Data overlays. Scrollable because the row no longer fits on one screen,
+    /// and score-only overlays are dropped on a day with no score.
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.space2) {
+                ForEach(MirrorFilter.available(hasScore: score != nil)) { candidate in
+                    Button {
+                        filter = candidate
+                    } label: {
+                        Text(candidate.label)
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(filter == candidate ? Color.black : .white)
+                            .padding(.horizontal, DS.space3)
+                            .padding(.vertical, DS.space2)
+                            .background(
+                                filter == candidate ? Color.white : .white.opacity(0.15),
+                                in: Capsule()
+                            )
+                    }
+                    .accessibilityAddTraits(filter == candidate ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, DS.space4)
         }
         .padding(.bottom, DS.space4)
         .sensoryFeedback(.selection, trigger: filter)
     }
 
+    private func select(_ candidate: MirrorLook) {
+        look = candidate
+        guard let previewBase else { return }
+        lookedPreview = MirrorLookRenderer.apply(candidate, to: previewBase)
+    }
+
+    private func prepareLookPreviews(_ image: UIImage) {
+        let base = MirrorPhotoStore.downscaled(image, maxPixel: Self.previewMaxPixel)
+        previewBase = base
+        lookedPreview = MirrorLookRenderer.apply(look, to: base)
+
+        let thumbBase = MirrorPhotoStore.downscaled(base, maxPixel: Self.lookThumbMaxPixel)
+        lookThumbs = Dictionary(uniqueKeysWithValues: MirrorLook.allCases.map {
+            ($0, MirrorLookRenderer.apply($0, to: thumbBase))
+        })
+    }
+
     private func save(_ image: UIImage) {
-        let score = ReadinessStore().loadCachedScore()
         let streak = stampStreak
+        // Colour first, overlay second: the stamp must stay legible white on
+        // black, not get pushed through a mono or fade filter with the photo.
+        let looked = MirrorLookRenderer.apply(look, to: image)
         let finished = MirrorPhotoRenderer.render(
-            photo: image, filter: filter, date: .now, score: score, streak: streak
+            photo: looked, filter: filter, date: .now, score: score, streak: streak
         )
         do {
             try store.save(finished, score: score, streak: streak)
+            if MirrorPhotoLibrary.isEnabled {
+                Task {
+                    if await MirrorPhotoLibrary.save(finished) == false {
+                        photosSaveFailed = true
+                    }
+                }
+            }
             // A capture from any door ends the prompt's quiet period and
             // dismissal count: the user is engaged again.
             MirrorMomentManager.shared.recordCaptured()
@@ -226,6 +323,7 @@ struct MirrorCaptureSheet: View {
                 screen: .mirrorCapture,
                 metadata: [
                     "filter": filter.rawValue,
+                    "look": look.rawValue,
                     "streak": streak,
                     "has_score": score != nil
                 ]

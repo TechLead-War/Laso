@@ -21,6 +21,7 @@
 		078BE92ABF81E3179AF99EF8 /* FeedbackPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1D030EF7F163D8F2CDD0CD /* FeedbackPromptManager.swift */; };
 		08CC2A1F3501BECC92DAB011 /* RemoteConfigSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8BC791E520041885A5F9D66 /* RemoteConfigSchema.swift */; };
 		0901C78DEA61ADB1FEA001D3 /* AdherenceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */; };
+		0A7699D7F72EEA1FD23C3EA3 /* MirrorLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = F604C329D07BCC4C0940F62E /* MirrorLook.swift */; };
 		0B241C38AC72F42837C9BB10 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		0BA034199EEE6FDFC960B61A /* AnalysisSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904302FDB500593CF09CC92A /* AnalysisSummaryWidget.swift */; };
 		0BC728283F344678988F17BA /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2528F279EF11BFB08AE04FB /* UserBaseline.swift */; };
@@ -64,6 +65,7 @@
 		1DF04CDBA27B5FDD2A0349F4 /* BreathworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16425BB154CB6626E8F2463 /* BreathworkView.swift */; };
 		1E22C1B64955D1CB608A78BD /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F47A0BD262D48C73776740B /* ForceUpdateView.swift */; };
 		1E2FF2B341FB89D5609D1C41 /* Insight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 674936E86E917B6F37B17698 /* Insight.swift */; };
+		1E545055621EB6019584079E /* MirrorGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D830F3EAD66B813F8894C37 /* MirrorGalleryView.swift */; };
 		1EC894A825A1978B30149E23 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12CE5681E27AAA16A13E2727 /* ProFeatureOverlay.swift */; };
 		1ED825E0323AC89385B30050 /* LiveRefreshPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A0CA4192244918F8673806 /* LiveRefreshPlanner.swift */; };
 		1ED98655A5B9B5C5AD398DAE /* NotificationRepromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64E3472403085C1A2A22D24C /* NotificationRepromptManager.swift */; };
@@ -97,6 +99,7 @@
 		2F19483F01ACDB937C5ACC3B /* MLCalibrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957C6C8214A079EB29F5754E /* MLCalibrationManager.swift */; };
 		2FA97BD414E1C68FF9177EBF /* AppLaunchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42DD4F97763CFD162113D17E /* AppLaunchCoordinator.swift */; };
 		301599C98009F193A2418AED /* PredictiveHealthSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B22E58759FFF233236D942C /* PredictiveHealthSignals.swift */; };
+		30248F6B7AE3B6E562AC4E81 /* MirrorPhotoLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CB2D3664D84558516F0925 /* MirrorPhotoLibrary.swift */; };
 		30277AB3F8885AC215CE5BF2 /* DailyActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A47E1CFAD202D04EBC29296 /* DailyActionStore.swift */; };
 		3045F084B4C7EACD9B06DED3 /* NotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3A683298AFEEA85B728A9D /* NotificationPreferences.swift */; };
 		306A84E4FBE1ABFFCE25AE46 /* SleepDebtTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361995D08D2DE1BCBED85066 /* SleepDebtTracker.swift */; };
@@ -864,6 +867,7 @@
 		9B1126FDF9B9F9CB1B17EA3B /* WidgetStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStyle.swift; sourceTree = "<group>"; };
 		9B65BB412118954AC2AAE5B1 /* DailyActionResultStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionResultStore.swift; sourceTree = "<group>"; };
 		9CBCE5F0076403F1992FEF39 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		9D830F3EAD66B813F8894C37 /* MirrorGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorGalleryView.swift; sourceTree = "<group>"; };
 		9DE80A834AB5919BB9C3D041 /* Copy+SleepCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+SleepCoach.swift"; sourceTree = "<group>"; };
 		9E19438F39FEFC8FE00D4532 /* Copy+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Live.swift"; sourceTree = "<group>"; };
 		9E3B13F4131F97D8A3453704 /* CardioRespiratoryAgeAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardioRespiratoryAgeAnalyzer.swift; sourceTree = "<group>"; };
@@ -1021,6 +1025,8 @@
 		F4F4693DEFC0B60CED6018E5 /* WakeAnchorAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeAnchorAnalyzer.swift; sourceTree = "<group>"; };
 		F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthSnapshot.swift; sourceTree = "<group>"; };
 		F5B2C63FCAD32635EA9F6DB2 /* MirrorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorOverlay.swift; sourceTree = "<group>"; };
+		F5CB2D3664D84558516F0925 /* MirrorPhotoLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorPhotoLibrary.swift; sourceTree = "<group>"; };
+		F604C329D07BCC4C0940F62E /* MirrorLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorLook.swift; sourceTree = "<group>"; };
 		F7103B6451DAE1FA564160CC /* MirrorPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorPhotoStore.swift; sourceTree = "<group>"; };
 		F7901D4D2355FF56E578ED1E /* FoundationModelQueryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelQueryEngine.swift; sourceTree = "<group>"; };
 		F87A76DA46FCC55AB12B2B0E /* AppColour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColour.swift; sourceTree = "<group>"; };
@@ -2065,6 +2071,8 @@
 			isa = PBXGroup;
 			children = (
 				99E62CC2603255CF0D0DB6DF /* MirrorCaptureSheet.swift */,
+				9D830F3EAD66B813F8894C37 /* MirrorGalleryView.swift */,
+				F604C329D07BCC4C0940F62E /* MirrorLook.swift */,
 				0FCEEA950B21917873ABAAB8 /* MirrorMomentSheet.swift */,
 				F5B2C63FCAD32635EA9F6DB2 /* MirrorOverlay.swift */,
 				48E49716A7B7885C25DA5044 /* MirrorPhotoViewer.swift */,
@@ -2419,6 +2427,7 @@
 			isa = PBXGroup;
 			children = (
 				AA5F67125732D1258530187F /* MirrorMomentManager.swift */,
+				F5CB2D3664D84558516F0925 /* MirrorPhotoLibrary.swift */,
 				F7103B6451DAE1FA564160CC /* MirrorPhotoStore.swift */,
 			);
 			path = Services;
@@ -2960,9 +2969,12 @@
 				6A6F6442958A6B981E7ACD5D /* MetricTimeSeries.swift in Sources */,
 				7BEC1B924C438F6A599BC5BA /* MetricVerdict.swift in Sources */,
 				4FEC81F0FA006DD563BDC6D2 /* MirrorCaptureSheet.swift in Sources */,
+				1E545055621EB6019584079E /* MirrorGalleryView.swift in Sources */,
+				0A7699D7F72EEA1FD23C3EA3 /* MirrorLook.swift in Sources */,
 				C7C6F710A2D0AB9556574F36 /* MirrorMomentManager.swift in Sources */,
 				DA9EF1A93EE3677AC99E17AC /* MirrorMomentSheet.swift in Sources */,
 				9865CFFF72EBCCDB0BC6FB9C /* MirrorOverlay.swift in Sources */,
+				30248F6B7AE3B6E562AC4E81 /* MirrorPhotoLibrary.swift in Sources */,
 				CC69B4FA6EBC04E9EFE85250 /* MirrorPhotoStore.swift in Sources */,
 				46DADEDD9DD914C3C006DE2D /* MirrorPhotoViewer.swift in Sources */,
 				8C4B4B79E3CEC07A3027EBE4 /* MirrorReminderScheduler.swift in Sources */,
@@ -3279,7 +3291,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 113;
+				CURRENT_PROJECT_VERSION = 114;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3298,7 +3310,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.105;
+				MARKETING_VERSION = 1.2.106;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3369,7 +3381,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 113;
+				CURRENT_PROJECT_VERSION = 114;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3382,7 +3394,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.105;
+				MARKETING_VERSION = 1.2.106;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

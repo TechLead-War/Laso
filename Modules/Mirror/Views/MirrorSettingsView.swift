@@ -11,6 +11,12 @@ struct MirrorSettingsView: View {
 
     @State private var reminderOn = MirrorReminderScheduler.isEnabled
     @State private var reminderDenied = false
+
+    @State private var saveToPhotos = MirrorPhotoLibrary.isEnabled
+    @State private var photosDenied = false
+    @State private var exporting = false
+    /// Non-nil once an export finishes, holding how many photos landed.
+    @State private var exportedCount: Int?
     @State private var windowStart = Self.date(fromMinutes: MirrorReminderScheduler.windowStartMinutes)
     @State private var windowEnd = Self.date(fromMinutes: MirrorReminderScheduler.windowEndMinutes)
 
@@ -35,27 +41,14 @@ struct MirrorSettingsView: View {
                 }
 
                 Section {
-                    ForEach(store.allDays.reversed(), id: \.self) { day in
-                        HStack {
-                            Text(day.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year()))
-                                .font(DS.Typography.subheadline)
-                            Spacer()
-                            if let score = store.meta(on: day)?.score {
-                                Text("\(score)")
-                                    .font(DS.Typography.subheadlineSemibold)
-                                    .monospacedDigit()
-                                    .foregroundStyle(DS.scoreColor(score))
-                            }
-                        }
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                delete(day)
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                        }
+                    NavigationLink {
+                        MirrorGalleryView()
+                    } label: {
+                        LabeledContent(Copy.Mirror.settingsGallery, value: "\(store.photoCount)")
                     }
                 }
+
+                photosLibrarySection
 
                 Section {
                     Button(role: .destructive) {
@@ -97,6 +90,87 @@ struct MirrorSettingsView: View {
         }
         .alert(Copy.Mirror.saveFailed, isPresented: $deleteFailed) {
             Button(Copy.Buttons.done, role: .cancel) {}
+        }
+        .alert(Copy.Mirror.settingsPhotosDenied, isPresented: $photosDenied) {
+            Button(Copy.Buttons.done, role: .cancel) {}
+        }
+        .alert(
+            Copy.Mirror.settingsExportDone(exportedCount ?? 0),
+            isPresented: Binding(get: { exportedCount != nil }, set: { if !$0 { exportedCount = nil } })
+        ) {
+            Button(Copy.Buttons.done, role: .cancel) {}
+        }
+    }
+
+    // MARK: - Copy into the Photos app
+
+    /// The only way a Daily Mirror photo outlives the app being deleted, so the
+    /// footer states plainly what turning it on does and does not change.
+    private var photosLibrarySection: some View {
+        Section {
+            Toggle(Copy.Mirror.settingsPhotosToggle, isOn: Binding(
+                get: { saveToPhotos },
+                set: { enabled in setSaveToPhotos(enabled) }
+            ))
+            if store.photoCount > 0 {
+                Button {
+                    exportAll()
+                } label: {
+                    HStack {
+                        Text(Copy.Mirror.settingsExportAll)
+                        if exporting {
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+                }
+                .disabled(exporting)
+            }
+        } footer: {
+            Text(Copy.Mirror.settingsPhotosFooter)
+        }
+    }
+
+    private func setSaveToPhotos(_ enabled: Bool) {
+        AppAnalytics.shared.trackBlockTap(
+            title: "Mirror save to Photos toggle",
+            type: .mirrorPhotosLibraryToggled,
+            screen: .settings,
+            metadata: ["enabled": enabled]
+        )
+        guard enabled else {
+            saveToPhotos = false
+            MirrorPhotoLibrary.isEnabled = false
+            return
+        }
+        // Ask now rather than at the next capture: a permission sheet in the
+        // middle of the camera flow is the worst possible moment for it.
+        saveToPhotos = true
+        Task {
+            let granted = await MirrorPhotoLibrary.requestAccess()
+            saveToPhotos = granted
+            MirrorPhotoLibrary.isEnabled = granted
+            if !granted { photosDenied = true }
+        }
+    }
+
+    private func exportAll() {
+        exporting = true
+        Task {
+            let urls = store.allDays.compactMap { store.fileURL(on: $0) }
+            let saved = await MirrorPhotoLibrary.saveAll(urls)
+            exporting = false
+            AppAnalytics.shared.trackBlockTap(
+                title: "Save mirror archive to Photos",
+                type: .mirrorPhotosExported,
+                screen: .settings,
+                metadata: ["photo_count": urls.count, "saved_count": saved]
+            )
+            if saved == 0 && !urls.isEmpty {
+                photosDenied = true
+            } else {
+                exportedCount = saved
+            }
         }
     }
 
@@ -192,17 +266,4 @@ struct MirrorSettingsView: View {
         return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
     }
 
-    private func delete(_ day: Date) {
-        do {
-            try store.delete(on: day)
-            AppAnalytics.shared.trackBlockTap(
-                title: "Delete mirror photo",
-                type: .mirrorArchiveDeleted,
-                screen: .settings,
-                metadata: ["scope": "single"]
-            )
-        } catch {
-            deleteFailed = true
-        }
-    }
 }

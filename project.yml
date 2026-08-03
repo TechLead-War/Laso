@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.105"
-    CURRENT_PROJECT_VERSION: "113"
+    MARKETING_VERSION: "1.2.106"
+    CURRENT_PROJECT_VERSION: "114"
 
 packages:
   Firebase:
@@ -80,6 +80,7 @@ targets:
         NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
         NSCameraUsageDescription: "Laso uses your camera only when you choose to take a photo, for your share card or your Daily Mirror. Photos never leave your device unless you share them."
         NSFaceIDUsageDescription: "Laso locks the app with Face ID so only you can see your health data."
+        NSPhotoLibraryAddUsageDescription: "Laso saves a copy of your Daily Mirror photos to your Photos app, but only if you turn that on, so your archive survives deleting the app. Laso can add photos and never read the ones already there."
         POSTHOG_API_KEY: $(POSTHOG_API_KEY)
         POSTHOG_HOST: $(POSTHOG_HOST)
         AMPLITUDE_API_KEY: $(AMPLITUDE_API_KEY)

@@ -62,6 +62,8 @@
 	<string>Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Laso saves a copy of your Daily Mirror photos to your Photos app, but only if you turn that on, so your archive survives deleting the app. Laso can add photos and never read the ones already there.</string>
 	<key>NSSiriUsageDescription</key>
 	<string>Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free.</string>
 	<key>NSSupportsLiveActivities</key>

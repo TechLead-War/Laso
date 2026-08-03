@@ -20,19 +20,35 @@ extension Copy {
         static var explainerBody: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_body", default: "Daily Mirror photos are stored only on this device, protected by your phone's passcode encryption.") }
         static var explainerPoint1: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_point1", default: "Never uploaded. No cloud, no server, no backup we can see.") }
         static var explainerPoint2: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_point2", default: "Not in your camera roll. Photos live inside Laso only.") }
-        static var explainerPoint3: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_point3", default: "One trade off. If you lose this phone, the archive goes with it.") }
+        static var explainerPoint3: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_point3", default: "One trade off. Delete Laso and the archive goes too, unless you turn on saving to Photos in settings.") }
         static var explainerStart: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_start", default: "Allow camera and start") }
         static var explainerLater: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_later", default: "Maybe later") }
 
         // MARK: - Capture and confirm
 
+        // Data overlays baked into the photo.
         static var filterStamp: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_stamp", default: "Today stamp") }
         static var filterTint: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_tint", default: "Score tint") }
         static var filterStreak: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_streak", default: "Streak") }
+        static var filterRing: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_ring", default: "Score ring") }
+        static var filterBigScore: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_big_score", default: "Big score") }
+        /// Sits under the large numeral on the big score overlay.
+        static var filterBigScoreUnit: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_big_score_unit", default: "RECOVERY") }
+        static var filterDateOnly: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_date_only", default: "Date only") }
         static var filterClean: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_clean", default: "Clean") }
+
+        // Colour looks applied to the photo itself.
+        static var lookOriginal: String { RemoteConfigManager.shared.copyString("copy_mirror_look_original", default: "Original") }
+        static var lookNoir: String { RemoteConfigManager.shared.copyString("copy_mirror_look_noir", default: "Noir") }
+        static var lookChrome: String { RemoteConfigManager.shared.copyString("copy_mirror_look_chrome", default: "Vivid") }
+        static var lookFade: String { RemoteConfigManager.shared.copyString("copy_mirror_look_fade", default: "Fade") }
+        static var lookInstant: String { RemoteConfigManager.shared.copyString("copy_mirror_look_instant", default: "Film") }
+        static var lookWarm: String { RemoteConfigManager.shared.copyString("copy_mirror_look_warm", default: "Warm") }
+
         static var confirmSave: String { RemoteConfigManager.shared.copyString("copy_mirror_confirm_save", default: "Save photo") }
         static var confirmRetake: String { RemoteConfigManager.shared.copyString("copy_mirror_confirm_retake", default: "Retake") }
         static var saveFailed: String { RemoteConfigManager.shared.copyString("copy_mirror_save_failed", default: "Could not save your photo. Please try again.") }
+        static var photosSaveFailed: String { RemoteConfigManager.shared.copyString("copy_mirror_photos_save_failed", default: "Your photo is saved in Laso, but the copy to your Photos app did not go through.") }
         /// `%d` is the readiness score baked onto the photo stamp.
         static func recoveryScore(_ score: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_mirror_recovery_score", default: "Recovery %d"), score)
@@ -120,10 +136,22 @@ extension Copy {
         static var settingsSince: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_since", default: "Your story started") }
         static var settingsSpace: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_space", default: "Space your memories take") }
         static var settingsStreak: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_streak", default: "Longest streak") }
+        static var settingsGallery: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_gallery", default: "See all photos") }
+        static var settingsPhotosToggle: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_photos_toggle", default: "Also save to Photos") }
+        static var settingsPhotosFooter: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_photos_footer", default: "Off by default. Turn it on and every new capture is also copied to your Photos app, so your archive survives deleting Laso. Laso can add photos there but never read them.") }
+        static var settingsExportAll: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_export_all", default: "Save every photo to Photos now") }
+        /// `%d` is how many photos were copied into the Photos app.
+        static func settingsExportDone(_ count: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_settings_export_done", default: "%d photos saved to your Photos app."), count)
+        }
+        static var settingsPhotosDenied: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_photos_denied", default: "Laso cannot add to your Photos app. Allow it in iOS Settings first.") }
+        static var galleryTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_gallery_title", default: "Your photos") }
+        static var galleryDelete: String { RemoteConfigManager.shared.copyString("copy_mirror_gallery_delete", default: "Delete photo") }
+        static var galleryDeleteConfirm: String { RemoteConfigManager.shared.copyString("copy_mirror_gallery_delete_confirm", default: "Delete this photo?") }
         static var settingsDeleteAll: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_all", default: "Delete entire archive") }
         static var settingsDeleteConfirmTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_confirm_title", default: "Delete all Daily Mirror photos?") }
         static var settingsDeleteAction: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_action", default: "Delete all") }
-        static var settingsFooter: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_footer", default: "Deleting is immediate and permanent. Photos are never backed up anywhere.") }
+        static var settingsFooter: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_footer", default: "Deleting is immediate and permanent. Copies you already saved to your Photos app stay there.") }
         static var settingsEmpty: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_empty", default: "No photos yet. Capture your first one from the evening check-in.") }
     }
 }

@@ -181,6 +181,11 @@ enum AppKeys {
         static let reminderWindowStartMins = "laso.mirror.reminder_window_start"
         static let reminderWindowEndMins   = "laso.mirror.reminder_window_end"
         static let reminderLastRolledDay   = "laso.mirror.reminder_last_rolled_day"
+
+        // Opt-in copy of every capture into the system Photos app, so the
+        // archive survives deleting Laso. Off by default: on-device only is
+        // still the promise the explainer makes.
+        static let saveToPhotos            = "laso.mirror.save_to_photos"
     }
 
     // MARK: - Referral

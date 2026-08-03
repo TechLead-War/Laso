@@ -49,6 +49,7 @@ enum AppFeature: String, Hashable {
     case notificationsSettings = "notifications_settings"
     case exploreDaySheet = "explore_day_sheet"
     case mirrorCapture = "mirror_capture"
+    case mirrorGallery = "mirror_gallery"
     case appLock = "app_lock"
 }
 
@@ -146,6 +147,8 @@ enum BlockType: String {
     case mirrorMomentLater = "mirror_moment_later"
     case mirrorPromptToggled = "mirror_prompt_toggled"
     case mirrorReminderToggled = "mirror_reminder_toggled"
+    case mirrorPhotosLibraryToggled = "mirror_photos_library_toggled"
+    case mirrorPhotosExported = "mirror_photos_exported"
 
     // Navigation
     case tabHome = "tab_home"

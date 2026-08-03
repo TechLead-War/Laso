@@ -1,3 +1,4 @@
+import ImageIO
 import UIKit
 import Observation
 
@@ -29,6 +30,11 @@ final class MirrorPhotoStore {
     private(set) var metaByDay: [String: Meta] = [:]
 
     private let directory: URL
+
+    /// Longest edge of a gallery thumbnail, in pixels: a 104pt tile on a 3x
+    /// screen. NSCache so memory pressure drops them instead of the app.
+    private static let thumbnailMaxPixel = 320
+    private let thumbnailCache = NSCache<NSString, UIImage>()
 
     /// Fixed-locale key formatter: the key is a filename, so it must not follow
     /// the device locale's calendar or digits. The time zone is re-read on
@@ -75,6 +81,36 @@ final class MirrorPhotoStore {
     func image(on date: Date) -> UIImage? {
         guard hasPhoto(on: date) else { return nil }
         return UIImage(contentsOfFile: photoURL(for: date).path)
+    }
+
+    /// Grid-sized decode for the gallery. Loading the full 1440px JPEG for a
+    /// 104pt tile costs about 8 MB of decoded pixels each, so a wall of them
+    /// would evict itself out of memory while scrolling.
+    ///
+    /// ponytail: synchronous, cached after first read. A first fast fling
+    /// through hundreds of photos does its ImageIO decode on the main thread;
+    /// move this to a background queue if that ever shows up as dropped frames.
+    func thumbnail(on date: Date) -> UIImage? {
+        let key = Self.dayKey(for: date) as NSString
+        if let cached = thumbnailCache.object(forKey: key) { return cached }
+        guard hasPhoto(on: date),
+              let source = CGImageSourceCreateWithURL(photoURL(for: date) as CFURL, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                  kCGImageSourceCreateThumbnailFromImageAlways: true,
+                  kCGImageSourceCreateThumbnailWithTransform: true,
+                  kCGImageSourceThumbnailMaxPixelSize: Self.thumbnailMaxPixel
+              ] as CFDictionary)
+        else { return nil }
+        let image = UIImage(cgImage: cgImage)
+        thumbnailCache.setObject(image, forKey: key)
+        return image
+    }
+
+    /// The stored JPEG itself, for handing a photo to another framework without
+    /// decoding it into memory first.
+    func fileURL(on date: Date) -> URL? {
+        guard hasPhoto(on: date) else { return nil }
+        return photoURL(for: date)
     }
 
     /// Every day with a photo, oldest first.
@@ -169,7 +205,7 @@ final class MirrorPhotoStore {
 
     /// Longest photo edge kept on disk. Screens and share cards render at most
     /// story size, so anything larger is wasted space on the user's phone.
-    private static let maxPixelDimension: CGFloat = 1440
+    static let maxPixelDimension: CGFloat = 1440
 
     func save(_ image: UIImage, on date: Date = .now, score: Int?, streak: Int) throws {
         guard let data = Self.downscaled(image).jpegData(compressionQuality: 0.72) else {
@@ -179,6 +215,9 @@ final class MirrorPhotoStore {
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         excludeFromBackup(url)
 
+        // A retake overwrites the day's file, so a stale thumbnail would keep
+        // showing the photo the user just replaced.
+        thumbnailCache.removeObject(forKey: Self.dayKey(for: date) as NSString)
         metaByDay[Self.dayKey(for: date)] = Meta(score: score, streak: streak)
         try persistIndex()
         syncWidgetSnapshot()
@@ -189,6 +228,7 @@ final class MirrorPhotoStore {
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
         }
+        thumbnailCache.removeObject(forKey: Self.dayKey(for: date) as NSString)
         metaByDay[Self.dayKey(for: date)] = nil
         try persistIndex()
         syncWidgetSnapshot()
@@ -201,6 +241,7 @@ final class MirrorPhotoStore {
                 try FileManager.default.removeItem(at: url)
             }
         }
+        thumbnailCache.removeAllObjects()
         metaByDay = [:]
         try persistIndex()
         syncWidgetSnapshot()
@@ -245,10 +286,12 @@ final class MirrorPhotoStore {
         try? target.setResourceValues(values)
     }
 
-    private static func downscaled(_ image: UIImage) -> UIImage {
+    /// Also used by the capture screen to build the filter preview off a small
+    /// copy rather than re-filtering full camera pixels on every chip tap.
+    static func downscaled(_ image: UIImage, maxPixel: CGFloat = maxPixelDimension) -> UIImage {
         let longest = max(image.size.width, image.size.height) * image.scale
-        guard longest > maxPixelDimension else { return image }
-        let ratio = maxPixelDimension / longest
+        guard longest > maxPixel else { return image }
+        let ratio = maxPixel / longest
         let size = CGSize(width: image.size.width * image.scale * ratio,
                           height: image.size.height * image.scale * ratio)
         let format = UIGraphicsImageRendererFormat()
