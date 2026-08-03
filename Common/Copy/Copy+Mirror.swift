@@ -28,22 +28,21 @@ extension Copy {
 
         // Data overlays baked into the photo.
         static var filterStamp: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_stamp", default: "Today stamp") }
-        static var filterTint: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_tint", default: "Score tint") }
+        static var filterPulse: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_pulse", default: "Heartbeat") }
         static var filterStreak: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_streak", default: "Streak") }
         static var filterRing: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_ring", default: "Score ring") }
         static var filterBigScore: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_big_score", default: "Big score") }
         /// Sits under the large numeral on the big score overlay.
         static var filterBigScoreUnit: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_big_score_unit", default: "RECOVERY") }
+        static var filterGlow: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_glow", default: "Glow") }
+        static var filterJourney: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_journey", default: "Journey") }
+        /// `%d` is the capture streak shown large on the journey overlay.
+        static func filterJourneyDay(_ day: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_filter_journey_day", default: "Day %d"), day)
+        }
+        static var filterBanner: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_banner", default: "Diary strip") }
         static var filterDateOnly: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_date_only", default: "Date only") }
         static var filterClean: String { RemoteConfigManager.shared.copyString("copy_mirror_filter_clean", default: "Clean") }
-
-        // Colour looks applied to the photo itself.
-        static var lookOriginal: String { RemoteConfigManager.shared.copyString("copy_mirror_look_original", default: "Original") }
-        static var lookNoir: String { RemoteConfigManager.shared.copyString("copy_mirror_look_noir", default: "Noir") }
-        static var lookChrome: String { RemoteConfigManager.shared.copyString("copy_mirror_look_chrome", default: "Vivid") }
-        static var lookFade: String { RemoteConfigManager.shared.copyString("copy_mirror_look_fade", default: "Fade") }
-        static var lookInstant: String { RemoteConfigManager.shared.copyString("copy_mirror_look_instant", default: "Film") }
-        static var lookWarm: String { RemoteConfigManager.shared.copyString("copy_mirror_look_warm", default: "Warm") }
 
         static var confirmSave: String { RemoteConfigManager.shared.copyString("copy_mirror_confirm_save", default: "Save photo") }
         static var confirmRetake: String { RemoteConfigManager.shared.copyString("copy_mirror_confirm_retake", default: "Retake") }

@@ -32,6 +32,11 @@ struct MirrorMomentSheet: View {
         .presentationDetents([.height(isFirstRun ? 400 : 380)])
         .presentationDragIndicator(.visible)
         .onAppear {
+            // Straight to the capture confirm step: screenshots of the overlay
+            // picker need no tap the simulator's missing camera would block.
+            if UITestMode.isEnabled, UITestMode.mirrorConfirmFilter != nil {
+                showCapture = true
+            }
             guard !openTracked else { return }
             openTracked = true
             // The day is stamped here, on confirmed presentation, never at

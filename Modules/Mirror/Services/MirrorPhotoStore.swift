@@ -205,7 +205,7 @@ final class MirrorPhotoStore {
 
     /// Longest photo edge kept on disk. Screens and share cards render at most
     /// story size, so anything larger is wasted space on the user's phone.
-    static let maxPixelDimension: CGFloat = 1440
+    private static let maxPixelDimension: CGFloat = 1440
 
     func save(_ image: UIImage, on date: Date = .now, score: Int?, streak: Int) throws {
         guard let data = Self.downscaled(image).jpegData(compressionQuality: 0.72) else {
@@ -286,12 +286,10 @@ final class MirrorPhotoStore {
         try? target.setResourceValues(values)
     }
 
-    /// Also used by the capture screen to build the filter preview off a small
-    /// copy rather than re-filtering full camera pixels on every chip tap.
-    static func downscaled(_ image: UIImage, maxPixel: CGFloat = maxPixelDimension) -> UIImage {
+    private static func downscaled(_ image: UIImage) -> UIImage {
         let longest = max(image.size.width, image.size.height) * image.scale
-        guard longest > maxPixel else { return image }
-        let ratio = maxPixel / longest
+        guard longest > maxPixelDimension else { return image }
+        let ratio = maxPixelDimension / longest
         let size = CGSize(width: image.size.width * image.scale * ratio,
                           height: image.size.height * image.scale * ratio)
         let format = UIGraphicsImageRendererFormat()

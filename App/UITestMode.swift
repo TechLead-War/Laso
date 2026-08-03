@@ -14,6 +14,7 @@ enum UITestMode {
     private static let forceProLockFlag = "--ui-test-force-pro-lock"
     private static let forceMorningCheckInFlag = "--ui-test-force-morning-checkin"
     private static let forceMirrorMomentFlag = "--ui-test-force-mirror-moment"
+    private static let mirrorConfirmPrefix = "--ui-test-mirror-confirm="
     private static let premiumShowcaseFlag = "--ui-test-premium-showcase"
     private static let subscribedFlag = "--ui-test-subscribed"
     private static let initialTabPrefix = "--ui-test-initial-tab="
@@ -86,6 +87,12 @@ enum UITestMode {
     static var forceMirrorMoment: Bool {
         ProcessInfo.processInfo.arguments.contains(forceMirrorMomentFlag)
     }
+
+    /// Opens MirrorCaptureSheet directly on the confirm step with the named
+    /// overlay preselected, using today's archived photo as the capture. The
+    /// simulator has no camera, so this is the only way to see the overlay
+    /// picker there. Format: `--ui-test-mirror-confirm=<MirrorFilter rawValue>`
+    static var mirrorConfirmFilter: String? { stringValue(for: mirrorConfirmPrefix) }
 
     /// When true, AppContainer seeds PremiumShowcaseDataProvider (thriving values)
     /// instead of SampleDataProvider so App Store screenshots reflect the
@@ -236,6 +243,7 @@ enum UITestMode {
     static var forceProLock: Bool { false }
     static var forceMorningCheckIn: Bool { false }
     static var forceMirrorMoment: Bool { false }
+    static var mirrorConfirmFilter: String? { nil }
     static var premiumShowcase: Bool { false }
     static var forceSubscribed: Bool { false }
     static var initialTab: String? { nil }

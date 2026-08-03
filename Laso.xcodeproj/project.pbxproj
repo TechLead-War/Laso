@@ -21,7 +21,6 @@
 		078BE92ABF81E3179AF99EF8 /* FeedbackPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1D030EF7F163D8F2CDD0CD /* FeedbackPromptManager.swift */; };
 		08CC2A1F3501BECC92DAB011 /* RemoteConfigSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8BC791E520041885A5F9D66 /* RemoteConfigSchema.swift */; };
 		0901C78DEA61ADB1FEA001D3 /* AdherenceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */; };
-		0A7699D7F72EEA1FD23C3EA3 /* MirrorLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = F604C329D07BCC4C0940F62E /* MirrorLook.swift */; };
 		0B241C38AC72F42837C9BB10 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		0BA034199EEE6FDFC960B61A /* AnalysisSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904302FDB500593CF09CC92A /* AnalysisSummaryWidget.swift */; };
 		0BC728283F344678988F17BA /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2528F279EF11BFB08AE04FB /* UserBaseline.swift */; };
@@ -1026,7 +1025,6 @@
 		F562D19515893A01A6D036CD /* OnboardingHealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthSnapshot.swift; sourceTree = "<group>"; };
 		F5B2C63FCAD32635EA9F6DB2 /* MirrorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorOverlay.swift; sourceTree = "<group>"; };
 		F5CB2D3664D84558516F0925 /* MirrorPhotoLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorPhotoLibrary.swift; sourceTree = "<group>"; };
-		F604C329D07BCC4C0940F62E /* MirrorLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorLook.swift; sourceTree = "<group>"; };
 		F7103B6451DAE1FA564160CC /* MirrorPhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorPhotoStore.swift; sourceTree = "<group>"; };
 		F7901D4D2355FF56E578ED1E /* FoundationModelQueryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelQueryEngine.swift; sourceTree = "<group>"; };
 		F87A76DA46FCC55AB12B2B0E /* AppColour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColour.swift; sourceTree = "<group>"; };
@@ -2072,7 +2070,6 @@
 			children = (
 				99E62CC2603255CF0D0DB6DF /* MirrorCaptureSheet.swift */,
 				9D830F3EAD66B813F8894C37 /* MirrorGalleryView.swift */,
-				F604C329D07BCC4C0940F62E /* MirrorLook.swift */,
 				0FCEEA950B21917873ABAAB8 /* MirrorMomentSheet.swift */,
 				F5B2C63FCAD32635EA9F6DB2 /* MirrorOverlay.swift */,
 				48E49716A7B7885C25DA5044 /* MirrorPhotoViewer.swift */,
@@ -2970,7 +2967,6 @@
 				7BEC1B924C438F6A599BC5BA /* MetricVerdict.swift in Sources */,
 				4FEC81F0FA006DD563BDC6D2 /* MirrorCaptureSheet.swift in Sources */,
 				1E545055621EB6019584079E /* MirrorGalleryView.swift in Sources */,
-				0A7699D7F72EEA1FD23C3EA3 /* MirrorLook.swift in Sources */,
 				C7C6F710A2D0AB9556574F36 /* MirrorMomentManager.swift in Sources */,
 				DA9EF1A93EE3677AC99E17AC /* MirrorMomentSheet.swift in Sources */,
 				9865CFFF72EBCCDB0BC6FB9C /* MirrorOverlay.swift in Sources */,
@@ -3291,7 +3287,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 114;
+				CURRENT_PROJECT_VERSION = 115;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3310,7 +3306,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.106;
+				MARKETING_VERSION = 1.2.107;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3381,7 +3377,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 114;
+				CURRENT_PROJECT_VERSION = 115;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3394,7 +3390,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.106;
+				MARKETING_VERSION = 1.2.107;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
