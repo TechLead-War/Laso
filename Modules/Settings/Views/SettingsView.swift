@@ -497,6 +497,7 @@ struct SettingsView: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("settings.row.dataExport")
@@ -770,6 +771,7 @@ struct SettingsView: View {
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tertiary)
             }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("settings.row.updateApp")
@@ -870,6 +872,7 @@ struct SettingsView: View {
                     }
                     Spacer()
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(isDeleting)
@@ -924,6 +927,9 @@ struct SettingsView: View {
                     .foregroundStyle(.tertiary)
             }
         }
+        // Without this the plain-style Button and Link rows only take taps on the
+        // icon and text, so the empty space next to the Spacer swallows the tap.
+        .contentShape(Rectangle())
     }
 
     private func iconBadge(icon: String, color: Color) -> some View {

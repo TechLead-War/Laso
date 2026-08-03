@@ -217,6 +217,36 @@ final class LasoUITests: XCTestCase {
         saveScreenshot(name: "home-sleep-bank")
     }
 
+    /// Taps the blank area on the right of a Settings row, not the icon or the
+    /// text. Plain-style Button rows only take taps on their drawn content, so
+    /// without `.contentShape(Rectangle())` this tap lands on nothing and the
+    /// row reads as randomly unclickable.
+    @MainActor
+    func testSettingsRowTapsOnEmptyRightSide() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["--ui-test-mode", "--ui-test-initial-tab=settings"]
+        app.launch()
+
+        let settings = app.descendants(matching: .any)["screen.settings"].firstMatch
+        XCTAssertTrue(settings.waitForExistence(timeout: 30), "Settings never appeared")
+
+        let bugRow = app.descendants(matching: .any)["settings.row.reportBug"].firstMatch
+        var swipes = 0
+        while !bugRow.exists && swipes < 6 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(bugRow.waitForExistence(timeout: 10), "Report a bug row missing in Settings")
+
+        bugRow.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+
+        // Settings itself has no text field, so one appearing proves the
+        // feedback sheet opened from a tap on the row's empty space.
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 10),
+                      "Tap on the empty right side of the row did nothing")
+        saveScreenshot(name: "settings-row-empty-side-tap")
+    }
+
     @MainActor
     private func saveScreenshot(name: String) {
         let screenshot = XCUIScreen.main.screenshot()
