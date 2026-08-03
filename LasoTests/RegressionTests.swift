@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import SwiftUI
 import Testing
 @testable import Laso
@@ -723,6 +724,61 @@ struct RegressionTests {
         let missing = debt?.dailyDeficits.first { $0.date == gap }
         #expect(missing?.hasData == false, "a night with no sample is flagged, not drawn as met")
         #expect(missing?.deficit == 0, "and it still adds no invented debt")
+    }
+
+    /// Sleep Coach shows nothing but "Building your sleep profile" while
+    /// `SleepNeedCalculator.currentNeed` is nil, and only the launch prewarm can
+    /// fill it before the first HealthKit refresh lands seconds later. Sleep was
+    /// the one engine the prewarm skipped, so opening the screen off a cold
+    /// launch showed the empty state to users with years of nights on disk.
+    @MainActor
+    @Test func launchPrewarmFillsSleepNeedFromDisk() throws {
+        let modelContainer = try ModelContainer(
+            for: StoredDailySample.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let store = HealthDataStore(modelContainer: modelContainer)
+
+        let today = Date.cal.startOfDay(for: Date())
+        let nights: [MetricSample] = (0..<30).compactMap { offset in
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return MetricSample(date: day, value: 7.0)
+        }
+        store.saveSamples(nights, for: .sleepDuration)
+
+        // The encrypted profile is the only working age source, and the prewarm
+        // skips every age-dependent engine without one.
+        let previousProfile = UserProfileStore.shared.loadLocal()
+        defer { if let previousProfile { UserProfileStore.shared.saveLocal(previousProfile) } }
+        let dob = Date.cal.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        UserProfileStore.shared.saveLocal(
+            UserProfileStore.shared.makeProfile(
+                name: "Prewarm Test",
+                email: "prewarm@example.com",
+                gender: .male,
+                dateOfBirth: dob,
+                healthFocuses: ["Sleep"]
+            )
+        )
+
+        // Construction alone must be enough: the prewarm runs in init, which is
+        // the only thing that has happened by the time Home's sleep tile is
+        // tappable.
+        let viewModel = DashboardViewModel(
+            healthKitManager: HealthKitManager(),
+            analysisEngine: AnalysisEngine(),
+            store: store,
+            housekeepingService: DashboardHousekeepingService(
+                persistenceManager: PersistenceManager(),
+                analytics: AppAnalytics.shared,
+                sessionTracker: SessionTracker.shared
+            )
+        )
+
+        #expect(viewModel.sleepNeedCalculator.currentNeed != nil,
+                "Sleep Coach would open on its empty state despite 30 nights on disk")
+        #expect(viewModel.sleepDebtTracker.currentDebt != nil,
+                "Sleep Coach would open with an empty 14-day history")
     }
 
     /// The payback line is arithmetic on the balance, so it has to round up:

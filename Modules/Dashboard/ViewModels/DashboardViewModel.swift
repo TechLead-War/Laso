@@ -541,6 +541,10 @@ final class DashboardViewModel {
     /// second later. Skips Vitality/Strain when their snapshots already
     /// restored, and skips them entirely if no real chronological age is
     /// available — we never feed engines a fabricated age.
+    ///
+    /// Sleep Need and Sleep Debt are warmed here too. They back no tile, but
+    /// the Sleep Coach screen is reachable from the first frame and shows its
+    /// empty state whenever they are nil.
     @MainActor
     private func prewarmScorersFromStoreIfNeeded() {
         let needsVitality = !vitalityScorer.isReady
@@ -550,8 +554,14 @@ final class DashboardViewModel {
         // run them on launch when missing.
         let needsBrain = brainHealthScorer.currentScore == nil
         let needsStress = stressScorer.currentStress == nil
+        // Sleep Coach gates its whole screen on `currentNeed`, and the Home sleep
+        // tile that opens it is rebuilt from an on-disk snapshot. Without this the
+        // tile shows real hours while the calculator is still empty, so tapping it
+        // before the first HealthKit refresh lands renders "Building your sleep
+        // profile" on a user who has years of nights.
+        let needsSleepNeed = sleepNeedCalculator.currentNeed == nil
 
-        guard needsVitality || needsStrain || needsBrain || needsStress else { return }
+        guard needsVitality || needsStrain || needsBrain || needsStress || needsSleepNeed else { return }
 
         // Passed explicitly instead of letting each scorer fall through to
         // `store.loadAllTimeSeries()`. This runs inside `ContentView.init`, before
@@ -577,6 +587,27 @@ final class DashboardViewModel {
             }
             if needsVitality {
                 vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: recent)
+            }
+            if needsSleepNeed {
+                let sleepSeries = recent[.sleepDuration]
+                // Sleep Coach reads the debt for its 14-day history, so warming
+                // the need alone would open the screen with an empty chart.
+                sleepDebtTracker.compute(from: store, sleepSeries: sleepSeries)
+                _ = sleepNeedCalculator.compute(
+                    from: store,
+                    currentStrain: strainScorer.currentStrain,
+                    sleepDebt: sleepDebtTracker.currentDebt?.totalDebtHours ?? 0,
+                    targetWakeTime: WakeUpTimeDetector.anchorDate(
+                        on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                    ),
+                    age: age,
+                    // recoveryScore is deliberately left at its default: today's
+                    // score is still 0 at init and 0 reads as a low-recovery
+                    // night, which would inflate the prewarmed need.
+                    // `computeNewEngines` recomputes with the real score once
+                    // the first refresh lands.
+                    sleepSeries: sleepSeries
+                )
             }
         }
         // Tiles built before prewarm reflected the empty default scorer
@@ -1437,7 +1468,17 @@ final class DashboardViewModel {
         // Memoize: skip recomputation if timeSeries hasn't changed within the same calendar day.
         // Scorers produce identical output for identical input, so this saves ~300-500ms per refresh.
         let today = Date.cal.ordinality(of: .day, in: .year, for: Date()) ?? 0
+
+        // Resolved before the memo key, not after: age gates the Strain, Sleep
+        // Need and Vitality blocks below. Onboarding calibration runs this pass
+        // before the profile is written, so without age in the key that first
+        // ageless pass memoizes itself as done and every later pass that day
+        // short-circuits — the age-gated engines then never run at all.
+        let profile = UserProfileStore.shared.loadLocal()
+        let resolvedAge = resolveChronologicalAge(profile: profile)
+
         var inputHasher = Hasher()
+        inputHasher.combine(resolvedAge)
         inputHasher.combine(timeSeries.count)
         for (metric, series) in timeSeries {
             inputHasher.combine(metric)
@@ -1455,13 +1496,10 @@ final class DashboardViewModel {
         lastScorerInputHash = inputHash
         lastScorerDay = today
 
-        let profile = UserProfileStore.shared.loadLocal()
-        // Resolve chronological age from real sources only — no hardcoded
-        // fallback. Profile DOB first, HealthKit DOB second. Age-dependent
-        // engines (Strain, Sleep Need, Vitality) only run when we have a
-        // real age; the others run regardless so the rest of the dashboard
-        // stays populated even when DOB is missing.
-        let resolvedAge = resolveChronologicalAge(profile: profile)
+        // Age comes from real sources only — no hardcoded fallback. Profile DOB
+        // first, HealthKit DOB second. Age-dependent engines (Strain, Sleep Need,
+        // Vitality) only run when we have a real age; the others run regardless
+        // so the rest of the dashboard stays populated even when DOB is missing.
         let sleepSeries = timeSeries[.sleepDuration]
 
         // Strain. pass raw per-sample HR for accurate zone classification,
