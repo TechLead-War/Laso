@@ -237,7 +237,10 @@ final class BackgroundRefreshCoordinator {
             // reminder drifts away from the wake time the user chose.
             targetWakeTime: WakeUpTimeDetector.anchorDate(
                 on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-            )
+            ),
+            // Unadjusted rather than assumed: this pass only needs a bedtime, and
+            // the age term moves it by 15 minutes at the extremes.
+            age: nil
         )
         let defaults = UserDefaults.standard
         let lastHRV = defaults.integer(forKey: AppKeys.Notifications.lastHRVValue)

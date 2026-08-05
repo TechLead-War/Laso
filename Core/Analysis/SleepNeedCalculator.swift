@@ -54,7 +54,7 @@ final class SleepNeedCalculator {
         sleepDebt: Double,
         targetWakeTime: Date?,
         performanceLevel: PerformanceLevel = .peak,
-        age: Int = 30,
+        age: Int?,
         recoveryScore: Double = 70,
         sleepSeries: MetricTimeSeries? = nil
     ) -> SleepNeed {
@@ -67,13 +67,17 @@ final class SleepNeedCalculator {
 
         let base = performanceLevel.baseHours
 
+        // Age shifts the target by a fraction of an hour at most. A missing age
+        // leaves it unadjusted rather than skipping the whole calculation, which
+        // is what used to leave Sleep Coach on its empty state for a user with
+        // years of nights on disk.
         let ageAdjustment: Double
-        if age < Cfg.ageYoungAdultUpper {
+        if let age, age < Cfg.ageYoungAdultUpper {
             ageAdjustment = Cfg.ageYoungAdultAdjustment
-        } else if age <= Cfg.ageOlderAdultLower {
-            ageAdjustment = 0
-        } else {
+        } else if let age, age > Cfg.ageOlderAdultLower {
             ageAdjustment = Cfg.ageOlderAdultAdjustment
+        } else {
+            ageAdjustment = 0
         }
 
         let recoveryAdjustment: Double

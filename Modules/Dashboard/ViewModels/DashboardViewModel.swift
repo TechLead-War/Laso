@@ -542,9 +542,9 @@ final class DashboardViewModel {
     /// restored, and skips them entirely if no real chronological age is
     /// available — we never feed engines a fabricated age.
     ///
-    /// Sleep Need and Sleep Debt are warmed here too. They back no tile, but
-    /// the Sleep Coach screen is reachable from the first frame and shows its
-    /// empty state whenever they are nil.
+    /// Sleep Need and Sleep Debt are warmed here too, age or no age. They back
+    /// no tile, but the Sleep Coach screen is reachable from the first frame and
+    /// shows its empty state whenever they are nil.
     @MainActor
     private func prewarmScorersFromStoreIfNeeded() {
         let needsVitality = !vitalityScorer.isReady
@@ -575,7 +575,8 @@ final class DashboardViewModel {
         if needsStress {
             stressScorer.compute(from: store, timeSeries: recent)
         }
-        if let age = resolveChronologicalAge() {
+        let resolvedAge = resolveChronologicalAge()
+        if let age = resolvedAge {
             if needsStrain {
                 strainScorer.compute(
                     from: store,
@@ -588,27 +589,30 @@ final class DashboardViewModel {
             if needsVitality {
                 vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: recent)
             }
-            if needsSleepNeed {
-                let sleepSeries = recent[.sleepDuration]
-                // Sleep Coach reads the debt for its 14-day history, so warming
-                // the need alone would open the screen with an empty chart.
-                sleepDebtTracker.compute(from: store, sleepSeries: sleepSeries)
-                _ = sleepNeedCalculator.compute(
-                    from: store,
-                    currentStrain: strainScorer.currentStrain,
-                    sleepDebt: sleepDebtTracker.currentDebt?.totalDebtHours ?? 0,
-                    targetWakeTime: WakeUpTimeDetector.anchorDate(
-                        on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                    ),
-                    age: age,
-                    // recoveryScore is deliberately left at its default: today's
-                    // score is still 0 at init and 0 reads as a low-recovery
-                    // night, which would inflate the prewarmed need.
-                    // `computeNewEngines` recomputes with the real score once
-                    // the first refresh lands.
-                    sleepSeries: sleepSeries
-                )
-            }
+        }
+        // Outside the age gate: age only nudges the sleep target by a fraction of
+        // an hour, and gating on it hid the whole Sleep Coach screen from anyone
+        // whose profile never stored a date of birth.
+        if needsSleepNeed {
+            let sleepSeries = recent[.sleepDuration]
+            // Sleep Coach reads the debt for its 14-day history, so warming
+            // the need alone would open the screen with an empty chart.
+            sleepDebtTracker.compute(from: store, sleepSeries: sleepSeries)
+            _ = sleepNeedCalculator.compute(
+                from: store,
+                currentStrain: strainScorer.currentStrain,
+                sleepDebt: sleepDebtTracker.currentDebt?.totalDebtHours ?? 0,
+                targetWakeTime: WakeUpTimeDetector.anchorDate(
+                    on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                ),
+                age: resolvedAge,
+                // recoveryScore is deliberately left at its default: today's
+                // score is still 0 at init and 0 reads as a low-recovery
+                // night, which would inflate the prewarmed need.
+                // `computeNewEngines` recomputes with the real score once
+                // the first refresh lands.
+                sleepSeries: sleepSeries
+            )
         }
         // Tiles built before prewarm reflected the empty default scorer
         // state; rebuild now so the first rendered frame uses the freshly
@@ -1497,9 +1501,9 @@ final class DashboardViewModel {
         lastScorerDay = today
 
         // Age comes from real sources only — no hardcoded fallback. Profile DOB
-        // first, HealthKit DOB second. Age-dependent engines (Strain, Sleep Need,
-        // Vitality) only run when we have a real age; the others run regardless
-        // so the rest of the dashboard stays populated even when DOB is missing.
+        // first, HealthKit DOB second. Strain and Vitality only run with a real
+        // age; Sleep Need takes it as an optional nudge and the rest ignore it,
+        // so the dashboard stays populated even when DOB is missing.
         let sleepSeries = timeSeries[.sleepDuration]
 
         // Strain. pass raw per-sample HR for accurate zone classification,
@@ -1554,18 +1558,18 @@ final class DashboardViewModel {
             on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         ) ?? circadianWakeTime
 
-        if let age = resolvedAge {
-            let need = sleepNeedCalculator.compute(
-                from: store,
-                currentStrain: strainScorer.currentStrain,
-                sleepDebt: debtHours,
-                targetWakeTime: targetWakeTime,
-                age: age,
-                recoveryScore: Double(scores.overallScore.score),
-                sleepSeries: sleepSeries
-            )
-            _ = need  // stored internally in sleepNeedCalculator
-        }
+        // Runs with or without a real age: `age` only nudges the target, and
+        // skipping it left Sleep Coach on its empty state for anyone missing a
+        // date of birth.
+        _ = sleepNeedCalculator.compute(
+            from: store,
+            currentStrain: strainScorer.currentStrain,
+            sleepDebt: debtHours,
+            targetWakeTime: targetWakeTime,
+            age: resolvedAge,
+            recoveryScore: Double(scores.overallScore.score),
+            sleepSeries: sleepSeries
+        )
 
         // Gamification
         let sessionDays = SessionTracker.shared.daysSinceInstall

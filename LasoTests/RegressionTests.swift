@@ -781,6 +781,48 @@ struct RegressionTests {
                 "Sleep Coach would open with an empty 14-day history")
     }
 
+    /// Sleep need used to sit inside the `if let age` gate that Strain and
+    /// Vitality need, so a profile without a date of birth left Sleep Coach on
+    /// "Building your sleep profile" forever, no matter how many nights were on
+    /// disk. Age only shifts the target by 15 minutes at the extremes.
+    @MainActor
+    @Test func sleepNeedIsComputedWithoutADateOfBirth() throws {
+        let modelContainer = try ModelContainer(
+            for: StoredDailySample.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let store = HealthDataStore(modelContainer: modelContainer)
+
+        let today = Date.cal.startOfDay(for: Date())
+        let nights: [MetricSample] = (0..<30).compactMap { offset in
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return MetricSample(date: day, value: 7.0)
+        }
+        store.saveSamples(nights, for: .sleepDuration)
+
+        // Key literal mirrors UserProfileStore's private `localKey`; there is no
+        // public way to clear the profile, and this test is only meaningful with
+        // no age available from any source.
+        let previousProfile = UserProfileStore.shared.loadLocal()
+        defer { if let previousProfile { UserProfileStore.shared.saveLocal(previousProfile) } }
+        EncryptedStore.shared.remove(forKey: "healthpulse.userProfile")
+        #expect(UserProfileStore.shared.loadLocal() == nil, "the ageless case is what this test covers")
+
+        let viewModel = DashboardViewModel(
+            healthKitManager: HealthKitManager(),
+            analysisEngine: AnalysisEngine(),
+            store: store,
+            housekeepingService: DashboardHousekeepingService(
+                persistenceManager: PersistenceManager(),
+                analytics: AppAnalytics.shared,
+                sessionTracker: SessionTracker.shared
+            )
+        )
+
+        #expect(viewModel.sleepNeedCalculator.currentNeed != nil,
+                "Sleep Coach stays on its empty state whenever this is nil")
+    }
+
     /// The payback line is arithmetic on the balance, so it has to round up:
     /// telling someone 2 nights clears a debt that 2 nights leaves open is the
     /// kind of small lie that costs trust in every other number.
