@@ -5,6 +5,7 @@ import SwiftUI
 enum UITestMode {
     private static let launchFlag = "--ui-test-mode"
     private static let resetDefaultsFlag = "--ui-test-reset-defaults"
+    private static let seedMirrorFlag = "--ui-test-seed-mirror"
     private static let showOnboardingFlag = "--ui-test-show-onboarding"
     private static let lightAppearanceFlag = "--ui-test-appearance-light"
     private static let noWatchFlag = "--ui-test-no-watch"
@@ -99,9 +100,9 @@ enum UITestMode {
     }
 
     /// Opens MirrorCaptureSheet directly on the confirm step with the named
-    /// overlay preselected, using today's archived photo as the capture. The
-    /// simulator has no camera, so this is the only way to see the overlay
-    /// picker there. Format: `--ui-test-mirror-confirm=<MirrorFilter rawValue>`
+    /// template preselected, using today's archived photo as the capture. The
+    /// simulator has no camera, so this is the only way to see the template
+    /// picker there. Format: `--ui-test-mirror-confirm=<MirrorTemplate rawValue>`
     static var mirrorConfirmFilter: String? { stringValue(for: mirrorConfirmPrefix) }
 
     /// When true, AppContainer seeds PremiumShowcaseDataProvider (thriving values)
@@ -205,6 +206,16 @@ enum UITestMode {
             appStateStore.setPendingCalibrationHydration(false)
         }
 
+        // A simulator has no camera, so the Daily Mirror capture flow can only
+        // be driven end to end if the archive already holds something. Writing
+        // synthetic days here is the only way a UI test reaches the confirm
+        // screen and the template picker at all.
+        if ProcessInfo.processInfo.arguments.contains(seedMirrorFlag) {
+            // configureDefaults runs on the main thread during app init, and
+            // MirrorPhotoStore.Meta inherits the store's main actor isolation.
+            MainActor.assumeIsolated { seedMirrorArchive() }
+        }
+
         appStateStore.setOnboardingCompleted(!shouldShowOnboarding)
         appStateStore.markDiscoverySeen()
         appStateStore.setPendingCalibrationHydration(false)
@@ -233,6 +244,78 @@ enum UITestMode {
             if let todayScore = overrideOverallScore {
                 ReadinessStore().saveMorningLock(todayScore, for: Date())
             }
+        }
+    }
+
+    /// Writes eight synthetic Daily Mirror days ending today, so the capture
+    /// confirm screen, the template picker, the gallery and the archive
+    /// templates all have something real to draw on a device with no camera.
+    ///
+    /// Written straight to disk rather than through the store: this runs before
+    /// the first main actor hop, and the store reads its index once at init.
+    @MainActor
+    private static func seedMirrorArchive() {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let directory = support.appendingPathComponent("DailyMirror", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        var index: [String: MirrorPhotoStore.Meta] = [:]
+        for offset in 0..<8 {
+            guard let day = Calendar.current.date(byAdding: .day, value: -offset, to: Date()) else { continue }
+            let key = formatter.string(from: Calendar.current.startOfDay(for: day))
+            let score = 58 + (offset * 9) % 34
+            let photo = syntheticPortrait(warm: offset % 2 == 0)
+            try? photo.jpegData(compressionQuality: 0.7)?
+                .write(to: directory.appendingPathComponent("\(key).jpg"))
+
+            // The oldest two are left without a template on purpose: they stand
+            // in for photos captured before the overlay moved out of the pixels,
+            // which is the migration path most likely to break unnoticed.
+            if offset >= 6 {
+                index[key] = MirrorPhotoStore.Meta(score: score, streak: 8 - offset)
+            } else {
+                var payload = MirrorPayload.empty
+                payload.date = day
+                payload.streak = 8 - offset
+                payload.captureCount = 8
+                payload.daysSinceFirst = 212
+                payload.score = score
+                payload.sleepHours = 7.4
+                payload.deepMinutes = 63
+                payload.vitalityAge = 31
+                payload.chronologicalAge = 34
+                payload.scoreHistory = (0..<20).map { 58 + ($0 * 7) % 32 }
+                index[key] = MirrorPhotoStore.Meta(
+                    score: score, streak: 8 - offset,
+                    template: MirrorTemplate.fieldNotes.rawValue, payload: payload
+                )
+            }
+        }
+        if let data = try? JSONEncoder().encode(index) {
+            try? data.write(to: directory.appendingPathComponent("index.json"))
+        }
+    }
+
+    private static func syntheticPortrait(warm: Bool) -> UIImage {
+        let size = CGSize(width: 780, height: 1040)
+        return UIGraphicsImageRenderer(size: size).image { context in
+            let cg = context.cgContext
+            let top: [CGFloat] = warm ? [0.79, 0.72, 0.62, 1] : [0.42, 0.49, 0.56, 1]
+            let bottom: [CGFloat] = warm ? [0.20, 0.17, 0.14, 1] : [0.09, 0.11, 0.13, 1]
+            if let gradient = CGGradient(colorSpace: CGColorSpaceCreateDeviceRGB(),
+                                         colorComponents: top + bottom,
+                                         locations: [0, 1], count: 2) {
+                cg.drawLinearGradient(gradient, start: .zero,
+                                      end: CGPoint(x: 0, y: size.height), options: [])
+            }
+            cg.setFillColor(red: 0.16, green: 0.12, blue: 0.09, alpha: 0.85)
+            cg.fillEllipse(in: CGRect(x: size.width * 0.30, y: size.height * 0.20,
+                                      width: size.width * 0.40, height: size.height * 0.30))
         }
     }
 }

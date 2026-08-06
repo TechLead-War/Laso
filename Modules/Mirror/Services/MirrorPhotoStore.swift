@@ -20,6 +20,23 @@ final class MirrorPhotoStore {
         let score: Int?
         /// Capture streak the day this photo was taken, for the streak filter.
         let streak: Int
+
+        /// The overlay this day wears. Nil means the photo predates stored
+        /// templates and already has one burned into the pixels, so it must be
+        /// shown exactly as it is and never drawn over a second time.
+        var template: String?
+
+        /// The day's values, kept so the overlay can be redrawn at view time
+        /// and so a past day stays honest: "your last thirty days" on a photo
+        /// from March must always mean the thirty days that ended in March.
+        var payload: MirrorPayload?
+
+        /// Photos saved before the template moved out of the pixels.
+        var isBaked: Bool { template == nil }
+
+        var resolvedTemplate: MirrorTemplate? {
+            template.flatMap(MirrorTemplate.init(rawValue:))
+        }
     }
 
     enum StoreError: Error {
@@ -207,7 +224,23 @@ final class MirrorPhotoStore {
     /// story size, so anything larger is wasted space on the user's phone.
     private static let maxPixelDimension: CGFloat = 1440
 
-    func save(_ image: UIImage, on date: Date = .now, score: Int?, streak: Int) throws {
+    /// Writes the plain camera frame plus the choice of overlay.
+    ///
+    /// The overlay is deliberately NOT drawn into these pixels. Burning it in
+    /// made the choice permanent: a template could never be changed after the
+    /// fact, a bug in one could never be fixed for a photo already taken, and
+    /// no template written later could ever apply to an older day. Keeping the
+    /// photo plain and the decision beside it costs a few hundred bytes of
+    /// JSON and buys all three back.
+    func save(
+        _ image: UIImage,
+        on date: Date = .now,
+        score: Int?,
+        streak: Int,
+        template: MirrorTemplate,
+        payload: MirrorPayload,
+        personMask: UIImage? = nil
+    ) throws {
         guard let data = Self.downscaled(image).jpegData(compressionQuality: 0.72) else {
             throw StoreError.encodingFailed
         }
@@ -215,18 +248,43 @@ final class MirrorPhotoStore {
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         excludeFromBackup(url)
 
+        // Only Behind You needs the cutout, so the file is written when there
+        // is one and cleared when there is not, rather than left to go stale
+        // against a retake that no longer uses it.
+        let mask = maskURL(for: date)
+        if let personMask, let maskData = personMask.pngData() {
+            try? maskData.write(to: mask, options: [.atomic, .completeFileProtection])
+            excludeFromBackup(mask)
+        } else if FileManager.default.fileExists(atPath: mask.path) {
+            try? FileManager.default.removeItem(at: mask)
+        }
+
         // A retake overwrites the day's file, so a stale thumbnail would keep
         // showing the photo the user just replaced.
         thumbnailCache.removeObject(forKey: Self.dayKey(for: date) as NSString)
-        metaByDay[Self.dayKey(for: date)] = Meta(score: score, streak: streak)
+        metaByDay[Self.dayKey(for: date)] = Meta(
+            score: score, streak: streak, template: template.rawValue, payload: payload
+        )
         try persistIndex()
         syncWidgetSnapshot()
+    }
+
+    func personMask(on date: Date) -> UIImage? {
+        let url = maskURL(for: date)
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return UIImage(contentsOfFile: url.path)
     }
 
     func delete(on date: Date) throws {
         let url = photoURL(for: date)
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
+        }
+        // The cutout is part of the photo, so it goes with it. Leaving it
+        // behind would keep a recognisable silhouette of a deleted day on disk.
+        let mask = maskURL(for: date)
+        if FileManager.default.fileExists(atPath: mask.path) {
+            try? FileManager.default.removeItem(at: mask)
         }
         thumbnailCache.removeObject(forKey: Self.dayKey(for: date) as NSString)
         metaByDay[Self.dayKey(for: date)] = nil
@@ -236,8 +294,8 @@ final class MirrorPhotoStore {
 
     func deleteAll() throws {
         for date in allDays {
-            let url = photoURL(for: date)
-            if FileManager.default.fileExists(atPath: url.path) {
+            for url in [photoURL(for: date), maskURL(for: date)]
+            where FileManager.default.fileExists(atPath: url.path) {
                 try FileManager.default.removeItem(at: url)
             }
         }
@@ -251,6 +309,10 @@ final class MirrorPhotoStore {
 
     private func photoURL(for date: Date) -> URL {
         directory.appendingPathComponent("\(Self.dayKey(for: date)).jpg")
+    }
+
+    private func maskURL(for date: Date) -> URL {
+        directory.appendingPathComponent("\(Self.dayKey(for: date)).mask.png")
     }
 
     private var indexURL: URL {

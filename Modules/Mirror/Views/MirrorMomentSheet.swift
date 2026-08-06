@@ -156,10 +156,8 @@ struct MirrorMomentSheet: View {
     /// carries the tease instead.
     private var teaseRow: some View {
         HStack(spacing: DS.space3) {
-            if let yesterdayPhoto = store.image(on: Date().daysAgo(1)) {
-                Image(uiImage: yesterdayPhoto)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+            if let frame = MirrorPhotoFrame.forStoredDay(Date().daysAgo(1), thumbnail: true) {
+                frame
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .clipShape(RoundedRectangle(cornerRadius: DS.iconRadius))
                     .blur(radius: 5)

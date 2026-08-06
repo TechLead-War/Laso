@@ -152,5 +152,149 @@ extension Copy {
         static var settingsDeleteAction: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_action", default: "Delete all") }
         static var settingsFooter: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_footer", default: "Deleting is immediate and permanent. Copies you already saved to your Photos app stay there.") }
         static var settingsEmpty: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_empty", default: "No photos yet. Capture your first one from the evening check-in.") }
+
+        // MARK: - Templates: names and groups
+
+        static func templateName(_ template: MirrorTemplate) -> String {
+            switch template {
+            case .fieldNotes:   return RemoteConfigManager.shared.copyString("copy_mirror_tpl_field_notes", default: "Field Notes")
+            case .number:       return RemoteConfigManager.shared.copyString("copy_mirror_tpl_number", default: "The Number")
+            case .oneWord:      return RemoteConfigManager.shared.copyString("copy_mirror_tpl_one_word", default: "One Word")
+            case .clean:        return RemoteConfigManager.shared.copyString("copy_mirror_tpl_clean", default: "Clean")
+            case .behindYou:    return RemoteConfigManager.shared.copyString("copy_mirror_tpl_behind_you", default: "Behind You")
+            case .horizon:      return RemoteConfigManager.shared.copyString("copy_mirror_tpl_horizon", default: "Horizon")
+            case .night:        return RemoteConfigManager.shared.copyString("copy_mirror_tpl_night", default: "The Night")
+            case .bodyAge:      return RemoteConfigManager.shared.copyString("copy_mirror_tpl_body_age", default: "Body Age")
+            case .slip:         return RemoteConfigManager.shared.copyString("copy_mirror_tpl_slip", default: "The Slip")
+            case .chin:         return RemoteConfigManager.shared.copyString("copy_mirror_tpl_chin", default: "Instant Film")
+            case .newsprint:    return RemoteConfigManager.shared.copyString("copy_mirror_tpl_newsprint", default: "Newsprint")
+            case .nineties:     return RemoteConfigManager.shared.copyString("copy_mirror_tpl_nineties", default: "Nineteen Ninety Eight")
+            case .thisWeek:     return RemoteConfigManager.shared.copyString("copy_mirror_tpl_this_week", default: "This Week")
+            case .thenAndNow:   return RemoteConfigManager.shared.copyString("copy_mirror_tpl_then_and_now", default: "Then and Now")
+            case .contactSheet: return RemoteConfigManager.shared.copyString("copy_mirror_tpl_contact_sheet", default: "Contact Sheet")
+            case .sentence:     return RemoteConfigManager.shared.copyString("copy_mirror_tpl_sentence", default: "The Sentence")
+            case .claim:        return RemoteConfigManager.shared.copyString("copy_mirror_tpl_claim", default: "The Claim")
+            case .landmark:     return RemoteConfigManager.shared.copyString("copy_mirror_tpl_landmark", default: "Landmark")
+            }
+        }
+
+        static func templateGroup(_ group: MirrorTemplate.Group) -> String {
+            switch group {
+            case .everyday: return RemoteConfigManager.shared.copyString("copy_mirror_group_everyday", default: "Every day")
+            case .data:     return RemoteConfigManager.shared.copyString("copy_mirror_group_data", default: "Your numbers")
+            case .object:   return RemoteConfigManager.shared.copyString("copy_mirror_group_object", default: "Printed")
+            case .archive:  return RemoteConfigManager.shared.copyString("copy_mirror_group_archive", default: "Your history")
+            case .voice:    return RemoteConfigManager.shared.copyString("copy_mirror_group_voice", default: "In words")
+            }
+        }
+
+        // MARK: - Picker
+
+        static var pickerSuggested: String { RemoteConfigManager.shared.copyString("copy_mirror_picker_suggested", default: "Suggested for today") }
+        static var pickerAllLooks: String { RemoteConfigManager.shared.copyString("copy_mirror_picker_all", default: "All looks") }
+        static var pickerSetDefault: String { RemoteConfigManager.shared.copyString("copy_mirror_picker_set_default", default: "Use this every day") }
+        static var pickerDefaultSet: String { RemoteConfigManager.shared.copyString("copy_mirror_picker_default_set", default: "This is your everyday look") }
+        /// `%d` is the landmark day being marked.
+        static func suggestLandmark(_ day: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_suggest_landmark", default: "Day %d. Worth marking properly."), day)
+        }
+        static var suggestQuiet: String { RemoteConfigManager.shared.copyString("copy_mirror_suggest_quiet", default: "A quieter one today, with no numbers on it.") }
+        static var suggestWeek: String { RemoteConfigManager.shared.copyString("copy_mirror_suggest_week", default: "You have the full week. Here it is.") }
+        static var suggestLighting: String { RemoteConfigManager.shared.copyString("copy_mirror_suggest_lighting", default: "Bright behind you, so the numbers move onto paper.") }
+
+        // MARK: - Template content
+
+        static var labelReady: String { RemoteConfigManager.shared.copyString("copy_mirror_label_ready", default: "READY") }
+        static var labelSleep: String { RemoteConfigManager.shared.copyString("copy_mirror_label_sleep", default: "SLEEP") }
+        static var labelHrv: String { RemoteConfigManager.shared.copyString("copy_mirror_label_hrv", default: "HRV") }
+        static var labelResting: String { RemoteConfigManager.shared.copyString("copy_mirror_label_resting", default: "RESTING") }
+        static var labelStrain: String { RemoteConfigManager.shared.copyString("copy_mirror_label_strain", default: "STRAIN") }
+        static var labelDeep: String { RemoteConfigManager.shared.copyString("copy_mirror_label_deep", default: "DEEP") }
+        static var labelLastNight: String { RemoteConfigManager.shared.copyString("copy_mirror_label_last_night", default: "LAST NIGHT") }
+        static var labelAsleep: String { RemoteConfigManager.shared.copyString("copy_mirror_label_asleep", default: "ASLEEP") }
+        static var labelThisWeek: String { RemoteConfigManager.shared.copyString("copy_mirror_label_this_week", default: "THIS WEEK") }
+        static var labelThen: String { RemoteConfigManager.shared.copyString("copy_mirror_label_then", default: "THEN") }
+        static var labelNow: String { RemoteConfigManager.shared.copyString("copy_mirror_label_now", default: "NOW") }
+        static var labelYourAge: String { RemoteConfigManager.shared.copyString("copy_mirror_label_your_age", default: "YOUR AGE") }
+        static var labelYourBody: String { RemoteConfigManager.shared.copyString("copy_mirror_label_your_body", default: "YOUR BODY") }
+        static var labelThirtyDays: String { RemoteConfigManager.shared.copyString("copy_mirror_label_thirty_days", default: "30 DAYS") }
+        static var labelPrivate: String { RemoteConfigManager.shared.copyString("copy_mirror_label_private", default: "ONLY YOU SEE THIS") }
+        static var labelKeptHere: String { RemoteConfigManager.shared.copyString("copy_mirror_label_kept_here", default: "KEPT ON THIS PHONE") }
+        static var masthead: String { RemoteConfigManager.shared.copyString("copy_mirror_masthead", default: "The Daily Mirror") }
+        /// `%d` is the capture day, used as an issue number on the masthead.
+        static func issueNumber(_ day: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_issue_number", default: "NO. %d"), day)
+        }
+        /// `%d` is the capture day.
+        static func dayNumber(_ day: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_day_number", default: "DAY %d"), day)
+        }
+        /// `%d` is the average score across the window drawn.
+        static func averageScore(_ score: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_average_score", default: "AVG %d"), score)
+        }
+        /// `%1$d` captured days, `%2$d` days in the window.
+        static func daysOfSeven(_ captured: Int, _ total: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_days_of_seven", default: "%1$d OF %2$d DAYS"), captured, total)
+        }
+        /// `%d` is the number of days between the two photos.
+        static func daysApart(_ days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_days_apart", default: "%d days apart"), days)
+        }
+        /// `%1$@` is what the user did, `%2$d` is how far recovery moved.
+        static func actionProof(_ action: String, _ delta: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_action_proof", default: "%1$@. Recovery moved %2$d points overnight."), action, delta)
+        }
+        /// `%d` is the confidence percentage behind this morning's score.
+        static func confidenceSure(_ percent: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_confidence_sure", default: "%d PERCENT SURE"), percent)
+        }
+        /// `%d` is the run length being marked.
+        static func landmarkTitle(_ days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_landmark_title", default: "%d DAYS"), days)
+        }
+        /// `%1$@` is the first capture date, `%2$d` is the total captures.
+        static func landmarkLine(_ started: String, _ total: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_landmark_line", default: "You started on %1$@ and you have kept %2$d of them."), started, total)
+        }
+        /// `%d` is the number of years between the two ages.
+        static func yearsYounger(_ years: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_years_younger", default: "%d YEARS YOUNGER"), years)
+        }
+        static func yearsOlder(_ years: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_years_older", default: "%d YEARS OLDER"), years)
+        }
+        static var sameAsYourAge: String { RemoteConfigManager.shared.copyString("copy_mirror_same_age", default: "THE SAME AS YOUR AGE") }
+
+        /// The claim template's archetypes. Each is a description of a real
+        /// pattern in the last thirty days, never flattery the data cannot
+        /// support.
+        static var claimSteady: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_steady", default: "STEADY STATE") }
+        static var claimSteadyLine: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_steady_line", default: "Thirty days, and your recovery has not moved more than six points either way.") }
+        static var claimClimbing: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_climbing", default: "ON THE WAY UP") }
+        static var claimClimbingLine: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_climbing_line", default: "Your last ten days are running higher than the twenty before them.") }
+        static var claimRebuilding: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_rebuilding", default: "REBUILDING") }
+        static var claimRebuildingLine: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_rebuilding_line", default: "A harder stretch than usual, and you kept showing up through it.") }
+        static var claimSwinging: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_swinging", default: "UP AND DOWN") }
+        static var claimSwingingLine: String { RemoteConfigManager.shared.copyString("copy_mirror_claim_swinging_line", default: "Big swings this month. Your good days are very good.") }
+
+        /// One Word. Read in order, first match wins. None of these states a
+        /// health claim and none of them makes a hard day sound like a failure.
+        static var wordRest: String { RemoteConfigManager.shared.copyString("copy_mirror_word_rest", default: "Rest") }
+        static var wordRestLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_rest_line", default: "Hard days count too.") }
+        static var wordTired: String { RemoteConfigManager.shared.copyString("copy_mirror_word_tired", default: "Tired") }
+        static var wordTiredLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_tired_line", default: "You came anyway.") }
+        static var wordHeavy: String { RemoteConfigManager.shared.copyString("copy_mirror_word_heavy", default: "Heavy") }
+        static var wordHeavyLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_heavy_line", default: "Carrying a bit today.") }
+        static var wordSlow: String { RemoteConfigManager.shared.copyString("copy_mirror_word_slow", default: "Slow") }
+        static var wordSlowLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_slow_line", default: "Take it gently.") }
+        static var wordSteady: String { RemoteConfigManager.shared.copyString("copy_mirror_word_steady", default: "Steady") }
+        static var wordSteadyLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_steady_line", default: "Nothing to prove today.") }
+        static var wordReady: String { RemoteConfigManager.shared.copyString("copy_mirror_word_ready", default: "Ready") }
+        static var wordReadyLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_ready_line", default: "Good day to use.") }
+        static var wordStrong: String { RemoteConfigManager.shared.copyString("copy_mirror_word_strong", default: "Strong") }
+        static var wordStrongLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_strong_line", default: "Remember this one.") }
+        static var wordToday: String { RemoteConfigManager.shared.copyString("copy_mirror_word_today", default: "Today") }
+        static var wordTodayLine: String { RemoteConfigManager.shared.copyString("copy_mirror_word_today_line", default: "Just here.") }
     }
 }

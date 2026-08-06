@@ -64,7 +64,7 @@ struct WeeklyReviewEntryCard: View {
 struct WeeklyReviewView: View {
     let viewModel: WeeklyReviewViewModel
 
-    @State private var mirrorFullPhoto: UIImage?
+    @State private var mirrorFullDay: Date?
 
     // Section trackers
     @State private var scoreTracker = SectionTracker(section: .weeklyReviewScore, tab: .weeklyReview)
@@ -194,7 +194,7 @@ struct WeeklyReviewView: View {
                     ForEach(days, id: \.self) { day in
                         VStack(spacing: DS.space1) {
                             ZStack {
-                                if let photo = store.image(on: day) {
+                                if let frame = MirrorPhotoFrame.forStoredDay(day, thumbnail: true) {
                                     Button {
                                         AppAnalytics.shared.trackBlockTap(
                                             title: "Open mirror photo",
@@ -202,11 +202,9 @@ struct WeeklyReviewView: View {
                                             screen: .weeklyReview,
                                             metadata: ["source": "weekly_strip"]
                                         )
-                                        mirrorFullPhoto = photo
+                                        mirrorFullDay = day
                                     } label: {
-                                        Image(uiImage: photo)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
+                                        frame
                                     }
                                     .buttonStyle(.plain)
                                 } else {
@@ -229,11 +227,11 @@ struct WeeklyReviewView: View {
             .cardStyle()
             .padding(.horizontal, DS.screenPadding)
             .fullScreenCover(isPresented: Binding(
-                get: { mirrorFullPhoto != nil },
-                set: { if !$0 { mirrorFullPhoto = nil } }
+                get: { mirrorFullDay != nil },
+                set: { if !$0 { mirrorFullDay = nil } }
             )) {
-                if let photo = mirrorFullPhoto {
-                    MirrorPhotoViewer(photo: photo) { mirrorFullPhoto = nil }
+                if let day = mirrorFullDay {
+                    MirrorPhotoViewer(date: day) { mirrorFullDay = nil }
                 }
             }
         }

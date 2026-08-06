@@ -116,10 +116,8 @@ struct MirrorGalleryView: View {
         Color.clear
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                if let thumbnail = store.thumbnail(on: day.date) {
-                    Image(uiImage: thumbnail)
-                        .resizable()
-                        .scaledToFill()
+                if let frame = MirrorPhotoFrame.forStoredDay(day.date, thumbnail: true) {
+                    frame
                 } else {
                     AppColour.surfaceRaised
                 }
@@ -168,6 +166,13 @@ private struct MirrorGalleryViewer: View {
     /// deleting a photo from here drops its page immediately.
     private var days: [Date] { store.allDays.reversed() }
 
+    /// Shape read from the cached thumbnail, so paging through the archive does
+    /// not decode every full size JPEG twice.
+    private func aspect(of day: Date) -> CGFloat {
+        guard let thumb = store.thumbnail(on: day), thumb.size.height > 0 else { return 3.0 / 4.0 }
+        return thumb.size.width / thumb.size.height
+    }
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -175,10 +180,13 @@ private struct MirrorGalleryViewer: View {
             TabView(selection: $selection) {
                 ForEach(days, id: \.self) { day in
                     Group {
-                        if let image = store.image(on: day) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFit()
+                        if let frame = MirrorPhotoFrame.forStoredDay(day) {
+                            // Fitted rather than filled: the archive page is
+                            // the one place the whole photo must be visible.
+                            Color.clear
+                                .aspectRatio(aspect(of: day), contentMode: .fit)
+                                .overlay { frame }
+                                .clipped()
                         } else {
                             Color.black
                         }

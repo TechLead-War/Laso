@@ -76,12 +76,12 @@ struct ExploreDaySheet: View {
         }
     }
 
-    /// The Daily Mirror photo from that day, when one exists. The overlay the
-    /// user picked is already baked into the stored image. The card is a crop;
-    /// tapping opens the uncropped photo full screen.
+    /// The Daily Mirror photo from that day, when one exists, with the template
+    /// that day wears drawn over it. The card is a crop; tapping opens the
+    /// uncropped photo full screen.
     @ViewBuilder
     private var mirrorPhoto: some View {
-        if let photo = MirrorPhotoStore.shared.image(on: detail.date) {
+        if let frame = MirrorPhotoFrame.forStoredDay(detail.date) {
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Open mirror photo",
@@ -91,9 +91,7 @@ struct ExploreDaySheet: View {
                 )
                 showFullPhoto = true
             } label: {
-                Image(uiImage: photo)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                frame
                     .frame(maxWidth: .infinity)
                     .frame(height: 260)
                     .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
@@ -101,7 +99,7 @@ struct ExploreDaySheet: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Copy.Mirror.journalCardDone)
             .fullScreenCover(isPresented: $showFullPhoto) {
-                MirrorPhotoViewer(photo: photo) { showFullPhoto = false }
+                MirrorPhotoViewer(date: detail.date) { showFullPhoto = false }
             }
         }
     }

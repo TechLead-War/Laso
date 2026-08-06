@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The Daily Mirror capture flow, presented full screen from the journal
-/// check-in card: privacy explainer (first run only), camera, filter confirm,
+/// check-in card: privacy explainer (first run only), camera, template confirm,
 /// then the seven day replay as the save reward.
 struct MirrorCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,10 +14,18 @@ struct MirrorCaptureSheet: View {
     }
 
     @State private var stage: Stage
-    @State private var filter: MirrorFilter = .stamp
+    @State private var template: MirrorTemplate = MirrorHouseLook.current
     @State private var saveFailed = false
     @State private var photosSaveFailed = false
-    @State private var score: Int? = ReadinessStore().loadCachedScore()
+
+    /// Filled once the captured frame has been measured. Until then the picker
+    /// shows the templates that need no measurement and the ladder falls back
+    /// to its safe step, so nothing ever waits on Vision to draw something.
+    @State private var analysis = MirrorLegibility.Analysis.unknown
+    @State private var personMask: UIImage?
+    @State private var payload = MirrorPayload.empty
+    @State private var suggested: MirrorTemplate?
+    @State private var suggestionReason: String?
 
     private let store = MirrorPhotoStore.shared
 
@@ -32,7 +40,7 @@ struct MirrorCaptureSheet: View {
         if UITestMode.isEnabled, let raw = UITestMode.mirrorConfirmFilter,
            let photo = MirrorPhotoStore.shared.image(on: .now) {
             _stage = State(initialValue: .confirm(photo))
-            _filter = State(initialValue: MirrorFilter(rawValue: raw) ?? .stamp)
+            _template = State(initialValue: MirrorTemplate(rawValue: raw) ?? .fieldNotes)
             return
         }
         let seen = UserDefaults.standard.bool(forKey: AppKeys.Mirror.explainerSeen)
@@ -138,18 +146,40 @@ struct MirrorCaptureSheet: View {
         }
     }
 
-    // MARK: - Filter confirm
+    // MARK: - Template confirm
+
+    private var archiveFacts: MirrorTemplate.ArchiveFacts {
+        MirrorTemplate.ArchiveFacts.from(store: store, streak: stampStreak)
+    }
+
+    private var offered: [MirrorTemplate] {
+        let available = MirrorTemplate.available(payload: payload, archive: archiveFacts)
+        // The suggestion leads the row, then the rest in declaration order, so
+        // the list never reshuffles under the user between two captures.
+        guard let suggested, available.contains(suggested) else { return available }
+        return [suggested] + available.filter { $0 != suggested }
+    }
 
     private func confirm(_ image: UIImage) -> some View {
-        VStack(spacing: DS.space4) {
+        VStack(spacing: DS.space3) {
             HStack {
-                Button(Copy.Mirror.confirmRetake) { stage = .camera }
+                Button(Copy.Mirror.confirmRetake) { retake() }
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, DS.space4)
                     .padding(.vertical, DS.space2)
                     .background(.white.opacity(0.15), in: Capsule())
                 Spacer()
+                if template != MirrorHouseLook.current {
+                    Button(Copy.Mirror.pickerSetDefault) {
+                        MirrorHouseLook.current = template
+                    }
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, DS.space3)
+                    .padding(.vertical, DS.space2)
+                    .background(.white.opacity(0.15), in: Capsule())
+                }
             }
             .padding(.horizontal, DS.space4)
             .padding(.top, DS.space4)
@@ -157,30 +187,17 @@ struct MirrorCaptureSheet: View {
             Spacer(minLength: 0)
 
             // Fitted preview, not full bleed: the whole photo stays visible and
-            // the stamp can never collide with the controls below. The overlay
+            // the overlay can never collide with the controls below. The frame
             // sizes to the fitted photo rect, which is exactly the rect the
-            // baked JPEG uses.
-            // The flexible frame is what keeps the photo on screen: scaledToFit
-            // alone takes its ideal height in a VStack, and a tall portrait
-            // capture pushed the chips and save button off the bottom edge.
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFit()
-                .overlay(
-                    MirrorOverlay(
-                        filter: filter,
-                        date: .now,
-                        score: score,
-                        streak: stampStreak
-                    )
-                )
+            // exported JPEG uses.
+            preview(image)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, DS.space4)
 
             Spacer(minLength: 0)
 
-            filterChips
+            picker(image)
 
             Button {
                 save(image)
@@ -199,49 +216,161 @@ struct MirrorCaptureSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.ignoresSafeArea())
         .environment(\.colorScheme, .dark)
+        .task(id: image) { await measure(image) }
         .alert(Copy.Mirror.saveFailed, isPresented: $saveFailed) {
             Button(Copy.Buttons.done, role: .cancel) {}
         }
     }
 
-    /// Data overlays. Scrollable because the row no longer fits on one screen,
-    /// and score-only overlays are dropped on a day with no score.
-    private var filterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DS.space2) {
-                ForEach(MirrorFilter.available(hasScore: score != nil)) { candidate in
-                    Button {
-                        filter = candidate
-                    } label: {
-                        Text(candidate.label)
-                            .font(DS.Typography.captionSemibold)
-                            .foregroundStyle(filter == candidate ? Color.black : .white)
-                            .padding(.horizontal, DS.space3)
-                            .padding(.vertical, DS.space2)
-                            .background(
-                                filter == candidate ? Color.white : .white.opacity(0.15),
-                                in: Capsule()
-                            )
+    private func preview(_ image: UIImage) -> some View {
+        // The photo keeps its own aspect so nothing is cropped away before the
+        // user has agreed to it.
+        Color.clear
+            .aspectRatio(image.size.width / max(image.size.height, 1), contentMode: .fit)
+            .overlay {
+                MirrorPhotoFrame(
+                    photo: image,
+                    template: template,
+                    payload: payload,
+                    analysis: analysis,
+                    archive: MirrorArchiveSlice.build(for: template.archiveNeed, endingOn: .now),
+                    personMask: personMask
+                )
+            }
+            .clipped()
+    }
+
+    /// Live previews rather than word chips. A choice you can see is a choice
+    /// people actually make, and the row stops being a list nobody reads past
+    /// the fourth item of.
+    private func picker(_ image: UIImage) -> some View {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            if let suggestionReason, template == suggested {
+                Text(suggestionReason)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(.white.opacity(0.65))
+                    .padding(.horizontal, DS.space4)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: DS.space2) {
+                    ForEach(offered) { candidate in
+                        Button {
+                            template = candidate
+                            MirrorHouseLook.markSeen(candidate)
+                        } label: {
+                            card(candidate, image: image)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(candidate.label)
+                        .accessibilityIdentifier("mirror.template.\(candidate.rawValue)")
+                        .accessibilityAddTraits(template == candidate ? .isSelected : [])
                     }
-                    .accessibilityAddTraits(filter == candidate ? .isSelected : [])
+                }
+                .padding(.horizontal, DS.space4)
+            }
+            .sensoryFeedback(.selection, trigger: template)
+        }
+        .padding(.bottom, DS.space3)
+    }
+
+    private func card(_ candidate: MirrorTemplate, image: UIImage) -> some View {
+        let isOn = template == candidate
+        return VStack(spacing: DS.space2) {
+            MirrorPhotoFrame(
+                photo: image,
+                template: candidate,
+                payload: payload,
+                analysis: analysis,
+                archive: MirrorArchiveSlice.build(for: candidate.archiveNeed, endingOn: .now),
+                personMask: personMask
+            )
+            .frame(width: 64, height: 85)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay {
+                RoundedRectangle(cornerRadius: DS.Radius.sm)
+                    .strokeBorder(AppColour.primary, lineWidth: isOn ? 2 : 0)
+                    .padding(-2)
+            }
+            .overlay(alignment: .topTrailing) {
+                // One dot, once, on something never tried. It disappears after
+                // a single use and it never nags.
+                if MirrorHouseLook.isUnseen(candidate) && !isOn {
+                    Circle()
+                        .fill(AppColour.primary)
+                        .frame(width: 5, height: 5)
+                        .padding(4)
                 }
             }
-            .padding(.horizontal, DS.space4)
+
+            Text(candidate.label)
+                .font(DS.Typography.caption2Medium)
+                .foregroundStyle(isOn ? .white : .white.opacity(0.55))
+                .lineLimit(1)
+                .frame(width: 68)
         }
-        .padding(.bottom, DS.space4)
-        .sensoryFeedback(.selection, trigger: filter)
+    }
+
+    // MARK: - Work
+
+    /// Measures the frame once, then picks the template the day asks for. The
+    /// user can be looking at, and changing, the preview the whole time.
+    private func measure(_ image: UIImage) async {
+        payload = MirrorPayloadBuilder.build(streak: stampStreak)
+
+        let measured = await MirrorLegibility.analyse(image)
+        guard !Task.isCancelled else { return }
+        analysis = measured
+
+        let pick = MirrorTemplate.suggested(
+            payload: payload,
+            archive: archiveFacts,
+            houseLook: MirrorHouseLook.current,
+            lighting: MirrorLegibility.difficulty(measured)
+        )
+        suggested = pick
+        suggestionReason = MirrorTemplate.suggestionReason(
+            payload: payload, archive: archiveFacts,
+            lighting: MirrorLegibility.difficulty(measured), picked: pick
+        )
+        template = pick
+
+        // Only one template needs the cutout, so the cost is only paid when it
+        // is actually on offer.
+        if MirrorTemplate.available(payload: payload, archive: archiveFacts).contains(.behindYou) {
+            let mask = await MirrorLegibility.personMask(image)
+            guard !Task.isCancelled else { return }
+            personMask = mask
+        }
+    }
+
+    private func retake() {
+        analysis = .unknown
+        personMask = nil
+        suggested = nil
+        suggestionReason = nil
+        stage = .camera
     }
 
     private func save(_ image: UIImage) {
         let streak = stampStreak
-        let finished = MirrorPhotoRenderer.render(
-            photo: image, filter: filter, date: .now, score: score, streak: streak
-        )
         do {
-            try store.save(finished, score: score, streak: streak)
+            try store.save(
+                image, score: payload.score, streak: streak,
+                template: template, payload: payload,
+                personMask: template == .behindYou ? personMask : nil
+            )
             if MirrorPhotoLibrary.isEnabled {
+                // The copy that leaves the app is flattened, because a photo in
+                // someone's camera roll cannot carry a template with it.
+                let flattened = MirrorPhotoRenderer.render(
+                    photo: image, template: template, payload: payload,
+                    analysis: analysis,
+                    archive: MirrorArchiveSlice.build(for: template.archiveNeed, endingOn: .now),
+                    personMask: personMask
+                )
                 Task {
-                    if await MirrorPhotoLibrary.save(finished) == false {
+                    if await MirrorPhotoLibrary.save(flattened) == false {
                         photosSaveFailed = true
                     }
                 }
@@ -249,14 +378,16 @@ struct MirrorCaptureSheet: View {
             // A capture from any door ends the prompt's quiet period and
             // dismissal count: the user is engaged again.
             MirrorMomentManager.shared.recordCaptured()
+            MirrorHouseLook.markSeen(template)
             AppAnalytics.shared.trackBlockTap(
                 title: "Save mirror photo",
                 type: .mirrorPhotoSaved,
                 screen: .mirrorCapture,
                 metadata: [
-                    "filter": filter.rawValue,
+                    "filter": template.rawValue,
                     "streak": streak,
-                    "has_score": score != nil
+                    "has_score": payload.score != nil,
+                    "was_suggested": template == suggested
                 ]
             )
             stage = .replay
@@ -280,11 +411,9 @@ struct MirrorReplayView: View {
             Color.black.ignoresSafeArea()
 
             if days.indices.contains(index),
-               let image = MirrorPhotoStore.shared.image(on: days[index]) {
+               let frame = MirrorPhotoFrame.forStoredDay(days[index]) {
                 GeometryReader { proxy in
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
+                    frame
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .clipped()
                 }

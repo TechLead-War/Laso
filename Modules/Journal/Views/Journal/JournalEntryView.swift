@@ -167,10 +167,8 @@ struct JournalEntryView: View {
                 showMirrorCapture = true
             } label: {
                 HStack(spacing: DS.space3) {
-                    if capturedToday, let photo = store.image(on: .now) {
-                        Image(uiImage: photo)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
+                    if capturedToday, let frame = MirrorPhotoFrame.forStoredDay(.now, thumbnail: true) {
+                        frame
                             .frame(width: DS.iconSize, height: DS.iconSize)
                             .clipShape(RoundedRectangle(cornerRadius: DS.iconRadius))
                     } else {

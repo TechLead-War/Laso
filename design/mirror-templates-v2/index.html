@@ -1,0 +1,1530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+<title>Daily Mirror: the next generation of capture templates</title>
+
+<style>
+/* ============================================================
+   Palette. The product's own tokens carry every meaning-bearing
+   colour; the page chrome stays achromatic so the mockups shout
+   and nothing else does.
+   ============================================================ */
+:root{
+  --ink:#101312; --ink-2:#181C1B; --ink-3:#222826; --ink-4:#2E3533;
+  --paper:#EDEEEB; --paper-2:#F7F8F5; --paper-3:#FFFFFF;
+
+  --fg:#171A18; --fg-2:#4E5551; --fg-3:#767E79; --rule:#D6D9D4;
+  --bg:var(--paper); --card:var(--paper-2); --card-2:var(--paper-3);
+  --accent:#0064CC;
+
+  /* Product score bands, exact hexes from AppColour.swift */
+  --good:#0D7A52; --fair:#8A6400; --poor:#C42B33;
+  --good-on-photo:#33C48D; --fair-on-photo:#E3B45A; --poor-on-photo:#E05C64;
+  --brand-on-photo:#4DA3FF; --cyan-on-photo:#22D3EE;
+
+  --serif:ui-serif,"New York","Iowan Old Style",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --round:ui-rounded,"SF Pro Rounded",-apple-system,var(--sans);
+
+  --measure:66ch;
+  --gutter:clamp(20px,5vw,64px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --fg:#F0F2EE; --fg-2:#B4BAB6; --fg-3:#858C88; --rule:#2A302E;
+    --bg:var(--ink); --card:var(--ink-2); --card-2:var(--ink-3);
+    --accent:#4DA3FF;
+    --good:#33C48D; --fair:#E3B45A; --poor:#E05C64;
+  }
+}
+:root[data-theme="dark"]{
+  --fg:#F0F2EE; --fg-2:#B4BAB6; --fg-3:#858C88; --rule:#2A302E;
+  --bg:var(--ink); --card:var(--ink-2); --card-2:var(--ink-3);
+  --accent:#4DA3FF;
+  --good:#33C48D; --fair:#E3B45A; --poor:#E05C64;
+}
+:root[data-theme="light"]{
+  --fg:#171A18; --fg-2:#4E5551; --fg-3:#767E79; --rule:#D6D9D4;
+  --bg:var(--paper); --card:var(--paper-2); --card-2:var(--paper-3);
+  --accent:#0064CC;
+  --good:#0D7A52; --fair:#8A6400; --poor:#C42B33;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:var(--sans); font-size:17px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--gutter)}
+.lede{max-width:var(--measure)}
+
+.eyebrow{
+  font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--fg-3);
+}
+
+/* ---------------- masthead ---------------- */
+.masthead{padding:clamp(56px,10vw,120px) 0 clamp(40px,6vw,72px)}
+.masthead h1{
+  font-family:var(--serif); font-weight:600;
+  font-size:clamp(38px,6.4vw,74px); line-height:1.02;
+  letter-spacing:-.022em; margin:18px 0 0;
+}
+.masthead h1 em{font-style:italic;color:var(--fg-2)}
+.masthead .lede{margin-top:26px;font-size:clamp(17px,1.9vw,20px);color:var(--fg-2)}
+.masthead .lede + .lede{margin-top:14px}
+
+.verdict{
+  margin-top:40px;display:grid;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:14px;overflow:hidden;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+}
+.verdict div{background:var(--card);padding:18px 20px}
+.verdict dt{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--fg-3)}
+.verdict dd{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--fg)}
+.verdict b{font-family:var(--round);font-size:28px;font-weight:700;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ---------------- section chrome ---------------- */
+section{padding:clamp(48px,7vw,92px) 0;border-top:1px solid var(--rule)}
+.sec-head{display:flex;flex-direction:column;gap:14px;margin-bottom:38px}
+.sec-head h2{
+  font-family:var(--serif);font-weight:600;
+  font-size:clamp(27px,3.6vw,42px);line-height:1.1;letter-spacing:-.018em;
+}
+.sec-head p{color:var(--fg-2);max-width:var(--measure)}
+
+/* ---------------- control bar ---------------- */
+.controls{
+  position:sticky;top:0;z-index:60;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(180%) blur(16px);
+  -webkit-backdrop-filter:saturate(180%) blur(16px);
+  border-bottom:1px solid var(--rule);
+}
+.controls-in{
+  max-width:1180px;margin:0 auto;padding:11px var(--gutter);
+  display:flex;gap:22px;align-items:center;flex-wrap:wrap;
+}
+.ctl{display:flex;align-items:center;gap:9px}
+.ctl > label{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--fg-3);white-space:nowrap}
+.ctl input[type=range]{width:112px;accent-color:var(--accent)}
+.readout{font-family:var(--round);font-weight:700;font-size:16px;
+  font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:right}
+.swatches{display:flex;gap:6px}
+.sw{width:24px;height:24px;border-radius:7px;border:1.5px solid transparent;
+  cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed=true]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.mini-btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--card-2);color:var(--fg-2);border:1px solid var(--rule);
+  border-radius:999px;padding:6px 13px;cursor:pointer;
+}
+.mini-btn[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+/* ============================================================
+   The photo stand in. No external assets are allowed on this
+   page, so the "selfie" is layered gradients plus grain: an out
+   of focus portrait that behaves like a real one under an
+   overlay, which is the only thing these mockups need it to do.
+   ============================================================ */
+.shot{position:absolute;inset:0;overflow:hidden}
+.shot::before{
+  content:"";position:absolute;inset:-4%;
+  transform:translateX(var(--sx,0)) scale(var(--sz,1.04));
+  filter:blur(3.4px) saturate(1.05);
+  background:
+    /* vignette */
+    radial-gradient(116% 90% at 50% 40%, transparent 46%, rgba(0,0,0,.5) 100%),
+    /* key light falling across the frame */
+    linear-gradient(158deg, var(--beam) 0%, transparent 56%),
+    /* eye sockets and the shadow under the lip, softened almost to nothing */
+    radial-gradient(4% 2% at 50% 51.5%, rgba(0,0,0,.2) 0 50%, transparent 100%),
+    radial-gradient(3.4% 2.1% at 43.4% 43.2%, rgba(0,0,0,.34) 0 48%, transparent 100%),
+    radial-gradient(3.4% 2.1% at 56.6% 43.2%, rgba(0,0,0,.34) 0 48%, transparent 100%),
+    /* rim light down one side of the face */
+    radial-gradient(7% 12% at 39.5% 45%, var(--rim) 0 18%, transparent 92%),
+    /* head, neck, hair, shoulders: overlapping, so the blur fuses them */
+    radial-gradient(15.5% 13.5% at 50% 44%, var(--skin) 0 84%, transparent 99%),
+    radial-gradient(8.5% 11% at 50% 57%, var(--neck) 0 76%, transparent 99%),
+    radial-gradient(20% 17% at 50% 34%, var(--hair) 0 82%, transparent 99%),
+    radial-gradient(64% 36% at 50% 97%, var(--body) 0 78%, transparent 99%),
+    var(--room);
+}
+.shot::after{
+  content:"";position:absolute;inset:-20%;opacity:.13;pointer-events:none;
+  mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+/* Newsprint: the photo is destroyed and rebuilt at a known contrast, which is
+   the only treatment that is completely immune to the lighting it came from. */
+.halftone .shot::before{filter:grayscale(1) contrast(1.9) brightness(1.06)}
+.halftone .shot::after{
+  opacity:.62;mix-blend-mode:multiply;inset:0;
+  background-image:radial-gradient(circle at 50% 50%,#000 0 32%,transparent 34%);
+  background-size:4px 4px;
+}
+/* Just the subject, no room and no vignette. Drawn over the top of an overlay
+   it puts that overlay behind the person, which is what the segmentation mask
+   does for real in the app. */
+.person{position:absolute;inset:-4%;pointer-events:none;filter:blur(.7px);
+  transform:scale(1.04);
+  background:
+    radial-gradient(3.4% 1.5% at 50% 51.5%, rgba(0,0,0,.26) 0 55%, transparent 100%),
+    radial-gradient(2.7% 1.6% at 43.6% 43.4%, rgba(0,0,0,.44) 0 52%, transparent 100%),
+    radial-gradient(2.7% 1.6% at 56.4% 43.4%, rgba(0,0,0,.44) 0 52%, transparent 100%),
+    radial-gradient(12% 5% at 50% 56.5%, rgba(0,0,0,.2) 0 45%, transparent 100%),
+    radial-gradient(15.5% 13% at 50% 44%, var(--skin) 0 86%, transparent 95%),
+    radial-gradient(7% 9.5% at 50% 58%, var(--neck) 0 78%, transparent 92%),
+    radial-gradient(19.5% 16.5% at 50% 34.5%, var(--hair) 0 84%, transparent 93%),
+    radial-gradient(55% 31% at 50% 100%, var(--body) 0 80%, transparent 93%);
+}
+/* Five lighting moods, so a wall of mockups does not read as one photo. */
+.mood-morning{--room:linear-gradient(200deg,#C9B79F,#6E6252 58%,#332C25);
+  --beam:rgba(255,240,212,.4);--skin:#D6A57C;--neck:#A87B56;--hair:#2F241A;--body:#3B3A48;
+  --rim:rgba(255,236,206,.34)}
+.mood-lamp{--room:linear-gradient(190deg,#6A452F,#2E1E16 66%,#150E0B);
+  --beam:rgba(255,182,102,.32);--skin:#C88A57;--neck:#96613A;--hair:#1D140D;--body:#33261E;
+  --rim:rgba(255,198,124,.36)}
+.mood-gym{--room:linear-gradient(200deg,#46545F,#212A34 62%,#12171B);
+  --beam:rgba(158,210,255,.3);--skin:#B98868;--neck:#8A6248;--hair:#1A1D24;--body:#242D36;
+  --rim:rgba(186,224,255,.3)}
+.mood-outdoor{--room:linear-gradient(195deg,#AFC4CE,#556B77 56%,#2A353E);
+  --beam:rgba(240,251,255,.48);--skin:#D8A184;--neck:#A97654;--hair:#28201A;--body:#3A4751;
+  --rim:rgba(248,253,255,.36)}
+.mood-night{--room:linear-gradient(195deg,#2C2A37,#16151D 66%,#09080C);
+  --beam:rgba(146,156,224,.2);--skin:#8E6B56;--neck:#664636;--hair:#120E0B;--body:#1C1B24;
+  --rim:rgba(160,172,236,.28)}
+
+/* ---------------- the frame ---------------- */
+.render{container-type:inline-size;width:100%}
+.render-box{position:relative;width:100%;overflow:hidden;border-radius:26px}
+.frame{
+  position:absolute;top:0;left:0;width:390px;height:520px;
+  transform-origin:top left;overflow:hidden;
+  background:#000;color:#fff;font-family:var(--sans);
+  isolation:isolate;
+}
+.frame *{box-sizing:border-box}
+.ov{position:absolute;inset:0;pointer-events:none}
+
+/* Shared overlay atoms, mirroring what SwiftUI would draw. */
+.num{font-family:var(--round);font-weight:800;font-variant-numeric:tabular-nums;
+  letter-spacing:-.03em;line-height:.92}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.scrim-b{position:absolute;left:0;right:0;bottom:0;
+  background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.42) 46%,transparent)}
+.scrim-t{position:absolute;left:0;right:0;top:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.62),transparent)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);
+  border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* ---------------- plates ---------------- */
+.plates{display:flex;flex-direction:column;gap:clamp(52px,7vw,96px)}
+.plate{
+  display:grid;gap:clamp(24px,4vw,52px);
+  grid-template-columns:minmax(0,340px) minmax(0,1fr);align-items:start;
+}
+@media (max-width:820px){.plate{grid-template-columns:1fr}}
+.plate-body h3{
+  font-family:var(--serif);font-weight:600;font-size:clamp(24px,3vw,33px);
+  line-height:1.08;letter-spacing:-.018em;margin:10px 0 0;
+}
+.plate-tag{margin-top:12px;color:var(--fg-2);font-size:17px;max-width:56ch}
+.plate-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--rule);border-radius:999px;padding:4px 10px;color:var(--fg-3);
+}
+.tag--flex{border-color:color-mix(in srgb,var(--good) 55%,transparent);color:var(--good)}
+.tag--close{border-color:color-mix(in srgb,var(--accent) 50%,transparent);color:var(--accent)}
+.tag--private{border-color:var(--rule);color:var(--fg-3)}
+
+.why{
+  margin-top:22px;padding:16px 18px;border-radius:12px;
+  background:var(--card);border:1px solid var(--rule);
+}
+.why p{font-size:15.5px;line-height:1.55;color:var(--fg)}
+.why .eyebrow{display:block;margin-bottom:7px}
+
+.specs{margin-top:20px;border-top:1px solid var(--rule)}
+.specs div{display:grid;grid-template-columns:minmax(84px,132px) 1fr;gap:16px;
+  padding:11px 0;border-bottom:1px solid var(--rule)}
+.specs dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--fg-3);padding-top:3px}
+.specs dd{margin:0;font-size:14.5px;line-height:1.55;color:var(--fg-2)}
+.specs code{font-family:var(--mono);font-size:12.5px;background:var(--card);
+  border:1px solid var(--rule);border-radius:5px;padding:1px 5px;color:var(--fg)}
+
+/* ---------------- old work contact sheet ---------------- */
+.sheet{
+  display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(126px,1fr));
+}
+.cell{position:relative;border-radius:12px;overflow:hidden;
+  aspect-ratio:3/4;background:#000;filter:saturate(.55)}
+.cell .frame{width:390px;height:520px}
+.cell figcaption{
+  position:absolute;left:0;right:0;bottom:0;z-index:5;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+  padding:16px 8px 7px;color:#fff;
+  background:linear-gradient(to top,rgba(0,0,0,.85),transparent);
+}
+
+/* ---------------- principle cards ---------------- */
+.grid{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  border-radius:16px;overflow:hidden;
+  grid-template-columns:repeat(auto-fit,minmax(258px,1fr))}
+.grid article{background:var(--card);padding:24px}
+.grid h3{font-family:var(--serif);font-size:21px;font-weight:600;
+  line-height:1.2;margin:11px 0 9px;letter-spacing:-.01em}
+.grid p{font-size:15px;line-height:1.55;color:var(--fg-2)}
+
+/* ---------------- picker mock ---------------- */
+.picker-lane{display:grid;gap:clamp(24px,4vw,48px);align-items:start;
+  grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+@media (max-width:820px){.picker-lane{grid-template-columns:1fr}}
+
+/* ---------------- roadmap ---------------- */
+.steps{border-top:1px solid var(--rule)}
+.step{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) minmax(0,86px);
+  gap:20px;padding:20px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+@media (max-width:700px){.step{grid-template-columns:1fr;gap:6px}}
+.step h4{margin:0;font-size:17px;font-weight:600;font-family:var(--sans)}
+.step p{font-size:15px;color:var(--fg-2)}
+.step .cost{font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--fg-3);text-align:right}
+@media (max-width:700px){.step .cost{text-align:left}}
+
+footer{padding:56px 0 90px;border-top:1px solid var(--rule);color:var(--fg-3);font-size:14px}
+
+/* ---------------- legibility ladder ---------------- */
+.ladder{display:grid;gap:clamp(24px,4vw,52px);align-items:start;
+  grid-template-columns:minmax(0,330px) minmax(0,1fr)}
+@media (max-width:820px){.ladder{grid-template-columns:1fr}}
+.ladder-ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.rung{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  background:var(--card);color:var(--fg-2);border:1px solid var(--rule);
+  border-radius:8px;padding:7px 10px;cursor:pointer;text-align:left;flex:1 1 auto;
+}
+.rung[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ladder-body .specs{margin-top:24px}
+
+/* ---------------- reveal ---------------- */
+.rise{opacity:0;transform:translateY(16px)}
+.rise.in{opacity:1;transform:none;
+  transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1)}
+@media (prefers-reduced-motion:reduce){
+  .rise,.rise.in{opacity:1;transform:none;transition:none}
+  *{animation:none!important}
+}
+</style>
+
+<div class="controls">
+  <div class="controls-in">
+    <div class="ctl">
+      <label for="c-score">Score</label>
+      <input id="c-score" type="range" min="18" max="98" value="74">
+      <span class="readout" id="r-score">74</span>
+    </div>
+    <div class="ctl">
+      <label for="c-streak">Day</label>
+      <input id="c-streak" type="range" min="1" max="240" value="63">
+      <span class="readout" id="r-streak">63</span>
+    </div>
+    <div class="ctl">
+      <label>Light</label>
+      <div class="swatches" id="c-mood" role="group" aria-label="Lighting"></div>
+    </div>
+    <button class="mini-btn" id="c-theme" aria-pressed="false">Flip theme</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Daily Mirror · capture templates · design direction</p>
+    <h1>Ten ways to write a number<br><em>on your own face.</em></h1>
+    <p class="lede">That is what the capture screen offers today. Every template
+      is the same idea moved to a different corner: a score, a date, a badge.
+      Nothing there is worth keeping, and nothing there is worth showing anyone.</p>
+    <p class="lede">The photo is the most personal thing this app will ever hold.
+      This is a proposal for what we put on it instead.</p>
+    <dl class="verdict" id="verdict"></dl>
+  </header>
+</div>
+
+<section id="today">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What we ship today</p>
+      <h2>All ten, drawn at the real size</h2>
+      <p>These are the current overlays, rendered exactly as
+        <code>MirrorOverlay.swift</code> draws them. Seen together the problem is
+        obvious: nine chips and an empty one. Change the score in the bar above
+        and watch how little moves.</p>
+      <p>Two of them are worse than plain. Heartbeat draws an ECG trace that is
+        a fixed decorative polyline, the same nine points on everyone, every
+        day. Glow paints a coloured border and calls it a score. And whichever
+        one gets picked is burned into the file forever, so a photo taken today
+        can never wear a template we write tomorrow.</p>
+    </div>
+    <div class="sheet" id="old-sheet"></div>
+  </div>
+</section>
+
+<section id="engine">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The thing under the templates</p>
+      <h2>Readable is a mechanism, not a mood</h2>
+      <p>There are only five ways to make type survive on top of a photo, and
+        every template is a choice among them. Today we use one of them, always
+        the same one, at a fixed strength, and we hope. On a backlit window
+        selfie the hope runs out.</p>
+    </div>
+
+    <div class="ladder">
+      <div class="ladder-demo">
+        <div class="render"><div class="render-box" style="aspect-ratio:390/430">
+          <div class="frame mood-outdoor" id="ladder-frame" style="height:430px">
+            <div class="shot"></div>
+            <div class="ov" id="ladder-ov"></div>
+          </div>
+        </div></div>
+        <div class="ladder-ctl" id="ladder-ctl" role="group" aria-label="Protection level"></div>
+      </div>
+      <div class="ladder-body">
+        <p class="eyebrow">How the engine decides</p>
+        <p class="plate-tag">Before the overlay is drawn, we already know two
+          things about the photo that we currently throw away: where the face is,
+          and how bright each part of the frame is. Vision gives us the first for
+          free. A sixteen cell luminance sample gives us the second in under a
+          millisecond.</p>
+        <p class="plate-tag" style="margin-top:14px">The renderer then walks up
+          the ladder on the left until the text block it is about to draw clears
+          contrast. Most photos stop at step one. Nothing else in this proposal
+          matters as much as this, because it is what makes every template below
+          safe to ship.</p>
+        <dl class="specs" id="ladder-specs"></dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="principles">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">What the good ones get right</p>
+      <h2>Rules the new set is built on</h2>
+    </div>
+    <div class="grid" id="principles-grid"></div>
+  </div>
+</section>
+
+<section id="set">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The proposal</p>
+      <h2>The new set</h2>
+      <p>Every template below is drawn live from the same controls in the bar
+        above, so what you see is what the app would bake into the JPEG. Each
+        one earns its place by doing something the current ten cannot.</p>
+    </div>
+    <div class="plates" id="plates"></div>
+  </div>
+</section>
+
+<section id="picker">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The screen around them</p>
+      <h2>Choosing gets a real design too</h2>
+      <p>A scrolling row of grey word chips is where good templates go to die.
+        Nobody scrolls past the fourth one, so templates five to ten may as well
+        not exist.</p>
+    </div>
+    <div class="picker-lane" id="picker-lane"></div>
+  </div>
+</section>
+
+<section id="beyond">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Beyond the overlay</p>
+      <h2>What makes people come back tomorrow</h2>
+      <p>Templates make a capture worth keeping. These make the next one happen.</p>
+    </div>
+    <div class="grid" id="beyond-grid"></div>
+  </div>
+</section>
+
+<section id="build">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Order of work</p>
+      <h2>What to build, in what order</h2>
+    </div>
+    <div class="steps" id="steps"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Mockups are drawn in the browser at the same 390 point design space
+      SwiftUI renders into. The face behind them is a stand in, not a photo.</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/* ============================================================
+   State. One object drives every mockup on the page.
+   ============================================================ */
+const MOODS = [
+  {id:"morning", label:"Morning window",  sw:"linear-gradient(150deg,#E8CFA8,#6B5B49)"},
+  {id:"lamp",    label:"Evening lamp",    sw:"linear-gradient(150deg,#E09A5A,#3A241B)"},
+  {id:"gym",     label:"Gym light",       sw:"linear-gradient(150deg,#8FB6D6,#1E262F)"},
+  {id:"outdoor", label:"Outside",         sw:"linear-gradient(150deg,#D6E7F0,#3E4E59)"},
+  {id:"night",   label:"Late night",      sw:"linear-gradient(150deg,#5A5B78,#0B0A0F)"},
+];
+
+const S = { score:74, streak:63, mood:"morning" };
+
+/* Product truth: DS.recoveryTier, optimalFloor 67, fairFloor 45. */
+const OPTIMAL_FLOOR = 67, FAIR_FLOOR = 45;
+const tier  = v => v >= OPTIMAL_FLOOR ? "optimal" : v >= FAIR_FLOOR ? "fair" : "poor";
+const sCol  = v => ({optimal:"#33C48D", fair:"#E3B45A", poor:"#E05C64"})[tier(v)];
+const sWord = v => ({optimal:"Optimal", fair:"Moderate", poor:"Low"})[tier(v)];
+/* Page chrome uses the theme aware token; only overlays use the on-photo hex. */
+const sVar = v => `var(--${({optimal:"good", fair:"fair", poor:"poor"})[tier(v)]})`;
+
+const TODAY = new Date(2026, 7, 6); // Thursday 6 August 2026
+const DAY_S = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const DAY_L = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MON_S = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MON_L = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const back  = n => new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - n);
+const esc   = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* Score history is a slow random walk, not noise: real readiness drifts over
+   days. A plain hash per index would draw a sine wave, which is exactly what
+   made the first pass of Horizon look like wallpaper.
+   ponytail: fixed seed, so the mockups stay identical between redraws. */
+function rng(seed) {
+  let s = seed >>> 0;
+  return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+}
+
+function history(days, end, step) {
+  const next = rng(0x5EED), out = new Array(days);
+  let v = end;
+  for (let i = days - 1; i >= 0; i--) {
+    out[i] = Math.round(Math.max(30, Math.min(96, v)));
+    v += (next() - 0.48) * step;
+  }
+  out[days - 1] = end;
+  return out;
+}
+
+const week = base => history(7, base, 26);
+
+/* ============================================================
+   Frame plumbing. Every overlay is authored at 390 x 520, the
+   real SwiftUI design space, then scaled to whatever the column
+   allows. Numbers in the specs are therefore literal points.
+   ============================================================ */
+function frame(overlayHTML, opts = {}) {
+  const h = opts.h || 520;
+  const base = opts.bare ? "" : `<div class="shot"></div>`;
+  return `<div class="render"><div class="render-box" style="aspect-ratio:390/${h}">
+    <div class="frame mood-${S.mood} ${opts.cls || ""}"
+      style="height:${h}px;background:${opts.bg || "#000"}">
+      ${base}<div class="ov">${overlayHTML}</div>
+    </div></div></div>`;
+}
+
+/* A framed sub photo, for the templates that read more than one day out of
+   the archive. Mood stands in for "a different day". */
+function shot(mood, style, shift = 0) {
+  return `<div style="position:absolute;${style};overflow:hidden">
+    <div class="shot mood-${mood}" style="--sx:${shift}%"></div></div>`;
+}
+
+/* Rounded readouts and wide tracked mono labels, the two voices every
+   template below is built from. */
+const big  = (t, size, colour = "#fff", extra = "") =>
+  `<div class="num" style="font-size:${size}px;color:${colour};${extra}">${t}</div>`;
+const label = (t, size = 9.5, colour = "rgba(255,255,255,.82)", extra = "") =>
+  `<div class="mono" style="font-size:${size}px;letter-spacing:.2em;color:${colour};${extra}">${t}</div>`;
+
+const stamp = d => `${String(d.getDate()).padStart(2, "0")} ${MON_S[d.getMonth()].toUpperCase()} ${d.getFullYear()}`;
+
+function fitFrames(root = document) {
+  root.querySelectorAll(".render-box").forEach(box => {
+    const f = box.querySelector(".frame");
+    if (!f) return;
+    f.style.transform = `scale(${box.clientWidth / 390})`;
+  });
+}
+
+/* ============================================================
+   The current ten, redrawn from MirrorOverlay.swift so the
+   comparison is fair. Same points, same colours, same corners.
+   ============================================================ */
+function ring(v, d, lw, fs) {
+  const r = (d - lw) / 2, c = 2 * Math.PI * r;
+  return `<svg width="${d}" height="${d}" viewBox="0 0 ${d} ${d}" style="display:block">
+    <circle cx="${d/2}" cy="${d/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="${lw}"/>
+    <circle cx="${d/2}" cy="${d/2}" r="${r}" fill="none" stroke="${sCol(v)}" stroke-width="${lw}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - v/100)}"
+      transform="rotate(-90 ${d/2} ${d/2})"/>
+    <text x="${d/2}" y="${d/2}" fill="#fff" font-family="ui-rounded,-apple-system,sans-serif"
+      font-size="${fs}" font-weight="700" text-anchor="middle" dominant-baseline="central">${v}</text>
+  </svg>`;
+}
+
+/* One decorative ECG beat repeated, matching the fixed polyline in ECGTrace. */
+function ecg(w, h, colour) {
+  const beat = [[0,.5],[.28,.5],[.34,.38],[.4,.5],[.46,.5],[.52,.95],[.58,.05],[.64,.8],[.7,.5],[1,.5]];
+  const beats = Math.max(1, Math.floor(w / 90)), bw = w / beats;
+  let d = "";
+  for (let i = 0; i < beats; i++)
+    beat.forEach(([x, y], j) =>
+      d += `${i === 0 && j === 0 ? "M" : "L"}${(i * bw + x * bw).toFixed(1)} ${(y * h).toFixed(1)}`);
+  return `<svg width="${w}" height="${h}" style="display:block;overflow:visible">
+    <path d="${d}" fill="none" stroke="${colour}" stroke-width="3" stroke-linecap="round"
+      stroke-linejoin="round" style="filter:drop-shadow(0 0 5px ${colour})"/></svg>`;
+}
+
+const OLD = [
+  ["Today stamp", () => `<div style="position:absolute;left:16px;right:16px;bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.55);
+      border-radius:16px;padding:12px">
+      ${ring(S.score, 48, 5, 18)}
+      <div><div class="num" style="font-size:15px;font-weight:700">Recovery ${S.score}</div>
+      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.75);margin-top:2px">
+      ${DAY_S[TODAY.getDay()]} ${TODAY.getDate()} ${MON_S[TODAY.getMonth()]}</div></div>
+    </div></div>`],
+  ["Heartbeat", () => `<div class="scrim-b" style="height:110px;display:flex;align-items:center;
+      gap:12px;padding:16px 20px">
+      <div style="flex:1">${ecg(258, 36, sCol(S.score))}</div>
+      <div class="num" style="font-size:26px">${S.score}</div></div>`],
+  ["Score ring", () => `<div style="position:absolute;left:16px;top:16px;background:rgba(0,0,0,.45);
+      border-radius:50%;padding:12px">${ring(S.score, 64, 6, 24)}</div>`],
+  ["Big score", () => `<div style="position:absolute;right:20px;bottom:20px;display:flex;
+      align-items:baseline;gap:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)">
+      <span class="num" style="font-size:76px;color:${sCol(S.score)}">${S.score}</span>
+      <span style="font-size:15px;font-weight:700;color:rgba(255,255,255,.8)">RECOVERY</span></div>`],
+  ["Glow", () => `<div style="position:absolute;inset:0;border:6px solid ${sCol(S.score)};
+      opacity:.7;filter:blur(4px)"></div>
+      <div style="position:absolute;inset:0;border:2.5px solid ${sCol(S.score)};opacity:.95"></div>`],
+  ["Streak", () => `<div style="position:absolute;right:16px;top:16px" class="chip">
+      <span style="font-size:12px">🔥</span>
+      <span class="num" style="font-size:13px;font-weight:700">${S.streak} day streak</span></div>`],
+  ["Journey", () => `<div style="position:absolute;left:0;right:0;bottom:20px;display:flex;
+      justify-content:center">
+      <div style="background:rgba(0,0,0,.55);border-radius:16px;padding:12px 20px;text-align:center">
+      <div class="num" style="font-size:34px">Day ${S.streak}</div>
+      <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.75);margin-top:2px">
+      ${TODAY.getDate()} ${MON_S[TODAY.getMonth()]} ${TODAY.getFullYear()}</div></div></div>`],
+  ["Diary strip", () => `<div class="scrim-b" style="height:96px;display:flex;align-items:flex-end;
+      justify-content:space-between;padding:0 20px 20px">
+      <span class="num" style="font-size:16px;font-weight:700">${DAY_L[TODAY.getDay()]} ${TODAY.getDate()} ${MON_S[TODAY.getMonth()]}</span>
+      <span class="num" style="font-size:14px;color:${sCol(S.score)}">Recovery ${S.score}</span></div>`],
+  ["Date only", () => `<div style="position:absolute;left:16px;bottom:16px" class="chip">
+      <span style="font-size:13px;font-weight:600">${TODAY.getDate()} ${MON_S[TODAY.getMonth()]} ${TODAY.getFullYear()}</span></div>`],
+  ["Clean", () => ``],
+];
+
+/* ============================================================
+   Mount and redraw.
+   ============================================================ */
+const $ = id => document.getElementById(id);
+
+function paintOld() {
+  $("old-sheet").innerHTML = OLD.map(([name, draw]) => `<figure class="cell">
+    <div class="frame mood-${S.mood}" style="transform:scale(1)">
+      <div class="shot"></div><div class="ov">${draw()}</div>
+    </div>
+    <figcaption>${esc(name)}</figcaption></figure>`).join("");
+  // These cells are fixed aspect tiles, so they scale off their own width.
+  $("old-sheet").querySelectorAll(".cell").forEach(c => {
+    c.querySelector(".frame").style.transform = `scale(${c.clientWidth / 390})`;
+  });
+}
+
+let firstPaint = true;
+
+function paintPlates() {
+  // The reveal only runs on first paint: re-fading every plate each time the
+  // score slider moves would make the whole page flicker.
+  const rise = firstPaint ? " rise" : " in";
+  $("plates").innerHTML = TEMPLATES.map(t => `<article class="plate${rise}">
+    <div>${frame(t.draw(), t.opts || {})}</div>
+    <div class="plate-body">
+      <div class="plate-meta">
+        <span class="tag">${esc(t.category)}</span>
+        <span class="tag tag--${t.reach}">${esc({flex:"Worth posting", close:"Worth sending", private:"Worth keeping"}[t.reach])}</span>
+      </div>
+      <h3>${esc(t.name)}</h3>
+      <p class="plate-tag">${esc(t.tagline)}</p>
+      <div class="why"><span class="eyebrow">Why anyone picks it</span><p>${esc(t.why)}</p></div>
+      <dl class="specs">
+        <div><dt>Reads</dt><dd>${t.data}</dd></div>
+        <div><dt>Layout</dt><dd>${t.spec}</dd></div>
+        <div><dt>Stays legible</dt><dd>${t.legible}</dd></div>
+        <div><dt>Build</dt><dd>${t.build}</dd></div>
+      </dl>
+    </div></article>`).join("");
+  fitFrames($("plates"));
+  if (firstPaint) { reveal($("plates")); firstPaint = false; }
+}
+
+function paintPicker() {
+  $("picker-lane").innerHTML = `<div>${frame(PICKER.draw(), {bare: true, bg: "#0F0F13", h: 520})}</div>
+    <div class="plate-body">
+      <h3 style="margin-top:0">${esc(PICKER.name)}</h3>
+      <p class="plate-tag">${esc(PICKER.tagline)}</p>
+      <dl class="specs">${PICKER.notes.map(([k, v]) =>
+        `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("")}</dl>
+    </div>`;
+  fitFrames($("picker-lane"));
+}
+
+function cardGrid(el, items) {
+  el.innerHTML = items.map(([eyebrow, head, body]) => `<article>
+    <p class="eyebrow">${esc(eyebrow)}</p><h3>${esc(head)}</h3><p>${esc(body)}</p>
+  </article>`).join("");
+}
+
+function paintVerdict() {
+  $("verdict").innerHTML = VERDICT.map(([k, v, note]) =>
+    `<div><dt>${esc(k)}</dt><dd><b>${esc(v)}</b><br>${esc(note)}</dd></div>`).join("");
+}
+
+function paintSteps() {
+  $("steps").innerHTML = STEPS.map(([when, what, cost]) => `<div class="step">
+    <h4>${esc(when)}</h4><p>${esc(what)}</p><span class="cost">${esc(cost)}</span></div>`).join("");
+}
+
+/* Only the frames depend on the controls, so a change repaints those alone. */
+function redraw() {
+  paintOld();
+  paintPlates();
+  paintPicker();
+  paintLadder();
+}
+
+function reveal(root) {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, {rootMargin: "0px 0px -8% 0px"});
+  root.querySelectorAll(".rise").forEach(n => io.observe(n));
+}
+
+/* ---------------- controls ---------------- */
+$("c-mood").innerHTML = MOODS.map((m, i) =>
+  `<button class="sw" data-mood="${m.id}" title="${esc(m.label)}" aria-label="${esc(m.label)}"
+    aria-pressed="${i === 0}" style="background:${m.sw}"></button>`).join("");
+
+$("c-mood").addEventListener("click", e => {
+  const b = e.target.closest("[data-mood]"); if (!b) return;
+  S.mood = b.dataset.mood;
+  $("c-mood").querySelectorAll(".sw").forEach(s => s.setAttribute("aria-pressed", s === b));
+  redraw();
+});
+
+$("c-score").addEventListener("input", e => {
+  S.score = +e.target.value; $("r-score").textContent = S.score;
+  $("r-score").style.color = sVar(S.score); redraw();
+});
+$("c-streak").addEventListener("input", e => {
+  S.streak = +e.target.value; $("r-streak").textContent = S.streak; redraw();
+});
+
+$("c-theme").addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark"
+    || (!document.documentElement.hasAttribute("data-theme")
+        && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  $("c-theme").setAttribute("aria-pressed", String(!dark));
+});
+
+addEventListener("resize", () => { fitFrames(); paintOld(); });
+
+/* ============================================================
+   Drawing parts shared by the new set.
+   ============================================================ */
+function corners(inset = 13, len = 15, a = .55) {
+  const c = `position:absolute;width:${len}px;height:${len}px;border:1.2px solid rgba(255,255,255,${a})`;
+  return `<div style="${c};left:${inset}px;top:${inset}px;border-right:0;border-bottom:0"></div>
+    <div style="${c};right:${inset}px;top:${inset}px;border-left:0;border-bottom:0"></div>
+    <div style="${c};left:${inset}px;bottom:${inset}px;border-right:0;border-top:0"></div>
+    <div style="${c};right:${inset}px;bottom:${inset}px;border-left:0;border-top:0"></div>`;
+}
+
+function readout(name, value, colour = "#fff") {
+  return `<div>${label(name, 8.5, "rgba(255,255,255,.6)")}
+    <div class="num" style="font-size:17px;color:${colour};margin-top:3px">${value}</div></div>`;
+}
+
+/* One night of sleep as the clinic draws it: awake at the top, deep at the
+   bottom, every transition a real one. Minutes here sum to 7h 24m. */
+const HYPNO = [[0,5],[2,18],[3,30],[2,26],[1,16],[2,32],[3,21],[2,30],[1,28],
+               [2,34],[3,12],[2,36],[1,30],[2,40],[0,4],[2,32],[1,18],[2,32]];
+
+function hypnogram(w, h) {
+  const total = HYPNO.reduce((s, [, m]) => s + m, 0);
+  const y = lvl => 6 + lvl * ((h - 12) / 3);
+  let x = 0, d = `M0 ${y(HYPNO[0][0])}`, deep = "";
+  HYPNO.forEach(([lvl, mins], i) => {
+    if (i) d += `L${x.toFixed(1)} ${y(lvl)}`;          // the drop between stages
+    const nx = x + mins / total * w;
+    d += `L${nx.toFixed(1)} ${y(lvl)}`;                 // the stage itself
+    if (lvl === 3) deep += `M${x.toFixed(1)} ${y(3)}L${nx.toFixed(1)} ${y(3)}`;
+    x = nx;
+  });
+  return `<svg width="${w}" height="${h}" style="display:block;overflow:visible">
+    <path d="${d}L${w} ${h}L0 ${h}Z" fill="rgba(255,255,255,.13)"/>
+    <path d="${d}" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.6"
+      stroke-linejoin="round"/>
+    <path d="${deep}" fill="none" stroke="#22D3EE" stroke-width="3.4" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* The day's heart rate, one stroke, hour by hour. */
+const HR = [58,55,52,50,49,53,61,98,148,92,76,71,79,84,77,74,82,90,78,71,66,62,60,57];
+
+function hrLine(w, h) {
+  const lo = 40, hi = 155;
+  const pt = (v, i) => [i / (HR.length - 1) * w, h - (v - lo) / (hi - lo) * h];
+  const d = HR.map((v, i) => `${i ? "L" : "M"}${pt(v, i).map(n => n.toFixed(1)).join(" ")}`).join("");
+  const peak = pt(148, 8);
+  return `<svg width="${w}" height="${h}" style="display:block;overflow:visible">
+    <path d="${d}L${w} ${h}L0 ${h}Z" fill="rgba(255,255,255,.1)"/>
+    <path d="${d}" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+    <circle cx="${peak[0].toFixed(1)}" cy="${peak[1].toFixed(1)}" r="4" fill="#E05C64"/>
+    <circle cx="${peak[0].toFixed(1)}" cy="${peak[1].toFixed(1)}" r="8" fill="none"
+      stroke="#E05C64" stroke-width="1" opacity=".55"/>
+  </svg>`;
+}
+
+/* Catmull Rom through the points, converted to cubic beziers, so a month of
+   scores reads as terrain rather than as a zigzag chart. */
+function spline(p) {
+  let d = `M${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p[i + 1];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)},${c2[0].toFixed(1)} ${c2[1].toFixed(1)},` +
+         `${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+/* Deterministic bars, so the receipt looks printed rather than generated. */
+function barcode(w, h) {
+  let x = 0, bars = "";
+  for (let i = 0; x < w; i++) {
+    const bw = 1 + (i * 7 % 3);
+    if (i % 2 === 0) bars += `<rect x="${x}" y="0" width="${bw}" height="${h}" fill="#14110E"/>`;
+    x += bw + 1;
+  }
+  return `<svg width="${w}" height="${h}" style="display:block">${bars}</svg>`;
+}
+
+function receiptRow(name, value) {
+  return `<div style="display:flex;align-items:baseline;gap:5px;margin-top:6px">
+    <span>${name}</span>
+    <span style="flex:1;border-bottom:1px dotted #8A8175;transform:translateY(-3px)"></span>
+    <span style="font-weight:700">${value}</span></div>`;
+}
+
+/* Seven days along the bottom edge, today outlined. */
+function weekStrip() {
+  const scores = week(S.score);
+  return scores.map((v, i) => {
+    const today = i === 6;
+    return `<div style="position:relative;width:42px;height:54px;border-radius:5px;
+      overflow:hidden;${today ? "outline:1.5px solid #fff;outline-offset:1.5px" : "opacity:.72"}">
+      <div class="shot mood-${MOODS[(i * 2 + 1) % 5].id}" style="--sx:${(i % 3 - 1) * 5}%"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:${sCol(v)}"></div>
+    </div>`;
+  }).join("");
+}
+
+/* ============================================================
+   Page copy. Every claim here traces to either the codebase or
+   a named source in the research pass.
+   ============================================================ */
+const VERDICT = [
+  ["Reads today", "3", "A score, a date, a streak. That is everything the capture screen can see."],
+  ["Sits unread on the phone", "78", "Sleep stages, strain, heart, cycle, records, the day's own headline. All of it already cached."],
+  ["Uses the archive", "0", "Not one overlay has ever looked at a second photo, and the store keeps every one of them."],
+  ["Files in the way", "1", "MirrorCaptureSheet is built with no parameters. That is the whole blocker."],
+];
+
+const PRINCIPLES = [
+  ["Legibility", "Pick the mechanism, then the look",
+   "There are five ways to make type survive on a photo: wash the frame, scrim behind the block, a solid strip, space the photo already left empty, or blur. Choose one on purpose. The templates people abandon were styled first and protected never."],
+  ["Worst case", "Design for the bad photo",
+   "Not the golden hour test shot. A backlit window, a dim lamp, a black hoodie against a dark wall. Every template gets signed off against a hostile set before it ships, which is the rule Nielsen Norman states outright."],
+  ["Colour", "Let the photo bring the colour",
+   "Wrapped went nearly monochrome in 2025 so hundreds of millions of arbitrary images could sit inside the design. Skin tone plus ambient light plus a brand green is where overlays turn ugly. One accent moment per template, no more."],
+  ["Scale", "Size is the safest kind of bold",
+   "One very large number in a heavy face beats almost any background on size alone. Texture dates inside two years. Scale does not, which is why it carries the boldness in most of the set below."],
+  ["Register", "A diary, not a report card",
+   "The same numbers read as a life or as a performance review depending only on the words around them. Nobody keeps a performance review for a year, and nobody sends one to a friend."],
+  ["Naming", "Templates are identities, not layouts",
+   "The Strava sticker apps sell Influencer, Simple, Data Nerd, and people pick the one they think they are. Nobody has ever picked Template 4."],
+  ["Placement", "Put it where the face is not",
+   "Vision hands us the face box for nothing. Placing type automatically in the quiet part of the frame is the single thing every competitor skips, because they all hand positioning back to the user and hope."],
+  ["The streak", "Showing up is the only thing that counts",
+   "The streak is the photo, full stop. A bad score can never break it. The moment a health number can end a run, the people with hard weeks quit first, and those are the people this feature is for."],
+];
+
+const BEYOND = [
+  ["Timing", "Develop it at dusk",
+   "Capture in the morning, develop in the evening. The day's numbers genuinely are not final until the day ends, so the wait is honest rather than a gimmick. It kills the retake loop and hands the app a second moment it fully controls."],
+  ["Sequence", "Today's numbers unlock behind today's photo",
+   "Home keeps the recap soft until the capture happens. Not a toll: the readiness picture really does firm up as the day goes. BeReal runs about seventy percent daily posting on exactly this mechanic."],
+  ["Consistency", "One look, chosen once",
+   "A filter tray at every capture is a daily decision, and daily decisions are where people drop out. Pick the house look in onboarding and never ask again. Three hundred and sixty five tiles that match is the entire point of the archive."],
+  ["Forgiveness", "Rest days stay silent",
+   "The store already covers two missed days a month. Mark them in the calendar, never announce them, never ask for a confirmation. Without repair, a streak stops being a reward and becomes a debt."],
+  ["Coverage", "A card on the days the camera stays down",
+   "Nike Run Club forks between a photo and a typographic poster so something always exists to keep. The daily artifact cannot depend on the selfie actually happening."],
+  ["Compounding", "A year in one file",
+   "One capture a day turns into a film nobody wants to abandon. Backfill the first frames from health history the app already holds, so the archive is worth opening in week one rather than month six."],
+  ["Voice", "A sentence only you ever see",
+   "One honest line a day naming a pattern instead of a number. Owner only and never shareable, which is precisely what lets it be candid about a bad week."],
+  ["Restraint", "Landmarks, not confetti",
+   "Full screen celebration at seven, thirty, one hundred and three hundred and sixty five, and nowhere else. If every day gets a party, no day does."],
+];
+
+const STEPS = [
+  ["Before anything", "Stop baking the overlay into the JPEG. Today the renderer burns the chosen template into the file permanently, which means a template can never be changed, a bug can never be fixed, and no template we write next year can ever be applied to a photo taken this year. Keep the plain photo plus the template choice, and draw at view time.", "Medium"],
+  ["Before anything", "The placement and contrast engine: face box, luminance sample, escalation ladder. Every template below is unsafe to ship without it, and it is the one piece no competitor has.", "Large"],
+  ["Before anything", "Pass the real data in. The capture sheet takes no parameters today and reads two values, while the App Group snapshot already holds sleep, strain, heart, the day's action and the intelligence headline with no async call at all.", "Small"],
+  ["First release", "The house set: the edge readout, the hero number, the quiet stamp and one opaque object. Four templates that cover the whole range of taste and lighting.", "Medium"],
+  ["First release", "Retire the nine chips. Keep Clean. Anything that survives has to earn a slot against the new set.", "Small"],
+  ["Second release", "The archive templates, the ones that read a second photo: the pair, the week strip, the month sheet. This is where the feature stops being a filter and starts being a record.", "Medium"],
+  ["Second release", "Named looks chosen once in onboarding, applied to every capture after.", "Medium"],
+  ["Later", "Develop at dusk, the softened recap, and the landmark cards at seven, thirty and a hundred.", "Large"],
+  ["Later", "Transparent export, so the day leaves the app and lands in somebody's story without a screenshot.", "Small"],
+];
+
+/* ============================================================
+   The new set. Every draw() is authored at 390 x 520 points,
+   which is the space MirrorPhotoRenderer already renders into,
+   so the numbers in each spec are the numbers to type into
+   SwiftUI.
+   ============================================================ */
+const TEMPLATES = [
+
+{
+  name: "Field Notes", category: "Everyday", reach: "private",
+  tagline: "The day's instruments read out along the edges of the frame, and the photo keeps the middle.",
+  why: "It is the one you can wear every single day without getting bored of it, because it never competes with your face. It reads as an instrument, not a sticker, and it is the only template here that shows four numbers while covering almost none of the picture.",
+  data: "Readiness, last night's sleep, HRV and resting heart rate. All four are already sitting in the App Group snapshot, so this costs no HealthKit query at capture.",
+  spec: "Corner brackets inset <code>13</code>, 15pt arms, 1.2pt white at 55%. Date and clock top left in 9.5pt mono tracked <code>0.2em</code>. Bottom rail: hairline at 55% white, then four readouts, 8.5pt mono caps over 17pt rounded. Only the readiness value takes colour.",
+  legible: "Scrim, bottom 120pt. Type sits in the two dead strips a portrait selfie always leaves, so it never needs more than the first rung of the ladder.",
+  build: "Small. Static layout, no new data plumbing beyond passing the snapshot in.",
+  draw: () => `${corners()}
+    <div style="position:absolute;left:18px;top:16px">
+      ${label(stamp(TODAY))}${label("07:14", 9.5, "rgba(255,255,255,.55)", "margin-top:5px")}
+    </div>
+    <div style="position:absolute;right:18px;top:16px;text-align:right">
+      ${label("DAY " + S.streak, 9.5, "rgba(255,255,255,.55)")}
+    </div>
+    <div class="scrim-b" style="height:130px"></div>
+    <div style="position:absolute;left:18px;right:18px;bottom:20px">
+      <div style="height:1px;background:rgba(255,255,255,.45);margin-bottom:11px"></div>
+      <div style="display:flex;justify-content:space-between">
+        ${readout("READY", S.score, sCol(S.score))}
+        ${readout("SLEEP", "7h24")}
+        ${readout("HRV", "48")}
+        ${readout("RESTING", "54")}
+      </div></div>`,
+},
+
+{
+  name: "The Number", category: "Hero", reach: "flex",
+  tagline: "One number, big enough to read across a room, cropped by the edge of the frame like a magazine cover.",
+  why: "This is the one people screenshot. A 168 point numeral wins the fight with any background on size alone, so it is simultaneously the boldest thing in the set and the safest. Everything else on the frame gets out of its way.",
+  data: "Readiness only. One number, chosen because six equal numbers is a dashboard and nobody has ever screenshotted a dashboard.",
+  spec: "Numeral 168pt rounded at weight 800, tracking <code>-0.05em</code>, sitting at <code>left: -10</code> so it bleeds off the edge, baseline 46pt from the bottom. Word set in 12pt mono caps tracked <code>0.24em</code> with a 3pt rule above it in the score colour. Date top left, 9.5pt.",
+  legible: "Scrim, bottom 240pt at 88%. Pure white type. The score colour appears once, in the rule, which is the only place a colour clash cannot hurt legibility.",
+  build: "Small.",
+  draw: () => `
+    <div style="position:absolute;left:18px;top:16px">${label(stamp(TODAY))}</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:250px;
+      background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.5) 40%,transparent)"></div>
+    <div style="position:absolute;left:-10px;bottom:34px;display:flex;align-items:flex-end;gap:14px">
+      ${big(S.score, 168, "#fff", "letter-spacing:-.05em")}
+      <div style="padding-bottom:26px">
+        <div style="width:34px;height:3px;background:${sCol(S.score)};margin-bottom:8px"></div>
+        ${label("READY", 12, "#fff", "letter-spacing:.24em")}
+        ${label(sWord(S.score).toUpperCase(), 12, "rgba(255,255,255,.6)", "letter-spacing:.24em;margin-top:4px")}
+      </div></div>`,
+},
+
+{
+  name: "Behind You", category: "Hero", reach: "flex",
+  tagline: "The number is enormous, and it passes behind your head and shoulders instead of over them.",
+  why: "This is the one nobody else can copy. Every competitor exports a flat sticker and hands positioning to the user, which is why their overlays sit on people's faces. Cutting the subject out and putting the number behind them makes the photo and the data look like one photograph rather than a picture with a label stuck on it.",
+  data: "Readiness alone, plus the date. The number is the entire design, so a second metric would only weaken it.",
+  spec: "Numeral 230pt rounded at weight 800, tracking <code>-0.06em</code>, centred on the face at <code>y 150</code>, white at 92%. The person layer composites over it. Date bottom left, 9.5pt mono. No scrim: the numeral is not text to be read at small size, it is a shape.",
+  legible: "Copy space and depth. Because the numeral sits behind the subject, the parts that would have fought the face are simply not drawn, so the contrast problem disappears instead of being solved.",
+  build: "Medium. <code>VNGeneratePersonSegmentationRequest</code> at accurate quality, once at capture, cached with the photo. It fails softly: no mask means the numeral drops behind a scrim instead and the template still ships.",
+  draw: () => `
+    <div style="position:absolute;left:0;right:0;top:120px;text-align:center">
+      ${big(S.score, 230, "rgba(255,255,255,.93)", "letter-spacing:-.06em;text-shadow:0 6px 40px rgba(0,0,0,.45)")}</div>
+    <div class="person"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:130px;
+      background:linear-gradient(to top,rgba(0,0,0,.62),transparent)"></div>
+    <div style="position:absolute;left:20px;right:20px;bottom:22px;display:flex;
+      justify-content:space-between;align-items:baseline">
+      ${label(stamp(TODAY), 9.5)}
+      ${label(sWord(S.score).toUpperCase() + " · DAY " + S.streak, 9.5, "rgba(255,255,255,.6)")}</div>`,
+},
+
+{
+  name: "One Word", category: "Voice", reach: "private",
+  tagline: "One honest word for the kind of day it was, and no numbers anywhere on the frame.",
+  why: "On a wrecked day the last thing anyone wants burned into their own face is a red 38. This is the template that lets a bad day still become a photo worth keeping, and because it carries no value at all it is also the one people reach for when they want the picture without handing over their health data. It is available every day, not only the bad ones, because a template you only see when you feel awful is a template nobody chooses.",
+  data: "Readiness, sleep hours and recovery debt, used only to pick the word. None of the three is ever printed.",
+  spec: "Radial vignette centred at <code>y 208</code>, from <code>#101014</code> at 0% out to 52%, so the edges darken and the face does not. Word 42pt serif regular, tracking <code>1.0</code>, centred, baseline <code>y 430</code>. Subline 13pt at 72% white. Date 9pt mono at 45%.",
+  legible: "Copy space plus a vignette that darkens exactly the ring the type sits in. At 42pt the word is around 155 pixels tall in the saved JPEG, so it cannot be lost.",
+  build: "Small. The word table lives in the copy file with Remote Config overrides, and it must never state a health claim or make a bad day sound like a failure.",
+  draw: () => {
+    const t = S.score < 34 ? ["Rest", "Hard days count too."]
+      : S.score < 50 ? ["Slow", "Take it gently."]
+      : S.score < 67 ? ["Steady", "Nothing to prove today."]
+      : S.score < 85 ? ["Ready", "Good day to use."]
+      : ["Strong", "Remember this one."];
+    return `
+    <div style="position:absolute;inset:0;background:radial-gradient(circle 330px at 50% 40%,
+      rgba(16,16,20,0) 39%, rgba(16,16,20,.52) 100%)"></div>
+    <div style="position:absolute;left:26px;right:26px;bottom:64px;text-align:center">
+      <div style="font-family:var(--serif);font-size:42px;line-height:1.05;letter-spacing:.02em;
+        color:#F5F5F8;text-shadow:0 0 12px rgba(0,0,0,.55)">${t[0]}</div>
+      <div style="font-size:13px;line-height:1.4;color:rgba(255,255,255,.72);margin-top:14px;
+        text-shadow:0 0 8px rgba(0,0,0,.55)">${t[1]}</div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:28px;text-align:center">
+      ${label(stamp(TODAY), 9, "rgba(255,255,255,.45)")}</div>`;
+  },
+},
+
+{
+  name: "Horizon", category: "Data art", reach: "flex",
+  tagline: "Your last thirty days drawn as a landscape, with today standing at the end of it.",
+  why: "It makes one selfie carry a month of life. The photo stops being a dated snapshot and becomes the end of a visible run, and because the shape is different for every person on every day, it reads as a signature rather than a chart. The fill under the curve is doing two jobs at once: it is the terrain, and it is the only scrim this template needs.",
+  data: "Thirty days of score history, which the app already stores per day, plus today's morning lock for the final point. Missing days are bridged, never drawn as zero.",
+  spec: "Thirty samples, <code>x = i * 13.448</code>, <code>y = 470 - score * 1.12</code>, so 0 sits at <code>y 470</code> and 100 at <code>y 358</code>. Curve smoothed Catmull Rom. Stroke 2.5pt at 92% white with a 3pt black shadow. Fill from the curve to the bottom edge, top stop the score colour at 22%, bottom stop black at 78%. Today marked with a 5pt dot and a 1.5pt white ring. Average shown as a 1pt dashed rule. Hero 64pt at <code>x 24</code>, baseline <code>y 498</code>.",
+  legible: "Full overlay, but one that means something. Every mark sits on 60 to 78% black by construction rather than by adding a bar over the picture, and nothing at all is drawn above <code>y 340</code>.",
+  build: "Medium. The score history read is already there; the work is the spline and the missing day bridging.",
+  draw: () => {
+    const days = 30, hist = history(days, S.score, 15);
+    const mean = Math.round(hist.reduce((a, b) => a + b, 0) / days);
+    const pts = hist.map((v, i) => [i * 13.448, 470 - v * 1.12]);
+    const avgY = 470 - mean * 1.12;
+    return `
+    <svg width="390" height="520" style="position:absolute;inset:0">
+      <defs><linearGradient id="hz${S.score}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${sCol(S.score)}" stop-opacity=".22"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".78"/></linearGradient></defs>
+      <path d="${spline(pts)}L390 520L0 520Z" fill="url(#hz${S.score})"/>
+      <path d="${spline(pts)}" fill="none" stroke="#F5F5F8" stroke-opacity=".92" stroke-width="2.5"
+        stroke-linecap="round" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,.45))"/>
+      <line x1="0" y1="${avgY.toFixed(1)}" x2="390" y2="${avgY.toFixed(1)}"
+        stroke="#fff" stroke-opacity=".3" stroke-width="1" stroke-dasharray="4 5"/>
+      <line x1="${pts[days-1][0].toFixed(1)}" y1="${pts[days-1][1].toFixed(1)}"
+        x2="${pts[days-1][0].toFixed(1)}" y2="520" stroke="${sCol(S.score)}"
+        stroke-opacity=".6" stroke-width="2"/>
+      <circle cx="${pts[days-1][0].toFixed(1)}" cy="${pts[days-1][1].toFixed(1)}" r="5"
+        fill="${sCol(S.score)}"/>
+      <circle cx="${pts[days-1][0].toFixed(1)}" cy="${pts[days-1][1].toFixed(1)}" r="7"
+        fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/>
+    </svg>
+    <div style="position:absolute;right:24px;top:${(avgY - 16).toFixed(0)}px">
+      ${label("AVG " + mean, 8, "rgba(255,255,255,.55)", "letter-spacing:.18em")}</div>
+    <div style="position:absolute;left:24px;bottom:24px">
+      ${big(S.score, 64, "#fff", "letter-spacing:-.03em")}</div>
+    <div style="position:absolute;left:26px;bottom:8px">${label("READY", 9, "#B4B4C0")}</div>
+    <div style="position:absolute;right:24px;bottom:8px">
+      ${label("30 DAYS", 8, "rgba(180,180,192,.7)")}</div>`;
+  },
+},
+
+{
+  name: "Body Age", category: "Identity", reach: "flex",
+  tagline: "The age you are, the age your body is behaving like, and the gap between them drawn as real distance.",
+  why: "This is the one number in the app that is about identity rather than performance. A readiness of 74 says nothing about who you are, but I am 34 and my body is 31 is a sentence people say out loud to other people. Setting the gap as physical space between the two numerals makes it land instantly, even for someone who has never opened this app.",
+  data: "Chronological age and vitality age, both restored from the vitality scorer's own snapshot. No view model and no async work.",
+  spec: "Both numerals 84pt rounded on a common baseline at <code>y 466</code>. Your age at <code>x 30</code> in semibold white at 55%; your body age offset by <code>min(abs(delta), 8) * 8</code> points, in heavy, filled <code>#22D3EE</code> when lower and <code>#E05C64</code> when higher. Dotted connector at <code>y 480</code> when the gap reaches 24pt. Labels 8pt mono caps, claim 9pt mono caps.",
+  legible: "Scrim, bottom 140pt at 68%. Both numerals are solid fills rather than outlines, which is the single change that lets the 55% white one survive a bright background.",
+  build: "Medium. The clamp at eight years is what stops the layout ever running off the edge.",
+  draw: () => {
+    const real = 34, body = 31, delta = real - body;
+    const gap = Math.min(Math.abs(delta), 8) * 8;
+    const tint = delta > 0 ? "#22D3EE" : delta < 0 ? "#E05C64" : "#F2F2F6";
+    return `
+    <div style="position:absolute;left:0;right:0;bottom:0;height:150px;
+      background:linear-gradient(to top,rgba(0,0,0,.68),transparent)"></div>
+    <div style="position:absolute;left:30px;bottom:50px;display:flex;align-items:flex-end;
+      gap:${gap}px">
+      ${big(real, 84, "rgba(255,255,255,.55)", "font-weight:600")}
+      ${big(body, 84, tint)}
+    </div>
+    <div style="position:absolute;left:30px;bottom:28px;display:flex;gap:${gap}px">
+      <div style="width:100px">${label("YOUR AGE", 8, "rgba(180,180,192,.8)", "letter-spacing:.18em")}</div>
+      <div>${label("YOUR BODY", 8, "rgba(180,180,192,.8)", "letter-spacing:.18em")}</div>
+    </div>
+    <div style="position:absolute;left:30px;bottom:10px">
+      ${label(Math.abs(delta) + " YEARS " + (delta > 0 ? "YOUNGER" : "OLDER"), 9, tint,
+        "letter-spacing:.16em;opacity:.88")}</div>`;
+  },
+},
+
+{
+  name: "The Slip", category: "Object", reach: "close",
+  tagline: "The day printed as a receipt and dropped into the frame, dotted leaders and all.",
+  why: "A receipt makes an arbitrary list of numbers feel official and complete, which is the whole reason Receiptify went round the world. It is also the safest template we can build: the slip is opaque, so its contrast has nothing to do with the photo behind it.",
+  data: "Readiness, sleep, strain, resting heart rate, steps, and the capture day as the total line. Steps and heart rate are the only fields needing a HealthKit read, and both degrade to being dropped from the list.",
+  spec: "Slip <code>236 x 300</code> at <code>left: 26, top: 168</code>, rotated <code>-1.8deg</code>, stock <code>#F6F3EC</code>, ink <code>#14110E</code>, radius 3pt, shadow <code>0 12 30 rgba(0,0,0,.5)</code>. All type 10pt mono. Rows are label, dotted leader, right aligned value. Barcode 18pt tall above the footer.",
+  legible: "Opaque object. Nothing on this template can ever fail a contrast check, which is why it is the fallback the ladder lands on in hostile light.",
+  build: "Medium. The row list has to reflow when a field is missing rather than leaving a gap.",
+  draw: () => `
+    <div style="position:absolute;left:26px;top:150px;width:236px;background:#F6F3EC;
+      color:#14110E;border-radius:3px;padding:16px 16px 14px;transform:rotate(-1.8deg);
+      box-shadow:0 12px 30px rgba(0,0,0,.5);font-family:var(--mono);font-size:10px;line-height:1.3">
+      <div style="text-align:center;letter-spacing:.18em;font-weight:700">DAILY MIRROR</div>
+      <div style="text-align:center;letter-spacing:.1em;color:#6B6459;margin-top:3px">
+        ${stamp(TODAY)} · 07:14</div>
+      <div style="border-top:1px dashed #A79E90;margin:11px 0 4px"></div>
+      ${receiptRow("READINESS", S.score)}
+      ${receiptRow("SLEEP", "7H 24M")}
+      ${receiptRow("DEEP", "63M")}
+      ${receiptRow("STRAIN", "12.4")}
+      ${receiptRow("RESTING HR", "54")}
+      ${receiptRow("STEPS", "8,412")}
+      <div style="border-top:1px dashed #A79E90;margin:10px 0 8px"></div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:12px">
+        <span style="letter-spacing:.1em">DAY</span><span>${S.streak}</span></div>
+      <div style="margin-top:12px">${barcode(204, 18)}</div>
+      <div style="text-align:center;color:#6B6459;letter-spacing:.08em;margin-top:7px;font-size:8px">
+        KEPT ON THIS PHONE ONLY</div>
+    </div>`,
+},
+
+{
+  name: "The Chin", category: "Object", reach: "close",
+  tagline: "Instant film framing, where the white lip below the picture carries the writing.",
+  why: "The Polaroid chin is a physical solution to the legibility problem that predates computers: a guaranteed opaque area of known size, sitting where it cannot cover anyone's face. It also makes the archive look like a shoebox of prints rather than a camera roll.",
+  data: "Readiness and the day's action result sentence, which the app already writes for the proof loop. On a day with no result it falls back to the sleep line.",
+  spec: "Card <code>#F2EFE8</code> filling the frame. Photo inset <code>18</code> on three sides, height <code>372</code>. Chin from <code>402</code> to <code>502</code>. Score 46pt rounded in ink at left; caption in 13pt serif italic, two lines maximum, 62 characters.",
+  legible: "Copy space. The caption never touches the photo, so the treatment is immune to what the photo looks like.",
+  build: "Small, and it reuses the sentence the daily action result store already produces.",
+  opts: {bare: true, bg: "#F2EFE8"},
+  draw: () => `
+    <div style="position:absolute;left:18px;top:18px;width:354px;height:372px;overflow:hidden;
+      background:#000"><div class="shot mood-${S.mood}"></div></div>
+    <div style="position:absolute;left:18px;right:18px;top:406px;display:flex;
+      align-items:flex-start;gap:16px;color:#14110E">
+      <div>
+        ${big(S.score, 46, "#14110E")}
+        ${label("READY", 8.5, "#7A7264", "margin-top:4px")}
+      </div>
+      <div style="flex:1;padding-top:4px">
+        <div style="font-family:var(--serif);font-style:italic;font-size:13.5px;line-height:1.35;
+          color:#2C2721">You walked after dinner. Recovery moved six points overnight.</div>
+        <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;color:#8A8175;
+          margin-top:7px">${stamp(TODAY)} · DAY ${S.streak}</div>
+      </div></div>`,
+},
+
+{
+  name: "This Week", category: "Archive", reach: "private",
+  tagline: "Today's face over the six that came before it, in a strip along the bottom edge.",
+  why: "It is the first template that admits the archive exists. One photo is a selfie; seven in a row is evidence, and the moment you see the row you want to fill the gap in it. No overlay we ship today has ever looked at a second photo.",
+  data: "The last seven captured days from the photo store, each with the score baked into its own meta. Nothing new to fetch, all of it is already on disk.",
+  spec: "Seven cells <code>42 x 54</code>, gap 5, centred, bottom inset 24. Today outlined 1.5pt white with 1.5pt offset; the other six at 72% opacity. A 3pt bar under each cell in that day's own score colour. Labels 8.5pt mono above the row.",
+  legible: "Strip. The cells are photographs, so the row reads as content rather than chrome, and the scrim under it only has to carry two small labels.",
+  build: "Medium. Needs thumbnail decode for six extra days at render time, which the store already caches.",
+  draw: () => `
+    <div class="scrim-b" style="height:150px"></div>
+    <div style="position:absolute;left:18px;right:18px;bottom:88px;display:flex;
+      justify-content:space-between;align-items:baseline">
+      ${label("THIS WEEK", 9.5)}${label("6 OF 7 DAYS", 9.5, "rgba(255,255,255,.55)")}
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:26px;display:flex;justify-content:center;gap:5px">
+      ${weekStrip()}</div>`,
+},
+
+{
+  name: "Then and Now", category: "Archive", reach: "flex",
+  tagline: "Your first ever capture, taped into the corner of today's, with the distance between them.",
+  why: "Nothing else in a health app lands like your own face from two hundred days ago sitting next to your face today. The two photographs do all the work and the numbers are a footnote. This is the one export from this app a normal person would actually post, and the app already computes the pair.",
+  data: "First and latest capture from the progress pair the store already exposes, their two stored scores, and the days between them.",
+  spec: "Taped print <code>104 x 138</code> at <code>x 20, y 352</code>, paper white at 94%, photo inset 4pt, caption strip 22pt, rotated <code>-3.5deg</code> with a <code>0 4 10</code> shadow at 45%. Right rail from <code>x 140</code>, laid out bottom up: then label and score at 26pt in white at 60%, now label and score at 38pt in the score colour, day count at 11pt. Every rail line carries a 6pt black shadow.",
+  legible: "Scrim plus an opaque object. Today's photo stays the photo: the old one is a print laid on top, so the archive still holds a real daily capture rather than a composite of two.",
+  build: "Small. The pair and its gate are already written for the share sheet.",
+  draw: () => {
+    const delta = S.score - 58;
+    const tint = delta > 0 ? "#33C48D" : delta < 0 ? "#E3B45A" : "#F2F2F6";
+    return `
+    <div style="position:absolute;left:0;right:0;bottom:0;height:230px;
+      background:linear-gradient(to top,rgba(0,0,0,.72),transparent)"></div>
+    <div style="position:absolute;left:20px;top:352px;width:104px;height:138px;
+      background:rgba(255,255,255,.94);border-radius:3px;transform:rotate(-3.5deg);
+      box-shadow:0 4px 10px rgba(0,0,0,.45);padding:4px">
+      <div style="position:relative;width:96px;height:112px;overflow:hidden;border-radius:2px">
+        <div class="shot mood-night" style="--sx:-4%"></div></div>
+      <div style="text-align:center;font-family:var(--mono);font-size:8.5px;font-weight:600;
+        letter-spacing:.13em;color:#1C1C20;line-height:22px">07 JAN 2026</div>
+    </div>
+    <div style="position:absolute;left:140px;right:20px;bottom:30px;
+      text-shadow:0 1px 6px rgba(0,0,0,.55)">
+      ${label("THEN", 8.5, "rgba(255,255,255,.55)")}
+      ${big(58, 26, "rgba(255,255,255,.6)", "font-weight:600;margin-top:2px")}
+      ${label("NOW", 8.5, "rgba(255,255,255,.85)", "margin-top:10px")}
+      ${big(S.score, 38, tint, "margin-top:2px")}
+      <div style="font-size:11px;font-weight:500;color:rgba(255,255,255,.75);margin-top:8px">
+        212 days apart</div>
+    </div>`;
+  },
+},
+
+{
+  name: "Contact Sheet", category: "Archive", reach: "private",
+  tagline: "Nine days as a proof sheet, with today ringed in grease pencil.",
+  why: "A photographer marks the keeper on the sheet. Turning a month of captures into one object makes the archive feel like a body of work instead of a folder, and it is the template most likely to make someone scroll back through their own year.",
+  data: "The nine most recent captured days and their stored scores. Purely archive, no health query at all.",
+  spec: "Stock <code>#0B0B0D</code>. Grid 3 by 3, cells <code>112 x 128</code>, gutter 6, starting at <code>x 18, y 62</code>. Frame number bottom left of each cell in 7pt mono. Today ringed with a 2.5pt <code>#E05C64</code> ellipse rotated <code>-6deg</code>. Header and folio in 9pt mono caps.",
+  legible: "The whole frame is the object. Nothing overlays a photo at all.",
+  build: "Large. Needs nine thumbnail decodes and a real empty state for anyone under nine captures.",
+  opts: {bare: true, bg: "#0B0B0D"},
+  draw: () => {
+    const scores = [61, 55, 70, 66, 78, 72, 64, 81, S.score];
+    const cells = scores.map((v, i) => {
+      const col = i % 3, row = (i / 3) | 0, last = i === 8;
+      return `<div style="position:absolute;left:${18 + col * 118}px;top:${62 + row * 134}px;
+        width:112px;height:128px;overflow:hidden;border-radius:2px">
+        <div class="shot mood-${MOODS[(i + 2) % 5].id}" style="--sx:${(i % 3 - 1) * 6}%"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:20px;
+          background:linear-gradient(to top,rgba(0,0,0,.8),transparent);"></div>
+        <div style="position:absolute;left:5px;bottom:4px;font-family:var(--mono);font-size:7px;
+          letter-spacing:.1em;color:rgba(255,255,255,.8)">${55 + i} · ${v}</div>
+        ${last ? `<div style="position:absolute;inset:-4px;border:2.5px solid #E05C64;
+          border-radius:50%;transform:rotate(-6deg) scale(.94)"></div>` : ""}
+      </div>`;
+    }).join("");
+    return `<div style="position:absolute;left:18px;right:18px;top:24px;display:flex;
+        justify-content:space-between">
+        ${label("AUGUST 2026", 9)}${label("FRAMES 55 TO 63", 9, "rgba(255,255,255,.5)")}</div>
+      ${cells}
+      <div style="position:absolute;left:18px;right:18px;bottom:22px;display:flex;
+        justify-content:space-between">
+        ${label("DAY " + S.streak, 9)}${label("KEPT ON THIS PHONE", 9, "rgba(255,255,255,.5)")}</div>`;
+  },
+},
+
+{
+  name: "The Night", category: "Data art", reach: "private",
+  tagline: "Last night drawn the way a sleep clinic draws it, running along the bottom of the picture.",
+  why: "It is the one template that tells you something you did not already know by feel. The shape of a night is genuinely different every time, so this template never looks the same twice, and the cyan runs are the deep sleep you actually got.",
+  data: "The sleep stage series for last night. The widget snapshot already carries hours, deep and REM; the full staged series is the one real HealthKit read in this set.",
+  spec: "Chart <code>354 x 96</code> at <code>x 18, y 348</code>. Four levels, awake at the top, deep at the bottom. Area fill white at 13%, stroke 1.6pt white, deep runs overdrawn 3.4pt in <code>#22D3EE</code>. Legend and clock times 9pt mono beneath.",
+  legible: "Scrim plus the chart's own fill. The stroke is a line, not text, so it survives far more background noise than type does.",
+  build: "Medium. One staged sleep query, and a fallback to a plain hours readout when staging is unavailable.",
+  draw: () => `
+    <div class="scrim-b" style="height:230px"></div>
+    <div style="position:absolute;left:18px;bottom:150px">
+      ${label("LAST NIGHT", 9.5)}</div>
+    <div style="position:absolute;left:18px;bottom:52px">${hypnogram(354, 96)}</div>
+    <div style="position:absolute;left:18px;right:18px;bottom:24px;display:flex;
+      justify-content:space-between;align-items:baseline">
+      ${label("22:45", 9, "rgba(255,255,255,.6)")}
+      <div style="display:flex;gap:14px;align-items:baseline">
+        ${label("7H 24M ASLEEP", 9.5)}
+        ${label("63M DEEP", 9.5, "#22D3EE")}
+      </div>
+      ${label("06:50", 9, "rgba(255,255,255,.6)")}
+    </div>`,
+},
+
+
+{
+  name: "Newsprint", category: "Treatment", reach: "flex",
+  tagline: "The photo screened down to dots and set like a front page.",
+  why: "Halftone is the only treatment that is completely immune to the lighting the photo came from, because it throws the original tones away and rebuilds them at a contrast we choose. It is also the strongest looking thing in the set, and it makes a bad photo look deliberate.",
+  data: "Readiness as the headline number, the day's intelligence headline as the standfirst, and the capture day as the issue number.",
+  spec: "Photo desaturated, contrast <code>1.9</code>, then a 4pt dot screen at 62% multiply. Masthead in serif at 27pt between two rules. Headline number 88pt rounded reversed out of a solid ink block. Folio line 9pt mono.",
+  legible: "Full overlay. The image is rebuilt at known contrast before any type lands, so this is the template to reach for when the light was hopeless.",
+  build: "Medium. A Core Image halftone plus mono chain, cached per capture.",
+  opts: {cls: "halftone"},
+  draw: () => `
+    <div style="position:absolute;left:0;right:0;top:0;background:#F4F2ED;padding:14px 18px 9px">
+      <div style="border-bottom:1.5px solid #14110E;padding-bottom:8px;text-align:center">
+        <span style="font-family:var(--serif);font-size:26px;letter-spacing:.05em;color:#14110E">
+          The Daily Mirror</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        ${label(stamp(TODAY), 8.5, "#4A443C")}${label("NO. " + S.streak, 8.5, "#4A443C")}</div>
+    </div>
+    <div style="position:absolute;left:18px;right:18px;bottom:20px;background:#0B0B0D;padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        ${big(S.score, 88, "#fff", "letter-spacing:-.04em")}
+        <div style="flex:1">
+          ${label("READY · " + sWord(S.score).toUpperCase(), 10, "#fff")}
+          <div style="font-family:var(--serif);font-size:15px;line-height:1.25;color:#fff;margin-top:8px">
+            Your body clock slipped forty eight minutes.</div>
+        </div></div></div>`,
+},
+
+{
+  name: "Nineteen Ninety Eight", category: "Treatment", reach: "flex",
+  tagline: "A camcorder date stamp in the corner, and one health number burned in opposite it.",
+  why: "The orange corner date stamp is the most legible type over photo ever mass produced, and it worked for a mechanical reason: it is emissive, tiny, and in the deadest part of the frame. Twenty years of holiday photos proved it. It also carries a nostalgia most of our users grew up inside.",
+  data: "Date, time, and one number the user picks once. Readiness by default.",
+  spec: "Stamp 24pt in a seven segment face, <code>#FF7A18</code>, with a 6pt soft glow at 60%, sitting <code>22</code> in from the bottom right. Mirror number bottom left in the same treatment. Warm grade over the whole frame: <code>#FF8A3D</code> at 10% soft light, plus crushed blacks.",
+  legible: "Copy space plus emissive colour. Nothing is placed centrally and nothing needs a scrim, which is why this survives on almost any photo.",
+  build: "Small once the numeral face is drawn. The grade is a single Core Image filter.",
+  draw: () => `
+    <div style="position:absolute;inset:0;background:#FF8A3D;opacity:.1;mix-blend-mode:soft-light"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.4),transparent 40%)"></div>
+    <div style="position:absolute;right:22px;bottom:22px;font-family:var(--mono);font-size:24px;
+      font-weight:700;letter-spacing:.06em;color:#FF7A18;text-shadow:0 0 9px rgba(255,122,24,.75)">
+      '26 8 ${String(TODAY.getDate()).padStart(2, "0")}</div>
+    <div style="position:absolute;left:22px;bottom:22px;font-family:var(--mono);font-size:24px;
+      font-weight:700;letter-spacing:.06em;color:#FF7A18;text-shadow:0 0 9px rgba(255,122,24,.75)">
+      ${S.score}<span style="font-size:12px;letter-spacing:.12em"> RDY</span></div>`,
+},
+
+{
+  name: "The Sentence", category: "Voice", reach: "private",
+  tagline: "No numbers at all. One line about what your body has been doing, that only you ever see.",
+  why: "Strava found the highest value thing they render is a private sentence naming a pattern, and it is candid precisely because it is never shared. On a bad day this is the only template in the set that will not make someone feel graded, which is exactly when we need them to keep capturing.",
+  data: "The top intelligence card headline, the strongest correlation the user's own data supports, or the sleep coach line, whichever the day has. Every one of them is already written as a full English sentence.",
+  spec: "Serif 21pt, line height <code>1.34</code>, three lines maximum, left aligned at <code>x 24</code>, sitting on the bottom third. Footer 9pt mono caps at 55% white. No numeric type anywhere on the frame.",
+  legible: "Scrim, bottom 200pt. Large serif at 21pt clears the 3:1 bar with less protection than body copy needs.",
+  build: "Small. Nothing new is computed, this is a routing change over sentences the app already produces.",
+  draw: () => `
+    <div style="position:absolute;left:0;right:0;bottom:0;height:220px;
+      background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.45) 45%,transparent)"></div>
+    <div style="position:absolute;left:24px;right:38px;bottom:56px;font-family:var(--serif);
+      font-size:21px;line-height:1.34;color:#fff">
+      Third night running you were in bed before eleven. Your resting heart rate is following.</div>
+    <div style="position:absolute;left:24px;bottom:26px">
+      ${label(stamp(TODAY) + " · ONLY YOU SEE THIS", 9, "rgba(255,255,255,.55)")}</div>`,
+},
+
+{
+  name: "The Claim", category: "Identity", reach: "flex",
+  tagline: "Not a number about a day. A short, honest name for the kind of month you are having.",
+  why: "Wrapped's Listening Age and Strava's effort labels get shared because a label is a claim about a person while a number is only a fact about a day. This is the template someone posts, because it says something about them that a stranger can read.",
+  data: "Derived from thirty days of score history, sleep consistency and wake drift, all of which the app already stores per day. A small closed set of honest archetypes, never invented flattery.",
+  spec: "Label 32pt rounded caps tracked <code>0.16em</code>, centred, between two 1pt white rules with 14pt of air. Definition line 13pt at 78% white, two lines maximum. Month top right, 9pt mono.",
+  legible: "Scrim plus rules. The rules do double duty: they frame the claim and they give the eye a hard edge to hold on a busy photo.",
+  build: "Medium. The archetype rules need writing and, more importantly, need to stay honest on a bad month.",
+  draw: () => `
+    <div style="position:absolute;right:18px;top:16px">${label("AUGUST 2026", 9.5)}</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:250px;
+      background:linear-gradient(to top,rgba(0,0,0,.86),rgba(0,0,0,.4) 50%,transparent)"></div>
+    <div style="position:absolute;left:26px;right:26px;bottom:52px;text-align:center">
+      <div style="height:1px;background:rgba(255,255,255,.85)"></div>
+      <div class="mono" style="font-size:29px;font-weight:700;letter-spacing:.16em;color:#fff;
+        padding:15px 0 13px">STEADY STATE</div>
+      <div style="height:1px;background:rgba(255,255,255,.85)"></div>
+      <div style="font-size:13px;line-height:1.4;color:rgba(255,255,255,.8);margin-top:13px">
+        Thirty days, and your recovery has not moved more than six points either way.</div>
+    </div>`,
+},
+
+
+{
+  name: "One Hundred", category: "Landmark", reach: "flex",
+  tagline: "A plate that only exists on the days worth marking, and never on the days in between.",
+  why: "If every capture gets a celebration then none of them do. Duolingo gates full screen animation to four numbers only, and redesigning that single moment moved their week one retention. This is the artifact for day seven, thirty, one hundred and a year, and it should be impossible to get any other way.",
+  data: "Capture count, longest run, the first capture date, and how many weeks have gone unbroken. All of it already computed by the photo store.",
+  spec: "Ghost numeral 250pt rounded, white at 10%, centred, cropped top and bottom. Caption 15pt mono caps tracked <code>0.2em</code>. Supporting line 13pt at 70%. Hairline rule 60pt wide above the caption.",
+  legible: "Scrim plus a ghosted numeral that is deliberately below text contrast, because it is texture and not information.",
+  build: "Small once the landmark set is agreed. The numbers are already there.",
+  draw: () => `
+    <div style="position:absolute;left:0;right:0;top:118px;text-align:center">
+      ${big(100, 250, "rgba(255,255,255,.11)", "letter-spacing:-.05em")}</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:230px;
+      background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.35) 55%,transparent)"></div>
+    <div style="position:absolute;left:26px;right:26px;bottom:48px;text-align:center">
+      <div style="width:60px;height:1px;background:rgba(255,255,255,.8);margin:0 auto 15px"></div>
+      ${label("ONE HUNDRED DAYS", 15, "#fff", "letter-spacing:.2em")}
+      <div style="font-size:13px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:12px">
+        You started on the seventh of January and you have not missed a week since March.</div>
+    </div>`,
+},
+
+];
+
+/* ============================================================
+   The confirm screen itself. The chip row is where good
+   templates go to die, so this replaces it with live previews
+   and a suggestion that is right most mornings.
+   ============================================================ */
+const PICKER = {
+  name: "Live previews, and one that is already right",
+  tagline: "Word chips make you imagine the result. Previews show it. And on most days the app already knows which template the day wants, so the first card is chosen rather than searched for.",
+  notes: [
+    ["The problem", "Ten grey word chips in a scrolling row. Nobody reads past the fourth, so templates five to ten are dead weight we pay to maintain."],
+    ["Previews", "Each card renders the real overlay on the real photo at <code>74 x 100</code>. A choice you can see is a choice people actually make."],
+    ["Suggested", "One card, first in the row, already selected. Rules in order: a landmark day takes One Hundred; a low readiness day or an active illness warning takes Rest Day; a seventh capture takes This Week; hostile measured lighting takes The Slip; everything else takes the user's house look."],
+    ["House look", "Picked once during the first run, applied to every capture after. A tray at every capture is a daily decision, and daily decisions are where people drop out."],
+    ["Discovery", "Templates the user has never tried carry a single dot. It disappears after one use, and it never nags."],
+    ["What goes", "The nine chips. Clean survives. Anything else has to beat the new set on its own merits, not on being already written."],
+  ],
+  draw: () => {
+    const cards = [
+      ["Field Notes", true, `<div style="position:absolute;left:5px;right:5px;bottom:5px">
+          <div style="height:1px;background:rgba(255,255,255,.6);margin-bottom:4px"></div>
+          <div class="num" style="font-size:11px;color:${sCol(S.score)}">${S.score}</div></div>`],
+      ["The Number", false, `<div class="num" style="position:absolute;left:-2px;bottom:2px;
+          font-size:44px;color:#fff">${S.score}</div>`],
+      ["Behind You", false, `<div class="num" style="position:absolute;left:0;right:0;top:11px;
+          text-align:center;font-size:52px;color:rgba(255,255,255,.9)">${S.score}</div>
+        <div class="person"></div>`],
+      ["The Slip", false, `<div style="position:absolute;left:11px;top:20px;width:52px;height:62px;
+          background:#F6F3EC;border-radius:2px;transform:rotate(-2deg)"></div>`],
+      ["This Week", false, `<div style="position:absolute;left:5px;right:5px;bottom:6px;display:flex;gap:2px">
+          ${[0,1,2,3,4,5,6].map(i => `<div style="flex:1;height:14px;border-radius:2px;
+            background:rgba(255,255,255,${i === 6 ? ".9" : ".38"})"></div>`).join("")}</div>`],
+    ];
+    return `
+    <div style="position:absolute;left:16px;top:14px" class="chip"
+      ><span style="font-size:12px">Retake</span></div>
+
+    <div style="position:absolute;left:18px;right:18px;top:50px;height:244px;border-radius:18px;
+      overflow:hidden;background:#000">
+      <div class="shot mood-${S.mood}"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:90px;
+        background:linear-gradient(to top,rgba(0,0,0,.8),transparent)"></div>
+      <div style="position:absolute;left:14px;right:14px;bottom:13px">
+        <div style="height:1px;background:rgba(255,255,255,.45);margin-bottom:8px"></div>
+        <div style="display:flex;justify-content:space-between">
+          ${readout("READY", S.score, sCol(S.score))}${readout("SLEEP", "7h24")}
+          ${readout("HRV", "48")}${readout("RESTING", "54")}</div></div>
+    </div>
+
+    <div style="position:absolute;left:18px;right:18px;top:308px;display:flex;
+      justify-content:space-between;align-items:baseline">
+      <span style="font-size:13px;font-weight:600;color:#F2F2F6">Suggested for today</span>
+      <span style="font-size:11px;color:#858C88">Day ${S.streak}</span></div>
+    <div style="position:absolute;left:18px;right:18px;top:328px;font-size:11.5px;color:#858C88">
+      Bright window behind you, so the numbers move to the edge.</div>
+
+    <div style="position:absolute;left:18px;top:352px;display:flex;gap:9px">
+      ${cards.map(([name, on, art], i) => `<div style="width:63px">
+        <div style="position:relative;width:63px;height:78px;border-radius:9px;overflow:hidden;
+          ${on ? "outline:2px solid #4DA3FF;outline-offset:1.5px" : ""}">
+          <div class="shot mood-${S.mood}" style="--sx:${(i % 3 - 1) * 4}%"></div>${art}
+          ${i === 4 ? `<div style="position:absolute;right:4px;top:4px;width:5px;height:5px;
+            border-radius:50%;background:#4DA3FF"></div>` : ""}
+        </div>
+        <div style="font-size:9px;color:${on ? "#F2F2F6" : "#858C88"};margin-top:6px;
+          text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+      </div>`).join("")}
+    </div>
+
+    <div style="position:absolute;left:18px;right:18px;bottom:18px;height:46px;border-radius:23px;
+      background:#4DA3FF;display:flex;align-items:center;justify-content:center;
+      font-size:15px;font-weight:600;color:#0F0F13">Save photo</div>`;
+  },
+};
+
+/* ============================================================
+   The escalation ladder demo. Same text block, five levels of
+   protection, so the cost of each step is visible.
+   ============================================================ */
+const BLOCK = (colour, shadow) => `
+  <div class="num" style="font-size:44px;color:${colour};${shadow}">${S.score}</div>
+  <div class="mono" style="font-size:11px;letter-spacing:.14em;margin-top:5px;
+    color:${colour};opacity:.82;${shadow}">RECOVERY · ${DAY_S[TODAY.getDay()].toUpperCase()} ${String(TODAY.getDate()).padStart(2,"0")} ${MON_S[TODAY.getMonth()].toUpperCase()}</div>`;
+
+const RUNGS = [
+  ["No protection", "Vibrant white type straight on the photo.",
+   () => `<div style="position:absolute;left:20px;bottom:20px">
+     ${BLOCK("#fff", "text-shadow:0 1px 2px rgba(0,0,0,.25)")}</div>`],
+  ["Scrim", "A gradient wash under the block only. Costs the least photo.",
+   () => `<div class="scrim-b" style="height:150px"></div>
+     <div style="position:absolute;left:20px;bottom:20px">${BLOCK("#fff", "")}</div>`],
+  ["Deeper scrim", "Same gradient, driven harder where the frame is bright.",
+   () => `<div style="position:absolute;left:0;right:0;bottom:0;height:186px;
+     background:linear-gradient(to top,rgba(0,0,0,.94),rgba(0,0,0,.66) 44%,transparent)"></div>
+     <div style="position:absolute;left:20px;bottom:20px">${BLOCK("#fff", "")}</div>`],
+  ["Solid strip", "An opaque band across the bottom edge. Contrast stops depending on the photo.",
+   () => `<div style="position:absolute;left:0;right:0;bottom:0;height:104px;background:#0F0F13"></div>
+     <div style="position:absolute;left:20px;bottom:20px">${BLOCK("#F2F2F6", "")}</div>`],
+  ["Opaque slip", "The last resort: a physical object composited in. Works on any photo ever taken.",
+   () => `<div style="position:absolute;left:20px;right:20px;bottom:20px;background:#F6F4EF;
+     border-radius:4px;padding:14px 16px;transform:rotate(-1.2deg);
+     box-shadow:0 10px 26px rgba(0,0,0,.45)">
+     <div class="num" style="font-size:44px;color:#14110E">${S.score}</div>
+     <div class="mono" style="font-size:11px;letter-spacing:.14em;margin-top:5px;color:#5A544B">
+     RECOVERY · ${DAY_S[TODAY.getDay()].toUpperCase()} ${String(TODAY.getDate()).padStart(2,"0")} ${MON_S[TODAY.getMonth()].toUpperCase()}</div></div>`],
+];
+
+let rung = 1;
+
+function paintLadder() {
+  $("ladder-ov").innerHTML = RUNGS[rung][2]();
+  $("ladder-frame").className = `frame mood-${S.mood}`;
+  const box = $("ladder-frame").parentElement;
+  $("ladder-frame").style.transform = `scale(${box.clientWidth / 390})`;
+  $("ladder-ctl").querySelectorAll(".rung").forEach((b, i) =>
+    b.setAttribute("aria-pressed", String(i === rung)));
+}
+
+$("ladder-ctl").innerHTML = RUNGS.map(([name], i) =>
+  `<button class="rung" data-rung="${i}" aria-pressed="${i === 1}">${esc(name)}</button>`).join("");
+$("ladder-ctl").addEventListener("click", e => {
+  const b = e.target.closest("[data-rung]"); if (!b) return;
+  rung = +b.dataset.rung; paintLadder();
+  $("ladder-note").textContent = RUNGS[rung][1];
+});
+
+$("ladder-specs").innerHTML = [
+  ["Now showing", `<span id="ladder-note">${esc(RUNGS[1][1])}</span>`],
+  ["Trigger", "Mean luminance and variance of the exact rect the block will occupy, sampled from a 16 cell grid on the downscaled buffer. Under 4.5:1 for body type or 3:1 for the hero numeral, step up."],
+  ["Placement", "<code>VNDetectFaceRectanglesRequest</code> plus a saliency pass returns the quiet regions. The block goes in the largest one that does not intersect the face box, so the number never lands on a cheek."],
+  ["Fallback", "Reduce Transparency or Increase Contrast turned on in iOS starts the walk at the solid strip. No glass, no guessing."],
+  ["Why it matters", "One engine makes every template below safe. Without it each new template is a new way to ship an unreadable photo."],
+].map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join("");
+
+/* ---------------- go ---------------- */
+paintVerdict();
+cardGrid($("principles-grid"), PRINCIPLES);
+cardGrid($("beyond-grid"), BEYOND);
+paintSteps();
+redraw();
+$("r-score").style.color = sVar(S.score);
+reveal(document);
+</script>
+
+</body>
+</html>

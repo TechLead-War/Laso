@@ -679,6 +679,9 @@ struct ShareableMirrorPairCard: View {
     @ViewBuilder
     private func pairPhoto(day: Date, score: Int?) -> some View {
         ZStack(alignment: .bottomLeading) {
+            // Deliberately the plain photo, not the day's template: this card
+            // already prints its own date and score under each face, and a
+            // second overlay on top would say everything twice.
             if let image = MirrorPhotoStore.shared.image(on: day) {
                 Image(uiImage: image)
                     .resizable()

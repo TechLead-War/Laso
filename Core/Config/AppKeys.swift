@@ -186,6 +186,11 @@ enum AppKeys {
         // archive survives deleting Laso. Off by default: on-device only is
         // still the promise the explainer makes.
         static let saveToPhotos            = "laso.mirror.save_to_photos"
+
+        /// The look chosen once and applied to every capture after, plus the
+        /// templates already tried, so the picker marks a new one exactly once.
+        static let houseLook               = "laso.mirror.house_look"
+        static let seenTemplates           = "laso.mirror.seen_templates"
     }
 
     // MARK: - Referral
