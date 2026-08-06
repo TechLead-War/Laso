@@ -229,6 +229,10 @@ final class RemoteConfigManager: @unchecked Sendable {
                     invalidateCopyCache()
                     lastFetchTime = Date()
                     fetchError = nil
+                    // The arm can only be known once real values land. Reconciling
+                    // here (and in the realtime listener) is what makes the change
+                    // event carry the moment the flip reached the device.
+                    AppAnalytics.shared.syncPricingCohort()
                 }
             }
         } catch {
@@ -262,6 +266,7 @@ final class RemoteConfigManager: @unchecked Sendable {
                     self?.invalidateCopyCache()
                     self?.lastFetchTime = Date()
                     self?.fetchError = nil
+                    AppAnalytics.shared.syncPricingCohort()
                 }
             }
         }
@@ -440,6 +445,17 @@ final class RemoteConfigManager: @unchecked Sendable {
     /// Whether free-year mode is active (bypasses all subscription gating for PMF signal).
     var freeYearActive: Bool {
         boolValue(forKey: "free_year_active")
+    }
+
+    /// Pricing experiment arm for this install (free_lifetime, paid_1, exp_3, ...).
+    /// Set per Firebase condition (first-open date range, random percentile) so an
+    /// arm can change without a release. This is an analytics label only: access is
+    /// still decided by `free_year_active`, and every event also carries the derived
+    /// `has_free_access`, so a mislabelled condition shows up as a visible mismatch
+    /// instead of silently skewing the experiment.
+    var pricingCohort: String {
+        let value = stringValue(forKey: "pricing_cohort").trimmingCharacters(in: .whitespaces).lowercased()
+        return value.isEmpty ? "unassigned" : value
     }
 
     /// Free-year mode end date (Unix timestamp seconds). Returns nil when unset (0).
@@ -669,6 +685,7 @@ extension RemoteConfigManager {
         // Monetization
         "free_year_active":          false as NSNumber,    // Safe default: no accidental Pro grants when fetch fails or is pending. Flip via Firebase Remote Config.
         "free_year_end_date":        1786752000 as NSNumber,    // 2026-08-15 UTC; override in Firebase Remote Config (0 = hide date)
+        "pricing_cohort":            "unassigned" as NSString,   // Experiment arm label. Set per condition in Firebase Remote Config; "unassigned" means no condition matched or the fetch has not landed.
 
         // Kill switches (all off by default)
         "kill_switch_enabled":       false as NSNumber,

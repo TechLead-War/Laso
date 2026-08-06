@@ -20,7 +20,7 @@ struct FeatureGate {
     /// Non-paid full access: free-year mode or banked referral months. Referral
     /// credit is server-granted (see ReferralManager) and starts counting after
     /// the free year ends, so this stays correct the day the flag flips off.
-    private static var hasComplimentaryAccess: Bool {
+    static var hasComplimentaryAccess: Bool {
         config.freeYearActive || referral.hasReferralAccess
     }
 

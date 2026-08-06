@@ -603,6 +603,193 @@ struct RegressionTests {
                 "an everyday card must not send an age claim with the invite")
     }
 
+    /// Every template has to survive `ImageRenderer`, which is the only thing
+    /// that ever draws these cards. A card that compiles but renders nil, or
+    /// renders at the wrong size, ships a broken or cropped image into someone
+    /// else's feed and nothing upstream would catch it.
+    @MainActor
+    @Test func everyShareTemplateRendersAtTheStoryCanvasSize() {
+        let today = Date()
+        let templates = ShareTemplateBuilder.build(
+            vitalityAge: 31, realAge: 38, recovery: 82, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: 8.2 * 3600, allTimeBestSleepHours: 8.2,
+            mirrorPair: (firstDay: Date.cal.date(byAdding: .day, value: -84, to: today)!,
+                         firstScore: 61,
+                         latestDay: today,
+                         latestScore: 79),
+            correlation: HealthCorrelation(
+                metricA: .sleepDeep, metricB: .heartRateVariability, correlation: 0.62,
+                sampleCount: 94, strengthLabel: "Strong",
+                causeLabel: "More deep sleep", effectLabel: "Higher HRV next day",
+                effectSummary: "When deep sleep is above average, HRV is 18% higher",
+                effectPercentDiff: 18, isPositive: true, dayOffset: 1
+            ),
+            recentBadge: Achievement(
+                id: "step_king", title: "Step King", description: "20,000 steps in a single day",
+                icon: "figure.walk", category: .record, isUnlocked: true,
+                unlockedDate: Date.cal.date(byAdding: .day, value: -2, to: today)
+            ),
+            today: today
+        )
+
+        // Every kind that can reach the tray must be exercised here, or a new
+        // card can be added and never drawn until a user shares it.
+        let covered = Set(templates.map(\.kind))
+        #expect(covered.isSuperset(of: [.receipt, .younger, .streak, .badge,
+                                        .bestSleep, .mirror, .recovery, .sleep,
+                                        .bodyAge, .rings]),
+                "the fixture must build one of every template kind, got \(covered)")
+
+        for template in templates {
+            let renderer = ImageRenderer(
+                content: ShareableTemplateCard(template: template, photo: nil)
+                    .environment(\.colorScheme, .dark)
+            )
+            renderer.scale = 1
+
+            let image = renderer.uiImage
+            #expect(image != nil, "\(template.kind.rawValue) rendered nothing")
+            #expect(image?.size == CGSize(width: DS.Share.width, height: DS.Share.height),
+                    "\(template.kind.rawValue) rendered at \(image?.size ?? .zero), not the story canvas")
+        }
+    }
+
+    /// Reporting every share as one number hides the only split that matters:
+    /// a private send and a public post are different acts with different
+    /// conversion. The classifier is substring-based, so the ordering between
+    /// the groups is load-bearing and is what this guards.
+    @Test func shareChannelSeparatesPrivateSendsFromPublicPosts() {
+        typealias Channel = AppAnalytics.ShareChannel
+
+        #expect(Channel.classify("com.apple.UIKit.activity.Message") == .directMessage)
+        #expect(Channel.classify("net.whatsapp.WhatsApp.ShareExtension") == .directMessage)
+        #expect(Channel.classify("com.apple.UIKit.activity.Mail") == .directMessage)
+
+        // Messenger is a private channel and must not be claimed by the
+        // Facebook token, which is why the DM group is matched first.
+        #expect(Channel.classify("com.facebook.Messenger.ShareExtension") == .directMessage)
+        #expect(Channel.classify("com.facebook.Facebook.ShareExtension") == .social)
+
+        #expect(Channel.classify("com.burbn.instagram.shareextension") == .social)
+        #expect(Channel.classify("com.atebits.Tweetie2.Share") == .social)
+
+        #expect(Channel.classify("com.apple.UIKit.activity.CopyToPasteboard") == .copy)
+        #expect(Channel.classify("com.apple.UIKit.activity.AirDrop") == .copy)
+
+        #expect(Channel.classify(nil) == .other, "a cancelled share has no destination")
+        #expect(Channel.classify("") == .other)
+        #expect(Channel.classify("com.example.SomeNewApp") == .other)
+    }
+
+    /// A share started from a detail screen must open on the card that screen is
+    /// about. Sharing from Correlations and being handed the Home tray is how
+    /// the screenshot path behaved, and it threw away the one thing the user had
+    /// just chosen to capture.
+    @Test func aDetailScreenLeadsTheTrayWithItsOwnCard() {
+        let tray = ShareTemplateBuilder.build(
+            vitalityAge: 31, realAge: 38, recovery: 82, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: 8.2 * 3600, allTimeBestSleepHours: 8.2
+        )
+        #expect(tray.first?.kind == .younger, "Home leads with the strongest win")
+
+        let fromSleep = ShareTemplateBuilder.leading([.bestSleep, .sleep], in: tray)
+        #expect(fromSleep.first?.kind == .bestSleep)
+        #expect(Set(fromSleep.map(\.kind)) == Set(tray.map(\.kind)),
+                "leading reorders the tray, it never adds or drops a card")
+
+        // The first preference did not qualify today, so the fallback leads
+        // rather than the screen falling back to Home's ordering.
+        let noRecord = ShareTemplateBuilder.build(
+            vitalityAge: 37, realAge: 38, recovery: 64, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: 7.1 * 3600, allTimeBestSleepHours: 8.4
+        )
+        #expect(ShareTemplateBuilder.leading([.bestSleep, .sleep], in: noRecord).first?.kind == .sleep)
+
+        // Nothing the screen asked for qualified, so the earned order stands.
+        #expect(ShareTemplateBuilder.leading([.mirror], in: tray).map(\.kind) == tray.map(\.kind))
+        #expect(ShareTemplateBuilder.leading([], in: tray).map(\.kind) == tray.map(\.kind))
+    }
+
+    /// The correlation card leads the tray because it is the only claim months
+    /// of tracking could make. That is only true while the sample size behind
+    /// it is real, so a thin pattern must produce no card rather than a card
+    /// that prints a small number next to the words "measured on me".
+    @Test func theCorrelationCardIsGatedOnItsOwnSampleSize() {
+        func correlation(days: Int) -> HealthCorrelation {
+            HealthCorrelation(
+                metricA: .sleepDeep, metricB: .heartRateVariability, correlation: 0.62,
+                sampleCount: days, strengthLabel: "Strong",
+                causeLabel: "More deep sleep", effectLabel: "Higher HRV next day",
+                effectSummary: "When deep sleep is above average, HRV is 18% higher",
+                effectPercentDiff: 18, isPositive: true, dayOffset: 1
+            )
+        }
+
+        let thin = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: 70, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            correlation: correlation(days: ShareTemplateGates.minCorrelationDays - 1)
+        )
+        #expect(!thin.map(\.kind).contains(.receipt),
+                "a pattern under the floor is still building and must not be offered")
+
+        let solid = ShareTemplateBuilder.build(
+            vitalityAge: 31, realAge: 38, recovery: 70, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            correlation: correlation(days: 94)
+        )
+        #expect(solid.first?.kind == .receipt,
+                "the correlation card leads the tray, ahead of the age and streak wins")
+        #expect(solid.first?.chip == "94", "the chip carries the sample size, which is the whole claim")
+        #expect(solid.first?.captionYears == nil,
+                "a pattern card must not send a years-younger claim with the invite")
+    }
+
+    /// A badge earned two months ago is a fact about the user, not a moment, and
+    /// the tray is a list of moments.
+    @Test func theBadgeCardOnlyOffersARecentUnlock() {
+        let today = Date()
+        func badge(daysAgo: Int) -> Achievement {
+            Achievement(
+                id: "step_king", title: "Step King", description: "20,000 steps in a single day",
+                icon: "figure.walk", category: .record, isUnlocked: true,
+                unlockedDate: Date.cal.date(byAdding: .day, value: -daysAgo, to: today)
+            )
+        }
+
+        let stale = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: 70, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            recentBadge: badge(daysAgo: ShareTemplateGates.maxBadgeAgeDays + 1), today: today
+        )
+        #expect(!stale.map(\.kind).contains(.badge), "an old unlock is not a moment worth posting")
+
+        let locked = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: 70, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            recentBadge: Achievement(id: "year_one", title: "Year One", description: "365 days",
+                                     icon: "crown.fill", category: .milestone,
+                                     isUnlocked: false, unlockedDate: nil),
+            today: today
+        )
+        #expect(!locked.map(\.kind).contains(.badge), "a locked achievement has nothing to share")
+
+        let fresh = ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: 70, masterStreak: 23,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            recentBadge: badge(daysAgo: 2), today: today
+        )
+        #expect(fresh.map(\.kind).prefix(2) == [.streak, .badge],
+                "a fresh badge sits with the streak card, both being discipline proof")
+        if case .badge(_, let title, _, let earnedOn)? = fresh.first(where: { $0.kind == .badge })?.content {
+            #expect(title == "Step King")
+            #expect(earnedOn.daysBetween(today) == 2,
+                    "the card carries the date it was earned, never today's date")
+        } else {
+            Issue.record("the badge template must carry badge content")
+        }
+    }
+
 
 
 

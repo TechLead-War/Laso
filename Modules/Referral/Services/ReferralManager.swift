@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
 import FirebaseFunctions
@@ -41,7 +42,17 @@ final class ReferralManager {
             ?? ""
     }
 
-    private var uid: String { Auth.auth().currentUser?.uid ?? "" }
+    /// Empty when Firebase is not configured.
+    ///
+    /// `AppLaunchCoordinator.configureOnLaunch` deliberately skips
+    /// `FirebaseApp.configure()` in UI-test mode, and `Auth.auth()` traps
+    /// rather than returning nil when that has not run. Every caller here
+    /// already treats an empty uid as "no referral context", so the guard costs
+    /// nothing and stops the share tray taking the process down with it.
+    private var uid: String {
+        guard FirebaseApp.app() != nil else { return "" }
+        return Auth.auth().currentUser?.uid ?? ""
+    }
 
     private init() {
         // Load cached values for instant access check

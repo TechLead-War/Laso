@@ -4,7 +4,6 @@ import PhotosUI
 /// Card type for shareable content
 enum ShareCardType {
     case score(score: Int, scoreChange: Int?, streakDays: Int)
-    case insight(text: String, metric: String, category: String)
     case template(ShareTemplate, photo: UIImage?)
 }
 
@@ -19,6 +18,12 @@ enum ShareCardType {
 struct ShareTemplate: Identifiable, Equatable {
     enum Kind: String {
         case younger, streak, proof, bestSleep
+        /// A cause, an effect and the days behind them, from the user's own
+        /// correlations. Leads the tray because it is the only card whose claim
+        /// months of tracking could produce and one good morning could not.
+        case receipt
+        /// An already-earned achievement, carrying the date it was earned.
+        case badge
         /// Everyday cards. No win required, only the reading. They exist because
         /// gating every card on an achievement left an ordinary day with one
         /// option in the tray, which is not a choice.
@@ -38,6 +43,10 @@ struct ShareTemplate: Identifiable, Equatable {
         /// time; carrying only the days keeps this value type Equatable and
         /// keeps photo bytes out of the template tray.
         case mirrorPair(firstDay: Date, firstScore: Int?, latestDay: Date, latestScore: Int?)
+        /// SF Symbol plus the achievement's own title and description. The date
+        /// is carried, never re-derived, so the card cannot claim today for
+        /// something earned last month.
+        case badge(icon: String, title: String, detail: String, earnedOn: Date)
     }
 
     let kind: Kind
@@ -54,6 +63,8 @@ struct ShareTemplate: Identifiable, Equatable {
         switch kind {
         case .younger:   return Copy.Common.shareChipYounger
         case .streak:    return Copy.Common.shareChipStreak
+        case .receipt:   return Copy.Common.shareChipReceipt
+        case .badge:     return Copy.Common.shareChipBadge
         case .proof:     return Copy.Common.shareChipProof
         case .bestSleep: return Copy.Common.shareChipBestSleep
         case .recovery:  return Copy.Common.shareChipRecovery
@@ -84,6 +95,15 @@ enum ShareTemplateGates {
     /// Two mirror photos a few days apart show no visible change. Two weeks is
     /// the floor where a then-vs-now pair reads as progress.
     static let minMirrorDaysApart = 14
+    /// `CorrelationAnalyzer` already calls 30+ aligned days "a reliable
+    /// pattern" in the copy it writes for the detail view, so the share gate
+    /// reuses that number rather than introducing a second, softer one. Below
+    /// it the pattern is still building and does not belong on a card that
+    /// leads with the sample size.
+    static let minCorrelationDays = 30
+    /// A badge earned months ago is a fact about the user, not a moment. Past
+    /// this the achievement stays on the Achievements screen and off the tray.
+    static let maxBadgeAgeDays = 30
 }
 
 /// Builds the tray, strongest win first, with the rings card last. Every win
@@ -98,9 +118,28 @@ enum ShareTemplateBuilder {
         actionResult: DailyActionResultStore.Result?,
         lastNightSleepSeconds: Double?,
         allTimeBestSleepHours: Double?,
-        mirrorPair: (firstDay: Date, firstScore: Int?, latestDay: Date, latestScore: Int?)? = nil
+        mirrorPair: (firstDay: Date, firstScore: Int?, latestDay: Date, latestScore: Int?)? = nil,
+        correlation: HealthCorrelation? = nil,
+        recentBadge: Achievement? = nil,
+        today: Date = Date()
     ) -> [ShareTemplate] {
         var templates: [ShareTemplate] = []
+
+        // Leads the tray. Every other card reports a result; this one reports
+        // what produced it, over a stated number of days, which is the only
+        // claim here that a single good morning could not have made.
+        if let correlation, correlation.sampleCount >= ShareTemplateGates.minCorrelationDays {
+            templates.append(ShareTemplate(
+                kind: .receipt,
+                chip: "\(correlation.sampleCount)",
+                content: .headline(
+                    accent: correlation.causeLabel,
+                    plain: correlation.effectLabel,
+                    sub: Copy.Common.shareReceiptSub(days: correlation.sampleCount)
+                ),
+                captionYears: nil
+            ))
+        }
 
         if let vitalityAge, let realAge {
             let years = realAge - vitalityAge
@@ -126,6 +165,26 @@ enum ShareTemplateBuilder {
                     accent: Copy.Common.shareStreakAccent(days: masterStreak),
                     plain: Copy.Common.shareStreakPlain,
                     sub: Copy.Common.shareStreakSub
+                ),
+                captionYears: nil
+            ))
+        }
+
+        // Sits with the streak card because both are discipline proof rather
+        // than a reading. Gated on recency, not just on being unlocked, so the
+        // tray never offers a badge the user earned two months ago.
+        if let recentBadge,
+           let earnedOn = recentBadge.unlockedDate,
+           recentBadge.isUnlocked,
+           earnedOn.daysBetween(today) <= ShareTemplateGates.maxBadgeAgeDays {
+            templates.append(ShareTemplate(
+                kind: .badge,
+                chip: earnedOn.formatted(.dateTime.day().month(.abbreviated)),
+                content: .badge(
+                    icon: recentBadge.icon,
+                    title: recentBadge.title,
+                    detail: recentBadge.description,
+                    earnedOn: earnedOn
                 ),
                 captionYears: nil
             ))
@@ -250,11 +309,97 @@ enum ShareTemplateBuilder {
         return templates
     }
 
+    /// Moves the first of `kinds` that exists to the front of the tray, so a
+    /// share started from a detail screen opens on the card that screen is
+    /// about instead of on whatever Home would have led with.
+    ///
+    /// A kind that did not qualify today is simply absent, and the tray keeps
+    /// its earned-wins-first order. Nothing is invented to fill the slot.
+    static func leading(_ kinds: [ShareTemplate.Kind], in templates: [ShareTemplate]) -> [ShareTemplate] {
+        guard let index = kinds.lazy.compactMap({ kind in
+            templates.firstIndex { $0.kind == kind }
+        }).first else { return templates }
+
+        var ordered = templates
+        ordered.insert(ordered.remove(at: index), at: 0)
+        return ordered
+    }
+
     /// "8:12" from 8.2 hours. Rounds once on the total minute count so 7.999
     /// does not render as 7:60.
     private static func clockText(hours: Double) -> String {
         let minutes = Int((hours * 60).rounded())
         return "\(minutes / 60):\(String(format: "%02d", minutes % 60))"
+    }
+}
+
+// MARK: - Shared Canvas
+
+/// The frame every 9:16 share card is drawn in: fixed canvas, brand wordmark
+/// top-left, footer bottom, clipped and pinned to dark.
+///
+/// Cards pass their ground and their middle and nothing else. Four hand-copied
+/// versions of this block is how the canvas size ended up written five times
+/// and the photo scrim ended up with two sets of stops that disagreed.
+struct ShareCardCanvas<Ground: View, Content: View>: View {
+    @ViewBuilder var ground: () -> Ground
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        ZStack {
+            ground()
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text(Copy.Common.laso.uppercased())
+                        .font(DS.Share.Typography.wordmark)
+                        .tracking(DS.Share.Typography.wordmarkTracking)
+                        .foregroundStyle(.white.opacity(0.85))
+                    Spacer()
+                }
+                .padding(.horizontal, DS.Share.marginH)
+                .padding(.top, DS.Share.marginTop)
+
+                content()
+
+                Text(Copy.Common.shareCardFooter)
+                    .font(DS.Share.Typography.footer)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.bottom, DS.Share.marginBottom)
+            }
+        }
+        .frame(width: DS.Share.width, height: DS.Share.height)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Share.radius))
+        // The ground is always dark artwork, so every theme-dynamic token inside
+        // must resolve its dark variant even when the app is in light mode.
+        .environment(\.colorScheme, .dark)
+    }
+}
+
+/// Ground for a share card: the user's photo under the readability scrim, or
+/// the score-graded gradient when there is no photo.
+struct ShareCardGround: View {
+    var photo: UIImage? = nil
+    /// Grades the fallback gradient. Nil means the card carries no score, which
+    /// is the earned-win case, and a win draws the optimal ground.
+    var score: Int? = nil
+
+    var body: some View {
+        if let photo {
+            ZStack {
+                // The fill image must be framed and clipped HERE: unframed it
+                // inflates the ZStack's layout bounds, which spreads the card's
+                // own content past the visible canvas and cuts it off.
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: DS.Share.width, height: DS.Share.height)
+                    .clipped()
+                DS.Share.photoScrim
+            }
+        } else {
+            DS.Share.gradient(for: score)
+        }
     }
 }
 
@@ -274,16 +419,6 @@ struct ShareableRingsCard: View {
     /// Mirrors the fixed goal in `RecoverySignalsSnapshot.sleepHoursGoal`.
     private static let sleepGoalHours: Double = 7.5
 
-    private var gradientColors: [Color] {
-        let score = recovery ?? 0
-        switch score {
-        case 80...100: return [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd]
-        case 60..<80: return [AppColour.shareScoreGoodStart, AppColour.shareScoreGoodEnd]
-        case 40..<60: return [AppColour.shareScoreFairStart, AppColour.shareScoreFairEnd]
-        default: return [AppColour.shareScorePoorStart, AppColour.shareScorePoorEnd]
-        }
-    }
-
     /// Full ring at 10+ years younger, half at on-age, empty at 10+ years older.
     private var vitalityProgress: Double {
         guard let vitalityAge, let realAge else { return 0 }
@@ -301,100 +436,60 @@ struct ShareableRingsCard: View {
     }
 
     var body: some View {
-        ZStack {
-            if let photo {
-                // The fill image must be framed and clipped HERE: unframed it
-                // inflates the ZStack's layout bounds, which spreads the rings
-                // row beyond the visible card and cuts the metrics off.
-                Image(uiImage: photo)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 390, height: 693)
-                    .clipped()
-            } else {
-                LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
+        ShareCardCanvas {
+            ShareCardGround(photo: photo, score: recovery)
+        } content: {
+            Spacer()
 
-            // Readability fades over the photo, top and bottom.
-            LinearGradient(stops: [
-                .init(color: .black.opacity(0.45), location: 0),
-                .init(color: .clear, location: 0.3),
-                .init(color: .clear, location: 0.55),
-                .init(color: .black.opacity(0.55), location: 1)
-            ], startPoint: .top, endPoint: .bottom)
-
-            VStack(spacing: 0) {
-                HStack {
-                    Text(Copy.Common.laso.uppercased())
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(.white.opacity(0.85))
-                    Spacer()
+            HStack(spacing: 0) {
+                if let vitalityAge {
+                    statRing(value: "\(vitalityAge)",
+                             label: Copy.Common.shareRingVitalityAge,
+                             progress: vitalityProgress,
+                             tint: AppColour.scoreOptimal)
                 }
-                .padding(.horizontal, DS.space6)
-                .padding(.top, 30)
-
-                Spacer()
-
-                HStack(spacing: 0) {
-                    if let vitalityAge {
-                        statRing(value: "\(vitalityAge)",
-                                 label: Copy.Common.shareRingVitalityAge,
-                                 progress: vitalityProgress,
-                                 tint: AppColour.scoreOptimal)
-                    }
-                    if let recovery {
-                        statRing(value: "\(recovery)",
-                                 label: Copy.Common.shareRingRecovery,
-                                 progress: Double(recovery) / 100.0,
-                                 tint: DS.scoreColor(recovery))
-                    }
-                    if let sleepSeconds, sleepSeconds > 0 {
-                        statRing(value: sleepText,
-                                 label: Copy.Common.shareRingSleep,
-                                 progress: min((sleepSeconds / 3600) / Self.sleepGoalHours, 1),
-                                 tint: .white.opacity(0.85))
-                    }
+                if let recovery {
+                    statRing(value: "\(recovery)",
+                             label: Copy.Common.shareRingRecovery,
+                             progress: Double(recovery) / 100.0,
+                             tint: DS.scoreColor(recovery))
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, DS.space4)
-
-                Spacer().frame(height: 26)
-
-                Text(Copy.Common.shareCardFooter)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(.bottom, 26)
+                if let sleepSeconds, sleepSeconds > 0 {
+                    statRing(value: sleepText,
+                             label: Copy.Common.shareRingSleep,
+                             progress: min((sleepSeconds / 3600) / Self.sleepGoalHours, 1),
+                             tint: .white.opacity(0.85))
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, DS.space4)
+
+            Spacer().frame(height: DS.Share.marginBottom)
         }
-        .frame(width: 390, height: 693)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        // The card ground is always one of the dark share gradients, so every
-        // theme-dynamic token inside it must resolve its dark variant even when
-        // the app is in light mode.
-        .environment(\.colorScheme, .dark)
     }
 
     private func statRing(value: String, label: String, progress: Double, tint: Color) -> some View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .stroke(.white.opacity(0.3), lineWidth: 7)
-                    .frame(width: 92, height: 92)
+                    .stroke(.white.opacity(DS.Share.Ring.trackOpacity), lineWidth: DS.Share.Ring.lineWidth)
+                    .frame(width: DS.Share.Ring.diameter, height: DS.Share.Ring.diameter)
                 Circle()
                     .trim(from: 0, to: progress)
-                    .stroke(tint, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .stroke(tint, style: StrokeStyle(lineWidth: DS.Share.Ring.lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 92, height: 92)
+                    .frame(width: DS.Share.Ring.diameter, height: DS.Share.Ring.diameter)
                 Text(value)
-                    .font(.system(size: value.count > 2 ? 24 : 30, weight: .bold, design: .rounded))
+                    // "8:12" overruns the ring at full size, so anything wider
+                    // than two characters steps down.
+                    .font(value.count > 2 ? DS.Share.Typography.ringValueCompact : DS.Share.Typography.ringValue)
                     .monospacedDigit()
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.6), radius: 4)
             }
             Text(label)
-                .font(.system(size: 10, weight: .bold))
-                .tracking(2)
+                .font(DS.Share.Typography.ringLabel)
+                .tracking(DS.Share.Typography.labelTracking)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.7), radius: 3)
@@ -422,81 +517,120 @@ struct ShareableTemplateCard: View {
         case .mirrorPair(let firstDay, let firstScore, let latestDay, let latestScore):
             ShareableMirrorPairCard(firstDay: firstDay, firstScore: firstScore,
                                     latestDay: latestDay, latestScore: latestScore)
+        case .badge(let icon, let title, let detail, let earnedOn):
+            ShareableBadgeCard(icon: icon, title: title, detail: detail, earnedOn: earnedOn)
         }
     }
 
     private func headlineCard(accent: String, plain: String, sub: String) -> some View {
-        ZStack {
-            if let photo {
-                // The fill image must be framed and clipped HERE: unframed it
-                // inflates the ZStack's layout bounds, which spreads the
-                // headline beyond the visible card and cuts it off.
-                Image(uiImage: photo)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 390, height: 693)
-                    .clipped()
-            } else {
-                LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
+        ShareCardCanvas {
+            ShareCardGround(photo: photo)
+        } content: {
+            Spacer()
 
-            // Readability fades over the photo, top and bottom.
-            LinearGradient(stops: [
-                .init(color: .black.opacity(0.45), location: 0),
-                .init(color: .clear, location: 0.3),
-                .init(color: .clear, location: 0.5),
-                .init(color: .black.opacity(0.65), location: 1)
-            ], startPoint: .top, endPoint: .bottom)
-
-            VStack(spacing: 0) {
-                HStack {
-                    Text(Copy.Common.laso.uppercased())
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(.white.opacity(0.85))
-                    Spacer()
+            VStack(alignment: .leading, spacing: DS.space3) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(accent)
+                        .foregroundStyle(AppColour.scoreOptimal)
+                    Text(plain)
+                        .foregroundStyle(.white)
                 }
-                .padding(.horizontal, DS.space6)
-                .padding(.top, 30)
+                .font(DS.Share.Typography.hero)
+                .lineLimit(2)
+                .minimumScaleFactor(0.55)
+                .shadow(color: .black.opacity(0.55), radius: 12, y: 2)
 
-                Spacer()
-
-                VStack(alignment: .leading, spacing: DS.space3) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(accent)
-                            .foregroundStyle(AppColour.scoreOptimal)
-                        Text(plain)
-                            .foregroundStyle(.white)
-                    }
-                    .font(.system(size: 50, weight: .heavy, design: .rounded))
+                Text(sub)
+                    .font(DS.Share.Typography.sub)
+                    .foregroundStyle(.white.opacity(0.85))
                     .lineLimit(2)
-                    .minimumScaleFactor(0.55)
-                    .shadow(color: .black.opacity(0.55), radius: 12, y: 2)
+                    .minimumScaleFactor(0.7)
+                    .shadow(color: .black.opacity(0.6), radius: 6)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, DS.Share.marginH)
 
-                    Text(sub)
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.85))
+            Spacer().frame(height: 40)
+        }
+    }
+}
+
+// MARK: - Badge Card (an earned achievement)
+
+/// Story card for one already-earned achievement: the medal, the achievement's
+/// own title and description, and the date it was earned.
+///
+/// The date is not decoration. An undated badge says what someone is, a dated
+/// one says when they did it, and only the second reads as a moment worth
+/// posting.
+struct ShareableBadgeCard: View {
+    let icon: String
+    let title: String
+    let detail: String
+    let earnedOn: Date
+
+    /// The medal rim. Runs through the same tokens the Achievements screen uses
+    /// for its level ramp, so a badge is the same object in the app and on the
+    /// card. Bronze sits at the sweep ends so the seam lands in shadow.
+    private var rim: AngularGradient {
+        AngularGradient(
+            colors: [
+                AppColour.achievementBronze,
+                AppColour.achievementGold,
+                AppColour.achievementPlatinum,
+                AppColour.achievementGold,
+                AppColour.achievementBronze
+            ],
+            center: .center
+        )
+    }
+
+    var body: some View {
+        ShareCardCanvas {
+            ShareCardGround()
+        } content: {
+            Spacer()
+
+            VStack(spacing: DS.space5) {
+                ZStack {
+                    Circle()
+                        .fill(rim)
+                        .frame(width: 156, height: 156)
+                    Circle()
+                        .fill(AppColour.shareScoreHighEnd)
+                        .frame(width: 132, height: 132)
+                    Image(systemName: icon)
+                        .font(.system(size: 56, weight: .semibold))
+                        .foregroundStyle(AppColour.achievementGold)
+                }
+                .shadow(color: AppColour.achievementGold.opacity(0.35), radius: 26, y: 8)
+
+                VStack(spacing: DS.space2) {
+                    Text(title)
+                        .font(DS.Share.Typography.heroCompact)
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.5)
+
+                    Text(detail)
+                        .font(DS.Share.Typography.sub)
+                        .foregroundStyle(.white.opacity(0.8))
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
-                        .shadow(color: .black.opacity(0.6), radius: 6)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 30)
+                .multilineTextAlignment(.center)
 
-                Spacer().frame(height: 40)
-
-                Text(Copy.Common.shareCardFooter)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(.bottom, 26)
+                Text(Copy.Common.shareBadgeEarned(
+                    date: earnedOn.formatted(.dateTime.day().month(.abbreviated).year())
+                ))
+                .font(DS.Share.Typography.label)
+                .tracking(DS.Share.Typography.labelTracking)
+                .foregroundStyle(.white.opacity(0.55))
             }
+            .padding(.horizontal, DS.Share.marginH)
+
+            Spacer()
         }
-        .frame(width: 390, height: 693)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        // Statically dark artwork: pin the scheme so the accent headline keeps
-        // its dark variant for a light-mode user.
-        .environment(\.colorScheme, .dark)
     }
 }
 
@@ -519,49 +653,27 @@ struct ShareableMirrorPairCard: View {
     }
 
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        ShareCardCanvas {
+            ShareCardGround()
+        } content: {
+            Spacer()
 
-            VStack(spacing: 0) {
-                HStack {
-                    Text(Copy.Common.laso.uppercased())
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(.white.opacity(0.85))
-                    Spacer()
-                }
-                .padding(.horizontal, DS.space6)
-                .padding(.top, 30)
-
-                Spacer()
-
-                HStack(spacing: DS.space3) {
-                    pairPhoto(day: firstDay, score: firstScore)
-                    pairPhoto(day: latestDay, score: latestScore)
-                }
-                .padding(.horizontal, DS.space5)
-
-                Spacer().frame(height: 30)
-
-                Text(headline)
-                    .font(.system(size: 40, weight: .heavy, design: .rounded))
-                    .foregroundStyle(AppColour.scoreOptimal)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-
-                Spacer()
-
-                Text(Copy.Common.shareCardFooter)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(.bottom, 26)
+            HStack(spacing: DS.space3) {
+                pairPhoto(day: firstDay, score: firstScore)
+                pairPhoto(day: latestDay, score: latestScore)
             }
+            .padding(.horizontal, DS.space5)
+
+            Spacer().frame(height: 30)
+
+            Text(headline)
+                .font(DS.Share.Typography.heroCompact)
+                .foregroundStyle(AppColour.scoreOptimal)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+
+            Spacer()
         }
-        .frame(width: 390, height: 693)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        // Statically dark artwork, same as every other share card.
-        .environment(\.colorScheme, .dark)
     }
 
     @ViewBuilder
@@ -721,10 +833,26 @@ struct ShareWinSheet: View {
 
                         photoControls
 
+                        // Direct send first, activity sheet second. Private
+                        // messaging carries the large majority of real sharing
+                        // and converts several times better than a feed post,
+                        // and health is the category where public posting drops
+                        // off hardest, so the recipient path leads.
+                        if SendToPersonButton.isAvailable {
+                            SendToPersonButton(
+                                cardType: .template(selected, photo: photo),
+                                screen: .home,
+                                captionText: inviteCaption
+                            )
+                        }
+
                         ShareButton(
                             cardType: .template(selected, photo: photo),
                             screen: .home,
-                            title: Copy.Common.shareCTA,
+                            title: SendToPersonButton.isAvailable
+                                ? Copy.Common.shareMoreWays
+                                : Copy.Common.shareCTA,
+                            isPrimary: !SendToPersonButton.isAvailable,
                             captionText: inviteCaption
                         )
                     } else {
@@ -866,23 +994,9 @@ struct ShareableScoreCard: View {
         DS.scoreColor(score)
     }
 
-    private var gradientColors: [Color] {
-        switch score {
-        case 80...100: return [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd]
-        case 60..<80: return [AppColour.shareScoreGoodStart, AppColour.shareScoreGoodEnd]
-        case 40..<60: return [AppColour.shareScoreFairStart, AppColour.shareScoreFairEnd]
-        default: return [AppColour.shareScorePoorStart, AppColour.shareScorePoorEnd]
-        }
-    }
-
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: gradientColors,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            DS.Share.gradient(for: score)
 
             VStack(spacing: 0) {
                 // Top bar: App name
@@ -941,7 +1055,7 @@ struct ShareableScoreCard: View {
                         HStack(spacing: 4) {
                             Image(systemName: change > 0 ? "arrow.up.right" : "arrow.down.right")
                                 .font(.system(size: 11, weight: .bold))
-                            Text("\(change > 0 ? "+" : "")\(change) this week")
+                            Text(Copy.Common.shareScoreChangeThisWeek(delta: change))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(change > 0 ? .green : .red)
@@ -988,134 +1102,6 @@ struct ShareableScoreCard: View {
     }
 }
 
-// MARK: - Insight Card
-
-/// A shareable card displaying a health insight discovery
-struct ShareableInsightCard: View {
-    let insightText: String
-    let metricName: String
-    let category: String
-
-    private var categoryColor: Color {
-        // Map category string to HealthCategory color
-        switch category.lowercased() {
-        case "heart", "heart & cardio": return .red
-        case "sleep": return .indigo
-        case "activity": return .green
-        case "body", "body & vitals": return .orange
-        case "respiratory": return .teal
-        case "mindfulness": return .cyan
-        case "mobility": return .purple
-        case "nutrition": return .brown
-        default: return .blue
-        }
-    }
-
-    private var categoryIcon: String {
-        switch category.lowercased() {
-        case "heart", "heart & cardio": return "heart.fill"
-        case "sleep": return "bed.double.fill"
-        case "activity": return "figure.run"
-        case "body", "body & vitals": return "figure.stand"
-        case "respiratory": return "lungs.fill"
-        case "mindfulness": return "brain.head.profile"
-        case "mobility": return "figure.walk.motion"
-        case "nutrition": return "fork.knife"
-        default: return "sparkles"
-        }
-    }
-
-    private var gradientColors: [Color] {
-        [categoryColor.opacity(0.25), AppColour.shareSecondaryBackground]
-    }
-
-    var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: gradientColors,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            VStack(spacing: 0) {
-                // Top bar: App name
-                HStack {
-                    Text(Copy.Common.laso2)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.7))
-                    Spacer()
-                    Text(formattedDate)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
-                }
-                .padding(.horizontal, DS.space6)
-                .padding(.top, 28)
-
-                Spacer()
-
-                // Insight icon
-                ZStack {
-                    Circle()
-                        .fill(categoryColor.opacity(0.15))
-                        .frame(width: 80, height: 80)
-
-                    Image(systemName: categoryIcon)
-                        .font(.system(size: 32, weight: .semibold))
-                        .foregroundStyle(categoryColor)
-                }
-
-                Spacer().frame(height: 20)
-
-                // Category badge
-                Text(category)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(categoryColor)
-                    .textCase(.uppercase)
-                    .tracking(1.2)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 5)
-                    .background(categoryColor.opacity(0.15), in: Capsule())
-
-                Spacer().frame(height: 20)
-
-                // Main insight text
-                Text(insightText)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
-                    .padding(.horizontal, DS.space7)
-
-                Spacer().frame(height: 12)
-
-                // Metric label
-                Text(metricName)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.5))
-
-                Spacer()
-
-                // Bottom tagline
-                Text(Copy.Common.discoverYourHealthPatternsWithLaso)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.4))
-                    .padding(.bottom, 28)
-            }
-        }
-        .frame(width: 390, height: 520)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        // Statically dark artwork: pin the scheme so the category tint keeps its
-        // dark variant for a light-mode user.
-        .environment(\.colorScheme, .dark)
-    }
-
-    // Locale-aware (see notes on the score-card formatter above).
-    private var formattedDate: String {
-        Date().formatted(.dateTime.day().month().year())
-    }
-}
-
 // MARK: - Previews
 
 #Preview("Template - Younger") {
@@ -1152,14 +1138,4 @@ struct ShareableInsightCard: View {
     ShareableScoreCard(score: 62, scoreChange: -3, streakDays: 0)
         .padding()
         .background(.black)
-}
-
-#Preview("Insight Card") {
-    ShareableInsightCard(
-        insightText: "Your resting heart rate has been trending down over the past 2 weeks",
-        metricName: "Resting Heart Rate",
-        category: "Heart"
-    )
-    .padding()
-    .background(.black)
 }

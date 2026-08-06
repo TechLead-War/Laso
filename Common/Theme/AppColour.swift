@@ -579,16 +579,16 @@ enum AppColour {
     )
 
     /// Share-card optimal tier gradient top. Static: ImageRenderer artwork pinned with .environment(\.colorScheme, .dark), consumed outside the app as a PNG.
+    ///
+    /// There are three share grounds, not four, because `DS.recoveryTier` is the
+    /// app's only score threshold table and it grades three bands. A fourth
+    /// "good" gradient existed here and was picked by a second set of bands
+    /// (80/60/40) that disagreed with that table, so a 70 could draw an amber
+    /// ground behind a green ring on the same image.
     static let shareScoreHighStart = Color(uiColor: #colorLiteral(red: 0.078, green: 0.180, blue: 0.149, alpha: 1.00))
 
     /// Share-card optimal tier gradient bottom. Static artwork.
     static let shareScoreHighEnd = Color(uiColor: #colorLiteral(red: 0.039, green: 0.102, blue: 0.078, alpha: 1.00))
-
-    /// Share-card good tier gradient top. Static artwork.
-    static let shareScoreGoodStart = Color(uiColor: #colorLiteral(red: 0.059, green: 0.161, blue: 0.220, alpha: 1.00))
-
-    /// Share-card good tier gradient bottom. Static artwork.
-    static let shareScoreGoodEnd = Color(uiColor: #colorLiteral(red: 0.031, green: 0.090, blue: 0.141, alpha: 1.00))
 
     /// Share-card fair tier gradient top. Static artwork.
     static let shareScoreFairStart = Color(uiColor: #colorLiteral(red: 0.220, green: 0.141, blue: 0.059, alpha: 1.00))
@@ -601,7 +601,4 @@ enum AppColour {
 
     /// Share-card poor tier gradient bottom. Static artwork.
     static let shareScorePoorEnd = Color(uiColor: #colorLiteral(red: 0.122, green: 0.039, blue: 0.051, alpha: 1.00))
-
-    /// Share-card secondary panel. Static artwork.
-    static let shareSecondaryBackground = Color(uiColor: #colorLiteral(red: 0.071, green: 0.090, blue: 0.110, alpha: 1.00))
 }

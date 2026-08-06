@@ -58,7 +58,8 @@ TIERS = [
 ]
 
 GLOBALS = ['schema_version', 'environment', 'platform', 'build_number', 'app_version', 'session_id',
-           'session_number', 'tab', 'screen', 'opened_from', 'hour_of_day', 'client_timestamp_utc']
+           'session_number', 'tab', 'screen', 'opened_from', 'hour_of_day', 'client_timestamp_utc',
+           'pricing_cohort', 'has_free_access']
 SUPERS = ['app_environment', 'is_debug', 'app_version', 'app_build', 'locale_language',
           'locale_country', 'timezone_id', 'ios_version']
 
@@ -186,10 +187,10 @@ def main():
                   head, flags=re.S)
     head = re.sub(r'<div class="banner">.*?</div>',
                   '<div class="banner"><b>How to read this.</b> Tier 1 matters most (activation and aha), '
-                  'Tier 8 least (diagnostics). Every facade event also carries the <b>12 global</b> and '
-                  '<b>8 super</b> properties below plus the joinable user properties, so those are not '
+                  f'Tier 8 least (diagnostics). Every facade event also carries the <b>{len(GLOBALS)} global</b> and '
+                  f'<b>{len(SUPERS)} super</b> properties below plus the joinable user properties, so those are not '
                   'repeated on each card. <span style="color:var(--amber)">bypasses globals</span> = sent '
-                  'straight to the SDK without the 12 globals.</div>',
+                  f'straight to the SDK without the {len(GLOBALS)} globals.</div>',
                   head, flags=re.S)
     head = re.sub(r'(<h3>Global properties[^<]*</h3>)<div class="ev-props">.*?</div>',
                   lambda m: m.group(1) + f'<div class="ev-props">{chips(GLOBALS)}</div>', head, flags=re.S)

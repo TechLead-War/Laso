@@ -198,6 +198,97 @@ enum DS {
     /// rather than a second table that drifts.
     static let optimalFloor = 67
     static let fairFloor = 45
+
+    // MARK: - Share Artwork
+
+    /// Tokens for the cards `ImageRenderer` turns into PNGs.
+    ///
+    /// Share artwork cannot use the in-app scales. It leaves the app as a fixed
+    /// pixel image, so it inherits no Dynamic Type, no colour scheme and no
+    /// safe area, and every size has to be literal. These tokens exist so those
+    /// literals live in one place instead of being retyped in every card body,
+    /// which is how the canvas size ended up repeated five times and the photo
+    /// scrim ended up with two sets of stops that had drifted apart.
+    enum Share {
+
+        // MARK: Canvas
+
+        /// 9:16 story canvas. The picker scales this down for preview only; the
+        /// rendered image is always full size.
+        static let width: CGFloat = 390
+        static let height: CGFloat = 693
+        static let radius: CGFloat = cardRadius
+
+        /// Interior margins. Wider than `cardPadding` because the artwork is
+        /// judged at thumbnail size in someone else's feed.
+        static let marginH: CGFloat = 30
+        static let marginTop: CGFloat = 30
+        static let marginBottom: CGFloat = 26
+
+        // MARK: Type ramp
+
+        enum Typography {
+            static let wordmark: Font = .system(size: 15, weight: .bold, design: .rounded)
+            static let wordmarkTracking: CGFloat = 3
+
+            /// The one number or phrase the card is about. Pair with
+            /// `minimumScaleFactor` rather than shrinking this: a long value
+            /// should squeeze, not demote the hierarchy.
+            static let hero: Font = .system(size: 50, weight: .heavy, design: .rounded)
+            static let heroCompact: Font = .system(size: 40, weight: .heavy, design: .rounded)
+            static let sub: Font = .system(size: 17, weight: .medium)
+
+            /// Small tracked caps for provenance lines (sample size, date, what
+            /// the number was measured against).
+            static let label: Font = .system(size: 10, weight: .bold)
+            static let labelTracking: CGFloat = 2
+
+            static let footer: Font = .system(size: 12, weight: .semibold)
+
+            static let ringValue: Font = .system(size: 30, weight: .bold, design: .rounded)
+            /// Sleep renders as "8:12", which overruns the ring at full size.
+            static let ringValueCompact: Font = .system(size: 24, weight: .bold, design: .rounded)
+            static let ringLabel: Font = .system(size: 10, weight: .bold)
+        }
+
+        enum Ring {
+            static let diameter: CGFloat = 92
+            static let lineWidth: CGFloat = 7
+            static let trackOpacity: Double = 0.3
+        }
+
+        // MARK: Grounds
+
+        /// The single readability scrim for every photo card.
+        ///
+        /// A fixed opacity is a known-weak solution over an arbitrary photo, so
+        /// this uses the darker of the two floors the cards used to carry
+        /// independently. Replacing it with a measured per-photo scrim is the
+        /// real fix and is tracked separately.
+        static let photoScrim = LinearGradient(stops: [
+            .init(color: .black.opacity(0.45), location: 0),
+            .init(color: .clear, location: 0.30),
+            .init(color: .clear, location: 0.50),
+            .init(color: .black.opacity(0.65), location: 1)
+        ], startPoint: .top, endPoint: .bottom)
+
+        /// Card ground for a score, graded by `recoveryTier` and nothing else.
+        ///
+        /// A card with no score gets the optimal ground on purpose: the cards
+        /// that carry no score are the earned wins, and a win is green.
+        static func gradient(for score: Int?) -> LinearGradient {
+            let colors: [Color]
+            switch score.map(recoveryTier(for:)) {
+            case .optimal, .none:
+                colors = [AppColour.shareScoreHighStart, AppColour.shareScoreHighEnd]
+            case .fair:
+                colors = [AppColour.shareScoreFairStart, AppColour.shareScoreFairEnd]
+            case .poor:
+                colors = [AppColour.shareScorePoorStart, AppColour.shareScorePoorEnd]
+            }
+            return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
 }
 
 // MARK: - Unified Card Background

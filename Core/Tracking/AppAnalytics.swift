@@ -432,6 +432,8 @@ final class AppAnalytics {
         static let firstScoreGeneratedTracked = "laso.analytics.first_score_generated_tracked"
         static let trialStartedTracked = "laso.analytics.trial_started_tracked"
         static let dailyActiveLastDate = "laso.analytics.daily_active_last_date"
+        static let lastPricingCohort = "laso.analytics.last_pricing_cohort"
+        static let lastFreeAccess = "laso.analytics.last_free_access"
     }
 
     private init() {}
@@ -960,7 +962,11 @@ final class AppAnalytics {
             "network_type": networkType,
             "activation_status": session.isActivated ? "activated" : "not_activated",
             "engagement_level": engagement.rawValue,
-            "subscription_age_days": "\(subscriptionAgeDays)"
+            "subscription_age_days": "\(subscriptionAgeDays)",
+            // Refreshed every session so Amplitude cohorts stay current even for a
+            // user whose arm changed while the app was closed.
+            "pricing_cohort": RemoteConfigManager.shared.pricingCohort,
+            "has_free_access": FeatureGate.hasComplimentaryAccess ? "yes" : "no"
             // nav_depth is deliberately absent: startSession() resets currentDepth
             // to 0 a few lines above, so it could only ever be "0". Session depth
             // now ships as max_depth on session_ended.
@@ -1504,6 +1510,37 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 9. Subscription Funnel
     // ══════════════════════════════════════════════════════════════════════
+
+    /// Reconciles the Remote Config pricing arm, and the access it actually
+    /// produced, against the last pair this device saw. Called every time a
+    /// config fetch lands (cold launch and the realtime listener), so the change
+    /// event carries the moment the flip reached the user rather than the next
+    /// session start.
+    ///
+    /// A brand-new install moving from no stored value to its first arm is an
+    /// assignment, not a change: emitting there would put a
+    /// `pricing_cohort_changed` on every install and drown the real switches.
+    func syncPricingCohort() {
+        let cohort = RemoteConfigManager.shared.pricingCohort
+        let freeAccess = FeatureGate.hasComplimentaryAccess ? "yes" : "no"
+        let previousCohort = defaults.string(forKey: Key.lastPricingCohort)
+        let previousAccess = defaults.string(forKey: Key.lastFreeAccess)
+        guard previousCohort != cohort || previousAccess != freeAccess else { return }
+
+        defaults.set(cohort, forKey: Key.lastPricingCohort)
+        defaults.set(freeAccess, forKey: Key.lastFreeAccess)
+        setUserProperty("pricing_cohort", value: cohort)
+        setUserProperty("has_free_access", value: freeAccess)
+
+        guard let previousCohort, let previousAccess else { return }
+        logEvent("pricing_cohort_changed", parameters: [
+            "from_cohort": previousCohort,
+            "to_cohort": cohort,
+            "from_free_access": previousAccess,
+            "to_free_access": freeAccess,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
 
     /// Call when trial begins (first app launch after onboarding).
     /// Fires `trial_started` exactly once per install. The persisted
@@ -3728,12 +3765,54 @@ final class AppAnalytics {
     // MARK: - 24. Share Completion
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call from UIActivityViewController's completion handler.
-    /// Tracks whether the user actually completed a share or cancelled it.
+    /// Where a completed share actually went.
+    ///
+    /// Matching is on substrings of the activity type rather than exact bundle
+    /// ids, because share extensions rename themselves between releases and a
+    /// renamed extension dropping silently into `other` would quietly shrink
+    /// the very channel this exists to measure. Order matters: Facebook
+    /// Messenger is a private channel and must be classified before the
+    /// Facebook token would claim it for `social`.
+    enum ShareChannel: String {
+        case directMessage = "dm"
+        case social
+        case copy
+        case other
+
+        private static let copyTokens = ["copytopasteboard", "savetocameraroll", "airdrop"]
+        // "messenger" is listed separately because it does not contain
+        // "message": the fifth letter differs, so the shorter token never
+        // matches it and Facebook Messenger would fall through to `social`.
+        private static let dmTokens = [
+            "message", "messenger", "whatsapp", "telegra", "signal", "mail", "slack", "discord"
+        ]
+        private static let socialTokens = [
+            "instagram", "twitter", "tweetie", "facebook", "tiktok",
+            "snapchat", "threads", "reddit", "linkedin", "pinterest"
+        ]
+
+        static func classify(_ activityType: String?) -> ShareChannel {
+            guard let raw = activityType?.lowercased(), !raw.isEmpty else { return .other }
+            if copyTokens.contains(where: raw.contains) { return .copy }
+            if dmTokens.contains(where: raw.contains) { return .directMessage }
+            if socialTokens.contains(where: raw.contains) { return .social }
+            return .other
+        }
+    }
+
+    /// Call from UIActivityViewController's completion handler, or from the
+    /// direct-send composer.
+    ///
+    /// `channel` collapses the long tail of `activity_type` into the three
+    /// groups that behave differently. Reporting shares as one blended number
+    /// hides the split: published benchmarks put the large majority of real
+    /// sharing in private messaging, and a feed post is a different act with a
+    /// different conversion rate, so the two must never be summed.
     func trackShareCompleted(contentType: String, activityType: String?, completed: Bool) {
         logEvent("share_completed", parameters: [
             "content_type": contentType,
             "activity_type": activityType ?? "unknown",
+            "channel": ShareChannel.classify(activityType).rawValue,
             "completed": completed ? 1 : 0
         ])
     }
@@ -3801,7 +3880,7 @@ final class AppAnalytics {
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
         var enriched = parameters
 
-        // The 12 global properties from the analytics taxonomy, injected on every
+        // The 14 global properties from the analytics taxonomy, injected on every
         // event. User-level dimensions (subscription_status, streak_days,
         // engagement_level, etc.) are NOT injected here — they live as user
         // properties and are set via setUserProperty on session start, so they
@@ -3845,6 +3924,20 @@ final class AppAnalytics {
         // Fixed-UTC ISO-8601 wall-clock stamp, comparable across timezones.
         if enriched["client_timestamp_utc"] == nil {
             enriched["client_timestamp_utc"] = Self.eventTimestampFormatter.string(from: Date())
+        }
+
+        // Pricing experiment: the arm this install was assigned, plus what it
+        // actually got. Both ride on the event rather than only as user
+        // properties because a mid-session Remote Config flip must be readable at
+        // the exact event where it changed — an identify call lands later and
+        // would backdate the boundary. `has_free_access` is derived from the real
+        // gate, so a mislabelled Firebase condition reads as a mismatch instead of
+        // quietly reporting a paywalled user as free.
+        if enriched["pricing_cohort"] == nil {
+            enriched["pricing_cohort"] = RemoteConfigManager.shared.pricingCohort
+        }
+        if enriched["has_free_access"] == nil {
+            enriched["has_free_access"] = FeatureGate.hasComplimentaryAccess ? "yes" : "no"
         }
 
         // Events ship under their literal, sanitized stable name.

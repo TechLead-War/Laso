@@ -135,16 +135,6 @@
         }
       }
     },
-    "%@%lld this week" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$lld this week"
-          }
-        }
-      }
-    },
     "%@%lld%%" : {
       "localizations" : {
         "en" : {

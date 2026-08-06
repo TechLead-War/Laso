@@ -20,6 +20,12 @@ struct ContentView: View {
     @State private var explorePath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
+    /// Which cards the visible detail screen offers, set by `routeDestination`
+    /// while that screen is on top. The paths are `NavigationPath`, which is
+    /// type-erased and cannot be read back, so the screen records itself on the
+    /// way in rather than being inferred on the way out.
+    @State private var shareEntryContext: (kinds: [ShareTemplate.Kind], screen: AppFeature)?
+
     @State private var dashboardViewModel: DashboardViewModel
     @State private var liveViewModel: LiveViewModel
     @State private var webExportViewModel: WebExportViewModel
@@ -364,12 +370,24 @@ struct ContentView: View {
             // Push the requested deep-link route once the dashboard has had a
             // moment to load mock data so the destination view renders with
             // populated values. UI-test-only.
-            guard UITestMode.isEnabled,
-                  appStateStore.onboardingCompleted,
-                  let raw = UITestMode.initialRoute,
-                  let route = Route.fromUITestIdentifier(raw) else { return }
+            guard UITestMode.isEnabled, appStateStore.onboardingCompleted else { return }
             try? await Task.sleep(nanoseconds: 1_500_000_000)
-            navigate(to: route)
+
+            if let raw = UITestMode.initialRoute,
+               let route = Route.fromUITestIdentifier(raw) {
+                navigate(to: route)
+            }
+            // Same wait, for the same reason: the tray is built from the live
+            // scorers, so opening it before they have run shows an empty tray.
+            // The second wait lets the pushed screen appear and register its
+            // own share context, so the forced tray leads with the same card a
+            // real tap from that screen would.
+            if UITestMode.forceShareTray {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                presentShareTray(preferring: shareEntryContext?.kinds ?? [],
+                                 screen: shareEntryContext?.screen ?? selectedTab.feature,
+                                 source: "ui_test")
+            }
         }
     }
 
@@ -545,8 +563,70 @@ struct ContentView: View {
 
     // MARK: - Route Destinations
 
+    /// Wraps every pushed detail screen with its share entry.
+    ///
+    /// Sharing used to be reachable from one conditional button on Home, which
+    /// only appeared on a morning where yesterday's action had gone up. Better
+    /// artwork cannot fix a button nobody can find, so the affordance is added
+    /// here, once, around the whole destination switch: the detail screens stay
+    /// free of share plumbing and there is a single place that decides which
+    /// card leads from which screen.
     @ViewBuilder
     private func routeDestination(for route: Route) -> some View {
+        let entry = Self.shareEntry(for: route)
+
+        routeContent(for: route)
+            .toolbar {
+                if let entry {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            presentShareTray(preferring: entry.kinds,
+                                             screen: entry.screen,
+                                             source: "detail_toolbar")
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel(Copy.Common.shareHealthCard)
+                        .accessibilityIdentifier("share.entry")
+                    }
+                }
+            }
+            // A screenshot taken here should offer this screen's card, not the
+            // Home tray. Cleared on the way out so a screenshot on a tab root
+            // falls back to the default order.
+            .onAppear { shareEntryContext = entry }
+            .onDisappear { if shareEntryContext?.screen == entry?.screen { shareEntryContext = nil } }
+    }
+
+    /// Which cards a detail screen offers, strongest first.
+    ///
+    /// Screens whose card does not exist yet are deliberately absent rather
+    /// than pointed at something unrelated: a share button on Strain that opens
+    /// a sleep card is worse than no share button at all.
+    private static func shareEntry(for route: Route) -> (kinds: [ShareTemplate.Kind], screen: AppFeature)? {
+        switch route {
+        case .correlationsDetail:
+            return ([.receipt], .correlations)
+        case .achievements:
+            return ([.badge, .streak], .achievements)
+        case .vitalityDetail:
+            // Falls back to the plain body-age card on a day where the gap is
+            // inside the model's warm-up and `.younger` did not qualify.
+            return ([.younger, .bodyAge], .vitalityDetail)
+        case .sleepCoach:
+            return ([.bestSleep, .sleep], .sleepCoach)
+        case .insightsDetail:
+            return ([.receipt], .insightsDetail)
+        case .weeklyReview:
+            // Carries its own ShareButton in its toolbar already.
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    @ViewBuilder
+    private func routeContent(for route: Route) -> some View {
         switch route {
         case .insightsDetail:
             InsightsDetailView(
@@ -975,21 +1055,39 @@ struct ContentView: View {
               appStateStore.disclaimerAcknowledged,
               !paywallOwnsScreen else { return }
 
+        // A screenshot on Correlations used to be answered with the Home tray,
+        // which threw away the one thing the user had just chosen to capture.
+        //
+        // Unprompted, so it stays silent when there is nothing to offer. A tap
+        // is different: the user asked, and an answer of "nothing yet" beats a
+        // button that does nothing.
+        presentShareTray(preferring: shareEntryContext?.kinds ?? [],
+                         screen: shareEntryContext?.screen ?? selectedTab.feature,
+                         source: "screenshot",
+                         onlyIfEarned: true)
+    }
+
+    /// Builds the tray, leads it with the card the current screen is about, and
+    /// presents it. The single entry into sharing from anywhere outside Home.
+    private func presentShareTray(preferring kinds: [ShareTemplate.Kind],
+                                  screen: AppFeature,
+                                  source: String,
+                                  onlyIfEarned: Bool = false) {
         let templates = dashboardViewModel.shareTemplates(
             liveVM: liveViewModel,
             actionResult: DailyActionResultStore.resultToShow()
         )
-        guard !templates.isEmpty else { return }
+        if onlyIfEarned && templates.isEmpty { return }
 
         // Entry step of the share funnel, matching Home's own Share CTA, so
-        // screenshot-sourced opens are separable from tapped ones.
+        // each source is separable from the others.
         AppAnalytics.shared.trackBlockTap(
             title: "Share",
             type: .shareCard,
-            screen: selectedTab.feature,
-            metadata: ["source": "screenshot", "card_type": "template"]
+            screen: screen,
+            metadata: ["source": source, "card_type": "template"]
         )
-        rootSheet = .shareWin(templates)
+        rootSheet = .shareWin(ShareTemplateBuilder.leading(kinds, in: templates))
     }
 
     // MARK: - Session Analytics

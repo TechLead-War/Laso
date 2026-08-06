@@ -2237,8 +2237,30 @@ final class DashboardViewModel {
             lastNightSleepSeconds: liveVM.sleep.lastNightSleepDuration > 0
                 ? liveVM.sleep.lastNightSleepDuration : nil,
             allTimeBestSleepHours: analysisEngine.historicalContext[.sleepDuration]?.allTimeHigh,
-            mirrorPair: MirrorPhotoStore.shared.progressPair
+            mirrorPair: MirrorPhotoStore.shared.progressPair,
+            correlation: strongestShareableCorrelation,
+            recentBadge: mostRecentlyEarnedBadge
         )
+    }
+
+    /// The correlation worth putting on a card: the one with the largest effect
+    /// the user's own data supports. Ranked by |r| rather than by sample count,
+    /// because the builder already floors the sample size and, past that floor,
+    /// a stronger relationship is the more interesting claim.
+    @MainActor
+    private var strongestShareableCorrelation: HealthCorrelation? {
+        analysisEngine.correlations
+            .filter { $0.sampleCount >= ShareTemplateGates.minCorrelationDays }
+            .max { abs($0.correlation) < abs($1.correlation) }
+    }
+
+    /// The newest unlocked achievement. The builder decides whether it is still
+    /// recent enough to offer; this only answers which one is newest.
+    @MainActor
+    private var mostRecentlyEarnedBadge: Achievement? {
+        gamificationEngine.achievements
+            .filter { $0.isUnlocked && $0.unlockedDate != nil }
+            .max { ($0.unlockedDate ?? .distantPast) < ($1.unlockedDate ?? .distantPast) }
     }
 
     /// Single source of truth for what to do today.

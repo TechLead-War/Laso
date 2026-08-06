@@ -17,6 +17,7 @@ struct MirrorGalleryView: View {
 
     private let store = MirrorPhotoStore.shared
     @State private var viewerDay: Day?
+    @State private var showShare = false
 
     /// Adaptive so the wall is four across on a Pro Max and three on an SE,
     /// instead of a fixed count that leaves a gutter on one of them.
@@ -59,11 +60,38 @@ struct MirrorGalleryView: View {
         .background(AppColour.surfaceBase)
         .navigationTitle(Copy.Mirror.galleryTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // The then-vs-now pair is the one card this screen is about, so the
+            // tray here is built from the archive alone rather than reaching for
+            // the dashboard's scorers, which this view has no access to.
+            if !mirrorTemplates.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showShare = true } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel(Copy.Common.shareHealthCard)
+                    .accessibilityIdentifier("share.entry")
+                }
+            }
+        }
+        .sheet(isPresented: $showShare) {
+            ShareWinSheet(templates: mirrorTemplates)
+        }
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.mirrorGallery) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.mirrorGallery) }
         .fullScreenCover(item: $viewerDay) { day in
             MirrorGalleryViewer(start: day.date) { viewerDay = nil }
         }
+    }
+
+    /// Empty until two photos sit far enough apart to read as progress, which
+    /// is the builder's own gate rather than a second one kept here.
+    private var mirrorTemplates: [ShareTemplate] {
+        ShareTemplateBuilder.build(
+            vitalityAge: nil, realAge: nil, recovery: nil, masterStreak: 0,
+            actionResult: nil, lastNightSleepSeconds: nil, allTimeBestSleepHours: nil,
+            mirrorPair: store.progressPair
+        )
     }
 
     /// Newest month first, days newest first inside it. Grouped by the stored

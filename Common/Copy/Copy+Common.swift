@@ -81,6 +81,10 @@ extension Copy {
         static var shareTakePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_take_photo", default: "Take a photo") }
         static var shareChangePhoto: String { RemoteConfigManager.shared.copyString("copy_common_share_change_photo", default: "Change photo") }
         static var shareCTA: String { RemoteConfigManager.shared.copyString("copy_common_share_cta", default: "Share") }
+        /// Primary action in the tray. Names the act, not the app, because the
+        /// point is that this goes to one person rather than to a feed.
+        static var shareSendToPerson: String { RemoteConfigManager.shared.copyString("copy_common_share_send_to_person", default: "Send to someone") }
+        static var shareMoreWays: String { RemoteConfigManager.shared.copyString("copy_common_share_more_ways", default: "More ways to share") }
         static var shareSheetTitle: String { RemoteConfigManager.shared.copyString("copy_common_share_sheet_title", default: "Share a win") }
         static var shareTrayHint: String { RemoteConfigManager.shared.copyString("copy_common_share_tray_hint", default: "Pick a win, then add your photo.") }
 
@@ -148,8 +152,27 @@ extension Copy {
         static func shareAgeSub(realAge: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_common_share_age_sub", default: "%d on paper."), realAge)
         }
-        static var laso2: String { RemoteConfigManager.shared.copyString("copy_common_laso2", default: "Laso") }
-        static var discoverYourHealthPatternsWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_discover_your_health_patterns_with_laso", default: "Discover your health patterns with Laso") }
+
+        // The Receipt. A cause, an effect and the number of days behind them.
+        // Every other card states a result; this one states what produced it,
+        // which is the only claim on the tray that months of tracking could
+        // have made and a single good morning could not.
+        static var shareChipReceipt: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_receipt", default: "Pattern") }
+        static func shareReceiptSub(days: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_receipt_sub", default: "Measured on me across %d days. Not a study average."), days)
+        }
+
+        // The Badge. Always dated: an undated badge says what you are, a dated
+        // one says when you did it, and only the second reads as a moment.
+        static var shareChipBadge: String { RemoteConfigManager.shared.copyString("copy_common_share_chip_badge", default: "Badge") }
+        static func shareBadgeEarned(date: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_badge_earned", default: "EARNED %@"), date)
+        }
+
+        // Weekly Review score card.
+        static func shareScoreChangeThisWeek(delta: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_common_share_score_change_this_week", default: "%+d this week"), delta)
+        }
         static var hidesThisBannerWithoutChangingNotificationHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_notification_hint", default: "Hides this banner without changing notification settings") }
         static var opensTheSystemSettingsAppToHint: String { RemoteConfigManager.shared.copyString("copy_common_opens_the_system_settings_app_to_hint", default: "Opens the system Settings app to enable notifications") }
         static var updateRequired: String { RemoteConfigManager.shared.copyString("copy_common_update_required", default: "Update Required") }

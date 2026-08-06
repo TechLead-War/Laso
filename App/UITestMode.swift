@@ -14,6 +14,7 @@ enum UITestMode {
     private static let forceProLockFlag = "--ui-test-force-pro-lock"
     private static let forceMorningCheckInFlag = "--ui-test-force-morning-checkin"
     private static let forceMirrorMomentFlag = "--ui-test-force-mirror-moment"
+    private static let forceShareTrayFlag = "--ui-test-force-share-tray"
     private static let mirrorConfirmPrefix = "--ui-test-mirror-confirm="
     private static let premiumShowcaseFlag = "--ui-test-premium-showcase"
     private static let subscribedFlag = "--ui-test-subscribed"
@@ -86,6 +87,15 @@ enum UITestMode {
     /// on the simulator (which has no camera).
     static var forceMirrorMoment: Bool {
         ProcessInfo.processInfo.arguments.contains(forceMirrorMomentFlag)
+    }
+
+    /// When true, ContentView presents the share tray on launch.
+    ///
+    /// The tray is otherwise only reachable by tapping, and the share cards are
+    /// the one part of the app whose output leaves it as an image, so this is
+    /// the only way to see the rendered artwork on a simulator.
+    static var forceShareTray: Bool {
+        ProcessInfo.processInfo.arguments.contains(forceShareTrayFlag)
     }
 
     /// Opens MirrorCaptureSheet directly on the confirm step with the named
@@ -243,6 +253,7 @@ enum UITestMode {
     static var forceProLock: Bool { false }
     static var forceMorningCheckIn: Bool { false }
     static var forceMirrorMoment: Bool { false }
+    static var forceShareTray: Bool { false }
     static var mirrorConfirmFilter: String? { nil }
     static var premiumShowcase: Bool { false }
     static var forceSubscribed: Bool { false }
