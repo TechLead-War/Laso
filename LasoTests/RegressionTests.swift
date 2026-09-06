@@ -13,28 +13,40 @@ struct RegressionTests {
     // MARK: - Vitality
 
     /// The 90-day age trend quoted a pace off two weeks of data, and the old
-    /// formula divided a whole-year age step by a quarter of a year, so the
-    /// number sat pinned at the 0.5 or 2.0 clamp instead of measuring anything.
+    /// formula reported the fitted slope plus one, so a body aging at exactly
+    /// the calendar rate was labelled the fastest decline the scale can show.
     @Test func paceOfAgingNeedsRealHistoryAndTracksTheCalendar() {
-        func history(days: Int, agePerDay: Double) -> [(date: Date, age: Double)] {
+        func history(days: Int, agePerDay: Double, noise: Double = 0) -> [(date: Date, age: Double)] {
             let start = Date().addingTimeInterval(-Double(days) * 86_400)
-            return (0..<days).map { day in
-                (date: start.addingTimeInterval(Double(day) * 86_400),
-                 age: 40 + agePerDay * Double(day))
+            return (0..<days).map { day -> (date: Date, age: Double) in
+                let offset: Double = Double(day) * 86_400
+                let wobble: Double = day.isMultiple(of: 2) ? -noise : noise
+                let age: Double = 40 + agePerDay * Double(day) + wobble
+                return (date: start.addingTimeInterval(offset), age: age)
             }
         }
 
         #expect(VitalityScorer.pace(from: history(days: 14, agePerDay: 0)) == nil,
                 "two weeks is too short to fit a slope, so no pace may be shown")
 
-        let flat = VitalityScorer.pace(from: history(days: 90, agePerDay: 0))
-        #expect(flat != nil, "90 recorded days is enough to quote a pace")
-        // A vitality age that never moves is aging slower than the calendar.
-        #expect(abs((flat ?? 0) - 1.0) < 0.05, "a flat history must read as roughly on pace, got \(flat ?? -1)")
+        // A year of vitality age per calendar year is the calendar rate itself.
+        let calendarRate = VitalityScorer.pace(from: history(days: 90, agePerDay: 1.0 / 365.25))
+        #expect(calendarRate != nil, "90 recorded days is enough to quote a pace")
+        #expect(abs((calendarRate ?? 0) - 1.0) < 0.05,
+                "tracking the calendar must read as on pace, got \(calendarRate ?? -1)")
 
-        // Half a year of vitality age added per calendar year reads above 1.
-        let rising = VitalityScorer.pace(from: history(days: 90, agePerDay: 0.5 / 365.25))
-        #expect((rising ?? 0) > 1.0, "a rising vitality age must read as a faster pace, got \(rising ?? -1)")
+        // Two years of vitality age per calendar year is aging twice as fast.
+        let rising = VitalityScorer.pace(from: history(days: 90, agePerDay: 2.0 / 365.25))
+        #expect((rising ?? 0) > 1.0, "a fast rising vitality age must read as a faster pace, got \(rising ?? -1)")
+
+        // A vitality age that never moves is aging slower than the calendar.
+        let flat = VitalityScorer.pace(from: history(days: 90, agePerDay: 0))
+        #expect((flat ?? 1) < 1.0, "a flat vitality age must read as slower than the calendar, got \(flat ?? -1)")
+
+        // The same flat trend under day-to-day scatter is not a finding: the
+        // slope has to clear its own noise before a verdict is printed.
+        let noisyFlat = VitalityScorer.pace(from: history(days: 90, agePerDay: 0, noise: 6))
+        #expect(noisyFlat == 1.0, "sub-noise drift must report calendar pace, got \(noisyFlat ?? -1)")
     }
 
     /// A usual range drawn off three days is noise, and a band of zero width
@@ -99,7 +111,7 @@ struct RegressionTests {
         func component(age: Int) -> VitalityComponent {
             VitalityComponent(
                 metric: "test", metricAge: age, currentValue: 1, unit: "",
-                populationMedian: 1, isBeyondYoungestReference: false,
+                referenceValue: 1, referenceIsTarget: false, isBeyondYoungestReference: false,
                 isBelowOldestReference: false, healthMetric: nil
             )
         }

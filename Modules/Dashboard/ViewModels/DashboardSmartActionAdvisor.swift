@@ -11,6 +11,11 @@ struct DashboardSmartActionAdvisor {
         let exerciseMinutes: Double
         let exerciseGoal: Double
         let latestRestingHeartRate: Double?
+        /// The score the recovery hero card on the same screen is showing: live
+        /// readiness, or the daily score when readiness is missing. Nil means no
+        /// caller supplied it, which leaves the recovery gate off rather than
+        /// grading a band from a guessed number.
+        var heroRecoveryScore: Int? = nil
     }
 
     struct AnalysisSnapshot {
@@ -88,7 +93,7 @@ struct DashboardSmartActionAdvisor {
         }
 
         // 1. ML policy engine. highest quality, fully personalized
-        if let r = recommendFromPolicyEngine(analysis: analysis) { return r }
+        if let r = recommendFromPolicyEngine(live: live, analysis: analysis) { return r }
 
         // 2. Insight-driven. derive action from the highest-priority insight
         if let r = recommendFromHighPriorityInsight(analysis: analysis) { return r }
@@ -122,9 +127,25 @@ struct DashboardSmartActionAdvisor {
 
     // MARK: - Recommendation Sources
 
-    private func recommendFromPolicyEngine(analysis: AnalysisSnapshot) -> Recommendation? {
+    private func recommendFromPolicyEngine(live: LiveSnapshot, analysis: AnalysisSnapshot) -> Recommendation? {
         guard let decision = analysis.policyDecision,
               decision.decisionConfidence >= 0.3 else { return nil }
+        // The engine scores a declining exercise metric, not how recovered the
+        // person is, so it asks for a harder workout even on a day the recovery
+        // hero directly above this card reads red and says take it easy. Both
+        // sides band the hero's own score through DS.recoveryTier, the app's one
+        // readiness table, so the screen cannot say push and rest at once.
+        if decision.primaryAction.candidate.actionType == .intensifyExercise,
+           let heroScore = live.heroRecoveryScore,
+           DS.recoveryTier(for: heroScore) == .poor {
+            return Recommendation(
+                icon: "figure.mind.and.body",
+                title: Copy.Home.SmartAction.lowReadinessTitle,
+                subtitle: Copy.Home.SmartAction.doActiveRecovery,
+                source: "recovery_gate",
+                rationale: Copy.Home.SmartAction.lowReadinessRationale
+            )
+        }
         // The headline is the action itself, not `decision.prescriptiveHeadline`:
         // that string comes from the recovery state bucket, so it could announce
         // strong recovery while the sentence below reported a metric 91% below

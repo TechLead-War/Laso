@@ -51,8 +51,12 @@ struct WellbeingTrendAnalyzer {
         guard signals.count >= 3 else { return [] }
 
         // Compute weighted wellbeing score
+        // Divide by the weight actually present, not by 1: signals are optional
+        // and only three are required, so clamping the divisor to 1 would pull
+        // every partial-data score toward zero and understate both directions.
         let totalWeight = signals.map(\.weight).reduce(0, +)
-        let weightedScore = signals.map { $0.score * $0.weight }.reduce(0, +) / max(totalWeight, 1)
+        guard totalWeight > 0 else { return [] }
+        let weightedScore = signals.map { $0.score * $0.weight }.reduce(0, +) / totalWeight
 
         // Count concerning signals
         let concerningSignals = signals.filter { $0.score < -0.3 }

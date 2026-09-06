@@ -189,15 +189,17 @@ final class DashboardViewModel {
         /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
         /// describes the same series as the displayed weekly score.
         fileprivate(set) var cachedWeeklyScoreChange: Int?
-        /// Set by parent after each analysis refresh
-        fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
+        /// Set by parent after each analysis refresh. Nil until an analysis has
+        /// actually scored something, so a user with no data (or with HealthKit
+        /// denied) is never handed a stand-in number.
+        fileprivate(set) var overallScore: HealthScore?
         fileprivate(set) var categoryScores: [HealthScore] = []
 
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
         var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
 
         var recoveryState: RecoveryState {
-            RecoveryState(score: overallScore.score)
+            RecoveryState(score: overallScore?.score ?? 0)
         }
 
         /// Score explanation for transparency
@@ -316,7 +318,7 @@ final class DashboardViewModel {
 
     // MARK: - Convenience accessors (kept for backward compat with internal methods)
 
-    var overallScore: HealthScore { scores.overallScore }
+    var overallScore: HealthScore? { scores.overallScore }
     var recoveryState: RecoveryState { scores.recoveryState }
 
     var lastRefresh: Date? {
@@ -606,11 +608,10 @@ final class DashboardViewModel {
                     on: Date.cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
                 ),
                 age: resolvedAge,
-                // recoveryScore is deliberately left at its default: today's
-                // score is still 0 at init and 0 reads as a low-recovery
-                // night, which would inflate the prewarmed need.
-                // `computeNewEngines` recomputes with the real score once
-                // the first refresh lands.
+                // recoveryScore is deliberately left at its neutral default:
+                // no analysis has run at init, and a stand-in low score would
+                // inflate the prewarmed need. `computeNewEngines` recomputes
+                // with the real score once the first refresh lands.
                 sleepSeries: sleepSeries
             )
         }
@@ -887,11 +888,15 @@ final class DashboardViewModel {
         // HealthDataStore is @MainActor for ModelContext thread safety; updateCachedProperties
         // also reads score history from the store for score change computation.
         await MainActor.run {
-            store.saveAnalysisSnapshot(
-                overallScore: overallScore.score,
-                categoryScores: analysisEngine.categoryScores,
-                baselines: analysisEngine.baselines
-            )
+            // No score means no snapshot row: a stand-in 0 would land in the
+            // score history every caller reads and drag every average down.
+            if let overallScore = self.overallScore {
+                store.saveAnalysisSnapshot(
+                    overallScore: overallScore.score,
+                    categoryScores: analysisEngine.categoryScores,
+                    baselines: analysisEngine.baselines
+                )
+            }
             // Invalidate score history cache after saving. the new snapshot is now part of the data
             invalidateScoreHistoryCache()
             updateCachedProperties()
@@ -939,7 +944,7 @@ final class DashboardViewModel {
 
         // Phase 2: Deferred analysis + housekeeping (fire-and-forget background)
         // Insight generators, health risks, notifications, analytics. all non-blocking
-        let currentScore = overallScore.score
+        let currentScore = overallScore?.score
         let currentAnomalies = analysisEngine.anomalies
         let currentTrends = analysisEngine.trends
         let currentCategoryScores = analysisEngine.categoryScores
@@ -1068,7 +1073,7 @@ final class DashboardViewModel {
     private func runPostHeavyPhase(
         timeSeries: [HealthMetric: MetricTimeSeries],
         prevTrends: [HealthMetric: TrendDirection],
-        currentScore: Int,
+        currentScore: Int?,
         currentAnomalies: [AnomalyDetector.AnomalyResult],
         currentTrends: [HealthMetric: TrendAnalyzer.TrendResult],
         currentCategoryScores: [HealthScore],
@@ -1138,7 +1143,10 @@ final class DashboardViewModel {
             }
         }
 
-        guard runHousekeeping else { return }
+        // Housekeeping writes this number into weekly score history and into the
+        // daily push copy, so a day with nothing scored is skipped rather than
+        // reported as a zero.
+        guard runHousekeeping, let currentScore else { return }
 
         // Re-detect wake-up time weekly so daily notification timing stays current
         _ = await WakeUpTimeDetector.detectAndPersist(healthStore: healthKitManager.healthStore)
@@ -1258,7 +1266,7 @@ final class DashboardViewModel {
         // first non-zero score is computed. Gate on a UserDefaults flag so
         // re-launches don't double-fire. Without this, activation rate cannot
         // be measured for ad-driven cohorts.
-        let firstScore = analysisEngine.overallScore.score
+        let firstScore = analysisEngine.overallScore?.score ?? 0
         if firstScore > 0 && !UserDefaults.standard.bool(forKey: "laso.firstScoreFired") {
             UserDefaults.standard.set(true, forKey: "laso.firstScoreFired")
             let installTs = UserDefaults.standard.double(forKey: AppKeys.Lifecycle.installDate)
@@ -1333,7 +1341,6 @@ final class DashboardViewModel {
         anomalies.warningAlertCount = analysisEngine.anomalies.filter { $0.severity == .warning }.count
 
         // Cache lightweight score data for Siri intents (avoids SwiftData conflicts)
-        let score = overallScore.score
         let topAreas = analysisEngine.categoryScores
             .sorted { $0.score < $1.score }
             .prefix(2)
@@ -1342,11 +1349,15 @@ final class DashboardViewModel {
                 return "\(cat.shortName) \(s.score)"
             }
         let summaryText = topAreas.isEmpty ? "" : "Areas to watch: \(topAreas.joined(separator: ", "))."
-        intentCacheStore.saveHealthSummary(
-            score: score,
-            grade: overallScore.grade,
-            summary: summaryText
-        )
+        // Siri answers from this cache verbatim, so it is left untouched until a
+        // real score exists rather than being filled with a placeholder.
+        if let overallScore {
+            intentCacheStore.saveHealthSummary(
+                score: overallScore.score,
+                grade: overallScore.grade,
+                summary: summaryText
+            )
+        }
 
         // Save shown recommendations for outcome tracking
         let insightsToSave = insights.cachedFocusedInsights.prefix(10)
@@ -1372,7 +1383,7 @@ final class DashboardViewModel {
             hasher.combine(series.samples.last?.date ?? .distantPast)
         }
         hasher.combine(analysisEngine.correlations.count)
-        hasher.combine(analysisEngine.overallScore.score)
+        hasher.combine(analysisEngine.overallScore?.score)
         return hasher.finalize()
     }
 
@@ -1567,7 +1578,9 @@ final class DashboardViewModel {
             sleepDebt: debtHours,
             targetWakeTime: targetWakeTime,
             age: resolvedAge,
-            recoveryScore: Double(scores.overallScore.score),
+            // No score falls back to the calculator's own neutral value: a 0 here
+            // reads as a low-recovery night and inflates the sleep need.
+            recoveryScore: scores.overallScore.map { Double($0.score) } ?? SleepNeedConfig.neutralRecoveryScore,
             sleepSeries: sleepSeries
         )
 
@@ -2013,7 +2026,8 @@ final class DashboardViewModel {
 
     @MainActor
     private func computeScoreChangeFromYesterday() -> Int? {
-        derivedStateBuilder.scoreChangeFromYesterday(
+        guard let overallScore else { return nil }
+        return derivedStateBuilder.scoreChangeFromYesterday(
             currentScore: overallScore.score,
             history: scoreHistoryCached(days: 3)
         )
@@ -2036,7 +2050,7 @@ final class DashboardViewModel {
     @MainActor
     private func computeRollingAverageScore() -> Int {
         let today = Date.cal.startOfDay(for: Date())
-        return ewmaWeeklyScore(asOf: today) ?? overallScore.score
+        return ewmaWeeklyScore(asOf: today) ?? overallScore?.score ?? 0
     }
 
     /// EWMA over completed daily snapshots strictly before `asOf`.
@@ -2227,11 +2241,11 @@ final class DashboardViewModel {
         liveVM: LiveViewModel,
         actionResult: DailyActionResultStore.Result?
     ) -> [ShareTemplate] {
-        let recovery = liveVM.recovery.readinessScore ?? overallScore.score
+        let recovery = liveVM.recovery.readinessScore ?? overallScore?.score
         return ShareTemplateBuilder.build(
             vitalityAge: vitalityScorer.isReady ? vitalityScorer.vitalityAge : nil,
             realAge: vitalityScorer.isReady ? vitalityScorer.chronologicalAge : nil,
-            recovery: recovery > 0 ? recovery : nil,
+            recovery: recovery.flatMap { $0 > 0 ? $0 : nil },
             masterStreak: gamificationEngine.streaks.masterStreak,
             actionResult: actionResult,
             lastNightSleepSeconds: liveVM.sleep.lastNightSleepDuration > 0
@@ -2290,7 +2304,10 @@ final class DashboardViewModel {
                 deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
                 exerciseMinutes: liveVM.activity.todayExerciseMinutes,
                 exerciseGoal: liveVM.activity.exerciseGoal,
-                latestRestingHeartRate: liveVM.recovery.latestRestingHeartRate
+                latestRestingHeartRate: liveVM.recovery.latestRestingHeartRate,
+                // Same number the recovery hero on Home renders, fallback and
+                // all, so the action cannot argue with the card above it.
+                heroRecoveryScore: liveVM.recovery.readinessScore ?? overallScore?.score
             ),
             analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
                 policyDecision: analysisEngine.mlOrchestrator.policyDecision,
@@ -2350,18 +2367,32 @@ final class DashboardViewModel {
     @MainActor
     func refreshIntelligenceBriefing() {
         guard analysisEngine.mlOrchestrator.hasRunOnce else { return }
+        let timeSeries = healthKitManager.timeSeries
+        // Same-day reading only, matching how the engine resolves every other
+        // metric. A stale value from last week is not today's autonomic state,
+        // and nil is what the card generators expect when a signal is absent.
+        func todaysValue(_ metric: HealthMetric) -> Double? {
+            timeSeries[metric]?.samples(lastDays: 1).last?.value
+        }
         intelligenceBriefing = todayIntelligenceEngine.generateBriefing(
             orchestrator: analysisEngine.mlOrchestrator,
             baselines: analysisEngine.baselines,
-            timeSeries: healthKitManager.timeSeries,
-            liveHRV: nil,
-            liveRestingHR: nil,
-            sleepHours: 0,
-            deepSleepMinutes: 0,
-            exerciseMinutes: 0,
-            exerciseGoal: 30
+            timeSeries: timeSeries,
+            liveHRV: todaysValue(.heartRateVariability),
+            liveRestingHR: todaysValue(.restingHeartRate),
+            sleepHours: todaysValue(.sleepDuration) ?? 0,
+            // The sleep series is stored in hours; this parameter is minutes.
+            deepSleepMinutes: (todaysValue(.sleepDeep) ?? 0) * 60,
+            exerciseMinutes: todaysValue(.exerciseMinutes) ?? 0,
+            exerciseGoal: Self.defaultExerciseGoalMinutes
         )
     }
+
+    /// Apple's out-of-the-box Move-ring exercise target, and the value
+    /// `LiveViewModel` starts from before HealthKit reports the wearer's own.
+    /// The briefing runs on the analysis path, which has no live activity
+    /// summary to read the personalised goal from.
+    private static let defaultExerciseGoalMinutes: Double = 30
 
     // MARK: - Widget Snapshots
 
@@ -2441,14 +2472,16 @@ final class DashboardViewModel {
     }
 
     func writeWidgetSnapshots() {
-        let grade = overallScore.grade
+        // Empty when nothing has been scored yet. The widget and the wrist both
+        // render a blank grade, which is honest; a stand-in letter is not.
+        let grade = overallScore?.grade ?? ""
 
         // Prefer today's morning Recovery lock when one exists so the widget
         // matches the Home hero card. Fall back to the overall daily health
         // score only when no morning lock has been set yet today (very early
         // first day, or no overnight wear).
         let readinessStore = ReadinessStore()
-        let widgetScore = readinessStore.loadMorningLock(for: Date()) ?? overallScore.score
+        let widgetScore = readinessStore.loadMorningLock(for: Date()) ?? overallScore?.score ?? 0
 
         let readiness = WidgetReadinessSnapshot(
             score: widgetScore,
@@ -2505,7 +2538,7 @@ final class DashboardViewModel {
         // lock. Someone who glances at their wrist and then opens the app has to see
         // the same value. `loadCachedScore` is the live score LiveViewModel mirrors
         // for exactly this cross-surface use.
-        let watchScore = readinessStore.loadCachedScore() ?? overallScore.score
+        let watchScore = readinessStore.loadCachedScore() ?? overallScore?.score ?? 0
         PhoneWatchSession.shared.push(
             readinessScore: watchScore,
             grade: grade,
@@ -2539,8 +2572,7 @@ final class DashboardViewModel {
     @MainActor
     private func pushTodayScoreLiveActivity() {
         guard !healthKitManager.timeSeries.isEmpty else { return }
-        let score = overallScore.score
-        guard score > 0 else { return }
+        guard let score = overallScore?.score, score > 0 else { return }
 
         // Weakest pillar: same source used by HomeView via cachedWeakestCategoryName
         // (HomeView.swift:160-162 → viewModel.cachedWeakestCategoryName). Fall back to
@@ -2757,7 +2789,7 @@ final class DashboardViewModel {
         }
 
         // Energy — the same score the ring shows (readiness, or daily score).
-        if let score = liveVM.recovery.readinessScore ?? (overallScore.score > 0 ? overallScore.score : nil) {
+        if let score = liveVM.recovery.readinessScore ?? overallScore.flatMap({ $0.score > 0 ? $0.score : nil }) {
             let low = score < 60
             let dev = abs(Double(score) - 70) / 70
             candidates.append((.init(kind: .energy,
@@ -3064,7 +3096,7 @@ final class DashboardViewModel {
             tomorrowRiskPrediction: orch.tomorrowRiskPrediction,
             compoundInsights: orch.compoundInsights,
             temporalSequences: orch.temporalSequences,
-            overallScore: scores.overallScore.score
+            overallScore: scores.overallScore?.score ?? 0
         )
 
         let engine: any HealthQueryEngine

@@ -17,6 +17,7 @@ struct IllnessEarlyWarning {
         let baselineValue: Double
         let deviationSigma: Double      // how many stddevs from baseline
         let direction: String           // "elevated" or "depressed"
+        let daysSignaling: Int          // days inside the streak this metric itself signaled
     }
 
     /// A body stress warning combining signals from multiple metrics
@@ -53,8 +54,13 @@ struct IllnessEarlyWarning {
         SignalConfig(metric: .respiratoryRate, unfavorableDirection: .above),
     ]
 
-    /// Minimum standard deviations from baseline to count as a signal
-    private static let signalThresholdSigma: Double = 1.0
+    /// Minimum standard deviations from baseline to count as a signal.
+    ///
+    /// A 1 sigma bar is a one-in-six day for a single metric, which across five
+    /// metrics makes a two-metric day ordinary noise rather than evidence. This
+    /// warning tells a person their body is under stress, so the bar sits at the
+    /// point where a two-metric streak is rare instead of routine.
+    private static let signalThresholdSigma: Double = 1.5
 
     /// Minimum days of historical data required to establish a reliable baseline
     private static let minimumDataDays: Int = 14
@@ -132,13 +138,13 @@ struct IllnessEarlyWarning {
         let consecutiveResult = computeConsecutiveMultiMetricDays(dailySignals: dailySignals)
 
         guard consecutiveResult.daysElevated >= minDaysElevatedForWarning,
-              consecutiveResult.signalingMetrics.count >= minSignalingMetrics else {
+              consecutiveResult.signalingDays.count >= minSignalingMetrics else {
             return []
         }
 
         // Step 3: Build MetricSignal objects for all signaling metrics
         let activeSignals = buildActiveSignals(
-            signalingMetrics: consecutiveResult.signalingMetrics,
+            signalingDays: consecutiveResult.signalingDays,
             timeSeries: timeSeries,
             calendar: calendar,
             now: now
@@ -170,7 +176,7 @@ struct IllnessEarlyWarning {
         )
 
         // Step 7: Generate narrative
-        let narrative = generateNarrative(signals: finalSignals, daysElevated: consecutiveResult.daysElevated)
+        let narrative = generateNarrative(signals: finalSignals)
 
         let warning = Warning(
             severity: severity,
@@ -226,6 +232,25 @@ struct IllnessEarlyWarning {
         }
     }
 
+    // MARK: - Baseline Window
+
+    /// The baseline span: days `baselineGapDays + 1` through
+    /// `baselineGapDays + baselineWindowDays` ago, skipping the recent window.
+    ///
+    /// Both ends snap to local midnight because the daily samples are stamped at
+    /// midnight themselves. A `now`-relative start landed just after the oldest
+    /// day's sample and left the window one short of `minimumDataDays`, so every
+    /// metric failed the baseline guard and no warning could ever be produced.
+    private static func baselineWindow(calendar: Calendar, now: Date) -> (start: Date, endExclusive: Date) {
+        let start = calendar.startOfDay(
+            for: calendar.date(byAdding: .day, value: -(baselineGapDays + baselineWindowDays), to: now) ?? now
+        )
+        let endExclusive = calendar.startOfDay(
+            for: calendar.date(byAdding: .day, value: -baselineGapDays, to: now) ?? now
+        )
+        return (start, endExclusive)
+    }
+
     // MARK: - Daily Signal Computation
 
     /// For each signal metric, compute whether it was deviating unfavorably on each
@@ -241,13 +266,8 @@ struct IllnessEarlyWarning {
         for config in signalMetrics {
             guard let series = timeSeries[config.metric] else { continue }
 
-            // Compute a personal baseline from days (baselineGapDays + 1) through
-            // (baselineGapDays + baselineWindowDays) ago, skipping the recent window
-            let baselineStart = calendar.date(byAdding: .day, value: -(baselineGapDays + baselineWindowDays), to: now) ?? now
-            let baselineEnd = calendar.date(byAdding: .day, value: -(baselineGapDays + 1), to: now) ?? now
-
-            let baselineSamples = series.samples(from: baselineStart, to: baselineEnd)
-            let baselineValues = baselineSamples.map(\.value)
+            let window = baselineWindow(calendar: calendar, now: now)
+            let baselineValues = series.samples(from: window.start, until: window.endExclusive).map(\.value)
 
             // Require enough data to form a meaningful baseline
             guard baselineValues.count >= minimumDataDays else { continue }
@@ -297,7 +317,9 @@ struct IllnessEarlyWarning {
 
     private struct ConsecutiveResult {
         let daysElevated: Int
-        let signalingMetrics: Set<HealthMetric>
+        /// Days inside the streak on which each metric itself signaled. A metric can
+        /// join on a single day, so the streak length is not its deviation length.
+        let signalingDays: [HealthMetric: Int]
     }
 
     /// Determine how many consecutive recent days had 2+ metrics signaling simultaneously.
@@ -306,7 +328,7 @@ struct IllnessEarlyWarning {
         dailySignals: [HealthMetric: [Int: Double]]
     ) -> ConsecutiveResult {
         var consecutiveDays = 0
-        var allSignalingMetrics: Set<HealthMetric> = []
+        var signalingDays: [HealthMetric: Int] = [:]
 
         // Walk backwards from today (dayOffset 0) through the recent window
         for dayOffset in 0..<recentWindowDays {
@@ -320,21 +342,23 @@ struct IllnessEarlyWarning {
 
             if metricsSignalingToday.count >= minSignalingMetrics {
                 consecutiveDays += 1
-                allSignalingMetrics.formUnion(metricsSignalingToday)
+                for metric in metricsSignalingToday {
+                    signalingDays[metric, default: 0] += 1
+                }
             } else {
                 // Streak broken
                 break
             }
         }
 
-        return ConsecutiveResult(daysElevated: consecutiveDays, signalingMetrics: allSignalingMetrics)
+        return ConsecutiveResult(daysElevated: consecutiveDays, signalingDays: signalingDays)
     }
 
     // MARK: - Active Signal Construction
 
     /// Build MetricSignal objects with current and baseline values for all signaling metrics.
     private static func buildActiveSignals(
-        signalingMetrics: Set<HealthMetric>,
+        signalingDays: [HealthMetric: Int],
         timeSeries: [HealthMetric: MetricTimeSeries],
         calendar: Calendar,
         now: Date
@@ -342,13 +366,11 @@ struct IllnessEarlyWarning {
         var signals: [MetricSignal] = []
 
         for config in signalMetrics {
-            guard signalingMetrics.contains(config.metric),
+            guard let daysSignaling = signalingDays[config.metric],
                   let series = timeSeries[config.metric] else { continue }
 
-            let baselineStart = calendar.date(byAdding: .day, value: -(baselineGapDays + baselineWindowDays), to: now) ?? now
-            let baselineEnd = calendar.date(byAdding: .day, value: -(baselineGapDays + 1), to: now) ?? now
-
-            let baselineValues = series.samples(from: baselineStart, to: baselineEnd).map(\.value)
+            let window = baselineWindow(calendar: calendar, now: now)
+            let baselineValues = series.samples(from: window.start, until: window.endExclusive).map(\.value)
             guard !baselineValues.isEmpty else { continue }
 
             let baselineMean = baselineValues.mean
@@ -373,7 +395,8 @@ struct IllnessEarlyWarning {
                 currentValue: currentValue,
                 baselineValue: baselineMean,
                 deviationSigma: abs(deviation),
-                direction: direction
+                direction: direction,
+                daysSignaling: daysSignaling
             ))
         }
 
@@ -469,11 +492,14 @@ struct IllnessEarlyWarning {
 
     /// Build a human-readable narrative describing the multi-metric pattern.
     /// Uses non-diagnostic language. describes physiological strain, not specific conditions.
-    private static func generateNarrative(signals: [MetricSignal], daysElevated: Int) -> String {
-        let daysLabel = daysElevated == 1 ? "day" : "days"
+    private static func generateNarrative(signals: [MetricSignal]) -> String {
         var parts: [String] = []
 
         for signal in signals {
+            // Each metric gets its own day count. The streak is a union across days,
+            // so a metric can be in it on the strength of a single day.
+            let days = signal.daysSignaling
+            let daysLabel = days == 1 ? "day" : "days"
             let metricName = signal.metric.displayName.lowercased()
             let formatted = signal.metric.formatValue(signal.currentValue)
             let baselineFormatted = signal.metric.formatValue(signal.baselineValue)
@@ -489,9 +515,9 @@ struct IllnessEarlyWarning {
 
             switch signal.direction {
             case "elevated":
-                parts.append("\(metricName) has trended \(deviationDescription) above baseline for \(daysElevated) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
+                parts.append("\(metricName) has trended \(deviationDescription) above baseline for \(days) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
             case "depressed":
-                parts.append("\(metricName) dropped \(deviationDescription) below baseline over \(daysElevated) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
+                parts.append("\(metricName) dropped \(deviationDescription) below baseline over \(days) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
             default:
                 parts.append("\(metricName) deviated \(deviationDescription) from baseline")
             }

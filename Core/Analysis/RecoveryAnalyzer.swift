@@ -61,9 +61,11 @@ struct RecoveryAnalyzer {
         let restDays28 = 28 - workoutCount28
         let highIntensityCount = intensities.filter { $0.value == .high }
             .filter { $0.key.timeIntervalSinceNow > -28 * 86400 }.count
-        let recommendedRest = max(2, highIntensityCount)
+        // highIntensityCount is a 28-day total, so it has to be brought down to a
+        // weekly rate before it can stand in for a per-week rest requirement.
+        let recommendedRestPerWeek = max(2, Int((Double(highIntensityCount) / 4.0).rounded(.up)))
 
-        if restDays28 < recommendedRest * 4 {  // recommended per week * 4 weeks
+        if restDays28 < recommendedRestPerWeek * 4 {
             let weeklyRest = Double(restDays28) / 4.0
             insights.append(Insight(
                 metric: .workoutDuration,
@@ -72,8 +74,8 @@ struct RecoveryAnalyzer {
                 recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(highIntensityCount) high-intensity sessions in the last 28 days. That's \(workoutCount28) workout days to \(restDays28) rest days.",
                 severity: .warning,
                 trend: .declining,
-                baselineValue: Double(recommendedRest),
-                deviationPercent: ((weeklyRest - Double(recommendedRest)) / Double(recommendedRest)) * 100,
+                baselineValue: Double(recommendedRestPerWeek),
+                deviationPercent: ((weeklyRest - Double(recommendedRestPerWeek)) / Double(recommendedRestPerWeek)) * 100,
                 category: .recovery,
             ))
         }

@@ -6,8 +6,8 @@ import Foundation
 ///
 /// The engine generates intervention candidates from multiple ML sources, scores them using
 /// expected utility (predicted uplift x confidence x adherence x novelty x effort),
-/// applies fatigue/diversity controls, runs counterfactual sensitivity analysis via
-/// PredictiveScorer, and produces ranked PolicyDecisions with natural language output.
+/// applies fatigue/diversity controls, and produces ranked PolicyDecisions with
+/// natural language output.
 ///
 /// Feedback integration closes the loop: per-actionType effectiveness is tracked via
 /// exponential moving average and feeds back into future scoring.
@@ -29,6 +29,15 @@ final class DecisionPolicyEngine {
 
     /// Maximum recent decisions retained for exposure tracking
     private static let maxRecentDecisions = 50
+
+    /// Paired observations at which a causal candidate's evidence stops being
+    /// discounted for series length. Below this the confidence is scaled down.
+    private static let causalConfidenceFullSampleCount: Double = 60
+
+    /// Ceiling on causal-candidate confidence. Observational discovery on a
+    /// single person's history cannot establish a causal link outright, so this
+    /// never reaches 1.0 no matter how stable the association looks.
+    private static let causalConfidenceCeiling: Double = 0.7
 
 
     /// Cached decimal NumberFormatter — `formatted(_:)` is called
@@ -95,55 +104,6 @@ final class DecisionPolicyEngine {
         }
 
         return max(0, utility)
-    }
-
-    // MARK: - Counterfactual Sensitivity
-
-    /// Estimate what happens if the user follows this intervention.
-    ///
-    /// Modifies the target metric's raw feature by the predicted uplift,
-    /// re-runs PredictiveScorer on the modified vector, and returns the
-    /// delta in probability: P(bad_day | modified) - P(bad_day | current).
-    ///
-    /// A negative return means the intervention reduces bad-day probability (good).
-    func estimateCounterfactual(
-        action: InterventionCandidate,
-        currentVector: DailyFeatureVector,
-        scorer: PredictiveScorer
-    ) -> Double? {
-        // Get baseline prediction
-        guard let basePrediction = scorer.predict(todayVector: currentVector) else {
-            return nil
-        }
-        let baseProb = basePrediction.probability
-
-        // Build modified vector: shift target metric's raw feature by predicted uplift
-        var modifiedFeatures = currentVector.features
-        let targetKey = FeatureKey(metric: action.targetMetric, type: .raw)
-
-        guard let currentRaw = modifiedFeatures[targetKey],
-              currentRaw != FeatureKey.missingSentinel else {
-            return nil
-        }
-
-        // For higherIsBetter metrics, uplift means increasing the raw z-score.
-        // For lowerIsBetter metrics, uplift means decreasing it.
-        let upliftDirection: Double = action.targetMetric.higherIsBetter ? 1.0 : -1.0
-        modifiedFeatures[targetKey] = currentRaw + (action.predictedUplift * upliftDirection)
-
-        let modifiedVector = DailyFeatureVector(
-            date: currentVector.date,
-            features: modifiedFeatures,
-            context: currentVector.context
-        )
-
-        // Get counterfactual prediction
-        guard let modifiedPrediction = scorer.predict(todayVector: modifiedVector) else {
-            return nil
-        }
-
-        // Delta: negative means reduced risk (intervention helps)
-        return modifiedPrediction.probability - baseProb
     }
 
     // MARK: - Novelty and Fatigue Controls
@@ -596,16 +556,12 @@ final class DecisionPolicyEngine {
             return Copy.Policy.predictiveDefault(prob: prob)
 
         case .causalDiscovery:
-            let lag = candidate.evidence.grangerOptimalLag
             let effectSize = candidate.evidence.grangerEffectSize ?? 0
             let effectLabel = effectSize > 0.35 ? Copy.Policy.effectStrong : effectSize > 0.15 ? Copy.Policy.effectNotable : Copy.Policy.effectMeasurable
-            if let lag, lag > 0 {
-                return Copy.Policy.causalWithLag(effectLabel: effectLabel, metric: metric.displayName.lowercased(), lag: lag)
-            }
             return Copy.Policy.causalDefault(metric: metric.displayName.lowercased(), effectLabel: effectLabel)
 
         case .stateTransition:
-            return Copy.Policy.stateTransition(days: max(1, Int(candidate.upliftConfidence / 0.03)), metricName: metric.displayName)
+            return Copy.Policy.stateTransition(metricName: metric.displayName)
 
         case .anomalyResponse:
             if let current = currentValue, let bl = baseline {
@@ -810,9 +766,17 @@ final class DecisionPolicyEngine {
             let downstreamTrend = trends[corr.metricB]
             guard downstreamTrend?.direction == .declining else { return nil }
 
+            // A Granger p-value is P(data | no causal link), so (1 - p) is not the
+            // probability the link is real and must never be shown as confidence.
+            // The p-value is used only as an entry gate, via the FDR flag the
+            // correlation already carries, and confidence comes from how much
+            // evidence there is: stability across windows, damped on short series.
+            guard corr.survivedFDR else { return nil }
+
             let effectSize = corr.overallStrength
             let uplift = min(1.0, effectSize * 0.8)
-            let confidence = min(1.0, (1.0 - corr.grangerPValue) * corr.stability)
+            let sampleWeight = min(1.0, Double(corr.sampleCount) / Self.causalConfidenceFullSampleCount)
+            let confidence = min(Self.causalConfidenceCeiling, corr.stability * sampleWeight)
 
             let actionType = bestActionType(for: upstream, trend: trends[upstream], source: .causalDiscovery)
             let effectiveness = categoryEffectiveness[actionType.rawValue]

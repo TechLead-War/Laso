@@ -179,10 +179,7 @@ Consumer: `Core/Analysis/Config/ReadinessScorerConfig.swift` → `Core/Analysis/
 ### Stress sub-score
 | Key | Default |
 |---|---|
-| `scoring_readiness_stress_hrv_anchor` | 60.0 |
-| `scoring_readiness_stress_hrv_range` | 40.0 |
-| `scoring_readiness_stress_rhr_anchor` | 50.0 |
-| `scoring_readiness_stress_rhr_range` | 30.0 |
+| `scoring_readiness_stress_deviation_at_cap` | 0.5 |
 | `scoring_readiness_stress_channel_cap` | 50.0 |
 
 ---

@@ -111,20 +111,22 @@ struct HealthScorer {
     static func scoreCategory(
         category: HealthCategory,
         metricScores: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]
-    ) -> HealthScore {
+    ) -> HealthScore? {
         return scoreCategory(category: category, metricScores: metricScores, metricWeights: nil)
     }
 
     /// Compute category score from metric scores with optional per-metric weights.
     /// When metricWeights is nil, falls back to equal weighting.
+    ///
+    /// Returns nil when nothing was measured. A category with no scored metric
+    /// has no score — scoring it as perfect would tell a user with no data that
+    /// they are in perfect health.
     static func scoreCategory(
         category: HealthCategory,
         metricScores: [(metric: HealthMetric, score: Int, components: [ScoreComponent])],
         metricWeights: [HealthMetric: Double]?
-    ) -> HealthScore {
-        guard !metricScores.isEmpty else {
-            return HealthScore(category: category, score: Cfg.perfectScore)
-        }
+    ) -> HealthScore? {
+        guard !metricScores.isEmpty else { return nil }
 
         let avgScore: Int
         if let weights = metricWeights {
@@ -153,13 +155,13 @@ struct HealthScorer {
 
     /// Compute overall score from category scores with optional adaptive weights.
     /// When weights is nil, falls back to equal weighting (backward compatible).
+    ///
+    /// Returns nil when no category scored. Absence of data is not a score.
     static func overallScore(
         categoryScores: [HealthScore],
         weights: [HealthCategory: Double]?
-    ) -> HealthScore {
-        guard !categoryScores.isEmpty else {
-            return HealthScore(score: Cfg.perfectScore)
-        }
+    ) -> HealthScore? {
+        guard !categoryScores.isEmpty else { return nil }
 
         let avgScore: Int
         if let weights {
@@ -349,7 +351,8 @@ struct HealthScorer {
     /// Apply coverage-based shrinkage to prevent sparse data from producing
     /// misleadingly confident scores. With few data sources, the score is
     /// pulled toward a neutral midpoint (75). As coverage grows, the raw
-    /// score is trusted more.
+    /// score is trusted more. Empty baselines are the sparsest input there is,
+    /// so they get the full pull to neutral rather than an exemption.
     ///
     /// Coverage formula:
     ///   For each category with data, weight = min(metricsInCategory / 2, 1)
@@ -361,7 +364,7 @@ struct HealthScorer {
         baselines: [HealthMetric: UserBaseline]
     ) -> Int {
         let totalCategories = HealthCategory.allCases.count
-        guard totalCategories > 0, !baselines.isEmpty else { return rawScore }
+        guard totalCategories > 0 else { return rawScore }
 
         // Count metrics per category from baselines (metrics with actual data)
         var metricsPerCategory: [HealthCategory: Int] = [:]

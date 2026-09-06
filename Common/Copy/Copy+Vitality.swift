@@ -76,6 +76,15 @@ extension Copy {
         static var methodology: String { RemoteConfigManager.shared.copyString("copy_vitality_methodology", default: "Vitality Age compares your health numbers to what is typical for your age and turns that into one number. This is for wellness and information only.") }
         static func ageLabel(_ age: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_age_label", default: "Age %d"), age) }
         static func metricSubtitle(current: String, expected: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_metric_subtitle", default: "%@ now, typical %@"), current, expected) }
+        /// Steps and exercise minutes are compared against activity targets, not
+        /// against measured medians, so they must never read as "typical".
+        static func metricTargetSubtitle(current: String, expected: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_vitality_metric_target_subtitle", default: "%@ now, target %@"), current, expected) }
+
+        // MARK: - Onboarding Reveal
+
+        /// Shown under the reveal when too few real metrics are behind the
+        /// number to claim a year gap.
+        static var onboardingProvisionalCaption: String { RemoteConfigManager.shared.copyString("copy_vitality_onboarding_provisional_caption", default: "We will sharpen this as your data comes in.") }
 
         // MARK: - Data Maturity
 

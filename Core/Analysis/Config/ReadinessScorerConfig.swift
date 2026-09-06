@@ -105,10 +105,12 @@ enum ReadinessScorerConfig {
 
     // MARK: - Stress Sub-Score
 
-    static var stressHRVAnchor: Double            { rc.readinessStressHrvAnchor }
-    static var stressHRVRange: Double             { rc.readinessStressHrvRange }
-    static var stressRHRAnchor: Double            { rc.readinessStressRhrAnchor }
-    static var stressRHRRange: Double             { rc.readinessStressRhrRange }
+    /// How far from the person's own baseline fills one stress channel, as a
+    /// fraction of that baseline. Matches `StressScorer.deviationAtMaxScore`
+    /// so the two stress readouts in the app cannot disagree about what a
+    /// stressed day is. Fixed population anchors used to sit here and labelled
+    /// every healthy older adult "High" forever.
+    static var stressDeviationAtCap: Double       { rc.readinessStressDeviationAtCap }
     static var stressChannelCap: Double           { rc.readinessStressChannelCap }
 
     // MARK: - Live Energy

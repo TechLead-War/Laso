@@ -128,10 +128,7 @@ enum RC {
     static let readinessWorkoutConfFloor         = "scoring_readiness_workout_conf_floor"
     static let readinessWorkoutConfOnsetHours    = "scoring_readiness_workout_conf_onset_hours"
     static let readinessWorkoutConfDecayHours    = "scoring_readiness_workout_conf_decay_hours"
-    static let readinessStressHrvAnchor          = "scoring_readiness_stress_hrv_anchor"
-    static let readinessStressHrvRange           = "scoring_readiness_stress_hrv_range"
-    static let readinessStressRhrAnchor          = "scoring_readiness_stress_rhr_anchor"
-    static let readinessStressRhrRange           = "scoring_readiness_stress_rhr_range"
+    static let readinessStressDeviationAtCap     = "scoring_readiness_stress_deviation_at_cap"
     static let readinessStressChannelCap         = "scoring_readiness_stress_channel_cap"
 
     // MARK: Scoring — StrainScorer

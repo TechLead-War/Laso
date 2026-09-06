@@ -18,10 +18,16 @@ struct BaselineCalculator {
         // Step 2: Apply exponential smoothing (alpha = 0.3)
         let smoothed = filtered.exponentialSmoothing(alpha: 0.3)
 
-        // Step 3: Compute statistics from smoothed data
+        // Step 3: Compute statistics
         let mean = smoothed.mean
-        let stdDev = smoothed.standardDeviation
         let median = smoothed.median
+        // Spread comes from the unsmoothed days on purpose. Every consumer of this
+        // baseline divides a raw-scale quantity by it (mean +/- SD bands, single-day
+        // and 3-day-mean z-scores), and the EWMA is a low-pass filter that strips
+        // 30-40% of a real metric's day-to-day variance. Taking SD from the smoothed
+        // series put numerator and denominator on different scales and inflated every
+        // z-score by roughly 1.4-1.7x, which fired warning anomalies on ordinary days.
+        let stdDev = filtered.standardDeviation
 
         return UserBaseline(
             metric: series.metric,

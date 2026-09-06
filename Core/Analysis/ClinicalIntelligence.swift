@@ -1,50 +1,10 @@
 import Foundation
 
 /// Tracks key health metrics over time and highlights meaningful changes.
-/// References AHA/ACC (blood pressure), ADA (glucose), and standard ranges (respiratory rate).
+/// Blood pressure and glucose are reported as a trend against the user's own baseline, not a clinical stage.
 struct ClinicalIntelligence {
 
     // MARK: - Clinical Stages
-
-    enum BPStage: String, Comparable {
-        case normal = "Normal"
-        case elevated = "Elevated"
-        case hypertensionS1 = "Above Range"
-        case hypertensionS2 = "High"
-        case crisis = "Very High"
-
-        static func < (lhs: BPStage, rhs: BPStage) -> Bool {
-            lhs.order < rhs.order
-        }
-
-        var order: Int {
-            switch self {
-            case .normal: return 0
-            case .elevated: return 1
-            case .hypertensionS1: return 2
-            case .hypertensionS2: return 3
-            case .crisis: return 4
-            }
-        }
-    }
-
-    enum GlucoseStage: String, Comparable {
-        case normal = "Normal"
-        case prediabetic = "Above Range"
-        case diabetic = "High"
-
-        static func < (lhs: GlucoseStage, rhs: GlucoseStage) -> Bool {
-            lhs.order < rhs.order
-        }
-
-        var order: Int {
-            switch self {
-            case .normal: return 0
-            case .prediabetic: return 1
-            case .diabetic: return 2
-            }
-        }
-    }
 
     enum RespiratoryStage: String {
         case bradypnea = "Below Range"
@@ -53,27 +13,7 @@ struct ClinicalIntelligence {
         case severe = "Well Above Range"
     }
 
-    // MARK: - Classification thresholds (AHA/ACC 2017, ADA, standard ranges)
-
-    /// Systolic mmHg above which BP is classified as hypertensive crisis.
-    private static let bpCrisisSystolic: Double = 180
-    /// Diastolic mmHg above which BP is classified as hypertensive crisis.
-    private static let bpCrisisDiastolic: Double = 120
-    /// Systolic mmHg at/above which BP enters Stage 2 hypertension.
-    private static let bpStage2Systolic: Double = 140
-    /// Diastolic mmHg at/above which BP enters Stage 2 hypertension.
-    private static let bpStage2Diastolic: Double = 90
-    /// Systolic mmHg at/above which BP enters Stage 1 hypertension.
-    private static let bpStage1Systolic: Double = 130
-    /// Diastolic mmHg at/above which BP enters Stage 1 hypertension.
-    private static let bpStage1Diastolic: Double = 80
-    /// Systolic mmHg at/above which BP is "elevated" (when diastolic is still normal).
-    private static let bpElevatedSystolic: Double = 120
-
-    /// Fasting glucose mg/dL at/above which the value is in the diabetic range (ADA).
-    private static let glucoseDiabetic: Double = 126
-    /// Fasting glucose mg/dL at/above which the value is in the prediabetic range (ADA).
-    private static let glucosePrediabetic: Double = 100
+    // MARK: - Classification thresholds (standard ranges)
 
     /// Respiratory rate (breaths/min) above which is severe tachypnea.
     private static let respiratoryRateSevere: Double = 25
@@ -82,23 +22,7 @@ struct ClinicalIntelligence {
     /// Respiratory rate (breaths/min) below which is bradypnea.
     private static let respiratoryRateBradypnea: Double = 12
 
-    // MARK: - Classification (AHA/ACC 2017)
-
-    /// Classify blood pressure stage from systolic and diastolic readings
-    static func classifyBP(systolic: Double, diastolic: Double) -> BPStage {
-        if systolic > bpCrisisSystolic || diastolic > bpCrisisDiastolic { return .crisis }
-        if systolic >= bpStage2Systolic || diastolic >= bpStage2Diastolic { return .hypertensionS2 }
-        if systolic >= bpStage1Systolic || diastolic >= bpStage1Diastolic { return .hypertensionS1 }
-        if systolic >= bpElevatedSystolic && diastolic < bpStage1Diastolic { return .elevated }
-        return .normal
-    }
-
-    /// Classify fasting glucose stage (ADA)
-    static func classifyGlucose(_ value: Double) -> GlucoseStage {
-        if value >= glucoseDiabetic { return .diabetic }
-        if value >= glucosePrediabetic { return .prediabetic }
-        return .normal
-    }
+    // MARK: - Classification
 
     /// Classify respiratory rate
     static func classifyRespiratoryRate(_ value: Double) -> RespiratoryStage {
@@ -107,17 +31,6 @@ struct ClinicalIntelligence {
         if value < respiratoryRateBradypnea { return .bradypnea }
         return .normal
     }
-
-    // MARK: - Clinical Thresholds
-
-    /// Next threshold values for trajectory projection
-    private static let systolicThresholds: [(threshold: Double, label: String)] = [
-        (120, "Elevated"), (130, "Above Range"), (140, "High"), (180, "Very High")
-    ]
-
-    private static let glucoseThresholds: [(threshold: Double, label: String)] = [
-        (100, "Above Range"), (126, "High")
-    ]
 
     // MARK: - Analysis thresholds
 
@@ -145,8 +58,6 @@ struct ClinicalIntelligence {
     private static let respiratoryRateBaseline: Double = 16
     /// Days per month used to convert per-day slopes to per-month slopes.
     private static let daysPerMonth: Double = 30
-    /// Maximum forward projection in days when estimating time-to-threshold.
-    private static let maxProjectionDays: Int = 365
     /// Seconds in one day used to convert TimeInterval into day-based regression x-values.
     private static let secondsPerDay: Double = 86_400
 
@@ -187,13 +98,9 @@ struct ClinicalIntelligence {
               sysSeries.samples.count >= minSamplesForInsight else { return [] }
 
         let sysValues = sysSeries.sortedSamples
-        let diaSeries = timeSeries[.bloodPressureDiastolic]
-        let diaValues = diaSeries?.sortedSamples ?? []
+        let diaValues = timeSeries[.bloodPressureDiastolic]?.sortedSamples ?? []
 
-        // Current stage
         guard let latestSys = sysValues.last?.value else { return [] }
-        let latestDia = diaValues.last?.value ?? bpStage1Diastolic
-        let currentStage = classifyBP(systolic: latestSys, diastolic: latestDia)
 
         // 90-day linear regression for systolic
         let recent90 = Array(sysValues.suffix(regressionWindowDays))
@@ -202,17 +109,13 @@ struct ClinicalIntelligence {
         let sysSlope = linearRegressionSlope(samples: recent90)
         let slopePerMonth = sysSlope * daysPerMonth
 
-        // Project days to next stage
-        let daysToNextStage = projectDaysToNextThreshold(
-            currentValue: latestSys,
-            slopePerDay: sysSlope,
-            thresholds: systolicThresholds
-        )
-
         // Generate insight if trending upward significantly
         if slopePerMonth > bpUpwardSlopeThreshold {
             let severity: Severity = slopePerMonth > bpWarningSlopeThreshold ? .warning : .info
-            let nextStageInfo = daysToNextStage.map { Copy.Analysis.Clinical.projectedToReach(label: $0.label, days: $0.days) } ?? ""
+            let baselineMean = baselines[.bloodPressureSystolic]?.mean
+            let baselineComparison = baselineMean.map {
+                Copy.Analysis.Clinical.systolicVsBaseline(baseline: String(format: "%.0f", $0))
+            } ?? ""
 
             insights.append(Insight(
                 metric: .bloodPressureSystolic,
@@ -220,24 +123,25 @@ struct ClinicalIntelligence {
                 summary: Copy.Analysis.ClinicalSentences.systolicTrendSummary(
                     slopePerMonth: String(format: "%.1f", slopePerMonth),
                     recentDays: recent90.count,
-                    currentStage: currentStage.rawValue,
-                    nextStageInfo: nextStageInfo),
+                    latest: String(format: "%.0f", latestSys),
+                    baselineComparison: baselineComparison),
                 recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,
-                baselineValue: baselines[.bloodPressureSystolic]?.mean ?? latestSys,
+                baselineValue: baselineMean ?? latestSys,
                 deviationPercent: slopePerMonth,
                 category: .clinicalTrajectory,
                 context: InsightContext(
                     slope: slopePerMonth,
-                    projectedDaysToThreshold: daysToNextStage?.days,
                     confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
                 )
             ))
         }
 
         // Pulse pressure trend (systolic - diastolic)
-        if sysValues.count >= minSamplesForPulsePressure && diaValues.count >= minSamplesForPulsePressure {
+        if sysValues.count >= minSamplesForPulsePressure,
+           diaValues.count >= minSamplesForPulsePressure,
+           let latestDia = diaValues.last?.value {
             let pulsePressure = latestSys - latestDia
             if pulsePressure > elevatedPulsePressureThreshold {
                 insights.append(Insight(
@@ -269,7 +173,6 @@ struct ClinicalIntelligence {
         let samples = glucoseSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }
 
-        let currentStage = classifyGlucose(latest)
         let recent90 = Array(samples.suffix(regressionWindowDays))
         guard recent90.count >= minSamplesForInsight else { return nil }
 
@@ -278,14 +181,11 @@ struct ClinicalIntelligence {
 
         guard slopePerMonth > glucoseUpwardSlopeThreshold else { return nil }
 
-        let daysToNext = projectDaysToNextThreshold(
-            currentValue: latest,
-            slopePerDay: slope,
-            thresholds: glucoseThresholds
-        )
-
-        let severity: Severity = currentStage >= .prediabetic || slopePerMonth > glucoseWarningSlopeThreshold ? .warning : .info
-        let nextInfo = daysToNext.map { Copy.Analysis.Clinical.projectedToReachRange(label: $0.label, days: $0.days) } ?? ""
+        let severity: Severity = slopePerMonth > glucoseWarningSlopeThreshold ? .warning : .info
+        let baselineMean = baselines[.bloodGlucose]?.mean
+        let baselineComparison = baselineMean.map {
+            Copy.Analysis.Clinical.glucoseVsBaseline(baseline: String(format: "%.0f", $0))
+        } ?? ""
 
         return Insight(
             metric: .bloodGlucose,
@@ -293,17 +193,15 @@ struct ClinicalIntelligence {
             summary: Copy.Analysis.ClinicalSentences.glucoseTrendSummary(
                 slopePerMonth: String(format: "%.1f", slopePerMonth),
                 latest: String(format: "%.0f", latest),
-                currentStage: currentStage.rawValue,
-                nextInfo: nextInfo),
+                baselineComparison: baselineComparison),
             recommendation: "\(Copy.Analysis.Clinical.glucoseRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: severity,
             trend: .declining,
-            baselineValue: baselines[.bloodGlucose]?.mean ?? latest,
+            baselineValue: baselineMean ?? latest,
             deviationPercent: slopePerMonth,
             category: .clinicalTrajectory,
             context: InsightContext(
                 slope: slopePerMonth,
-                projectedDaysToThreshold: daysToNext?.days,
                 confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
             )
         )
@@ -356,25 +254,6 @@ struct ClinicalIntelligence {
         let xs = samples.map { $0.date.timeIntervalSince(firstDate) / secondsPerDay }
         let ys = samples.map(\.value)
         return Array<Double>.linearRegression(x: xs, y: ys).slope
-    }
-
-    /// Project how many days until the next clinical threshold is reached
-    private static func projectDaysToNextThreshold(
-        currentValue: Double,
-        slopePerDay: Double,
-        thresholds: [(threshold: Double, label: String)]
-    ) -> (days: Int, label: String)? {
-        guard slopePerDay > 0 else { return nil }
-
-        for threshold in thresholds {
-            if currentValue < threshold.threshold {
-                let daysToThreshold = Int((threshold.threshold - currentValue) / slopePerDay)
-                if daysToThreshold > 0 && daysToThreshold < maxProjectionDays {
-                    return (days: daysToThreshold, label: threshold.label)
-                }
-            }
-        }
-        return nil
     }
 
 }

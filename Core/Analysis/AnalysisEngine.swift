@@ -38,7 +38,9 @@ final class AnalysisEngine {
 
     @Observable
     final class ScoreState {
-        var overallScore: HealthScore = HealthScore(score: 100)
+        /// Nil until an analysis has actually scored something. A fresh install,
+        /// or a user who denied HealthKit, has no score — not a perfect one.
+        var overallScore: HealthScore?
         var categoryScores: [HealthScore] = []
         var scoreExplanation: HealthScorer.ScoreExplanation?
     }
@@ -79,7 +81,7 @@ final class AnalysisEngine {
         get { anomalyState.crossMetricAnomalies }
         set { anomalyState.crossMetricAnomalies = newValue }
     }
-    var overallScore: HealthScore {
+    var overallScore: HealthScore? {
         get { scoreState.overallScore }
         set { scoreState.overallScore = newValue }
     }
@@ -232,8 +234,8 @@ final class AnalysisEngine {
         var newCategoryScores: [HealthScore] = []
         for category in HealthCategory.allCases {
             let metricScores = metricScoresByCategory[category] ?? []
-            guard !metricScores.isEmpty else { continue }
-            newCategoryScores.append(HealthScorer.scoreCategory(category: category, metricScores: metricScores))
+            guard let categoryScore = HealthScorer.scoreCategory(category: category, metricScores: metricScores) else { continue }
+            newCategoryScores.append(categoryScore)
         }
 
         let adaptiveWeights = HealthScorer.adaptiveCategoryWeights(
@@ -242,12 +244,14 @@ final class AnalysisEngine {
             baselines: newBaselines,
             focusCategories: focusCategories
         )
-        let rawOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
-        let newOverallScore = HealthScore(
-            score: HealthScorer.applyCoverageAdjustment(rawScore: rawOverallScore.score, baselines: newBaselines),
-            breakdown: rawOverallScore.breakdown,
-            generatedAt: rawOverallScore.generatedAt
-        )
+        let newOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
+            .map { raw in
+                HealthScore(
+                    score: HealthScorer.applyCoverageAdjustment(rawScore: raw.score, baselines: newBaselines),
+                    breakdown: raw.breakdown,
+                    generatedAt: raw.generatedAt
+                )
+            }
         let newScoreExplanation = HealthScorer.explainOverallScore(
             categoryScores: newCategoryScores,
             weights: adaptiveWeights,
@@ -371,11 +375,15 @@ final class AnalysisEngine {
         insights.append(contentsOf: mlOrchestrator.generateInsights())
         insights = InsightCoordinator.coordinate(insights)
 
-        mlOrchestrator.trainIncremental(
-            timeSeries: timeSeries,
-            todayScore: overallScore.score,
-            todayAnomalyCount: anomalies.count
-        )
+        // Training on a stand-in score would teach the model a number the user
+        // never had, so a day with no score contributes no training sample.
+        if let overallScore {
+            mlOrchestrator.trainIncremental(
+                timeSeries: timeSeries,
+                todayScore: overallScore.score,
+                todayAnomalyCount: anomalies.count
+            )
+        }
 
         // Persist the fitted models (including today's incremental update) so the
         // next launch restores them and skips the grid search.
@@ -461,11 +469,9 @@ final class AnalysisEngine {
         var newCategoryScores: [HealthScore] = []
         for category in HealthCategory.allCases {
             let metricScores = metricScoresByCategory[category] ?? []
-            guard !metricScores.isEmpty else { continue }
-            newCategoryScores.append(HealthScorer.scoreCategory(category: category, metricScores: metricScores))
+            guard let categoryScore = HealthScorer.scoreCategory(category: category, metricScores: metricScores) else { continue }
+            newCategoryScores.append(categoryScore)
         }
-
-        guard !newCategoryScores.isEmpty else { return nil }
 
         let adaptiveWeights = HealthScorer.adaptiveCategoryWeights(
             categoryScores: newCategoryScores,
@@ -473,7 +479,7 @@ final class AnalysisEngine {
             baselines: newBaselines,
             focusCategories: []
         )
-        let rawOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
+        guard let rawOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights) else { return nil }
         let adjusted = HealthScorer.applyCoverageAdjustment(rawScore: rawOverall.score, baselines: newBaselines)
 
         return (overallScore: adjusted, categoryScores: newCategoryScores, baselines: newBaselines)

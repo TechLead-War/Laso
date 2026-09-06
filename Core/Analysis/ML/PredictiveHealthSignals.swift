@@ -1120,7 +1120,7 @@ struct PredictiveHealthSignals {
         let confidence = clamp01(Double(availableSignals) / 5.0 * 0.6 +
                                  Double(Swift.min(awakeValues.count + sleepValues.count, 28)) / 28.0 * 0.4)
 
-        let explanation = buildInsomniaExplanation(score: rawScore, factors: factors)
+        let explanation = buildInsomniaExplanation(riskLevel: riskLevel, factors: factors)
         let recommendation = buildInsomniaRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return InsomniaSignal(
@@ -1133,10 +1133,21 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The score is a hand-weighted blend of sleep markers, never fitted against how
+    /// often a night actually went badly, so it is banded here instead of shown as a percent.
     private static func buildInsomniaExplanation(
-        score: Double, factors: [ContributingFactor]
+        riskLevel: RiskLevel, factors: [ContributingFactor]
     ) -> String {
-        var parts: [String] = ["Probability of poor sleep tonight: \(String(format: "%.0f", score * 100))%."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Several markers that often come before a rough night are elevated."
+        case .moderate:
+            lead = "A few markers that often come before a rough night are elevated."
+        case .low:
+            lead = "Your sleep markers are close to your usual."
+        }
+        var parts: [String] = [lead]
         for factor in factors.prefix(3) {
             parts.append(factor.description + ".")
         }
@@ -1364,7 +1375,7 @@ struct PredictiveHealthSignals {
                                  (maxConsecutive >= 2 ? 0.3 : 0.1))
 
         let explanation = buildImmuneExplanation(
-            score: rawScore, factors: factors, consecutiveDays: maxConsecutive
+            riskLevel: riskLevel, factors: factors, consecutiveDays: maxConsecutive
         )
         let recommendation = buildImmuneRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
@@ -1378,12 +1389,24 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The daily logistic scores use hand-set weights and then gain a flat consecutive-day
+    /// boost, so the result is a banded reading of the observed deviations, never a
+    /// probability of falling ill.
     private static func buildImmuneExplanation(
-        score: Double, factors: [ContributingFactor], consecutiveDays: Int
+        riskLevel: RiskLevel, factors: [ContributingFactor], consecutiveDays: Int
     ) -> String {
-        var parts: [String] = ["Immune compromise risk: \(String(format: "%.0f", score * 100))%."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Several of your recovery numbers are outside your usual range at the same time."
+        case .moderate:
+            lead = "A few of your recovery numbers are drifting outside your usual range."
+        case .low:
+            lead = "Your recovery numbers are close to your usual range."
+        }
+        var parts: [String] = [lead]
         if consecutiveDays >= 2 {
-            parts.append("This multi-metric pattern has persisted for \(consecutiveDays) consecutive days, which in research literature precedes illness onset by 1-3 days.")
+            parts.append("This pattern has shown up \(consecutiveDays) days in a row.")
         }
         for factor in factors.prefix(3) {
             parts.append(factor.description + ".")
@@ -1400,28 +1423,30 @@ struct PredictiveHealthSignals {
 
         switch riskLevel {
         case .critical:
-            parts.append("Your body is showing strong signs of immune compromise.")
+            parts.append("Several of your recovery numbers are well outside your usual range together.")
             for factor in factors.prefix(2) {
                 if let baseline = baselines[factor.metric] {
                     parts.append("\(factor.metric.displayName) needs to recover to \(formatted(baseline.mean, metric: factor.metric)).")
                 }
             }
-            parts.append("Cancel intense workouts for the next 2-3 days. Prioritize sleep (9+ hours), hydrate aggressively (3+ liters), and increase vitamin C and zinc intake.")
+            parts.append("Easing off hard workouts for a few days, giving sleep extra room, and keeping fluids up may help.")
         case .high:
-            parts.append("Multiple markers suggest your immune system is under strain.")
+            parts.append("Several of your recovery numbers are outside your usual range at the same time.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
-                parts.append("Your \(topFactor.metric.displayName) is at concerning levels. target: \(formatted(baseline.mean, metric: topFactor.metric)).")
+                parts.append("Your \(topFactor.metric.displayName) is the furthest off. target: \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
-            parts.append("Reduce exercise to light walking only for the next 48 hours. Focus on sleep quality, hydration, and nutrition.")
+            parts.append("Keeping activity light for a day or two and focusing on sleep may help.")
         case .moderate:
-            parts.append("Some early immune compromise indicators are present.")
+            parts.append("A few of your recovery numbers are drifting outside your usual range.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
                 parts.append("Watch your \(topFactor.metric.displayName). aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
-            parts.append("Be extra diligent about sleep (8+ hours), stay well-hydrated, and consider reducing training intensity by 30%.")
+            parts.append("Giving sleep extra room and easing off training intensity may help.")
         case .low:
-            parts.append("No significant immune compromise indicators. Continue your normal routine with good sleep and nutrition habits.")
+            parts.append("Your recovery numbers are close to your usual range. Continue your normal routine with good sleep and nutrition habits.")
         }
+
+        parts.append(Copy.Analysis.Clinical.medicalDisclaimer)
 
         return parts.joined(separator: " ")
     }

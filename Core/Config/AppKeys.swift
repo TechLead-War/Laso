@@ -162,6 +162,11 @@ enum AppKeys {
         static let morningLockScorePrefix      = "laso.readiness.morning_lock_score."
         static let morningLockDatePrefix       = "laso.readiness.morning_lock_date."
         static let morningLockConfidencePrefix = "laso.readiness.morning_lock_confidence."
+        static let morningLockStressPrefix     = "laso.readiness.morning_lock_stress."
+        // Day-over-day EMA state. The scorer runs once a day, so the previous
+        // smoothed score has to outlive the process or the smoothing never
+        // engages.
+        static let smoothedScorePrefix         = "laso.readiness.smoothed_score."
     }
 
     // MARK: - Daily Mirror

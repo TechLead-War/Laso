@@ -340,12 +340,27 @@ private struct EnrichedInsightCard: View {
         return ""
     }
 
+    /// `deviationPercent` only means "off your baseline" when the insight also
+    /// carries the baseline it was measured against. Several producers reuse the
+    /// field for a risk score or a count of signalling metrics, and those must
+    /// never be read back to the user as a deviation, so they show the trend
+    /// word instead, which is true of any insight.
     private var impactText: String {
         let dev = abs(insight.deviationPercent)
-        if dev > 0.5 {
-            let direction = insight.deviationPercent > 0 ? "above" : "below"
-            return String(format: "%.0f%% %@ your baseline", dev, direction)
+        guard describesBaselineDeviation, dev > 0.5 else { return insight.trend.displayName }
+        let percent = String(format: "%.0f", dev)
+        return insight.deviationPercent > 0
+            ? Copy.Insights.Detail.percentAboveBaseline(percent)
+            : Copy.Insights.Detail.percentBelowBaseline(percent)
+    }
+
+    /// These two do carry a non-zero `baselineValue`, but it is a model constant
+    /// (an anomaly-score midpoint, a predicted probability) rather than anything
+    /// this person recorded, so their percentage is not a baseline deviation.
+    private var describesBaselineDeviation: Bool {
+        switch insight.category {
+        case .crossMetricAnomaly, .mlPrediction: return false
+        default: return insight.baselineValue != 0
         }
-        return insight.trend.displayName
     }
 }

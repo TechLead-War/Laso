@@ -59,11 +59,6 @@ final class LiveViewModel {
     private var pendingHeartRateUpdate: PendingHRUpdate?
     private var pendingUIUpdateWorkItem: DispatchWorkItem?
 
-    private enum ReadinessMetric {
-        case heartRateVariability
-        case restingHeartRate
-    }
-
     // 60-day window matches the Plews/Altini methodology used by HRV4Training
     // and athlete-grade HRV studies: long enough to capture menstrual cycle
     // and travel variance, short enough that a sustained training adaptation
@@ -73,11 +68,9 @@ final class LiveViewModel {
     private static let readinessBaselineRefreshInterval: TimeInterval = 6 * 3600
     private static let weeklyTrendDays = 7
 
-    private var readinessBaselines: [ReadinessMetric: ReadinessScorer.BaselineStats] = [:]
     private var lastReadinessBaselineRefresh: Date?
     private var readinessBaselineRefreshTask: Task<Void, Never>?
     private var deferredRefreshTask: Task<Void, Never>?
-    private var smoothedReadinessScore: Double?
     private var refreshState = LiveRefreshPlanner.State()
     private var lastHomeFetchDate: Date?
     private var lastTieredFetchDate: Date?
@@ -776,7 +769,7 @@ final class LiveViewModel {
                 self.scheduleReadinessRecompute()
             }
         }
-        fetchLatestSampleWithDate(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli), maxAge: 48 * 3600) { [weak self] value, date in
+        fetchTodayAverageHRV { [weak self] value, date in
             Task { @MainActor in
                 guard let self else { return }
                 self.recovery.latestHRV = value
@@ -963,14 +956,19 @@ final class LiveViewModel {
         let rhrAge = recovery.latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
         guard hrvAge <= freshnessSeconds, rhrAge <= freshnessSeconds else { return nil }
 
+        // Yesterday's smoothed score, not an in-memory one: this runs once a
+        // day, so any state the EMA needs has to survive a cold launch.
+        let previousSmoothed = Date.cal.date(byAdding: .day, value: -1, to: now)
+            .flatMap { readinessStore.loadSmoothedScore(for: $0) }
+
         let input = ReadinessScorer.Input(
             now: now,
             hrv: recovery.latestHRV,
             hrvTimestamp: recovery.latestHRVTimestamp,
-            hrvBaseline: readinessBaselines[.heartRateVariability],
+            hrvBaseline: recovery.hrvBaseline,
             restingHeartRate: recovery.latestRestingHeartRate,
             restingHeartRateTimestamp: recovery.latestRestingHeartRateTimestamp,
-            restingHeartRateBaseline: readinessBaselines[.restingHeartRate],
+            restingHeartRateBaseline: recovery.restingHeartRateBaseline,
             sleepDuration: sleep.lastNightSleepDuration,
             deepSleep: sleep.lastNightDeepSleep,
             remSleep: sleep.lastNightREMSleep,
@@ -978,14 +976,19 @@ final class LiveViewModel {
             workoutTimestamp: workout.lastWorkoutTimestamp,
             workoutDurationMinutes: workout.lastWorkoutDuration,
             workoutCalories: workout.lastWorkoutCalories,
-            previousSmoothedScore: smoothedReadinessScore
+            previousSmoothedScore: previousSmoothed
         )
 
         guard let assessment = ReadinessScorer.assess(input) else { return nil }
 
-        smoothedReadinessScore = assessment.smoothedScore
+        readinessStore.saveSmoothedScore(assessment.smoothedScore, for: now)
         readinessStore.saveMorningLock(assessment.score, for: now)
         readinessStore.saveMorningLockConfidence(assessment.confidence, for: now)
+        // Siri reads this instead of scoring stress from its own inputs, so
+        // both surfaces quote the same number for the same day.
+        if let stress = recovery.stressLevel {
+            readinessStore.saveMorningStress(stress, for: now)
+        }
         recovery.readinessConfidence = assessment.confidence
         recovery.readinessUncertainty = assessment.uncertainty
         return assessment.score
@@ -1071,6 +1074,38 @@ final class LiveViewModel {
                 let value = sample.quantity.doubleValue(for: unit)
                 completion(value, sample.startDate)
             }
+        }
+
+        healthStore.execute(query)
+    }
+
+    /// Today's mean SDNN plus the newest sample behind it.
+    ///
+    /// The readiness baseline is 60 days of per-day averages, so the value
+    /// scored against it has to be a per-day average too. One raw latest
+    /// sample can be a Breathe session or a single spike, which lands on that
+    /// baseline's spread as a different statistic and inflates the z-score.
+    private func fetchTodayAverageHRV(completion: @escaping (Double, Date) -> Void) {
+        let type = HKQuantityType(.heartRateVariabilitySDNN)
+        let unit = HKUnit.secondUnit(with: .milli)
+        let now = Date()
+        let predicate = HKQuery.predicateForSamples(
+            withStart: Date.cal.startOfDay(for: now),
+            end: now,
+            options: .strictStartDate
+        )
+
+        let query = HKSampleQuery(
+            sampleType: type,
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: nil
+        ) { _, results, _ in
+            let readings = ((results as? [HKQuantitySample]) ?? [])
+                .map { (value: $0.quantity.doubleValue(for: unit), date: $0.startDate) }
+                .filter { $0.value.isFinite && $0.value > 0 }
+            guard !readings.isEmpty, let newest = readings.map({ $0.date }).max() else { return }
+            completion(readings.reduce(0) { $0 + $1.value } / Double(readings.count), newest)
         }
 
         healthStore.execute(query)
@@ -1171,10 +1206,10 @@ final class LiveViewModel {
 
             await MainActor.run {
                 if let rhrBaseline {
-                    self.readinessBaselines[.restingHeartRate] = rhrBaseline
+                    self.recovery.restingHeartRateBaseline = rhrBaseline
                 }
                 if let hrvBaseline {
-                    self.readinessBaselines[.heartRateVariability] = hrvBaseline
+                    self.recovery.hrvBaseline = hrvBaseline
                 }
                 self.recovery.weeklyTrend = self.computeWeeklyHRVTrend(recent: recent)
                 self.lastReadinessBaselineRefresh = Date()
@@ -1190,8 +1225,8 @@ final class LiveViewModel {
     /// caption is hidden until we have both a baseline and at least
     /// `weeklyTrendMinDays` recent samples.
     private func computeWeeklyHRVTrend(recent: [Double]) -> WeeklyHRVTrend {
-        let baselineMean = readinessBaselines[.heartRateVariability]?.mean
-        let baselineSD = readinessBaselines[.heartRateVariability]?.standardDeviation
+        let baselineMean = recovery.hrvBaseline?.mean
+        let baselineSD = recovery.hrvBaseline?.standardDeviation
         guard recent.count >= ReadinessScorerConfig.weeklyTrendMinDays,
               let mean = baselineMean,
               let sd = baselineSD else {

@@ -251,6 +251,9 @@ struct OnbV2VitalityRevealScreen: View {
     private let metrics: [OnbV2Metric]
     private let feedOrder: [Int]
     private let realMetricCount: Int
+    /// Too few real metrics to claim a year gap. The number stays on the user's
+    /// real age, which is also what the dashboard shows for the first week.
+    private let isProvisional: Bool
 
     /// First concrete action, from the metric costing the most years. All
     /// deltas <= 0 means nothing is dragging the age up: maintain instead.
@@ -270,6 +273,7 @@ struct OnbV2VitalityRevealScreen: View {
         self.onContinue = onContinue
         let est = VitalityScorer.onboardingEstimate(
             chronologicalAge: profile.age,
+            gender: profile.sex?.asGender ?? .preferNotToSay,
             restingHR: snapshot.restingHR.map(Double.init),
             hrvMs: snapshot.hrvWeeklyAvgMs,
             steps: snapshot.stepsDailyAvg,
@@ -286,6 +290,7 @@ struct OnbV2VitalityRevealScreen: View {
         }
         self.feedOrder = Array(self.metrics.indices)
         self.realMetricCount = est.metrics.count
+        self.isProvisional = est.isProvisional
         _consumed = State(initialValue: [Bool](repeating: false, count: self.metrics.count))
     }
 
@@ -297,9 +302,16 @@ struct OnbV2VitalityRevealScreen: View {
         else { return OnbV2.rose }
     }
     private var payoffText: String {
+        if isProvisional { return Copy.Vitality.buildingProfile }
         let n = Int(abs(yearsDiff).rounded())
         if n == 0 { return Copy.OnboardingV2.revealPayoffOnAge }
         return yearsDiff > 0 ? Copy.OnboardingV2.revealPayoffYounger(n) : Copy.OnboardingV2.revealPayoffOlder(n)
+    }
+
+    /// The line under the payoff. A provisional reveal cannot compare itself to
+    /// the real age, because it is the real age.
+    private var payoffSubText: String {
+        isProvisional ? Copy.Vitality.buildingProfileDescription : Copy.OnboardingV2.revealThanRealAge(chronoAge)
     }
     // the whole orb (particles, glow, rim, number) takes the verdict colour
     private var orbTint: Color {
@@ -311,7 +323,8 @@ struct OnbV2VitalityRevealScreen: View {
         yearsDiff >= 0 ? OnbV2.blueLight : resultColor
     }
     private var ctaCaption: String {
-        yearsDiff > 0 ? Copy.OnboardingV2.revealSubYounger : Copy.OnboardingV2.revealSubOlder
+        if isProvisional { return Copy.Vitality.onboardingProvisionalCaption }
+        return yearsDiff > 0 ? Copy.OnboardingV2.revealSubYounger : Copy.OnboardingV2.revealSubOlder
     }
 
     @State private var particles = makeOrbParticles()
@@ -384,9 +397,11 @@ struct OnbV2VitalityRevealScreen: View {
                             Text(payoffText)
                                 .font(.system(size: 24, weight: .heavy))
                                 .foregroundStyle(resultColor)
-                            Text(Copy.OnboardingV2.revealThanRealAge(chronoAge))
+                            Text(payoffSubText)
                                 .font(.system(size: 13))
                                 .foregroundStyle(OnbV2.fg3)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, OnbV2.bodyPadH)
 
                             // The pathway starts here: hand over the first
                             // concrete step, picked from the weakest metric,

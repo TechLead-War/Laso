@@ -344,6 +344,9 @@ final class HealthKitManager: @unchecked Sendable {
                 let lastSync = syncDates[metric]
                 let rewriteHistory = (needsSleepBackfill && sleepStageMetrics.contains(metric))
                     || (needsAfibRescale && metric == .atrialFibrillationBurden)
+                // The sleep scan reaches one day further back than everything else
+                // because its first day is dropped as a lead-in (fetchAllSleepStages).
+                let incrementalDaysBack = sleepStageMetrics.contains(metric) ? -2 : -1
 
                 // Skip stale metrics: if the metric was synced within the last day AND
                 // its most recent data is older than 7 days, skip it -- unless it's a
@@ -366,7 +369,12 @@ final class HealthKitManager: @unchecked Sendable {
                 group.addTask { [self] in
                     let startDate: Date
                     if let lastSync, !rewriteHistory {
-                        startDate = Date.cal.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
+                        // `lastSync` is the wall-clock instant of the previous sync, but the
+                        // daily statistics buckets are midnight anchored and the predicate is
+                        // strictStartDate, so a mid-day start returns a partial bucket for the
+                        // boundary day that then overwrites the stored full day.
+                        let lastSyncDay = Date.cal.startOfDay(for: lastSync)
+                        startDate = Date.cal.date(byAdding: .day, value: incrementalDaysBack, to: lastSyncDay) ?? lastSyncDay
                     } else {
                         // Fetch all available HealthKit history (up to 10 years) so the
                         // Explore "days" counter reflects the user's full data span, and
@@ -1084,6 +1092,26 @@ final class HealthKitManager: @unchecked Sendable {
         session.end.startOfDay
     }
 
+    /// Hours covered by these spans, counting a minute two sources both recorded
+    /// once. A second sleep writer beside the Watch records the same night, and
+    /// adding the raw sample durations doubled every shared minute — which then
+    /// pushed the night past the 24 h sleep ceiling and dropped it whole.
+    private static func unionHours(_ spans: [(start: Date, end: Date)]) -> Double {
+        var total: TimeInterval = 0
+        var open: (start: Date, end: Date)?
+        for span in spans.sorted(by: { $0.start < $1.start }) where span.end > span.start {
+            if var current = open, span.start <= current.end {
+                if span.end > current.end { current.end = span.end }
+                open = current
+            } else {
+                if let current = open { total += current.end.timeIntervalSince(current.start) }
+                open = span
+            }
+        }
+        if let current = open { total += current.end.timeIntervalSince(current.start) }
+        return total / 3600.0
+    }
+
     private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> (overnight: [Date: SleepSessionBoundary], naps: [Date: [SleepSessionBoundary]]) {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
@@ -1102,37 +1130,39 @@ final class HealthKitManager: @unchecked Sendable {
 
                 let sessions = HealthKitManager.groupSleepSessions(results).sessions
 
-                /// Builds a SleepSessionBoundary by attributing each stage sample's
-                /// duration to its category, then deriving awake time from the rest
-                /// of the bedtime…wakeTime window.
+                /// Builds a SleepSessionBoundary by collecting each stage sample's span
+                /// under its category and measuring the union of those spans, then
+                /// deriving awake time from the rest of the bedtime…wakeTime window.
                 func buildBoundary(for session: SleepSession) -> SleepSessionBoundary {
-                    var coreSec: TimeInterval = 0
-                    var deepSec: TimeInterval = 0
-                    var remSec: TimeInterval = 0
+                    var coreSpans: [(start: Date, end: Date)] = []
+                    var deepSpans: [(start: Date, end: Date)] = []
+                    var remSpans: [(start: Date, end: Date)] = []
                     for sample in session.samples {
-                        let dur = sample.endDate.timeIntervalSince(sample.startDate)
+                        let span = (start: sample.startDate, end: sample.endDate)
                         switch sample.value {
                         case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                            deepSec += dur
+                            deepSpans.append(span)
                         case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                            remSec += dur
+                            remSpans.append(span)
                         case HKCategoryValueSleepAnalysis.asleepCore.rawValue,
                              HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
-                            coreSec += dur
+                            coreSpans.append(span)
                         default:
                             break
                         }
                     }
-                    let totalSec = session.end.timeIntervalSince(session.start)
-                    let asleepSec = coreSec + deepSec + remSec
-                    let awakeSec = max(0, totalSec - asleepSec)
+                    let coreHours = HealthKitManager.unionHours(coreSpans)
+                    let deepHours = HealthKitManager.unionHours(deepSpans)
+                    let remHours = HealthKitManager.unionHours(remSpans)
+                    let totalHours = session.end.timeIntervalSince(session.start) / 3600.0
+                    let asleepHours = HealthKitManager.unionHours(coreSpans + deepSpans + remSpans)
                     return SleepSessionBoundary(
                         bedtime: session.start,
                         wakeTime: session.end,
-                        coreHours: coreSec / 3600.0,
-                        deepHours: deepSec / 3600.0,
-                        remHours: remSec / 3600.0,
-                        awakeHours: awakeSec / 3600.0
+                        coreHours: coreHours,
+                        deepHours: deepHours,
+                        remHours: remHours,
+                        awakeHours: max(0, totalHours - asleepHours)
                     )
                 }
 
@@ -1205,24 +1235,27 @@ final class HealthKitManager: @unchecked Sendable {
                 }
 
                 let sleepMetrics: [HealthMetric] = [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake]
-                var durations: [HealthMetric: [Date: Double]] = [:]
-                for m in sleepMetrics { durations[m] = [:] }
+                // Spans, not running totals: two sources writing the same night overlap,
+                // and the hours are only correct once the overlaps are merged away
+                // (unionHours), so each day keeps its raw spans until the end.
+                var spans: [HealthMetric: [Date: [(start: Date, end: Date)]]] = [:]
+                for m in sleepMetrics { spans[m] = [:] }
 
-                // Add one sample's time to the day its sleep session counts towards.
+                // Add one sample's span to the day its sleep session counts towards.
                 func route(_ sample: HKCategorySample, to day: Date) {
-                    let hours = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0
+                    let span = (start: sample.startDate, end: sample.endDate)
                     if HealthKitManager.asleepStageValues.contains(sample.value) {
-                        durations[.sleepDuration]?[day, default: 0] += hours
+                        spans[.sleepDuration]?[day, default: []].append(span)
                     }
                     switch sample.value {
                     case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                        durations[.sleepREM]?[day, default: 0] += hours
+                        spans[.sleepREM]?[day, default: []].append(span)
                     case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                        durations[.sleepDeep]?[day, default: 0] += hours
+                        spans[.sleepDeep]?[day, default: []].append(span)
                     case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-                        durations[.sleepCore]?[day, default: 0] += hours
+                        spans[.sleepCore]?[day, default: []].append(span)
                     case HKCategoryValueSleepAnalysis.awake.rawValue:
-                        durations[.sleepAwake]?[day, default: 0] += hours
+                        spans[.sleepAwake]?[day, default: []].append(span)
                     default:
                         break
                     }
@@ -1251,10 +1284,19 @@ final class HealthKitManager: @unchecked Sendable {
                 // Awake time recorded away from any sleep still counts on its own day.
                 for sample in grouped.unassigned { route(sample, to: sample.endDate.startOfDay) }
 
+                // The window's first day is a lead-in, not a result: .strictStartDate
+                // drops the part of a night that began before the window start, so that
+                // day's session comes back truncated and would overwrite the stored
+                // full night. Callers reach one day further back to pay for this.
+                let leadInDay = startDate.startOfDay
+
                 var out: [HealthMetric: MetricTimeSeries] = [:]
                 for m in sleepMetrics {
-                    let samples = (durations[m] ?? [:]).map { entry in
-                        MetricSample(date: wakeTimes[entry.key] ?? entry.key, value: entry.value)
+                    let samples = (spans[m] ?? [:]).compactMap { entry -> MetricSample? in
+                        guard entry.key != leadInDay else { return nil }
+                        let hours = HealthKitManager.unionHours(entry.value)
+                        guard hours > 0 else { return nil }
+                        return MetricSample(date: wakeTimes[entry.key] ?? entry.key, value: hours)
                     }.sorted { $0.date < $1.date }
                     out[m] = MetricTimeSeries(metric: m, samples: samples)
                 }

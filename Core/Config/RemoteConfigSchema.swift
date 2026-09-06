@@ -109,10 +109,7 @@ extension RemoteConfigManager {
         RC.readinessWorkoutConfFloor:         0.4  as NSNumber,
         RC.readinessWorkoutConfOnsetHours:    36.0 as NSNumber,
         RC.readinessWorkoutConfDecayHours:    24.0 as NSNumber,
-        RC.readinessStressHrvAnchor:          60.0 as NSNumber,
-        RC.readinessStressHrvRange:           40.0 as NSNumber,
-        RC.readinessStressRhrAnchor:          50.0 as NSNumber,
-        RC.readinessStressRhrRange:           30.0 as NSNumber,
+        RC.readinessStressDeviationAtCap:     0.5  as NSNumber,
         RC.readinessStressChannelCap:         50.0 as NSNumber,
 
         // Scoring — StrainScorer (mirrors StrainScorerConfig values).
@@ -303,10 +300,7 @@ extension RemoteConfigManager {
     var readinessWorkoutConfFloor: Double      { double(forKey: RC.readinessWorkoutConfFloor) }
     var readinessWorkoutConfOnsetHours: Double { double(forKey: RC.readinessWorkoutConfOnsetHours) }
     var readinessWorkoutConfDecayHours: Double { double(forKey: RC.readinessWorkoutConfDecayHours) }
-    var readinessStressHrvAnchor: Double       { double(forKey: RC.readinessStressHrvAnchor) }
-    var readinessStressHrvRange: Double        { double(forKey: RC.readinessStressHrvRange) }
-    var readinessStressRhrAnchor: Double       { double(forKey: RC.readinessStressRhrAnchor) }
-    var readinessStressRhrRange: Double        { double(forKey: RC.readinessStressRhrRange) }
+    var readinessStressDeviationAtCap: Double  { double(forKey: RC.readinessStressDeviationAtCap) }
     var readinessStressChannelCap: Double      { double(forKey: RC.readinessStressChannelCap) }
 
     // MARK: Scoring — StrainScorer

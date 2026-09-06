@@ -726,7 +726,7 @@ final class HealthDataQueryEngine {
         for m in metricsToCheck {
             guard let series = ctx.timeSeries[m], let latest = series.samples.last,
                   let baseline = ctx.baselines[m] else { continue }
-            let dev = abs(latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            let dev = abs(deviation(of: latest.value, from: baseline))
             if dev > 2.0 { anomalies.append((m, dev, latest.value)) }
         }
 
@@ -803,7 +803,7 @@ final class HealthDataQueryEngine {
         var answer: String
 
         if let baseline = ctx.baselines[m] {
-            let dev = (avg - baseline.mean) / max(1, baseline.standardDeviation)
+            let dev = deviation(of: avg, from: baseline)
             let latestStr = m.formatWithUnit(latest)
             if dev > 1 {
                 answer = m.higherIsBetter
@@ -858,7 +858,7 @@ final class HealthDataQueryEngine {
                 guard let series = ctx.timeSeries[metric], let latest = series.samples.last else { continue }
                 let label = metric.displayName
                 if let baseline = ctx.baselines[metric] {
-                    let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                    let dev = deviation(of: latest.value, from: baseline)
                     let valueStr = metric.formatWithUnit(latest.value)
                     if dev > 1 {
                         highlights.append(Copy.Analysis.HealthDataQuery.highlightHigh(label: label, value: valueStr))
@@ -935,7 +935,7 @@ final class HealthDataQueryEngine {
             var warnings: [(metric: HealthMetric, deviation: Double, value: Double)] = []
             for (metric, series) in ctx.timeSeries {
                 guard let latest = series.samples.last, let baseline = ctx.baselines[metric] else { continue }
-                let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                let dev = deviation(of: latest.value, from: baseline)
                 let isBad = (dev < -1.5 && metric.higherIsBetter) || (dev > 1.5 && !metric.higherIsBetter)
                 if isBad { warnings.append((metric, abs(dev), latest.value)) }
             }
@@ -1067,7 +1067,7 @@ final class HealthDataQueryEngine {
         for metric in improvableMetrics {
             guard let series = ctx.timeSeries[metric], let latest = series.samples.last,
                   let baseline = ctx.baselines[metric] else { continue }
-            let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            let dev = deviation(of: latest.value, from: baseline)
             let isBelowOptimal = (dev < -0.5 && metric.higherIsBetter) || (dev > 0.5 && !metric.higherIsBetter)
             if isBelowOptimal {
                 suggestions.append((metric, "\(metric.displayName) is below your usual level", latest.value))
@@ -1240,7 +1240,7 @@ final class HealthDataQueryEngine {
                 if let baseline = ctx.baselines[driver.metric],
                    let series = ctx.timeSeries[driver.metric],
                    let latest = series.samples.last {
-                    let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                    let dev = deviation(of: latest.value, from: baseline)
                     let isBad = (dev < -0.5 && driver.metric.higherIsBetter) || (dev > 0.5 && !driver.metric.higherIsBetter)
                     if isBad {
                         dragging.append(driver.metric.displayName)
@@ -1280,7 +1280,7 @@ final class HealthDataQueryEngine {
         for metric in keyMetrics {
             guard let series = ctx.timeSeries[metric], let latest = series.samples.last,
                   let baseline = ctx.baselines[metric] else { continue }
-            let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            let dev = deviation(of: latest.value, from: baseline)
             if abs(dev) > 0.8 {
                 let isBad = (dev < 0 && metric.higherIsBetter) || (dev > 0 && !metric.higherIsBetter)
                 noteworthy.append((metric, isBad ? "below optimal" : "looking good", latest.value))
@@ -1606,7 +1606,7 @@ final class HealthDataQueryEngine {
         guard let baseline = context.baselines[metric] else {
             return "Here's what to expect."
         }
-        let dev = (predicted - baseline.mean) / max(1, baseline.standardDeviation)
+        let dev = deviation(of: predicted, from: baseline)
         let isBad = (dev < -0.5 && metric.higherIsBetter) || (dev > 0.5 && !metric.higherIsBetter)
         if isBad {
             switch metric {
@@ -1673,6 +1673,25 @@ final class HealthDataQueryEngine {
     }
 
     // MARK: - Helpers
+
+    /// Smallest spread a baseline may claim, as a fraction of its own mean.
+    /// Same 5% relative floor `ReadinessScorer.makeBaseline` applies.
+    private static let minimumRelativeSD: Double = 0.05
+
+    /// How many standard deviations `value` sits from its baseline mean.
+    ///
+    /// The floor is relative, not an absolute one unit: body temperature (°C),
+    /// SpO2 (%), sleep (hrs) and walking speed (km/h) all have a natural SD well
+    /// under 1, so a fixed floor of 1 made their deviation permanently smaller
+    /// than every threshold here and those metrics could never be reported.
+    private func deviation(of value: Double, from baseline: UserBaseline) -> Double {
+        let spread = max(baseline.standardDeviation, abs(baseline.mean) * Self.minimumRelativeSD)
+        // A zero mean with zero spread means every recorded day was zero; there is
+        // no scale to measure a deviation against, so report none rather than a
+        // divide-by-zero infinity that would trip every threshold below.
+        guard spread > 0 else { return 0 }
+        return (value - baseline.mean) / spread
+    }
 
     private func recentSamples(from series: MetricTimeSeries, days: Int, offset: Int = 0) -> [MetricSample] {
         let calendar = Date.cal

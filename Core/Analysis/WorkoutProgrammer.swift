@@ -140,7 +140,9 @@ struct WorkoutProgrammer {
                 }
                 cycleNote = "During your menstrual phase, we have adjusted intensity to favor low-impact movements. Listen to your body. Rest is productive."
             case .luteal:
-                cycleNote = "Luteal phase detected. Volume reduced ~15%. Steady-state cardio preferred over high-intensity intervals."
+                // Advice only: the luteal phase does not change the generated plan,
+                // so the note must not claim a volume cut that was never applied.
+                cycleNote = "Luteal phase detected. Effort often feels harder in this phase. Take the intervals easier or swap them for steady cardio, and drop a set if your body asks for it."
             case .follicular, .ovulatory:
                 break
             }

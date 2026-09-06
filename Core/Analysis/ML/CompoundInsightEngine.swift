@@ -694,7 +694,7 @@ final class CompoundInsightEngine {
                 id: "risk_converging_signals",
                 title: Copy.Insights.warningSignsConverging,
                 narrative: narrative,
-                recommendation: "\(riskSignals) risk signals converging.\(pastCrashes >= 2 ? " Similar patterns preceded your last \(pastCrashes) score dips." : "")\(predictionRisk > Self.predictionMentionProbability ? " Tomorrow's risk estimate: \(Int(predictionRisk * 100))%." : "")",
+                recommendation: "\(riskSignals) risk signals converging.\(pastCrashes >= 2 ? " Similar patterns preceded your last \(pastCrashes) score dips." : "")\(predictionRisk > Self.predictionMentionProbability ? " Estimated \(Int(predictionRisk * 100))% chance tomorrow lands below your usual." : "")",
                 involvedMetrics: Array(uniqueMetrics.prefix(5)),
                 severity: predictionRisk > Self.predictionUrgentProbability ? .urgent : .important,
                 category: .riskWarning,
@@ -712,7 +712,7 @@ final class CompoundInsightEngine {
             let protective = pred.topFactors.filter { !$0.isRiskFactor }.prefix(2)
 
             if !riskFactors.isEmpty {
-                var narrative = "Tomorrow's outlook: \(Int(pred.probability * 100))% risk of a below-average day. "
+                var narrative = "Tomorrow's outlook: \(Int(pred.probability * 100))% chance your overall score lands below your own usual. "
                 narrative += "Main risk factors: "
                 narrative += riskFactors.map { factor in
                     "\(factor.metric.displayName) (\(factor.featureType == .raw ? "current level" : factor.featureType.rawValue))"

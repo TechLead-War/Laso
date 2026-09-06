@@ -176,7 +176,9 @@ enum IntentSnippetViews {
 
     struct ReadinessSnippet: View {
         let readinessScore: Int
-        let stressLevel: Int
+        /// Nil until the personal baselines stress is scored against exist.
+        /// The ring then draws empty rather than a green zero.
+        let stressLevel: Int?
         let stressLabel: String
 
         private var readinessColor: Color {
@@ -189,11 +191,11 @@ enum IntentSnippetViews {
         }
 
         private var stressColor: Color {
+            guard let stressLevel else { return AppColour.trackNeutral }
             switch stressLevel {
             case 0..<20: return AppColour.scoreOptimal
             case 20..<40: return AppColour.scoreGood
             case 40..<60: return AppColour.scoreFair
-            case 60..<80: return AppColour.scorePoor
             default: return AppColour.scorePoor
             }
         }
@@ -225,7 +227,7 @@ enum IntentSnippetViews {
                             Circle()
                                 .stroke(AppColour.trackNeutral, lineWidth: 6)
                             Circle()
-                                .trim(from: 0, to: Double(stressLevel) / 100.0)
+                                .trim(from: 0, to: Double(stressLevel ?? 0) / 100.0)
                                 .stroke(stressColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                             Image(systemName: "waveform.path.ecg")

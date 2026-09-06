@@ -38,8 +38,12 @@ struct CircadianDisruptionAnalyzer {
             components.append((sleepScore, 0.25, Copy.Analysis.Research.CircadianDisruption.sleepTimingComponent))
         }
 
+        // Divide by the weight actually present, not by 1: sleep timing is
+        // optional, so a user without it carries 0.75 of the model and clamping
+        // the divisor to 1 would report their circadian score a quarter low.
         let totalWeight = components.map(\.weight).reduce(0, +)
-        let circadianScore = components.map { $0.score * $0.weight }.reduce(0, +) / max(totalWeight, 1)
+        guard totalWeight > 0 else { return [] }
+        let circadianScore = components.map { $0.score * $0.weight }.reduce(0, +) / totalWeight
 
         let weakestComponent = components.min(by: { $0.score < $1.score })!
         let strongestComponent = components.max(by: { $0.score < $1.score })!

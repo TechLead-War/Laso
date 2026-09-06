@@ -37,9 +37,13 @@ struct ReadinessIntent: AppIntent {
         }
 
         let readinessLabel = readinessDescription(readiness.readinessScore)
-        let dialog = IntentDialog(
-            "Your readiness is \(readiness.readinessScore)%. \(readinessLabel). Stress level is \(readiness.stressLabel.lowercased())."
-        )
+        // Stress is left out of the sentence when there is none to report,
+        // rather than reading "stress level is no data" aloud.
+        var spoken = "Your readiness is \(readiness.readinessScore)%. \(readinessLabel)."
+        if readiness.stressLevel != nil {
+            spoken += " Stress level is \(readiness.stressLabel.lowercased())."
+        }
+        let dialog = IntentDialog(stringLiteral: spoken)
 
         return .result(dialog: dialog) {
             IntentSnippetViews.ReadinessSnippet(
