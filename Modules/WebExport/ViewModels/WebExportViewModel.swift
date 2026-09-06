@@ -43,7 +43,7 @@ final class WebExportViewModel {
             exportedURL = fileURL
 
             AppAnalytics.shared.trackReportExported(
-                score: analysisEngine.overallScore.score,
+                score: analysisEngine.overallScore?.score ?? 0,
                 metricsCount: healthKitManager.timeSeries.count,
                 insightsCount: analysisEngine.insights.count
             )

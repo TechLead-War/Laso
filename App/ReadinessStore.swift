@@ -70,4 +70,33 @@ final class ReadinessStore {
         let key = AppKeys.Readiness.morningLockConfidencePrefix + dateKeySuffix(for: date)
         userDefaults.set(confidence, forKey: key)
     }
+
+    /// Stress stamped with the morning lock, so Siri and Home report the one
+    /// number instead of each recomputing stress from different inputs.
+    func loadMorningStress(for date: Date) -> Int? {
+        let key = AppKeys.Readiness.morningLockStressPrefix + dateKeySuffix(for: date)
+        guard userDefaults.object(forKey: key) != nil else { return nil }
+        return userDefaults.integer(forKey: key)
+    }
+
+    func saveMorningStress(_ stress: Int, for date: Date) {
+        let key = AppKeys.Readiness.morningLockStressPrefix + dateKeySuffix(for: date)
+        userDefaults.set(stress, forKey: key)
+    }
+
+    // MARK: - Day-Over-Day Smoothing State
+
+    /// The scorer runs once per day, so the EMA's previous value has to survive
+    /// a cold launch. Held in memory it was lost on every relaunch and the
+    /// configured smoothing silently never applied.
+    func loadSmoothedScore(for date: Date) -> Double? {
+        let key = AppKeys.Readiness.smoothedScorePrefix + dateKeySuffix(for: date)
+        guard userDefaults.object(forKey: key) != nil else { return nil }
+        return userDefaults.double(forKey: key)
+    }
+
+    func saveSmoothedScore(_ score: Double, for date: Date) {
+        let key = AppKeys.Readiness.smoothedScorePrefix + dateKeySuffix(for: date)
+        userDefaults.set(score, forKey: key)
+    }
 }

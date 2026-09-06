@@ -5,7 +5,9 @@ import SwiftUI
 /// number never appears without a plain reason, and the missing-signals line is
 /// the card's one honesty device.
 struct RecoveryHeroCard: View {
-    let score: Int
+    /// Nil when nothing has been scored yet. The card then says so instead of
+    /// drawing a ring around a number the user never earned.
+    let score: Int?
     /// Bold heading under the orb, e.g. "Higher than usual today."
     var summaryHead: String = ""
     /// Lighter sub line under the heading, e.g. "Good to push a little."
@@ -34,10 +36,6 @@ struct RecoveryHeroCard: View {
     /// live behind the ring tap.
     private static let maxWhyRows = 3
 
-    private var recoveryState: DashboardViewModel.RecoveryState {
-        DashboardViewModel.RecoveryState(score: score)
-    }
-
     private var visibleWhyReasons: [DashboardViewModel.RecoveryWhyReason] {
         Array(whyReasons.prefix(Self.maxWhyRows))
     }
@@ -55,15 +53,20 @@ struct RecoveryHeroCard: View {
 
     var body: some View {
         Group {
-            if shouldShowWearWatch {
-                Button { onTap?() } label: { wearWatchEmptyState }
-                    .buttonStyle(.dsPress)
+            if let score {
+                if shouldShowWearWatch {
+                    Button { onTap?() } label: { wearWatchEmptyState }
+                        .buttonStyle(.dsPress)
+                } else {
+                    cardContent(score: score)
+                }
             } else {
-                cardContent
+                Button { onTap?() } label: { noScoreEmptyState }
+                    .buttonStyle(.dsPress)
             }
         }
         .overlay(alignment: .topTrailing) {
-            if let onShare, !shouldShowWearWatch, score > 0 {
+            if let onShare, !shouldShowWearWatch, let score, score > 0 {
                 Button(action: onShare) {
                     Image(systemName: "square.and.arrow.up")
                         .font(DS.Typography.footnoteMedium)
@@ -80,13 +83,48 @@ struct RecoveryHeroCard: View {
         .onAppear {
             // Activation counts real readiness sightings only; a fallback daily
             // score is not the moment the milestone celebrates.
-            guard isWearingWatch, !isFallbackScore, score > 0 else { return }
+            guard isWearingWatch, !isFallbackScore, let score, score > 0 else { return }
             if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
                 EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
             } else {
                 EngagementSequenceScheduler.markActivation(.firstRecoveryScore)
             }
         }
+    }
+
+    // MARK: - No Score Empty State
+
+    /// Shown before anything has been scored. Says what is missing and what the
+    /// user can do, and never puts a number where there is no measurement.
+    private var noScoreEmptyState: some View {
+        HStack(spacing: 16) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(DS.Typography.title2)
+                .foregroundStyle(AppColour.textTertiary)
+                .frame(width: 56, height: 56)
+                .background(AppColour.surfaceRaised, in: Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Copy.Home.scoreNoDataYet)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(AppColour.textPrimary)
+                Text(Copy.Home.scoreNoDataYetDetail)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(DS.cardPadding + 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColour.surfaceRaised)
+        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(Copy.Home.scoreNoDataYet). \(Copy.Home.scoreNoDataYetDetail)")
+        .accessibilityIdentifier("home.recoveryCard.noScore")
     }
 
     // MARK: - Wear Watch Empty State
@@ -121,12 +159,12 @@ struct RecoveryHeroCard: View {
 
     /// The card is a stack of separate buttons, not one big button, because a
     /// Button nested inside another Button's label never receives the tap.
-    private var cardContent: some View {
+    private func cardContent(score: Int) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             // Ring on the left, the "Why" list on the right — compact side by
             // side. Ring is vertically centered against the taller Why column.
             HStack(alignment: .center, spacing: 16) {
-                Button { onTap?() } label: { ringColumn }
+                Button { onTap?() } label: { ringColumn(score: score) }
                     .buttonStyle(.dsPress)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("\(ringLabel) \(score)")
@@ -191,8 +229,9 @@ struct RecoveryHeroCard: View {
         .accessibilityIdentifier("home.recoveryCard")
     }
 
-    private var ringColumn: some View {
-        ZStack {
+    private func ringColumn(score: Int) -> some View {
+        let recoveryState = DashboardViewModel.RecoveryState(score: score)
+        return ZStack {
             // Soft glow via a radial gradient (cheap) rather than a
             // Gaussian blur, which re-renders offscreen every frame and
             // makes scrolling lag. Same RecoveryState colour as the ring,

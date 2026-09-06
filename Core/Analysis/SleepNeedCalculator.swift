@@ -55,7 +55,7 @@ final class SleepNeedCalculator {
         targetWakeTime: Date?,
         performanceLevel: PerformanceLevel = .peak,
         age: Int?,
-        recoveryScore: Double = 70,
+        recoveryScore: Double = SleepNeedConfig.neutralRecoveryScore,
         sleepSeries: MetricTimeSeries? = nil
     ) -> SleepNeed {
         guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {

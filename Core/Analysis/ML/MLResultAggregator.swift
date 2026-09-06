@@ -106,7 +106,6 @@ final class MLResultAggregator {
             baselines: baselines,
             ruleBasedAnomalies: ruleBasedAnomalies,
             timeSeries: timeSeries,
-            vectors: vectors,
             focusCategories: focusCategories,
             timingRecommendations: timingRecommendations
         )
@@ -329,18 +328,19 @@ final class MLResultAggregator {
         }
 
         // Personal optimization insights
-        if let profile = optimalProfile, profile.matchPercentage < 0.7 {
+        // `matchPercentage` arrives from PersonalOptimizer on a 0-100 scale, not 0-1.
+        if let profile = optimalProfile, profile.matchPercentage < 70 {
             let unmet = profile.conditions.filter { !$0.isCurrentlyMet }.prefix(3)
             let gaps = unmet.map { $0.description }.joined(separator: ". ")
             insights.append(Insight(
                 metric: unmet.first?.metric ?? .heartRateVariability,
-                title: Copy.Insights.optimizationGap(Int((1.0 - profile.matchPercentage) * 100)),
-                summary: "You're matching \(Int(profile.matchPercentage * 100))% of your optimal profile (avg score \(Int(profile.avgScoreWhenOptimal)) vs \(Int(profile.avgScoreWhenNot)) when not). \(gaps)",
+                title: Copy.Insights.optimizationGap(Int(100.0 - profile.matchPercentage)),
+                summary: "You're matching \(Int(profile.matchPercentage))% of your optimal profile (avg score \(Int(profile.avgScoreWhenOptimal)) vs \(Int(profile.avgScoreWhenNot)) when not). \(gaps)",
                 recommendation: unmet.first?.description ?? "Focus on the top gaps to reach your optimal state.",
-                severity: profile.matchPercentage < 0.4 ? .warning : .info,
+                severity: profile.matchPercentage < 40 ? .warning : .info,
                 trend: .stable,
-                baselineValue: 1.0,
-                deviationPercent: (1.0 - profile.matchPercentage) * 100,
+                baselineValue: 0,
+                deviationPercent: 100.0 - profile.matchPercentage,
                 category: .correlation,
                 context: InsightContext(
                     confidenceLevel: 0.8,
@@ -416,7 +416,6 @@ final class MLResultAggregator {
         baselines: [HealthMetric: UserBaseline],
         ruleBasedAnomalies: [AnomalyDetector.AnomalyResult],
         timeSeries: [HealthMetric: MetricTimeSeries],
-        vectors: [DailyFeatureVector],
         focusCategories: Set<HealthCategory>,
         timingRecommendations: [CircadianAnalyzer.TimingRecommendation]
     ) -> PolicyDecision? {
@@ -434,23 +433,7 @@ final class MLResultAggregator {
 
         guard !candidates.isEmpty else { return nil }
 
-        var enrichedCandidates = candidates
-        if components.predictiveScorer.isReady, let todayVector = vectors.last {
-            enrichedCandidates = candidates.map { candidate in
-                let delta = components.decisionPolicyEngine.estimateCounterfactual(
-                    action: candidate,
-                    currentVector: todayVector,
-                    scorer: components.predictiveScorer
-                )
-                if let delta = delta, abs(delta) > 0.01 {
-                    let boosted = candidate
-                    return boosted
-                }
-                return candidate
-            }
-        }
-
-        guard let decision = components.decisionPolicyEngine.decide(candidates: enrichedCandidates, focusCategories: focusCategories) else {
+        guard let decision = components.decisionPolicyEngine.decide(candidates: candidates, focusCategories: focusCategories) else {
             return nil
         }
 

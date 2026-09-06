@@ -13,11 +13,31 @@ import Observation
 /// same age difference in a shipped build, which a test would have caught.
 enum VitalityNorms {
 
-    /// VO2 Max norms (mL/kg/min) by age. combined sex average.
-    static let vo2Max: [(age: Int, value: Double)] = [
-        (20, 46), (25, 45), (30, 43), (35, 41), (40, 39),
-        (45, 37), (50, 35), (55, 33), (60, 31), (65, 29),
-        (70, 27), (75, 25), (80, 23)
+    /// VO2 Max norms (mL/kg/min) by age, 50th percentile of the FRIEND
+    /// registry treadmill reference standards (Kaminsky et al., Mayo Clin Proc
+    /// 2015). FRIEND publishes one median per decade; the rows below are that
+    /// median placed at the decade midpoint and read off at five year steps,
+    /// with the end slopes carried the last 4.5 years to reach 20 and 80.
+    /// The sexes differ by roughly 10 mL/kg/min in the twenties, which is why
+    /// one combined table read a fit woman as decades older than she is.
+    static let vo2MaxMale: [(age: Int, value: Double)] = [
+        (20, 50.5), (25, 47.7), (30, 44.9), (35, 42.2), (40, 39.9),
+        (45, 37.5), (50, 34.9), (55, 32.4), (60, 30.2), (65, 28.0),
+        (70, 26.1), (75, 24.2), (80, 22.3)
+    ]
+
+    static let vo2MaxFemale: [(age: Int, value: Double)] = [
+        (20, 40.9), (25, 37.2), (30, 33.5), (35, 30.0), (40, 28.3),
+        (45, 26.5), (50, 24.9), (55, 23.2), (60, 21.5), (65, 19.9),
+        (70, 19.1), (75, 18.2), (80, 17.4)
+    ]
+
+    /// Used when the profile has no usable sex. Averaging the two published
+    /// medians is the honest middle, not a third measurement.
+    static let vo2MaxCombined: [(age: Int, value: Double)] = [
+        (20, 45.7), (25, 42.5), (30, 39.2), (35, 36.1), (40, 34.1),
+        (45, 32.0), (50, 29.9), (55, 27.8), (60, 25.9), (65, 24.0),
+        (70, 22.6), (75, 21.2), (80, 19.9)
     ]
 
     /// Resting heart rate norms (bpm) by age. lower is better.
@@ -28,6 +48,12 @@ enum VitalityNorms {
     ]
 
     /// HRV (SDNN, ms) by age. higher is better.
+    ///
+    /// Deliberately not split by sex. The published sex difference in SDNN is
+    /// small, is present only below about 30, and has disappeared by 50
+    /// (Umetani et al., JACC 1998), and no short-recording reference set gives
+    /// per-sex medians on the scale a watch reports. Two tables here would be
+    /// invented precision, so both sexes read the same rows.
     static let hrv: [(age: Int, value: Double)] = [
         (20, 62), (25, 58), (30, 54), (35, 50), (40, 46),
         (45, 42), (50, 38), (55, 34), (60, 30), (65, 27),
@@ -55,15 +81,21 @@ enum VitalityNorms {
         (70, 4.1), (75, 3.9), (80, 3.6)
     ]
 
-    /// Steps per day norms by age.
-    static let steps: [(age: Int, value: Double)] = [
+    /// Steps per day TARGETS by age, not population medians. 10,000 steps is a
+    /// guideline figure; measured medians sit several thousand steps lower.
+    /// Anything shown next to these rows has to be worded as a target, which is
+    /// what `VitalityComponent.referenceIsTarget` carries to the UI.
+    static let stepsTarget: [(age: Int, value: Double)] = [
         (20, 10000), (25, 9800), (30, 9500), (35, 9000), (40, 8500),
         (45, 8000), (50, 7500), (55, 7000), (60, 6500), (65, 6000),
         (70, 5500), (75, 5000), (80, 4500)
     ]
 
-    /// Exercise minutes per day norms by age.
-    static let exerciseMinutes: [(age: Int, value: Double)] = [
+    /// Exercise minutes per day TARGETS by age. Exercise minutes are an Apple
+    /// defined metric with no population median published against it, so these
+    /// are the 150 minutes a week guideline spread across the days and eased
+    /// down with age. Same rule as steps: present as a target, never as typical.
+    static let exerciseMinutesTarget: [(age: Int, value: Double)] = [
         (20, 45), (25, 42), (30, 40), (35, 38), (40, 35),
         (45, 33), (50, 30), (55, 28), (60, 25), (65, 22),
         (70, 20), (75, 18), (80, 15)
@@ -73,17 +105,59 @@ enum VitalityNorms {
     /// For BMI we measure distance from optimal (22.5), so lower delta = younger.
     static let bmiOptimal: Double = 22.5
 
-    /// Body fat % norms by age. combined sex average.
-    static let bodyFatPercent: [(age: Int, value: Double)] = [
-        (20, 18), (25, 19), (30, 20), (35, 21), (40, 22),
-        (45, 23), (50, 24), (55, 25), (60, 26), (65, 27),
-        (70, 28), (75, 29), (80, 30)
+    /// Body fat % medians by age, from the NHANES DXA distributions (CDC
+    /// 2005-06 and 2015-16). Women carry roughly 13 points more fat than men at
+    /// the same age, so the single table that used to sit here read a lean
+    /// woman as decades old. The raw NHANES series dips a few tenths between
+    /// neighbouring brackets; the rows below are smoothed to stay monotonic,
+    /// because the interpolation needs values that only move one way with age.
+    ///
+    /// These are DXA medians and most users measure on a bioimpedance scale,
+    /// which typically reads lower, so this metric errs generous rather than
+    /// harsh. It carries the smallest weight in the model.
+    static let bodyFatPercentMale: [(age: Int, value: Double)] = [
+        (20, 24.0), (25, 25.5), (30, 27.0), (35, 28.5), (40, 28.8),
+        (45, 29.0), (50, 29.2), (55, 29.4), (60, 29.7), (65, 30.2),
+        (70, 30.5), (75, 31.0), (80, 31.4)
+    ]
+
+    static let bodyFatPercentFemale: [(age: Int, value: Double)] = [
+        (20, 37.8), (25, 38.5), (30, 40.0), (35, 41.0), (40, 41.8),
+        (45, 42.2), (50, 42.6), (55, 43.3), (60, 44.0), (65, 44.4),
+        (70, 44.6), (75, 44.8), (80, 45.0)
+    ]
+
+    /// Used when the profile has no usable sex.
+    static let bodyFatPercentCombined: [(age: Int, value: Double)] = [
+        (20, 30.9), (25, 32.0), (30, 33.5), (35, 34.8), (40, 35.3),
+        (45, 35.6), (50, 35.9), (55, 36.4), (60, 36.9), (65, 37.3),
+        (70, 37.6), (75, 37.9), (80, 38.2)
     ]
 
     /// Age span every table above covers. The metric gauge maps an age onto this
     /// span so the bar and the age label are on one scale.
     static let youngestReferenceAge = 20
     static let oldestReferenceAge = 80
+
+    // MARK: - Sex Selection
+
+    /// `other` and `preferNotToSay` fall back to the combined table. Guessing a
+    /// sex would be worse than reading the average of both.
+    static func vo2Max(for gender: Gender?) -> [(age: Int, value: Double)] {
+        switch gender {
+        case .male: return vo2MaxMale
+        case .female: return vo2MaxFemale
+        default: return vo2MaxCombined
+        }
+    }
+
+    static func bodyFatPercent(for gender: Gender?) -> [(age: Int, value: Double)] {
+        switch gender {
+        case .male: return bodyFatPercentMale
+        case .female: return bodyFatPercentFemale
+        default: return bodyFatPercentCombined
+        }
+    }
 
     // MARK: - Interpolation
 
@@ -172,7 +246,12 @@ struct VitalityComponent: Identifiable {
     let metricAge: Int
     let currentValue: Double
     let unit: String
-    let populationMedian: Double
+    /// What the metric is being compared against: a population median for most
+    /// metrics, an activity target for steps and exercise minutes.
+    let referenceValue: Double
+    /// True when `referenceValue` is a target rather than a measured median, so
+    /// the UI must not call it typical.
+    let referenceIsTarget: Bool
     /// True when the value beats the youngest row of the reference table, so
     /// `metricAge` is a floor rather than a reading. The UI shows "top of
     /// range" for these instead of a year gap that has no data behind it.
@@ -324,7 +403,37 @@ final class VitalityScorer {
     private static let paceLowerBound: Double = 0.5
     private static let paceUpperBound: Double = 2.0
 
+    /// How far the fitted slope must sit from calendar pace, in standard errors
+    /// of its own fit, before a non-stable pace is reported.
+    private static let paceSignificanceSigma: Double = 2.0
+
     private static let secondsPerYear: Double = 365.25 * 24 * 60 * 60
+    private static let secondsPerDay: Double = 24 * 60 * 60
+
+    // MARK: - Freshness
+
+    /// How stale a metric may be before it stops counting, matched to how often
+    /// each one is actually written rather than one flat window. Watch metrics
+    /// land daily, so a week covers a weekend with the watch off the wrist.
+    private static let dailyMetricStalenessDays = 7
+
+    /// VO2 max only lands after a qualifying outdoor workout, which for most
+    /// people is weeks apart. A two day window dropped the heaviest component
+    /// in the model from nearly everyone.
+    private static let vo2MaxStalenessDays = 45
+
+    /// Body composition comes off a scale people step on now and then.
+    private static let bodyCompositionStalenessDays = 30
+
+    /// Share of the model's weight that must be present before a new age is
+    /// published. Below this the number would move because data went missing,
+    /// not because the body changed, so the last computed age is held instead.
+    private static let minimumWeightCoverage: Double = 0.5
+
+    /// How long a held age stays honest. Past this the gap is no longer a
+    /// dropout, it is a tracker that stopped, and we fall back to the
+    /// chronological-age path rather than showing a stale number forever.
+    private static let heldAgeMaxDays = 14
 
     /// Days of data available at last compute. 0 means no data yet.
     private(set) var availableDays: Int = 0
@@ -351,7 +460,14 @@ final class VitalityScorer {
         var chronologicalAge: Int
         var personalizationProgress: Double
         var availableDays: Int
+        /// Optional so snapshots written before this field decode instead of
+        /// being thrown away on upgrade.
+        var computedAt: Date?
     }
+
+    /// When the last full compute ran. Bounds how long a dropout may be covered
+    /// by holding the previous age.
+    private var lastFullComputeAt: Date?
 
     init() {
         guard
@@ -363,6 +479,7 @@ final class VitalityScorer {
         computedBiologicalAge = snap.vitalityAge
         personalizationProgress = snap.personalizationProgress
         availableDays = snap.availableDays
+        lastFullComputeAt = snap.computedAt
         isReady = true
     }
 
@@ -375,7 +492,8 @@ final class VitalityScorer {
             vitalityAge: vitalityAge,
             chronologicalAge: chronologicalAge,
             personalizationProgress: personalizationProgress,
-            availableDays: availableDays
+            availableDays: availableDays,
+            computedAt: lastFullComputeAt
         )
         if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
@@ -404,6 +522,10 @@ final class VitalityScorer {
             allSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
         }
 
+        // Sex-specific norms where published ones exist. The profile already
+        // holds this from onboarding, so it is read, never asked for again.
+        let gender = UserProfileStore.shared.loadLocal()?.gender
+
         availableDays = usableDaysForPersonalization(from: allSeries)
         personalizationProgress = personalizationProgress(for: availableDays)
         computedBiologicalAge = chronologicalAge
@@ -416,15 +538,16 @@ final class VitalityScorer {
 
         // --- VO2 Max ---
         if let series = allSeries[.vo2Max],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.vo2MaxStalenessDays),
            let avg = recentAverage(series, days: 30) {
-            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.vo2Max, higherIsBetter: true)
+            let table = VitalityNorms.vo2Max(for: gender)
+            let norm = VitalityNorms.metricAge(value: avg, table: table, higherIsBetter: true)
             let w = Self.weightFor(.vo2Max)
-            let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.vo2Max)
+            let median = interpolateMedian(age: chronologicalAge, table: table)
             components.append(VitalityComponent(
                 metric: "VO2 Max", metricAge: norm.age,
                 currentValue: avg, unit: "mL/kg/min",
-                populationMedian: median,
+                referenceValue: median, referenceIsTarget: false,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .vo2Max
@@ -435,7 +558,7 @@ final class VitalityScorer {
 
         // --- Resting Heart Rate ---
         if let series = allSeries[.restingHeartRate],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let avg = recentAverage(series, days: 14) {
             let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.restingHeartRate, higherIsBetter: false)
             let w = Self.weightFor(.restingHeartRate)
@@ -443,7 +566,7 @@ final class VitalityScorer {
             components.append(VitalityComponent(
                 metric: "Resting HR", metricAge: norm.age,
                 currentValue: avg, unit: "bpm",
-                populationMedian: median,
+                referenceValue: median, referenceIsTarget: false,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .restingHeartRate
@@ -454,7 +577,7 @@ final class VitalityScorer {
 
         // --- HRV ---
         if let series = allSeries[.heartRateVariability],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let avg = recentAverage(series, days: 14) {
             let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.hrv, higherIsBetter: true)
             let w = Self.weightFor(.hrv)
@@ -462,7 +585,7 @@ final class VitalityScorer {
             components.append(VitalityComponent(
                 metric: "HRV", metricAge: norm.age,
                 currentValue: avg, unit: "ms",
-                populationMedian: median,
+                referenceValue: median, referenceIsTarget: false,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .heartRateVariability
@@ -473,7 +596,7 @@ final class VitalityScorer {
 
         // --- Sleep Efficiency (computed from duration and awake time) ---
         if let sleepSeries = allSeries[.sleepDuration],
-           !sleepSeries.isStale(thresholdDays: 2),
+           !sleepSeries.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let awakeSeries = allSeries[.sleepAwake] {
             let recentSleep = sleepSeries.samples(lastDays: 14)
             let recentAwake = awakeSeries.samples(lastDays: 14)
@@ -489,7 +612,7 @@ final class VitalityScorer {
                     components.append(VitalityComponent(
                         metric: "Sleep Efficiency", metricAge: norm.age,
                         currentValue: efficiency, unit: "%",
-                        populationMedian: median,
+                        referenceValue: median, referenceIsTarget: false,
                         isBeyondYoungestReference: norm.isBeyondYoungestReference,
                         isBelowOldestReference: norm.isBelowOldestReference,
                         healthMetric: .sleepDuration
@@ -502,7 +625,7 @@ final class VitalityScorer {
 
         // --- Deep Sleep % ---
         if let deepSeries = allSeries[.sleepDeep],
-           !deepSeries.isStale(thresholdDays: 2),
+           !deepSeries.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let sleepSeries = allSeries[.sleepDuration] {
             let recentDeep = deepSeries.samples(lastDays: 14)
             let recentSleep = sleepSeries.samples(lastDays: 14)
@@ -517,7 +640,7 @@ final class VitalityScorer {
                     components.append(VitalityComponent(
                         metric: "Deep Sleep", metricAge: norm.age,
                         currentValue: deepPct, unit: "%",
-                        populationMedian: median,
+                        referenceValue: median, referenceIsTarget: false,
                         isBeyondYoungestReference: norm.isBeyondYoungestReference,
                         isBelowOldestReference: norm.isBelowOldestReference,
                         healthMetric: .sleepDeep
@@ -530,7 +653,7 @@ final class VitalityScorer {
 
         // --- Walking Speed ---
         if let series = allSeries[.walkingSpeed],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let avg = recentAverage(series, days: 30) {
             let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.walkingSpeed, higherIsBetter: true)
             let w = Self.weightFor(.walkingSpeed)
@@ -538,7 +661,7 @@ final class VitalityScorer {
             components.append(VitalityComponent(
                 metric: "Walking Speed", metricAge: norm.age,
                 currentValue: avg, unit: "km/h",
-                populationMedian: median,
+                referenceValue: median, referenceIsTarget: false,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .walkingSpeed
@@ -549,15 +672,15 @@ final class VitalityScorer {
 
         // --- Steps ---
         if let series = allSeries[.steps],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let avg = recentAverage(series, days: 14) {
-            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.steps, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.stepsTarget, higherIsBetter: true)
             let w = Self.weightFor(.steps)
-            let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.steps)
+            let target = interpolateMedian(age: chronologicalAge, table: VitalityNorms.stepsTarget)
             components.append(VitalityComponent(
                 metric: "Daily Steps", metricAge: norm.age,
                 currentValue: avg, unit: "steps",
-                populationMedian: median,
+                referenceValue: target, referenceIsTarget: true,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .steps
@@ -568,15 +691,15 @@ final class VitalityScorer {
 
         // --- Exercise Minutes ---
         if let series = allSeries[.exerciseMinutes],
-           !series.isStale(thresholdDays: 2),
+           !series.isStale(thresholdDays: Self.dailyMetricStalenessDays),
            let avg = recentAverage(series, days: 14) {
-            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.exerciseMinutes, higherIsBetter: true)
+            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.exerciseMinutesTarget, higherIsBetter: true)
             let w = Self.weightFor(.exerciseMinutes)
-            let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.exerciseMinutes)
+            let target = interpolateMedian(age: chronologicalAge, table: VitalityNorms.exerciseMinutesTarget)
             components.append(VitalityComponent(
                 metric: "Exercise", metricAge: norm.age,
                 currentValue: avg, unit: "min/day",
-                populationMedian: median,
+                referenceValue: target, referenceIsTarget: true,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .exerciseMinutes
@@ -587,15 +710,16 @@ final class VitalityScorer {
 
         // --- Body Composition (BMI or Body Fat %) ---
         if let bfSeries = allSeries[.bodyFatPercentage],
-           !bfSeries.isStale(thresholdDays: 30), // Body comp doesn't change fast
+           !bfSeries.isStale(thresholdDays: Self.bodyCompositionStalenessDays),
            let avg = recentAverage(bfSeries, days: 30) {
-            let norm = VitalityNorms.metricAge(value: avg, table: VitalityNorms.bodyFatPercent, higherIsBetter: false)
+            let table = VitalityNorms.bodyFatPercent(for: gender)
+            let norm = VitalityNorms.metricAge(value: avg, table: table, higherIsBetter: false)
             let w = Self.weightFor(.bodyComposition)
-            let median = interpolateMedian(age: chronologicalAge, table: VitalityNorms.bodyFatPercent)
+            let median = interpolateMedian(age: chronologicalAge, table: table)
             components.append(VitalityComponent(
                 metric: "Body Fat", metricAge: norm.age,
                 currentValue: avg, unit: "%",
-                populationMedian: median,
+                referenceValue: median, referenceIsTarget: false,
                 isBeyondYoungestReference: norm.isBeyondYoungestReference,
                 isBelowOldestReference: norm.isBelowOldestReference,
                 healthMetric: .bodyFatPercentage
@@ -603,7 +727,7 @@ final class VitalityScorer {
             weightedAgeSum += Double(norm.age) * w
             totalWeight += w
         } else if let bmiSeries = allSeries[.bmi],
-                  !bmiSeries.isStale(thresholdDays: 30),
+                  !bmiSeries.isStale(thresholdDays: Self.bodyCompositionStalenessDays),
                   let avg = recentAverage(bmiSeries, days: 30) {
             // Fall back to BMI if no body fat data
             // Map BMI deviation from optimal to an age offset
@@ -615,7 +739,7 @@ final class VitalityScorer {
             components.append(VitalityComponent(
                 metric: "BMI", metricAge: bmiAge,
                 currentValue: avg, unit: "",
-                populationMedian: VitalityNorms.bmiOptimal,
+                referenceValue: VitalityNorms.bmiOptimal, referenceIsTarget: false,
                 // BMI age comes from distance to the optimal point, not a norm
                 // table, so there is no reference row at either end to clamp at.
                 isBeyondYoungestReference: false,
@@ -643,6 +767,20 @@ final class VitalityScorer {
             return
         }
 
+        // A dropout is not a change in the body. When the metrics that did
+        // arrive cover less than half the model, renormalising over them moves
+        // the age by years overnight for no reason the user caused, so the last
+        // full estimate is held instead. Held only while it is recent enough to
+        // still describe this person.
+        if totalWeight < Self.minimumWeightCoverage,
+           vitalityAge > 0,
+           let lastCompute = lastFullComputeAt,
+           Date().timeIntervalSince(lastCompute) < Double(Self.heldAgeMaxDays) * Self.secondsPerDay {
+            componentAges = components.sorted { $0.metricAge > $1.metricAge }
+            isReady = true
+            return
+        }
+
         // Normalize weights if not all metrics are available
         let computedAge = max(18, min(95, weightedAgeSum / totalWeight))
         computedBiologicalAge = Int(computedAge.rounded())
@@ -654,6 +792,8 @@ final class VitalityScorer {
         vitalityAge = Int(preciseVitalityAge.rounded())
         componentAges = components.sorted { $0.metricAge > $1.metricAge }
         isReady = true
+
+        lastFullComputeAt = Date()
 
         // Compute historical trend and pace of aging
         computeHistory(from: store)
@@ -780,19 +920,33 @@ final class VitalityScorer {
     /// the estimate's noise floor, so only ±2+ is claimed as younger/older.
     static let onboardingHeadlineDeltaBandYears = 2
 
+    /// Fewest in-range metrics behind a definite "N years younger" at the end of
+    /// onboarding. One scalar is a hint, not a reading, and the dashboard holds
+    /// the user at their real age for the first week either way, so a thin
+    /// estimate has to be shown as provisional or the app contradicts itself.
+    static let onboardingMinimumMetrics = 3
+
+    /// Model weight those metrics have to carry between them, so three of the
+    /// lightest signals cannot stand in for the heavy ones.
+    static let onboardingMinimumWeight: Double = 0.3
+
     /// Store-free Vitality Age estimate for the onboarding reveal, where only
     /// scalar averages exist (resting HR, HRV). Reuses the same population norms
     /// and weights as the full engine, renormalised over the metrics provided.
     /// Returns the chronological age and no metrics when nothing is available.
+    ///
+    /// `isProvisional` is true when too little real data is behind the number to
+    /// state a year gap. The caller must not print a definite claim then.
     static func onboardingEstimate(
         chronologicalAge: Int,
+        gender: Gender,
         restingHR: Double?,
         hrvMs: Double?,
         steps: Double?,
         vo2Max: Double?,
         exerciseMinutes: Double?,
         walkingSpeedKmh: Double?
-    ) -> (vitalityAge: Int, metrics: [OnboardingMetric]) {
+    ) -> (vitalityAge: Int, metrics: [OnboardingMetric], isProvisional: Bool) {
         var weightedSum = 0.0
         var totalWeight = 0.0
         var out: [OnboardingMetric] = []
@@ -802,6 +956,12 @@ final class VitalityScorer {
                  key: VitalityMetricKey, goodness: (Double) -> Double) {
             guard let v = value, v > 0 else { return }
             let norm = VitalityNorms.metricAge(value: v, table: table, higherIsBetter: higherIsBetter)
+            // Off either end of the table the age is a floor or a ceiling, not a
+            // reading, so it carries no year gap. Onboarding averages are also
+            // the shakiest input in the app: a partial step window divided over
+            // a full month lands past the oldest row and would otherwise show up
+            // as a confident "+50 years".
+            guard !norm.isBeyondYoungestReference, !norm.isBelowOldestReference else { return }
             let w = weightFor(key)
             weightedSum += Double(norm.age) * w
             totalWeight += w
@@ -817,20 +977,23 @@ final class VitalityScorer {
             table: VitalityNorms.hrv, higherIsBetter: true,
             key: .hrv, goodness: { ($0 - 10) / 90 })
         add(steps, name: "STEPS", label: { "\(Int($0.rounded())) steps" },
-            table: VitalityNorms.steps, higherIsBetter: true,
+            table: VitalityNorms.stepsTarget, higherIsBetter: true,
             key: .steps, goodness: { $0 / 12000 })
         add(vo2Max, name: "VO2 MAX", label: { "\(Int($0.rounded())) mL" },
-            table: VitalityNorms.vo2Max, higherIsBetter: true,
+            table: VitalityNorms.vo2Max(for: gender), higherIsBetter: true,
             key: .vo2Max, goodness: { ($0 - 20) / 40 })
         add(exerciseMinutes, name: "EXERCISE", label: { "\(Int($0.rounded())) min" },
-            table: VitalityNorms.exerciseMinutes, higherIsBetter: true,
+            table: VitalityNorms.exerciseMinutesTarget, higherIsBetter: true,
             key: .exerciseMinutes, goodness: { $0 / 45 })
         add(walkingSpeedKmh, name: "WALK SPEED", label: { String(format: "%.1f km/h", $0) },
             table: VitalityNorms.walkingSpeed, higherIsBetter: true,
             key: .walkingSpeed, goodness: { ($0 - 3) / 3 })
 
-        guard totalWeight > 0 else { return (chronologicalAge, []) }
-        return (Int((weightedSum / totalWeight).rounded()), out)
+        guard out.count >= onboardingMinimumMetrics, totalWeight >= onboardingMinimumWeight else {
+            // Not enough behind it to move the number, so it does not move.
+            return (chronologicalAge, out, true)
+        }
+        return (Int((weightedSum / totalWeight).rounded()), out, false)
     }
 
     /// Interpolate the population median for a given age from a reference table
@@ -866,10 +1029,6 @@ final class VitalityScorer {
 
     /// Pace of aging: how many years of vitality age accrue per calendar year.
     /// 1.0 tracks the calendar, below 1.0 is aging slower, above is faster.
-    ///
-    /// Chronological age is a constant across this window, so the slope of
-    /// vitality age is the slope of the gap between them, which is why the
-    /// fitted slope is offset by 1.
     private func computePaceOfAging() {
         if let pace = Self.pace(from: history) {
             paceOfAging = pace
@@ -891,9 +1050,40 @@ final class VitalityScorer {
         guard smoothed.count >= 2, let firstDate = dates.first else { return nil }
 
         let elapsedYears = dates.map { $0.timeIntervalSince(firstDate) / secondsPerYear }
-        let (slope, _) = [Double].linearRegression(x: elapsedYears, y: smoothed)
+        let (slope, intercept) = [Double].linearRegression(x: elapsedYears, y: smoothed)
         guard slope.isFinite else { return nil }
 
-        return max(paceLowerBound, min(paceUpperBound, slope + 1.0))
+        // The slope is already years of vitality age per calendar year, so it is
+        // the pace. It used to be reported as slope + 1, which labelled a body
+        // tracking the calendar (slope 1) as the fastest decline the scale can
+        // show. A quarter of a year of history cannot resolve a small drift
+        // either, so a slope that has not cleared its own standard error is
+        // reported as calendar pace rather than as a verdict.
+        guard let standardError = slopeStandardError(x: elapsedYears, y: smoothed, slope: slope, intercept: intercept),
+              abs(slope - 1.0) > paceSignificanceSigma * standardError
+        else { return 1.0 }
+
+        return max(paceLowerBound, min(paceUpperBound, slope))
+    }
+
+    /// Standard error of the fitted slope. Returns nil when the fit has no
+    /// residual degrees of freedom or no spread in x to regress against.
+    ///
+    /// Consecutive days are smoothed and correlated, so this understates the
+    /// true uncertainty; `paceSignificanceSigma` is set wide to absorb that.
+    private static func slopeStandardError(x: [Double], y: [Double], slope: Double, intercept: Double) -> Double? {
+        let n = Swift.min(x.count, y.count)
+        guard n > 2 else { return nil }
+        let xMean = x.prefix(n).reduce(0, +) / Double(n)
+        var residualSquares = 0.0
+        var xSpread = 0.0
+        for i in 0..<n {
+            let residual = y[i] - (intercept + slope * x[i])
+            residualSquares += residual * residual
+            let xDiff = x[i] - xMean
+            xSpread += xDiff * xDiff
+        }
+        guard xSpread > 0 else { return nil }
+        return ((residualSquares / Double(n - 2)) / xSpread).squareRoot()
     }
 }

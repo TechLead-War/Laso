@@ -186,18 +186,30 @@ struct ReadinessScorer {
         )
     }
 
-    static func stressLevel(hrv: Double?, restingHeartRate: Double?) -> Int? {
-        guard let hrv, let restingHeartRate else { return nil }
+    /// Stress read against the person's own HRV and resting-HR baselines, the
+    /// way every other channel in this scorer reads. Fixed population anchors
+    /// (60 ms SDNN, 50 bpm) made "Relaxed" unreachable for normal older adults
+    /// and disagreed with `StressScorer`, which is baseline-relative.
+    ///
+    /// Returns nil without both baselines: there is no honest population
+    /// fallback here, so callers must show a no-data state instead.
+    static func stressLevel(
+        hrv: Double?,
+        hrvBaseline: BaselineStats?,
+        restingHeartRate: Double?,
+        restingHeartRateBaseline: BaselineStats?
+    ) -> Int? {
+        guard let hrv, let restingHeartRate,
+              let hrvBaseline, hrvBaseline.median > 0,
+              let rhrBaseline = restingHeartRateBaseline, rhrBaseline.median > 0 else { return nil }
+
         let cap = ReadinessScorerConfig.stressChannelCap
-        let hrvStress = min(
-            max((ReadinessScorerConfig.stressHRVAnchor - hrv) / ReadinessScorerConfig.stressHRVRange * cap, 0),
-            cap
-        )
-        let rhrStress = min(
-            max((restingHeartRate - ReadinessScorerConfig.stressRHRAnchor) / ReadinessScorerConfig.stressRHRRange * cap, 0),
-            cap
-        )
-        return Int(hrvStress + rhrStress)
+        let deviationAtCap = max(ReadinessScorerConfig.stressDeviationAtCap, 0.0001)
+        let hrvDrop = max(0, (hrvBaseline.median - hrv) / hrvBaseline.median)
+        let rhrRise = max(0, (restingHeartRate - rhrBaseline.median) / rhrBaseline.median)
+        let hrvStress = min(hrvDrop / deviationAtCap, 1.0) * cap
+        let rhrStress = min(rhrRise / deviationAtCap, 1.0) * cap
+        return Int((hrvStress + rhrStress).rounded())
     }
 
     static func stressLabel(for level: Int?) -> String {

@@ -28,6 +28,10 @@ enum SleepNeedConfig {
 
     // MARK: - Recovery Adjustments (recovery score → hours)
 
+    /// Used when the caller has no recovery score to pass. Sits in the "good"
+    /// band so an unknown recovery neither adds nor removes sleep need.
+    static let neutralRecoveryScore: Double = 70
+
     static let recoveryLowCeiling: Double = 40
     static let recoveryModerateCeiling: Double = 60
     static let recoveryGoodCeiling: Double = 80

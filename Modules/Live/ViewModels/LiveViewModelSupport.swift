@@ -221,8 +221,17 @@ extension LiveViewModel {
     final class RecoveryData {
         var latestRestingHeartRate: Double?
         var latestRestingHeartRateTimestamp: Date?
+        /// Today's mean SDNN, not one raw sample. The personal baseline is built
+        /// from 60 days of daily averages, so anything scored against it has to
+        /// be a daily average too.
         var latestHRV: Double?
+        /// Newest SDNN sample behind `latestHRV`. Freshness evidence, so a day
+        /// averaged from overnight samples is not treated as measured now.
         var latestHRVTimestamp: Date?
+        /// Personal 60-day baselines the readiness and stress channels score
+        /// against. Nil until enough daily averages exist.
+        var hrvBaseline: ReadinessScorer.BaselineStats?
+        var restingHeartRateBaseline: ReadinessScorer.BaselineStats?
         var readinessScore: Int?
         var readinessConfidence: Int?
         /// Score points the model held back for the signals it did not have.
@@ -249,7 +258,12 @@ extension LiveViewModel {
         }
 
         var stressLevel: Int? {
-            ReadinessScorer.stressLevel(hrv: latestHRV, restingHeartRate: latestRestingHeartRate)
+            ReadinessScorer.stressLevel(
+                hrv: latestHRV,
+                hrvBaseline: hrvBaseline,
+                restingHeartRate: latestRestingHeartRate,
+                restingHeartRateBaseline: restingHeartRateBaseline
+            )
         }
     }
 

@@ -329,6 +329,8 @@ extension Copy {
         static var whyThisToday: String { RemoteConfigManager.shared.copyString("copy_home_why_this_today", default: "Why this, today") }
         static var nextWeekTarget: String { RemoteConfigManager.shared.copyString("copy_home_next_week_target", default: "Next week target") }
         static var wearAppleWatchForRecovery: String { RemoteConfigManager.shared.copyString("copy_home_wear_apple_watch_for_recovery", default: "Wear your Apple Watch to see your live energy") }
+        static var scoreNoDataYet: String { RemoteConfigManager.shared.copyString("copy_home_score_no_data_yet", default: "Not enough data yet to score your day") }
+        static var scoreNoDataYetDetail: String { RemoteConfigManager.shared.copyString("copy_home_score_no_data_yet_detail", default: "Keep your health data syncing and your score will show up here") }
 
         // MARK: - Score Guide
 

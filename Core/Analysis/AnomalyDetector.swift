@@ -28,7 +28,12 @@ struct AnomalyDetector {
     ) -> AnomalyResult {
         let deviation = baseline.deviationPercent(for: currentValue)
 
-        // Z-score: how many standard deviations from baseline mean
+        // Z-score: how many standard deviations from baseline mean.
+        // `detectAll` passes a 3-day mean here, whose own spread is narrower than a
+        // single day's. Do not divide the baseline SD by sqrt(3) to compensate: daily
+        // health metrics are strongly autocorrelated, so the true spread of a 3-day
+        // mean sits near 0.8 SD, not 0.58, and the sqrt(n) correction would
+        // over-report anomalies. The unscaled daily SD is the conservative bound.
         let zScore: Double
         if baseline.standardDeviation > 0 && baseline.sampleCount >= 7 {
             zScore = (currentValue - baseline.mean) / baseline.standardDeviation

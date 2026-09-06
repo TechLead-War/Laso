@@ -101,7 +101,9 @@ struct VitalityMetricContributionSection: View {
 
     private func metricSubtitle(for component: VitalityComponent) -> String {
         let current = vitalityFormatMetricValue(component.currentValue, unit: component.unit, metric: component.healthMetric)
-        let expected = vitalityFormatMetricValue(component.populationMedian, unit: component.unit, metric: component.healthMetric)
-        return Copy.Vitality.metricSubtitle(current: current, expected: expected)
+        let expected = vitalityFormatMetricValue(component.referenceValue, unit: component.unit, metric: component.healthMetric)
+        return component.referenceIsTarget
+            ? Copy.Vitality.metricTargetSubtitle(current: current, expected: expected)
+            : Copy.Vitality.metricSubtitle(current: current, expected: expected)
     }
 }

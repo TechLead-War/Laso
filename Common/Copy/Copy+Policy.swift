@@ -90,17 +90,16 @@ extension Copy {
         static func predictiveDefault(prob: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_policy_policy_predictive_default", default: "Your risk for tomorrow is higher than usual (%d%% sure). This tackles the biggest cause."), prob)
         }
-        static func causalWithLag(effectLabel: String, metric: String, lag: Int) -> String {
-            let unit = lag == 1
-                ? RemoteConfigManager.shared.copyString("copy_policy_causal_lag_day_singular", default: "day")
-                : RemoteConfigManager.shared.copyString("copy_policy_causal_lag_day_plural", default: "days")
-            return String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_with_lag", default: "Your data shows a %@ link: changes in %@ lead to health changes %d %@ later. This isn't just a coincidence, it's a real cause."), effectLabel, metric, lag, unit)
-        }
+        /// A Granger test on as few as 16 daily samples shows that one metric leads
+        /// another, never that it causes it, so this stays association wording.
         static func causalDefault(metric: String, effectLabel: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_default", default: "Your data points to %@ as a %@ cause of your overall health."), metric, effectLabel)
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_causal_default", default: "Your data shows a %2$@ link between %1$@ and your overall health. That is a pattern we spotted, not proof of cause."), metric, effectLabel)
         }
-        static func stateTransition(days: Int, metricName: String) -> String {
-            String(format: RemoteConfigManager.shared.copyString("copy_policy_state_transition", default: "Your body has been in this state for %d days. %@ is the main thing keeping you from a healthier one, so improving it speeds up the change."), days, metricName)
+        // New key rather than reusing `copy_policy_state_transition`: any override
+        // already published for that key still carries a %d placeholder, and
+        // formatting it with one argument reads past the argument list.
+        static func stateTransition(metricName: String) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_policy_state_transition_metric", default: "%@ is the main thing keeping you from a healthier state, so improving it speeds up the change."), metricName)
         }
         static func anomalyWithDeviation(metric: String, devPct: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_policy_anomaly_with_deviation", default: "Your %@ is %d%% outside your normal range. Odd readings that stick around can hurt sleep, recovery, and how you feel the next day."), metric, devPct)

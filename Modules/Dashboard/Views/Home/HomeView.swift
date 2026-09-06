@@ -141,7 +141,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet(
-                score: viewModel.overallScore.score,
+                score: viewModel.overallScore?.score ?? 0,
                 weakestCategoryName: weakestCategoryName,
                 appStateStore: appStateStore
             )
@@ -271,9 +271,18 @@ struct HomeView: View {
 
     // MARK: - Live Readiness Score (30-minute refresh)
 
-    /// Live readiness score. falls back to daily score when no readiness data is available
-    private var liveReadinessScore: Int {
-        liveViewModel.recovery.readinessScore ?? viewModel.overallScore.score
+    /// Live readiness score. Falls back to the daily score when no readiness
+    /// data is available, and stays nil when neither exists so the card can say
+    /// so instead of drawing a ring around a stand-in number.
+    private var liveReadinessScore: Int? {
+        liveViewModel.recovery.readinessScore ?? viewModel.overallScore?.score
+    }
+
+    /// Empty strings when there is no score: the card hides the summary footer
+    /// rather than narrating a number that was never computed.
+    private var readinessSummary: (head: String, sub: String) {
+        guard let liveReadinessScore else { return ("", "") }
+        return viewModel.readinessSummary(score: liveReadinessScore)
     }
 
     /// Whether we have a real live readiness score (not a fallback)
@@ -469,8 +478,8 @@ struct HomeView: View {
                     // shown as one ring plus the plain-word reasons behind it.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
-                        summaryHead: viewModel.readinessSummary(score: liveReadinessScore).head,
-                        summarySub: viewModel.readinessSummary(score: liveReadinessScore).sub,
+                        summaryHead: readinessSummary.head,
+                        summarySub: readinessSummary.sub,
                         whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
                         isFallbackScore: !hasLiveReadiness,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
@@ -511,10 +520,12 @@ struct HomeView: View {
                     .onAppear {
                         recoveryTracker.appeared()
                         scrollDepth.record(10)
-                        AppAnalytics.shared.trackScoreViewed(
-                            score: liveReadinessScore,
-                            previousScore: viewModel.scores.scoreChangeFromYesterday.map { liveReadinessScore - $0 }
-                        )
+                        if let liveReadinessScore {
+                            AppAnalytics.shared.trackScoreViewed(
+                                score: liveReadinessScore,
+                                previousScore: viewModel.scores.scoreChangeFromYesterday.map { liveReadinessScore - $0 }
+                            )
+                        }
                     }
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
@@ -527,7 +538,11 @@ struct HomeView: View {
                     // and two numbers for today on one screen reads as a bug.
                     WeekScoreStrip(scoresByDay: {
                         var scores = viewModel.cachedDailyScoresByDay
-                        scores[Date.cal.startOfDay(for: .now)] = liveReadinessScore
+                        // No score today leaves today's dial empty rather than
+                        // pinning it to a number the ring above never showed.
+                        if let liveReadinessScore {
+                            scores[Date.cal.startOfDay(for: .now)] = liveReadinessScore
+                        }
                         return scores
                     }()) {
                         AppAnalytics.shared.trackBlockTap(
@@ -600,7 +615,7 @@ struct HomeView: View {
                                 screen: .home,
                                 metadata: [
                                     "destination": "weekly_review",
-                                    "score": liveReadinessScore
+                                    "score": liveReadinessScore ?? 0
                                 ]
                             )
                             navigationPath.append(Route.weeklyReview)

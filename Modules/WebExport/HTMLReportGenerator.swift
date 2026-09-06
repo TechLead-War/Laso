@@ -3,8 +3,10 @@ import Foundation
 /// Generates a self-contained HTML report with charts and insights
 struct HTMLReportGenerator {
 
+    /// `overallScore` is nil when nothing has been scored yet; the report then
+    /// omits the score hero rather than printing a stand-in number.
     static func generate(
-        overallScore: HealthScore,
+        overallScore: HealthScore?,
         categoryScores: [HealthScore],
         insights: [Insight],
         timeSeries: [HealthMetric: MetricTimeSeries]
@@ -12,7 +14,9 @@ struct HTMLReportGenerator {
         var body = ""
 
         // Overall Score
-        body += generateScoreSection(score: overallScore)
+        if let overallScore {
+            body += generateScoreSection(score: overallScore)
+        }
 
         // Category Cards
         body += "<div class=\"categories\">"

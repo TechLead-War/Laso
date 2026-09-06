@@ -310,14 +310,18 @@ struct OnbV2Screen16Paywall: View {
     /// re-run here from the identical threaded inputs.
     private var headline: String {
         guard hasInsights else { return Copy.OnboardingV2.s16TitleNoData }
-        let (vitalityAge, _) = VitalityScorer.onboardingEstimate(
+        let (vitalityAge, _, isProvisional) = VitalityScorer.onboardingEstimate(
             chronologicalAge: profile.age,
+            gender: profile.sex?.asGender ?? .preferNotToSay,
             restingHR: snapshot.restingHR.map(Double.init),
             hrvMs: snapshot.hrvWeeklyAvgMs,
             steps: snapshot.stepsDailyAvg,
             vo2Max: snapshot.vo2Max,
             exerciseMinutes: snapshot.exerciseDailyAvg,
             walkingSpeedKmh: snapshot.walkingSpeedKmh)
+        // Same gate as the reveal screen, so the two screens cannot disagree
+        // about whether there is a year gap to claim.
+        guard !isProvisional else { return Copy.OnboardingV2.s16TitleNoData }
         let delta = vitalityAge - profile.age
         let band = VitalityScorer.onboardingHeadlineDeltaBandYears
         if delta <= -band { return Copy.OnboardingV2.s16TitleYounger(abs(delta)) }

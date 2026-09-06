@@ -43,7 +43,7 @@ extension Copy {
         static func categoriesLinked(_ a: String, _ b: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_categories_linked", default: "Your %@ and %@ Are Linked"), a, b) }
         static var mostResponsiveMetric: String { RemoteConfigManager.shared.copyString("copy_insights_most_responsive_metric", default: "Your Fastest-Reacting Number") }
         static var warningSignsConverging: String { RemoteConfigManager.shared.copyString("copy_insights_warning_signs_converging", default: "Warning Signs Adding Up") }
-        static func tomorrowsRisk(_ percent: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_tomorrows_risk", default: "Tomorrow's Risk: %d%%"), percent) }
+        static func tomorrowsRisk(_ percent: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_tomorrows_risk", default: "Chance tomorrow lands below your usual: %d%%"), percent) }
         static func biggestOpportunity(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_insights_biggest_opportunity", default: "Biggest Opportunity: %@"), metric) }
         static var yourBestDayFormula: String { RemoteConfigManager.shared.copyString("copy_insights_your_best_day_formula", default: "Your Best-Day Formula") }
         static var recoveryUnderway: String { RemoteConfigManager.shared.copyString("copy_insights_recovery_underway", default: "You're Recovering") }
@@ -217,6 +217,15 @@ extension Copy {
             static var emptyMessageAll: String { RemoteConfigManager.shared.copyString("copy_insights_detail_empty_message_all", default: "More data will open up deeper insights over time.") }
             static func emptyMessageFiltered(_ filter: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_detail_empty_message_filtered", default: "No %@ insights right now."), filter)
+            }
+
+            /// Impact line on an insight card. Only for insights that carry the
+            /// baseline their percentage was measured against.
+            static func percentAboveBaseline(_ percent: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_detail_percent_above_baseline", default: "%@%% above your baseline"), percent)
+            }
+            static func percentBelowBaseline(_ percent: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_detail_percent_below_baseline", default: "%@%% below your baseline"), percent)
             }
         }
 

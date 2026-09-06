@@ -10,7 +10,6 @@
 		0004909582AA930451459F3B /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E020657065005DF616545BF6 /* Date+Extensions.swift */; };
 		003F39E7F76235D19074136B /* HealthKitRepromptBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B9091C60DB3AF85FB82B44 /* HealthKitRepromptBanner.swift */; };
 		0127CC461CC7B5B5E7DE93A5 /* OnboardingPredictionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285FDE9BD8011B4DC47703DF /* OnboardingPredictionStore.swift */; };
-		015E6C615F6CA214083038D3 /* CardioRespiratoryAgeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F884979A6CD42372836D0A4 /* CardioRespiratoryAgeConfig.swift */; };
 		01B1033B9E349610B5FFD999 /* AnalyzerRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3256A8FCD07403BA31F6683D /* AnalyzerRegistry.swift */; };
 		0332BA29357E2D47156878C9 /* MirrorTemplates+Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECEFD321813AB8387C557E60 /* MirrorTemplates+Archive.swift */; };
 		036D8F68A76BA08D114F47EA /* LiveHeaderSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B93DC233848DE7E3BBB185 /* LiveHeaderSection.swift */; };
@@ -77,7 +76,6 @@
 		2137C8F765D87C36B72EB817 /* MaintenanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D16B937F6B0A1ED4F53EB /* MaintenanceView.swift */; };
 		227F4E2EC3D21CF365A6766C /* PremiumShowcaseDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1844D157779B2A88AC7F84 /* PremiumShowcaseDataProvider.swift */; };
 		22D19718B85B75EDDC061633 /* ExploreScoreHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D901E75F4ECF2BFD747AD3F9 /* ExploreScoreHeroSection.swift */; };
-		24C57C91594478F097ADEEB9 /* BiologicalAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F306262364B569E960A18DA5 /* BiologicalAgeAnalyzer.swift */; };
 		25B9C4D143D9219F0DF6D78A /* NotificationRepromptBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9135AB9785666485017DA2D /* NotificationRepromptBanner.swift */; };
 		268F02E787681E98625C517F /* ScoreGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E191C477794DD8ED3B5F34F /* ScoreGuideSheet.swift */; };
 		26CDE9DD7326658BD23E2745 /* LasoWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B6C9AC3F5A37F12B09E3EE /* LasoWatchApp.swift */; };
@@ -142,7 +140,6 @@
 		46DADEDD9DD914C3C006DE2D /* MirrorPhotoViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48E49716A7B7885C25DA5044 /* MirrorPhotoViewer.swift */; };
 		473CFC0642013549FCA628A0 /* RenewalReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F1752AB92977E7D27BD15C /* RenewalReminderStore.swift */; };
 		488ABDA144D7BD1039A5D655 /* RemoteConfigKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F7D6AF332CE6CD4E913AD7 /* RemoteConfigKeys.swift */; };
-		4896B12ADCAA10A33878E200 /* CardioRespiratoryAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3B13F4131F97D8A3453704 /* CardioRespiratoryAgeAnalyzer.swift */; };
 		493B2AF6902F42F27F875216 /* SubscriptionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */; };
 		4A09CA552DEFAE79A8C21BBB /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A063270DE935D1F0AB38584D /* NotificationManager.swift */; };
 		4A49214B1191BD29B42FD12B /* Copy+Causation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76339BBE28D7CD8BC1281CF1 /* Copy+Causation.swift */; };
@@ -670,7 +667,6 @@
 		2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoUITests.swift; sourceTree = "<group>"; };
 		2EB0ECC498E15CAE9AC31BCB /* MenstrualCycleTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenstrualCycleTracker.swift; sourceTree = "<group>"; };
 		2F47A0BD262D48C73776740B /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
-		2F884979A6CD42372836D0A4 /* CardioRespiratoryAgeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardioRespiratoryAgeConfig.swift; sourceTree = "<group>"; };
 		2FA8072A158088DA331EF152 /* WorkoutBandsConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutBandsConfig.swift; sourceTree = "<group>"; };
 		2FB550DF613A646C3C15C54C /* BreathworkLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkLiveActivityWidget.swift; sourceTree = "<group>"; };
 		2FD013BD316032A31BDBD294 /* SleepRegularityAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepRegularityAnalyzer.swift; sourceTree = "<group>"; };
@@ -890,7 +886,6 @@
 		9D830F3EAD66B813F8894C37 /* MirrorGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorGalleryView.swift; sourceTree = "<group>"; };
 		9DE80A834AB5919BB9C3D041 /* Copy+SleepCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+SleepCoach.swift"; sourceTree = "<group>"; };
 		9E19438F39FEFC8FE00D4532 /* Copy+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Live.swift"; sourceTree = "<group>"; };
-		9E3B13F4131F97D8A3453704 /* CardioRespiratoryAgeAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardioRespiratoryAgeAnalyzer.swift; sourceTree = "<group>"; };
 		9E70023F46DBF3C93DD395AF /* Copy+Vitality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Vitality.swift"; sourceTree = "<group>"; };
 		9F504A261844112700CFB346 /* HRRFitnessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRRFitnessAnalyzer.swift; sourceTree = "<group>"; };
 		9F7A76B38DD14D452A4444C7 /* MirrorPhotoFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorPhotoFrame.swift; sourceTree = "<group>"; };
@@ -1042,7 +1037,6 @@
 		F16425BB154CB6626E8F2463 /* BreathworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkView.swift; sourceTree = "<group>"; };
 		F2528F279EF11BFB08AE04FB /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		F2E2767728A344F83903A2FB /* VitalityScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityScorer.swift; sourceTree = "<group>"; };
-		F306262364B569E960A18DA5 /* BiologicalAgeAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalAgeAnalyzer.swift; sourceTree = "<group>"; };
 		F32A5C595D4BC361D4EFE49C /* Copy+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Notifications.swift"; sourceTree = "<group>"; };
 		F4453E2C8E37235B90525F4F /* PatternMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternMiner.swift; sourceTree = "<group>"; };
 		F4F4693DEFC0B60CED6018E5 /* WakeAnchorAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeAnchorAnalyzer.swift; sourceTree = "<group>"; };
@@ -1144,7 +1138,6 @@
 			isa = PBXGroup;
 			children = (
 				40D2A73BAF6AE0371B4C739E /* BiologicalAgeConfig.swift */,
-				2F884979A6CD42372836D0A4 /* CardioRespiratoryAgeConfig.swift */,
 				6129398803D9F5EB1C5F30B0 /* HealthScorerConfig.swift */,
 				987269B5C4845E2B0D87BEC1 /* InsightConfig.swift */,
 				6E18FC551C74EEB11077E85D /* ReadinessScorerConfig.swift */,
@@ -1226,8 +1219,6 @@
 		150B173094C1E29C1CCE961C /* Research */ = {
 			isa = PBXGroup;
 			children = (
-				F306262364B569E960A18DA5 /* BiologicalAgeAnalyzer.swift */,
-				9E3B13F4131F97D8A3453704 /* CardioRespiratoryAgeAnalyzer.swift */,
 				8BAA9BA92A0457852B6FFF87 /* CircadianDisruptionAnalyzer.swift */,
 				9F504A261844112700CFB346 /* HRRFitnessAnalyzer.swift */,
 				4491582C6F04866AB7955DFF /* InflammationRiskAnalyzer.swift */,
@@ -2809,15 +2800,12 @@
 				73E6E81F3F95F7A9481D855E /* BackupPayload.swift in Sources */,
 				421D98FD3FAA63162014FC05 /* BaselineCalculator.swift in Sources */,
 				A568AF3CC1C4BDCBDAEE796D /* BaselineDriftDetector.swift in Sources */,
-				24C57C91594478F097ADEEB9 /* BiologicalAgeAnalyzer.swift in Sources */,
 				B2D2EF8F61F11AF77D1AF97B /* BiologicalAgeConfig.swift in Sources */,
 				31C7770C9EB2AB5D46BCD45F /* BrainHealthDetailView.swift in Sources */,
 				280B07A1B7493EDBB4D5E9C4 /* BrainHealthScorer.swift in Sources */,
 				568A4B9C45459F0BBC05BDE5 /* BreathworkActivityAttributes.swift in Sources */,
 				3F15AA031DC849499F54286C /* BreathworkLiveActivityManager.swift in Sources */,
 				1DF04CDBA27B5FDD2A0349F4 /* BreathworkView.swift in Sources */,
-				4896B12ADCAA10A33878E200 /* CardioRespiratoryAgeAnalyzer.swift in Sources */,
-				015E6C615F6CA214083038D3 /* CardioRespiratoryAgeConfig.swift in Sources */,
 				AAB847BC61393D23E6F5666B /* CategoryDetailView.swift in Sources */,
 				1433431726275DBAD5C9AA16 /* CategoryDetailViewModel.swift in Sources */,
 				83CD8A0FAF5341781E380E81 /* CausalChainEngine.swift in Sources */,
@@ -3351,7 +3339,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3370,7 +3358,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.109;
+				MARKETING_VERSION = 1.2.110;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3441,7 +3429,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 117;
+				CURRENT_PROJECT_VERSION = 118;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3454,7 +3442,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.109;
+				MARKETING_VERSION = 1.2.110;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

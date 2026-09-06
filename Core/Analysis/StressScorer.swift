@@ -194,7 +194,10 @@ final class StressScorer {
 
         // Compute current stress from most recent values
         let currentHRV = mostRecentDailyValue(hrvSeries)
-        let currentHR = currentHeartRateValue(allSeries)
+        // Resting HR only. A daytime average heart rate scored against a resting-HR
+        // baseline reads as elevation that never happened, so a missing resting
+        // reading drops the HR component rather than substituting another quantity.
+        let currentHR = allSeries[.restingHeartRate].flatMap { mostRecentDailyValue($0) }
 
         if let hrvBase = hrvBaseline, let hrv = currentHRV {
             let stressScore = computeStressScore(
@@ -238,21 +241,6 @@ final class StressScorer {
     /// Get the most recent daily average value from a time series
     private func mostRecentDailyValue(_ series: MetricTimeSeries) -> Double? {
         mostRecentDailyMean(series.samples(lastDays: Self.mostRecentLookbackDays))
-    }
-
-    /// Get the current heart rate, preferring resting HR, falling back to general HR
-    private func currentHeartRateValue(_ allSeries: [HealthMetric: MetricTimeSeries]) -> Double? {
-        // Prefer resting heart rate as it is less noisy
-        if let rhrSeries = allSeries[.restingHeartRate],
-           let mean = mostRecentDailyMean(rhrSeries.samples(lastDays: Self.mostRecentLookbackDays)) {
-            return mean
-        }
-        // Fall back to general heart rate
-        if let hrSeries = allSeries[.heartRate],
-           let mean = mostRecentDailyMean(hrSeries.samples(lastDays: Self.mostRecentLookbackDays)) {
-            return mean
-        }
-        return nil
     }
 
     /// Aggregate samples by calendar day and return the most recent day's mean.

@@ -18,12 +18,12 @@ extension Copy {
             static var glucoseRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_glucose_recommendation", default: "Cut back on sugar and white bread. Eat more fiber. Stay active.") }
             static var respiratoryRecommendation: String { RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_recommendation", default: "If your breathing rate stays unusual for a few days, it is worth checking in on this.") }
 
-            // Projection templates
-            static func projectedToReach(label: String, days: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_projected_to_reach", default: "At this rate, this could reach %@ levels in about %d days."), label, days)
+            // Baseline comparison templates
+            static func systolicVsBaseline(baseline: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_systolic_vs_baseline", default: "Your usual is around %@ mmHg."), baseline)
             }
-            static func projectedToReachRange(label: String, days: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_projected_to_reach_range", default: "At this rate, this could reach the %@ range in about %d days."), label, days)
+            static func glucoseVsBaseline(baseline: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_glucose_vs_baseline", default: "Your usual is around %@ mg/dL."), baseline)
             }
 
             // BP summary templates
@@ -1199,39 +1199,6 @@ extension Copy {
                 }
             }
 
-            // MARK: Biological Age
-
-            enum BiologicalAge {
-                static var cardioFitnessComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_cardio_fitness_component", default: "Cardio Fitness") }
-                static var restingHeartRateComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_resting_heart_rate_component", default: "Resting Heart Rate") }
-                static var activityRhythmComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_activity_rhythm_component", default: "Activity Rhythm") }
-                static var mobilityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_mobility_component", default: "Mobility") }
-                static var autonomicComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_biological_age_autonomic_component", default: "Rest-and-Recover System") }
-
-                static func fitnessAgeTitle(years: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_title", default: "Fitness Age Estimate: ~%@"), years)
-                }
-                static var imbalanceTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_imbalance_title", default: "Some Body Systems Age Faster") }
-
-                static func componentBreakdownEntry(component: String, years: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_component_breakdown_entry", default: "%@: ~%@ yrs"), component, years)
-                }
-
-                static func fitnessAgeSummary(componentCount: Int, years: String, strongest: String, oldest: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_summary", default: "Based on %d body signals, your body works like someone around %@ years old. Strongest area: %@. Most room to improve: %@."), componentCount, years, strongest, oldest)
-                }
-                static func fitnessAgeRecommendation(breakdown: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_fitness_age_recommendation", default: "Breakdown. %@. Each part is compared to typical results from large studies. Your VO2 Max on its own (one of the best signs of overall fitness) points to a matching fitness age."), breakdown)
-                }
-
-                static func imbalanceSummary(spread: String, youngestComponent: String, youngestAge: String, oldestComponent: String, oldestAge: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_summary", default: "There's a %@-year gap between your youngest system (%@: ~%@) and your oldest (%@: ~%@). This gap is worth working on."), spread, youngestComponent, youngestAge, oldestComponent, oldestAge)
-                }
-                static func imbalanceRecommendation(oldestComponent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_biological_age_imbalance_recommendation", default: "A big gap between these parts means one system is aging faster than the rest. Working on your %@ could bring your overall fitness age down a lot."), oldestComponent)
-                }
-            }
-
             // MARK: Wellbeing Trend
 
             enum WellbeingTrend {
@@ -1389,49 +1356,6 @@ extension Copy {
                 }
                 static func highVariabilityRecommendation(cvPercent: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_recommendation", default: "How much your temperature swings: %@%%. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock."), cvPercent)
-                }
-            }
-
-            // MARK: Cardio Respiratory Age
-
-            enum CardioRespiratoryAge {
-                static func cardioFitnessAgeTitle(age: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_title", default: "Cardio Fitness Age: ~%@"), age)
-                }
-                static func vo2ImprovingTitle(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_title", default: "VO2 Max Improving: +%@ Over %d Months"), change, months)
-                }
-                static func vo2DecliningTitle(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_title", default: "VO2 Max Declining: %@ Over %d Months"), change, months)
-                }
-                static var belowThresholdTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_below_threshold_title", default: "VO2 Max Below Healthy Level") }
-
-                static func cardioFitnessAgeSummary(vo2: String, age: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_summary", default: "Your VO2 Max of %@ mL/kg/min is average for someone around age %@. VO2 Max is one of the most important signs of long-term fitness and overall health."), vo2, age)
-                }
-                static func cardioFitnessAgeRecommendation(vo2: String, percentile: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_cardio_fitness_age_recommendation", default: "At %@ mL/kg/min, your heart and lung fitness is higher than about %@ out of 100 middle-aged adults. Every small step up (about 3.5 mL/kg/min) brings real health benefits."), vo2, percentile)
-                }
-
-                static func vo2ImprovingSummary(change: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_summary", default: "Your heart and lung fitness has improved by %@ mL/kg/min over %d months. That is a real gain based on large health studies."), change, months)
-                }
-                static func vo2ImprovingRecommendation(change: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_improving_recommendation", default: "A %@ mL/kg/min gain in VO2 Max is real progress. It makes your fitness age younger and goes with better long-term health."), change)
-                }
-
-                static func vo2DecliningSummary(absChange: String, months: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_summary", default: "Your heart and lung fitness has dropped by %@ mL/kg/min over %d months. Since VO2 Max is a key fitness sign, this is worth turning around."), absChange, months)
-                }
-                static func vo2DecliningRecommendation(absChange: String, perMonth: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_vo2_declining_recommendation", default: "A %@ mL/kg/min drop makes your fitness age older. Losing %@ mL/kg/min per month is faster than normal aging (about 1 to 2 mL/kg/min every 10 years). Doing cardio more often or a bit harder can help turn it around."), absChange, perMonth)
-                }
-
-                static func belowThresholdSummary(vo2: String, threshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_summary", default: "Your VO2 Max of %@ mL/kg/min is below %d, a level linked to lower fitness at any age."), vo2, threshold)
-                }
-                static func belowThresholdRecommendation(threshold: Int) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_cardio_respiratory_age_below_threshold_recommendation", default: "A VO2 Max below %d mL/kg/min puts you in the lowest fitness group at any age. Large studies keep showing this level matters for overall health. Even small gains from here can make a real difference."), threshold)
                 }
             }
 
@@ -1603,11 +1527,11 @@ extension Copy {
         // MARK: - Clinical Intelligence (lifted from ClinicalIntelligence.swift)
 
         enum ClinicalSentences {
-            static func systolicTrendSummary(slopePerMonth: String, recentDays: Int, currentStage: String, nextStageInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_systolic_trend_summary", default: "Your top blood pressure number has risen %@ mmHg per month over the past %d days. Right now it is in the %@ range. You can still turn this around with everyday habits. %@"), slopePerMonth, recentDays, currentStage, nextStageInfo)
+            static func systolicTrendSummary(slopePerMonth: String, recentDays: Int, latest: String, baselineComparison: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_systolic_trend_summary_v2", default: "Your top blood pressure number has risen %@ mmHg per month over the past %d days. It is now %@ mmHg. You can still turn this around with everyday habits. %@"), slopePerMonth, recentDays, latest, baselineComparison)
             }
-            static func glucoseTrendSummary(slopePerMonth: String, latest: String, currentStage: String, nextInfo: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_glucose_trend_summary", default: "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@"), slopePerMonth, latest, currentStage, nextInfo)
+            static func glucoseTrendSummary(slopePerMonth: String, latest: String, baselineComparison: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_clinical_glucose_trend_summary_v2", default: "Your blood sugar has been rising %@ mg/dL per month. It is now %@ mg/dL. %@"), slopePerMonth, latest, baselineComparison)
             }
         }
     }

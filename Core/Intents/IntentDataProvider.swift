@@ -108,43 +108,20 @@ enum IntentDataProvider {
 
     // MARK: - Readiness
 
-    /// Fetches readiness data from HealthKit using the shared readiness scorer.
-    /// Returns (readinessScore, stressLevel, stressLabel) or nil.
-    static func fetchReadiness() async -> (readinessScore: Int, stressLevel: Int, stressLabel: String)? {
-        guard HKHealthStore.isHealthDataAvailable() else { return nil }
-        let healthStore = HKHealthStore()
+    /// Reads today's readiness exactly as Home computed it.
+    ///
+    /// Siri used to re-score from its own HealthKit fetch with no personal
+    /// baselines, no sleep and fabricated sample timestamps, so the same
+    /// "readiness" landed 15 to 25 points away from the number on Home. One
+    /// name, one number: the app writes the morning lock, Siri reads it.
+    /// Stress is nil until the personal baselines it needs exist.
+    static func fetchReadiness() async -> (readinessScore: Int, stressLevel: Int?, stressLabel: String)? {
+        let store = ReadinessStore()
+        let today = Date()
+        guard let score = store.loadMorningLock(for: today) else { return nil }
 
-        let now = Date()
-        let oneDayAgo = Date.cal.date(byAdding: .day, value: -1, to: now)!
-
-        async let rhrResult = fetchLatestQuantity(
-            store: healthStore,
-            identifier: .restingHeartRate,
-            unit: HKUnit(from: "count/min"),
-            from: oneDayAgo
-        )
-        async let hrvResult = fetchLatestQuantity(
-            store: healthStore,
-            identifier: .heartRateVariabilitySDNN,
-            unit: HKUnit.secondUnit(with: .milli),
-            from: oneDayAgo
-        )
-
-        guard let rhr = await rhrResult, let hrv = await hrvResult else { return nil }
-
-        let readinessInput = ReadinessScorer.Input(
-            now: now,
-            hrv: hrv,
-            hrvTimestamp: now,
-            restingHeartRate: rhr,
-            restingHeartRateTimestamp: now
-        )
-        guard let readiness = ReadinessScorer.assess(readinessInput) else { return nil }
-
-        let stress = ReadinessScorer.stressLevel(hrv: hrv, restingHeartRate: rhr) ?? 0
-        let stressLabel = ReadinessScorer.stressLabel(for: stress)
-
-        return (readiness.score, stress, stressLabel)
+        let stress = store.loadMorningStress(for: today)
+        return (score, stress, ReadinessScorer.stressLabel(for: stress))
     }
 
     // MARK: - Water Logging
@@ -193,33 +170,6 @@ enum IntentDataProvider {
     }
 
     // MARK: - Helpers
-
-    private static func fetchLatestQuantity(
-        store: HKHealthStore,
-        identifier: HKQuantityTypeIdentifier,
-        unit: HKUnit,
-        from startDate: Date
-    ) async -> Double? {
-        let quantityType = HKQuantityType(identifier)
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: Date(), options: .strictStartDate)
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-
-        return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: quantityType,
-                predicate: predicate,
-                limit: 1,
-                sortDescriptors: [sort]
-            ) { _, results, _ in
-                guard let sample = results?.first as? HKQuantitySample else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                continuation.resume(returning: sample.quantity.doubleValue(for: unit))
-            }
-            store.execute(query)
-        }
-    }
 
     private static func scoreLabel(for score: Int) -> String {
         switch score {

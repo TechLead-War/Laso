@@ -320,8 +320,11 @@ final class StrainScorer {
     /// Classify heart rate samples into zone minutes.
     /// Zones are based on percentage of heart rate reserve (Karvonen method):
     ///   Zone % = (HR - restingHR) / (maxHR - restingHR)
-    /// Each sample is assumed to represent approximately 1 minute of data
-    /// (HealthKit typically provides ~1 sample/min during workouts).
+    /// Each sample is credited with the real elapsed time until the next
+    /// reading. HealthKit sampling cadence is not fixed: a watch workout
+    /// session writes HR every few seconds while background sampling can skip
+    /// several minutes, so counting one sample as one minute inflates tracked
+    /// workouts by roughly an order of magnitude and erases everything else.
     private func computeZoneMinutes(
         hrSamples: [MetricSample],
         restingHR: Double,
@@ -331,9 +334,22 @@ final class StrainScorer {
         let hrReserve = maxHR - restingHR
         guard hrReserve > 0 else { return zones }
 
-        for sample in hrSamples {
+        // Both call sites supply chronologically sorted samples (HKSampleQuery
+        // sorts ascending, MetricTimeSeries sorts at init), but a negative gap
+        // is clamped away rather than trusted. The final reading has no
+        // following sample and therefore no measurable span, so it is skipped.
+        for (sample, next) in zip(hrSamples, hrSamples.dropFirst()) {
+            let elapsedMinutes = min(
+                max(next.date.timeIntervalSince(sample.date) / 60.0, 0),
+                StrainScorerConfig.hrSampleCoverageCapMinutes
+            )
+            guard elapsedMinutes > 0 else { continue }
+
             // Use heart rate reserve method for zone classification
             let intensityPct = (sample.value - restingHR) / hrReserve
+
+            // Below zone 1 threshold. negligible strain contribution
+            guard intensityPct >= 0.4 else { continue }
 
             let zone: Int
             switch intensityPct {
@@ -344,10 +360,7 @@ final class StrainScorer {
             default:      zone = 5  // 90-100%
             }
 
-            // Below zone 1 threshold. negligible strain contribution
-            if intensityPct >= 0.4 {
-                zones[zone, default: 0] += 1.0
-            }
+            zones[zone, default: 0] += elapsedMinutes
         }
 
         return zones
@@ -356,10 +369,10 @@ final class StrainScorer {
     /// Combine all physiological signals into a single normalized load value.
     ///
     /// Load components:
-    /// 1. Calorie load: today's calories relative to personal baseline
-    /// 2. HR zone load: weighted zone minutes (higher zones contribute exponentially more)
-    /// 3. Duration load: total active minutes with diminishing returns
-    /// 4. Movement load: minor contribution from steps and distance for non-exercise activity
+    /// 1. Workout load: the single strongest estimate of the session. HR zone
+    ///    minutes, calorie surplus and active duration all measure the same
+    ///    load event, so they compete instead of stacking.
+    /// 2. Movement load: minor contribution from steps and distance for non-exercise activity
     private func computeNormalizedLoad(
         calories: Double,
         calorieBaseline: Double,
@@ -369,30 +382,40 @@ final class StrainScorer {
         steps: Double,
         distance: Double
     ) -> Double {
-        // 1. Calorie load. normalized to baseline, contributes ~40% of max load
-        let calorieRatio = calories / max(calorieBaseline, 100.0)
-        let calorieLoad = calorieRatio * 150.0
+        // Calorie estimate. Scored on the surplus over the personal baseline,
+        // because a day that merely matches your own average is by definition
+        // an ordinary day and must not read as a hard one.
+        let calorieExcessRatio = max(0.0, calories / max(calorieBaseline, StrainScorerConfig.minCalorieBaseline) - 1.0)
+        let calorieLoad = min(
+            StrainScorerConfig.calorieExcessCap,
+            calorieExcessRatio * StrainScorerConfig.calorieExcessWeight
+        )
 
-        // 2. HR zone load. weighted sum with exponential zone multipliers
-        //    Contributes ~40% of max load at extreme efforts
+        // HR zone estimate. Weighted sum with exponential zone multipliers.
+        // Closest proxy to true cardiovascular load when the watch recorded HR.
         var zoneLoad: Double = 0
         for (zone, minutes) in zoneMinutes {
             let multiplier = Self.zoneMultipliers[zone] ?? 1.0
             zoneLoad += minutes * multiplier
         }
 
-        // 3. Duration load. total exercise/workout time with square-root diminishing returns
-        //    Prevents ultra-long low-intensity sessions from dominating
+        // Duration estimate. Square-root diminishing returns prevent ultra-long
+        // low-intensity sessions from dominating.
         let totalActiveMinutes = max(exerciseMinutes, workoutMinutes)
-        let durationLoad = sqrt(totalActiveMinutes) * 10.0
+        let durationLoad = sqrt(totalActiveMinutes) * StrainScorerConfig.durationLoadWeight
 
-        // 4. Movement load. minor NEAT contribution from daily movement
-        //    Steps and distance contribute modestly for non-exercise days
+        // One session, one term. The three estimates above are three
+        // measurements of the same load event, so the strongest wins and the
+        // weaker two act as fallbacks for when their signal is missing.
+        let workoutLoad = max(zoneLoad, max(calorieLoad, durationLoad))
+
+        // Movement load. minor NEAT contribution from daily movement
+        // Steps and distance contribute modestly for non-exercise days
         let stepsLoad = min(30.0, (steps / 10000.0) * 15.0)
         let distanceLoad = min(20.0, distance * 2.0)  // distance in km
         let movementLoad = (stepsLoad + distanceLoad) * 0.5
 
-        return calorieLoad + zoneLoad + durationLoad + movementLoad
+        return workoutLoad + movementLoad
     }
 
     /// Build rolling strain history from persisted snapshots, with day-level recompute fallback for missing dates.

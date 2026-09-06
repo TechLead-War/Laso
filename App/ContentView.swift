@@ -668,7 +668,7 @@ struct ContentView: View {
             // path, so this branch only exists to keep the switch exhaustive.
             JournalEntryView()
         case .todaysAction:
-            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score
+            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore?.score ?? 0
             TodaysActionDetailView(
                 action: dashboardViewModel.smartDailyAction(liveVM: liveViewModel),
                 policyDecision: dashboardViewModel.analysisEngine.mlOrchestrator.policyDecision,

@@ -218,12 +218,16 @@ struct TrendAnalyzer {
         regressionValues.reverse()
         let slope = regressionValues.linearRegression.slope
 
-        // Period-over-period change
+        // Period-over-period change.
+        // Both halves must actually contain days. An empty recent half used to be
+        // coerced to a mean of zero, so anyone who stopped wearing the watch got an
+        // exact -100% "decline" on every metric, ranked top of Explore. Missing days
+        // are absent from the series, never zero-filled, so no change is reportable.
         let periodChange: Double
-        if countOlderHalf > 0 {
+        if countOlderHalf > 0, countRecentHalf > 0 {
             let olderMean = sumOlderHalf / Double(countOlderHalf)
             if olderMean != 0 {
-                let recentMean = countRecentHalf > 0 ? sumRecentHalf / Double(countRecentHalf) : 0
+                let recentMean = sumRecentHalf / Double(countRecentHalf)
                 let raw = ((recentMean - olderMean) / olderMean) * 100
                 periodChange = max(-maxPercentChange, min(maxPercentChange, raw))
             } else {
