@@ -1211,17 +1211,21 @@ struct HomeView: View {
             Spacer()
 
             ZStack {
+                // One-shot scale, no repeatForever: an autoreversing repeat holds
+                // the display link for the whole life of this screen, and this
+                // screen is up for the entire first HealthKit import and ML pass.
+                // Matches LoadingView, which already dropped the repeat.
                 Circle()
                     .fill(phase.color.opacity(0.1))
                     .frame(width: 120, height: 120)
                     .scaleEffect(firstLaunchIconScale == 1.0 ? 1.3 : 0.9)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: firstLaunchIconScale)
+                    .animation(.easeInOut(duration: 1.2), value: firstLaunchIconScale)
 
                 Circle()
                     .fill(phase.color.opacity(0.05))
                     .frame(width: 160, height: 160)
                     .scaleEffect(firstLaunchIconScale == 1.0 ? 1.5 : 1.0)
-                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: firstLaunchIconScale)
+                    .animation(.easeInOut(duration: 1.5), value: firstLaunchIconScale)
 
                 Image(systemName: phase.icon)
                     .font(DS.Typography.displayL)

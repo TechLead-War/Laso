@@ -13,10 +13,13 @@ struct ProFeatureOverlay: View {
         VStack(spacing: 24) {
             Spacer()
 
+            // No repeating pulse: this is the whole Live tab, Correlations and
+            // Metric Detail for every free user, so an unbounded symbol effect
+            // held the display link alive for as long as they sat on a screen
+            // that is otherwise completely static.
             Image(systemName: icon)
                 .font(DS.Typography.heroIcon)
                 .foregroundStyle(.tint)
-                .symbolEffect(.pulse, options: .repeating)
 
             VStack(spacing: 8) {
                 HStack(spacing: 6) {

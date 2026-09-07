@@ -150,14 +150,19 @@ final class WatchMonitor {
             if shouldRefreshSchedule {
                 scheduleNotWornNotification()
             }
+        }
 
-            let lastProcessed = defaults.double(forKey: lastObserverProcessingKey)
-            let processedRecently = lastProcessed > 0 &&
-                now.timeIntervalSince(Date(timeIntervalSince1970: lastProcessed)) < observerProcessingInterval
-            if processedRecently {
-                completion?()
-                return
-            }
+        // Throttle guards the HKSampleQuery below, so it has to sit outside the
+        // confirmation branch. Nested inside it, a user whose watch had gone
+        // stale (taken off, out of battery, out of range) fell straight through
+        // to a full sample query on *every* heart-rate delivery — and delivery
+        // is .immediate, so that is once per watch sync, all day, unthrottled.
+        let lastProcessed = defaults.double(forKey: lastObserverProcessingKey)
+        let processedRecently = lastProcessed > 0 &&
+            now.timeIntervalSince(Date(timeIntervalSince1970: lastProcessed)) < observerProcessingInterval
+        if processedRecently {
+            completion?()
+            return
         }
 
         defaults.set(now.timeIntervalSince1970, forKey: lastObserverProcessingKey)

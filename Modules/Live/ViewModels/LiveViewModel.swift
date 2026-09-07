@@ -54,6 +54,13 @@ final class LiveViewModel {
     private var backgroundHRObserver: HKObserverQuery?
     private var backgroundDeliveryRegistered = false
 
+    /// WatchMonitor enables `.immediate` background delivery on heart rate, so this
+    /// observer fires once per watch HR sync all day — and its only job is to keep a
+    /// pre-fetched value warm for the next Live tab open. Without a throttle that is
+    /// one extra HKSampleQuery per sync for a value nobody is looking at.
+    private var lastBackgroundHRFetch: Date = .distantPast
+    private static let backgroundHRThrottleInterval: TimeInterval = 5 * 60
+
     /// Throttle UI-facing property updates to max 1 per second to reduce GPU work.
     private var lastUIUpdateTime: Date = .distantPast
     private var pendingHeartRateUpdate: PendingHRUpdate?
@@ -152,6 +159,9 @@ final class LiveViewModel {
             // Otherwise, pre-fetch latest HR so it's ready when Live tab opens.
             Task { @MainActor in
                 guard !self.isStreaming else { return }
+                let now = Date()
+                guard now.timeIntervalSince(self.lastBackgroundHRFetch) >= Self.backgroundHRThrottleInterval else { return }
+                self.lastBackgroundHRFetch = now
                 let unit = HKUnit.count().unitDivided(by: .minute())
                 self.fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
                     Task { @MainActor in

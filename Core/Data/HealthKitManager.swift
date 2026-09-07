@@ -339,54 +339,77 @@ final class HealthKitManager: @unchecked Sendable {
         let staleCutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let recentSyncCutoff = Date.cal.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
-        await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
-            for metric in HealthMetric.allCases {
-                let lastSync = syncDates[metric]
-                let rewriteHistory = (needsSleepBackfill && sleepStageMetrics.contains(metric))
-                    || (needsAfibRescale && metric == .atrialFibrillationBurden)
-                // The sleep scan reaches one day further back than everything else
-                // because its first day is dropped as a lead-in (fetchAllSleepStages).
-                let incrementalDaysBack = sleepStageMetrics.contains(metric) ? -2 : -1
+        // Build the work list first so the fetches below can run in a bounded
+        // window instead of all at once.
+        var pendingFetches: [(metric: HealthMetric, startDate: Date)] = []
+        for metric in HealthMetric.allCases {
+            let lastSync = syncDates[metric]
+            let rewriteHistory = (needsSleepBackfill && sleepStageMetrics.contains(metric))
+                || (needsAfibRescale && metric == .atrialFibrillationBurden)
+            // The sleep scan reaches one day further back than everything else
+            // because its first day is dropped as a lead-in (fetchAllSleepStages).
+            let incrementalDaysBack = sleepStageMetrics.contains(metric) ? -2 : -1
 
-                // Skip stale metrics: if the metric was synced within the last day AND
-                // its most recent data is older than 7 days, skip it -- unless it's a
-                // core metric or every 7th sync (to catch newly-appearing data).
-                if !isFirstSync,
-                   !rewriteHistory,
-                   !coreMetrics.contains(metric),
-                   syncCount % 7 != 0,
-                   let lastSync,
-                   lastSync > recentSyncCutoff {
-                    // Check if this metric's latest sample is stale
-                    let latestSampleDate = timeSeries[metric]?.samples.last?.date
-                    if let latestSampleDate, latestSampleDate < staleCutoff {
-                        syncProgress?.metricsCompleted += 1
-                        fetchedMetrics.insert(metric)
-                        continue
-                    }
-                }
-
-                group.addTask { [self] in
-                    let startDate: Date
-                    if let lastSync, !rewriteHistory {
-                        // `lastSync` is the wall-clock instant of the previous sync, but the
-                        // daily statistics buckets are midnight anchored and the predicate is
-                        // strictStartDate, so a mid-day start returns a partial bucket for the
-                        // boundary day that then overwrites the stored full day.
-                        let lastSyncDay = Date.cal.startOfDay(for: lastSync)
-                        startDate = Date.cal.date(byAdding: .day, value: incrementalDaysBack, to: lastSyncDay) ?? lastSyncDay
-                    } else {
-                        // Fetch all available HealthKit history (up to 10 years) so the
-                        // Explore "days" counter reflects the user's full data span, and
-                        // so the one time sleep rewrite covers every stored day.
-                        startDate = Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
-                    }
-                    let series = await self.fetchMetric(metric, from: startDate, to: endDate)
-                    return (metric, series)
+            // Skip stale metrics: if the metric was synced within the last day AND
+            // its most recent data is older than 7 days, skip it -- unless it's a
+            // core metric or every 7th sync (to catch newly-appearing data).
+            if !isFirstSync,
+               !rewriteHistory,
+               !coreMetrics.contains(metric),
+               syncCount % 7 != 0,
+               let lastSync,
+               lastSync > recentSyncCutoff {
+                // Check if this metric's latest sample is stale
+                let latestSampleDate = timeSeries[metric]?.samples.last?.date
+                if let latestSampleDate, latestSampleDate < staleCutoff {
+                    syncProgress?.metricsCompleted += 1
+                    fetchedMetrics.insert(metric)
+                    continue
                 }
             }
 
+            let startDate: Date
+            if let lastSync, !rewriteHistory {
+                // `lastSync` is the wall-clock instant of the previous sync, but the
+                // daily statistics buckets are midnight anchored and the predicate is
+                // strictStartDate, so a mid-day start returns a partial bucket for the
+                // boundary day that then overwrites the stored full day.
+                let lastSyncDay = Date.cal.startOfDay(for: lastSync)
+                startDate = Date.cal.date(byAdding: .day, value: incrementalDaysBack, to: lastSyncDay) ?? lastSyncDay
+            } else {
+                // Fetch all available HealthKit history (up to 10 years) so the
+                // Explore "days" counter reflects the user's full data span, and
+                // so the one time sleep rewrite covers every stored day.
+                startDate = Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+            }
+            pendingFetches.append((metric, startDate))
+        }
+
+        // HealthMetric.allCases is ~70 metrics, and a first sync asks each one for
+        // ten years of history. Adding every task up front put ~70 concurrent
+        // queries on the HealthKit daemon plus ~70 concurrent decode and aggregate
+        // jobs, which is the sharpest CPU and thermal spike in the app's life. A
+        // sliding window runs exactly the same fetches for the same results, just
+        // without the thundering herd. Accumulation below is already order
+        // independent, so completion order does not matter.
+        let maxConcurrentFetches = min(6, max(2, ProcessInfo.processInfo.activeProcessorCount - 2))
+
+        await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
+            var nextIndex = 0
+            func addNextFetch() {
+                guard nextIndex < pendingFetches.count else { return }
+                let item = pendingFetches[nextIndex]
+                nextIndex += 1
+                group.addTask { [self] in
+                    let series = await self.fetchMetric(item.metric, from: item.startDate, to: endDate)
+                    return (item.metric, series)
+                }
+            }
+
+            for _ in 0..<min(maxConcurrentFetches, pendingFetches.count) { addNextFetch() }
+
             for await (metric, series) in group {
+                addNextFetch()
                 syncProgress?.metricsCompleted += 1
                 guard let series else { continue }
                 fetchedMetrics.insert(metric)

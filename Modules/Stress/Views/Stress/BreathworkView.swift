@@ -219,9 +219,12 @@ struct BreathworkView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
-    /// `@State`, so a parent re-render does not throw the publisher away and drop
-    /// the ticks it had already scheduled.
-    @State private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    /// Runs only while a session is actually counting down. An autoconnected
+    /// 10 Hz publisher used to start at view init and tick for as long as the
+    /// screen was open, so the idle protocol picker and the completion screen
+    /// each held the main runloop awake ten times a second for a `tick()` that
+    /// guarded itself out immediately.
+    @State private var tickTimer = RepeatTimer()
 
     private var accent: Color { selectedProtocol.accentColor }
 
@@ -243,15 +246,19 @@ struct BreathworkView: View {
         }
         .navigationTitle(Copy.StressMonitor.breathworkNavTitle)
         .navigationBarTitleDisplayMode(.inline)
-        .onReceive(timer) { _ in
-            guard sessionState == .active else { return }
-            tick()
+        .onChange(of: sessionState) { _, newState in
+            if newState == .active {
+                tickTimer.start(interval: 0.1, tolerance: 0.02) { tick() }
+            } else {
+                tickTimer.stop()
+            }
         }
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.6), trigger: phaseTransitionTrigger)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.breathwork)
         }
         .onDisappear {
+            tickTimer.stop()
             if sessionState == .complete {
                 trackCompletedSessionIfNeeded()
             } else if sessionStartedAt != nil, sessionState == .active || sessionState == .paused {
@@ -260,6 +267,17 @@ struct BreathworkView: View {
             AppAnalytics.shared.trackFeatureClose(.breathwork)
         }
         .onChange(of: scenePhase) { _, newPhase in
+            // The tick is wall-clock based, so dropping it off-screen costs
+            // nothing: the next tick recomputes remaining time from the end
+            // dates rather than accumulating.
+            if newPhase == .active {
+                if sessionState == .active {
+                    tickTimer.start(interval: 0.1, tolerance: 0.02) { tick() }
+                }
+            } else {
+                tickTimer.stop()
+            }
+
             // onDisappear does not run when the app is backgrounded, and a suspended
             // app can be killed without ever returning, so a finished session left on
             // the mood screen would otherwise emit no completed event at all.

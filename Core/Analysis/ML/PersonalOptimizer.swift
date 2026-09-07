@@ -74,6 +74,14 @@ final class PersonalOptimizer {
         var scoreByDate: [Date: Int] = [:]
         for e in scoreHistory { scoreByDate[cal.startOfDay(for: e.date)] = e.score }
 
+        var neededMetrics: Set<HealthMetric> = []
+        for vector in vectors {
+            for (key, v) in vector.features where key.type == .raw && v != FeatureKey.missingSentinel {
+                neededMetrics.insert(key.metric)
+            }
+        }
+        let dailyValues = buildDailyLookups(for: neededMetrics, in: timeSeries, cal: cal)
+
         // Build scored days from feature vectors + raw time series values
         var scoredDays: [ScoredDay] = []
         for vector in vectors {
@@ -81,7 +89,7 @@ final class PersonalOptimizer {
             guard let score = scoreByDate[day] else { continue }
             var vals: [HealthMetric: Double] = [:]
             for (key, v) in vector.features where key.type == .raw && v != FeatureKey.missingSentinel {
-                if let raw = rawValue(for: key.metric, on: day, in: timeSeries, cal: cal) {
+                if let raw = dailyValues[key.metric]?[day] {
                     vals[key.metric] = raw
                 }
             }
@@ -254,18 +262,33 @@ final class PersonalOptimizer {
 
     // MARK: - Data Helpers
 
-    private func rawValue(for metric: HealthMetric, on date: Date, in ts: [HealthMetric: MetricTimeSeries], cal: Calendar) -> Double? {
-        guard let series = ts[metric] else { return nil }
-        let target = cal.startOfDay(for: date)
-        let samples = series.sortedSamples
-        var lo = 0, hi = samples.count - 1
-        while lo <= hi {
-            let mid = (lo + hi) / 2
-            let midDay = cal.startOfDay(for: samples[mid].date)
-            if midDay == target { return samples[mid].value }
-            else if midDay < target { lo = mid + 1 } else { hi = mid - 1 }
+    /// Day-keyed value per metric, built once per run.
+    ///
+    /// This lookup replaces a per-day binary search that called
+    /// `Calendar.startOfDay` on every probe. A year of history across ~20 raw
+    /// metrics meant tens of thousands of `startOfDay` calls per pipeline pass,
+    /// and `startOfDay` is one of the most expensive Foundation calls there is
+    /// (timezone plus DST resolution each time). Building the map touches each
+    /// sample exactly once instead.
+    ///
+    /// First sample of a day wins. The binary search returned whichever sample
+    /// it happened to land on, so this is the stable version of the same answer.
+    private func buildDailyLookups(
+        for metrics: Set<HealthMetric>,
+        in ts: [HealthMetric: MetricTimeSeries],
+        cal: Calendar
+    ) -> [HealthMetric: [Date: Double]] {
+        var lookups: [HealthMetric: [Date: Double]] = [:]
+        for metric in metrics {
+            guard let series = ts[metric] else { continue }
+            var byDay: [Date: Double] = [:]
+            for sample in series.sortedSamples {
+                let day = cal.startOfDay(for: sample.date)
+                if byDay[day] == nil { byDay[day] = sample.value }
+            }
+            lookups[metric] = byDay
         }
-        return nil
+        return lookups
     }
 
     private func metricsWithCoverage(days: [ScoredDay], minCount: Int) -> [HealthMetric] {

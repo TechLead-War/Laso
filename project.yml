@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.110"
-    CURRENT_PROJECT_VERSION: "118"
+    MARKETING_VERSION: "1.2.111"
+    CURRENT_PROJECT_VERSION: "119"
 
 packages:
   Firebase:
@@ -102,10 +102,12 @@ targets:
         UIBackgroundModes: [fetch, processing, remote-notification]
         BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.fit.background-refresh"]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        # Without this opt-in iOS caps every animation at 60 Hz on ProMotion
-        # iPhones, no matter what frame rate the view asks for. Raises the
-        # ceiling to 120 Hz and the power draw with it.
-        CADisableMinimumFrameDurationOnPhone: true
+        # Deliberately NOT opting in to CADisableMinimumFrameDurationOnPhone.
+        # It raises the ProMotion animation ceiling from 60 Hz to 120 Hz, which
+        # doubles composite work for every animated frame in the app, and
+        # nothing here asks for it: ThermalManager.maxFrameRate caps the orb
+        # canvases at 30 fps and every other animation is a short transition.
+        # Re-add the key only if a view genuinely needs above 60 Hz.
         UILaunchScreen:
           UIColorName: LaunchBackground
     configFiles:

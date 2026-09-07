@@ -90,6 +90,7 @@ final class BreathworkLiveActivityManager {
             sessionTimeRemaining: sessionTimeRemaining,
             status: isPaused ? .paused : .active
         )
+        let previousStatus = lastContentState?.status
         lastContentState = contentState
 
         // A paused session has no live countdown, so don't hand iOS a future stale
@@ -98,6 +99,15 @@ final class BreathworkLiveActivityManager {
         Task {
             await activity.update(ActivityContent(state: contentState, staleDate: staleDate))
         }
+
+        // The ActivityKit push above has to stay per-phase: the Dynamic Island
+        // reads `activePhase` at render time and only re-renders on a content
+        // update, so dropping it would freeze the island's glyph mid-session.
+        // The analytics event does not: this method runs once per breath phase,
+        // so a 5-minute Cyclic Sighing session fired ~100 identical "updated"
+        // events, crossing Amplitude's flush threshold several times per session
+        // for data no funnel reads. Only a real pause/resume is an event.
+        guard previousStatus != contentState.status else { return }
         AppAnalytics.shared.trackLiveActivityStateChanged(
             kind: "breathwork",
             state: isPaused ? "paused" : "updated",
