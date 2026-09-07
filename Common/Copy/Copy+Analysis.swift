@@ -27,11 +27,16 @@ extension Copy {
             }
 
             // BP summary templates
-            static func pulsePressureSummary(pulsePressure: Int) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_pulse_pressure_summary", default: "The gap between your blood pressure numbers (%d mmHg) is wider than the usual 40 to 60 mmHg. Based on your patterns, this is worth a look."), pulsePressure)
+            static func pulsePressureSummary(pulsePressure: Int, usualGap: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_pulse_pressure_summary_v2", default: "The gap between your blood pressure numbers is %d mmHg. Your usual gap is around %d mmHg. Based on your patterns, this is worth a look."), pulsePressure, usualGap)
             }
-            static func respiratorySummary(rate: String, stage: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_summary", default: "Your breathing rate (%@ br/min) falls in the %@ range. Most people sit between 12 and 20 breaths per minute."), rate, stage)
+
+            // Breathing rate summary templates
+            static func respiratoryAboveUsualSummary(rate: String, days: Int, usual: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_above_usual_summary", default: "Your breathing rate has averaged %@ br/min over the past %d days. That is higher than your usual %@ br/min."), rate, days, usual)
+            }
+            static func respiratoryBelowUsualSummary(rate: String, days: Int, usual: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_analysis_analysis_clinical_respiratory_below_usual_summary", default: "Your breathing rate has averaged %@ br/min over the past %d days. That is lower than your usual %@ br/min."), rate, days, usual)
             }
         }
 

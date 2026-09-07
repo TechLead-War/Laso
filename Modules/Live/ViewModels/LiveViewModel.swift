@@ -1,6 +1,7 @@
 import Foundation
 import HealthKit
 import Observation
+import OSLog
 import SwiftUI
 
 /// ViewModel for the Live tab. streams real-time health data from Apple Watch via HealthKit.
@@ -96,6 +97,8 @@ final class LiveViewModel {
     private static let homeFetchDebounce: TimeInterval = 1.0
     private static let tieredFetchDebounceNominal: TimeInterval = 10
     private static let tieredFetchDebounceFair: TimeInterval = 20
+
+    private static let logger = Logger(subsystem: "com.healthpulse", category: "Recovery")
 
     private typealias PendingHRUpdate = LiveHeartRateTimelineReducer.PendingUpdate
 
@@ -902,6 +905,7 @@ final class LiveViewModel {
     /// • blank only when no lock exists today AND the watch is off.
     func computeReadinessScore() {
         let now = Date()
+        stampMorningStressIfNeeded(now: now)
         let hrAge = vitals.heartRateTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
 
         if hrAge > ReadinessScorerConfig.onWristMaxAgeSeconds {
@@ -912,7 +916,7 @@ final class LiveViewModel {
             // does not invalidate it. Keep showing the anchor (no live drain
             // because we have no current activity stream).
             if let lock = readinessStore.loadMorningLock(for: now) {
-                recovery.readinessScore = lock
+                publishRecoveryScore(lock, now: now)
                 recovery.readinessConfidence = readinessStore.loadMorningLockConfidence(for: now) ?? recovery.readinessConfidence
             } else if recovery.hasCheckedOnWristOnce {
                 recovery.readinessScore = nil
@@ -941,13 +945,35 @@ final class LiveViewModel {
 
         let strainDrain = computeStrainDrainSinceWake()
         let liveEnergy = Int((max(ReadinessScorerConfig.energyFloor, Double(lock) - strainDrain)).rounded())
-        recovery.readinessScore = liveEnergy
+        publishRecoveryScore(liveEnergy, now: now)
         recovery.scoreLabel = strainDrain < ReadinessScorerConfig.energyLabelStrainThreshold ? "Recovery" : "Energy"
         // Legacy widget compat: the existing widget reads `loadCachedScore`,
         // so keep mirroring the live number there. The widget snapshot in
         // `DashboardViewModel.writeWidgetSnapshots` independently prefers the
         // morning lock for stability — this only feeds the legacy timeline.
         readinessStore.saveCachedScore(liveEnergy)
+    }
+
+    /// Sets the recovery number Home renders and persists that exact value for
+    /// today. Siri reads what was rendered, not the morning lock: the lock is
+    /// undrained, so from mid-morning the two surfaces quoted different numbers
+    /// for the same named thing.
+    private func publishRecoveryScore(_ score: Int, now: Date) {
+        recovery.readinessScore = score
+        readinessStore.saveDisplayedScore(score, for: now)
+    }
+
+    /// Stamps today's stress the first time the baselines behind it exist.
+    ///
+    /// Runs on every recompute, not only when the morning lock is created. The
+    /// lock is written at most once a day and the personal baselines stress
+    /// needs arrive from a separate refresh task that usually finishes after
+    /// it, so a write placed beside the lock almost never landed and Siri had
+    /// no stress at all. First write of the day wins.
+    private func stampMorningStressIfNeeded(now: Date) {
+        guard readinessStore.loadMorningStress(for: now) == nil,
+              let stress = recovery.stressLevel else { return }
+        readinessStore.saveMorningStress(stress, for: now)
     }
 
     /// Returns today's morning Recovery anchor, computing and persisting it
@@ -994,11 +1020,6 @@ final class LiveViewModel {
         readinessStore.saveSmoothedScore(assessment.smoothedScore, for: now)
         readinessStore.saveMorningLock(assessment.score, for: now)
         readinessStore.saveMorningLockConfidence(assessment.confidence, for: now)
-        // Siri reads this instead of scoring stress from its own inputs, so
-        // both surfaces quote the same number for the same day.
-        if let stress = recovery.stressLevel {
-            readinessStore.saveMorningStress(stress, for: now)
-        }
         recovery.readinessConfidence = assessment.confidence
         recovery.readinessUncertainty = assessment.uncertainty
         return assessment.score
@@ -1089,18 +1110,26 @@ final class LiveViewModel {
         healthStore.execute(query)
     }
 
-    /// Today's mean SDNN plus the newest sample behind it.
+    /// The mean SDNN of the most recent day that has any, plus the newest
+    /// sample behind it.
     ///
     /// The readiness baseline is 60 days of per-day averages, so the value
     /// scored against it has to be a per-day average too. One raw latest
     /// sample can be a Breathe session or a single spike, which lands on that
     /// baseline's spread as a different statistic and inflates the z-score.
+    ///
+    /// The window is 48 h, matching the resting-HR fetch beside it, and the
+    /// average is taken over one day inside it rather than over the whole
+    /// window. A since-midnight window returned nothing for anyone whose
+    /// overnight SDNN lands before local midnight, and readiness then had no
+    /// cardiac channel for the entire day. The morning lock's own freshness
+    /// gate still rejects a reading that is too old to anchor today.
     private func fetchTodayAverageHRV(completion: @escaping (Double, Date) -> Void) {
         let type = HKQuantityType(.heartRateVariabilitySDNN)
         let unit = HKUnit.secondUnit(with: .milli)
         let now = Date()
         let predicate = HKQuery.predicateForSamples(
-            withStart: Date.cal.startOfDay(for: now),
+            withStart: now.addingTimeInterval(-48 * 3600),
             end: now,
             options: .strictStartDate
         )
@@ -1114,8 +1143,16 @@ final class LiveViewModel {
             let readings = ((results as? [HKQuantitySample]) ?? [])
                 .map { (value: $0.quantity.doubleValue(for: unit), date: $0.startDate) }
                 .filter { $0.value.isFinite && $0.value > 0 }
-            guard !readings.isEmpty, let newest = readings.map({ $0.date }).max() else { return }
-            completion(readings.reduce(0) { $0 + $1.value } / Double(readings.count), newest)
+            let byDay = Dictionary(grouping: readings) { Date.cal.startOfDay(for: $0.date) }
+            guard let latestDay = byDay.keys.max(),
+                  let dayReadings = byDay[latestDay],
+                  let newest = dayReadings.map({ $0.date }).max() else {
+                // Say why rather than vanish: with no HRV there is no readiness
+                // today, and a bare return leaves nothing to explain the blank.
+                Self.logger.notice("No usable SDNN in the last 48h, so readiness has no HRV channel today")
+                return
+            }
+            completion(dayReadings.reduce(0) { $0 + $1.value } / Double(dayReadings.count), newest)
         }
 
         healthStore.execute(query)

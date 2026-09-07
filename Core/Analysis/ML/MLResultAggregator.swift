@@ -5,6 +5,9 @@ final class MLResultAggregator {
 
     private let logger = Logger(subsystem: "com.healthpulse.ml", category: "MLResultAggregator")
 
+    /// Share of days matching the optimal profile below which the gap is worth naming.
+    private static let optimalProfileMatchGate: Double = 25
+
     struct AggregatedResults {
         var mlAnomalies: [TimeSeriesForecaster.ForecastAnomaly] = []
         var adaptiveAnomalies: [AdaptiveAnomalyDetector.AdaptiveAnomaly] = []
@@ -327,9 +330,19 @@ final class MLResultAggregator {
             ))
         }
 
-        // Personal optimization insights
-        // `matchPercentage` arrives from PersonalOptimizer on a 0-100 scale, not 0-1.
-        if let profile = optimalProfile, profile.matchPercentage < 70 {
+        // Personal optimization insights.
+        //
+        // `matchPercentage` arrives from PersonalOptimizer on a 0-100 scale, not 0-1,
+        // and it is the share of all days sitting inside the top-decile IQR band of
+        // three metrics at once. Single digits are the norm for that construction, so
+        // a 70 bar made this a permanent card. A zero match means there are no optimal
+        // days to average and the two scores quoted below would print as 0, and without
+        // a real score gap between the matched and unmatched days there is nothing to
+        // aim at, so both cases stay silent rather than showing a number that is absent.
+        if let profile = optimalProfile,
+           profile.matchPercentage > 0,
+           profile.matchPercentage < Self.optimalProfileMatchGate,
+           profile.avgScoreWhenOptimal > profile.avgScoreWhenNot {
             let unmet = profile.conditions.filter { !$0.isCurrentlyMet }.prefix(3)
             let gaps = unmet.map { $0.description }.joined(separator: ". ")
             insights.append(Insight(
@@ -337,7 +350,9 @@ final class MLResultAggregator {
                 title: Copy.Insights.optimizationGap(Int(100.0 - profile.matchPercentage)),
                 summary: "You're matching \(Int(profile.matchPercentage))% of your optimal profile (avg score \(Int(profile.avgScoreWhenOptimal)) vs \(Int(profile.avgScoreWhenNot)) when not). \(gaps)",
                 recommendation: unmet.first?.description ?? "Focus on the top gaps to reach your optimal state.",
-                severity: profile.matchPercentage < 40 ? .warning : .info,
+                // An optimization gap is an opportunity, not an alarm: at `.warning`
+                // this bypassed the focus filter every day it fired.
+                severity: .info,
                 trend: .stable,
                 baselineValue: 0,
                 deviationPercent: 100.0 - profile.matchPercentage,

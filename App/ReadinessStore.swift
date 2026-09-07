@@ -84,6 +84,21 @@ final class ReadinessStore {
         userDefaults.set(stress, forKey: key)
     }
 
+    /// The recovery number Home is currently rendering: the morning lock drained
+    /// by today's activity, or the bare lock while the watch is off the wrist.
+    /// Siri reads this instead of the lock so the same named thing cannot carry
+    /// two different numbers on two surfaces.
+    func loadDisplayedScore(for date: Date) -> Int? {
+        let key = AppKeys.Readiness.displayedScorePrefix + dateKeySuffix(for: date)
+        let score = userDefaults.integer(forKey: key)
+        return score > 0 ? score : nil
+    }
+
+    func saveDisplayedScore(_ score: Int, for date: Date) {
+        let key = AppKeys.Readiness.displayedScorePrefix + dateKeySuffix(for: date)
+        userDefaults.set(score, forKey: key)
+    }
+
     // MARK: - Day-Over-Day Smoothing State
 
     /// The scorer runs once per day, so the EMA's previous value has to survive

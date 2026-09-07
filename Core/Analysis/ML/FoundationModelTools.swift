@@ -56,7 +56,11 @@ enum ContextCompressor {
 
     static func buildHealthSnapshot(context: HealthDataQueryEngine.QueryContext) -> String {
         var lines: [String] = []
-        lines.append("Health Score: \(context.overallScore)/100")
+        // Omitted rather than sent as 0: the model quotes this line back to the
+        // user as fact, so an unscored day must not reach it as a number.
+        if let score = context.overallScore {
+            lines.append("Health Score: \(score)/100")
+        }
         if let state = context.currentHealthState {
             lines.append("Body State: \(state.label) (day \(state.daysInState))")
         }
@@ -373,7 +377,9 @@ struct ScoreBreakdownTool: Tool {
     func call(arguments: Arguments) async throws -> String {
         let context = tc.ctx
         var lines: [String] = []
-        lines.append("Overall Score: \(context.overallScore)/100")
+        if let score = context.overallScore {
+            lines.append("Overall Score: \(score)/100")
+        }
         if !context.scoreSensitivities.isEmpty {
             let sorted = context.scoreSensitivities.sorted(by: { $0.slope > $1.slope })
             let boosters = sorted.filter { (sens: PersonalOptimizer.SensitivityResult) -> Bool in

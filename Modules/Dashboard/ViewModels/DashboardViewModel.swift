@@ -198,16 +198,20 @@ final class DashboardViewModel {
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
         var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
 
-        var recoveryState: RecoveryState {
-            RecoveryState(score: overallScore?.score ?? 0)
+        /// Nil until something has been scored. Banding a missing score put
+        /// every no-data user in the red recovery tier, which drove a rest-day
+        /// strain target the app never actually computed.
+        var recoveryState: RecoveryState? {
+            overallScore.map { RecoveryState(score: $0.score) }
         }
 
         /// Score explanation for transparency
         fileprivate(set) var scoreExplanation: HealthScorer.ScoreExplanation?
 
         /// 7-day rolling average score for Explore tab (differs from today's overallScore).
-        /// Falls back to overallScore when insufficient history.
-        fileprivate(set) var rollingAverageScore: Int = 0
+        /// Falls back to overallScore when insufficient history, and stays nil
+        /// when neither exists so Explore hides its hero instead of showing 0.
+        fileprivate(set) var rollingAverageScore: Int?
     }
 
     @Observable
@@ -319,7 +323,7 @@ final class DashboardViewModel {
     // MARK: - Convenience accessors (kept for backward compat with internal methods)
 
     var overallScore: HealthScore? { scores.overallScore }
-    var recoveryState: RecoveryState { scores.recoveryState }
+    var recoveryState: RecoveryState? { scores.recoveryState }
 
     var lastRefresh: Date? {
         healthKitManager.lastRefresh
@@ -1530,7 +1534,7 @@ final class DashboardViewModel {
         }
 
         // Strain Coach
-        let _ = strainCoach.computeTarget(
+        strainCoach.computeTarget(
             recoveryState: recoveryState,
             currentStrain: strainScorer.currentStrain,
             recentStrainHistory: strainScorer.weeklyStrainHistory,
@@ -2048,9 +2052,9 @@ final class DashboardViewModel {
     ///   - whoop.com/.../how-does-whoop-recovery-work-101
     ///   - livity-app.com/en/blog/readiness-score-explained (Oura)
     @MainActor
-    private func computeRollingAverageScore() -> Int {
+    private func computeRollingAverageScore() -> Int? {
         let today = Date.cal.startOfDay(for: Date())
-        return ewmaWeeklyScore(asOf: today) ?? overallScore?.score ?? 0
+        return ewmaWeeklyScore(asOf: today) ?? overallScore?.score
     }
 
     /// EWMA over completed daily snapshots strictly before `asOf`.
@@ -2481,7 +2485,10 @@ final class DashboardViewModel {
         // score only when no morning lock has been set yet today (very early
         // first day, or no overnight wear).
         let readinessStore = ReadinessStore()
-        let widgetScore = readinessStore.loadMorningLock(for: Date()) ?? overallScore?.score ?? 0
+        // Stays nil when neither exists. The widget renders its own no-data
+        // state for that; a 0 would paint the worst readiness band on a home
+        // screen the user cannot tap for context.
+        let widgetScore = readinessStore.loadMorningLock(for: Date()) ?? overallScore?.score
 
         let readiness = WidgetReadinessSnapshot(
             score: widgetScore,
@@ -2538,13 +2545,17 @@ final class DashboardViewModel {
         // lock. Someone who glances at their wrist and then opens the app has to see
         // the same value. `loadCachedScore` is the live score LiveViewModel mirrors
         // for exactly this cross-surface use.
-        let watchScore = readinessStore.loadCachedScore() ?? overallScore?.score ?? 0
-        PhoneWatchSession.shared.push(
-            readinessScore: watchScore,
-            grade: grade,
-            dayType: readiness.dayType,
-            facts: watchVerdictFacts(readinessScore: watchScore)
-        )
+        // Skipped entirely without a real score: `watchVerdictFacts` seeds the
+        // wrist's exercise ceiling from the score's recovery band, so a 0 would
+        // hand the watch a red-day ceiling derived from nothing.
+        if let watchScore = readinessStore.loadCachedScore() ?? overallScore?.score {
+            PhoneWatchSession.shared.push(
+                readinessScore: watchScore,
+                grade: grade,
+                dayType: readiness.dayType,
+                facts: watchVerdictFacts(readinessScore: watchScore)
+            )
+        }
 
         let snapshotsWritten = WidgetDataStore.shared.writeAllSnapshots(
             readiness: readiness,
@@ -2558,7 +2569,7 @@ final class DashboardViewModel {
         AppAnalytics.shared.trackWidgetSnapshotUpdated(
             trigger: "analysis_refresh",
             snapshotsWritten: snapshotsWritten,
-            hasReadiness: true,
+            hasReadiness: widgetScore != nil,
             hasSleep: true,
             hasAction: action != nil,
             hasIntelligence: intelligence != nil,
@@ -3096,7 +3107,7 @@ final class DashboardViewModel {
             tomorrowRiskPrediction: orch.tomorrowRiskPrediction,
             compoundInsights: orch.compoundInsights,
             temporalSequences: orch.temporalSequences,
-            overallScore: scores.overallScore?.score ?? 0
+            overallScore: scores.overallScore?.score
         )
 
         let engine: any HealthQueryEngine

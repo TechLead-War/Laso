@@ -245,12 +245,9 @@ final class AnalysisEngine {
             focusCategories: focusCategories
         )
         let newOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
-            .map { raw in
-                HealthScore(
-                    score: HealthScorer.applyCoverageAdjustment(rawScore: raw.score, baselines: newBaselines),
-                    breakdown: raw.breakdown,
-                    generatedAt: raw.generatedAt
-                )
+            .flatMap { raw in
+                HealthScorer.applyCoverageAdjustment(rawScore: raw.score, baselines: newBaselines)
+                    .map { HealthScore(score: $0, breakdown: raw.breakdown, generatedAt: raw.generatedAt) }
             }
         let newScoreExplanation = HealthScorer.explainOverallScore(
             categoryScores: newCategoryScores,
@@ -479,8 +476,8 @@ final class AnalysisEngine {
             baselines: newBaselines,
             focusCategories: []
         )
-        guard let rawOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights) else { return nil }
-        let adjusted = HealthScorer.applyCoverageAdjustment(rawScore: rawOverall.score, baselines: newBaselines)
+        guard let rawOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights),
+              let adjusted = HealthScorer.applyCoverageAdjustment(rawScore: rawOverall.score, baselines: newBaselines) else { return nil }
 
         return (overallScore: adjusted, categoryScores: newCategoryScores, baselines: newBaselines)
     }

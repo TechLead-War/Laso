@@ -340,11 +340,11 @@ private struct EnrichedInsightCard: View {
         return ""
     }
 
-    /// `deviationPercent` only means "off your baseline" when the insight also
-    /// carries the baseline it was measured against. Several producers reuse the
-    /// field for a risk score or a count of signalling metrics, and those must
-    /// never be read back to the user as a deviation, so they show the trend
-    /// word instead, which is true of any insight.
+    /// `deviationPercent` only means "off your baseline" for insights that
+    /// divided a real reading by a real `UserBaseline`. Most producers reuse the
+    /// field for a slope, a risk score, a model constant or a count of signalling
+    /// metrics, and those must never be read back to the user as a deviation, so
+    /// they show the trend word instead, which is true of any insight.
     private var impactText: String {
         let dev = abs(insight.deviationPercent)
         guard describesBaselineDeviation, dev > 0.5 else { return insight.trend.displayName }
@@ -354,13 +354,12 @@ private struct EnrichedInsightCard: View {
             : Copy.Insights.Detail.percentBelowBaseline(percent)
     }
 
-    /// These two do carry a non-zero `baselineValue`, but it is a model constant
-    /// (an anomaly-score midpoint, a predicted probability) rather than anything
-    /// this person recorded, so their percentage is not a baseline deviation.
+    /// Only `InsightGenerator` (the sole source of `.anomaly`) computes the field
+    /// as `(reading - baseline) / baseline`. Every other category is opted out
+    /// rather than opted in, because a category can be shared by producers that
+    /// pass a slope or a threshold constant, and a wrong percentage next to the
+    /// words "your baseline" is worse than no percentage at all.
     private var describesBaselineDeviation: Bool {
-        switch insight.category {
-        case .crossMetricAnomaly, .mlPrediction: return false
-        default: return insight.baselineValue != 0
-        }
+        insight.category == .anomaly && insight.baselineValue != 0
     }
 }

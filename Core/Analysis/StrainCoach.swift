@@ -76,17 +76,29 @@ final class StrainCoach {
     /// Compute a strain target based on current recovery, today's strain so far, and recent history.
     ///
     /// - Parameters:
-    ///   - recoveryState: Current day classification (green/yellow/red)
+    ///   - recoveryState: Current day classification (green/yellow/red), or nil
+    ///     when nothing has been scored yet
     ///   - currentStrain: Accumulated strain for today so far (0-21)
     ///   - recentStrainHistory: Dated strain values for recent days, sorted ascending by date
     ///   - daysOfData: Total number of days the user has data for (used for cold-start gating)
-    /// - Returns: A `StrainTarget` with zone, range, and human-readable guidance
+    /// - Returns: A `StrainTarget` with zone, range, and human-readable guidance,
+    ///   or nil when there is no recovery band to build one from
+    @discardableResult
     func computeTarget(
-        recoveryState: DashboardViewModel.RecoveryState,
+        recoveryState: DashboardViewModel.RecoveryState?,
         currentStrain: Double,
         recentStrainHistory: [(date: Date, strain: Double)],
         daysOfData: Int
-    ) -> StrainTarget {
+    ) -> StrainTarget? {
+        // Every zone and range below is selected by the recovery band. Without
+        // one there is no target, and clearing rather than keeping the last one
+        // is what makes a data wipe reach the widget's day-type line.
+        guard let recoveryState else {
+            currentTarget = nil
+            strainBalance = .optimal
+            return nil
+        }
+
         let hasEnoughHistory = recentStrainHistory.count >= Cfg.minHistoryDays
         let consecutiveHighDays = countConsecutiveHighDays(recentStrainHistory)
         let hadRecentRest = hasRecentRestDay(recentStrainHistory, withinDays: Cfg.recentRestWindowDays)

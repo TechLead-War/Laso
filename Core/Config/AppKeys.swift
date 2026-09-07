@@ -163,6 +163,10 @@ enum AppKeys {
         static let morningLockDatePrefix       = "laso.readiness.morning_lock_date."
         static let morningLockConfidencePrefix = "laso.readiness.morning_lock_confidence."
         static let morningLockStressPrefix     = "laso.readiness.morning_lock_stress."
+        // The number Home actually rendered today, lock minus the day's strain
+        // drain. Siri reads this so the two surfaces cannot quote different
+        // numbers for the same day.
+        static let displayedScorePrefix        = "laso.readiness.displayed_score."
         // Day-over-day EMA state. The scorer runs once a day, so the previous
         // smoothed score has to outlive the process or the smoothing never
         // engages.

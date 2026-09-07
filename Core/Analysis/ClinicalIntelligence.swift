@@ -1,61 +1,34 @@
 import Foundation
 
 /// Tracks key health metrics over time and highlights meaningful changes.
-/// Blood pressure and glucose are reported as a trend against the user's own baseline, not a clinical stage.
+/// Blood pressure, glucose and breathing rate are reported as a trend against
+/// the user's own baseline, never as a clinical stage.
 struct ClinicalIntelligence {
-
-    // MARK: - Clinical Stages
-
-    enum RespiratoryStage: String {
-        case bradypnea = "Below Range"
-        case normal = "Normal"
-        case tachypnea = "Above Range"
-        case severe = "Well Above Range"
-    }
-
-    // MARK: - Classification thresholds (standard ranges)
-
-    /// Respiratory rate (breaths/min) above which is severe tachypnea.
-    private static let respiratoryRateSevere: Double = 25
-    /// Respiratory rate (breaths/min) above which is tachypnea.
-    private static let respiratoryRateTachypnea: Double = 20
-    /// Respiratory rate (breaths/min) below which is bradypnea.
-    private static let respiratoryRateBradypnea: Double = 12
-
-    // MARK: - Classification
-
-    /// Classify respiratory rate
-    static func classifyRespiratoryRate(_ value: Double) -> RespiratoryStage {
-        if value > respiratoryRateSevere { return .severe }
-        if value > respiratoryRateTachypnea { return .tachypnea }
-        if value < respiratoryRateBradypnea { return .bradypnea }
-        return .normal
-    }
 
     // MARK: - Analysis thresholds
 
     /// Minimum sample count required before a clinical insight is generated.
     private static let minSamplesForInsight: Int = 14
-    /// Maximum recent days included in the trend regression window.
-    private static let regressionWindowDays: Int = 90
+    /// Most recent readings fed into the trend regression. Caps samples, not days.
+    private static let regressionSampleCap: Int = 90
     /// Systolic mmHg/month rise above which a BP insight is surfaced.
     private static let bpUpwardSlopeThreshold: Double = 0.5
     /// Systolic mmHg/month rise above which the BP insight is escalated to warning.
     private static let bpWarningSlopeThreshold: Double = 2.0
     /// Pulse pressure (systolic - diastolic) mmHg above which it is flagged as elevated.
     private static let elevatedPulsePressureThreshold: Double = 60
-    /// Reference healthy pulse pressure used as the baseline in the deviation calculation.
-    private static let pulsePressureBaseline: Double = 40
     /// Minimum sample count for the pulse-pressure cross-check on each BP series.
     private static let minSamplesForPulsePressure: Int = 30
     /// Glucose mg/dL/month rise above which a glucose insight is surfaced.
     private static let glucoseUpwardSlopeThreshold: Double = 0.3
     /// Glucose mg/dL/month rise above which the glucose insight is escalated to warning.
     private static let glucoseWarningSlopeThreshold: Double = 1.5
-    /// Respiratory rate analysis trailing window in days.
-    private static let respiratoryWindowDays: Int = 30
-    /// Reference healthy respiratory rate (breaths/min) used as the baseline in deviation calculations.
-    private static let respiratoryRateBaseline: Double = 16
+    /// Most recent breathing-rate readings averaged for the baseline comparison. Caps samples, not days.
+    private static let respiratorySampleCap: Int = 30
+    /// Percent departure from the user's usual breathing rate worth surfacing.
+    private static let respiratoryDeviationThreshold: Double = 10
+    /// Percent departure from the user's usual breathing rate that escalates to warning.
+    private static let respiratoryWarningDeviationThreshold: Double = 20
     /// Days per month used to convert per-day slopes to per-month slopes.
     private static let daysPerMonth: Double = 30
     /// Seconds in one day used to convert TimeInterval into day-based regression x-values.
@@ -102,17 +75,16 @@ struct ClinicalIntelligence {
 
         guard let latestSys = sysValues.last?.value else { return [] }
 
-        // 90-day linear regression for systolic
-        let recent90 = Array(sysValues.suffix(regressionWindowDays))
-        guard recent90.count >= minSamplesForInsight else { return [] }
+        let recentSys = Array(sysValues.suffix(regressionSampleCap))
+        guard recentSys.count >= minSamplesForInsight else { return [] }
 
-        let sysSlope = linearRegressionSlope(samples: recent90)
+        let sysSlope = linearRegressionSlope(samples: recentSys)
         let slopePerMonth = sysSlope * daysPerMonth
 
         // Generate insight if trending upward significantly
         if slopePerMonth > bpUpwardSlopeThreshold {
             let severity: Severity = slopePerMonth > bpWarningSlopeThreshold ? .warning : .info
-            let baselineMean = baselines[.bloodPressureSystolic]?.mean
+            let baselineMean = usableBaseline(baselines[.bloodPressureSystolic])
             let baselineComparison = baselineMean.map {
                 Copy.Analysis.Clinical.systolicVsBaseline(baseline: String(format: "%.0f", $0))
             } ?? ""
@@ -122,37 +94,46 @@ struct ClinicalIntelligence {
                 title: Copy.Analysis.Clinical.bloodPressureTrendingUp,
                 summary: Copy.Analysis.ClinicalSentences.systolicTrendSummary(
                     slopePerMonth: String(format: "%.1f", slopePerMonth),
-                    recentDays: recent90.count,
+                    recentDays: daySpan(of: recentSys),
                     latest: String(format: "%.0f", latestSys),
                     baselineComparison: baselineComparison),
                 recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,
-                baselineValue: baselineMean ?? latestSys,
-                deviationPercent: slopePerMonth,
+                // Without a baseline there is no deviation to report, so both fields stay
+                // empty rather than passing the slope off as a percentage off baseline.
+                baselineValue: baselineMean ?? 0,
+                deviationPercent: baselineMean.map { ((latestSys - $0) / $0) * 100 } ?? 0,
                 category: .clinicalTrajectory,
                 context: InsightContext(
                     slope: slopePerMonth,
-                    confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
+                    confidenceLevel: min(1.0, Double(recentSys.count) / Double(regressionSampleCap))
                 )
             ))
         }
 
-        // Pulse pressure trend (systolic - diastolic)
+        // Pulse pressure against this person's own usual gap
         if sysValues.count >= minSamplesForPulsePressure,
            diaValues.count >= minSamplesForPulsePressure,
-           let latestDia = diaValues.last?.value {
+           let latestDia = diaValues.last?.value,
+           let sysBaseline = usableBaseline(baselines[.bloodPressureSystolic]),
+           let diaBaseline = usableBaseline(baselines[.bloodPressureDiastolic]) {
+            let usualGap = sysBaseline - diaBaseline
             let pulsePressure = latestSys - latestDia
-            if pulsePressure > elevatedPulsePressureThreshold {
+            // Both bars have to clear: wide in absolute terms, and wider than this
+            // person normally runs, so the "higher than usual" title stays true.
+            if usualGap > 0, pulsePressure > max(usualGap, elevatedPulsePressureThreshold) {
                 insights.append(Insight(
                     metric: .bloodPressureSystolic,
                     title: Copy.Analysis.Clinical.elevatedPulsePressure,
-                    summary: Copy.Analysis.Clinical.pulsePressureSummary(pulsePressure: Int(pulsePressure)),
+                    summary: Copy.Analysis.Clinical.pulsePressureSummary(
+                        pulsePressure: Int(pulsePressure),
+                        usualGap: Int(usualGap.rounded())),
                     recommendation: "\(Copy.Analysis.Clinical.pulsePressureRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                     severity: .warning,
                     trend: .declining,
-                    baselineValue: pulsePressureBaseline,
-                    deviationPercent: ((pulsePressure - pulsePressureBaseline) / pulsePressureBaseline) * 100,
+                    baselineValue: usualGap,
+                    deviationPercent: ((pulsePressure - usualGap) / usualGap) * 100,
                     category: .clinicalTrajectory,
                 ))
             }
@@ -173,16 +154,16 @@ struct ClinicalIntelligence {
         let samples = glucoseSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }
 
-        let recent90 = Array(samples.suffix(regressionWindowDays))
-        guard recent90.count >= minSamplesForInsight else { return nil }
+        let recent = Array(samples.suffix(regressionSampleCap))
+        guard recent.count >= minSamplesForInsight else { return nil }
 
-        let slope = linearRegressionSlope(samples: recent90)
+        let slope = linearRegressionSlope(samples: recent)
         let slopePerMonth = slope * daysPerMonth
 
         guard slopePerMonth > glucoseUpwardSlopeThreshold else { return nil }
 
         let severity: Severity = slopePerMonth > glucoseWarningSlopeThreshold ? .warning : .info
-        let baselineMean = baselines[.bloodGlucose]?.mean
+        let baselineMean = usableBaseline(baselines[.bloodGlucose])
         let baselineComparison = baselineMean.map {
             Copy.Analysis.Clinical.glucoseVsBaseline(baseline: String(format: "%.0f", $0))
         } ?? ""
@@ -197,19 +178,20 @@ struct ClinicalIntelligence {
             recommendation: "\(Copy.Analysis.Clinical.glucoseRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: severity,
             trend: .declining,
-            baselineValue: baselineMean ?? latest,
-            deviationPercent: slopePerMonth,
+            // Same rule as blood pressure: no baseline, no percentage.
+            baselineValue: baselineMean ?? 0,
+            deviationPercent: baselineMean.map { ((latest - $0) / $0) * 100 } ?? 0,
             category: .clinicalTrajectory,
             context: InsightContext(
                 slope: slopePerMonth,
-                confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
+                confidenceLevel: min(1.0, Double(recent.count) / Double(regressionSampleCap))
             )
         )
     }
 
     // MARK: - Respiratory Rate Analysis
 
-    /// Minimum sample count for the respiratory regression trend.
+    /// Minimum sample count for the respiratory baseline comparison.
     private static let minSamplesForRespiratoryTrend: Int = 7
 
     private static func analyzeRespiratoryRate(
@@ -217,36 +199,55 @@ struct ClinicalIntelligence {
         baselines: [HealthMetric: UserBaseline]
     ) -> Insight? {
         guard let rrSeries = timeSeries[.respiratoryRate],
-              rrSeries.samples.count >= minSamplesForInsight else { return nil }
+              rrSeries.samples.count >= minSamplesForInsight,
+              let baselineMean = usableBaseline(baselines[.respiratoryRate]) else { return nil }
 
-        let samples = rrSeries.sortedSamples
-        guard let latest = samples.last?.value else { return nil }
-        let stage = classifyRespiratoryRate(latest)
+        let recent = Array(rrSeries.sortedSamples.suffix(respiratorySampleCap))
+        guard recent.count >= minSamplesForRespiratoryTrend else { return nil }
 
-        guard stage != .normal else { return nil }
+        // One unusual night is noise, so the comparison uses the window mean.
+        let recentMean = recent.map(\.value).reduce(0, +) / Double(recent.count)
+        let deviationPercent = ((recentMean - baselineMean) / baselineMean) * 100
+        guard abs(deviationPercent) >= respiratoryDeviationThreshold else { return nil }
 
-        let recent = Array(samples.suffix(respiratoryWindowDays))
-        let slope = recent.count >= minSamplesForRespiratoryTrend ? linearRegressionSlope(samples: recent) : 0
-        let slopePerMonth = slope * daysPerMonth
+        let rate = String(format: "%.1f", recentMean)
+        let usual = String(format: "%.1f", baselineMean)
+        let days = daySpan(of: recent)
+        let summary = deviationPercent > 0
+            ? Copy.Analysis.Clinical.respiratoryAboveUsualSummary(rate: rate, days: days, usual: usual)
+            : Copy.Analysis.Clinical.respiratoryBelowUsualSummary(rate: rate, days: days, usual: usual)
 
         return Insight(
             metric: .respiratoryRate,
             title: Copy.Analysis.Clinical.abnormalRespiratoryRate,
-            summary: Copy.Analysis.Clinical.respiratorySummary(rate: String(format: "%.1f", latest), stage: stage.rawValue),
+            summary: summary,
             recommendation: "\(Copy.Analysis.Clinical.respiratoryRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
-            severity: stage == .severe ? .critical : .warning,
-            trend: slopePerMonth > 0 ? .declining : .stable,
-            baselineValue: baselines[.respiratoryRate]?.mean ?? respiratoryRateBaseline,
-            deviationPercent: ((latest - respiratoryRateBaseline) / respiratoryRateBaseline) * 100,
+            severity: abs(deviationPercent) >= respiratoryWarningDeviationThreshold ? .warning : .info,
+            // A drift either side of this person's usual is a move away from it, never an improvement.
+            trend: .declining,
+            baselineValue: baselineMean,
+            deviationPercent: deviationPercent,
             category: .clinicalTrajectory,
             context: InsightContext(
-                slope: slopePerMonth,
-                confidenceLevel: min(1.0, Double(recent.count) / Double(respiratoryWindowDays))
+                slope: linearRegressionSlope(samples: recent) * daysPerMonth,
+                confidenceLevel: min(1.0, Double(recent.count) / Double(respiratorySampleCap))
             )
         )
     }
 
     // MARK: - Helpers
+
+    /// A baseline mean of zero cannot anchor a percentage, so it counts as no baseline.
+    private static func usableBaseline(_ baseline: UserBaseline?) -> Double? {
+        baseline.flatMap { $0.mean > 0 ? $0.mean : nil }
+    }
+
+    /// Calendar days a sample window actually covers. The windows are capped by
+    /// sample count, so the span has to come from the timestamps.
+    private static func daySpan(of samples: [MetricSample]) -> Int {
+        guard let first = samples.first?.date, let last = samples.last?.date else { return 0 }
+        return max(1, (Date.cal.dateComponents([.day], from: first, to: last).day ?? 0) + 1)
+    }
 
     /// Simple linear regression slope (value per day)
     private static func linearRegressionSlope(samples: [MetricSample]) -> Double {

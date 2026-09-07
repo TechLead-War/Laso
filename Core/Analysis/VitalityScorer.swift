@@ -425,14 +425,17 @@ final class VitalityScorer {
     /// Body composition comes off a scale people step on now and then.
     private static let bodyCompositionStalenessDays = 30
 
-    /// Share of the model's weight that must be present before a new age is
-    /// published. Below this the number would move because data went missing,
-    /// not because the body changed, so the last computed age is held instead.
-    private static let minimumWeightCoverage: Double = 0.5
+    /// How far the arriving weight must fall below what this user's own last
+    /// full compute carried before the age is held. Measured against the user
+    /// instead of against the whole model on purpose: a phone with no watch can
+    /// only ever supply steps, walking speed and sometimes sleep, so an absolute
+    /// share froze that entire cohort's age permanently. A drop against their
+    /// own steady state is what a dropout actually looks like.
+    private static let coverageDropoutFraction: Double = 0.6
 
     /// How long a held age stays honest. Past this the gap is no longer a
-    /// dropout, it is a tracker that stopped, and we fall back to the
-    /// chronological-age path rather than showing a stale number forever.
+    /// dropout, it is a tracker that stopped, and the chronological-age path
+    /// takes over rather than showing a stale number forever.
     private static let heldAgeMaxDays = 14
 
     /// Days of data available at last compute. 0 means no data yet.
@@ -463,11 +466,18 @@ final class VitalityScorer {
         /// Optional so snapshots written before this field decode instead of
         /// being thrown away on upgrade.
         var computedAt: Date?
+        /// Model weight the last full compute ran on, the baseline a dropout is
+        /// measured against. Optional for the same upgrade reason.
+        var weightCoverage: Double?
     }
 
     /// When the last full compute ran. Bounds how long a dropout may be covered
     /// by holding the previous age.
     private var lastFullComputeAt: Date?
+
+    /// Model weight the last full compute ran on. The dropout test compares
+    /// today's weight against this, not against the full model.
+    private var lastFullCoverage: Double?
 
     init() {
         guard
@@ -480,6 +490,7 @@ final class VitalityScorer {
         personalizationProgress = snap.personalizationProgress
         availableDays = snap.availableDays
         lastFullComputeAt = snap.computedAt
+        lastFullCoverage = snap.weightCoverage
         isReady = true
     }
 
@@ -493,7 +504,8 @@ final class VitalityScorer {
             chronologicalAge: chronologicalAge,
             personalizationProgress: personalizationProgress,
             availableDays: availableDays,
-            computedAt: lastFullComputeAt
+            computedAt: lastFullComputeAt,
+            weightCoverage: lastFullCoverage
         )
         if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
@@ -528,9 +540,10 @@ final class VitalityScorer {
 
         availableDays = usableDaysForPersonalization(from: allSeries)
         personalizationProgress = personalizationProgress(for: availableDays)
-        computedBiologicalAge = chronologicalAge
         // Always mark as ready. the orb is always shown.
         // With no data, vitality age defaults to chronological age.
+        // `computedBiologicalAge` is not reset here on purpose: every exit below
+        // either sets it, or is holding the age it was computed with.
 
         var components: [VitalityComponent] = []
         var weightedAgeSum: Double = 0
@@ -756,27 +769,29 @@ final class VitalityScorer {
         // snapshot with a placeholder, so first-render after launch would
         // show chronological age (or 0) instead of the real vitality age.
         if components.count < 2 || totalWeight <= 0 {
-            computedBiologicalAge = chronologicalAge
-            vitalityAge = chronologicalAge
-            personalizationProgress = 0
-            componentAges = components.sorted { $0.metricAge > $1.metricAge }
-            isReady = true
-            history = []
-            paceOfAging = 1.0
-            hasPaceEstimate = false
+            publishChronologicalAge(components: components)
             return
         }
 
-        // A dropout is not a change in the body. When the metrics that did
-        // arrive cover less than half the model, renormalising over them moves
-        // the age by years overnight for no reason the user caused, so the last
-        // full estimate is held instead. Held only while it is recent enough to
-        // still describe this person.
-        if totalWeight < Self.minimumWeightCoverage,
-           vitalityAge > 0,
-           let lastCompute = lastFullComputeAt,
-           Date().timeIntervalSince(lastCompute) < Double(Self.heldAgeMaxDays) * Self.secondsPerDay {
-            componentAges = components.sorted { $0.metricAge > $1.metricAge }
+        // A dropout is not a change in the body. When much less weight arrives
+        // than this user's own last full compute carried, renormalising over
+        // what is left moves the age by years overnight for no reason the user
+        // caused, so the last full estimate is held instead. A profile that has
+        // always been thin is not a dropout and keeps computing daily.
+        if let baselineCoverage = lastFullCoverage,
+           totalWeight < baselineCoverage * Self.coverageDropoutFraction,
+           vitalityAge > 0 {
+            guard let lastCompute = lastFullComputeAt,
+                  Date().timeIntervalSince(lastCompute) < Double(Self.heldAgeMaxDays) * Self.secondsPerDay
+            else {
+                // The gap outlived the hold, so this is a tracker that stopped.
+                // No age is claimed from the little that still arrives.
+                publishChronologicalAge(components: components)
+                return
+            }
+            // Today's partial metrics cannot be reconciled against an age
+            // computed from a fuller set, so the breakdown is left showing the
+            // set that age was actually built from.
             isReady = true
             return
         }
@@ -794,11 +809,27 @@ final class VitalityScorer {
         isReady = true
 
         lastFullComputeAt = Date()
+        lastFullCoverage = totalWeight
 
         // Compute historical trend and pace of aging
         computeHistory(from: store)
         computePaceOfAging()
         saveSnapshot()
+    }
+
+    /// Publish the user's real age and nothing derived from it, for the paths
+    /// where there is too little to compute from. The trend and the pace go
+    /// with it: they would describe an age nobody is being shown.
+    private func publishChronologicalAge(components: [VitalityComponent]) {
+        computedBiologicalAge = chronologicalAge
+        vitalityAge = chronologicalAge
+        preciseVitalityAge = Double(chronologicalAge)
+        personalizationProgress = 0
+        componentAges = components.sorted { $0.metricAge > $1.metricAge }
+        isReady = true
+        history = []
+        paceOfAging = 1.0
+        hasPaceEstimate = false
     }
 
     // MARK: - Top Improvement Opportunities
@@ -913,7 +944,12 @@ final class VitalityScorer {
         /// 0 = worse than peers, 1 = better. Drives the marker position.
         let goodness: Double
         /// Years this metric adds (+) or removes (-) vs the user's real age.
+        /// Not a reading when `isBeyondYoungestReference` is set.
         let delta: Int
+        /// True when the value beats the youngest row of the reference table,
+        /// so `delta` is the table's floor and not a measured gap. The card
+        /// says "top of range" for these, as the full engine already does.
+        let isBeyondYoungestReference: Bool
     }
 
     /// Deltas inside this band read as "same as your age": ±1 year is within
@@ -956,18 +992,20 @@ final class VitalityScorer {
                  key: VitalityMetricKey, goodness: (Double) -> Double) {
             guard let v = value, v > 0 else { return }
             let norm = VitalityNorms.metricAge(value: v, table: table, higherIsBetter: higherIsBetter)
-            // Off either end of the table the age is a floor or a ceiling, not a
-            // reading, so it carries no year gap. Onboarding averages are also
-            // the shakiest input in the app: a partial step window divided over
-            // a full month lands past the oldest row and would otherwise show up
-            // as a confident "+50 years".
-            guard !norm.isBeyondYoungestReference, !norm.isBelowOldestReference else { return }
+            // Past the oldest row the age is a ceiling with nothing behind it,
+            // and the shakiest onboarding averages land there, so the metric is
+            // dropped rather than shown as a confident "+50 years". The youngest
+            // row is the opposite case: beating it is the ordinary reading for a
+            // fit person, so it still counts at the table's floor, and the card
+            // says "top of range" instead of quoting the floor as a gap.
+            guard !norm.isBelowOldestReference else { return }
             let w = weightFor(key)
             weightedSum += Double(norm.age) * w
             totalWeight += w
             out.append(OnboardingMetric(name: name, valueLabel: label(v),
                                         goodness: min(1, max(0, goodness(v))),
-                                        delta: norm.age - chronologicalAge))
+                                        delta: norm.age - chronologicalAge,
+                                        isBeyondYoungestReference: norm.isBeyondYoungestReference))
         }
 
         add(restingHR, name: "RESTING HR", label: { "\(Int($0.rounded())) bpm" },
@@ -1030,13 +1068,29 @@ final class VitalityScorer {
     /// Pace of aging: how many years of vitality age accrue per calendar year.
     /// 1.0 tracks the calendar, below 1.0 is aging slower, above is faster.
     private func computePaceOfAging() {
-        if let pace = Self.pace(from: history) {
-            paceOfAging = pace
-            hasPaceEstimate = true
-        } else {
+        // While personalization ramps from 0 to 1 the age slides because
+        // confidence moved, not because the body did, and that slide is the
+        // straightest line the series ever holds: it sails through the
+        // significance gate and gets published as a verdict on the body. Only
+        // days recorded at full personalization are fitted.
+        guard let rampEnd = fullPersonalizationDate,
+              let pace = Self.pace(from: history.filter { $0.date >= rampEnd }) else {
             paceOfAging = 1.0
             hasPaceEstimate = false
+            return
         }
+        paceOfAging = pace
+        hasPaceEstimate = true
+    }
+
+    /// The day personalization reached full confidence, or nil while it is
+    /// still ramping. `availableDays` counts days that carry data, which cannot
+    /// grow faster than the calendar, so this never lands before the real one.
+    private var fullPersonalizationDate: Date? {
+        guard availableDays >= Self.minimumDaysRequired else { return nil }
+        return Date.cal.date(byAdding: .day,
+                             value: -(availableDays - Self.minimumDaysRequired),
+                             to: Date.cal.startOfDay(for: Date()))
     }
 
     /// Returns nil when the history is too short to fit a slope worth showing.

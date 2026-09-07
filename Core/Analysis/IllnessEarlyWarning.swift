@@ -138,13 +138,13 @@ struct IllnessEarlyWarning {
         let consecutiveResult = computeConsecutiveMultiMetricDays(dailySignals: dailySignals)
 
         guard consecutiveResult.daysElevated >= minDaysElevatedForWarning,
-              consecutiveResult.signalingDays.count >= minSignalingMetrics else {
+              consecutiveResult.signalingValues.count >= minSignalingMetrics else {
             return []
         }
 
         // Step 3: Build MetricSignal objects for all signaling metrics
         let activeSignals = buildActiveSignals(
-            signalingDays: consecutiveResult.signalingDays,
+            signalingValues: consecutiveResult.signalingValues,
             timeSeries: timeSeries,
             calendar: calendar,
             now: now
@@ -165,7 +165,10 @@ struct IllnessEarlyWarning {
 
         // Step 5: Determine severity
         let severity = determineSeverity(
-            signalCount: finalSignals.count,
+            sustainedSignalCount: sustainedSignalCount(
+                signals: finalSignals,
+                daysElevated: consecutiveResult.daysElevated
+            ),
             daysElevated: consecutiveResult.daysElevated
         )
 
@@ -255,7 +258,9 @@ struct IllnessEarlyWarning {
 
     /// For each signal metric, compute whether it was deviating unfavorably on each
     /// of the last `recentWindowDays` days.
-    /// Returns a dictionary: metric -> [dayIndex: deviation in sigma], where dayIndex 0 = today.
+    /// Returns a dictionary: metric -> [dayIndex: that day's own mean value], holding
+    /// only the days that deviated unfavorably, where dayIndex 0 = today. The day
+    /// values are kept because the narrative has to quote the days it is describing.
     private static func computeDailySignals(
         timeSeries: [HealthMetric: MetricTimeSeries],
         calendar: Calendar,
@@ -301,7 +306,7 @@ struct IllnessEarlyWarning {
                 }
 
                 if isUnfavorable {
-                    metricDailySignals[dayOffset] = abs(deviation)
+                    metricDailySignals[dayOffset] = dayMean
                 }
             }
 
@@ -317,9 +322,10 @@ struct IllnessEarlyWarning {
 
     private struct ConsecutiveResult {
         let daysElevated: Int
-        /// Days inside the streak on which each metric itself signaled. A metric can
-        /// join on a single day, so the streak length is not its deviation length.
-        let signalingDays: [HealthMetric: Int]
+        /// Values from the days inside the streak on which each metric itself signaled.
+        /// A metric can join on a single day, so the streak length is not its deviation
+        /// length, and the mean of these days is the only value a claim about it can quote.
+        let signalingValues: [HealthMetric: [Double]]
     }
 
     /// Determine how many consecutive recent days had 2+ metrics signaling simultaneously.
@@ -328,22 +334,22 @@ struct IllnessEarlyWarning {
         dailySignals: [HealthMetric: [Int: Double]]
     ) -> ConsecutiveResult {
         var consecutiveDays = 0
-        var signalingDays: [HealthMetric: Int] = [:]
+        var signalingValues: [HealthMetric: [Double]] = [:]
 
         // Walk backwards from today (dayOffset 0) through the recent window
         for dayOffset in 0..<recentWindowDays {
-            var metricsSignalingToday: Set<HealthMetric> = []
+            var metricsSignalingToday: [HealthMetric: Double] = [:]
 
             for (metric, days) in dailySignals {
-                if days[dayOffset] != nil {
-                    metricsSignalingToday.insert(metric)
+                if let dayValue = days[dayOffset] {
+                    metricsSignalingToday[metric] = dayValue
                 }
             }
 
             if metricsSignalingToday.count >= minSignalingMetrics {
                 consecutiveDays += 1
-                for metric in metricsSignalingToday {
-                    signalingDays[metric, default: 0] += 1
+                for (metric, dayValue) in metricsSignalingToday {
+                    signalingValues[metric, default: []].append(dayValue)
                 }
             } else {
                 // Streak broken
@@ -351,14 +357,14 @@ struct IllnessEarlyWarning {
             }
         }
 
-        return ConsecutiveResult(daysElevated: consecutiveDays, signalingDays: signalingDays)
+        return ConsecutiveResult(daysElevated: consecutiveDays, signalingValues: signalingValues)
     }
 
     // MARK: - Active Signal Construction
 
     /// Build MetricSignal objects with current and baseline values for all signaling metrics.
     private static func buildActiveSignals(
-        signalingDays: [HealthMetric: Int],
+        signalingValues: [HealthMetric: [Double]],
         timeSeries: [HealthMetric: MetricTimeSeries],
         calendar: Calendar,
         now: Date
@@ -366,7 +372,7 @@ struct IllnessEarlyWarning {
         var signals: [MetricSignal] = []
 
         for config in signalMetrics {
-            guard let daysSignaling = signalingDays[config.metric],
+            guard let daysValues = signalingValues[config.metric], !daysValues.isEmpty,
                   let series = timeSeries[config.metric] else { continue }
 
             let window = baselineWindow(calendar: calendar, now: now)
@@ -377,18 +383,17 @@ struct IllnessEarlyWarning {
             let baselineSD = baselineValues.standardDeviation
             guard baselineSD > baselineSDFloor else { continue }
 
-            // Current value: average of the recent window
-            let recentSamples = series.samples(lastDays: recentWindowDays)
-            guard !recentSamples.isEmpty else { continue }
-            let currentValue = recentSamples.map(\.value).mean
+            // Current value: average of the days this metric actually signaled on.
+            // Averaging the whole recent window mixed in the days it sat at baseline,
+            // which printed a number the sentence around it contradicted.
+            let currentValue = daysValues.mean
 
             let deviation = (currentValue - baselineMean) / baselineSD
 
-            let direction: String
-            switch config.unfavorableDirection {
-            case .above: direction = "elevated"
-            case .below: direction = "depressed"
-            }
+            // Direction comes from the measured sign, never from the configured
+            // unfavorable side, so the words can never disagree with the numbers
+            // quoted beside them.
+            let direction = deviation > 0 ? "elevated" : "depressed"
 
             signals.append(MetricSignal(
                 metric: config.metric,
@@ -396,7 +401,7 @@ struct IllnessEarlyWarning {
                 baselineValue: baselineMean,
                 deviationSigma: abs(deviation),
                 direction: direction,
-                daysSignaling: daysSignaling
+                daysSignaling: daysValues.count
             ))
         }
 
@@ -441,15 +446,25 @@ struct IllnessEarlyWarning {
 
     // MARK: - Severity Determination
 
-    /// Level is based on how many metrics are signaling and for how many consecutive days.
+    /// Metrics that signaled on every day of the streak.
     ///
-    /// - 2 metrics for 2+ days = `.info` (early heads up)
-    /// - 3+ metrics for 2 days = `.warning` (clear multi-system deviation)
-    /// - 3+ metrics for 3+ days = `.critical` (sustained multi-system strain)
-    private static func determineSeverity(signalCount: Int, daysElevated: Int) -> Severity {
-        if signalCount >= highSignalCount && daysElevated >= criticalDaysElevated {
+    /// The streak is a union across days, so a metric can be counted in it on the
+    /// strength of a single day. Escalating on that union claimed a multi-system
+    /// pattern that never held for more than a day at a time.
+    private static func sustainedSignalCount(signals: [MetricSignal], daysElevated: Int) -> Int {
+        signals.filter { $0.daysSignaling >= daysElevated }.count
+    }
+
+    /// Level is based on how many metrics held their deviation for the whole streak
+    /// and for how many consecutive days.
+    ///
+    /// - 2 sustained metrics for 2+ days = `.info` (early heads up)
+    /// - 3+ sustained metrics for 2 days = `.warning` (clear multi-system deviation)
+    /// - 3+ sustained metrics for 3+ days = `.critical` (sustained multi-system strain)
+    private static func determineSeverity(sustainedSignalCount: Int, daysElevated: Int) -> Severity {
+        if sustainedSignalCount >= highSignalCount && daysElevated >= criticalDaysElevated {
             return .critical
-        } else if signalCount >= highSignalCount && daysElevated >= minDaysElevatedForWarning {
+        } else if sustainedSignalCount >= highSignalCount && daysElevated >= minDaysElevatedForWarning {
             return .warning
         } else {
             return .info
@@ -560,14 +575,16 @@ struct IllnessEarlyWarning {
         severity: Severity
     ) -> String {
         var observations: [String] = []
+        let sustained = sustainedSignalCount(signals: signals, daysElevated: daysElevated)
 
-        // Core observation always present
-        observations.append("Your body is showing strain across \(signals.count) metrics over \(daysElevated) consecutive days.")
+        // Core observation always present. Only the sustained metrics can be paired
+        // with the streak length; the rest signaled on fewer days than that.
+        observations.append("Your body is showing strain across \(signals.count) metrics, \(sustained) of them on all \(daysElevated) days.")
 
-        // Rest priority. state data, not prescription
-        if severity >= .warning {
-            observations.append("Your body is showing strain across \(signals.count) metrics simultaneously.")
-        } else {
+        // Rest priority. state data, not prescription. The warning-level branch used to
+        // repeat the sentence above with the union count and the word "simultaneously",
+        // which is the claim the sentence above exists to qualify.
+        if severity < .warning {
             observations.append(Copy.Analysis.StrainSignals.multipleMetricsShifted)
         }
 
@@ -588,7 +605,7 @@ struct IllnessEarlyWarning {
 
         // Critical-level: state the severity of the data pattern
         if severity == .critical {
-            observations.append("This is a sustained multi-metric deviation. \(signals.count) signals active for \(daysElevated) consecutive days.")
+            observations.append("This is a sustained multi-metric deviation. \(sustained) signals active on every one of \(daysElevated) consecutive days.")
         }
 
         return observations.joined(separator: " ")

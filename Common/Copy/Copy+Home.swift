@@ -454,6 +454,9 @@ extension Copy {
             }
 
             static var suggestedQuestions: [String] { RemoteConfigManager.shared.copyArray("copy_home_suggested_questions", default: ["How is my sleep this week?", "What affects my heart calm signal the most?", "Am I getting enough deep sleep?", "How does exercise affect my recovery?", "What is my resting heart rate trend?", "How consistent is my sleep schedule?"]) }
+
+            /// Answer when the user asks about a score the app has not computed.
+            static var noScoreYet: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data_no_score_yet", default: "I do not have enough of your data to work out a health score yet. Keep your health data syncing and I will explain the score as soon as there is one.") }
         }
 
         // MARK: - Recovery Info

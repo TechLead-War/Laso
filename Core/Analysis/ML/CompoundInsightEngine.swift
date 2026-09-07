@@ -582,12 +582,18 @@ final class CompoundInsightEngine {
             )
             
             let narrative = llmGenerator.synthesizeParagraph(context: context)
-            
+
+            let lead1 = best.lag1 > 0 ? "\(best.lag1) day\(best.lag1 == 1 ? "" : "s") before" : "on the same day as"
+            let lead2 = best.lag2 > 0 ? "\(best.lag2) day\(best.lag2 == 1 ? "" : "s") before" : "on the same day as"
+
             results.append(CompoundInsight(
                 id: "causal_chain_\(best.source.rawValue)_\(best.dest.rawValue)",
-                title: "\(best.source.displayName) Drives a Chain Reaction",
+                title: "\(best.source.displayName) Leads a Chain of Changes",
                 narrative: narrative,
-                recommendation: "\(best.source.displayName) influences \(best.mid.displayName) (\(best.lag1)-day lag), which influences \(best.dest.displayName) (\(best.lag2)-day lag). Total chain effect: r=\(formatValue(combinedR, decimals: 2)) over \(totalLag) days.",
+                // A Granger test on daily samples shows that one metric moves before
+                // another, never that it moves it, so the chain is described as a
+                // sequence and the raw r stays off a sentence that reads as proof.
+                recommendation: "\(best.source.displayName) tends to move \(lead1) \(best.mid.displayName), which tends to move \(lead2) \(best.dest.displayName). That is a pattern we spotted, not proof of cause.",
                 involvedMetrics: [best.source, best.mid, best.dest],
                 severity: .notable,
                 category: .causeAndEffect,
@@ -623,14 +629,17 @@ final class CompoundInsightEngine {
             }
 
             let effectSizeLabel = strongestDirect.effectSize > Self.causalLargeEffect ? "large" : strongestDirect.effectSize > Self.causalMediumEffect ? "medium" : "small"
-            let lagStr = strongestDirect.lag > 0 ? "after \(strongestDirect.lag) day\(strongestDirect.lag == 1 ? "" : "s")" : "same day"
+            let lagStr = strongestDirect.lag > 0 ? "\(strongestDirect.lag) day\(strongestDirect.lag == 1 ? "" : "s") before" : "on the same day as"
 
             if !chainAlreadyCovers {
                 results.append(CompoundInsight(
                     id: "causal_direct_\(strongestDirect.cause.rawValue)_\(strongestDirect.effect.rawValue)",
-                    title: "\(strongestDirect.cause.displayName) Drives \(strongestDirect.effect.displayName)",
+                    title: "\(strongestDirect.cause.displayName) Tends to Lead \(strongestDirect.effect.displayName)",
                     narrative: narrative,
-                    recommendation: "\(strongestDirect.cause.displayName) causally predicts \(strongestDirect.effect.displayName) with a \(effectSizeLabel) effect size (f\u{00B2}=\(formatValue(strongestDirect.effectSize, decimals: 2))), visible \(lagStr).",
+                    // Matches the association wording `Copy.Policy.causalDefault` uses
+                    // for the same Granger evidence. The raw effect-size number goes
+                    // with it: it is a statistic, not a claim a reader can check.
+                    recommendation: "\(strongestDirect.cause.displayName) tends to move \(lagStr) \(strongestDirect.effect.displayName), a \(effectSizeLabel) link in your data. That is a pattern we spotted, not proof of cause.",
                     involvedMetrics: [strongestDirect.cause, strongestDirect.effect],
                     severity: strongestDirect.effectSize > Self.causalImportantEffect ? .important : .notable,
                     category: .causeAndEffect,

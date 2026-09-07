@@ -239,10 +239,10 @@ final class FoundationModelQueryEngine: HealthQueryEngine, @unchecked Sendable {
         }
 
         // If no specific metrics detected, show score
-        if points.isEmpty {
+        if points.isEmpty, let score = context.overallScore {
             points.append(.init(
                 label: "Health Score",
-                value: Double(context.overallScore),
+                value: Double(score),
                 unit: "pts"
             ))
         }

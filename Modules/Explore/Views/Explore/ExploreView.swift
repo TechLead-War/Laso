@@ -41,31 +41,35 @@ struct ExploreView: View {
             // cannot help there: recycling destroys identity, not just state.
             VStack(spacing: 24) {
                 if hasScoreData {
-                    // 1. Score Hero with trend
-                    ExploreScoreHeroSection(
-                        overallScore: viewModel.scores.rollingAverageScore,
-                        scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
-                        weakestCategory: weakestCategory,
-                        onScoreInfoTapped: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Score Info",
-                                type: .exploreScoreInfo,
-                                screen: .explore,
-                                metadata: [
-                                    // Send the same EWMA value the user sees,
-                                    // not the live daily score, so analytics
-                                    // never disagree with the UI.
-                                    "score": viewModel.scores.rollingAverageScore,
-                                    "grade": grade
-                                ]
-                            )
-                            scoreHeroTracker.tapped(target: "score_info")
-                            showScoreGuide = true
-                        }
-                    )
-                    .padding(.horizontal)
-                    .onAppear { scoreHeroTracker.appeared(); scrollDepth.record(15) }
-                    .onDisappear { scoreHeroTracker.disappeared() }
+                    // 1. Score Hero with trend. Categories can be scored while the
+                    // overall number is not (no baselines yet), and the hero has no
+                    // honest way to draw a missing score, so it stays away.
+                    if let rollingScore = viewModel.scores.rollingAverageScore {
+                        ExploreScoreHeroSection(
+                            overallScore: rollingScore,
+                            scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
+                            weakestCategory: weakestCategory,
+                            onScoreInfoTapped: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Score Info",
+                                    type: .exploreScoreInfo,
+                                    screen: .explore,
+                                    metadata: [
+                                        // Send the same EWMA value the user sees,
+                                        // not the live daily score, so analytics
+                                        // never disagree with the UI.
+                                        "score": rollingScore,
+                                        "grade": HealthScore.grade(for: rollingScore)
+                                    ]
+                                )
+                                scoreHeroTracker.tapped(target: "score_info")
+                                showScoreGuide = true
+                            }
+                        )
+                        .padding(.horizontal)
+                        .onAppear { scoreHeroTracker.appeared(); scrollDepth.record(15) }
+                        .onDisappear { scoreHeroTracker.disappeared() }
+                    }
 
                     // 2. Data depth bar. Metrics, Data Points, Days
                     ExploreDataSummarySection(
@@ -418,10 +422,6 @@ struct ExploreView: View {
 
     private var weakestCategory: (category: HealthCategory, score: Int)? {
         viewModel.exploreWeakestCategory
-    }
-
-    private var grade: String {
-        HealthScore.grade(for: viewModel.scores.rollingAverageScore)
     }
 
     private var decliningHighlights: [DashboardViewModel.HistoricalHighlight] {

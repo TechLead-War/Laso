@@ -29,7 +29,11 @@ final class HealthDataQueryEngine {
         let tomorrowRiskPrediction: MLPrediction?
         let compoundInsights: [CompoundInsightEngine.CompoundInsight]
         let temporalSequences: [TemporalSequenceMiner.TemporalSequence]
-        let overallScore: Int
+        /// Nil until something has been scored. Every sentence that quotes it is
+        /// skipped in that case: a health assistant reading out "your health
+        /// score is 0" to a user with no measurements is the worst stand-in of
+        /// the lot.
+        let overallScore: Int?
     }
 
     enum QueryIntent {
@@ -1224,7 +1228,17 @@ final class HealthDataQueryEngine {
     }
 
     private func answerWhyScore(ctx: QueryContext) -> QueryResult {
-        let score = ctx.overallScore
+        guard let score = ctx.overallScore else {
+            return QueryResult(
+                answer: Copy.Home.AskYourData.noScoreYet,
+                dataPoints: [],
+                confidence: 1.0,
+                relatedQuestions: [
+                    Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall,
+                    Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything
+                ]
+            )
+        }
         let sentiment: Sentiment = score > 75 ? .positive : score >= 50 ? .neutral : .negative
 
         // Use score sensitivities to explain
@@ -1411,11 +1425,17 @@ final class HealthDataQueryEngine {
         // Greetings
         if Self.greetings.contains(words) || Self.greetings.contains(where: { words.hasPrefix($0) && words.count < $0.count + 3 }) {
             let scorePhrase: String
-            switch ctx.overallScore {
-            case 85...100: scorePhrase = "You're doing great. your health score is \(ctx.overallScore)."
-            case 70..<85: scorePhrase = "Your health score is \(ctx.overallScore), looking solid."
-            case 50..<70: scorePhrase = "Your health score is \(ctx.overallScore). some room to improve."
-            default: scorePhrase = "Your health score is \(ctx.overallScore). let's work on that."
+            if let score = ctx.overallScore {
+                switch score {
+                case 85...100: scorePhrase = "You're doing great. your health score is \(score)."
+                case 70..<85: scorePhrase = "Your health score is \(score), looking solid."
+                case 50..<70: scorePhrase = "Your health score is \(score). some room to improve."
+                default: scorePhrase = "Your health score is \(score). let's work on that."
+                }
+            } else {
+                // Nothing scored means no score sentence at all. The tracking
+                // note below carries what the assistant can honestly say.
+                scorePhrase = ""
             }
 
             let metricCount = ctx.timeSeries.filter { !$0.value.samples.isEmpty }.count
@@ -1423,8 +1443,12 @@ final class HealthDataQueryEngine {
                 ? "I'm keeping an eye on \(metricCount) metrics for you."
                 : "Connect a device so I can start tracking your health."
 
+            let opening = ["Hey!", scorePhrase, trackingNote]
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+
             return QueryResult(
-                answer: "Hey! \(scorePhrase) \(trackingNote) Ask me anything. like \"How's my sleep?\" or \"Am I at risk for anything?\"",
+                answer: "\(opening) Ask me anything. like \"How's my sleep?\" or \"Am I at risk for anything?\"",
                 dataPoints: [],
                 confidence: 1.0,
                 relatedQuestions: [
@@ -1674,23 +1698,19 @@ final class HealthDataQueryEngine {
 
     // MARK: - Helpers
 
-    /// Smallest spread a baseline may claim, as a fraction of its own mean.
-    /// Same 5% relative floor `ReadinessScorer.makeBaseline` applies.
-    private static let minimumRelativeSD: Double = 0.05
-
     /// How many standard deviations `value` sits from its baseline mean.
     ///
-    /// The floor is relative, not an absolute one unit: body temperature (°C),
-    /// SpO2 (%), sleep (hrs) and walking speed (km/h) all have a natural SD well
-    /// under 1, so a fixed floor of 1 made their deviation permanently smaller
-    /// than every threshold here and those metrics could never be reported.
+    /// The baseline's own SD is the whole scale, with no floor added on top. Any
+    /// floor silences the metrics whose natural SD is under one unit: a fixed 1
+    /// buried body temperature (°C), SpO2, sleep (hrs) and walking speed, and a
+    /// floor set as a fraction of the mean buried them harder still, because 5% of
+    /// a 36.8 °C mean is a 1.8 °C floor that no real fever clears.
     private func deviation(of value: Double, from baseline: UserBaseline) -> Double {
-        let spread = max(baseline.standardDeviation, abs(baseline.mean) * Self.minimumRelativeSD)
-        // A zero mean with zero spread means every recorded day was zero; there is
-        // no scale to measure a deviation against, so report none rather than a
-        // divide-by-zero infinity that would trip every threshold below.
-        guard spread > 0 else { return 0 }
-        return (value - baseline.mean) / spread
+        // A zero SD means every baseline day held the same value, so there is no
+        // scale to measure against: report no deviation rather than dividing by
+        // zero and tripping every threshold below with an infinity.
+        guard baseline.standardDeviation > 0 else { return 0 }
+        return (value - baseline.mean) / baseline.standardDeviation
     }
 
     private func recentSamples(from series: MetricTimeSeries, days: Int, offset: Int = 0) -> [MetricSample] {

@@ -668,12 +668,15 @@ struct ContentView: View {
             // path, so this branch only exists to keep the switch exhaustive.
             JournalEntryView()
         case .todaysAction:
-            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore?.score ?? 0
+            // Nil when nothing has been scored. The detail view then keeps the
+            // action and the reasons and drops the band-driven plan, rather than
+            // prescribing a rest day off a stand-in 0.
+            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore?.score
             TodaysActionDetailView(
                 action: dashboardViewModel.smartDailyAction(liveVM: liveViewModel),
                 policyDecision: dashboardViewModel.analysisEngine.mlOrchestrator.policyDecision,
                 readinessScore: readinessScore,
-                workoutRecoveryBand: WorkoutRecoveryBand(score: readinessScore),
+                workoutRecoveryBand: readinessScore.map(WorkoutRecoveryBand.init(score:)),
                 cyclePhase: dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier,
                 topCausalChain: dashboardViewModel.analysis.topCausalChain,
                 recoverySignals: dashboardViewModel.todayRecoverySignals(liveVM: liveViewModel),

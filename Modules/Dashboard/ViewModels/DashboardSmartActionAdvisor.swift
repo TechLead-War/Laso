@@ -45,6 +45,10 @@ struct DashboardSmartActionAdvisor {
         /// What the user gets from doing it, shown as a chip under the reason.
         /// Empty for the rule-based sources, which have no forecast behind them.
         var expectedBenefit: String = ""
+        /// True when the action asks for more intensity. Read only by the
+        /// recovery gate in `recommend`, so every rung that can ask a person to
+        /// push is vetoed in one place instead of each guarding itself.
+        var isPushDirection: Bool = false
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.icon == rhs.icon && lhs.title == rhs.title &&
@@ -53,6 +57,32 @@ struct DashboardSmartActionAdvisor {
     }
 
     func recommend(
+        live: LiveSnapshot,
+        analysis: AnalysisSnapshot
+    ) -> Recommendation {
+        let candidate = chooseRecommendation(live: live, analysis: analysis)
+        // One veto, at the exit. The policy engine is not the only rung that
+        // can ask for more intensity — both insight rungs and the fitness-focus
+        // rung do too — so guarding one of them left the same contradiction
+        // reachable: a red recovery hero and "push harder" on the card below
+        // it. Both sides band the hero's own score through DS.recoveryTier, the
+        // app's one readiness table. A nil hero score leaves the gate off
+        // rather than grading a band from a number nobody supplied.
+        if candidate.isPushDirection,
+           let heroScore = live.heroRecoveryScore,
+           DS.recoveryTier(for: heroScore) == .poor {
+            return Recommendation(
+                icon: "figure.mind.and.body",
+                title: Copy.Home.SmartAction.lowReadinessTitle,
+                subtitle: Copy.Home.SmartAction.doActiveRecovery,
+                source: "recovery_gate",
+                rationale: Copy.Home.SmartAction.lowReadinessRationale
+            )
+        }
+        return candidate
+    }
+
+    private func chooseRecommendation(
         live: LiveSnapshot,
         analysis: AnalysisSnapshot
     ) -> Recommendation {
@@ -93,7 +123,7 @@ struct DashboardSmartActionAdvisor {
         }
 
         // 1. ML policy engine. highest quality, fully personalized
-        if let r = recommendFromPolicyEngine(live: live, analysis: analysis) { return r }
+        if let r = recommendFromPolicyEngine(analysis: analysis) { return r }
 
         // 2. Insight-driven. derive action from the highest-priority insight
         if let r = recommendFromHighPriorityInsight(analysis: analysis) { return r }
@@ -127,25 +157,9 @@ struct DashboardSmartActionAdvisor {
 
     // MARK: - Recommendation Sources
 
-    private func recommendFromPolicyEngine(live: LiveSnapshot, analysis: AnalysisSnapshot) -> Recommendation? {
+    private func recommendFromPolicyEngine(analysis: AnalysisSnapshot) -> Recommendation? {
         guard let decision = analysis.policyDecision,
               decision.decisionConfidence >= 0.3 else { return nil }
-        // The engine scores a declining exercise metric, not how recovered the
-        // person is, so it asks for a harder workout even on a day the recovery
-        // hero directly above this card reads red and says take it easy. Both
-        // sides band the hero's own score through DS.recoveryTier, the app's one
-        // readiness table, so the screen cannot say push and rest at once.
-        if decision.primaryAction.candidate.actionType == .intensifyExercise,
-           let heroScore = live.heroRecoveryScore,
-           DS.recoveryTier(for: heroScore) == .poor {
-            return Recommendation(
-                icon: "figure.mind.and.body",
-                title: Copy.Home.SmartAction.lowReadinessTitle,
-                subtitle: Copy.Home.SmartAction.doActiveRecovery,
-                source: "recovery_gate",
-                rationale: Copy.Home.SmartAction.lowReadinessRationale
-            )
-        }
         // The headline is the action itself, not `decision.prescriptiveHeadline`:
         // that string comes from the recovery state bucket, so it could announce
         // strong recovery while the sentence below reported a metric 91% below
@@ -156,7 +170,8 @@ struct DashboardSmartActionAdvisor {
             subtitle: decision.primaryAction.description,
             source: "policy_engine",
             rationale: decision.primaryAction.whyItMatters,
-            expectedBenefit: decision.primaryAction.expectedBenefit
+            expectedBenefit: decision.primaryAction.expectedBenefit,
+            isPushDirection: decision.primaryAction.candidate.actionType == .intensifyExercise
         )
     }
 
@@ -263,7 +278,8 @@ struct DashboardSmartActionAdvisor {
             title: title,
             subtitle: subtitle,
             source: "insight_driven",
-            rationale: rationale
+            rationale: rationale,
+            isPushDirection: insight.directive == .increaseActivity || insight.directive == .pushHarder
         )
     }
 
@@ -298,7 +314,8 @@ struct DashboardSmartActionAdvisor {
                 icon: "figure.run",
                 title: Copy.Home.SmartAction.fitnessGapTitle(remaining),
                 subtitle: Copy.Home.SmartAction.fitnessGapSubtitle,
-                rationale: Copy.Home.SmartAction.fitnessGapRationale(remaining)
+                rationale: Copy.Home.SmartAction.fitnessGapRationale(remaining),
+                isPushDirection: true
             )
         }
 

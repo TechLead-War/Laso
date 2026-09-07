@@ -108,17 +108,19 @@ enum IntentDataProvider {
 
     // MARK: - Readiness
 
-    /// Reads today's readiness exactly as Home computed it.
+    /// Reads today's readiness exactly as Home is showing it.
     ///
     /// Siri used to re-score from its own HealthKit fetch with no personal
     /// baselines, no sleep and fabricated sample timestamps, so the same
     /// "readiness" landed 15 to 25 points away from the number on Home. One
-    /// name, one number: the app writes the morning lock, Siri reads it.
+    /// name, one number: the app persists the score it renders and Siri reads
+    /// that. The morning lock is only the fallback for a day Home has not drawn
+    /// yet, where it is the number Home would open on.
     /// Stress is nil until the personal baselines it needs exist.
     static func fetchReadiness() async -> (readinessScore: Int, stressLevel: Int?, stressLabel: String)? {
         let store = ReadinessStore()
         let today = Date()
-        guard let score = store.loadMorningLock(for: today) else { return nil }
+        guard let score = store.loadDisplayedScore(for: today) ?? store.loadMorningLock(for: today) else { return nil }
 
         let stress = store.loadMorningStress(for: today)
         return (score, stress, ReadinessScorer.stressLabel(for: stress))

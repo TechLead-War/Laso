@@ -139,8 +139,12 @@ struct ReadinessScorer {
         }
 
         let clampedScore = clamp(score, min: 0, max: 100)
+        // Smooth a rise, publish a drop as it reads. Smoothing both directions
+        // hid the day that matters most: yesterday 80 against today's raw 40
+        // lands at 80 + 0.7 * (40 - 80) = 52, which bands .fair and no longer
+        // trips the .poor recovery gate that holds back "push harder".
         let smoothedScore: Double
-        if let previous = input.previousSmoothedScore {
+        if let previous = input.previousSmoothedScore, clampedScore > previous {
             smoothedScore = previous + smoothingAlpha * (clampedScore - previous)
         } else {
             smoothedScore = clampedScore

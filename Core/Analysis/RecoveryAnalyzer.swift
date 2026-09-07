@@ -3,6 +3,12 @@ import Foundation
 /// Tracks post-workout HRV/RHR recovery, rest deficits, and overtraining signals
 struct RecoveryAnalyzer {
 
+    /// Rest days a week the deficit check asks for at the lowest training load.
+    private static let minRestDaysPerWeek = 2
+    /// Ceiling on that ask. Above it the check stops being a comparison against the
+    /// rest actually taken and becomes a verdict on the training volume alone.
+    private static let maxRestDaysPerWeek = 3
+
     /// Analyze recovery patterns and generate insights
     static func generateInsights(
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -62,8 +68,14 @@ struct RecoveryAnalyzer {
         let highIntensityCount = intensities.filter { $0.value == .high }
             .filter { $0.key.timeIntervalSinceNow > -28 * 86400 }.count
         // highIntensityCount is a 28-day total, so it has to be brought down to a
-        // weekly rate before it can stand in for a per-week rest requirement.
-        let recommendedRestPerWeek = max(2, Int((Double(highIntensityCount) / 4.0).rounded(.up)))
+        // weekly rate before it can stand in for a per-week rest requirement, and the
+        // requirement is capped so it stays reachable: hard days come out of the same
+        // 28, so 13 of them leave at most 15 rest days and a 4-per-week bar (16) would
+        // fire on everyone who trains that often no matter how much they rested.
+        let recommendedRestPerWeek = min(
+            maxRestDaysPerWeek,
+            max(minRestDaysPerWeek, Int((Double(highIntensityCount) / 4.0).rounded(.up)))
+        )
 
         if restDays28 < recommendedRestPerWeek * 4 {
             let weeklyRest = Double(restDays28) / 4.0

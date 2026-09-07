@@ -2,7 +2,9 @@ import SwiftUI
 
 /// Tutorial sheet explaining how Recovery & Readiness is calculated.
 struct RecoveryInfoSheet: View {
-    let score: Int
+    /// Absent until a real Recovery reading exists. A ring drawn at 0 reads as
+    /// the worst possible score rather than as "no reading yet".
+    let score: Int?
 
     @Environment(\.dismiss) private var dismiss
     @State private var contentTracker = SectionTracker(section: .recoveryInfoContent, tab: .recoveryInfo)
@@ -13,7 +15,9 @@ struct RecoveryInfoSheet: View {
                 VStack(spacing: 24) {
                     // MARK: - Hero
                     VStack(spacing: 16) {
-                        HealthScoreRing(score: score, label: "Recovery", size: 120, lineWidth: 12)
+                        if let score {
+                            HealthScoreRing(score: score, label: "Recovery", size: 120, lineWidth: 12)
+                        }
 
                         Text(Copy.Home.RecoveryInfo.title)
                             .font(DS.Typography.title2)

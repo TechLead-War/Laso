@@ -6,7 +6,10 @@ struct ScoreGuideSheet: View {
     /// Explore score that only updates at the day boundary.
     enum Kind { case daily, weekly }
 
-    let score: Int
+    /// Nil when nothing has been scored yet. The hero ring and the personalised
+    /// "What does it mean" paragraph then drop out; the rest of the guide
+    /// explains the score whether or not the reader has one.
+    let score: Int?
     let weakestCategoryName: String?
     let appStateStore: AppStateStore
     var kind: Kind = .daily
@@ -26,7 +29,9 @@ struct ScoreGuideSheet: View {
                     }
                     // MARK: - Hero
                     VStack(spacing: 16) {
-                        HealthScoreRing(score: score, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
+                        if let score {
+                            HealthScoreRing(score: score, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
+                        }
 
                         Text(titleText)
                             .font(.system(size: 24).weight(.semibold))
@@ -40,16 +45,18 @@ struct ScoreGuideSheet: View {
                     .padding(.top, DS.space2)
 
                     // MARK: - What does it mean?
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(Copy.Home.ScoreGuide.whatDoesItMean)
-                            .font(.system(size: 20.4, weight: .semibold))
+                    if let score {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(Copy.Home.ScoreGuide.whatDoesItMean)
+                                .font(.system(size: 20.4, weight: .semibold))
 
-                        Text(Copy.Home.ScoreGuide.whatDoesItMeanBody(score: score, weakestCategory: weakestCategoryName))
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            Text(Copy.Home.ScoreGuide.whatDoesItMeanBody(score: score, weakestCategory: weakestCategoryName))
+                                .font(.system(size: 18))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.leading, DS.screenPadding + DS.space5)
+                        .padding(.trailing, DS.screenPadding)
                     }
-                    .padding(.leading, DS.screenPadding + DS.space5)
-                    .padding(.trailing, DS.screenPadding)
 
                     // MARK: - Score Levels
                     VStack(alignment: .leading, spacing: 10) {
@@ -221,6 +228,7 @@ struct ScoreGuideSheet: View {
     // MARK: - Variant copy
 
     private var titleText: String {
+        guard score != nil else { return Copy.Home.scoreNoDataYet }
         switch kind {
         case .daily: return Copy.Home.ScoreGuide.title
         case .weekly: return Copy.Explore.ScoreGuide.title
@@ -228,6 +236,9 @@ struct ScoreGuideSheet: View {
     }
 
     private var descriptionText: String {
+        // Without a score the guide is still worth reading, but leading with
+        // "here is your number" would promise one the reader does not have.
+        guard score != nil else { return Copy.Home.scoreNoDataYetDetail }
         switch kind {
         case .daily: return Copy.Home.ScoreGuide.description
         case .weekly: return Copy.Explore.ScoreGuide.description

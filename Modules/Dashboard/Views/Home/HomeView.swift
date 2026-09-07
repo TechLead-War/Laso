@@ -141,7 +141,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet(
-                score: viewModel.overallScore?.score ?? 0,
+                score: viewModel.overallScore?.score,
                 weakestCategoryName: weakestCategoryName,
                 appStateStore: appStateStore
             )
@@ -167,10 +167,9 @@ struct HomeView: View {
             PaywallView(subscriptionManager: SubscriptionManager.shared, source: "soft_lock_home")
         }
         .sheet(isPresented: $showRecoveryInfo) {
-            // Nil-safe value: `liveReadinessScore` falls back to the daily
-            // health score when no readiness exists, which would mislabel the
-            // info sheet. Pass 0 in that case so the sheet renders neutrally.
-            RecoveryInfoSheet(score: liveViewModel.recovery.readinessScore ?? 0)
+            // Passed through unresolved: the sheet hides its ring when there is
+            // no reading, and 0 would have drawn the worst possible score.
+            RecoveryInfoSheet(score: liveViewModel.recovery.readinessScore)
         }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
@@ -842,7 +841,7 @@ struct HomeView: View {
                         screen: .home,
                         metadata: [
                             "source": action.source,
-                            "recovery_state": viewModel.recoveryState.rawValue,
+                            "recovery_state": viewModel.recoveryState?.rawValue ?? "none",
                             "routed_to": "\(actionRoute)"
                         ]
                     )

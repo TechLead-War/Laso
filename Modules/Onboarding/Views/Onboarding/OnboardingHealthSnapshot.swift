@@ -144,10 +144,10 @@ final class OnboardingHealthSnapshot {
         async let rhrSamples = dailyRestingHRSamples()
         async let sleepSamples = dailySleepDurationSamples()
         async let hrvSamples = dailyHRVSamples()
-        async let stepsV = quantityStat(HKQuantityType(.stepCount), unit: .count(), days: 30, options: .cumulativeSum)
-        async let vo2V = quantityStat(HKQuantityType(.vo2Max), unit: HKUnit(from: "ml/kg*min"), days: 90, options: .discreteAverage)
-        async let exV = quantityStat(HKQuantityType(.appleExerciseTime), unit: .minute(), days: 30, options: .cumulativeSum)
-        async let wsV = quantityStat(HKQuantityType(.walkingSpeed), unit: HKUnit(from: "km/hr"), days: 30, options: .discreteAverage)
+        async let stepsV = dailyTotals(HKQuantityType(.stepCount), unit: .count(), days: 30)
+        async let vo2V = quantityStat(HKQuantityType(.vo2Max), unit: HKUnit(from: "ml/kg*min"), days: 90)
+        async let exV = dailyTotals(HKQuantityType(.appleExerciseTime), unit: .minute(), days: 30)
+        async let wsV = quantityStat(HKQuantityType(.walkingSpeed), unit: HKUnit(from: "km/hr"), days: 30)
 
         let h = await hrAge
         let s = await slpAge
@@ -184,24 +184,73 @@ final class OnboardingHealthSnapshot {
         sleepWakeTimes = sleepDaily.wakeTimes
         hrvDailySamples = hrvDaily
 
-        stepsDailyAvg = (await stepsV).map { $0 / 30.0 }
+        let steps = await stepsV
+        let exercise = await exV
+        // Daily totals divide by the days that actually recorded, never by the
+        // length of the window: a 20 day history over a fixed 30 read as a third
+        // less activity than the user does, which the reveal printed as a
+        // confident "+35 years". Exercise minutes are simply absent on a rest
+        // day rather than written as a zero, so they spread over every day the
+        // device recorded anything, not only over the days it saw a workout.
+        let recordedDays = max(steps.days, exercise.days)
+        stepsDailyAvg = steps.days >= Self.minimumDaysForDailyAverage
+            ? steps.total / Double(steps.days) : nil
+        exerciseDailyAvg = exercise.days > 0 && recordedDays >= Self.minimumDaysForDailyAverage
+            ? exercise.total / Double(recordedDays) : nil
         vo2Max = await vo2V
-        exerciseDailyAvg = (await exV).map { $0 / 30.0 }
         walkingSpeedKmh = await wsV
 
         isLoaded = true
     }
 
-    /// One HKStatisticsQuery over the last `days` window. `cumulativeSum` for
-    /// totals (steps, exercise minutes), `discreteAverage` for rates (VO2, speed).
-    private func quantityStat(_ type: HKQuantityType, unit: HKUnit, days: Int, options: HKStatisticsOptions) async -> Double? {
+    /// One HKStatisticsQuery average over the last `days` window, for the rate
+    /// metrics (VO2 max, walking speed) where each sample is already a rate.
+    private func quantityStat(_ type: HKQuantityType, unit: HKUnit, days: Int) async -> Double? {
         let end = Date()
         guard let start = Date.cal.date(byAdding: .day, value: -days, to: end) else { return nil }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
         return await withCheckedContinuation { cont in
-            let q = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: options) { _, stats, _ in
-                let qty = options.contains(.cumulativeSum) ? stats?.sumQuantity() : stats?.averageQuantity()
-                cont.resume(returning: qty?.doubleValue(for: unit))
+            let q = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, _ in
+                cont.resume(returning: stats?.averageQuantity()?.doubleValue(for: unit))
+            }
+            store.execute(q)
+        }
+    }
+
+    /// Days a metric has to actually carry data before a daily average is
+    /// quoted from it. Two or three logged days say nothing about a normal day,
+    /// and this average feeds the onboarding Vitality Age directly.
+    private static let minimumDaysForDailyAverage = 7
+
+    /// Sum of a cumulative metric over the last `days` completed days, with the
+    /// count of days that carried any of it. The caller picks the divisor,
+    /// because a day with no samples means "device not worn" for steps and
+    /// "rest day" for exercise. Today is left out: a morning's worth of steps
+    /// counted as a whole day would drag the average down.
+    private func dailyTotals(_ type: HKQuantityType, unit: HKUnit, days: Int) async -> (total: Double, days: Int) {
+        let today = Date.cal.startOfDay(for: Date())
+        guard let start = Date.cal.date(byAdding: .day, value: -days, to: today) else { return (0, 0) }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: today, options: .strictStartDate)
+        return await withCheckedContinuation { cont in
+            let q = HKStatisticsCollectionQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: today,
+                intervalComponents: DateComponents(day: 1))
+            q.initialResultsHandler = { _, collection, _ in
+                guard let collection else {
+                    cont.resume(returning: (0, 0))
+                    return
+                }
+                var total = 0.0
+                var daysWithData = 0
+                collection.enumerateStatistics(from: start, to: today) { stats, _ in
+                    guard let value = stats.sumQuantity()?.doubleValue(for: unit), value > 0 else { return }
+                    total += value
+                    daysWithData += 1
+                }
+                cont.resume(returning: (total, daysWithData))
             }
             store.execute(q)
         }

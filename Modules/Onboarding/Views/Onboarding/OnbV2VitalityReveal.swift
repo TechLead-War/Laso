@@ -134,7 +134,10 @@ private struct OnbV2Metric: Identifiable {
     let maxLabel: String     // scale end, e.g. "12K"
     let markerP: Double      // 0..1 marker position on the bar
     let delta: Double        // years added (older) or removed (younger)
-    var good: Bool { delta < 0 }
+    /// The value beats the youngest row of the reference table, so `delta` is
+    /// the table's floor. The card says so instead of printing that floor.
+    let topOfRange: Bool
+    var good: Bool { topOfRange || delta < 0 }
 }
 
 private struct OnbV2MetricChip: View {
@@ -193,14 +196,23 @@ private struct OnbV2MetricChip: View {
             }
 
             VStack(spacing: 0) {
-                Text(String(format: "%+.1f", metric.delta))
-                    .font(.system(size: 25, weight: .heavy))
-                    .foregroundStyle(metric.good ? OnbV2.blueLight : OnbV2.amber)
-                Text(Copy.OnboardingV2.revealYearsUnit)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(OnbV2.fg3)
+                if metric.topOfRange {
+                    Text(Copy.Vitality.metricTopOfRange)
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(OnbV2.blueLight)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 58)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(String(format: "%+.1f", metric.delta))
+                        .font(.system(size: 25, weight: .heavy))
+                        .foregroundStyle(metric.good ? OnbV2.blueLight : OnbV2.amber)
+                    Text(Copy.OnboardingV2.revealYearsUnit)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(OnbV2.fg3)
+                        .fixedSize()
+                }
             }
-            .fixedSize()
         }
         .padding(.horizontal, 15)
         .padding(.vertical, 13)
@@ -286,7 +298,8 @@ struct OnbV2VitalityRevealScreen: View {
         let top = est.metrics.sorted { abs($0.delta) > abs($1.delta) }.prefix(4)
         self.metrics = top.enumerated().map { idx, m in
             OnbV2Metric(id: idx, name: m.name, valueLabel: m.valueLabel,
-                        minLabel: "", maxLabel: "", markerP: m.goodness, delta: Double(m.delta))
+                        minLabel: "", maxLabel: "", markerP: m.goodness, delta: Double(m.delta),
+                        topOfRange: m.isBeyondYoungestReference)
         }
         self.feedOrder = Array(self.metrics.indices)
         self.realMetricCount = est.metrics.count
@@ -525,9 +538,8 @@ struct OnbV2VitalityRevealScreen: View {
             try? await Task.sleep(for: .milliseconds(1700))
             label = Copy.OnboardingV2.revealOrbCalculating
             for (step, idx) in feedOrder.enumerated() {
-                let d = metrics[idx].delta
                 lastFeed = Date()
-                rippleColor = d < 0 ? OnbV2.blueLight : OnbV2.amber
+                rippleColor = metrics[idx].good ? OnbV2.blueLight : OnbV2.amber
                 rippleScale = 0.55
                 rippleOpacity = 0.7
                 withAnimation(.easeOut(duration: 0.85)) { rippleScale = 1.7; rippleOpacity = 0 }

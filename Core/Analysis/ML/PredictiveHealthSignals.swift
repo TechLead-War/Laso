@@ -484,7 +484,7 @@ struct PredictiveHealthSignals {
         let confidence = clamp01(Double(availableMetrics) / 5.0 * 0.7 +
                                  Double(Swift.min(hrvValues.count, window)) / Double(window) * 0.3)
 
-        let explanation = buildFatigueExplanation(score: fatigueScore100, factors: factors)
+        let explanation = buildFatigueExplanation(riskLevel: riskLevel, factors: factors)
         let recommendation = buildFatigueRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return FatigueSignal(
@@ -497,10 +497,21 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The score is a weighted blend of hand-set component weights, never fitted against
+    /// how tired anyone actually felt, so it is banded here instead of shown out of 100.
     private static func buildFatigueExplanation(
-        score: Double, factors: [ContributingFactor]
+        riskLevel: RiskLevel, factors: [ContributingFactor]
     ) -> String {
-        var parts: [String] = ["Your fatigue accumulation score is \(String(format: "%.0f", score))/100."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Several of the numbers that build up fatigue are well outside your usual range."
+        case .moderate:
+            lead = "A few of the numbers that build up fatigue are drifting outside your usual range."
+        case .low:
+            lead = "Your fatigue numbers are close to your usual."
+        }
+        var parts: [String] = [lead]
         for factor in factors.prefix(3) {
             parts.append(factor.description + ".")
         }
@@ -695,7 +706,7 @@ struct PredictiveHealthSignals {
         let confidence = clamp01(Double(availableSignals) / 4.0 * 0.6 +
                                  Double(Swift.min(rhrValues.count, window)) / Double(window) * 0.4)
 
-        let explanation = buildBurnoutExplanation(score: rawScore, factors: factors)
+        let explanation = buildBurnoutExplanation(riskLevel: riskLevel, factors: factors)
         let recommendation = buildBurnoutRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return BurnoutSignal(
@@ -708,10 +719,21 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The score averages hand-set component readings, never fitted against how often
+    /// burnout followed, so it is banded here instead of shown as a percentage.
     private static func buildBurnoutExplanation(
-        score: Double, factors: [ContributingFactor]
+        riskLevel: RiskLevel, factors: [ContributingFactor]
     ) -> String {
-        var parts: [String] = ["Burnout risk score: \(String(format: "%.0f", score * 100))%."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Several of the markers that show up before burnout are elevated at the same time."
+        case .moderate:
+            lead = "A few of the markers that show up before burnout are elevated."
+        case .low:
+            lead = "Your burnout markers are close to your usual."
+        }
+        var parts: [String] = [lead]
         if factors.isEmpty {
             parts.append("No significant burnout indicators detected.")
         } else {
@@ -914,7 +936,7 @@ struct PredictiveHealthSignals {
         let confidence = clamp01(Double(availableSignals) / 4.0 * 0.6 +
                                  Double(Swift.min(calValues.count, 28)) / 28.0 * 0.4)
 
-        let explanation = buildOvertrainingExplanation(score: rawScore, factors: factors, recovery: projectedRecovery)
+        let explanation = buildOvertrainingExplanation(riskLevel: riskLevel, factors: factors, recovery: projectedRecovery)
         let recommendation = buildOvertrainingRecommendation(riskLevel: riskLevel, recovery: projectedRecovery, factors: factors, baselines: baselines)
 
         return OvertrainingSignal(
@@ -927,10 +949,21 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The score averages hand-set load and recovery readings, never fitted against
+    /// measured overtraining, so it is banded here instead of shown as a percentage.
     private static func buildOvertrainingExplanation(
-        score: Double, factors: [ContributingFactor], recovery: Int?
+        riskLevel: RiskLevel, factors: [ContributingFactor], recovery: Int?
     ) -> String {
-        var parts: [String] = ["Overtraining risk score: \(String(format: "%.0f", score * 100))%."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Your training load is well ahead of what your recovery numbers are keeping up with."
+        case .moderate:
+            lead = "Your training load is running a little ahead of your recovery numbers."
+        case .low:
+            lead = "Your training load and your recovery numbers are in step."
+        }
+        var parts: [String] = [lead]
         for factor in factors.prefix(3) {
             parts.append(factor.description + ".")
         }
@@ -1593,7 +1626,7 @@ struct PredictiveHealthSignals {
                                  Double(Swift.min(stepValues.count, window)) / Double(window) * 0.5)
 
         let explanation = buildInactivityExplanation(
-            score: rawScore, consecutiveDays: consecutiveInactiveDays, factors: factors
+            riskLevel: riskLevel, consecutiveDays: consecutiveInactiveDays, factors: factors
         )
         let recommendation = buildInactivityRecommendation(
             riskLevel: riskLevel, consecutiveDays: consecutiveInactiveDays, factors: factors, baselines: baselines
@@ -1609,10 +1642,21 @@ struct PredictiveHealthSignals {
         )
     }
 
+    /// The score blends hand-set movement readings, never fitted against a measured
+    /// metabolic outcome, so it is banded here instead of shown as a percentage.
     private static func buildInactivityExplanation(
-        score: Double, consecutiveDays: Int, factors: [ContributingFactor]
+        riskLevel: RiskLevel, consecutiveDays: Int, factors: [ContributingFactor]
     ) -> String {
-        var parts: [String] = ["Metabolic inactivity score: \(String(format: "%.0f", score * 100))%."]
+        let lead: String
+        switch riskLevel {
+        case .critical, .high:
+            lead = "Your movement has been well below your usual."
+        case .moderate:
+            lead = "Your movement is drifting below your usual."
+        case .low:
+            lead = "Your movement is close to your usual."
+        }
+        var parts: [String] = [lead]
         if consecutiveDays >= 3 {
             parts.append("You have been inactive for \(consecutiveDays) consecutive days.")
         }

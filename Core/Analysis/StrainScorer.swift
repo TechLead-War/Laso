@@ -120,6 +120,26 @@ final class StrainScorer {
     /// (no-data) zeros from earlier builds.
     private static let snapshotKey = "StrainScorer.snapshot.v2"
 
+    /// First launch on the re-anchored load formula, stamped once.
+    ///
+    /// v3.53 changed what a strain point means: the three workout estimates now
+    /// compete instead of stacking, calories score the surplus over baseline
+    /// rather than the raw ratio, and zone minutes are real elapsed time. Days
+    /// persisted before that were written on the old scale, and charting them
+    /// beside new ones draws a cliff the user never trained. They are dropped,
+    /// not converted: no factor maps one scale onto the other, and recomputing
+    /// a day whose source samples have since been pruned would fabricate a 0.
+    private static let scaleEpochKey = "StrainScorer.loadScaleEpoch.v2"
+
+    private static var loadScaleEpoch: Date {
+        if let stored = UserDefaults.standard.object(forKey: scaleEpochKey) as? Date {
+            return stored
+        }
+        let epoch = Date.cal.startOfDay(for: Date())
+        UserDefaults.standard.set(epoch, forKey: scaleEpochKey)
+        return epoch
+    }
+
     private struct Snapshot: Codable {
         var currentStrain: Double
         var todayCalories: Double
@@ -434,7 +454,12 @@ final class StrainScorer {
 
         // One fetch covers both: the weekly loop only ever looks up the last
         // seven days, so the older entries in this map are simply never read.
+        // Rows from before the scale change are dropped here, which is why the
+        // weekly loop below recomputes those days on the current formula and
+        // the trend card shows fewer points until same-scale days accumulate.
+        let scaleEpoch = Self.loadScaleEpoch
         trendStrainHistory = store.loadDailyStrainHistory(lookbackDays: Self.trendLookbackDays)
+            .filter { $0.date >= scaleEpoch }
             .map { (date: $0.date, strain: $0.strain) }
 
         var persistedByDate: [Date: Double] = [:]

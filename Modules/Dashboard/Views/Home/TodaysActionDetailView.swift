@@ -4,8 +4,10 @@ import SwiftUI
 struct TodaysActionDetailView: View {
     let action: DashboardViewModel.SmartAction
     let policyDecision: PolicyDecision?
-    let readinessScore: Int
-    let workoutRecoveryBand: WorkoutRecoveryBand
+    /// Both nil when nothing has been scored yet. The hero then paints neutral
+    /// and the band-driven plan sections stay off: there is no band to pick one.
+    let readinessScore: Int?
+    let workoutRecoveryBand: WorkoutRecoveryBand?
     let cyclePhase: CyclePhaseModifier?
     let topCausalChain: CausalChain?
     let recoverySignals: DashboardViewModel.RecoverySignalsSnapshot
@@ -13,10 +15,24 @@ struct TodaysActionDetailView: View {
 
     @State private var isShowingWorkoutPlan = false
 
-    private var todayWorkoutPlan: WorkoutPlan {
-        WorkoutProgrammer.generatePlan(
-            recoveryBand: workoutRecoveryBand,
-            cyclePhase: cyclePhase
+    private var todayWorkoutPlan: WorkoutPlan? {
+        workoutRecoveryBand.map {
+            WorkoutProgrammer.generatePlan(recoveryBand: $0, cyclePhase: cyclePhase)
+        }
+    }
+
+    /// The score's colour, or a neutral one when there is no score to grade.
+    private var tint: Color {
+        readinessScore.map(DS.scoreColor) ?? AppColour.textTertiary
+    }
+
+    /// Every `DS.recoveryGradient` is a verdict colour, so with no score the
+    /// hero sits on the flat card surface instead of borrowing a band's ground.
+    private var heroBackground: LinearGradient {
+        readinessScore.map(DS.recoveryGradient) ?? LinearGradient(
+            colors: [AppColour.surfaceRaised, AppColour.surfaceRaised],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
         )
     }
 
@@ -71,14 +87,16 @@ struct TodaysActionDetailView: View {
         .navigationTitle(Copy.Home.todaysAction)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingWorkoutPlan) {
-            NavigationStack {
-                WorkoutPlanSheet(
-                    plan: todayWorkoutPlan,
-                    recoveryBand: workoutRecoveryBand,
-                    cyclePhase: cyclePhase
-                )
+            if let todayWorkoutPlan, let workoutRecoveryBand {
+                NavigationStack {
+                    WorkoutPlanSheet(
+                        plan: todayWorkoutPlan,
+                        recoveryBand: workoutRecoveryBand,
+                        cyclePhase: cyclePhase
+                    )
+                }
+                .presentationDetents([.large])
             }
-            .presentationDetents([.large])
         }
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.todaysActionDetail, metadata: [
@@ -101,8 +119,7 @@ struct TodaysActionDetailView: View {
     // MARK: - Hero Section
 
     private var heroSection: some View {
-        let tint = DS.scoreColor(readinessScore)
-        return HStack(alignment: .top, spacing: DS.space4) {
+        HStack(alignment: .top, spacing: DS.space4) {
             Image(systemName: action.icon)
                 .font(DS.Typography.mediumIcon)
                 .foregroundStyle(AppColour.textOnAccent)
@@ -122,19 +139,21 @@ struct TodaysActionDetailView: View {
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text(recoveryBandChipLabel)
-                    .font(DS.Typography.calloutSemibold)
-                    .foregroundStyle(tint)
-                    .padding(.horizontal, DS.badgeH)
-                    .padding(.vertical, DS.badgeV)
-                    .background(tint.opacity(DS.badgeBg), in: Capsule())
-                    .padding(.top, DS.space1)
+                if let recoveryBandChipLabel {
+                    Text(recoveryBandChipLabel)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(tint.opacity(DS.badgeBg), in: Capsule())
+                        .padding(.top, DS.space1)
+                }
             }
 
             Spacer(minLength: 0)
         }
         .padding(DS.cardPadding + 4)
-        .background(DS.recoveryGradient(readinessScore))
+        .background(heroBackground)
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
@@ -145,11 +164,12 @@ struct TodaysActionDetailView: View {
         .padding(.top, DS.space4)
     }
 
-    private var recoveryBandChipLabel: String {
+    private var recoveryBandChipLabel: String? {
         switch workoutRecoveryBand {
         case .red: return "Red Day. Recover."
         case .yellow: return "Yellow Day. Maintain."
         case .green: return "Green Day. Push."
+        case nil: return nil
         }
     }
 
@@ -235,15 +255,25 @@ struct TodaysActionDetailView: View {
 
     // MARK: - Do Today
 
+    @ViewBuilder
     private var doTodaySection: some View {
-        let items = doTodayItems()
+        // Every row below is chosen by the recovery band, so with no band there
+        // is no plan to give. Rendering one anyway is how a user with no data
+        // was told to take a rest day.
+        if let band = workoutRecoveryBand {
+            doTodaySection(band: band)
+        }
+    }
+
+    private func doTodaySection(band: WorkoutRecoveryBand) -> some View {
+        let items = doTodayItems(band: band)
         let benefit = policyDecision?.primaryAction.expectedBenefit ?? ""
 
         return VStack(alignment: .leading, spacing: DS.space2) {
             HStack(spacing: DS.space2) {
                 Image(systemName: "target")
                     .font(DS.Typography.bodySemibold)
-                    .foregroundStyle(DS.scoreColor(readinessScore))
+                    .foregroundStyle(tint)
                 Text(Copy.Home.TodaysActionDetail.doToday)
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.textPrimary)
@@ -280,11 +310,11 @@ struct TodaysActionDetailView: View {
         let text: String
     }
 
-    private func doTodayItems() -> [DoTodayItem] {
+    private func doTodayItems(band: WorkoutRecoveryBand) -> [DoTodayItem] {
         let bedtime = policyDecision?.targetSleepTime
         let strain = policyDecision?.strainBudget
 
-        switch workoutRecoveryBand {
+        switch band {
         case .red:
             return [
                 DoTodayItem(icon: "figure.mind.and.body", text: strain ?? "Light movement only. Stretching, yoga, or a gentle walk."),
@@ -312,7 +342,7 @@ struct TodaysActionDetailView: View {
                 .font(DS.Typography.calloutSemibold)
                 .foregroundStyle(AppColour.textOnAccent)
                 .frame(width: 24, height: 24)
-                .background(DS.scoreColor(readinessScore), in: Circle())
+                .background(tint, in: Circle())
 
             Text(text)
                 .font(DS.Typography.body)
@@ -528,7 +558,14 @@ struct TodaysActionDetailView: View {
 
     // MARK: - Today's Workout
 
+    @ViewBuilder
     private var todayWorkoutSection: some View {
+        if let plan = todayWorkoutPlan, let band = workoutRecoveryBand {
+            todayWorkoutSection(plan: plan, band: band)
+        }
+    }
+
+    private func todayWorkoutSection(plan: WorkoutPlan, band: WorkoutRecoveryBand) -> some View {
         VStack(alignment: .leading, spacing: DS.space2) {
             HStack(spacing: DS.space2) {
                 Image(systemName: "figure.run.circle.fill")
@@ -541,20 +578,20 @@ struct TodaysActionDetailView: View {
             .padding(.horizontal, DS.screenPadding)
 
             TodayWorkoutCard(
-                plan: todayWorkoutPlan,
-                recoveryBand: workoutRecoveryBand,
+                plan: plan,
+                recoveryBand: band,
                 cyclePhase: cyclePhase
             ) {
                 AppAnalytics.shared.trackWorkoutPlanOpened(
-                    plan: todayWorkoutPlan,
-                    recoveryBand: workoutRecoveryBand,
+                    plan: plan,
+                    recoveryBand: band,
                     cyclePhase: cyclePhase,
                     screen: .todaysActionDetail
                 )
                 AppAnalytics.shared.trackRecommendationViewed(
                     type: "todays_action_workout_plan",
-                    metric: todayWorkoutPlan.zone.rawValue,
-                    difficulty: workoutRecoveryBand.rawValue
+                    metric: plan.zone.rawValue,
+                    difficulty: band.rawValue
                 )
                 isShowingWorkoutPlan = true
             }

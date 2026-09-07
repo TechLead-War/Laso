@@ -4,7 +4,11 @@ import WidgetKit
 // MARK: - Widget Snapshot Types
 
 struct WidgetReadinessSnapshot: Codable {
-    let score: Int
+    /// Nil when nothing has been scored yet. A non-optional Int could not tell
+    /// "no data" apart from a real 0, and the widget rendered the stand-in as
+    /// the worst possible readiness. Optional decodes both the snapshots older
+    /// builds wrote (score always present) and the new no-score ones.
+    let score: Int?
     let grade: String
     let dayType: String
     let updatedAt: Date

@@ -351,8 +351,13 @@ struct HealthScorer {
     /// Apply coverage-based shrinkage to prevent sparse data from producing
     /// misleadingly confident scores. With few data sources, the score is
     /// pulled toward a neutral midpoint (75). As coverage grows, the raw
-    /// score is trusted more. Empty baselines are the sparsest input there is,
-    /// so they get the full pull to neutral rather than an exemption.
+    /// score is trusted more.
+    ///
+    /// Returns nil with no baselines at all. Coverage is then exactly zero, so
+    /// the formula below returns the neutral midpoint for every input: the same
+    /// 75 whatever the user's data says. A constant dressed as a personal score
+    /// is a stand-in, and this score is defined as a comparison against the
+    /// user's usual, which does not exist yet without a baseline.
     ///
     /// Coverage formula:
     ///   For each category with data, weight = min(metricsInCategory / 2, 1)
@@ -362,9 +367,9 @@ struct HealthScorer {
     static func applyCoverageAdjustment(
         rawScore: Int,
         baselines: [HealthMetric: UserBaseline]
-    ) -> Int {
+    ) -> Int? {
         let totalCategories = HealthCategory.allCases.count
-        guard totalCategories > 0 else { return rawScore }
+        guard totalCategories > 0, !baselines.isEmpty else { return nil }
 
         // Count metrics per category from baselines (metrics with actual data)
         var metricsPerCategory: [HealthCategory: Int] = [:]

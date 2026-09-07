@@ -8,8 +8,10 @@ struct AnalysisWidgetView: View {
 
     var body: some View {
         Group {
-            if let readiness = entry.readiness {
-                dataView(readiness)
+            // A snapshot without a score is the same as no snapshot here: the
+            // widget has no room to explain a missing number, so it says so.
+            if let readiness = entry.readiness, let score = readiness.score {
+                dataView(readiness, score: score)
             } else {
                 emptyView
             }
@@ -17,7 +19,7 @@ struct AnalysisWidgetView: View {
         .containerBackground(for: .widget) {
             LinearGradient(
                 colors: [
-                    (entry.readiness.map { WidgetStyle.readinessColor(score: $0.score) } ?? AppColour.textTertiary)
+                    (entry.readiness?.score.map { WidgetStyle.readinessColor(score: $0) } ?? AppColour.textTertiary)
                         .opacity(0.18),
                     AppColour.surfaceBase
                 ],
@@ -28,20 +30,20 @@ struct AnalysisWidgetView: View {
     }
 
     @ViewBuilder
-    private func dataView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func dataView(_ readiness: WidgetReadinessSnapshot, score: Int) -> some View {
         switch family {
         case .systemSmall:
-            smallView(readiness)
+            smallView(readiness, score: score)
         case .systemMedium:
-            mediumView(readiness)
+            mediumView(readiness, score: score)
         case .accessoryRectangular:
-            rectangularView(readiness)
+            rectangularView(readiness, score: score)
         case .accessoryCircular:
-            circularView(readiness)
+            circularView(score: score)
         case .accessoryInline:
-            inlineView(readiness)
+            inlineView(readiness, score: score)
         default:
-            mediumView(readiness)
+            mediumView(readiness, score: score)
         }
     }
 
@@ -88,16 +90,16 @@ struct AnalysisWidgetView: View {
 
     // MARK: - With Data
 
-    private func smallView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func smallView(_ readiness: WidgetReadinessSnapshot, score: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Readiness")
                         .font(.caption2)
                         .foregroundStyle(AppColour.textSecondary)
-                    Text("\(readiness.score)")
+                    Text("\(score)")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(WidgetStyle.readinessColor(score: readiness.score))
+                        .foregroundStyle(WidgetStyle.readinessColor(score: score))
                 }
 
                 Spacer()
@@ -106,7 +108,7 @@ struct AnalysisWidgetView: View {
                     .font(.headline.weight(.bold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(WidgetStyle.readinessColor(score: readiness.score).opacity(0.16), in: Capsule())
+                    .background(WidgetStyle.readinessColor(score: score).opacity(0.16), in: Capsule())
             }
 
             if !readiness.dayType.isEmpty {
@@ -129,21 +131,21 @@ struct AnalysisWidgetView: View {
         .padding()
     }
 
-    private func mediumView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func mediumView(_ readiness: WidgetReadinessSnapshot, score: Int) -> some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     ZStack {
                         Circle()
-                            .stroke(WidgetStyle.readinessColor(score: readiness.score).opacity(0.18), lineWidth: 8)
+                            .stroke(WidgetStyle.readinessColor(score: score).opacity(0.18), lineWidth: 8)
                         Circle()
-                            .trim(from: 0, to: min(Double(readiness.score) / 100, 1))
-                            .stroke(WidgetStyle.readinessColor(score: readiness.score), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .trim(from: 0, to: min(Double(score) / 100, 1))
+                            .stroke(WidgetStyle.readinessColor(score: score), style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                     }
                     .frame(width: 56, height: 56)
                     .overlay {
-                        Text("\(readiness.score)")
+                        Text("\(score)")
                             .font(.headline.weight(.bold).monospacedDigit())
                     }
 
@@ -210,15 +212,15 @@ struct AnalysisWidgetView: View {
         .padding()
     }
 
-    private func rectangularView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func rectangularView(_ readiness: WidgetReadinessSnapshot, score: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text("Readiness \(readiness.score)")
+                Text("Readiness \(score)")
                     .font(.headline.weight(.semibold))
                 Spacer()
                 Text(readiness.grade)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(WidgetStyle.readinessColor(score: readiness.score))
+                    .foregroundStyle(WidgetStyle.readinessColor(score: score))
             }
             if !readiness.dayType.isEmpty {
                 Text(readiness.dayType)
@@ -233,25 +235,25 @@ struct AnalysisWidgetView: View {
         }
     }
 
-    private func circularView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func circularView(score: Int) -> some View {
         ZStack {
             Circle()
-                .stroke(WidgetStyle.readinessColor(score: readiness.score).opacity(0.2), lineWidth: 7)
+                .stroke(WidgetStyle.readinessColor(score: score).opacity(0.2), lineWidth: 7)
             Circle()
-                .trim(from: 0, to: min(Double(readiness.score) / 100, 1))
-                .stroke(WidgetStyle.readinessColor(score: readiness.score), style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .trim(from: 0, to: min(Double(score) / 100, 1))
+                .stroke(WidgetStyle.readinessColor(score: score), style: StrokeStyle(lineWidth: 7, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            Text("\(readiness.score)")
+            Text("\(score)")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .monospacedDigit()
         }
         .padding(6)
     }
 
-    private func inlineView(_ readiness: WidgetReadinessSnapshot) -> some View {
+    private func inlineView(_ readiness: WidgetReadinessSnapshot, score: Int) -> some View {
         Text(readiness.dayType.isEmpty
-             ? "Readiness \(readiness.score)"
-             : "Readiness \(readiness.score) • \(readiness.dayType)")
+             ? "Readiness \(score)"
+             : "Readiness \(score) • \(readiness.dayType)")
     }
 
     @ViewBuilder
