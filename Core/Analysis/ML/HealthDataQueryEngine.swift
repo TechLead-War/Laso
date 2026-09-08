@@ -42,7 +42,9 @@ final class HealthDataQueryEngine {
         case correlation(metricA: HealthMetric, metricB: HealthMetric)
         case forecast(metric: HealthMetric, horizon: Int)
         case anomaly(metric: HealthMetric?)
-        case bestWorst(metric: HealthMetric, seeking: BestWorst)
+        /// `period` is nil when the question named no window, which is the only
+        /// case where scanning the whole stored history is the right answer.
+        case bestWorst(metric: HealthMetric, seeking: BestWorst, period: QueryPeriod?)
         case status(metric: HealthMetric?)
         case healthState
         case risk
@@ -54,11 +56,6 @@ final class HealthDataQueryEngine {
         case general
 
         enum BestWorst { case best, worst }
-    }
-
-    enum MatchingMode {
-        case full
-        case keywordOnly
     }
 
     /// Intermediate category for semantic matching (no associated values)
@@ -78,6 +75,33 @@ final class HealthDataQueryEngine {
             case .thisWeek, .lastWeek, .last7Days: return 7
             case .thisMonth, .lastMonth, .last30Days: return 30
             case .last90Days: return 90
+            }
+        }
+
+        /// How many whole days back the window ends. Without this a past period
+        /// carried only a length, so "last week" resolved to the same window as
+        /// "this week" and the answer printed this week's numbers under the words
+        /// "last week".
+        var offset: Int {
+            switch self {
+            case .today, .thisWeek, .thisMonth, .last7Days, .last30Days, .last90Days: return 0
+            case .yesterday: return 1
+            case .lastWeek: return 7
+            case .lastMonth: return 30
+            }
+        }
+
+        /// The window a comparison names when the user gives only one side.
+        /// "better than last month" means this month against last month, not
+        /// against the default week.
+        var comparisonCounterpart: QueryPeriod {
+            switch self {
+            case .today: return .yesterday
+            case .yesterday: return .today
+            case .thisWeek, .last7Days: return .lastWeek
+            case .lastWeek: return .thisWeek
+            case .thisMonth, .last30Days, .last90Days: return .lastMonth
+            case .lastMonth: return .thisMonth
             }
         }
 
@@ -111,7 +135,15 @@ final class HealthDataQueryEngine {
 
     // MARK: - Properties
 
-    private let nlAnalyzer = NLEmbeddingAnalyzer()
+    /// Apple's sentence embedding, loaded straight rather than through
+    /// `NLEmbeddingAnalyzer`, whose bag-of-words fallback returns distances on a
+    /// 0...1 scale that cannot be compared against the cosine cut-offs below.
+    /// When the model is missing the semantic path is skipped entirely instead
+    /// of matching everything.
+    /// `static` so the one-time load is Swift's thread-safe global initialisation.
+    /// The engine is a single shared instance queried off the main actor, where an
+    /// instance-level `lazy var` would be an unsynchronised race.
+    private static let sentenceEmbedding: NLEmbedding? = NLEmbedding.sentenceEmbedding(for: .english)
     private let semanticCacheLock = NSLock()
     private var semanticIntentCache: [String: IntentCategory] = [:]
     private var semanticMissCache = Set<String>()
@@ -123,6 +155,13 @@ final class HealthDataQueryEngine {
         "heart rate": .heartRate, "hr": .heartRate, "pulse": .heartRate, "bpm": .heartRate,
         "resting heart rate": .restingHeartRate, "rhr": .restingHeartRate, "resting hr": .restingHeartRate, "resting pulse": .restingHeartRate,
         "hrv": .heartRateVariability, "heart rate variability": .heartRateVariability, "variability": .heartRateVariability,
+        // The app calls HRV "heart calm signal" on screen and ships suggested
+        // questions using that name, so the parser has to understand it too.
+        // "recovery" is deliberately absent: that word is the app's name for the
+        // readiness score on Home, not for HRV, so mapping it here answered a
+        // question about one number with another.
+        "heart calm signal": .heartRateVariability, "heart calm": .heartRateVariability,
+        "calm signal": .heartRateVariability,
         "heart rate recovery": .heartRateRecovery, "hr recovery": .heartRateRecovery,
         "afib": .atrialFibrillationBurden, "atrial fibrillation": .atrialFibrillationBurden,
         // Sleep
@@ -130,7 +169,7 @@ final class HealthDataQueryEngine {
         "deep sleep": .sleepDeep, "rem": .sleepREM, "rem sleep": .sleepREM, "core sleep": .sleepCore,
         "breathing disturbances": .sleepBreathingDisturbances, "sleep apnea": .sleepBreathingDisturbances,
         // Activity
-        "steps": .steps, "step count": .steps,
+        "steps": .steps, "step": .steps, "step count": .steps,
         "calories": .activeCalories, "active calories": .activeCalories, "active energy": .activeCalories,
         "basal calories": .basalCalories, "resting energy": .basalCalories,
         "exercise": .exerciseMinutes, "exercise minutes": .exerciseMinutes, "workout": .exerciseMinutes, "workouts": .exerciseMinutes,
@@ -253,10 +292,28 @@ final class HealthDataQueryEngine {
         (intentExemplars[category] ?? []).map { (category: category, exemplar: $0) }
     }
 
+    /// Cosine distance above which a question is treated as unrelated to every
+    /// exemplar. Measured against Apple's sentence embedding using the exemplars
+    /// below: real health questions that reach this path top out at 0.796, and
+    /// off-topic ones ("what is the capital of france", "how do i fix a python
+    /// import error") start at 0.812. 0.80 sits in that gap. The old 1.2 was
+    /// above every observed distance, so it accepted everything.
+    private static let semanticMaxDistance = 0.80
+    /// How far the winning category must beat the runner-up. A question that sits
+    /// between two categories has no clear intent, and picking the argmin anyway
+    /// is what made small rewordings flip the answer. Kept low because a reject
+    /// is cheap here: this path runs only after keyword matching failed, and a
+    /// rejected question still falls through to a status answer when it named a
+    /// metric, or to an honest "I did not understand" when it did not.
+    private static let semanticMinMargin = 0.03
+
     // MARK: - Query Processing
 
     /// Primary entry point. uses full ML pipeline context.
-    func query(question: String, context: QueryContext, matchingMode: MatchingMode = .full) -> QueryResult {
+    /// Named `answer` rather than `query` so it does not collide with the async
+    /// `HealthQueryEngine.query`, which would resolve to itself from an async
+    /// context and recurse.
+    func answer(question: String, context: QueryContext) -> QueryResult {
         let normalized = question.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Handle conversational inputs before parsing health intent
@@ -264,7 +321,7 @@ final class HealthDataQueryEngine {
             return conversational
         }
 
-        let intent = parseIntent(normalized, matchingMode: matchingMode)
+        let intent = parseIntent(normalized)
 
         switch intent {
         case .trend(let metric, let period):
@@ -277,8 +334,8 @@ final class HealthDataQueryEngine {
             return answerForecast(metric: metric, horizon: horizon, ctx: context)
         case .anomaly(let metric):
             return answerAnomaly(metric: metric, ctx: context)
-        case .bestWorst(let metric, let seeking):
-            return answerBestWorst(metric: metric, seeking: seeking, ctx: context)
+        case .bestWorst(let metric, let seeking, let period):
+            return answerBestWorst(metric: metric, seeking: seeking, period: period, ctx: context)
         case .status(let metric):
             return answerStatus(metric: metric, ctx: context)
         case .healthState:
@@ -296,13 +353,13 @@ final class HealthDataQueryEngine {
         case .causal(let metric):
             return answerCausal(metric: metric, ctx: context)
         case .general:
-            return answerGeneral(ctx: context)
+            return answerNotUnderstood(ctx: context)
         }
     }
 
     // MARK: - Intent Parsing
 
-    private func parseIntent(_ question: String, matchingMode: MatchingMode) -> QueryIntent {
+    private func parseIntent(_ question: String) -> QueryIntent {
         let detectedMetrics = detectMetrics(in: question)
         let detectedPeriods = detectPeriods(in: question)
         let primaryMetric = detectedMetrics.first
@@ -313,8 +370,8 @@ final class HealthDataQueryEngine {
         }
 
         // Semantic matching fallback via NLEmbedding
-        if matchingMode == .full, let category = semanticIntentMatch(question) {
-            return resolveCategory(category, metrics: detectedMetrics, periods: detectedPeriods)
+        if let category = semanticIntentMatch(question) {
+            return resolveCategory(category, question: question, metrics: detectedMetrics, periods: detectedPeriods)
         }
 
         // Default: status if we found a metric, general otherwise
@@ -324,89 +381,115 @@ final class HealthDataQueryEngine {
         return .general
     }
 
+    /// Every list is matched on whole words. The old raw `contains` let "most"
+    /// fire inside "almost" and "improve" fire inside "improved", so ordinary
+    /// questions were answered by the personal-record and optimization branches.
+    /// Inflections are spelled out for the same reason.
+    private enum Patterns {
+        static let healthState = ["state", "body doing", "body status", "recovered", "health state", "doing overall", "what data"]
+        static let risk = ["risk", "risks", "warning", "warnings", "worried", "danger", "concern", "concerning", "red flag", "red flags", "careful"]
+        static let optimization = ["optimize", "optimise", "improve", "ideal day", "best day", "tip", "tips", "should i do", "better score", "great day", "focus on"]
+        static let pattern = ["pattern", "patterns", "cycle", "cycles", "rhythm", "rhythms", "recurring", "routine", "consistent", "consistency"]
+        static let circadian = ["body clock", "chronotype", "best time", "when should", "optimal time", "when to"]
+        static let whyScore = ["why is my score", "score low", "score drop", "score dropped", "score breakdown", "explain my score", "affecting my score", "driving my score"]
+        static let causal = ["cause", "causes", "causing", "why does", "what drives", "root cause", "what leads to", "what makes my", "affects my", "affecting my", "influences"]
+        static let correlation = ["affect", "affects", "affecting", "impact", "impacts", "correlated", "correlation", "related", "relationship", "connected", "connection", "influence", "influences", "linked"]
+        static let forecast = ["predict", "prediction", "forecast", "will my", "expect", "next week", "next month", "tomorrow", "future"]
+        static let trend = ["trend", "trending", "changing", "improving", "improved", "declining", "declined", "getting", "heading", "direction", "going up", "going down"]
+        static let comparison = ["compare", "compared", "comparison", "versus", "vs", "better than", "worse than", "different", "difference"]
+        static let anomaly = ["unusual", "abnormal", "anomaly", "anomalies", "weird", "strange", "spike", "spikes", "something off"]
+        /// "Am I getting enough deep sleep?" asks whether a value is where it
+        /// should be, which is what the status answer reports. Without this the
+        /// word "getting" sent it to the trend branch instead.
+        static let sufficiency = ["enough", "normal", "healthy"]
+        static let best = ["best", "highest", "most", "peak", "record", "personal best"]
+        static let worst = ["worst", "lowest", "least", "minimum"]
+    }
+
     private func keywordIntent(_ question: String, metrics: [HealthMetric], periods: [QueryPeriod]) -> QueryIntent? {
         let primaryMetric = metrics.first
         let primaryPeriod = periods.first ?? .last7Days
 
-        let healthStatePatterns = ["state", "body doing", "body status", "recovered", "health state"]
-        let riskPatterns = ["risk", "warning", "worried", "danger", "concern", "red flag", "careful"]
-        let optimizationPatterns = ["optimize", "improve", "ideal day", "best day", "tip", "should i do", "better score", "great day"]
-        let patternPatterns = ["pattern", "cycle", "rhythm", "recurring", "weekly pattern", "routine"]
-        let circadianPatterns = ["body clock", "chronotype", "best time", "when should", "optimal time", "when to"]
-        let whyScorePatterns = ["why is my score", "score low", "score drop", "score breakdown", "explain my score", "affecting my score", "what's driving my score"]
-        let causalPatterns = ["cause", "why does", "what drives", "root cause", "what leads to", "what makes my"]
-        let correlationPatterns = ["affect", "impact", "correlat", "relat", "connect", "influence", "relationship", "linked"]
-        let forecastPatterns = ["predict", "forecast", "will my", "expect", "next", "tomorrow", "future"]
-        let trendPatterns = ["trend", "going", "changing", "improv", "declin", "getting", "heading", "direction"]
-        let comparisonPatterns = ["compar", "versus", "vs", "better than", "worse than", "differ"]
-        let anomalyPatterns = ["unusual", "abnormal", "anomal", "weird", "strange", "spike", "something off"]
-        let bestPatterns = ["best", "highest", "most", "peak", "record", "personal best"]
-        let worstPatterns = ["worst", "lowest", "least", "minimum"]
-
-        // New intents first (higher priority for specific questions)
-        if whyScorePatterns.contains(where: { question.contains($0) }) {
+        if Self.matches(question, Patterns.whyScore) {
             return .whyScore
         }
-        if healthStatePatterns.contains(where: { question.contains($0) }) {
+        if Self.matches(question, Patterns.healthState) {
             return .healthState
         }
-        if riskPatterns.contains(where: { question.contains($0) }) {
+        if Self.matches(question, Patterns.risk) {
             return .risk
         }
-        if optimizationPatterns.contains(where: { question.contains($0) }) {
-            return .optimization
-        }
-        if circadianPatterns.contains(where: { question.contains($0) }) {
+        if Self.matches(question, Patterns.circadian) {
             return .circadian
         }
-        if patternPatterns.contains(where: { question.contains($0) }) {
+        if Self.matches(question, Patterns.pattern) {
             return .pattern(metric: primaryMetric)
         }
 
         // Correlation (needs two metrics)
-        if metrics.count >= 2 && correlationPatterns.contains(where: { question.contains($0) }) {
+        if metrics.count >= 2 && Self.matches(question, Patterns.correlation) {
             return .correlation(metricA: metrics[0], metricB: metrics[1])
         }
 
         // Causal (one metric + causal keyword)
-        if causalPatterns.contains(where: { question.contains($0) }), let metric = primaryMetric {
+        if Self.matches(question, Patterns.causal), let metric = primaryMetric {
             return .causal(metric: metric)
         }
 
         // Forecast
-        if forecastPatterns.contains(where: { question.contains($0) }), let metric = primaryMetric {
+        if Self.matches(question, Patterns.forecast), let metric = primaryMetric {
             let horizon = question.contains("week") ? 7 : question.contains("3 day") ? 3 : 1
             return .forecast(metric: metric, horizon: horizon)
         }
 
-        // Best/Worst
-        if let metric = primaryMetric {
-            if bestPatterns.contains(where: { question.contains($0) }) {
-                return .bestWorst(metric: metric, seeking: .best)
-            }
-            if worstPatterns.contains(where: { question.contains($0) }) {
-                return .bestWorst(metric: metric, seeking: .worst)
-            }
-        }
-
-        // Anomaly
-        if anomalyPatterns.contains(where: { question.contains($0) }) {
-            return .anomaly(metric: primaryMetric)
-        }
-
-        // Trend
-        if trendPatterns.contains(where: { question.contains($0) }), let metric = primaryMetric {
-            return .trend(metric: metric, period: primaryPeriod)
-        }
-
-        // Comparison
-        if comparisonPatterns.contains(where: { question.contains($0) }), let metric = primaryMetric {
-            let periodA = periods.count > 0 ? periods[0] : .thisWeek
-            let periodB = periods.count > 1 ? periods[1] : .lastWeek
+        // Comparison before trend: "getting better than last month" names two
+        // windows and must not be answered as a one-window trend.
+        if Self.matches(question, Patterns.comparison), let metric = primaryMetric {
+            let (periodA, periodB) = Self.comparisonPeriods(from: periods)
             return .comparison(metric: metric, periodA: periodA, periodB: periodB)
         }
 
+        if Self.matches(question, Patterns.sufficiency), let metric = primaryMetric {
+            return .status(metric: metric)
+        }
+
+        // Trend
+        if Self.matches(question, Patterns.trend), let metric = primaryMetric {
+            return .trend(metric: metric, period: primaryPeriod)
+        }
+
+        // Anomaly before best/worst: "a weird peak in my hrv" is about the odd
+        // reading, not about the personal record.
+        if Self.matches(question, Patterns.anomaly) {
+            return .anomaly(metric: primaryMetric)
+        }
+
+        // Best/Worst
+        if let metric = primaryMetric {
+            if Self.matches(question, Patterns.best) {
+                return .bestWorst(metric: metric, seeking: .best, period: periods.first)
+            }
+            if Self.matches(question, Patterns.worst) {
+                return .bestWorst(metric: metric, seeking: .worst, period: periods.first)
+            }
+        }
+
+        // Optimization last: it needs no metric, so an earlier position let
+        // "improve" swallow questions that named one.
+        if Self.matches(question, Patterns.optimization) {
+            return .optimization
+        }
+
         return nil // No keyword match. fall through to semantic
+    }
+
+    /// A comparison needs two windows. When the user names only one, pair it with
+    /// the window on the other side of now, and always put the more recent window
+    /// first so the verdict reads in the direction the sentence claims.
+    private static func comparisonPeriods(from periods: [QueryPeriod]) -> (QueryPeriod, QueryPeriod) {
+        let named = periods.first ?? .thisWeek
+        let other = periods.count > 1 ? periods[1] : named.comparisonCounterpart
+        return named.offset <= other.offset ? (named, other) : (other, named)
     }
 
     /// Sentence-embedding semantic match for ambiguous queries.
@@ -425,18 +508,7 @@ final class HealthDataQueryEngine {
         }
         semanticCacheLock.unlock()
 
-        var bestCategory: IntentCategory?
-        var bestDistance = Double.infinity
-
-        for (category, exemplar) in Self.semanticCorpus {
-            let dist = nlAnalyzer.computeSemanticDistance(sentenceA: normalized, sentenceB: exemplar)
-            if dist < bestDistance {
-                bestDistance = dist
-                bestCategory = category
-            }
-        }
-
-        let match = bestDistance < 1.2 ? bestCategory : nil
+        let match = nearestCategory(to: normalized)
 
         semanticCacheLock.lock()
         if semanticIntentCache.count + semanticMissCache.count > 256 {
@@ -453,8 +525,40 @@ final class HealthDataQueryEngine {
         return match
     }
 
+    /// Nearest exemplar category, or nil when the question is not close enough to
+    /// any of them.
+    ///
+    /// `NLEmbedding` cosine distance runs 0...2 and ordinary English sentences
+    /// rarely pass ~1.1 against each other, so the old `< 1.2` cut accepted every
+    /// question and force-routed unrelated ones to whichever exemplar happened to
+    /// be nearest. Both gates below have to hold: an absolute cut, and a gap to
+    /// the runner-up category so a question sitting between two categories is
+    /// refused instead of decided by a rounding error.
+    private func nearestCategory(to question: String) -> IntentCategory? {
+        guard let embedding = Self.sentenceEmbedding else { return nil }
+
+        var bestByCategory: [IntentCategory: Double] = [:]
+        for (category, exemplar) in Self.semanticCorpus {
+            let distance = embedding.distance(between: question, and: exemplar)
+            if distance < bestByCategory[category, default: .infinity] {
+                bestByCategory[category] = distance
+            }
+        }
+
+        // Sorted with the category name as tiebreak: Dictionary order is seeded
+        // per process, so without it the same question could route differently
+        // between launches.
+        let ranked = bestByCategory.sorted {
+            $0.value != $1.value ? $0.value < $1.value : $0.key.rawValue < $1.key.rawValue
+        }
+        guard let best = ranked.first, best.value <= Self.semanticMaxDistance else { return nil }
+        let runnerUp = ranked.dropFirst().first?.value ?? .infinity
+        guard runnerUp - best.value >= Self.semanticMinMargin else { return nil }
+        return best.key
+    }
+
     /// Convert a category (from semantic match) into a full QueryIntent with extracted params.
-    private func resolveCategory(_ category: IntentCategory, metrics: [HealthMetric], periods: [QueryPeriod]) -> QueryIntent {
+    private func resolveCategory(_ category: IntentCategory, question: String, metrics: [HealthMetric], periods: [QueryPeriod]) -> QueryIntent {
         let metric = metrics.first
         let period = periods.first ?? .last7Days
 
@@ -462,8 +566,7 @@ final class HealthDataQueryEngine {
         case .trend:
             return metric.map { .trend(metric: $0, period: period) } ?? .general
         case .comparison:
-            let a = periods.count > 0 ? periods[0] : .thisWeek
-            let b = periods.count > 1 ? periods[1] : .lastWeek
+            let (a, b) = Self.comparisonPeriods(from: periods)
             return metric.map { .comparison(metric: $0, periodA: a, periodB: b) } ?? .general
         case .correlation:
             return metrics.count >= 2 ? .correlation(metricA: metrics[0], metricB: metrics[1]) : .general
@@ -472,7 +575,10 @@ final class HealthDataQueryEngine {
         case .anomaly:
             return .anomaly(metric: metric)
         case .bestWorst:
-            return metric.map { .bestWorst(metric: $0, seeking: .best) } ?? .general
+            // Read the direction from the question. Hardcoding .best answered a
+            // "worst day" question with the user's personal record.
+            let seeking: QueryIntent.BestWorst = Self.matches(question, Patterns.worst) ? .worst : .best
+            return metric.map { .bestWorst(metric: $0, seeking: seeking, period: periods.first) } ?? .general
         case .status:
             return .status(metric: metric)
         case .healthState:
@@ -496,37 +602,67 @@ final class HealthDataQueryEngine {
 
     // MARK: - Metric & Period Detection
 
-    private func detectMetrics(in text: String) -> [HealthMetric] {
+    /// Longest term first so a phrase claims its span before a shorter term can
+    /// match inside it, with the term itself as the tiebreak: Dictionary order is
+    /// seeded per process, so two equal-length terms would otherwise win against
+    /// each other differently on every launch.
+    private static func rankedVocabulary<T>(_ vocabulary: [String: T]) -> [(term: String, value: T)] {
+        vocabulary
+            .sorted { $0.key.count != $1.key.count ? $0.key.count > $1.key.count : $0.key < $1.key }
+            .map { (term: $0.key, value: $0.value) }
+    }
+
+    private static let rankedMetricVocabulary = rankedVocabulary(metricVocabulary)
+    private static let rankedPeriodVocabulary = rankedVocabulary(periodVocabulary)
+
+    /// Word-bounded search. A raw substring search let short terms fire inside
+    /// longer words: "hr" matched "hrs" and "three", "rem" matched "remember",
+    /// "temp" matched "attempt", each silently switching the answer to a metric
+    /// the user never named.
+    private static func wordRange(of term: String, in text: String) -> Range<String.Index>? {
+        let pattern = "\\b" + NSRegularExpression.escapedPattern(for: term) + "\\b"
+        return text.range(of: pattern, options: [.regularExpression])
+    }
+
+    private static func matches(_ text: String, _ patterns: [String]) -> Bool {
+        patterns.contains { wordRange(of: $0, in: text) != nil }
+    }
+
+    /// Collects vocabulary hits in the order they appear, keeping only the first
+    /// term to claim any given span. Without the span check "resting heart rate"
+    /// also yielded "heart rate", so a two-metric question was answered about the
+    /// long phrase and its own sub-phrase while the metric the user actually
+    /// named was dropped.
+    private static func detect<T: Equatable>(_ vocabulary: [(term: String, value: T)], in text: String) -> [T] {
         let lower = text.lowercased()
-        var found: [(metric: HealthMetric, position: Int)] = []
+        var found: [(value: T, position: Int)] = []
+        var claimed: [Range<String.Index>] = []
 
-        // Sort vocabulary by term length descending to match longer phrases first
-        let sortedVocab = Self.metricVocabulary.sorted { $0.key.count > $1.key.count }
-
-        for (term, metric) in sortedVocab {
-            if let range = lower.range(of: term) {
-                let position = lower.distance(from: lower.startIndex, to: range.lowerBound)
-                if !found.contains(where: { $0.metric == metric }) {
-                    found.append((metric: metric, position: position))
-                }
-            }
+        for (term, value) in vocabulary {
+            guard let range = wordRange(of: term, in: lower) else { continue }
+            guard !claimed.contains(where: { $0.overlaps(range) }) else { continue }
+            claimed.append(range)
+            guard !found.contains(where: { $0.value == value }) else { continue }
+            found.append((value: value, position: lower.distance(from: lower.startIndex, to: range.lowerBound)))
         }
 
-        return found.sorted { $0.position < $1.position }.map(\.metric)
+        return found.sorted { $0.position < $1.position }.map(\.value)
+    }
+
+    private func detectMetrics(in text: String) -> [HealthMetric] {
+        Self.detect(Self.rankedMetricVocabulary, in: text)
+    }
+
+    /// One vocabulary for both engines. The LLM path had its own 18-entry
+    /// substring map that knew nothing about most metrics and double-fired on
+    /// overlapping phrases, so the numbers under an answer came from a different
+    /// reading of the question than the answer itself.
+    func metrics(in question: String) -> [HealthMetric] {
+        detectMetrics(in: question)
     }
 
     private func detectPeriods(in text: String) -> [QueryPeriod] {
-        let lower = text.lowercased()
-        var found: [(period: QueryPeriod, position: Int)] = []
-
-        for (term, period) in Self.periodVocabulary {
-            if let range = lower.range(of: term) {
-                let position = lower.distance(from: lower.startIndex, to: range.lowerBound)
-                found.append((period: period, position: position))
-            }
-        }
-
-        return found.sorted { $0.position < $1.position }.map(\.period)
+        Self.detect(Self.rankedPeriodVocabulary, in: text)
     }
 
     // MARK: - Answer Generators (Original, Improved)
@@ -536,7 +672,7 @@ final class HealthDataQueryEngine {
             return noDataResult(for: metric)
         }
 
-        let recent = recentSamples(from: series, days: period.days)
+        let recent = recentSamples(from: series, days: period.days, offset: period.offset)
         guard recent.count >= 2 else { return noDataResult(for: metric) }
 
         let values = recent.map(\.value)
@@ -584,8 +720,12 @@ final class HealthDataQueryEngine {
             return noDataResult(for: metric)
         }
 
-        let samplesA = recentSamples(from: series, days: periodA.days)
-        let samplesB = recentSamples(from: series, days: periodB.days, offset: periodA.days)
+        // Each window comes from its own period, so the label the sentence prints
+        // always names the window the number came from. The old fixed
+        // recent-then-previous pairing printed the wrong label whenever the user
+        // named the older window first.
+        let samplesA = recentSamples(from: series, days: periodA.days, offset: periodA.offset)
+        let samplesB = recentSamples(from: series, days: periodB.days, offset: periodB.offset)
         guard !samplesA.isEmpty, !samplesB.isEmpty else { return noDataResult(for: metric) }
 
         let avgA = samplesA.valueMean
@@ -724,7 +864,12 @@ final class HealthDataQueryEngine {
     }
 
     private func answerAnomaly(metric: HealthMetric?, ctx: QueryContext) -> QueryResult {
-        let metricsToCheck: [HealthMetric] = metric.map { [$0] } ?? Array(ctx.timeSeries.keys.prefix(15))
+        // Every metric, in a fixed order. `keys.prefix(15)` took an arbitrary
+        // slice of an unordered Dictionary, so the same data surfaced a different
+        // anomaly, or none at all, on every launch. The cap belongs after the
+        // deviation sort below, not before the scan.
+        let metricsToCheck: [HealthMetric] = metric.map { [$0] }
+            ?? ctx.timeSeries.keys.sorted { $0.rawValue < $1.rawValue }
 
         var anomalies: [(metric: HealthMetric, deviation: Double, value: Double)] = []
         for m in metricsToCheck {
@@ -763,12 +908,18 @@ final class HealthDataQueryEngine {
         )
     }
 
-    private func answerBestWorst(metric: HealthMetric, seeking: QueryIntent.BestWorst, ctx: QueryContext) -> QueryResult {
+    private func answerBestWorst(metric: HealthMetric, seeking: QueryIntent.BestWorst, period: QueryPeriod?, ctx: QueryContext) -> QueryResult {
         guard let series = ctx.timeSeries[metric], !series.samples.isEmpty else {
             return noDataResult(for: metric)
         }
 
-        let sorted = series.samples.sorted { $0.value < $1.value }
+        // "My best step day this week" used to return the all-time record, which
+        // can be months old, because the parsed window was thrown away. History
+        // is scanned only when the question named no window at all.
+        let scope = period.map { recentSamples(from: series, days: $0.days, offset: $0.offset) } ?? series.samples
+        guard !scope.isEmpty else { return noDataResult(for: metric) }
+
+        let sorted = scope.sorted { $0.value < $1.value }
         guard let first = sorted.first, let last = sorted.last else {
             return noDataResult(for: metric)
         }
@@ -794,9 +945,8 @@ final class HealthDataQueryEngine {
     }
 
     private func answerStatus(metric: HealthMetric?, ctx: QueryContext) -> QueryResult {
-        guard let m = metric, let series = ctx.timeSeries[m] else {
-            return answerGeneral(ctx: ctx)
-        }
+        guard let m = metric else { return answerNotUnderstood(ctx: ctx) }
+        guard let series = ctx.timeSeries[m] else { return noDataResult(for: m) }
 
         let recent = recentSamples(from: series, days: 7)
         guard !recent.isEmpty else { return noDataResult(for: m) }
@@ -807,7 +957,10 @@ final class HealthDataQueryEngine {
         var answer: String
 
         if let baseline = ctx.baselines[m] {
-            let dev = deviation(of: avg, from: baseline)
+            // Judged on the same reading the sentence prints. Judging the 7-day
+            // mean while printing the latest sample produced answers like "your
+            // HRV has dipped to 71 ms" when 71 ms was above baseline.
+            let dev = deviation(of: latest, from: baseline)
             let latestStr = m.formatWithUnit(latest)
             if dev > 1 {
                 answer = m.higherIsBetter
@@ -1419,11 +1572,19 @@ final class HealthDataQueryEngine {
         "bye", "goodbye", "see you", "later", "cya", "take care",
     ]
 
+    /// A pleasantry is the whole message, or the whole message plus punctuation.
+    /// Matching a bare prefix sent "typical sleep for me?" to the thanks reply
+    /// ("ty") and "later today should i train?" to the farewell reply ("later"),
+    /// so a real health question got a canned goodbye.
+    private static func isPleasantry(_ words: String, in set: Set<String>) -> Bool {
+        set.contains(words) || set.contains { words.hasPrefix($0) && words.count < $0.count + 3 }
+    }
+
     private func handleConversational(_ question: String, ctx: QueryContext) -> QueryResult? {
         let words = question.components(separatedBy: .whitespaces).joined(separator: " ")
 
         // Greetings
-        if Self.greetings.contains(words) || Self.greetings.contains(where: { words.hasPrefix($0) && words.count < $0.count + 3 }) {
+        if Self.isPleasantry(words, in: Self.greetings) {
             let scorePhrase: String
             if let score = ctx.overallScore {
                 switch score {
@@ -1452,29 +1613,29 @@ final class HealthDataQueryEngine {
                 dataPoints: [],
                 confidence: 1.0,
                 relatedQuestions: [
-                    "How am I doing overall?",
-                    "What should I focus on?",
-                    "Any health risks?",
+                    Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall,
+                    Copy.Analysis.HealthDataQuery.rqWhatShouldIFocusOn,
+                    Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything,
                 ]
             )
         }
 
         // Thanks
-        if Self.thanks.contains(words) || Self.thanks.contains(where: { words.hasPrefix($0) }) {
+        if Self.isPleasantry(words, in: Self.thanks) {
             return QueryResult(
                 answer: "Happy to help! I'm here whenever you want to check in on your health.",
                 dataPoints: [],
                 confidence: 1.0,
                 relatedQuestions: [
-                    "How am I doing overall?",
-                    "What's my best metric?",
-                    "Any patterns in my data?",
+                    Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall,
+                    Copy.Analysis.HealthDataQuery.rqAnythingUnusualInData,
+                    Copy.Analysis.HealthDataQuery.rqDoIHaveAnyPatterns,
                 ]
             )
         }
 
         // Farewells
-        if Self.farewells.contains(words) || Self.farewells.contains(where: { words.hasPrefix($0) }) {
+        if Self.isPleasantry(words, in: Self.farewells) {
             return QueryResult(
                 answer: "Take care! I'll keep watching your data in the background.",
                 dataPoints: [],
@@ -1486,96 +1647,32 @@ final class HealthDataQueryEngine {
         return nil
     }
 
-    private func answerGeneral(ctx: QueryContext) -> QueryResult {
-        // 1. Surface compound insights first (richest, most synthesized)
-        if let topInsight = ctx.compoundInsights.sorted(by: { $0.surpriseScore > $1.surpriseScore }).first,
-           topInsight.surpriseScore > 0.3 {
-            return QueryResult(
-                answer: topInsight.narrative + (topInsight.isActionable ? " " + topInsight.recommendation : ""),
-                dataPoints: topInsight.involvedMetrics.prefix(3).compactMap { metric in
-                    guard let series = ctx.timeSeries[metric],
-                          let latest = series.samples.last else { return nil }
-                    return QueryResult.DataPoint(label: metric.displayName, value: latest.value, unit: metric.unit)
-                },
-                confidence: topInsight.confidence,
-                relatedQuestions: [
-                    "Am I at risk for anything?",
-                    "What state is my body in?",
-                    topInsight.involvedMetrics.first.map { "How is my \($0.displayName) trending?" } ?? "What should I do today?",
-                ]
-            )
-        }
-
-        // 2. Health signal warnings
-        if let report = ctx.healthSignalReport {
-            let signals: [(String, PredictiveHealthSignals.RiskLevel, String)] = [
-                (report.fatigueScore.signalName, report.fatigueScore.riskLevel, report.fatigueScore.explanation),
-                (report.burnoutRisk.signalName, report.burnoutRisk.riskLevel, report.burnoutRisk.explanation),
-                (report.overtrainingRisk.signalName, report.overtrainingRisk.riskLevel, report.overtrainingRisk.explanation),
-                (report.insomniaRisk.signalName, report.insomniaRisk.riskLevel, report.insomniaRisk.explanation),
-                (report.immuneRisk.signalName, report.immuneRisk.riskLevel, report.immuneRisk.explanation),
-                (report.inactivityAlert.signalName, report.inactivityAlert.riskLevel, report.inactivityAlert.explanation),
-            ]
-            if let warning = signals.filter({ $0.1 >= .high }).first {
-                return QueryResult(
-                    answer: "Something worth your attention: \(warning.2)",
-                    dataPoints: [],
-                    confidence: 0.8,
-                    relatedQuestions: [Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything, Copy.Analysis.HealthDataQuery.rqWhatShouldIDoToday]
-                )
-            }
-        }
-
-        // 3. Biggest trend mover
-        let sortedTrends = ctx.trends.sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
-        if let top = sortedTrends.first, abs(top.value.weekOverWeekChange) > 5 {
-            let dir = top.value.weekOverWeekChange > 0 ? "up" : "down"
-            let answer = "Here's what stands out: your \(top.key.displayName) is moving \(dir) \(String(format: "%.0f%%", abs(top.value.weekOverWeekChange))) week over week. That's the biggest shift in your data right now."
-            return QueryResult(
-                answer: answer,
-                dataPoints: [.init(label: "Change", value: top.value.weekOverWeekChange, unit: "%")],
-                confidence: 0.7,
-                relatedQuestions: [
-                    "How is my \(top.key.displayName) trending?",
-                    "What affects my \(top.key.displayName)?",
-                ]
-            )
-        }
-
-        // 4. Strongest correlation discovery
-        if let topCorr = ctx.correlations.sorted(by: { abs($0.pearsonR) > abs($1.pearsonR) }).first,
-           abs(topCorr.pearsonR) > 0.4 {
-            let dir = topCorr.pearsonR > 0 ? "move together" : "move in opposite directions"
-            return QueryResult(
-                answer: "Interesting discovery: your \(topCorr.metricA.displayName) and \(topCorr.metricB.displayName) \(dir) (r=\(String(format: "%.2f", topCorr.pearsonR))). This is one of the strongest connections in your data.",
-                dataPoints: [.init(label: "Correlation", value: topCorr.pearsonR, unit: "r")],
-                confidence: 0.7,
-                relatedQuestions: [
-                    "Does \(topCorr.metricA.displayName) affect \(topCorr.metricB.displayName)?",
-                    "How is my \(topCorr.metricA.displayName) doing?",
-                ]
-            )
-        }
-
-        // 5. True fallback
+    /// The engine did not recognise the question.
+    ///
+    /// This used to answer with whichever compound insight, trend mover or
+    /// correlation ranked highest, which is how an unrelated "interesting
+    /// discovery" ended up presented as the answer to a question the parser
+    /// never understood. Saying so plainly and offering questions that do
+    /// resolve is the honest response.
+    private func answerNotUnderstood(ctx: QueryContext) -> QueryResult {
         let metricCount = ctx.timeSeries.filter { !$0.value.samples.isEmpty }.count
-        if metricCount == 0 {
+        guard metricCount > 0 else {
             return QueryResult(
-                answer: "No health data yet. Once you connect your Apple Watch or allow Health access, I'll start learning about your body and can answer questions like \"How is my HRV trending?\" or \"Am I at risk for anything?\"",
+                answer: Copy.Analysis.HealthDataQuery.notUnderstoodNoData,
                 dataPoints: [],
-                confidence: 0.3,
+                confidence: 0.0,
                 relatedQuestions: []
             )
         }
 
         return QueryResult(
-            answer: "I'm tracking \(metricCount) metrics and everything looks within normal ranges right now. Try asking about a specific metric, or ask me things like \"Am I at risk?\" or \"What should I do today?\" to dig deeper.",
+            answer: Copy.Analysis.HealthDataQuery.notUnderstood,
             dataPoints: [],
-            confidence: 0.6,
+            confidence: 0.0,
             relatedQuestions: [
-                "Am I at risk for anything?",
-                "What state is my body in?",
-                "Do I have any patterns?",
+                Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall,
+                Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything,
+                Copy.Analysis.HealthDataQuery.rqWhatShouldIDoToday,
             ]
         )
     }
@@ -1713,11 +1810,20 @@ final class HealthDataQueryEngine {
         return (value - baseline.mean) / baseline.standardDeviation
     }
 
+    /// Samples inside a window of `days` whole calendar days, ending `offset` days
+    /// before today.
+    ///
+    /// Anchored to midnight rather than to the current instant, so "today" is a
+    /// calendar day instead of a rolling 24 hours that pulls in last night and
+    /// shifts as the clock advances. `Date.cal` carries the device time zone.
     private func recentSamples(from series: MetricTimeSeries, days: Int, offset: Int = 0) -> [MetricSample] {
         let calendar = Date.cal
-        let endDate = calendar.date(byAdding: .day, value: -offset, to: Date()) ?? Date()
-        let startDate = calendar.date(byAdding: .day, value: -days, to: endDate) ?? endDate
-        return series.samples.filter { $0.date >= startDate && $0.date <= endDate }
+        let today = calendar.startOfDay(for: Date())
+        guard let endExclusive = calendar.date(byAdding: .day, value: 1 - offset, to: today),
+              let start = calendar.date(byAdding: .day, value: -days, to: endExclusive) else {
+            return []
+        }
+        return series.samples.filter { $0.date >= start && $0.date < endExclusive }
             .sorted { $0.date < $1.date }
     }
 

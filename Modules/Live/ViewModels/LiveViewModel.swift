@@ -985,7 +985,10 @@ final class LiveViewModel {
             return existing
         }
 
-        guard sleep.hasSleepData else { return nil }
+        // Asleep time specifically, not `hasSleepData`: that is true on time in
+        // bed alone, and scoring readiness off a number the scorer is not allowed
+        // to read would grade the night as zero sleep.
+        guard sleep.lastNightSleepDuration > 0 else { return nil }
 
         let freshnessSeconds = ReadinessScorerConfig.morningLockFreshnessHours * 3600
         let hrvAge = recovery.latestHRVTimestamp.map { now.timeIntervalSince($0) } ?? .infinity

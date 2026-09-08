@@ -1037,7 +1037,7 @@ final class HealthKitManager: @unchecked Sendable {
     /// A gap this long between asleep segments starts a new sleep session.
     /// 90 minutes matches how Whoop and Oura split sessions: a brief 6:17 wake
     /// followed by falling back asleep at 6:35 is still one night, not two.
-    private static let sleepSessionGapThreshold: TimeInterval = 90 * 60
+    static let sleepSessionGapThreshold: TimeInterval = 90 * 60
 
     /// Contiguous asleep segments that make up one sleep, plus the awake and
     /// in-bed samples that sit inside or right beside that window.

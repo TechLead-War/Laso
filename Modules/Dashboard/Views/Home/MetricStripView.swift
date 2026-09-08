@@ -21,6 +21,13 @@ struct MetricStripView: View {
     let tiles: [MetricTile]
     let onTap: (MetricTile) -> Void
 
+    /// Width of the trailing softening. Only three and a bit tiles fit a phone
+    /// screen, and with the scroll indicator hidden a tile cut off dead straight
+    /// at the edge read as the end of the strip. A soft edge says there is more
+    /// without adding a control. Sized to about a quarter of a tile: wide enough
+    /// to read as a fade, narrow enough to leave the tile legible.
+    private static let edgeFadeWidth: CGFloat = DS.space6
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
@@ -31,6 +38,20 @@ struct MetricStripView: View {
                 }
             }
             .padding(.horizontal, DS.screenPadding)
+        }
+        // Alpha only, so it works on any background and needs no colour token.
+        // When the tiles do not fill the width the faded strip covers empty
+        // space and nothing changes on screen.
+        .mask {
+            HStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(
+                    colors: [.black, .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: Self.edgeFadeWidth)
+            }
         }
     }
 }

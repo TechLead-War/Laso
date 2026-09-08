@@ -48,6 +48,10 @@ struct ContentView: View {
     private enum RootSheet: Identifiable {
         case pmfSurvey
         case journalEntry
+        /// The camera, not the check-in sheet. MirrorCaptureSheet is a
+        /// fullScreenCover of its own inside the capture flow, so presenting it
+        /// modally here keeps it off the tab navigation stack.
+        case mirrorCapture
         /// Templates are captured at presentation time: the live scorers keep
         /// moving behind the sheet, and a card must not change under the user
         /// while they are choosing which one to post.
@@ -58,6 +62,7 @@ struct ContentView: View {
             switch self {
             case .pmfSurvey:        return "pmfSurvey"
             case .journalEntry:     return "journalEntry"
+            case .mirrorCapture:    return "mirrorCapture"
             case .shareWin:         return "shareWin"
             case .renewalReminder:  return "renewalReminder"
             }
@@ -102,6 +107,7 @@ struct ContentView: View {
             switch sheet {
             case .pmfSurvey:                    PMFSurveySheet()
             case .journalEntry:                 JournalEntryView()
+            case .mirrorCapture:                MirrorCaptureSheet()
             case .shareWin(let templates):      ShareWinSheet(templates: templates)
             case .renewalReminder(let reminder): RenewalReminderSheet(reminder: reminder)
             }
@@ -684,6 +690,10 @@ struct ContentView: View {
             )
         case .askYourData:
             AskYourDataView(viewModel: dashboardViewModel)
+        case .mirrorCapture:
+            // Diverted to a sheet by `navigate(to:)` before it can reach a path,
+            // so this branch only exists to keep the switch exhaustive.
+            MirrorCaptureSheet()
         }
     }
 
@@ -1008,6 +1018,10 @@ struct ContentView: View {
         // pops straight back to the tab root, so present it modally instead.
         guard route != .journalEntry else {
             rootSheet = .journalEntry
+            return
+        }
+        guard route != .mirrorCapture else {
+            rootSheet = .mirrorCapture
             return
         }
         switch selectedTab {

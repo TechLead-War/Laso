@@ -79,10 +79,10 @@ final class DashboardViewModel {
 
     /// Fingerprint of every input `updateCachedProperties` reads. It runs 4-5×
     /// per refresh, and each run republishes ~25 observable properties: most of
-    /// the published types (HealthScore, [Insight], [MetricTile],
-    /// [HealthCorrelation]) are not Equatable, so Observation cannot suppress an
-    /// identical write and each call repaints Home (0.34 ms per body pass) and
-    /// Explore (2.13 ms per body pass) in full. `nil` means "never computed", so
+    /// the published types (HealthScore, [Insight], [HealthCorrelation]) are not
+    /// Equatable, so Observation cannot suppress an identical write and each call
+    /// repaints Home (0.34 ms per body pass) and Explore (2.13 ms per body pass)
+    /// in full. `nil` means "never computed", so
     /// the very first call always publishes.
     @MainActor private var lastCacheHash: Int?
 
@@ -458,8 +458,25 @@ final class DashboardViewModel {
     /// Name of the lowest-scoring category. used by ScoreGuideSheet for personalized explanation
     @MainActor var cachedWeakestCategoryName: String?
 
-    /// Pre-built metric tiles for MetricStripView. rebuilt after scorer computation
-    @MainActor var cachedMetricTiles: [MetricTile] = []
+    /// Metric tiles for MetricStripView, derived on read.
+    ///
+    /// Not a stored array rebuilt by hand: every scorer behind it is `@Observable`
+    /// and finishes at its own moment (Vitality and Strain in `computeNewEngines`,
+    /// the cycle tracker later still, live sleep on an async HealthKit callback),
+    /// so a snapshot taken at three fixed points kept whatever happened to be
+    /// ready and silently dropped the rest for the whole visit. Deriving means a
+    /// SwiftUI body reading this re-runs when any of those publish. Nothing in
+    /// here mutates observed state, so it cannot loop.
+    @MainActor var cachedMetricTiles: [MetricTile] { buildMetricTiles() }
+
+    /// Last night's sleep as LiveViewModel last reported it. DashboardViewModel
+    /// does not own LiveViewModel, so the values are pushed in through
+    /// `rebuildMetricTiles` and held here for the derivation above to read.
+    /// Stamped because an app left running past midnight would otherwise keep
+    /// showing the night before as if it were last night.
+    @MainActor private var liveSleepDuration: TimeInterval = 0
+    @MainActor private var liveSleepQuality: String = ""
+    @MainActor private var liveSleepRecordedAt: Date?
 
     /// One score per calendar day for Explore's month calendar, keyed by start
     /// of day. Built at the end of every refresh path rather than from a SwiftUI
@@ -525,13 +542,6 @@ final class DashboardViewModel {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
         self.store = store
-        // Build the initial metric tiles synchronously from whatever the
-        // scorers restored from their on-disk snapshots. This way the very
-        // first frame after launch shows the last known Vitality and Strain
-        // instead of an empty strip (or zeros from a default scorer state).
-        // Sleep tile is omitted here since live sleep data isn't available
-        // until LiveViewModel populates; HomeView.onAppear rebuilds with sleep.
-        rebuildMetricTiles()
         // If a scorer had no on-disk snapshot to restore (fresh install,
         // app update from a build without snapshots, or expired daily Strain
         // snapshot), compute it once synchronously from the persisted
@@ -544,7 +554,8 @@ final class DashboardViewModel {
     /// scorer from persisted SwiftData on launch so the first frame shows
     /// all four tiles (Vitality, Strain, Brain, Stress) together rather
     /// than only the snapshot-restored ones with the rest popping in a
-    /// second later. Skips Vitality/Strain when their snapshots already
+    /// second later. The tiles derive from these scorers, so filling them in
+    /// here is all it takes. Skips Vitality/Strain when their snapshots already
     /// restored, and skips them entirely if no real chronological age is
     /// available — we never feed engines a fabricated age.
     ///
@@ -619,10 +630,6 @@ final class DashboardViewModel {
                 sleepSeries: sleepSeries
             )
         }
-        // Tiles built before prewarm reflected the empty default scorer
-        // state; rebuild now so the first rendered frame uses the freshly
-        // computed values.
-        rebuildMetricTiles()
     }
 
     /// Use results produced by onboarding calibration without re-running heavy first-load work.
@@ -1632,6 +1639,17 @@ final class DashboardViewModel {
     /// hourly keeps skipped writes from ever flipping that freshness decision.
     private static let sleepSnapshotRefreshInterval: TimeInterval = 3600
 
+    /// How recent a stored sleep reading has to be to still stand for "last
+    /// night". One night plus the day after it: a reading taken this morning is
+    /// still last night's at 11pm, one from the morning before is not. Shared by
+    /// both stored fallbacks so they cannot disagree about what counts as fresh.
+    private static let sleepFreshnessWindow: TimeInterval = 36 * 3600
+
+    /// The snapshot as it stood at launch. Read once: it only ages, both other
+    /// sleep sources outrank it, and the tiles derive on every SwiftUI body pass,
+    /// which is no place for a UserDefaults read and a JSON decode.
+    private let launchSleepSnapshot: SleepTileSnapshot? = DashboardViewModel.loadFreshSleepSnapshot()
+
     /// Persist the latest live sleep values for use on the next launch's
     /// first frame. Skips zero-duration "no data" inputs so we never restore
     /// an empty placeholder.
@@ -1639,7 +1657,8 @@ final class DashboardViewModel {
     /// Writes only on a real change: `rebuildMetricTiles` runs on every Home appear
     /// and every live-sleep update, and this JSON encode plus UserDefaults write was
     /// 97% of that function's measured 0.156 ms, each time re-writing a snapshot
-    /// identical to the one already on disk.
+    /// identical to the one already on disk. It is also why this write stays on
+    /// that path and out of the tile derivation, which runs far more often.
     @MainActor
     private func saveSleepSnapshot(duration: TimeInterval, quality: String) {
         guard duration > 0 else { return }
@@ -1657,27 +1676,110 @@ final class DashboardViewModel {
     }
 
     /// Restore the saved sleep tile values only when they're recent enough to
-    /// still represent "last night". 36h covers app launches throughout the
-    /// next day without surfacing stale multi-day-old sleep.
+    /// still represent "last night".
     private static func loadFreshSleepSnapshot() -> SleepTileSnapshot? {
         guard let data = UserDefaults.standard.data(forKey: sleepSnapshotKey),
               let snap = try? JSONDecoder().decode(SleepTileSnapshot.self, from: data) else {
             return nil
         }
-        if Date().timeIntervalSince(snap.savedAt) > 36 * 3600 { return nil }
+        if Date().timeIntervalSince(snap.savedAt) > sleepFreshnessWindow { return nil }
         return snap
     }
 
-    // MARK: - Metric Tiles Cache
+    /// The sleep quality wording and the hour thresholds behind it live on
+    /// `LiveViewModel.SleepData`. A reading recovered from the stored series has
+    /// to resolve to the same label rather than restate those thresholds here.
+    private static func sleepQualityLabel(for duration: TimeInterval) -> String {
+        let sleep = LiveViewModel.SleepData()
+        sleep.lastNightSleepDuration = duration
+        return sleep.sleepQualityLabel
+    }
 
-    /// Rebuild the cached metric tiles array. Call after scorer computation or when live sleep data changes.
-    /// Accepts sleep data from LiveViewModel since DashboardViewModel doesn't own it.
+    /// Last night's sleep from the freshest source that actually has it: the live
+    /// HealthKit query, then the synced `.sleepDuration` series, then the launch
+    /// snapshot. The series step is what puts the tile on screen for a user whose
+    /// live query came back empty while HealthKit and SwiftData both hold the
+    /// night. Nil means no source has it, which hides the tile rather than
+    /// showing a zero.
+    @MainActor
+    private var effectiveSleep: (duration: TimeInterval, quality: String)? {
+        if liveSleepDuration > 0, Self.isFreshSleep(liveSleepRecordedAt) {
+            return (liveSleepDuration, liveSleepQuality)
+        }
+        if let stored = storedSleepDuration {
+            return (stored, Self.sleepQualityLabel(for: stored))
+        }
+        // Re-checked on read, not only at launch: a session left running for
+        // days would otherwise keep replaying whatever was fresh when it started.
+        if let snap = launchSleepSnapshot, Self.isFreshSleep(snap.savedAt) {
+            return (snap.duration, snap.quality)
+        }
+        return nil
+    }
+
+    private static func isFreshSleep(_ recordedAt: Date?) -> Bool {
+        guard let recordedAt else { return false }
+        return Date().timeIntervalSince(recordedAt) <= sleepFreshnessWindow
+    }
+
+    /// Last night's hours out of the synced `.sleepDuration` series. Its samples
+    /// are dated at wake time and carry hours, so the newest one inside the
+    /// freshness window is last night.
+    @MainActor
+    private var storedSleepDuration: TimeInterval? {
+        guard let last = healthKitManager.timeSeries[.sleepDuration]?.sortedSamples.last,
+              last.value > 0,
+              Date().timeIntervalSince(last.date) <= Self.sleepFreshnessWindow else {
+            return nil
+        }
+        return last.value * 3600
+    }
+
+    // MARK: - Metric Tiles
+
+    /// Record the live sleep reading LiveViewModel just produced. The tiles
+    /// themselves derive from it (see `cachedMetricTiles`), so this only stores
+    /// the values and persists the snapshot.
+    ///
+    /// A `hasSleepData` of false is "the query has not landed yet", not "no sleep
+    /// last night", so it leaves an earlier reading alone instead of erasing it.
     @MainActor
     func rebuildMetricTiles(
         hasSleepData: Bool = false,
         lastNightSleepDuration: TimeInterval = 0,
         sleepQualityLabel: String = ""
     ) {
+        guard hasSleepData, lastNightSleepDuration > 0 else { return }
+        // Written only on a change: an identical write to an observable property
+        // still repaints every Home body that reads the tiles.
+        if liveSleepDuration != lastNightSleepDuration || liveSleepQuality != sleepQualityLabel {
+            liveSleepDuration = lastNightSleepDuration
+            liveSleepQuality = sleepQualityLabel
+            liveSleepRecordedAt = Date()
+        } else if let at = liveSleepRecordedAt,
+                  Date().timeIntervalSince(at) >= Self.sleepSnapshotRefreshInterval {
+            // The same reading arriving again is proof it is still current, so the
+            // stamp has to move or an unchanged night would age out. Restamped at
+            // most hourly, for the same reason the snapshot write is: this runs on
+            // every Home appear and every stamp repaints the strip.
+            liveSleepRecordedAt = Date()
+        }
+        saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
+    }
+
+    /// True once HealthKit has given us any activity at all. It is what separates
+    /// a strain of exactly 0 that means "you moved nothing today" from one that
+    /// means "nothing has synced", since `StrainScorer.isReady` is set even when
+    /// it computed against an empty store.
+    @MainActor
+    private var hasActivityHistory: Bool {
+        let series = healthKitManager.timeSeries
+        return series[.activeCalories]?.sortedSamples.isEmpty == false
+            || series[.steps]?.sortedSamples.isEmpty == false
+    }
+
+    @MainActor
+    private func buildMetricTiles() -> [MetricTile] {
         var tiles: [MetricTile] = []
 
         // Vitality. Gated on the scorer being ready: unguarded, a brand new
@@ -1697,22 +1799,6 @@ final class DashboardViewModel {
         }
 
         // Sleep
-        // Use the live values when LiveViewModel has them, otherwise fall
-        // back to the most recent snapshot so the tile shows on the very
-        // first frame after launch instead of waiting for LiveViewModel to
-        // finish its async fetch.
-        if hasSleepData {
-            saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
-        }
-        let effectiveSleep: (duration: TimeInterval, quality: String)? = {
-            if hasSleepData {
-                return (lastNightSleepDuration, sleepQualityLabel)
-            }
-            if let snap = Self.loadFreshSleepSnapshot() {
-                return (snap.duration, snap.quality)
-            }
-            return nil
-        }()
         if let sleep = effectiveSleep, sleep.duration > 0 {
             let sleepHours = sleep.duration / 3600
             let h = Int(sleepHours)
@@ -1725,10 +1811,12 @@ final class DashboardViewModel {
             ))
         }
 
-        // Strain. A flat 0.0 means nothing was recorded, not an easy day, so the
-        // tile stays away rather than reporting a reading the app does not have.
+        // Strain. `isReady` records only that compute ran, and it runs against an
+        // empty store too, so a zero on its own could mean "nothing synced". A
+        // zero backed by a real activity series is a genuine rest day and shows;
+        // a zero with no series behind it stays off.
         let strain = strainScorer
-        if strain.currentStrain > 0 {
+        if strain.isReady, strain.currentStrain > 0 || hasActivityHistory {
             tiles.append(MetricTile(
                 id: "strain_detail", icon: "flame.fill", label: "Strain",
                 value: String(format: "%.1f", strain.currentStrain),
@@ -1765,7 +1853,7 @@ final class DashboardViewModel {
             ))
         }
 
-        cachedMetricTiles = tiles
+        return tiles
     }
 
     // MARK: - Score History Cache

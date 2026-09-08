@@ -16,6 +16,9 @@ enum Route: Hashable {
     case journalEntry
     case todaysAction
     case askYourData
+    /// Opens the Daily Mirror camera directly. The streak widget links here so a
+    /// tap on it starts a capture instead of landing on the check-in sheet.
+    case mirrorCapture
 
     /// Maps a `--ui-test-initial-route=<id>` launch-arg value to a Route.
     /// Used only for App Store screenshot capture.
@@ -35,6 +38,7 @@ enum Route: Hashable {
         case "journalEntry": return .journalEntry
         case "todaysAction": return .todaysAction
         case "askYourData": return .askYourData
+        case "mirrorCapture": return .mirrorCapture
         default: return nil
         }
     }

@@ -8,34 +8,31 @@ import FoundationModels
 @available(iOS 26, *)
 enum ContextCompressor {
 
-    static func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        switch metric {
-        case .steps: return "\(Int(value))"
-        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore: return String(format: "%.1fh", value / 3600)
-        case .heartRateVariability: return String(format: "%.0fms", value)
-        case .heartRate, .restingHeartRate: return String(format: "%.0f bpm", value)
-        case .bodyTemperature, .appleSleepingWristTemperature: return String(format: "%.1f°F", value)
-        case .weight: return String(format: "%.1f lbs", value)
-        case .vo2Max: return String(format: "%.1f", value)
-        // Already percent points on ingest (registry valueScale 100), so no
-        // second multiply.
-        case .bloodOxygen: return String(format: "%.0f%%", value)
-        case .exerciseMinutes, .mindfulMinutes: return String(format: "%.0f min", value)
-        case .activeCalories, .basalCalories, .totalCaloriesIntake: return String(format: "%.0f kcal", value)
-        case .waterIntake: return String(format: "%.0f mL", value)
-        default:
-            if value > 1000 { return String(format: "%.0f", value) }
-            if value > 10 { return String(format: "%.1f", value) }
-            return String(format: "%.2f", value)
-        }
+    /// Days after which a reading is old enough that the model must be told, so
+    /// it stops presenting a stale weight or VO2 max as today's value.
+    private static let staleAfterDays = 2
+
+    static func dayStamp(_ date: Date) -> String {
+        Date.formatter(format: "yyyy-MM-dd").string(from: date)
+    }
+
+    /// Marks a reading with its date once it is older than `staleAfterDays`.
+    /// Fresh readings stay unstamped so the snapshot does not get noisy.
+    static func ageNote(_ series: MetricTimeSeries, latest: MetricSample) -> String {
+        series.isStale(thresholdDays: staleAfterDays) ? ", measured \(dayStamp(latest.date))" : ""
     }
 
     static func summarizeMetric(_ metric: HealthMetric, series: MetricTimeSeries?, baseline: UserBaseline?) -> String {
         guard let series, let latest = series.samples.last else { return "\(metric.displayName): no data" }
-        let val = formatValue(latest.value, metric: metric)
-        guard let baseline else { return "\(metric.displayName): \(val) (no baseline yet)" }
+        // HealthMetric.formatWithUnit is the app's one formatter and is correct
+        // for all 72 metrics. The parallel switch that used to live here divided
+        // sleep hours by 3600 and labelled kilograms as lbs and Celsius as
+        // Fahrenheit, so the model reasoned on mislabelled numbers.
+        let val = metric.formatWithUnit(latest.value)
+        let age = ageNote(series, latest: latest)
+        guard let baseline else { return "\(metric.displayName): \(val) (no baseline yet\(age))" }
         let sigma = baseline.standardDeviation > 0 ? (latest.value - baseline.mean) / baseline.standardDeviation : 0
-        return "\(metric.displayName): \(val) (baseline \(formatValue(baseline.mean, metric: metric)), \(String(format: "%+.1fσ", sigma)))"
+        return "\(metric.displayName): \(val) (baseline \(metric.formatWithUnit(baseline.mean)), \(String(format: "%+.1fσ", sigma))\(age))"
     }
 
     static func summarizeTrend(_ trend: TrendAnalyzer.TrendResult, metric: HealthMetric) -> String {
@@ -45,7 +42,7 @@ enum ContextCompressor {
         case .declining: dir = "declining"
         case .stable: dir = "stable"
         }
-        return "\(metric.displayName): \(dir), \(String(format: "%+.1f%%", trend.weekOverWeekChange)) week-over-week, 7d avg \(formatValue(trend.movingAverage7d, metric: metric))"
+        return "\(metric.displayName): \(dir), \(String(format: "%+.1f%%", trend.weekOverWeekChange)) week-over-week, 7d avg \(metric.formatWithUnit(trend.movingAverage7d))"
     }
 
     static func summarizeCorrelation(_ corr: MLCorrelation) -> String {
@@ -55,7 +52,10 @@ enum ContextCompressor {
     }
 
     static func buildHealthSnapshot(context: HealthDataQueryEngine.QueryContext) -> String {
-        var lines: [String] = []
+        // Nothing else in the prompt carries a date, so without this line the
+        // model has no way to resolve "last night" or "on Tuesday" and can only
+        // invent the timeframe.
+        var lines: [String] = ["Today is \(dayStamp(Date())), time zone \(Date.cal.timeZone.identifier)"]
         // Omitted rather than sent as 0: the model quotes this line back to the
         // user as fact, so an unscored day must not reach it as a number.
         if let score = context.overallScore {
@@ -111,15 +111,17 @@ struct MetricDetailTool: Tool {
             return "\(metric.displayName): no data available."
         }
         var lines: [String] = []
-        lines.append("Latest: \(ContextCompressor.formatValue(latest.value, metric: metric)) (\(metric.unit))")
-        let recent7 = series.samples.suffix(7)
+        lines.append("Latest: \(metric.formatWithUnit(latest.value)) (measured \(ContextCompressor.dayStamp(latest.date)))")
+        // Last 7 days, not the last 7 stored samples: `suffix(7)` silently
+        // widened past a week whenever days were missing.
+        let recent7 = series.samples(lastDays: 7)
         if recent7.count > 1 {
             let avg = recent7.mean(of: \.value)
-            lines.append("7-day avg: \(ContextCompressor.formatValue(avg, metric: metric))")
+            lines.append("7-day avg: \(metric.formatWithUnit(avg))")
         }
         if let baseline = context.baselines[metric] {
             let sigma = baseline.standardDeviation > 0 ? (latest.value - baseline.mean) / baseline.standardDeviation : 0
-            lines.append("Baseline: \(ContextCompressor.formatValue(baseline.mean, metric: metric))")
+            lines.append("Baseline: \(metric.formatWithUnit(baseline.mean))")
             lines.append("Deviation: \(String(format: "%+.1fσ", sigma)) (\(abs(sigma) < 1 ? "normal" : abs(sigma) < 2 ? "notable" : "significant"))")
         }
         lines.append("Higher is \(metric.higherIsBetter ? "better" : "worse") for this metric")
@@ -145,9 +147,9 @@ struct TrendsTool: Tool {
         }
         var lines: [String] = []
         lines.append(ContextCompressor.summarizeTrend(trend, metric: metric))
-        lines.append("30d avg: \(ContextCompressor.formatValue(trend.movingAverage30d, metric: metric))")
+        lines.append("30d avg: \(metric.formatWithUnit(trend.movingAverage30d))")
         if trend.movingAverage90d > 0 {
-            lines.append("90d avg: \(ContextCompressor.formatValue(trend.movingAverage90d, metric: metric))")
+            lines.append("90d avg: \(metric.formatWithUnit(trend.movingAverage90d))")
         }
         return lines.joined(separator: "\n")
     }
@@ -194,9 +196,9 @@ struct ForecastTool: Tool {
             return "No forecast available for '\(arguments.metricName)'."
         }
         return forecast.horizons.map { h in
-            let val = ContextCompressor.formatValue(h.value, metric: metric)
-            let lo = ContextCompressor.formatValue(h.ciLower, metric: metric)
-            let hi = ContextCompressor.formatValue(h.ciUpper, metric: metric)
+            let val = metric.formatWithUnit(h.value)
+            let lo = metric.formatWithUnit(h.ciLower)
+            let hi = metric.formatWithUnit(h.ciUpper)
             return "\(h.horizon)-day: \(val) (range \(lo) – \(hi))"
         }.joined(separator: "\n")
     }
@@ -312,7 +314,7 @@ struct OptimizationTool: Tool {
         if let ideal = context.idealDay {
             lines.append("Ideal day targets:")
             for target in ideal.targets.prefix(5) {
-                lines.append("  \(target.metric.displayName): \(ContextCompressor.formatValue(target.targetValue, metric: target.metric))")
+                lines.append("  \(target.metric.displayName): \(target.metric.formatWithUnit(target.targetValue))")
             }
         }
         if !context.scoreSensitivities.isEmpty {

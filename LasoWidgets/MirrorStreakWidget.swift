@@ -78,6 +78,7 @@ struct MirrorWidgetView: View {
                 smallView
             }
         }
+        .widgetURL(Self.captureURL)
         .containerBackground(for: .widget) {
             LinearGradient(
                 colors: [AppColour.primary.opacity(0.16), AppColour.surfaceBase],
@@ -86,6 +87,12 @@ struct MirrorWidgetView: View {
             )
         }
     }
+
+    /// Deep link target. `onOpenURL` maps this via `Route.fromUITestIdentifier`
+    /// to `Route.mirrorCapture`, which the root view presents as the camera
+    /// itself, so a tap on the widget starts a capture rather than landing on
+    /// the check-in sheet the user then has to read.
+    private static let captureURL = URL(string: "laso://route/mirrorCapture")
 
     private var smallView: some View {
         VStack(alignment: .leading, spacing: 2) {

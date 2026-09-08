@@ -89,12 +89,16 @@ struct BrainHealthScore {
 /// combining cognitive readiness, memory recovery, stress-cognition load,
 /// neurovascular fitness, and circadian alignment.
 ///
-/// Requires at least 7 days of HRV data to establish a reliable personal baseline.
+/// Runs on 7 days of HRV, or on 7 days of sleep duration when no device writes
+/// HRV. Four of the five subscales never read HRV and sleep carries most of the
+/// weight, so the no-HRV score is built from real inputs and simply reports a
+/// lower confidence.
 @Observable
 final class BrainHealthScorer {
 
     // MARK: - Configuration
 
+    /// Distinct days needed from whichever series the score is anchored on.
     private static let minimumDaysRequired = 7
     private static let baselineWindowDays = 14
     private static let recentWindowDays = 3
@@ -217,6 +221,15 @@ final class BrainHealthScorer {
     private static let subscoreDefault: Double = 50.0
     /// Confidence baseline contribution from having HRV data.
     private static let confidenceHRVBase: Double = 0.40
+    /// Confidence baseline when no source writes HRV and the score rests on
+    /// sleep, resting HR and activity alone. Half the HRV baseline: the model
+    /// keeps four of its five subscales, but loses its single strongest input.
+    private static let confidenceNoHRVBase: Double = 0.20
+    /// Below this the score is carried by the neutral default rather than by
+    /// measurements, so no score is published at all. 0.35 is the sleep anchor
+    /// (0.20 base plus the 0.05 duration bonus) plus the smallest additional
+    /// signal, a resting heart rate at 0.10.
+    private static let minimumPublishableConfidence: Double = 0.35
     /// Confidence contribution from each of deep, REM, RHR signals.
     private static let confidenceDeepBonus: Double = 0.15
     private static let confidenceREMBonus: Double = 0.15
@@ -237,7 +250,8 @@ final class BrainHealthScorer {
     /// The most recently computed brain health score, or nil if insufficient data
     private(set) var currentScore: BrainHealthScore?
 
-    /// Whether the scorer has enough data to produce a meaningful result (7+ days of HRV)
+    /// Whether the scorer has enough data to produce a meaningful result: 7+ days
+    /// of HRV, or 7+ days of sleep duration when nothing writes HRV.
     private(set) var isReady: Bool = false
 
     /// Daily brain health scores, oldest first, over `historyWindowDays`.
@@ -287,16 +301,6 @@ final class BrainHealthScorer {
     func compute(from store: HealthDataStore, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         let allSeries = timeSeries ?? store.loadAllTimeSeries()
 
-        guard let hrvSeries = allSeries[.heartRateVariability],
-              hrvSeries.daysOfData >= Self.minimumDaysRequired else {
-            isReady = false
-            currentScore = nil
-            weeklyHistory = []
-            return
-        }
-
-        isReady = true
-
         // Gather all available series
         let deepSeries = allSeries[.sleepDeep]
         let remSeries = allSeries[.sleepREM]
@@ -305,25 +309,58 @@ final class BrainHealthScorer {
         let vo2Series = allSeries[.vo2Max]
         let stepsSeries = allSeries[.steps]
 
+        // HRV is the strongest single input but only two of the five subscales
+        // read it, and nothing on an iPhone writes it. Sleep duration anchors the
+        // score instead when no source does: readiness, memory and circadian are
+        // 65% of the weight and all three are sleep-driven, so the result is still
+        // measured rather than assumed. `confidence` carries the difference.
+        let hrvSeries: MetricTimeSeries? = allSeries[.heartRateVariability].flatMap {
+            $0.daysOfData >= Self.minimumDaysRequired ? $0 : nil
+        }
+        let hasSleepAnchor = (durationSeries?.daysOfData ?? 0) >= Self.minimumDaysRequired
+
+        guard hrvSeries != nil || hasSleepAnchor else {
+            isReady = false
+            currentScore = nil
+            weeklyHistory = []
+            return
+        }
+
+        isReady = true
+
         // Build baselines
-        let hrvBaseline = computeBaseline(hrvSeries, days: Self.baselineWindowDays)
+        let hrvBaseline = hrvSeries.flatMap { computeBaseline($0, days: Self.baselineWindowDays) }
         let deepBaseline = deepSeries.flatMap { computeBaseline($0, days: Self.baselineWindowDays) }
         let remBaseline = remSeries.flatMap { computeBaseline($0, days: Self.baselineWindowDays) }
         let durationBaseline = durationSeries.flatMap { computeBaseline($0, days: Self.baselineWindowDays) }
         let rhrBaseline = rhrSeries.flatMap { computeBaseline($0, days: Self.baselineWindowDays) }
 
         // Recent averages (3-day)
-        let recentHRV = recentAverage(hrvSeries, days: Self.recentWindowDays)
+        let recentHRV = hrvSeries.flatMap { recentAverage($0, days: Self.recentWindowDays) }
         let recentDeep = deepSeries.flatMap { recentAverage($0, days: Self.recentWindowDays) }
         let recentREM = remSeries.flatMap { recentAverage($0, days: Self.recentWindowDays) }
         let recentDuration = durationSeries.flatMap { recentAverage($0, days: Self.recentWindowDays) }
         let recentRHR = rhrSeries.flatMap { recentAverage($0, days: Self.recentWindowDays) }
 
-        guard let hrvBase = hrvBaseline, let currentHRV = recentHRV else {
+        // A reading is only usable with both halves: a baseline to compare against
+        // and a recent value to compare.
+        let hrv: (current: Double, baseline: (mean: Double, sd: Double))? = {
+            guard let base = hrvBaseline, let recent = recentHRV else { return nil }
+            return (recent, base)
+        }()
+        let hasSleepReading = durationBaseline != nil && recentDuration != nil
+
+        // Whichever series anchored the score has to survive that test, otherwise
+        // every subscale falls back to its neutral default and the result is a
+        // number with no measurement under it.
+        guard hrv != nil || hasSleepReading else {
             currentScore = nil
             weeklyHistory = []
             return
         }
+
+        let currentHRV = hrv?.current
+        let hrvBase = hrv?.baseline
 
         // --- Subscale 1: Cognitive Readiness (30%) ---
         let cognitiveReadiness = computeCognitiveReadiness(
@@ -384,6 +421,7 @@ final class BrainHealthScorer {
 
         // Confidence
         let confidence = computeConfidence(
+            hasHRV: hrvBase != nil,
             hasDeep: deepSeries != nil,
             hasREM: remSeries != nil,
             hasRHR: rhrSeries != nil,
@@ -404,6 +442,18 @@ final class BrainHealthScorer {
             let z = zScore(current: rem, baseline: remBase)
             return normalizeZScore(z) * 100.0
         }()
+
+        // A sleep-anchored score with nothing else measured leaves four of the five
+        // subscales sitting on the neutral constant, so every such user would read
+        // the same middling number and take it for a finding. The floor is the
+        // anchor plus one more real signal, which is where `computeConfidence`
+        // lands once a sleep stage or a resting heart rate is present.
+        guard confidence >= Self.minimumPublishableConfidence else {
+            isReady = false
+            currentScore = nil
+            weeklyHistory = []
+            return
+        }
 
         currentScore = BrainHealthScore(
             score: finalScore,
@@ -444,8 +494,9 @@ final class BrainHealthScorer {
     // MARK: - Subscale Computations
 
     /// Cognitive Readiness: HRV (40%), Deep sleep (30%), REM (20%), Duration (10%)
+    /// Weights re-normalize over whichever components are present, HRV included.
     private func computeCognitiveReadiness(
-        currentHRV: Double, hrvBaseline: (mean: Double, sd: Double),
+        currentHRV: Double?, hrvBaseline: (mean: Double, sd: Double)?,
         currentDeep: Double?, deepBaseline: (mean: Double, sd: Double)?,
         currentREM: Double?, remBaseline: (mean: Double, sd: Double)?,
         currentDuration: Double?, durationBaseline: (mean: Double, sd: Double)?
@@ -454,10 +505,11 @@ final class BrainHealthScorer {
         var totalWeight = 0.0
 
         // HRV z-score
-        let hrvZ = zScore(current: currentHRV, baseline: hrvBaseline)
-        let hrvNorm = normalizeZScore(hrvZ)
-        weightedSum += hrvNorm * Self.cogReadinessHRVWeight
-        totalWeight += Self.cogReadinessHRVWeight
+        if let hrv = currentHRV, let hrvBase = hrvBaseline {
+            let hrvZ = zScore(current: hrv, baseline: hrvBase)
+            weightedSum += normalizeZScore(hrvZ) * Self.cogReadinessHRVWeight
+            totalWeight += Self.cogReadinessHRVWeight
+        }
 
         // Deep sleep z-score
         if let deep = currentDeep, let deepBase = deepBaseline {
@@ -511,15 +563,15 @@ final class BrainHealthScorer {
 
     /// Stress-Cognition Load: inverse of stress impact (higher = less stress = better for brain)
     private func computeStressCognitionLoad(
-        currentHRV: Double, hrvBaseline: (mean: Double, sd: Double),
+        currentHRV: Double?, hrvBaseline: (mean: Double, sd: Double)?,
         currentRHR: Double?, rhrBaseline: (mean: Double, sd: Double)?
     ) -> Double {
         var stressImpact = 0.0
         var components = 0
 
         // HRV below baseline = higher stress impact
-        if hrvBaseline.mean > 0 {
-            let hrvDrop = max(0, (hrvBaseline.mean - currentHRV) / hrvBaseline.mean)
+        if let hrv = currentHRV, let hrvBase = hrvBaseline, hrvBase.mean > 0 {
+            let hrvDrop = max(0, (hrvBase.mean - hrv) / hrvBase.mean)
             // Scale: 0% drop = 0 impact, hrvDropMaxImpact (e.g. 30%) drop = 100 impact
             stressImpact += min(Self.subscoreScale, hrvDrop / Self.hrvDropMaxImpact * Self.subscoreScale)
             components += 1
@@ -665,15 +717,17 @@ final class BrainHealthScorer {
 
     /// Compute confidence based on data availability
     private func computeConfidence(
+        hasHRV: Bool,
         hasDeep: Bool,
         hasREM: Bool,
         hasRHR: Bool,
         hasVO2: Bool,
         hasDuration: Bool,
-        hrvBaseline: (mean: Double, sd: Double)
+        hrvBaseline: (mean: Double, sd: Double)?
     ) -> Double {
-        // HRV is mandatory and provides base confidence
-        var confidence = Self.confidenceHRVBase
+        // HRV is the strongest input, so its absence starts the score lower
+        // rather than hiding it.
+        var confidence = hasHRV ? Self.confidenceHRVBase : Self.confidenceNoHRVBase
 
         // Each additional signal adds confidence
         if hasDeep { confidence += Self.confidenceDeepBonus }
@@ -683,7 +737,7 @@ final class BrainHealthScorer {
         if hasDuration { confidence += Self.confidenceDurationBonus }
 
         // Baseline stability bonus
-        if hrvBaseline.mean > 0 {
+        if let hrvBaseline, hrvBaseline.mean > 0 {
             let cv = hrvBaseline.sd / hrvBaseline.mean
             let stabilityBonus = max(0, min(
                 Self.confidenceStabilityBonusCap,
@@ -699,7 +753,7 @@ final class BrainHealthScorer {
 
     private func buildTopFactors(
         circadianAlignment: Double,
-        currentHRV: Double, hrvBaseline: (mean: Double, sd: Double),
+        currentHRV: Double?, hrvBaseline: (mean: Double, sd: Double)?,
         currentREM: Double?, remBaseline: (mean: Double, sd: Double)?,
         currentDeep: Double?, deepBaseline: (mean: Double, sd: Double)?,
         currentRHR: Double?, rhrBaseline: (mean: Double, sd: Double)?
@@ -707,16 +761,18 @@ final class BrainHealthScorer {
         var factors: [(label: String, impact: String, isPositive: Bool, magnitude: Double)] = []
 
         // HRV factor
-        let hrvPct = (currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1) * 100
-        if abs(hrvPct) > Self.factorPercentThreshold {
-            let isPositive = hrvPct > 0
-            let direction = isPositive ? Copy.BrainHealth.directionAbove : Copy.BrainHealth.directionBelow
-            factors.append((
-                label: Copy.BrainHealth.factorHRV,
-                impact: Copy.BrainHealth.percentAboveBelowBaseline(Int(abs(hrvPct)), direction: direction),
-                isPositive: isPositive,
-                magnitude: abs(hrvPct)
-            ))
+        if let hrv = currentHRV, let hrvBase = hrvBaseline {
+            let hrvPct = (hrv - hrvBase.mean) / max(hrvBase.mean, 1) * 100
+            if abs(hrvPct) > Self.factorPercentThreshold {
+                let isPositive = hrvPct > 0
+                let direction = isPositive ? Copy.BrainHealth.directionAbove : Copy.BrainHealth.directionBelow
+                factors.append((
+                    label: Copy.BrainHealth.factorHRV,
+                    impact: Copy.BrainHealth.percentAboveBelowBaseline(Int(abs(hrvPct)), direction: direction),
+                    isPositive: isPositive,
+                    magnitude: abs(hrvPct)
+                ))
+            }
         }
 
         // REM factor
@@ -791,11 +847,17 @@ final class BrainHealthScorer {
 
     private func buildHeadline(
         state: BrainHealthState,
-        currentHRV: Double, hrvBaseline: (mean: Double, sd: Double),
+        currentHRV: Double?, hrvBaseline: (mean: Double, sd: Double)?,
         currentREM: Double?, remBaseline: (mean: Double, sd: Double)?,
         currentDeep: Double?, deepBaseline: (mean: Double, sd: Double)?
     ) -> String {
-        let hrvAbove = currentHRV > hrvBaseline.mean * Self.headlineHRVAboveMultiplier
+        // No HRV reading means no HRV claim: every headline below then falls
+        // through to its sleep or default wording rather than asserting a
+        // measurement that was never taken.
+        let hrvAbove: Bool = {
+            guard let hrv = currentHRV, let base = hrvBaseline else { return false }
+            return hrv > base.mean * Self.headlineHRVAboveMultiplier
+        }()
         let remAbove: Bool = {
             guard let rem = currentREM, let base = remBaseline else { return false }
             return rem > base.mean * Self.headlineSleepAboveMultiplier
@@ -834,7 +896,10 @@ final class BrainHealthScorer {
             }
 
         case .foggy:
-            let hrvBelow = currentHRV < hrvBaseline.mean * Self.headlineHRVBelowMultiplier
+            let hrvBelow: Bool = {
+                guard let hrv = currentHRV, let base = hrvBaseline else { return false }
+                return hrv < base.mean * Self.headlineHRVBelowMultiplier
+            }()
             let remBelow: Bool = {
                 guard let rem = currentREM, let base = remBaseline else { return false }
                 return rem < base.mean * Self.headlineREMBelowMultiplier
@@ -854,7 +919,7 @@ final class BrainHealthScorer {
     /// Build the last 14 days of daily brain health scores
     private func buildWeeklyHistory(
         allSeries: [HealthMetric: MetricTimeSeries],
-        hrvSeries: MetricTimeSeries
+        hrvSeries: MetricTimeSeries?
     ) {
         let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
@@ -862,7 +927,7 @@ final class BrainHealthScorer {
         let lookbackDays = historyDays + Self.baselineWindowDays
 
         // Build per-day lookups
-        let hrvByDay = buildDailyLookup(hrvSeries.samples(lastDays: lookbackDays))
+        let hrvByDay = hrvSeries.map { buildDailyLookup($0.samples(lastDays: lookbackDays)) } ?? [:]
         let deepByDay = allSeries[.sleepDeep].map { buildDailyLookup($0.samples(lastDays: lookbackDays)) } ?? [:]
         let remByDay = allSeries[.sleepREM].map { buildDailyLookup($0.samples(lastDays: lookbackDays)) } ?? [:]
         let durationByDay = allSeries[.sleepDuration].map { buildDailyLookup($0.samples(lastDays: lookbackDays)) } ?? [:]
@@ -874,17 +939,20 @@ final class BrainHealthScorer {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
             let dayStart = calendar.startOfDay(for: date)
 
-            // Need at least HRV for this day
-            guard let dayHRV = hrvByDay[dayStart] else { continue }
-
             // Trailing baselines
             let hrvBase = trailingBaseline(from: hrvByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
-            guard let hrvB = hrvBase, hrvB.mean > 0 else { continue }
-
             let deepBase = trailingBaseline(from: deepByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
             let remBase = trailingBaseline(from: remByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
             let durBase = trailingBaseline(from: durationByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
             let rhrBase = trailingBaseline(from: rhrByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
+
+            // A day needs one baselined reading of its own, HRV or sleep duration.
+            // Without that every subscale would return its neutral default and the
+            // chart would draw a flat 50 that no measurement stands behind.
+            let dayHRV: Double? = (hrvBase?.mean ?? 0) > 0 ? hrvByDay[dayStart] : nil
+            let hrvB: (mean: Double, sd: Double)? = dayHRV == nil ? nil : hrvBase
+            let hasSleepDay = durationByDay[dayStart] != nil && durBase != nil
+            guard dayHRV != nil || hasSleepDay else { continue }
 
             // Compute subscores for this day
             let cogReady = computeCognitiveReadiness(

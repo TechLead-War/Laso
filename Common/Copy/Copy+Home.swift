@@ -447,13 +447,17 @@ extension Copy {
 
             // Concierge-style home card
             static var caption: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data_caption", default: "CONCIERGE") }
-            static var conciergePrompts: [String] { RemoteConfigManager.shared.copyArray("copy_home_ask_your_data_concierge_prompts", default: ["Ask me how to spend today well.", "How is my heart calm signal trending?", "What is affecting my sleep this week?", "Am I getting enough deep sleep?", "How does exercise shift my recovery?", "What changed in my body last week?", "How consistent is my sleep schedule?"]) }
+            // Every prompt has to resolve to a real intent in
+            // HealthDataQueryEngine. "Ask me how to spend today well" and "What
+            // changed in my body last week" matched no metric and no pattern, so
+            // tapping them returned an unrelated answer.
+            static var conciergePrompts: [String] { RemoteConfigManager.shared.copyArray("copy_home_ask_your_data_concierge_prompts", default: ["Tell me how to make today a great day.", "How is my heart calm signal trending?", "What is affecting my sleep this week?", "Am I getting enough deep sleep?", "Does my exercise affect my recovery?", "What looks unusual in my data right now?", "How consistent is my sleep schedule?"]) }
 
             static func confidence(_ percent: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_home_ask_your_data_confidence", default: "%d%% confidence"), percent)
             }
 
-            static var suggestedQuestions: [String] { RemoteConfigManager.shared.copyArray("copy_home_suggested_questions", default: ["How is my sleep this week?", "What affects my heart calm signal the most?", "Am I getting enough deep sleep?", "How does exercise affect my recovery?", "What is my resting heart rate trend?", "How consistent is my sleep schedule?"]) }
+            static var suggestedQuestions: [String] { RemoteConfigManager.shared.copyArray("copy_home_suggested_questions", default: ["How is my sleep trending this week?", "What affects my heart calm signal the most?", "Am I getting enough deep sleep?", "How does exercise affect my recovery?", "What is my resting heart rate trend?", "How consistent is my sleep schedule?"]) }
 
             /// Answer when the user asks about a score the app has not computed.
             static var noScoreYet: String { RemoteConfigManager.shared.copyString("copy_home_ask_your_data_no_score_yet", default: "I do not have enough of your data to work out a health score yet. Keep your health data syncing and I will explain the score as soon as there is one.") }

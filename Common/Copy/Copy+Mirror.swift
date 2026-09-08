@@ -14,6 +14,22 @@ extension Copy {
             String(format: RemoteConfigManager.shared.copyString("copy_mirror_streak_days", default: "%d day streak"), days)
         }
 
+        // MARK: - Home capture card
+
+        // The permanent Home door into capture. Stated as the plain thing the
+        // user gets, never as a streak mechanic, so it still reads honestly on
+        // the day someone opens the app having missed a week.
+        static var homeCardTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_title", default: "Take today's photo") }
+        static var homeCardDoneTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_done_title", default: "Today is on the record") }
+        static var homeCardSubtitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_subtitle", default: "Ten seconds a day. In a month you can see the change.") }
+        static var homeCardAction: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_action", default: "Capture") }
+
+        // The nav bar camera. Screen reader only, so it names the destination
+        // rather than repeating the card's pitch.
+        static var toolbarLabel: String { RemoteConfigManager.shared.copyString("copy_mirror_toolbar_label", default: "Take today's photo") }
+        static var toolbarDoneLabel: String { RemoteConfigManager.shared.copyString("copy_mirror_toolbar_done_label", default: "Retake today's photo") }
+        static var toolbarHint: String { RemoteConfigManager.shared.copyString("copy_mirror_toolbar_hint", default: "Opens the camera for your daily photo") }
+
         // MARK: - First run explainer
 
         static var explainerTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_explainer_title", default: "Your face stays on your phone") }
@@ -151,7 +167,7 @@ extension Copy {
         static var settingsDeleteConfirmTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_confirm_title", default: "Delete all Daily Mirror photos?") }
         static var settingsDeleteAction: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_delete_action", default: "Delete all") }
         static var settingsFooter: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_footer", default: "Deleting is immediate and permanent. Copies you already saved to your Photos app stay there.") }
-        static var settingsEmpty: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_empty", default: "No photos yet. Capture your first one from the evening check-in.") }
+        static var settingsEmpty: String { RemoteConfigManager.shared.copyString("copy_mirror_settings_empty", default: "No photos yet. Take your first one to start your story.") }
 
         // MARK: - Templates: names and groups
 

@@ -163,15 +163,25 @@ extension LiveViewModel {
         var lastNightREMSleep: TimeInterval = 0
         var lastNightCoreSleep: TimeInterval = 0
         var lastNightAwakeTime: TimeInterval = 0
+        /// Kept apart from `lastNightSleepDuration` so scoring never reads it.
+        /// Time in bed is the only signal an iPhone-only or third-party sleep
+        /// source gives, and the tile would otherwise be missing for that cohort.
+        var lastNightInBedDuration: TimeInterval = 0
 
-        var hasSleepData: Bool { lastNightSleepDuration > 0 }
+        var hasSleepData: Bool { tileDuration > 0 }
+
+        /// What the sleep tile shows. Falls back to time in bed only when no
+        /// source recorded an asleep stage.
+        var tileDuration: TimeInterval {
+            lastNightSleepDuration > 0 ? lastNightSleepDuration : lastNightInBedDuration
+        }
 
         var hasSleepStageBreakdown: Bool {
             lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
         }
 
         var sleepQualityLabel: String {
-            let hours = lastNightSleepDuration / 3600
+            let hours = tileDuration / 3600
             if hours >= 7.5 { return "Great" }
             if hours >= 6.5 { return "Good" }
             if hours >= 5.5 { return "Fair" }
@@ -184,6 +194,7 @@ extension LiveViewModel {
             lastNightREMSleep = summary.remSleep
             lastNightCoreSleep = summary.coreSleep
             lastNightAwakeTime = summary.awakeTime
+            lastNightInBedDuration = summary.inBedDuration
         }
     }
 

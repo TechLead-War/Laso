@@ -18,6 +18,7 @@ struct MirrorGalleryView: View {
     private let store = MirrorPhotoStore.shared
     @State private var viewerDay: Day?
     @State private var showShare = false
+    @State private var showCapture = false
 
     /// Adaptive so the wall is four across on a Pro Max and three on an SE,
     /// instead of a fixed count that leaves a gutter on one of them.
@@ -73,9 +74,25 @@ struct MirrorGalleryView: View {
                     .accessibilityIdentifier("share.entry")
                 }
             }
+
+            // The archive is where the wish to keep the run going is strongest,
+            // so today's capture starts here instead of sending the user back
+            // to Home. Hidden without a camera, matching JournalEntryView.
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { startCapture() } label: {
+                        Image(systemName: "camera.fill")
+                    }
+                    .accessibilityLabel(Copy.Mirror.journalCardCTA)
+                    .accessibilityIdentifier("mirror.captureEntry")
+                }
+            }
         }
         .sheet(isPresented: $showShare) {
             ShareWinSheet(templates: mirrorTemplates)
+        }
+        .fullScreenCover(isPresented: $showCapture) {
+            MirrorCaptureSheet()
         }
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.mirrorGallery) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.mirrorGallery) }
@@ -133,6 +150,16 @@ struct MirrorGalleryView: View {
                     .shadow(color: .black.opacity(0.6), radius: 3, y: 1)
                     .padding(DS.space2)
             }
+    }
+
+    private func startCapture() {
+        AppAnalytics.shared.trackBlockTap(
+            title: "Capture today's you",
+            type: .mirrorCaptureStarted,
+            screen: .mirrorGallery,
+            metadata: ["source": "gallery_toolbar", "is_retake": store.hasPhoto(on: .now)]
+        )
+        showCapture = true
     }
 
     private func open(_ day: Day) {

@@ -21,10 +21,13 @@ struct JournalEntryView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    // Leads the sheet because the only door into this screen is
+                    // the Home camera button, which promises a photo. Under the
+                    // nine-tile grid the card sat below the fold on an SE.
+                    mirrorCard
+
                     // Category picker grid
                     categoryGrid
-
-                    mirrorCard
 
                     // Value input (shown after category selection)
                     if let category = selectedCategory {
@@ -196,11 +199,7 @@ struct JournalEntryView: View {
                         .foregroundStyle(capturedToday ? AppColour.success : AppColour.textTertiary)
                 }
                 .padding(DS.cardPadding)
-                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.cardRadius)
-                        .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
-                )
+                .cardStyle(tint: AppColour.primary)
             }
             .buttonStyle(.dsPress)
             .accessibilityLabel(capturedToday ? Copy.Mirror.journalCardDone : Copy.Mirror.journalCardCTA)

@@ -314,6 +314,16 @@ extension Copy {
         // MARK: - Health Data Query Engine
 
         enum HealthDataQuery {
+            /// Answer templates resolve through the live copy override layer, so a
+            /// dropped or reordered %@ ships to users without a build and silently
+            /// prints a value under the wrong label. A template whose placeholder
+            /// count does not match the arguments falls back to the baked-in
+            /// English default rather than formatting garbage.
+            private static func template(_ key: String, default fallback: String, placeholders: Int) -> String {
+                let remote = RemoteConfigManager.shared.copyString(key, default: fallback)
+                return remote.components(separatedBy: "%@").count - 1 == placeholders ? remote : fallback
+            }
+
             // Question templates
             static func qHowTrending(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_how_trending", default: "How is my %@ trending?"), metric) }
             static func qWhatWasLabel(_ label: String, _ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_q_what_was_label", default: "What was my %@ %@?"), label, metric) }
@@ -325,7 +335,7 @@ extension Copy {
 
             // Trending answer
             static func trendingAnswer(action: String, metric: String, direction: String, period: String, avg: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_trending_answer", default: "%@ Your %@ is %@ over %@, averaging %@."), action, metric, direction, period, avg)
+                String(format: template("copy_analysis_health_data_query_trending_answer", default: "%@ Your %@ is %@ over %@, averaging %@.", placeholders: 5), action, metric, direction, period, avg)
             }
 
             // Comparison
@@ -338,7 +348,7 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_comparison_get_back", default: "Try to get back to your %@ routine. Your body did better then."), period)
             }
             static func comparisonAnswer(action: String, metric: String, periodA: String, verdict: String, periodB: String, avgA: String, avgB: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_comparison_answer", default: "%@ Your %@ %@ is %@ compared to %@ (%@ vs %@)."), action, metric, periodA, verdict, periodB, avgA, avgB)
+                String(format: template("copy_analysis_health_data_query_comparison_answer", default: "%@ Your %@ %@ is %@ compared to %@ (%@ vs %@).", placeholders: 7), action, metric, periodA, verdict, periodB, avgA, avgB)
             }
 
             // Correlation
@@ -368,20 +378,20 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_forecast_need_more", default: "I need a bit more %@ data to make a prediction. Once I have a couple of weeks of history, I'll be able to forecast ahead for you."), metric)
             }
             static func forecastAnswer(action: String, metric: String, value: String, when: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_forecast_answer", default: "%@ I'm expecting your %@ to be around %@ %@, based on your patterns."), action, metric, value, when)
+                String(format: template("copy_analysis_health_data_query_forecast_answer", default: "%@ I'm expecting your %@ to be around %@ %@, based on your patterns.", placeholders: 4), action, metric, value, when)
             }
 
             // Anomaly
             static var anomalyAllNormal: String { RemoteConfigManager.shared.copyString("copy_analysis_anomaly_all_normal", default: "Everything looks within your normal ranges right now. No spikes, no dips. your body is humming along as expected.") }
             static func anomalyAnswer(action: String, metric: String, value: String, dir: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_anomaly_answer", default: "%@ Your %@ at %@ is noticeably %@ than your usual."), action, metric, value, dir)
+                String(format: template("copy_analysis_health_data_query_anomaly_answer", default: "%@ Your %@ at %@ is noticeably %@ than your usual.", placeholders: 4), action, metric, value, dir)
             }
 
             // Personal records
             static var prBestSuffix: String { RemoteConfigManager.shared.copyString("copy_analysis_pr_best_suffix", default: "That's a solid benchmark to work toward again.") }
             static var prWorstSuffix: String { RemoteConfigManager.shared.copyString("copy_analysis_pr_worst_suffix", default: "Everyone has off days. what matters is the overall trajectory.") }
             static func prAnswer(label: String, metric: String, value: String, dateStr: String, suffix: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_pr_answer", default: "Your %@ %@ on record was %@, recorded on %@. %@"), label, metric, value, dateStr, suffix)
+                String(format: template("copy_analysis_health_data_query_pr_answer", default: "Your %@ %@ on record was %@, recorded on %@. %@", placeholders: 5), label, metric, value, dateStr, suffix)
             }
 
             // Metric status
@@ -524,6 +534,11 @@ extension Copy {
             static var rqDoIHaveAnyPatterns: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_do_i_have_any_patterns", default: "Do I have any patterns?") }
             static var rqWhatShouldIFocusOn: String { RemoteConfigManager.shared.copyString("copy_analysis_rq_what_should_i_focus_on", default: "What should I focus on?") }
             static func rqAnythingUnusualInMetric(_ metric: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_analysis_rq_anything_unusual_in_metric", default: "Anything unusual in my %@?"), metric) }
+
+            // Question not understood. Said plainly, because the alternative was
+            // handing back an unrelated insight as if it answered the question.
+            static var notUnderstood: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_not_understood", default: "I did not understand that one. I can tell you how a metric is doing, how it is trending, how two periods compare, what affects it, what looks unusual, and what to focus on today. Try naming a metric, like your sleep, steps, resting heart rate or heart calm signal.") }
+            static var notUnderstoodNoData: String { RemoteConfigManager.shared.copyString("copy_analysis_health_data_query_not_understood_no_data", default: "I did not understand that one, and I do not have any health data yet either. Connect your Apple Watch or allow Health access, then ask me about your sleep, steps or heart rate.") }
         }
 
         // MARK: - Rules Engine Helpers

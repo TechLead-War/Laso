@@ -144,10 +144,16 @@ struct AskYourDataView: View {
 
             // Confidence + feedback
             HStack(spacing: DS.space1) {
-                Image(systemName: "checkmark.seal")
-                    .font(DS.Typography.footnote)
-                Text(Copy.Home.AskYourData.confidence(Int(result.confidence * 100)))
-                    .font(DS.Typography.footnote)
+                // A refusal reports zero confidence. Sealing "0% confidence" onto
+                // "I did not understand that one" reads as a measured verdict
+                // about the user's health rather than about the question, so the
+                // badge is left off entirely on that path.
+                if result.confidence > 0 {
+                    Image(systemName: "checkmark.seal")
+                        .font(DS.Typography.footnote)
+                    Text(Copy.Home.AskYourData.confidence(Int(result.confidence * 100)))
+                        .font(DS.Typography.footnote)
+                }
 
                 Spacer()
 

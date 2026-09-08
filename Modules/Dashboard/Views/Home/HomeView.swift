@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var showScoreGuide = false
     @State private var showJournalEntry = false
     @State private var showMirrorMoment = false
+    @State private var showMirrorCapture = false
     @State private var showRecoveryInfo = false
     @State private var actionDoneToday = false
     @State private var actionReminderSet = false
@@ -73,35 +74,59 @@ struct HomeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                // The capture card sits six sections down the scroll, which is
+                // past two full screens, so on first open there is nothing about
+                // the Daily Mirror visible at all. This is the door that is
+                // always on screen. Hidden without a camera, matching the card.
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    let capturedToday = MirrorPhotoStore.shared.hasPhoto(on: .now)
+                    Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Capture today's you",
+                            type: .mirrorCaptureStarted,
+                            screen: .home,
+                            metadata: ["source": "home_toolbar", "is_retake": capturedToday]
+                        )
+                        showMirrorCapture = true
+                    } label: {
+                        Image(systemName: capturedToday ? "camera.fill" : "camera")
+                            .overlay(alignment: .topTrailing) {
+                                // During a prompt quiet period the sheet stays
+                                // away, so this passive dot is the only reminder
+                                // left until today is captured. Reading
+                                // `revision` subscribes this body to the
+                                // manager's state.
+                                if MirrorMomentManager.shared.revision >= 0,
+                                   MirrorMomentManager.shared.showsQuietBadge() {
+                                    Circle()
+                                        .fill(AppColour.primary)
+                                        .frame(width: 7, height: 7)
+                                        .offset(x: 3, y: -3)
+                                }
+                            }
+                    }
+                    .accessibilityLabel(capturedToday ? Copy.Mirror.toolbarDoneLabel : Copy.Mirror.toolbarLabel)
+                    .accessibilityHint(Copy.Mirror.toolbarHint)
+                    .accessibilityIdentifier("home.mirrorCaptureButton")
+                }
+
                 // The journal check-in previously had no visible entry point at
                 // all: it opened only from the evening notification deep link.
-                // The Daily Mirror capture lives inside it, so it needs a door
-                // that exists every day, not only when a notification lands.
                 Button {
                     AppAnalytics.shared.trackBlockTap(
                         title: "Open journal check-in",
-                        type: .mirrorCaptureStarted,
+                        type: .smartAction,
                         screen: .home,
-                        metadata: ["source": "home_toolbar"]
+                        metadata: ["source": "home_toolbar", "destination": "journal_entry"]
                     )
                     showJournalEntry = true
                 } label: {
-                    Image(systemName: "camera")
-                        .overlay(alignment: .topTrailing) {
-                            // During a prompt quiet period the sheet stays
-                            // away; this passive dot is the only reminder
-                            // until today is captured. Reading `revision`
-                            // subscribes this body to the manager's state.
-                            if MirrorMomentManager.shared.revision >= 0,
-                               MirrorMomentManager.shared.showsQuietBadge() {
-                                Circle()
-                                    .fill(AppColour.primary)
-                                    .frame(width: 7, height: 7)
-                                    .offset(x: 3, y: -3)
-                            }
-                        }
+                    // No mirror badge here any more. The dot means "today's photo
+                    // is still missing", and it now sits on the camera that
+                    // takes it rather than on the button that opens the journal.
+                    Image(systemName: "square.and.pencil")
                 }
-                .accessibilityLabel(Copy.Mirror.journalCardCTA)
+                .accessibilityLabel(Copy.Journal.logEntryTitle)
                 .accessibilityIdentifier("home.journalEntryButton")
 
                 Button {
@@ -152,6 +177,11 @@ struct HomeView: View {
         .sheet(isPresented: $showMirrorMoment) {
             MirrorMomentSheet()
         }
+        // fullScreenCover, not a sheet: the camera owns the screen, and this
+        // matches how both existing capture entries present it.
+        .fullScreenCover(isPresented: $showMirrorCapture) {
+            MirrorCaptureSheet()
+        }
         // The Mirror Moment fires only after the score has rendered (an
         // arrival overlay is the most-rejected prompt pattern), at most once
         // per calendar day, and never on top of another sheet.
@@ -186,6 +216,12 @@ struct HomeView: View {
             // the review card no longer loads itself (it renders only when a
             // review exists), so rebuild it whenever a refresh completes.
             weeklyReviewViewModel?.load()
+        }
+        // Without this the live sleep reading only reaches the view model on
+        // appear, on pull to refresh and on a completed refresh, so a night that
+        // lands while Home is open is stranded until one of those fires.
+        .onChange(of: liveViewModel.sleep.tileDuration) { _, _ in
+            rebuildMetricTilesFromLive()
         }
         .onAppear {
             ensureWeeklyReviewVM()
@@ -384,7 +420,7 @@ struct HomeView: View {
     private func rebuildMetricTilesFromLive() {
         viewModel.rebuildMetricTiles(
             hasSleepData: liveViewModel.sleep.hasSleepData,
-            lastNightSleepDuration: liveViewModel.sleep.lastNightSleepDuration,
+            lastNightSleepDuration: liveViewModel.sleep.tileDuration,
             sleepQualityLabel: liveViewModel.sleep.sleepQualityLabel
         )
     }
@@ -557,7 +593,12 @@ struct HomeView: View {
                     // mid-scroll rung.
                     .onAppear { scrollDepth.record(40) }
 
-                    // 6. When today actually happened, read against the user's
+                    // 6. Today's capture, next to the week it belongs to: the
+                    // strip above is the history of the score, this is the
+                    // visual record of the same week.
+                    mirrorCaptureCard
+
+                    // 7. When today actually happened, read against the user's
                     // own usual day. Hidden until the day has energy logged AND
                     // the morning has enough shape to compare against.
                     if Date.cal.component(.hour, from: Date()) >= Self.intradayMinimumHour,
@@ -568,7 +609,7 @@ struct HomeView: View {
                         )
                     }
 
-                    // 7. Sleep bank. The only running total on the screen, so
+                    // 8. Sleep bank. The only running total on the screen, so
                     // it sits right under the score it helps explain. Hidden
                     // entirely until the balance is big enough to act on.
                     if let bank = viewModel.sleepBank {
@@ -578,14 +619,14 @@ struct HomeView: View {
                                       nightsRecorded: bank.nightsRecorded)
                     }
 
-                    // 8. Watch face complication nudge. Only when a watch is paired
+                    // 9. Watch face complication nudge. Only when a watch is paired
                     // with the app installed and the complication is not on the face.
                     WatchComplicationCard(linkState: PhoneWatchSession.shared.linkState)
 
                     sectionHeader("VITALS")
                         .padding(.top, DS.space3)
 
-                    // 9. Metric Strip. horizontal scroll replacing 6 vertical cards
+                    // 10. Metric Strip. horizontal scroll replacing 6 vertical cards
                     MetricStripView(tiles: viewModel.cachedMetricTiles) { tile in
                         AppAnalytics.shared.trackBlockTap(
                             title: tile.label,
@@ -600,7 +641,7 @@ struct HomeView: View {
 
                     // ── Below the fold ──
 
-                    // 10. Weekly Review. Header and card render together only
+                    // 11. Weekly Review. Header and card render together only
                     // when a review exists, so a new user never sees a heading
                     // with nothing under it.
                     if let weeklyReviewViewModel, weeklyReviewViewModel.review != nil {
@@ -927,6 +968,78 @@ struct HomeView: View {
         }
         .onAppear {
             actionDoneToday = DailyActionCompletion.isDoneToday
+        }
+    }
+
+    // MARK: - Daily Mirror Capture Card
+
+    /// The permanent door into Daily Mirror capture. Deliberately not gated on
+    /// MirrorMomentManager: that prompt is a once-a-day nudge, this is the
+    /// affordance that has to be there every time the user goes looking for it.
+    /// Reading `hasPhoto` and `currentStreak` in the body is what subscribes this
+    /// view to the store, so the card flips to its done state on its own the
+    /// moment the capture sheet saves.
+    @ViewBuilder
+    private var mirrorCaptureCard: some View {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let store = MirrorPhotoStore.shared
+            let capturedToday = store.hasPhoto(on: .now)
+
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Capture today's you",
+                    type: .mirrorCaptureStarted,
+                    screen: .home,
+                    metadata: ["source": "home_card", "is_retake": capturedToday]
+                )
+                showMirrorCapture = true
+            } label: {
+                HStack(spacing: DS.space3) {
+                    if capturedToday, let frame = MirrorPhotoFrame.forStoredDay(.now, thumbnail: true) {
+                        frame
+                            .frame(width: DS.iconSize, height: DS.iconSize)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.iconRadius))
+                    } else {
+                        Image(systemName: "camera.fill")
+                            .font(DS.Typography.mediumIcon)
+                            .foregroundStyle(AppColour.primary)
+                            .frame(width: DS.iconSize, height: DS.iconSize)
+                    }
+
+                    VStack(alignment: .leading, spacing: DS.space1) {
+                        Text(capturedToday ? Copy.Mirror.homeCardDoneTitle : Copy.Mirror.homeCardTitle)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
+                        Text(store.currentStreak > 0
+                             ? Copy.Mirror.streakDays(store.currentStreak)
+                             : Copy.Mirror.homeCardSubtitle)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if capturedToday {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(AppColour.success)
+                    } else {
+                        Text(Copy.Mirror.homeCardAction)
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(AppColour.textOnAccent)
+                            .padding(.horizontal, DS.space3)
+                            .padding(.vertical, DS.space2)
+                            .background(AppColour.primary, in: Capsule())
+                    }
+                }
+                .padding(DS.cardPadding)
+                .cardStyle(tint: AppColour.primary)
+            }
+            .buttonStyle(.dsPress)
+            .padding(.horizontal, DS.screenPadding)
+            .accessibilityLabel(capturedToday ? Copy.Mirror.homeCardDoneTitle : Copy.Mirror.homeCardTitle)
+            .accessibilityHint(Copy.Mirror.homeCardSubtitle)
+            .accessibilityIdentifier("home.mirrorCaptureCard")
         }
     }
 
@@ -1285,7 +1398,7 @@ struct HomeView: View {
     private func presentMirrorMomentIfDue() {
         guard !viewModel.ui.showDiscovery, !showJournalEntry, !showScoreGuide,
               !showSoftLockPaywall, !showRecoveryInfo, !showShareCard,
-              !showMirrorMoment else { return }
+              !showMirrorMoment, !showMirrorCapture else { return }
         let manager = MirrorMomentManager.shared
         guard manager.shouldShow(cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera)) else { return }
         // The sheet stamps the day itself in onAppear: stamping here would
