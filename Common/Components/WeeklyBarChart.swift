@@ -19,6 +19,10 @@ struct WeeklyBarChart<Point: Identifiable>: View {
     var referenceFraction: Double? = nil
     /// Short caption for that line, e.g. "Your average".
     var referenceLabel: String? = nil
+    /// Fires on every bar tap with the newly selected point, or nil when the tap
+    /// cleared the selection. The host logs it: this component is shared, so it
+    /// knows neither the screen nor the metric being plotted.
+    var onSelect: ((Point?) -> Void)? = nil
 
     @State private var selectedID: Point.ID?
 
@@ -114,8 +118,10 @@ struct WeeklyBarChart<Point: Identifiable>: View {
             guard tooltipLines != nil else { return }
             if selectedID == point.id {
                 selectedID = nil
+                onSelect?(nil)
             } else {
                 selectedID = point.id
+                onSelect?(point)
             }
         }
     }

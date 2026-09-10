@@ -22,7 +22,7 @@
     "breathwork_session_paused": "A breathwork session paused.",
     "breathwork_session_resumed": "A breathwork session resumed.",
     "breathwork_session_started": "A breathwork session started.",
-    "chart_interaction": "Chart touch/drag/scrub interaction.",
+    "chart_interaction": "One gesture on any chart: drag_start, drag_end, tap_select or tap_deselect.",
     "connectivity_recovered": "Network connectivity came back.",
     "core_action_completed": "A retention-predicting core action with lifetime totals.",
     "correlation_tapped": "A correlation between two metrics was explored.",

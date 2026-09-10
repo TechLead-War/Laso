@@ -104,9 +104,9 @@ enum BlockType: String {
     case correlationFilterChip = "correlation_filter_chip"
     case correlationsExpandAll = "correlations_expand_all"
 
-    // Chart. user taps
-    case chartTouch = "chart_touch"
-    case chartDrag = "chart_drag"
+    // A sleep history night expanding or collapsing. It is a list row, not a
+    // chart: every real chart sends chart_interaction instead.
+    case sleepHistoryRow = "sleep_history_row"
 
     // Data Sync
     case dataSyncEvent = "data_sync_event"
@@ -215,7 +215,6 @@ enum BlockType: String {
     // Explore sections
     case exploreCategoryRow = "explore_category_row"
     case exploreHealthStateLink = "explore_health_state_link"
-    case exploreTrendTimeframeChanged = "explore_trend_timeframe_changed"
 
     // Journal
     case journalCategorySelected = "journal_category_selected"
@@ -1368,6 +1367,12 @@ final class AppAnalytics {
         ])
     }
 
+    /// The one event every chart sends. `interactionType` is exactly one of
+    /// `drag_start`, `drag_end`, `tap_select`, `tap_deselect`; a fifth value would
+    /// split every chart funnel in two. `metric` is what the chart plots at that
+    /// moment and `period` is the range the user picked, not a chart-wide default.
+    /// Call `trackChartGesture` instead unless the milestone and the core action
+    /// have already been sent for this gesture.
     func trackChartInteraction(metric: String, interactionType: String, period: String, screen: AppFeature) {
         logEvent("chart_interaction", parameters: [
             "metric": metric,
@@ -1376,6 +1381,17 @@ final class AppAnalytics {
             "screen": screen.rawValue,
             "tab": session.currentTab
         ])
+    }
+
+    /// Single entry point for a chart gesture: the `chart_interaction` event plus
+    /// the activation milestone and the core action, so no chart can end up
+    /// sending only some of the three. `drag_end` closes a drag whose `drag_start`
+    /// already counted the engagement, so it sends the event alone.
+    func trackChartGesture(metric: String, interactionType: String, period: String, screen: AppFeature) {
+        trackChartInteraction(metric: metric, interactionType: interactionType, period: period, screen: screen)
+        guard interactionType != "drag_end" else { return }
+        trackActivationMilestone(.firstChartInteraction)
+        trackCoreAction(.interactedWithChart, screen: screen)
     }
 
     func trackPullToRefresh(screen: AppFeature) {

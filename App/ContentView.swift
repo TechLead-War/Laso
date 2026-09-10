@@ -798,6 +798,7 @@ struct ContentView: View {
                     date: entry.date,
                     actual: max(0, baseline - entry.deficit),
                     needed: baseline,
+                    hasData: entry.hasData,
                     bedtime: boundary?.bedtime,
                     wakeTime: boundary?.wakeTime,
                     coreHours: boundary?.coreHours,

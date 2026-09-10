@@ -80,7 +80,8 @@ struct VitalityTrendSection: View {
                         proxy: proxy,
                         history: scorer.history,
                         chronologicalAge: scorer.chronologicalAge,
-                        lineColor: historyLineColor
+                        lineColor: historyLineColor,
+                        periodDays: scorer.historySpanDays
                     )
                 }
 
@@ -185,6 +186,9 @@ private struct VitalityTrendScrubLayer: View {
     let history: [(date: Date, age: Double)]
     let chronologicalAge: Int
     let lineColor: Color
+    /// Days the chart spans, for the analytics period. There is no range
+    /// picker here: the trend is however much history exists.
+    let periodDays: Int
 
     @State private var selectedTrendDate: Date?
     @State private var isScrubbing = false
@@ -194,10 +198,28 @@ private struct VitalityTrendScrubLayer: View {
     private static let scrubMinimumDrag: CGFloat = 8
 
     private var selectedTrendPoint: (date: Date, age: Double)? {
-        guard let selectedTrendDate, !history.isEmpty else { return nil }
-        return history.min(by: { lhs, rhs in
-            abs(lhs.date.timeIntervalSince(selectedTrendDate)) < abs(rhs.date.timeIntervalSince(selectedTrendDate))
+        guard let selectedTrendDate else { return nil }
+        return nearestPoint(to: selectedTrendDate)
+    }
+
+    /// Selection always resolves to a recorded point, never to the raw
+    /// interpolated touch date: the points sit at midnight, so two taps on one
+    /// marker can straddle a day boundary and never deselect.
+    private func nearestPoint(to date: Date) -> (date: Date, age: Double)? {
+        history.min(by: { lhs, rhs in
+            abs(lhs.date.timeIntervalSince(date)) < abs(rhs.date.timeIntervalSince(date))
         })
+    }
+
+    /// One place for this chart's identity so its four gesture events cannot
+    /// drift apart.
+    private func trackGesture(_ interactionType: String) {
+        AppAnalytics.shared.trackChartGesture(
+            metric: "vitalityAge",
+            interactionType: interactionType,
+            period: "\(periodDays)d",
+            screen: .vitalityDetail
+        )
     }
 
     var body: some View {
@@ -218,29 +240,32 @@ private struct VitalityTrendScrubLayer: View {
                                 // sideways, and keeps it for the rest of the drag.
                                 guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
                                 guard let plotRect else { return }
+                                if !isScrubbing { trackGesture("drag_start") }
                                 isScrubbing = true
                                 let x = value.location.x - plotRect.origin.x
                                 if let date: Date = proxy.value(atX: x) {
                                     selectedTrendDate = date
                                 }
                             }
-                            .onEnded { _ in isScrubbing = false }
+                            // Only a drag that was claimed as a scrub opened with
+                            // a drag_start, so only that one closes with a drag_end.
+                            .onEnded { _ in
+                                guard isScrubbing else { return }
+                                isScrubbing = false
+                                trackGesture("drag_end")
+                            }
                     )
                     .onTapGesture { location in
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Vitality Trend Chart",
-                            type: .chartTouch,
-                            screen: .vitalityDetail
-                        )
                         guard let plotRect else { return }
                         let x = location.x - plotRect.origin.x
-                        if let date: Date = proxy.value(atX: x) {
-                            if let current = selectedTrendDate,
-                               Date.cal.isDate(current, inSameDayAs: date) {
-                                selectedTrendDate = nil
-                            } else {
-                                selectedTrendDate = date
-                            }
+                        guard let date: Date = proxy.value(atX: x),
+                              let tapped = nearestPoint(to: date) else { return }
+                        if selectedTrendPoint?.date == tapped.date {
+                            selectedTrendDate = nil
+                            trackGesture("tap_deselect")
+                        } else {
+                            selectedTrendDate = tapped.date
+                            trackGesture("tap_select")
                         }
                     }
 

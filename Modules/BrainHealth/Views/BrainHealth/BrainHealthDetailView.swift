@@ -139,7 +139,16 @@ struct BrainHealthDetailView: View {
                             point.score.map { "\($0) \(Copy.BrainHealth.scaleSuffix)" } ?? Copy.Common.notEnoughData
                         ]
                     },
-                    tooltipColor: { chartBarColor(for: $0.score) }
+                    tooltipColor: { chartBarColor(for: $0.score) },
+                    // Fixed seven day window, no range picker on this screen.
+                    onSelect: { point in
+                        AppAnalytics.shared.trackChartGesture(
+                            metric: "brainHealthScore",
+                            interactionType: point == nil ? "tap_deselect" : "tap_select",
+                            period: "7d",
+                            screen: .brainHealth
+                        )
+                    }
                 )
 
                 HStack {

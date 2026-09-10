@@ -19,15 +19,18 @@ struct LiveHeartRateSection: View {
 
     var body: some View {
         Button {
+            // No reading means no bpm and no zone in the payload: a zero and a
+            // "Rest" zone would read as a real measurement of a resting heart.
+            var metadata: [String: Any] = ["metric_id": HealthMetric.heartRate.rawValue]
+            if let heartRate = vitals.currentHeartRate {
+                metadata["heart_rate"] = Int(heartRate)
+                metadata["zone"] = currentHeartRateZone.rawValue
+            }
             AppAnalytics.shared.trackBlockTap(
                 title: "Heart Rate Hero",
                 type: .heartRateHeroCard,
                 screen: .live,
-                metadata: [
-                    "metric_id": HealthMetric.heartRate.rawValue,
-                    "heart_rate": Int(vitals.currentHeartRate ?? 0),
-                    "zone": currentHeartRateZone.rawValue
-                ]
+                metadata: metadata
             )
             heartRateTracker.tapped(target: "heart_rate_hero")
         } label: {

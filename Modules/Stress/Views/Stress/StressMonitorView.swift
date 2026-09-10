@@ -305,7 +305,16 @@ struct StressMonitorView: View {
                     // "Your average 0" is the same empty claim the rest of this
                     // screen was cleaned up to avoid.
                     referenceFraction: showsWeeklyAverage ? StressScale.position(for: weeklyAverage) : nil,
-                    referenceLabel: showsWeeklyAverage ? Copy.StressMonitor.yourAverage(Int(weeklyAverage.rounded())) : nil
+                    referenceLabel: showsWeeklyAverage ? Copy.StressMonitor.yourAverage(Int(weeklyAverage.rounded())) : nil,
+                    // Fixed seven day window, no range picker on this screen.
+                    onSelect: { point in
+                        AppAnalytics.shared.trackChartGesture(
+                            metric: "stressScore",
+                            interactionType: point == nil ? "tap_deselect" : "tap_select",
+                            period: "7d",
+                            screen: .stressMonitor
+                        )
+                    }
                 )
 
                 // Scale labels

@@ -25,12 +25,13 @@ struct ExploreYourTrendsSection: View {
             .accessibilityHint(Copy.Explore.switchesBetween7Day30DayHint)
             .padding(.horizontal, DS.screenPadding)
             .onChange(of: trendTimeframe) { oldValue, newValue in
-                AppAnalytics.shared.trackBlockTap(
-                    title: "\(newValue)D",
-                    type: .exploreTrendTimeframeChanged,
+                AppAnalytics.shared.trackTimeRangeChanged(
                     screen: .explore,
-                    metadata: ["from_days": oldValue, "to_days": newValue]
+                    context: "your_trends",
+                    fromDays: oldValue,
+                    toDays: newValue
                 )
+                AppAnalytics.shared.trackCoreAction(.changedTimeRange, screen: .explore)
             }
 
             ForEach(trendMetrics.prefix(8)) { item in

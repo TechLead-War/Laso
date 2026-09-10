@@ -541,10 +541,28 @@ private struct StrainHistoryChart: View {
     private static let scrubMinimumDrag: CGFloat = 8
 
     private var selectedHistoryPoint: DailyStrainPoint? {
-        guard let selectedHistoryDate, !weekHistory.isEmpty else { return nil }
-        return weekHistory.min(by: { lhs, rhs in
-            abs(lhs.date.timeIntervalSince(selectedHistoryDate)) < abs(rhs.date.timeIntervalSince(selectedHistoryDate))
+        guard let selectedHistoryDate else { return nil }
+        return nearestPoint(to: selectedHistoryDate)
+    }
+
+    /// Selection always resolves to a recorded day, never to the raw interpolated
+    /// touch date: the points sit at midnight, so two taps on one marker can
+    /// straddle a day boundary and never deselect.
+    private func nearestPoint(to date: Date) -> DailyStrainPoint? {
+        weekHistory.min(by: { lhs, rhs in
+            abs(lhs.date.timeIntervalSince(date)) < abs(rhs.date.timeIntervalSince(date))
         })
+    }
+
+    /// One place for this chart's identity so its four gesture events cannot
+    /// drift apart.
+    private func trackGesture(_ interactionType: String) {
+        AppAnalytics.shared.trackChartGesture(
+            metric: "strain",
+            interactionType: interactionType,
+            period: "\(weekHistory.count)d",
+            screen: .strainDetail
+        )
     }
 
     /// Days that actually recorded activity. Days with no data are excluded from
@@ -665,32 +683,35 @@ private struct StrainHistoryChart: View {
                                         // sideways. Once scrubbing it keeps the touch, however
                                         // the finger drifts.
                                         guard isScrubbing || abs(value.translation.width) > abs(value.translation.height) else { return }
-                                        isScrubbing = true
                                         guard let plotFrame = proxy.plotFrame else { return }
+                                        if !isScrubbing { trackGesture("drag_start") }
+                                        isScrubbing = true
                                         let origin = geometry[plotFrame].origin
                                         let x = value.location.x - origin.x
                                         if let date: Date = proxy.value(atX: x) {
                                             selectedHistoryDate = date
                                         }
                                     }
-                                    .onEnded { _ in isScrubbing = false }
+                                    // Only a drag that was claimed as a scrub opened with
+                                    // a drag_start, so only that one closes with a drag_end.
+                                    .onEnded { _ in
+                                        guard isScrubbing else { return }
+                                        isScrubbing = false
+                                        trackGesture("drag_end")
+                                    }
                             )
                             .onTapGesture { location in
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Strain History Chart",
-                                    type: .chartTouch,
-                                    screen: .strainDetail
-                                )
                                 guard let plotFrame = proxy.plotFrame else { return }
                                 let origin = geometry[plotFrame].origin
                                 let x = location.x - origin.x
-                                if let date: Date = proxy.value(atX: x) {
-                                    if let current = selectedHistoryDate,
-                                       Date.cal.isDate(current, inSameDayAs: date) {
-                                        selectedHistoryDate = nil
-                                    } else {
-                                        selectedHistoryDate = date
-                                    }
+                                guard let date: Date = proxy.value(atX: x),
+                                      let tapped = nearestPoint(to: date) else { return }
+                                if selectedHistoryPoint?.id == tapped.id {
+                                    selectedHistoryDate = nil
+                                    trackGesture("tap_deselect")
+                                } else {
+                                    selectedHistoryDate = tapped.date
+                                    trackGesture("tap_select")
                                 }
                             }
                     }

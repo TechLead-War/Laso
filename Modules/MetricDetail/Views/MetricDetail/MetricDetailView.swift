@@ -308,6 +308,7 @@ struct MetricDetailView: View {
             MetricChartView(
                 samples: viewModel.chartSamples,
                 metric: viewModel.metric,
+                periodDays: viewModel.selectedTimeRange,
                 baseline: viewModel.baseline?.mean,
                 verdict: latestVerdict,
                 trendLine: viewModel.trendLineSamples.isEmpty ? nil : viewModel.trendLineSamples,

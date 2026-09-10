@@ -43,6 +43,10 @@ struct SleepCoachView: View {
         let date: Date
         let actual: Double   // hours slept (asleep stages summed)
         let needed: Double   // hours needed
+        /// False when that night recorded nothing. `actual` then carries the
+        /// personal baseline, which is a stand-in and must never be reported as
+        /// a night slept.
+        let hasData: Bool
         let bedtime: Date?
         let wakeTime: Date?
         /// Per-stage breakdown — populated when HealthKit stage data is available.
@@ -60,6 +64,7 @@ struct SleepCoachView: View {
             date: Date,
             actual: Double,
             needed: Double,
+            hasData: Bool,
             bedtime: Date? = nil,
             wakeTime: Date? = nil,
             coreHours: Double? = nil,
@@ -71,6 +76,7 @@ struct SleepCoachView: View {
             self.date = date
             self.actual = actual
             self.needed = needed
+            self.hasData = hasData
             self.bedtime = bedtime
             self.wakeTime = wakeTime
             self.coreHours = coreHours
@@ -385,14 +391,16 @@ struct SleepCoachView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Button {
+                // Asleep hours, the number this row shows. A night with nothing
+                // recorded reports no hours at all rather than the baseline
+                // `actual` stands in with.
+                var metadata: [String: Any] = ["action": isExpanded ? "collapse" : "expand"]
+                if day.hasData { metadata["sleep_hours"] = day.actual }
                 AppAnalytics.shared.trackBlockTap(
                     title: "Sleep History Day",
-                    type: .chartTouch,
+                    type: .sleepHistoryRow,
                     screen: .sleepCoach,
-                    metadata: [
-                        "action": isExpanded ? "collapse" : "expand",
-                        "sleep_hours": day.bedToWakeHours
-                    ]
+                    metadata: metadata
                 )
                 withAnimation(.easeInOut(duration: 0.22)) {
                     expandedDayId = isExpanded ? nil : day.id

@@ -18,6 +18,7 @@ struct MetricChartView: View {
     init(
         samples: [MetricSample],
         metric: HealthMetric,
+        periodDays: Int,
         baseline: Double? = nil,
         verdict: MetricVerdict? = nil,
         trendLine: [MetricSample]? = nil,
@@ -31,7 +32,9 @@ struct MetricChartView: View {
         self.trendLine = trendLine
         self.forecastPoints = forecastPoints
         self.dataSpanDays = dataSpanDays
-        self.periodLabel = Self.makePeriodLabel(dataSpanDays: dataSpanDays)
+        // The event has to name the range the person selected. How much history
+        // came back inside that range is a different question.
+        self.periodLabel = "\(periodDays)d"
         self.xAxisStride = Self.makeXAxisStride(dataSpanDays: dataSpanDays)
         self.xAxisDateFormat = Self.makeXAxisDateFormat(dataSpanDays: dataSpanDays)
         self.yDomain = Self.makeYDomain(
@@ -221,14 +224,6 @@ struct MetricChartView: View {
         return max(1, Date.cal.dateComponents([.day], from: first, to: last).day ?? 7)
     }
 
-    private static func makePeriodLabel(dataSpanDays: Int) -> String {
-        if dataSpanDays <= 1 { return "daily" }
-        if dataSpanDays <= 7 { return "weekly" }
-        if dataSpanDays <= 31 { return "monthly" }
-        if dataSpanDays <= 93 { return "quarterly" }
-        return "yearly"
-    }
-
     private static func makeXAxisStride(dataSpanDays: Int) -> (component: Calendar.Component, count: Int) {
         switch dataSpanDays {
         case 0...10: return (.day, 2)
@@ -336,10 +331,15 @@ private struct MetricChartScrubLayer: View {
     /// under that to still feel instant without stealing a vertical page scroll.
     private static let scrubMinimumDrag: CGFloat = 8
 
-    /// Find the closest sample to the selected date
     private var selectedSample: MetricSample? {
-        guard let selectedDate, !samples.isEmpty else { return nil }
-        let insertionIndex = samples.firstIndex(onOrAfter: selectedDate)
+        guard let selectedDate else { return nil }
+        return nearestSample(to: selectedDate)
+    }
+
+    /// Find the closest sample to a scrubbed or tapped date
+    private func nearestSample(to date: Date) -> MetricSample? {
+        guard !samples.isEmpty else { return nil }
+        let insertionIndex = samples.firstIndex(onOrAfter: date)
         if insertionIndex <= 0 {
             return samples.first
         }
@@ -349,9 +349,21 @@ private struct MetricChartScrubLayer: View {
 
         let previous = samples[insertionIndex - 1]
         let next = samples[insertionIndex]
-        return abs(previous.date.timeIntervalSince(selectedDate)) <= abs(next.date.timeIntervalSince(selectedDate))
+        return abs(previous.date.timeIntervalSince(date)) <= abs(next.date.timeIntervalSince(date))
             ? previous
             : next
+    }
+
+    /// Every path goes through the shared helper so this chart cannot drift from
+    /// the others: it sends the event plus the activation milestone plus the core
+    /// action, and knows that `drag_end` must not count a second engagement.
+    private func track(_ interactionType: String) {
+        AppAnalytics.shared.trackChartGesture(
+            metric: metric.rawValue,
+            interactionType: interactionType,
+            period: periodLabel,
+            screen: .metricDetail
+        )
     }
 
     var body: some View {
@@ -370,14 +382,7 @@ private struct MetricChartScrubLayer: View {
                                 // Once scrubbing it keeps the touch, however the finger drifts.
                                 guard isDragging || abs(value.translation.width) > abs(value.translation.height) else { return }
                                 if !isDragging {
-                                    AppAnalytics.shared.trackChartInteraction(
-                                        metric: metric.rawValue,
-                                        interactionType: "drag_start",
-                                        period: periodLabel,
-                                        screen: .metricDetail
-                                    )
-                                    AppAnalytics.shared.trackActivationMilestone(.firstChartInteraction)
-                                    AppAnalytics.shared.trackCoreAction(.interactedWithChart, screen: .metricDetail)
+                                    track("drag_start")
                                 }
                                 isDragging = true
                                 guard let plotRect else { return }
@@ -391,35 +396,24 @@ private struct MetricChartScrubLayer: View {
                                 // drag_start, so it must not send a drag_end either.
                                 guard isDragging else { return }
                                 isDragging = false
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "drag_end",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
+                                track("drag_end")
                             }
                     )
                     .onTapGesture { location in
                         guard let plotRect else { return }
                         let locationX = location.x - plotRect.origin.x
-                        if let date: Date = proxy.value(atX: locationX) {
-                            if selectedDate == date {
-                                selectedDate = nil // Deselect on second tap
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "tap_deselect",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
-                            } else {
-                                selectedDate = date
-                                AppAnalytics.shared.trackChartInteraction(
-                                    metric: metric.rawValue,
-                                    interactionType: "tap_select",
-                                    period: periodLabel,
-                                    screen: .metricDetail
-                                )
-                            }
+                        // Compare the snapped points, never the raw touch dates: two taps
+                        // on the same marker interpolate to different instants, so a raw
+                        // comparison never sees the second tap as a deselect.
+                        guard let date: Date = proxy.value(atX: locationX),
+                              let tapped = nearestSample(to: date) else { return }
+                        if let current = selectedSample,
+                           Date.cal.isDate(current.date, inSameDayAs: tapped.date) {
+                            selectedDate = nil
+                            track("tap_deselect")
+                        } else {
+                            selectedDate = date
+                            track("tap_select")
                         }
                     }
 
@@ -506,6 +500,7 @@ private struct MetricChartScrubLayer: View {
     MetricChartView(
         samples: samples,
         metric: .restingHeartRate,
+        periodDays: 30,
         baseline: 65,
         verdict: MetricVerdict.make(metric: .restingHeartRate, value: 65, baseline: nil)
     )
