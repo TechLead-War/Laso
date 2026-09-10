@@ -249,7 +249,6 @@ extension LiveViewModel {
         /// Drives the range shown on the card instead of a bare number.
         var readinessUncertainty: Int?
         var isWearingWatch: Bool = true
-        var scoreLabel: String = "Recovery"
         /// Stays false until `computeReadinessScore` has had a chance to inspect
         /// `vitals.heartRateTimestamp`. Cold-launch flicker guard: without this,
         /// the first frame after init would render the loaded morning lock and

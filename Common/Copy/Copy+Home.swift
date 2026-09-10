@@ -470,7 +470,7 @@ extension Copy {
             // Ranges here must match `DS.optimalFloor` and `DS.fairFloor`. This
             // sheet used to print 80/50 while the ring graded at 67/45, so a 55
             // was amber on screen and "decent recovery" one tap away.
-            static var description: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_description", default: "Each morning your Readiness is locked in from last night's sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops. Take off the Apple Watch and the drop pauses, but your morning Readiness still stays on the screen.") }
+            static var description: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_description", default: "Each morning your Readiness is set from last night's sleep and your overnight heart rate data. It stays the same all day, because it describes the state your body woke up in. What you do today shows up in Strain, not here.") }
 
             // Score levels
             static var scoreLevels: String { RemoteConfigManager.shared.copyString("copy_home_recovery_info_score_levels", default: "Score levels") }
@@ -512,8 +512,8 @@ extension Copy {
             }
 
             // Refresh timing
-            static var whenItUpdatesTitle: String { RemoteConfigManager.shared.copyString("copy_home_when_it_updates_title", default: "When does it update?") }
-            static var whenItUpdatesBody: String { RemoteConfigManager.shared.copyString("copy_home_when_it_updates_body", default: "Your Recovery is set once each morning from last night's signals and stays as the day's anchor. The number on Home then drains live as you burn energy. If you take the watch off, the morning Recovery stays put. If you do not have a morning reading yet and the watch is off, the score is hidden until your next overnight wear.") }
+            static var whenItUpdatesTitle: String { RemoteConfigManager.shared.copyString("copy_home_recovery_when_it_updates_title", default: "When does it update?") }
+            static var whenItUpdatesBody: String { RemoteConfigManager.shared.copyString("copy_home_recovery_when_it_updates_body", default: "Once each morning, from last night's signals. It then stays put for the rest of the day. If you do not have a morning reading yet and the watch is off your wrist, the score is hidden until your next overnight wear.") }
         }
 
         // MARK: - Cards

@@ -238,10 +238,6 @@ enum RC {
     // `ReadinessScorerConfig` typed accessors.
     static let energyOnWristMaxAgeSeconds        = "energy_on_wrist_max_age_seconds"
     static let energyMorningLockFreshnessHours   = "energy_morning_lock_freshness_hours"
-    static let energyKcalPerStrainPoint          = "energy_kcal_per_strain_point"
-    static let energyMaxStrainDrain              = "energy_max_strain_drain"
-    static let energyFloor                       = "energy_floor"
-    static let energyLabelStrainThreshold        = "energy_label_strain_threshold"
     static let recoveryWeeklyTrendMinDays        = "recovery_weekly_trend_min_days"
     static let recoveryWeeklyTrendThresholdSDMultiplier = "recovery_weekly_trend_threshold_sd_multiplier"
 

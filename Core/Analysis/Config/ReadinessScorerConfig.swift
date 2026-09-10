@@ -123,19 +123,6 @@ enum ReadinessScorerConfig {
     /// without a fresh overnight reading the lock would silently report stale
     /// recovery as "this morning".
     static var morningLockFreshnessHours: Double  { rc.energyMorningLockFreshnessHours }
-    /// kcal of active energy that drains one Energy point. Tuning: 50 keeps a
-    /// hard 60-min run (~600 kcal) at roughly 12 points of drain so an 80
-    /// Recovery still ends the day above the 60 mid-band.
-    static var kcalPerStrainPoint: Double         { rc.energyKcalPerStrainPoint }
-    /// Cap on total strain drain so a single very heavy day cannot push Energy
-    /// to zero from a healthy morning anchor.
-    static var maxStrainDrain: Double             { rc.energyMaxStrainDrain }
-    /// Floor for live Energy so the ring never reads zero while the watch is
-    /// still streaming live data — zero would imply no signal at all.
-    static var energyFloor: Double                { rc.energyFloor }
-    /// Below this much strain drain, the ring still reads "Recovery" — the
-    /// number is essentially the morning anchor. Above it, switch to "Energy".
-    static var energyLabelStrainThreshold: Double { rc.energyLabelStrainThreshold }
     /// Minimum number of recent daily HRV averages needed before we will call
     /// the 7-day trend; below this the caption is hidden.
     static var weeklyTrendMinDays: Int            { rc.recoveryWeeklyTrendMinDays }

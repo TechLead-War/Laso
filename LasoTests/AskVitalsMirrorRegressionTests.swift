@@ -348,4 +348,35 @@ struct AskVitalsMirrorRegressionTests {
                 "the older route still resolves, so existing links keep working")
         #expect(Route.fromUITestIdentifier("notARoute") == nil)
     }
+
+    // MARK: - Readiness cadence
+
+    /// Readiness used to be a morning anchor minus a one-way drain from the
+    /// day's active calories, so a workout the app itself recommended pushed the
+    /// number down and could talk the user into resting. It is a daily figure
+    /// now: the day's effort belongs to Strain.
+    @MainActor
+    @Test func readinessHoldsItsMorningValueAllDay() {
+        let defaults = UserDefaults(suiteName: "readiness.cadence.test")!
+        defaults.removePersistentDomain(forName: "readiness.cadence.test")
+        let store = ReadinessStore(userDefaults: defaults)
+
+        store.saveMorningLock(78, for: Date())
+        let viewModel = LiveViewModel(healthKitManager: HealthKitManager(), readinessStore: store)
+
+        // A hard day's worth of active calories. Under the old model this drained
+        // the anchor by the calorie total divided by 50, capped at 60 points.
+        viewModel.activity.todayActiveCalories = 900
+        viewModel.vitals.heartRateTimestamp = Date()
+        viewModel.computeReadinessScore()
+
+        #expect(viewModel.recovery.readinessScore == 78,
+                "Readiness moved with the day's activity, got \(String(describing: viewModel.recovery.readinessScore))")
+
+        // Every surface reads one of these three, so they must agree.
+        #expect(store.loadDisplayedScore(for: Date()) == 78)
+        #expect(store.loadCachedScore() == 78)
+
+        defaults.removePersistentDomain(forName: "readiness.cadence.test")
+    }
 }

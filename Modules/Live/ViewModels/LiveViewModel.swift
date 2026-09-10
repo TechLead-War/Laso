@@ -896,71 +896,55 @@ final class LiveViewModel {
         healthStore.execute(query)
     }
 
-    // MARK: - Recovery → Live Energy
+    // MARK: - Recovery
 
-    /// Locks today's Recovery anchor each morning, then drains it through the
-    /// day from accumulated active calories. The single number on Home is:
-    /// • the morning Recovery lock when the watch is off-wrist,
-    /// • `max(energyFloor, lock - strainDrain)` rounded to Int when on-wrist,
-    /// • blank only when no lock exists today AND the watch is off.
+    /// Today's Recovery, locked once each morning and left alone.
+    ///
+    /// The number does not move through the day. It reports the state the body
+    /// woke up in, measured from last night's sleep and the overnight heart
+    /// signals, so same-day activity has nothing to say about it: a workout is
+    /// load, not a worse night. The day's effort lives in Strain, which is
+    /// computed from the same activity and has its own screen.
+    ///
+    /// Blank only when no lock exists today and the watch is off the wrist.
     func computeReadinessScore() {
         let now = Date()
         stampMorningStressIfNeeded(now: now)
         let hrAge = vitals.heartRateTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
+        recovery.isWearingWatch = hrAge <= ReadinessScorerConfig.onWristMaxAgeSeconds
 
-        if hrAge > ReadinessScorerConfig.onWristMaxAgeSeconds {
-            recovery.isWearingWatch = false
-            recovery.scoreLabel = "Recovery"
-            // On-wrist preserve: a morning lock is a legitimate snapshot from
-            // when the watch WAS on the wrist overnight; mid-day wrist removal
-            // does not invalidate it. Keep showing the anchor (no live drain
-            // because we have no current activity stream).
-            if let lock = readinessStore.loadMorningLock(for: now) {
-                publishRecoveryScore(lock, now: now)
+        // A morning lock is a legitimate snapshot from when the watch was on the
+        // wrist overnight, so taking the watch off mid-day does not invalidate
+        // it. Resolving also computes the lock the first time the gates pass.
+        if let lock = recovery.isWearingWatch
+            ? resolveMorningRecoveryLock(now: now)
+            : readinessStore.loadMorningLock(for: now) {
+            publishRecoveryScore(lock, now: now)
+            if !recovery.isWearingWatch {
                 recovery.readinessConfidence = readinessStore.loadMorningLockConfidence(for: now) ?? recovery.readinessConfidence
-            } else if recovery.hasCheckedOnWristOnce {
-                recovery.readinessScore = nil
-                recovery.readinessConfidence = nil
-                // Travels with the score it describes. Left behind, the card
-                // falls back to the Daily Health Score and prints last
-                // readiness reading's range around an unrelated number.
-                recovery.readinessUncertainty = nil
             }
-            // else: cold-launch flicker guard — the very first call after
-            // `init` may run before HR has streamed in. Leave whatever the
-            // initialiser loaded so the ring does not flash empty for a frame.
-            recovery.hasCheckedOnWristOnce = true
-            return
+        } else if !recovery.isWearingWatch, recovery.hasCheckedOnWristOnce {
+            recovery.readinessScore = nil
+            recovery.readinessConfidence = nil
+            // Travels with the score it describes. Left behind, the card
+            // falls back to the Daily Health Score and prints last
+            // readiness reading's range around an unrelated number.
+            recovery.readinessUncertainty = nil
         }
-
-        recovery.isWearingWatch = true
+        // A lock that has not been earned yet leaves whatever the last pass
+        // produced on screen. The very first call after `init` can also run
+        // before HR has streamed in, and blanking there flashes an empty ring.
         recovery.hasCheckedOnWristOnce = true
-
-        guard let lock = resolveMorningRecoveryLock(now: now) else {
-            // No lock yet today and the gates have not been met. Do not blank
-            // a previously displayed lock — `recovery.readinessScore` already
-            // holds whatever the last successful pass produced.
-            return
-        }
-
-        let strainDrain = computeStrainDrainSinceWake()
-        let liveEnergy = Int((max(ReadinessScorerConfig.energyFloor, Double(lock) - strainDrain)).rounded())
-        publishRecoveryScore(liveEnergy, now: now)
-        recovery.scoreLabel = strainDrain < ReadinessScorerConfig.energyLabelStrainThreshold ? "Recovery" : "Energy"
-        // Legacy widget compat: the existing widget reads `loadCachedScore`,
-        // so keep mirroring the live number there. The widget snapshot in
-        // `DashboardViewModel.writeWidgetSnapshots` independently prefers the
-        // morning lock for stability — this only feeds the legacy timeline.
-        readinessStore.saveCachedScore(liveEnergy)
     }
 
-    /// Sets the recovery number Home renders and persists that exact value for
-    /// today. Siri reads what was rendered, not the morning lock: the lock is
-    /// undrained, so from mid-morning the two surfaces quoted different numbers
-    /// for the same named thing.
+    /// Sets the recovery number Home renders and persists it for today. Home,
+    /// Siri, the widget, the watch and Mirror all read from here, so they quote
+    /// the same figure for the same named thing.
     private func publishRecoveryScore(_ score: Int, now: Date) {
         recovery.readinessScore = score
         readinessStore.saveDisplayedScore(score, for: now)
+        // The legacy widget timeline reads `loadCachedScore`.
+        readinessStore.saveCachedScore(score)
     }
 
     /// Stamps today's stress the first time the baselines behind it exist.
@@ -1031,11 +1015,6 @@ final class LiveViewModel {
     /// Strain drain in score-points since wake. HealthKit's `activeEnergyBurned`
     /// already includes any workout calories — adding `lastWorkoutCalories` on
     /// top would double-count and over-drain Energy after a workout.
-    private func computeStrainDrainSinceWake() -> Double {
-        let raw = activity.todayActiveCalories / ReadinessScorerConfig.kcalPerStrainPoint
-        return min(raw, ReadinessScorerConfig.maxStrainDrain)
-    }
-
     // MARK: - Last Night's Sleep Fetch
 
     func fetchLastNightSleep() {

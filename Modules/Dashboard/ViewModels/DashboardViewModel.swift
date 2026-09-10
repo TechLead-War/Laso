@@ -2629,14 +2629,11 @@ final class DashboardViewModel {
             updatedAt: Date()
         )
 
-        // Watch: send the number the Home hero card shows, not the widget's morning
-        // lock. Someone who glances at their wrist and then opens the app has to see
-        // the same value. `loadCachedScore` is the live score LiveViewModel mirrors
-        // for exactly this cross-surface use.
-        // Skipped entirely without a real score: `watchVerdictFacts` seeds the
-        // wrist's exercise ceiling from the score's recovery band, so a 0 would
-        // hand the watch a red-day ceiling derived from nothing.
-        if let watchScore = readinessStore.loadCachedScore() ?? overallScore?.score {
+        // The wrist shows the same morning lock the widget and Home do. Skipped
+        // entirely without a real score: `watchVerdictFacts` seeds the wrist's
+        // exercise ceiling from the score's recovery band, so a 0 would hand the
+        // watch a red-day ceiling derived from nothing.
+        if let watchScore = widgetScore {
             PhoneWatchSession.shared.push(
                 readinessScore: watchScore,
                 grade: grade,
