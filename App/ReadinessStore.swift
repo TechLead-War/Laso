@@ -32,7 +32,7 @@ final class ReadinessStore {
     // overnight HRV/RHR vs the user's 60-day baseline (Plews/Altini). The lock
     // is keyed by yyyy-MM-dd in `Date.cal` calendar/timezone so a cold launch
     // or refresh later in the day re-uses today's morning anchor instead of
-    // recomputing from drained mid-day signals.
+    // recomputing from mid-day signals that never described the night.
 
     /// `yyyy-MM-dd` formatted in `Date.cal` calendar/timezone, locale `en_US_POSIX`.
     /// Stable across cold launches (no formatter allocation per call thanks to
@@ -84,10 +84,9 @@ final class ReadinessStore {
         userDefaults.set(stress, forKey: key)
     }
 
-    /// The recovery number Home is currently rendering: the morning lock drained
-    /// by today's activity, or the bare lock while the watch is off the wrist.
-    /// Siri reads this instead of the lock so the same named thing cannot carry
-    /// two different numbers on two surfaces.
+    /// The recovery number Home is currently rendering, which is today's morning
+    /// lock. Siri reads this rather than the lock directly so the same named
+    /// thing cannot carry two different numbers on two surfaces.
     func loadDisplayedScore(for date: Date) -> Int? {
         let key = AppKeys.Readiness.displayedScorePrefix + dateKeySuffix(for: date)
         let score = userDefaults.integer(forKey: key)

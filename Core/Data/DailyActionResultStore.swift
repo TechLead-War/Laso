@@ -6,17 +6,17 @@ import Foundation
 /// home screen can say "you did X yesterday, here is what happened" — the proof
 /// the Next Up card already promises ("we check the result in tomorrow's score").
 ///
-/// Both sides of the comparison are morning locks on purpose. The number on
-/// Home is the lock minus the day's active-calorie drain, so recording that
-/// number in the evening and comparing it to an undrained morning lock would
-/// manufacture a gain out of nothing but the hour the user tapped done.
+/// Both sides of the comparison are morning locks on purpose: the delta has to
+/// be one night's move. A lock only exists once the overnight signals for that
+/// day have landed, so comparing anything else would measure the gap between two
+/// differently-derived numbers instead.
 enum DailyActionResultStore {
 
     struct Record: Codable {
         let doneDate: Date
         let actionTitle: String
         let actionIcon: String
-        /// Morning lock of the day the action was done, never the live drained score.
+        /// Morning lock of the day the action was done.
         let morningLockOnDoneDay: Int
     }
 
@@ -42,9 +42,8 @@ enum DailyActionResultStore {
     nonisolated(unsafe) private static let readinessStore = ReadinessStore()
 
     /// Records the action against today's morning lock. The baseline is read here
-    /// rather than passed in: a caller's live on-screen number drains through the
-    /// day, so it is not comparable to the morning lock it would be measured
-    /// against tomorrow, and a caller with no score at all handed over a zero.
+    /// rather than passed in so a caller with no score at all cannot hand over a
+    /// zero and turn "no reading" into a 0-to-70 gain tomorrow.
     static func save(actionTitle: String, actionIcon: String) {
         guard let lock = readinessStore.loadMorningLock(for: Date()) else {
             // No comparable baseline today, so tomorrow shows no result card at
@@ -94,8 +93,8 @@ enum DailyActionResultStore {
             if days > 2 { clear() }
             return nil
         }
-        // Wait for today's lock rather than falling back to the live number:
-        // later in the day that number is drained and would understate the move.
+        // Wait for today's lock: with no fresh overnight reading there is no
+        // second point to measure the move against.
         guard let todayLock = readinessStore.loadMorningLock(for: Date()) else { return nil }
         return Result(record: record, todayMorningLock: todayLock)
     }

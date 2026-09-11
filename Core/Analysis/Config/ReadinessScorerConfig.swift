@@ -113,11 +113,10 @@ enum ReadinessScorerConfig {
     static var stressDeviationAtCap: Double       { rc.readinessStressDeviationAtCap }
     static var stressChannelCap: Double           { rc.readinessStressChannelCap }
 
-    // MARK: - Live Energy
+    // MARK: - Recovery Lock
 
-    /// Heart rate older than this means the watch is currently off the wrist;
-    /// the live ring should drop the live label and (when no morning lock
-    /// exists) blank itself.
+    /// Heart rate older than this means the watch is currently off the wrist.
+    /// Today's lock still stands if one exists; with no lock the ring blanks.
     static var onWristMaxAgeSeconds: TimeInterval { rc.energyOnWristMaxAgeSeconds }
     /// HRV and RHR samples older than this cannot anchor today's morning lock;
     /// without a fresh overnight reading the lock would silently report stale

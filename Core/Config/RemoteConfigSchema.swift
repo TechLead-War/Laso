@@ -174,7 +174,7 @@ extension RemoteConfigManager {
         RC.weeklySummaryFireHour:             10 as NSNumber,
         RC.weeklySummaryFireMinute:           0  as NSNumber,
 
-        // Recovery → Live Energy.
+        // Recovery.
         RC.energyOnWristMaxAgeSeconds:                 600    as NSNumber,
         RC.energyMorningLockFreshnessHours:            12.0   as NSNumber,
         RC.recoveryWeeklyTrendMinDays:                 4      as NSNumber,
@@ -370,7 +370,7 @@ extension RemoteConfigManager {
     var weeklySummaryFireHour: Int             { int(forKey: RC.weeklySummaryFireHour) }
     var weeklySummaryFireMinute: Int           { int(forKey: RC.weeklySummaryFireMinute) }
 
-    // MARK: Recovery → Live Energy
+    // MARK: Recovery
 
     var energyOnWristMaxAgeSeconds: TimeInterval        { double(forKey: RC.energyOnWristMaxAgeSeconds) }
     var energyMorningLockFreshnessHours: Double         { double(forKey: RC.energyMorningLockFreshnessHours) }

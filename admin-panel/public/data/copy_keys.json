@@ -420,20 +420,14 @@
     "isArray": false
   },
   {
+    "key": "copy_analysis_analysis_clinical_glucose_vs_baseline",
+    "defaultValue": "Your usual is around %@ mg/dL.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_analysis_analysis_clinical_medical_disclaimer",
     "defaultValue": "This is for your information only and is not medical advice.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_analysis_clinical_projected_to_reach",
-    "defaultValue": "At this rate, this could reach %@ levels in about %d days.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_analysis_clinical_projected_to_reach_range",
-    "defaultValue": "At this rate, this could reach the %@ range in about %d days.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -444,8 +438,20 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_analysis_clinical_pulse_pressure_summary",
-    "defaultValue": "The gap between your blood pressure numbers (%d mmHg) is wider than the usual 40 to 60 mmHg. Based on your patterns, this is worth a look.",
+    "key": "copy_analysis_analysis_clinical_pulse_pressure_summary_v2",
+    "defaultValue": "The gap between your blood pressure numbers is %d mmHg. Your usual gap is around %d mmHg. Based on your patterns, this is worth a look.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_analysis_clinical_respiratory_above_usual_summary",
+    "defaultValue": "Your breathing rate has averaged %@ br/min over the past %d days. That is higher than your usual %@ br/min.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_analysis_clinical_respiratory_below_usual_summary",
+    "defaultValue": "Your breathing rate has averaged %@ br/min over the past %d days. That is lower than your usual %@ br/min.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -456,8 +462,8 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_analysis_clinical_respiratory_summary",
-    "defaultValue": "Your breathing rate (%@ br/min) falls in the %@ range. Most people sit between 12 and 20 breaths per minute.",
+    "key": "copy_analysis_analysis_clinical_systolic_vs_baseline",
+    "defaultValue": "Your usual is around %@ mmHg.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -522,80 +528,8 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_below_threshold_title",
-    "defaultValue": "VO2 Max Below Healthy Level",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_better_shape_long_term",
     "defaultValue": "You are in better shape this year. Things are heading in the right direction.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_activity_rhythm_component",
-    "defaultValue": "Activity Rhythm",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_autonomic_component",
-    "defaultValue": "Rest-and-Recover System",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_cardio_fitness_component",
-    "defaultValue": "Cardio Fitness",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_component_breakdown_entry",
-    "defaultValue": "%@: ~%@ yrs",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_fitness_age_recommendation",
-    "defaultValue": "Breakdown. %@. Each part is compared to typical results from large studies. Your VO2 Max on its own (one of the best signs of overall fitness) points to a matching fitness age.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_fitness_age_summary",
-    "defaultValue": "Based on %d body signals, your body works like someone around %@ years old. Strongest area: %@. Most room to improve: %@.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_fitness_age_title",
-    "defaultValue": "Fitness Age Estimate: ~%@",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_imbalance_recommendation",
-    "defaultValue": "A big gap between these parts means one system is aging faster than the rest. Working on your %@ could bring your overall fitness age down a lot.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_imbalance_summary",
-    "defaultValue": "There's a %@-year gap between your youngest system (%@: ~%@) and your oldest (%@: ~%@). This gap is worth working on.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_mobility_component",
-    "defaultValue": "Mobility",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_biological_age_resting_heart_rate_component",
-    "defaultValue": "Resting Heart Rate",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -614,72 +548,6 @@
   {
     "key": "copy_analysis_building_circadian_profile",
     "defaultValue": "I'm still learning your full body clock.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_below_threshold_recommendation",
-    "defaultValue": "A VO2 Max below %d mL/kg/min puts you in the lowest fitness group at any age. Large studies keep showing this level matters for overall health. Even small gains from here can make a real difference.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_below_threshold_summary",
-    "defaultValue": "Your VO2 Max of %@ mL/kg/min is below %d, a level linked to lower fitness at any age.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_cardio_fitness_age_recommendation",
-    "defaultValue": "At %@ mL/kg/min, your heart and lung fitness is higher than about %@ out of 100 middle-aged adults. Every small step up (about 3.5 mL/kg/min) brings real health benefits.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_cardio_fitness_age_summary",
-    "defaultValue": "Your VO2 Max of %@ mL/kg/min is average for someone around age %@. VO2 Max is one of the most important signs of long-term fitness and overall health.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_cardio_fitness_age_title",
-    "defaultValue": "Cardio Fitness Age: ~%@",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_declining_recommendation",
-    "defaultValue": "A %@ mL/kg/min drop makes your fitness age older. Losing %@ mL/kg/min per month is faster than normal aging (about 1 to 2 mL/kg/min every 10 years). Doing cardio more often or a bit harder can help turn it around.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_declining_summary",
-    "defaultValue": "Your heart and lung fitness has dropped by %@ mL/kg/min over %d months. Since VO2 Max is a key fitness sign, this is worth turning around.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_declining_title",
-    "defaultValue": "VO2 Max Declining: %@ Over %d Months",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_improving_recommendation",
-    "defaultValue": "A %@ mL/kg/min gain in VO2 Max is real progress. It makes your fitness age younger and goes with better long-term health.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_improving_summary",
-    "defaultValue": "Your heart and lung fitness has improved by %@ mL/kg/min over %d months. That is a real gain based on large health studies.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_cardio_respiratory_age_vo2_improving_title",
-    "defaultValue": "VO2 Max Improving: +%@ Over %d Months",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -888,14 +756,14 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_clinical_glucose_trend_summary",
-    "defaultValue": "Your fasting blood sugar has been rising %@ mg/dL per month. Now: %@ mg/dL (%@). %@",
+    "key": "copy_analysis_clinical_glucose_trend_summary_v2",
+    "defaultValue": "Your blood sugar has been rising %@ mg/dL per month. It is now %@ mg/dL. %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
-    "key": "copy_analysis_clinical_systolic_trend_summary",
-    "defaultValue": "Your top blood pressure number has risen %@ mmHg per month over the past %d days. Right now it is in the %@ range. You can still turn this around with everyday habits. %@",
+    "key": "copy_analysis_clinical_systolic_trend_summary_v2",
+    "defaultValue": "Your top blood pressure number has risen %@ mmHg per month over the past %d days. It is now %@ mmHg. You can still turn this around with everyday habits. %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1254,12 +1122,6 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_health_data_query_anomaly_answer",
-    "defaultValue": "%@ Your %@ at %@ is noticeably %@ than your usual.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_health_data_query_body_snapshot",
     "defaultValue": "Here's a snapshot of your body right now. %@ As I gather more history, I'll be able to classify your body's overall state automatically.",
     "sourceFile": "Copy+Analysis.swift",
@@ -1302,12 +1164,6 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_health_data_query_comparison_answer",
-    "defaultValue": "%@ Your %@ %@ is %@ compared to %@ (%@ vs %@).",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_health_data_query_comparison_get_back",
     "defaultValue": "Try to get back to your %@ routine. Your body did better then.",
     "sourceFile": "Copy+Analysis.swift",
@@ -1328,12 +1184,6 @@
   {
     "key": "copy_analysis_health_data_query_correlation_no_link",
     "defaultValue": "I haven't found a clear statistical connection between your %@ and %@ so far. They appear to move independently based on the data I have.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_forecast_answer",
-    "defaultValue": "%@ I'm expecting your %@ to be around %@ %@, based on your patterns.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1398,6 +1248,18 @@
     "isArray": false
   },
   {
+    "key": "copy_analysis_health_data_query_not_understood",
+    "defaultValue": "I did not understand that one. I can tell you how a metric is doing, how it is trending, how two periods compare, what affects it, what looks unusual, and what to focus on today. Try naming a metric, like your sleep, steps, resting heart rate or heart calm signal.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_health_data_query_not_understood_no_data",
+    "defaultValue": "I did not understand that one, and I do not have any health data yet either. Connect your Apple Watch or allow Health access, then ask me about your sleep, steps or heart rate.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_analysis_health_data_query_optimization_aim_for",
     "defaultValue": "Your data says to aim for: %@. Hit those targets and you're looking at a score of %d.",
     "sourceFile": "Copy+Analysis.swift",
@@ -1430,12 +1292,6 @@
   {
     "key": "copy_analysis_health_data_query_pattern_peak_trough",
     "defaultValue": "Plan your toughest activities for %@s when your %@ peaks, and take it easier on %@s when it dips. Your %@ follows a clear %@ cycle.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_health_data_query_pr_answer",
-    "defaultValue": "Your %@ %@ on record was %@, recorded on %@. %@",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -1530,12 +1386,6 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_health_data_query_trending_answer",
-    "defaultValue": "%@ Your %@ is %@ over %@, averaging %@.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_health_risk_engine_and_direction",
     "defaultValue": "and %@",
     "sourceFile": "Copy+Analysis.swift",
@@ -1622,12 +1472,6 @@
   {
     "key": "copy_analysis_hrv_check_changes",
     "defaultValue": " Check recent changes in sleep or recovery patterns.",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_analysis_imbalance_title",
-    "defaultValue": "Some Body Systems Age Faster",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -4752,6 +4596,102 @@
     "isArray": false
   },
   {
+    "key": "copy_coach_activity_alert_rhr",
+    "defaultValue": "Resting heart rate %1$d is above your usual %2$d. Two slow minutes can help.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_alert_sleep_debt",
+    "defaultValue": "An earlier night tonight starts paying it back.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_day_high",
+    "defaultValue": "High strain today. A 2 minute reset will help.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_day_light",
+    "defaultValue": "Light load so far. Small movement helps.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_day_steady",
+    "defaultValue": "Steady strain. One short reset keeps you sharp.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_evening_bedtime",
+    "defaultValue": "In bed by %@ sets up tomorrow.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_evening_generic",
+    "defaultValue": "Wind down now to set up a strong tomorrow.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_evening_weakest",
+    "defaultValue": "Weakest today: %@. Wind down supports tomorrow.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_go_gentle",
+    "defaultValue": "Go gentle today",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_moderate_recovery",
+    "defaultValue": "Moderate recovery",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_morning_hrv",
+    "defaultValue": "HRV %1$d ms. %2$@.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_morning_no_hrv",
+    "defaultValue": "%@. Set the tone for today.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_night_generic",
+    "defaultValue": "Sleep in progress. Resume at sunrise.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_night_rhr",
+    "defaultValue": "Resting heart rate %d. Resume at sunrise.",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_solid_base",
+    "defaultValue": "Solid base",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_coach_activity_strong_recovery",
+    "defaultValue": "Strong recovery",
+    "sourceFile": "Copy+CoachActivity.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_a_new_version_of_laso_is",
     "defaultValue": "A new version of Laso is available with important fixes. Please update to continue.",
     "sourceFile": "Copy+Common.swift",
@@ -4860,12 +4800,6 @@
     "isArray": false
   },
   {
-    "key": "copy_common_discover_your_health_patterns_with_laso",
-    "defaultValue": "Discover your health patterns with Laso",
-    "sourceFile": "Copy+Common.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_common_done_button",
     "defaultValue": "Done",
     "sourceFile": "Copy+Common.swift",
@@ -4933,12 +4867,6 @@
   },
   {
     "key": "copy_common_laso",
-    "defaultValue": "Laso",
-    "sourceFile": "Copy+Common.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_common_laso2",
     "defaultValue": "Laso",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
@@ -5094,6 +5022,12 @@
     "isArray": false
   },
   {
+    "key": "copy_common_share_badge_earned",
+    "defaultValue": "EARNED %@",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_share_best_sleep_plain",
     "defaultValue": "best sleep yet",
     "sourceFile": "Copy+Common.swift",
@@ -5124,6 +5058,12 @@
     "isArray": false
   },
   {
+    "key": "copy_common_share_chip_badge",
+    "defaultValue": "Badge",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_share_chip_best_sleep",
     "defaultValue": "Best sleep",
     "sourceFile": "Copy+Common.swift",
@@ -5132,6 +5072,12 @@
   {
     "key": "copy_common_share_chip_proof",
     "defaultValue": "Proof",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_chip_receipt",
+    "defaultValue": "Pattern",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -5184,6 +5130,12 @@
     "isArray": false
   },
   {
+    "key": "copy_common_share_more_ways",
+    "defaultValue": "More ways to share",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_share_proof_accent",
     "defaultValue": "+%d",
     "sourceFile": "Copy+Common.swift",
@@ -5198,6 +5150,12 @@
   {
     "key": "copy_common_share_proof_sub",
     "defaultValue": "Yesterday: %@. That is what it did.",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_receipt_sub",
+    "defaultValue": "Measured on me across %d days. Not a study average.",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -5234,6 +5192,18 @@
   {
     "key": "copy_common_share_ring_vitality_age",
     "defaultValue": "VITALITY AGE",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_score_change_this_week",
+    "defaultValue": "%+d this week",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_share_send_to_person",
+    "defaultValue": "Send to someone",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -6474,6 +6444,12 @@
     "isArray": false
   },
   {
+    "key": "copy_explore_day_signals_qualifier",
+    "defaultValue": "Vs your usual",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_explore_day_signals_title",
     "defaultValue": "What the score was built from",
     "sourceFile": "Copy+Explore.swift",
@@ -6492,8 +6468,8 @@
     "isArray": false
   },
   {
-    "key": "copy_explore_day_strain_value",
-    "defaultValue": "%1$@ · %2$@",
+    "key": "copy_explore_day_usual_value",
+    "defaultValue": "usual %1$@",
     "sourceFile": "Copy+Explore.swift",
     "isArray": false
   },
@@ -6804,6 +6780,18 @@
     "isArray": false
   },
   {
+    "key": "copy_explore_month_calendar_subtitle",
+    "defaultValue": "One ring per day. Tap any day to see what drove it.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_calendar_title",
+    "defaultValue": "Daily score",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_explore_month_day_score",
     "defaultValue": "%1$d, %2$@",
     "sourceFile": "Copy+Explore.swift",
@@ -6979,7 +6967,7 @@
   },
   {
     "key": "copy_explore_x_text",
-    "defaultValue": "%d",
+    "defaultValue": "%d pts",
     "sourceFile": "Copy+Explore.swift",
     "isArray": false
   },
@@ -7218,6 +7206,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_ask_your_data_no_score_yet",
+    "defaultValue": "I do not have enough of your data to work out a health score yet. Keep your health data syncing and I will explain the score as soon as there is one.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_ask_your_data_placeholder",
     "defaultValue": "Ask anything about your health...",
     "sourceFile": "Copy+Home.swift",
@@ -7410,6 +7404,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_coverage_inline_missing",
+    "defaultValue": "Not reading: %@. Tap to fix in the Health app.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_coverage_missing_hint",
     "defaultValue": "%@ has sent nothing. Either it is switched off for Laso in the Health app, or your watch has not recorded it.",
     "sourceFile": "Copy+Home.swift",
@@ -7434,14 +7434,14 @@
     "isArray": false
   },
   {
-    "key": "copy_home_daily_result_dismiss",
-    "defaultValue": "Got it",
+    "key": "copy_home_daily_result_aggregate",
+    "defaultValue": "Done %1$d times. %2$@, measured across your last %3$d weeks.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
-    "key": "copy_home_daily_result_down",
-    "defaultValue": "Your recovery dipped %d. Rest is part of the plan too.",
+    "key": "copy_home_daily_result_dismiss",
+    "defaultValue": "Got it",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7452,32 +7452,26 @@
     "isArray": false
   },
   {
-    "key": "copy_home_daily_result_steady",
-    "defaultValue": "Your recovery held steady. Small steps add up.",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_daily_result_up",
-    "defaultValue": "Your recovery is +%d higher this morning.",
+    "key": "copy_home_daily_result_logged",
+    "defaultValue": "Done yesterday. Every completion builds your record.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_day_text",
-    "defaultValue": "%@/day",
+    "defaultValue": "%@ steps/day",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_day_text2",
-    "defaultValue": "%@/day",
+    "defaultValue": "%@ steps/day",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
   {
     "key": "copy_home_day_text3",
-    "defaultValue": "%@/day",
+    "defaultValue": "%@ steps/day",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7842,6 +7836,54 @@
     "isArray": false
   },
   {
+    "key": "copy_home_intraday_accessibility",
+    "defaultValue": "Active energy today, %1$d calories. Busiest hour %2$@.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_peak",
+    "defaultValue": "%d cal",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_title",
+    "defaultValue": "Your day so far",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_unit",
+    "defaultValue": "CAL",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_usual_legend",
+    "defaultValue": "Faint bars are your usual day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_ahead",
+    "defaultValue": "Ahead of your usual day by this hour",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_behind",
+    "defaultValue": "Quieter than your usual day so far",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_usual",
+    "defaultValue": "About your usual pace for this hour",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_last_updated_ago",
     "defaultValue": "Last updated %@",
     "sourceFile": "Copy+Home.swift",
@@ -7920,8 +7962,44 @@
     "isArray": false
   },
   {
+    "key": "copy_home_next_up_context_adjusted",
+    "defaultValue": "Adjusted for: %@ · change",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_context_prompt",
+    "defaultValue": "Something going on today? Tell me",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_done_logged",
+    "defaultValue": "Logged. It joins your record.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_done_tonight_hint",
+    "defaultValue": "You can mark it done this evening.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_fallback_note",
+    "defaultValue": "No strong signal today, so this is the standard suggestion.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_up_header",
     "defaultValue": "NEXT UP · TODAY",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_header_tonight",
+    "defaultValue": "TONIGHT",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7976,6 +8054,12 @@
   {
     "key": "copy_home_open_journal_entry_button",
     "defaultValue": "Open Journal",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_open_mirror_moment_button",
+    "defaultValue": "Open Mirror Moment",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8041,7 +8125,7 @@
   },
   {
     "key": "copy_home_recovery_info_description",
-    "defaultValue": "Each morning your Readiness is locked in from last night's sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops. Take off the Apple Watch and the drop pauses, but your morning Readiness still stays on the screen.",
+    "defaultValue": "Each morning your Readiness is set from last night's sleep and your overnight heart rate data. It stays the same all day, because it describes the state your body woke up in. What you do today shows up in Strain, not here.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8214,6 +8298,18 @@
     "isArray": false
   },
   {
+    "key": "copy_home_recovery_when_it_updates_body",
+    "defaultValue": "Once each morning, from last night's signals. It then stays put for the rest of the day. If you do not have a morning reading yet and the watch is off your wrist, the score is hidden until your next overnight wear.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_when_it_updates_title",
+    "defaultValue": "When does it update?",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_removes_the_current_question_and_result_hint",
     "defaultValue": "Removes the current question and result",
     "sourceFile": "Copy+Home.swift",
@@ -8312,6 +8408,18 @@
   {
     "key": "copy_home_score_missing_signals",
     "defaultValue": "%@ not recorded yet. Wear your watch tonight and tomorrow is a full read.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_no_data_yet",
+    "defaultValue": "Not enough data yet to score your day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_no_data_yet_detail",
+    "defaultValue": "Keep your health data syncing and your score will show up here",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8670,36 +8778,6 @@
     "isArray": false
   },
   {
-    "key": "copy_home_streak_milestone_body",
-    "defaultValue": "You hit activity, sleep and recovery on every one of those days.",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_streak_milestone_dismiss",
-    "defaultValue": "No thanks",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_streak_milestone_header",
-    "defaultValue": "STREAK MILESTONE",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_streak_milestone_share",
-    "defaultValue": "Share this",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_home_streak_milestone_title",
-    "defaultValue": "%d days in a row",
-    "sourceFile": "Copy+Home.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_home_submit_morning_check_in_label",
     "defaultValue": "Submit morning check-in",
     "sourceFile": "Copy+Home.swift",
@@ -8809,7 +8887,7 @@
   },
   {
     "key": "copy_home_wear_apple_watch_for_recovery",
-    "defaultValue": "Wear your Apple Watch to see your live energy",
+    "defaultValue": "Wear your Apple Watch overnight to see your Readiness",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8826,8 +8904,8 @@
     "isArray": false
   },
   {
-    "key": "copy_home_weekly_review_score_wins_label",
-    "defaultValue": "Weekly Review. Score %d. %d wins.",
+    "key": "copy_home_week_strip_accessibility",
+    "defaultValue": "Your score for the last seven days. Opens the full month.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -9390,6 +9468,18 @@
     "isArray": false
   },
   {
+    "key": "copy_insights_insights_detail_percent_above_baseline",
+    "defaultValue": "%@%% above your baseline",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_insights_insights_detail_percent_below_baseline",
+    "defaultValue": "%@%% below your baseline",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_insights_insights_discovered_pattern",
     "defaultValue": "Discovered %@ Pattern",
     "sourceFile": "Copy+Insights.swift",
@@ -9697,7 +9787,7 @@
   },
   {
     "key": "copy_insights_tomorrows_risk",
-    "defaultValue": "Tomorrow's Risk: %d%%",
+    "defaultValue": "Chance tomorrow lands below your usual: %d%%",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -10071,6 +10161,1014 @@
     "key": "copy_metricdetail_x_text",
     "defaultValue": "%d",
     "sourceFile": "Copy+MetricDetail.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_action_proof",
+    "defaultValue": "%1$@. Recovery moved %2$d points overnight.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_average_score",
+    "defaultValue": "AVG %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_climbing",
+    "defaultValue": "ON THE WAY UP",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_climbing_line",
+    "defaultValue": "Your last ten days are running higher than the twenty before them.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_rebuilding",
+    "defaultValue": "REBUILDING",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_rebuilding_line",
+    "defaultValue": "A harder stretch than usual, and you kept showing up through it.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_steady",
+    "defaultValue": "STEADY STATE",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_steady_line",
+    "defaultValue": "Thirty days, and your recovery has not moved more than six points either way.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_swinging",
+    "defaultValue": "UP AND DOWN",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_claim_swinging_line",
+    "defaultValue": "Big swings this month. Your good days are very good.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_confidence_sure",
+    "defaultValue": "%d PERCENT SURE",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_confirm_retake",
+    "defaultValue": "Retake",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_confirm_save",
+    "defaultValue": "Save photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_day_number",
+    "defaultValue": "DAY %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_days_apart",
+    "defaultValue": "%d days apart",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_days_of_seven",
+    "defaultValue": "%1$d OF %2$d DAYS",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_body",
+    "defaultValue": "Daily Mirror photos are stored only on this device, protected by your phone's passcode encryption.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_later",
+    "defaultValue": "Maybe later",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_point1",
+    "defaultValue": "Never uploaded. No cloud, no server, no backup we can see.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_point2",
+    "defaultValue": "Not in your camera roll. Photos live inside Laso only.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_point3",
+    "defaultValue": "One trade off. Delete Laso and the archive goes too, unless you turn on saving to Photos in settings.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_start",
+    "defaultValue": "Allow camera and start",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_explainer_title",
+    "defaultValue": "Your face stays on your phone",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_banner",
+    "defaultValue": "Diary strip",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_big_score",
+    "defaultValue": "Big score",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_big_score_unit",
+    "defaultValue": "RECOVERY",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_clean",
+    "defaultValue": "Clean",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_date_only",
+    "defaultValue": "Date only",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_glow",
+    "defaultValue": "Glow",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_journey",
+    "defaultValue": "Journey",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_journey_day",
+    "defaultValue": "Day %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_pulse",
+    "defaultValue": "Heartbeat",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_ring",
+    "defaultValue": "Score ring",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_stamp",
+    "defaultValue": "Today stamp",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_filter_streak",
+    "defaultValue": "Streak",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_gallery_delete",
+    "defaultValue": "Delete photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_gallery_delete_confirm",
+    "defaultValue": "Delete this photo?",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_gallery_title",
+    "defaultValue": "Your photos",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_group_archive",
+    "defaultValue": "Your history",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_group_data",
+    "defaultValue": "Your numbers",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_group_everyday",
+    "defaultValue": "Every day",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_group_object",
+    "defaultValue": "Printed",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_group_voice",
+    "defaultValue": "In words",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_action",
+    "defaultValue": "Capture",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_done_title",
+    "defaultValue": "Today is on the record",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_subtitle",
+    "defaultValue": "Ten seconds a day. In a month you can see the change.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_title",
+    "defaultValue": "Take today's photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_issue_number",
+    "defaultValue": "NO. %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_journal_cta",
+    "defaultValue": "Capture today's you",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_journal_done",
+    "defaultValue": "Captured today",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_asleep",
+    "defaultValue": "ASLEEP",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_deep",
+    "defaultValue": "DEEP",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_hrv",
+    "defaultValue": "HRV",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_kept_here",
+    "defaultValue": "KEPT ON THIS PHONE",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_last_night",
+    "defaultValue": "LAST NIGHT",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_now",
+    "defaultValue": "NOW",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_private",
+    "defaultValue": "ONLY YOU SEE THIS",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_ready",
+    "defaultValue": "READY",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_resting",
+    "defaultValue": "RESTING",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_sleep",
+    "defaultValue": "SLEEP",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_strain",
+    "defaultValue": "STRAIN",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_then",
+    "defaultValue": "THEN",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_thirty_days",
+    "defaultValue": "30 DAYS",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_this_week",
+    "defaultValue": "THIS WEEK",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_your_age",
+    "defaultValue": "YOUR AGE",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_label_your_body",
+    "defaultValue": "YOUR BODY",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_landmark_line",
+    "defaultValue": "You started on %1$@ and you have kept %2$d of them.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_landmark_title",
+    "defaultValue": "%d DAYS",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_masthead",
+    "defaultValue": "The Daily Mirror",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_capture_cta",
+    "defaultValue": "Capture today's you",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_commit_cta",
+    "defaultValue": "I'm in for 7 days",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_commit_later",
+    "defaultValue": "Maybe later",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_commit_line",
+    "defaultValue": "Ten seconds a day. On day 7 your week plays back.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_commit_title",
+    "defaultValue": "When I open Laso in the morning, I capture my mirror.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_eyebrow",
+    "defaultValue": "Daily Mirror",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_eyebrow_day",
+    "defaultValue": "Daily Mirror. Day %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_metric_month",
+    "defaultValue": "%d captures this month. Start a new run today.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_not_today",
+    "defaultValue": "Not today",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_privacy_line",
+    "defaultValue": "Photos never leave this phone.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_tease_locked",
+    "defaultValue": "Yesterday's you unlocks after today's capture.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_tease_progress",
+    "defaultValue": "%d more and your week plays back.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_title_1",
+    "defaultValue": "Ten seconds keeps it going.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_title_2",
+    "defaultValue": "Put today on the record.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_title_3",
+    "defaultValue": "Capture how you showed up today.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_title_4",
+    "defaultValue": "Future you will want this day.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_moment_title_5",
+    "defaultValue": "One capture. That is the whole job.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_photos_save_failed",
+    "defaultValue": "Your photo is saved in Laso, but the copy to your Photos app did not go through.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_picker_all",
+    "defaultValue": "All looks",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_picker_default_set",
+    "defaultValue": "This is your everyday look",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_picker_set_default",
+    "defaultValue": "Use this every day",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_picker_suggested",
+    "defaultValue": "Suggested for today",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_recovery_score",
+    "defaultValue": "Recovery %d",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_replay_done",
+    "defaultValue": "Done",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_replay_title",
+    "defaultValue": "Your last 7 days",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_same_age",
+    "defaultValue": "THE SAME AS YOUR AGE",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_save_failed",
+    "defaultValue": "Could not save your photo. Please try again.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_delete_action",
+    "defaultValue": "Delete all",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_delete_all",
+    "defaultValue": "Delete entire archive",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_delete_confirm_title",
+    "defaultValue": "Delete all Daily Mirror photos?",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_empty",
+    "defaultValue": "No photos yet. Take your first one to start your story.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_export_all",
+    "defaultValue": "Save every photo to Photos now",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_export_done",
+    "defaultValue": "%d photos saved to your Photos app.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_footer",
+    "defaultValue": "Deleting is immediate and permanent. Copies you already saved to your Photos app stay there.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_gallery",
+    "defaultValue": "See all photos",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_photos",
+    "defaultValue": "Memories captured",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_photos_denied",
+    "defaultValue": "Laso cannot add to your Photos app. Allow it in iOS Settings first.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_photos_footer",
+    "defaultValue": "Off by default. Turn it on and every new capture is also copied to your Photos app, so your archive survives deleting Laso. Laso can add photos there but never read them.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_photos_toggle",
+    "defaultValue": "Also save to Photos",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_prompt_footer",
+    "defaultValue": "One quiet invite on your first open of the day. Turning it off is always respected.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_prompt_toggle",
+    "defaultValue": "Morning capture prompt",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_reminder_denied",
+    "defaultValue": "Notifications are turned off for Laso. Allow them in iOS Settings first.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_reminder_end",
+    "defaultValue": "Latest",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_reminder_footer",
+    "defaultValue": "Off by default. Fires once a day at a different time inside your window.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_reminder_start",
+    "defaultValue": "Earliest",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_reminder_toggle",
+    "defaultValue": "Reminder notification",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_since",
+    "defaultValue": "Your story started",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_space",
+    "defaultValue": "Space your memories take",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_streak",
+    "defaultValue": "Longest streak",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_settings_title",
+    "defaultValue": "Daily Mirror",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_share_chip",
+    "defaultValue": "Progress",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_share_days_apart",
+    "defaultValue": "%d days apart",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_share_points_up",
+    "defaultValue": "+%d recovery",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_streak_days",
+    "defaultValue": "%d day streak",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_suggest_landmark",
+    "defaultValue": "Day %d. Worth marking properly.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_suggest_lighting",
+    "defaultValue": "Bright behind you, so the numbers move onto paper.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_suggest_quiet",
+    "defaultValue": "A quieter one today, with no numbers on it.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_suggest_week",
+    "defaultValue": "You have the full week. Here it is.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_toolbar_done_label",
+    "defaultValue": "Retake today's photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_toolbar_hint",
+    "defaultValue": "Opens the camera for your daily photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_toolbar_label",
+    "defaultValue": "Take today's photo",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_behind_you",
+    "defaultValue": "Behind You",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_body_age",
+    "defaultValue": "Body Age",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_chin",
+    "defaultValue": "Instant Film",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_claim",
+    "defaultValue": "The Claim",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_clean",
+    "defaultValue": "Clean",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_contact_sheet",
+    "defaultValue": "Contact Sheet",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_field_notes",
+    "defaultValue": "Field Notes",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_horizon",
+    "defaultValue": "Horizon",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_landmark",
+    "defaultValue": "Landmark",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_newsprint",
+    "defaultValue": "Newsprint",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_night",
+    "defaultValue": "The Night",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_nineties",
+    "defaultValue": "Nineteen Ninety Eight",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_number",
+    "defaultValue": "The Number",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_one_word",
+    "defaultValue": "One Word",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_sentence",
+    "defaultValue": "The Sentence",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_slip",
+    "defaultValue": "The Slip",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_then_and_now",
+    "defaultValue": "Then and Now",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_tpl_this_week",
+    "defaultValue": "This Week",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_weekly_strip_count",
+    "defaultValue": "%1$d of %2$d days",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_weekly_strip_title",
+    "defaultValue": "Your week in faces",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_heavy",
+    "defaultValue": "Heavy",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_heavy_line",
+    "defaultValue": "Carrying a bit today.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_ready",
+    "defaultValue": "Ready",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_ready_line",
+    "defaultValue": "Good day to use.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_rest",
+    "defaultValue": "Rest",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_rest_line",
+    "defaultValue": "Hard days count too.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_slow",
+    "defaultValue": "Slow",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_slow_line",
+    "defaultValue": "Take it gently.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_steady",
+    "defaultValue": "Steady",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_steady_line",
+    "defaultValue": "Nothing to prove today.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_strong",
+    "defaultValue": "Strong",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_strong_line",
+    "defaultValue": "Remember this one.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_tired",
+    "defaultValue": "Tired",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_tired_line",
+    "defaultValue": "You came anyway.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_today",
+    "defaultValue": "Today",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_word_today_line",
+    "defaultValue": "Just here.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_years_older",
+    "defaultValue": "%d YEARS OLDER",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_years_younger",
+    "defaultValue": "%d YEARS YOUNGER",
+    "sourceFile": "Copy+Mirror.swift",
     "isArray": false
   },
   {
@@ -10573,7 +11671,7 @@
   },
   {
     "key": "copy_notifications_hrv_low_body",
-    "defaultValue": "Your recovery is %d, about %d%% below usual. Take it easy and sleep early tonight.",
+    "defaultValue": "Your heart recovery is %d ms, about %d%% below usual. Take it easy tonight.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10598,6 +11696,12 @@
   {
     "key": "copy_notifications_improvement_title",
     "defaultValue": "Your %@ is up %@%%",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_improvement_title_down",
+    "defaultValue": "Your %@ is down %@%%",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10682,6 +11786,18 @@
   {
     "key": "copy_notifications_low_h_r_title",
     "defaultValue": "Your heart rate is low right now",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_mirror_reminder_body",
+    "defaultValue": "Ten seconds puts today on the record.",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_mirror_reminder_title",
+    "defaultValue": "Your mirror is open",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10824,8 +11940,20 @@
     "isArray": false
   },
   {
+    "key": "copy_notifications_trend_word_declining",
+    "defaultValue": "declining",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_notifications_trend_word_down",
     "defaultValue": "down",
+    "sourceFile": "Copy+Notifications.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_notifications_trend_word_improving",
+    "defaultValue": "improving",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -10987,7 +12115,7 @@
   },
   {
     "key": "copy_notifications_wind_down_hrv_hint",
-    "defaultValue": "Your recovery is low (%d), so an early night will help.",
+    "defaultValue": "Your heart recovery is low (%d ms), so an early night will help.",
     "sourceFile": "Copy+Notifications.swift",
     "isArray": false
   },
@@ -11274,6 +12402,42 @@
     "isArray": false
   },
   {
+    "key": "copy_paywall_renewal_charge_body",
+    "defaultValue": "Your Laso plan renews on %@. Cancel before then if you do not want to be charged.",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_paywall_renewal_charge_title",
+    "defaultValue": "Renewing soon",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_paywall_renewal_dismiss_label",
+    "defaultValue": "Close renewal reminder",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_paywall_renewal_lapse_body",
+    "defaultValue": "Your Laso plan ends on %@. Renew before then to keep your insights and history.",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_paywall_renewal_lapse_title",
+    "defaultValue": "Your plan is ending",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_paywall_renewal_manage_cta",
+    "defaultValue": "Manage subscription",
+    "sourceFile": "Copy+Paywall.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_paywall_restores_any_prior_subscription_tied_to_hint",
     "defaultValue": "Restores any prior subscription tied to your Apple ID",
     "sourceFile": "Copy+Paywall.swift",
@@ -11317,25 +12481,7 @@
   },
   {
     "key": "copy_policy_causal_default",
-    "defaultValue": "Your data points to %@ as a %@ cause of your overall health.",
-    "sourceFile": "Copy+Policy.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_policy_causal_lag_day_plural",
-    "defaultValue": "days",
-    "sourceFile": "Copy+Policy.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_policy_causal_lag_day_singular",
-    "defaultValue": "day",
-    "sourceFile": "Copy+Policy.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_policy_causal_with_lag",
-    "defaultValue": "Your data shows a %@ link: changes in %@ lead to health changes %d %@ later. This isn't just a coincidence, it's a real cause.",
+    "defaultValue": "Your data shows a %2$@ link between %1$@ and your overall health. That is a pattern we spotted, not proof of cause.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -11562,8 +12708,8 @@
     "isArray": false
   },
   {
-    "key": "copy_policy_state_transition",
-    "defaultValue": "Your body has been in this state for %d days. %@ is the main thing keeping you from a healthier one, so improving it speeds up the change.",
+    "key": "copy_policy_state_transition_metric",
+    "defaultValue": "%@ is the main thing keeping you from a healthier state, so improving it speeds up the change.",
     "sourceFile": "Copy+Policy.swift",
     "isArray": false
   },
@@ -11779,7 +12925,7 @@
   },
   {
     "key": "copy_reports_step_target",
-    "defaultValue": "Step target: %@/day",
+    "defaultValue": "Step target: %@ steps/day",
     "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
@@ -11791,25 +12937,25 @@
   },
   {
     "key": "copy_reports_weekly_review_keeping_up",
-    "defaultValue": "You are hitting your %@/day target. Next week, we will bump it up to %@/day.",
+    "defaultValue": "You are hitting your %@ steps/day target. Next week, we will bump it up to %@ steps/day.",
     "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
   {
     "key": "copy_reports_weekly_review_plateauing",
-    "defaultValue": "You are close to your %@/day target. Let us hold here this week and build the habit before pushing higher.",
+    "defaultValue": "You are close to your %@ steps/day target. Let us hold here this week and build the habit before pushing higher.",
     "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
   {
     "key": "copy_reports_weekly_review_struggling",
-    "defaultValue": "This week was tough at %@/day. We will drop to %@/day next week so it feels doable.",
+    "defaultValue": "This week was tough at %@ steps/day. We will drop to %@ steps/day next week so it feels doable.",
     "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
   {
     "key": "copy_reports_weekly_review_view_coach_target",
-    "defaultValue": "Coach target: %@/day",
+    "defaultValue": "Coach target: %@ steps/day",
     "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
@@ -11870,6 +13016,120 @@
   {
     "key": "copy_settings_adjust_the_heart_rate_threshold_for_hint",
     "defaultValue": "Adjust the heart rate threshold for alerts",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock",
+    "defaultValue": "App Lock",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_after_five_minutes",
+    "defaultValue": "After 5 minutes",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_after_leaving",
+    "defaultValue": "Lock after leaving the app",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_after_one_minute",
+    "defaultValue": "After 1 minute",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_auth_reason",
+    "defaultValue": "Unlock your health data",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_footer_biometric",
+    "defaultValue": "Your health scores, sleep, stress and mirror photos stay visible only to you. If %@ fails, your phone passcode unlocks the app.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_footer_passcode",
+    "defaultValue": "Your health scores, sleep, stress and mirror photos stay visible only to you.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_locked_subtitle",
+    "defaultValue": "Your health data stays private. Unlock to continue.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_locked_title",
+    "defaultValue": "Laso is locked",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_no_passcode_message",
+    "defaultValue": "Set a passcode on your phone in Settings first. App Lock needs it as a backup way to unlock.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_no_passcode_title",
+    "defaultValue": "No phone passcode",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_require",
+    "defaultValue": "Require %@",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_right_away",
+    "defaultValue": "Right away",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_row_footer",
+    "defaultValue": "Lock Laso with %@ so only you can open it.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_siri_locked",
+    "defaultValue": "Laso is locked. Open the app and unlock to see this.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_status_off",
+    "defaultValue": "Off",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_status_on",
+    "defaultValue": "%@ on",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_timing_footer",
+    "defaultValue": "Right away is safest when you hand your phone to someone.",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_app_lock_unlock_with",
+    "defaultValue": "Unlock with %@",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },
@@ -11954,6 +13214,12 @@
   {
     "key": "copy_settings_delete_everything",
     "defaultValue": "Delete Everything",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_face_id",
+    "defaultValue": "Face ID",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },
@@ -12048,8 +13314,20 @@
     "isArray": false
   },
   {
+    "key": "copy_settings_passcode",
+    "defaultValue": "Passcode",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_settings_per_day_value",
     "defaultValue": "%d per day",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_privacy",
+    "defaultValue": "Privacy",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },
@@ -12308,6 +13586,12 @@
   {
     "key": "copy_settings_theme_system",
     "defaultValue": "System",
+    "sourceFile": "Copy+Settings.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_settings_touch_id",
+    "defaultValue": "Touch ID",
     "sourceFile": "Copy+Settings.swift",
     "isArray": false
   },
@@ -12655,7 +13939,7 @@
   },
   {
     "key": "copy_sleepcoach_sleep_in_bed_label",
-    "defaultValue": "%@ sleep: %@ in bed",
+    "defaultValue": "%@ sleep: %@ asleep",
     "sourceFile": "Copy+SleepCoach.swift",
     "isArray": false
   },
@@ -13566,6 +14850,12 @@
     "isArray": false
   },
   {
+    "key": "copy_vitality_metric_below_range",
+    "defaultValue": "Below range",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_vitality_metric_contributions",
     "defaultValue": "Metric Contributions",
     "sourceFile": "Copy+Vitality.swift",
@@ -13580,6 +14870,12 @@
   {
     "key": "copy_vitality_metric_subtitle",
     "defaultValue": "%@ now, typical %@",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_metric_target_subtitle",
+    "defaultValue": "%@ now, target %@",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -13610,6 +14906,12 @@
   {
     "key": "copy_vitality_normal_or_slower",
     "defaultValue": "Normal or slower",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_onboarding_provisional_caption",
+    "defaultValue": "We will sharpen this as your data comes in.",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -13664,6 +14966,12 @@
   {
     "key": "copy_vitality_profile_progress_title",
     "defaultValue": "Profile progress",
+    "sourceFile": "Copy+Vitality.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_vitality_progress_percent",
+    "defaultValue": "%d%%",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },
@@ -13802,12 +15110,6 @@
   {
     "key": "copy_vitality_x_text2",
     "defaultValue": "%d",
-    "sourceFile": "Copy+Vitality.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_vitality_y_text",
-    "defaultValue": "+%dy",
     "sourceFile": "Copy+Vitality.swift",
     "isArray": false
   },

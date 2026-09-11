@@ -258,9 +258,9 @@ extension LiveViewModel {
         var weeklyTrend: WeeklyHRVTrend = .insufficientData
 
         init(readinessStore: ReadinessStore) {
-            // Seed only from today's morning lock. Yesterday's drained Energy
-            // (saved via `saveCachedScore` for legacy widget compat) is not a
-            // valid anchor for today, so we deliberately skip `loadCachedScore`.
+            // Seed only from today's morning lock. `loadCachedScore` is not
+            // date-keyed, so it can still be holding yesterday's number — that is
+            // not today's anchor, so it is deliberately skipped.
             if let lock = readinessStore.loadMorningLock(for: Date()) {
                 readinessScore = lock
                 readinessConfidence = readinessStore.loadMorningLockConfidence(for: Date())

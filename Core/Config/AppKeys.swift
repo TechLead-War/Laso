@@ -157,15 +157,15 @@ enum AppKeys {
 
         // Per-day morning lock. Score and confidence are stamped once each
         // morning when last-night sleep + overnight HRV/RHR vs the 60-day
-        // baseline land, then re-used by every refresh that day so the live
-        // energy drain has a stable anchor.
+        // baseline land, then re-used by every refresh that day so the number
+        // does not move once it is set.
         static let morningLockScorePrefix      = "laso.readiness.morning_lock_score."
         static let morningLockDatePrefix       = "laso.readiness.morning_lock_date."
         static let morningLockConfidencePrefix = "laso.readiness.morning_lock_confidence."
         static let morningLockStressPrefix     = "laso.readiness.morning_lock_stress."
-        // The number Home actually rendered today, lock minus the day's strain
-        // drain. Siri reads this so the two surfaces cannot quote different
-        // numbers for the same day.
+        // The number Home actually rendered today, which is the morning lock.
+        // Siri reads this so the two surfaces cannot quote different numbers for
+        // the same day.
         static let displayedScorePrefix        = "laso.readiness.displayed_score."
         // Day-over-day EMA state. The scorer runs once a day, so the previous
         // smoothed score has to outlive the process or the smoothing never

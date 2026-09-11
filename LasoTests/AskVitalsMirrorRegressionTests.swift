@@ -3,12 +3,11 @@ import HealthKit
 import Testing
 @testable import Laso
 
-/// One test per bug the user reported on the Ask, Vitals and Daily Mirror
-/// surfaces, so none of the three can come back quietly.
-///
-/// The three reports were: "Ask your data gives wrong or random answers",
-/// "Vitals only shows 2 metrics, it should be about 5 including sleep", and
-/// "the photo capture is not discoverable".
+/// One test per bug reported on a user-facing surface, so none of them can come
+/// back quietly. It started with Ask, Vitals and the Daily Mirror ("Ask your
+/// data gives wrong or random answers", "Vitals only shows 2 metrics, it should
+/// be about 5 including sleep", "the photo capture is not discoverable") and has
+/// taken every later report of the same kind since.
 struct AskVitalsMirrorRegressionTests {
 
     // MARK: - Fixtures

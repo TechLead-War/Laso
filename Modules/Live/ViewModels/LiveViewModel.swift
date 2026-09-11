@@ -943,7 +943,9 @@ final class LiveViewModel {
     private func publishRecoveryScore(_ score: Int, now: Date) {
         recovery.readinessScore = score
         readinessStore.saveDisplayedScore(score, for: now)
-        // The legacy widget timeline reads `loadCachedScore`.
+        // Not date-keyed, so it is the only readiness number available to code
+        // that runs without a day in hand: the trial and engagement notification
+        // bodies, and Mirror's fallback when today has no lock yet.
         readinessStore.saveCachedScore(score)
     }
 
@@ -1012,9 +1014,6 @@ final class LiveViewModel {
         return assessment.score
     }
 
-    /// Strain drain in score-points since wake. HealthKit's `activeEnergyBurned`
-    /// already includes any workout calories — adding `lastWorkoutCalories` on
-    /// top would double-count and over-drain Energy after a workout.
     // MARK: - Last Night's Sleep Fetch
 
     func fetchLastNightSleep() {

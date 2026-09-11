@@ -231,9 +231,9 @@ enum RC {
     static let weeklySummaryFireHour             = "weekly_summary_fire_hour"
     static let weeklySummaryFireMinute           = "weekly_summary_fire_minute"
 
-    // MARK: Recovery → Live Energy
+    // MARK: Recovery
     //
-    // Tunables for the morning Recovery lock + live Energy drain on Home.
+    // Tunables for the morning Recovery lock on Home and its weekly trend caption.
     // Consumer: Modules/Live/ViewModels/LiveViewModel.swift via
     // `ReadinessScorerConfig` typed accessors.
     static let energyOnWristMaxAgeSeconds        = "energy_on_wrist_max_age_seconds"
