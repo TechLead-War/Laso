@@ -20,7 +20,6 @@ enum PerformanceLevel: String, CaseIterable, Sendable {
 // MARK: - Sleep Need
 
 struct SleepNeed {
-    let totalHoursNeeded: Double
     let recommendedBedtime: Date?
     let recommendedWakeTime: Date?
 }
@@ -59,7 +58,7 @@ final class SleepNeedCalculator {
         sleepSeries: MetricTimeSeries? = nil
     ) -> SleepNeed {
         guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {
-            return fallbackNeed(performanceLevel: performanceLevel)
+            return fallbackNeed()
         }
 
         let recentSamples = sleepSeries.samples(lastDays: Cfg.minimumDaysRequired)
@@ -119,7 +118,6 @@ final class SleepNeedCalculator {
         }
 
         let need = SleepNeed(
-            totalHoursNeeded: totalHoursNeeded,
             recommendedBedtime: recommendedBedtime,
             recommendedWakeTime: wakeTime
         )
@@ -170,9 +168,8 @@ final class SleepNeedCalculator {
         return calendar.date(bySettingHour: avgHour, minute: avgMinute, second: 0, of: tomorrow)
     }
 
-    private func fallbackNeed(performanceLevel: PerformanceLevel) -> SleepNeed {
+    private func fallbackNeed() -> SleepNeed {
         SleepNeed(
-            totalHoursNeeded: performanceLevel.baseHours,
             recommendedBedtime: nil,
             recommendedWakeTime: nil
         )

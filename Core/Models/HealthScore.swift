@@ -1,38 +1,5 @@
 import Foundation
 
-/// Single source of truth for the user-facing score bands used across
-/// Home, Explore, the score guide, and category rows. Before this lived
-/// in code, every section had its own inline thresholds (40/55/70/85 in
-/// some files, 40/60/80 in the score guide, <60 / <75 in Needs Attention)
-/// — which let a single score render with contradictory labels. Always
-/// route UI labelling and colour through `HealthScore.Band` so the bands
-/// stay aligned everywhere.
-enum HealthScoreBand: Int, CaseIterable {
-    case critical       // < 40
-    case needsAttention // 40..<55
-    case fair           // 55..<70
-    case good           // 70..<85
-    case excellent      // 85...100
-
-    /// True for bands the UI should call out to the user.
-    var requiresAttention: Bool {
-        switch self {
-        case .critical, .needsAttention, .fair: return true
-        case .good, .excellent: return false
-        }
-    }
-
-    static func from(score: Int) -> HealthScoreBand {
-        switch score {
-        case 85...: return .excellent
-        case 70...: return .good
-        case 55...: return .fair
-        case 40...: return .needsAttention
-        default: return .critical
-        }
-    }
-}
-
 /// Health score (0-100) for a category or overall
 struct HealthScore: Identifiable {
     let id = UUID()

@@ -521,12 +521,6 @@ enum AppColour {
         dark:  #colorLiteral(red: 0.137, green: 0.137, blue: 0.169, alpha: 1.00)
     )
 
-    /// Opaque bottom stop for every AreaMark gradient; the series tint sits on top at 0.35 light / 0.28 dark instead of fading to a 2% no-op.
-    static let chartAreaFill = dynamic(
-        light: #colorLiteral(red: 0.894, green: 0.894, blue: 0.925, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.118, green: 0.118, blue: 0.149, alpha: 1.00)
-    )
-
 
     // MARK: - 12. Feature-specific and deliberately fixed-polarity
 

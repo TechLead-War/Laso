@@ -154,7 +154,6 @@ enum RC {
     static let workoutZoneRestoringCeiling       = "scoring_workout_zone_restoring_ceiling"
     static let workoutZoneMaintainingCeiling     = "scoring_workout_zone_maintaining_ceiling"
     static let workoutZoneBuildingCeiling        = "scoring_workout_zone_building_ceiling"
-    static let workoutDefaultMaxHR               = "scoring_workout_default_max_hr"
 
     // MARK: Color tokens (designer-tweakable subset)
     //
@@ -241,16 +240,22 @@ enum RC {
     static let recoveryWeeklyTrendMinDays        = "recovery_weekly_trend_min_days"
     static let recoveryWeeklyTrendThresholdSDMultiplier = "recovery_weekly_trend_threshold_sd_multiplier"
 
-    // MARK: Wake Anchor
+    // MARK: Daily brief
     //
-    // Bands and windows for the Sleep Coach wake-window section. Consumer:
-    // Core/Analysis/Config/WakeAnchorConfig.swift.
-    static let killWakeAnchor                    = "kill_wake_anchor"
-    static let wakeAnchorDriftTightMinutes       = "wake_anchor_drift_tight_minutes"
-    static let wakeAnchorDriftLooseMinutes       = "wake_anchor_drift_loose_minutes"
-    static let wakeAnchorConsistencyWindowDays   = "wake_anchor_consistency_window_days"
-    static let wakeAnchorConsistencyMinNights    = "wake_anchor_consistency_min_nights"
-    static let wakeAnchorHistoryWindowDays       = "wake_anchor_history_window_days"
+    // Focus length, driver thresholds and reminder time for the daily brief.
+    // Consumer: Core/Analysis/Config/DailyBriefConfig.swift.
+    static let dailyBriefFocusDays               = "daily_brief_focus_days"
+    static let dailyBriefFocusEarlyCloseDays     = "daily_brief_focus_early_close_days"
+    static let dailyBriefPastFocusRetention      = "daily_brief_past_focus_retention"
+    static let dailyBriefDriverCount             = "daily_brief_driver_count"
+    static let dailyBriefSleepBalanceDriverHours = "daily_brief_sleep_balance_driver_hours"
+    static let dailyBriefHrrOffUsualPercent      = "daily_brief_hrr_off_usual_percent"
+    static let dailyBriefStrainHighDaysOfSix     = "daily_brief_strain_high_days_of_six"
+    static let dailyBriefReadinessWindowDays     = "daily_brief_readiness_window_days"
+    static let dailyBriefReadinessBandDays       = "daily_brief_readiness_band_days"
+    static let dailyBriefTrajectoryDeadBand      = "daily_brief_trajectory_dead_band"
+    static let dailyBriefDayReminderHour         = "daily_brief_day_reminder_hour"
+    static let dailyBriefMoveLogRetentionDays    = "daily_brief_move_log_retention_days"
 }
 
 // MARK: - Hex → Color

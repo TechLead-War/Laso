@@ -159,16 +159,6 @@ enum DS {
         }
     }
 
-    /// Score-based gradient for hero card backgrounds.
-    static func recoveryGradient(_ score: Int) -> LinearGradient {
-        let tint = scoreColor(score)
-        return LinearGradient(
-            colors: [tint.opacity(0.28), tint.opacity(0.1)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     /// Human-readable recovery label from score bands. Mirrors `scoreColor`'s tiers.
     static func scoreLabel(_ score: Int) -> String {
         switch recoveryTier(for: score) {

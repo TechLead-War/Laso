@@ -5,11 +5,6 @@ extension Copy {
 
         // MARK: - Shared UI Tokens
 
-        static var notEnoughData: String { RemoteConfigManager.shared.copyString("copy_common_common_not_enough_data", default: "Not enough data yet") }
-        static var avg: String { RemoteConfigManager.shared.copyString("copy_common_common_avg", default: "Avg") }
-        static var thisWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_this_week", default: "This Week") }
-        static var lastWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_last_week", default: "Last Week") }
-        static var improved: String { RemoteConfigManager.shared.copyString("copy_common_common_improved", default: "Improved") }
         /// A span of time written as a clock, e.g. "7h 30m".
         static func durationHoursMinutes(_ hours: Int, _ minutes: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_common_duration_hours_minutes", default: "%1$dh %2$02dm"), hours, minutes)
@@ -17,21 +12,6 @@ extension Copy {
         /// Under an hour, so the leading "0h" is dropped.
         static func durationMinutes(_ minutes: Int) -> String {
             String(format: RemoteConfigManager.shared.copyString("copy_common_duration_minutes", default: "%dm"), minutes)
-        }
-        static var increased: String { RemoteConfigManager.shared.copyString("copy_common_common_increased", default: "Increased") }
-
-        // MARK: - Trend Cards
-
-        enum Trend {
-            static var sectionTitle: String { RemoteConfigManager.shared.copyString("copy_common_trend_section_title", default: "Trends") }
-            static var inUsualRange: String { RemoteConfigManager.shared.copyString("copy_common_trend_in_usual_range", default: "In your usual range") }
-            static var aboveUsual: String { RemoteConfigManager.shared.copyString("copy_common_trend_above_usual", default: "Above your usual") }
-            static var belowUsual: String { RemoteConfigManager.shared.copyString("copy_common_trend_below_usual", default: "Below your usual") }
-            static var buildingUsualRange: String { RemoteConfigManager.shared.copyString("copy_common_trend_building_usual_range", default: "Learning your usual range") }
-
-            static func accessibilityValue(value: String, status: String) -> String {
-                String(format: RemoteConfigManager.shared.copyString("copy_common_trend_a11y_value", default: "%@, %@"), value, status)
-            }
         }
 
         // MARK: - Metric Verdict
@@ -66,9 +46,6 @@ extension Copy {
         static var savedToAppleHealth2: String { RemoteConfigManager.shared.copyString("copy_common_saved_to_apple_health2", default: "Saved to Apple Health") }
         static var riskDataUnavailableTitle: String { RemoteConfigManager.shared.copyString("copy_common_risk_data_unavailable_title", default: "Risk data unavailable") }
         static var thisHealthRiskAssessmentIsNo: String { RemoteConfigManager.shared.copyString("copy_common_this_health_risk_assessment_is_no", default: "This health risk assessment is no longer available. Pull to refresh your data.") }
-        static var buildingYourSleepProfile: String { RemoteConfigManager.shared.copyString("copy_common_building_your_sleep_profile", default: "Building your sleep profile") }
-        static var weNeedAFewNightsOf: String { RemoteConfigManager.shared.copyString("copy_common_we_need_a_few_nights_of", default: "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.") }
-        static var whileYouWait: String { RemoteConfigManager.shared.copyString("copy_common_while_you_wait", default: "While you wait") }
         static var updateYourPaymentMethodToKeep: String { RemoteConfigManager.shared.copyString("copy_common_update_your_payment_method_to_keep", default: "Update your payment method to keep your subscription active.") }
         static var underMaintenance: String { RemoteConfigManager.shared.copyString("copy_common_under_maintenance", default: "Under Maintenance") }
         static var x: String { RemoteConfigManager.shared.copyString("copy_common_x", default: "·") }
@@ -222,7 +199,6 @@ extension Copy {
         static func loggedText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_logged_text", default: "%@ Logged"), p0) }
         static func switchToTabHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_switch_to_tab_hint", default: "Switch to %@ tab"), p0) }
         static func dayStreakText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_day_streak_text", default: "%d-day streak"), p0) }
-        static func x10100Text(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x10100_text", default: "%d%%"), p0) }
         static func percentValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_percent_value", default: "%d percent"), p0) }
         static func errorText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_error_text", default: "Error: %@"), p0) }
         static func viaText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_via_text", default: "via %@"), p0) }

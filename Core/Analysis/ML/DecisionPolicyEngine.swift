@@ -235,9 +235,7 @@ final class DecisionPolicyEngine {
             rationale: rationale,
             decisionConfidence: min(1.0, decisionConfidence),
             decidedAt: Date(),
-            prescriptiveHeadline: "",
-            targetSleepTime: nil,
-            strainBudget: nil
+            prescriptiveHeadline: ""
         )
 
         // Store decision
@@ -1206,63 +1204,6 @@ final class DecisionPolicyEngine {
         }
     }
 
-    /// Compute a target bedtime based on sleep debt and current strain.
-    ///
-    /// Returns a formatted time string like "10:30 PM" or nil if insufficient data.
-    func computeTargetSleepTime(
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> String? {
-        guard let sleepBaseline = baselines[.sleepDuration],
-              sleepBaseline.mean > 0 else { return nil }
-
-        let currentSleep = timeSeries[.sleepDuration]?.latestValue ?? sleepBaseline.mean
-        let sleepDebtHours = max(0, sleepBaseline.mean - currentSleep)
-
-        // Estimate strain from exercise + steps deviation
-        let strainFactor = estimateStrainFactor(baselines: baselines, timeSeries: timeSeries)
-
-        // Base wake time assumption: 7:00 AM
-        let baseWakeHour = 7.0
-
-        // Target sleep hours: baseline + debt recovery (cap at 1hr extra) + strain adjustment
-        let debtRecovery = min(1.0, sleepDebtHours * 0.5)
-        let strainAdjustment = strainFactor > 1.2 ? 0.5 : (strainFactor > 1.0 ? 0.25 : 0.0)
-        let targetSleepHours = sleepBaseline.mean + debtRecovery + strainAdjustment
-
-        // Compute bedtime from wake time
-        let bedtimeHour = baseWakeHour - targetSleepHours + 24.0
-        let normalizedHour = bedtimeHour.truncatingRemainder(dividingBy: 24.0)
-
-        let hour = Int(normalizedHour)
-        let minute = Int((normalizedHour - Double(hour)) * 60)
-        let roundedMinute = (minute / 15) * 15
-
-        let displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour)
-        let period = hour >= 12 ? "PM" : "AM"
-
-        return String(format: "%d:%02d %@", displayHour, roundedMinute, period)
-    }
-
-    /// Compute a strain budget suggestion based on recovery and recent exertion.
-    ///
-    /// Returns "High intensity OK", "Moderate effort recommended", or "Light activity only".
-    func computeStrainBudget(
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> String? {
-        let recoveryScore = estimateRecoveryScore(baselines: baselines, timeSeries: timeSeries)
-
-        switch recoveryScore {
-        case .excellent, .good:
-            return Copy.Policy.highIntensityOK
-        case .moderate:
-            return Copy.Policy.moderateEffort
-        case .poor, .depleted:
-            return Copy.Policy.lightActivityOnly
-        }
-    }
-
     // MARK: - Recovery Score Estimation
 
     private enum RecoveryLevel {
@@ -1309,29 +1250,6 @@ final class DecisionPolicyEngine {
         if avgSignal > -0.3 { return .moderate }
         if avgSignal > -0.8 { return .poor }
         return .depleted
-    }
-
-    /// Estimate strain factor from exercise/activity deviation above baseline.
-    private func estimateStrainFactor(
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> Double {
-        var factors: [Double] = []
-
-        if let bl = baselines[.activeCalories],
-           let current = timeSeries[.activeCalories]?.latestValue,
-           bl.mean > 0 {
-            factors.append(current / bl.mean)
-        }
-
-        if let bl = baselines[.exerciseMinutes],
-           let current = timeSeries[.exerciseMinutes]?.latestValue,
-           bl.mean > 0 {
-            factors.append(current / bl.mean)
-        }
-
-        guard !factors.isEmpty else { return 1.0 }
-        return factors.reduce(0, +) / Double(factors.count)
     }
 
     // MARK: - Headline Generators

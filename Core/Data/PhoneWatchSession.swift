@@ -159,6 +159,8 @@ final class PhoneWatchSession: NSObject, WCSessionDelegate {
     /// than the local wipe reaches, so it has to be overwritten rather than deleted.
     func clearForAccountWipe() {
         DailyActionStore.clear()
+        DailyMoveLog.clear()
+        UserDefaults.standard.removeObject(forKey: AppKeys.Data.focusRecords)
         WatchCoreState.clear()
         lastComplicationScore = nil
         send(buildPayload(core: nil))

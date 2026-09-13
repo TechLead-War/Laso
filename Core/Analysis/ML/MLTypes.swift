@@ -246,8 +246,6 @@ struct MLCorrelation {
     let grangerCausal: Bool
     /// p-value for Granger test
     let grangerPValue: Double
-    /// Partial correlation controlling for strongest confounder
-    let partialCorrelation: Double?
     /// Stability of correlation over sliding 30-day windows (0.0 = volatile, 1.0 = stable)
     let stability: Double
     /// Number of paired observations
@@ -409,10 +407,6 @@ struct PolicyDecision {
     /// Bold single-sentence headline for the hero card
     /// e.g. "Push hard today -- your recovery is excellent" or "Take it easy -- prioritize sleep tonight"
     let prescriptiveHeadline: String
-    /// Computed optimal bedtime based on strain + sleep debt (e.g. "10:30 PM")
-    let targetSleepTime: String?
-    /// Suggested exertion level for the day ("High intensity OK" / "Light activity only" / "Moderate effort recommended")
-    let strainBudget: String?
 
     struct RankedIntervention {
         let candidate: InterventionCandidate

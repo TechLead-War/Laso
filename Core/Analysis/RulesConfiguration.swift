@@ -154,11 +154,6 @@ struct RulesConfiguration {
     /// Score deduction applied when a value falls outside the population normal range.
     static let outsideNormalRangeDeduction: Int = -15
 
-    /// Recommendation templates. base version (no context)
-    static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection) -> String {
-        recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil, context: nil)
-    }
-
     // MARK: - Context-Aware Helpers
 
     /// "Based on current trends, this may approach warning level within ~8 days."

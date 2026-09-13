@@ -21,8 +21,6 @@ enum DeviceMessaging {
     /// Short device name for inline text: "Apple Watch", "Oura Ring", "Garmin", etc.
     static var deviceName: String { primary.displayName }
 
-    static var optionalDeviceName: String? { detectedWearable?.displayName }
-
     // MARK: - Device Type Classification
 
     private static var deviceType: Copy.Devices.DeviceType {

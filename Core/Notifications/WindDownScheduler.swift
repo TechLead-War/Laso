@@ -10,7 +10,8 @@ struct WindDownScheduler {
     private static let identifier = AppConstants.NotificationID.windDown
 
     /// How many minutes before the predicted bedtime we fire.
-    private static let leadMinutes = 60
+    /// Internal so the Today tab can name the time the push fires at.
+    static let leadMinutes = 60
 
 
     /// Schedule the wind-down push.

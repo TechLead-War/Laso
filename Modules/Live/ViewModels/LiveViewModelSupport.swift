@@ -19,42 +19,6 @@ extension LiveViewModel {
         case cardio = "Cardio"
         case peak = "Peak"
         case extreme = "Extreme"
-
-        var color: Color {
-            switch self {
-            case .rest: return AppColour.surfaceMuted
-            case .warmUp: return AppColour.info
-            case .fatBurn: return AppColour.success
-            case .cardio: return AppColour.scoreFair
-            case .peak: return AppColour.categoryActivity
-            case .extreme: return AppColour.danger
-            }
-        }
-
-    }
-
-    enum VitalStatus: Equatable {
-        case normal, elevated, low, critical, unknown
-
-        var label: String {
-            switch self {
-            case .normal: return "Normal"
-            case .elevated: return "Elevated"
-            case .low: return "Low"
-            case .critical: return "Critical"
-            case .unknown: return "No Data"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .normal: return AppColour.success
-            case .elevated: return AppColour.categoryActivity
-            case .low: return AppColour.warning
-            case .critical: return AppColour.danger
-            case .unknown: return AppColour.stateDefault
-            }
-        }
     }
 
     /// Whether an optional timestamp is within the given threshold from now.
@@ -93,55 +57,8 @@ extension LiveViewModel {
         var latestBodyTemp: Double?
         var bodyTempTimestamp: Date?
 
-        private static let freshnessThreshold: TimeInterval = 30 * 60
-
-        var heartRateStatus: LiveViewModel.VitalStatus {
-            guard let hr = currentHeartRate else { return .unknown }
-            if hr > 120 { return .elevated }
-            if hr < 45 { return .low }
-            return .normal
-        }
-
-        var bloodOxygenStatus: LiveViewModel.VitalStatus {
-            guard let spo2 = currentBloodOxygen else { return .unknown }
-            if spo2 < 92 { return .critical }
-            if spo2 < 95 { return .low }
-            return .normal
-        }
-
-        var respiratoryRateStatus: LiveViewModel.VitalStatus {
-            guard let rr = currentRespiratoryRate else { return .unknown }
-            if rr > 24 { return .elevated }
-            if rr < 10 { return .low }
-            return .normal
-        }
-
-        var bloodPressureStatus: LiveViewModel.VitalStatus {
-            guard let sys = latestSystolic else { return .unknown }
-            if sys >= 140 { return .critical }
-            if sys >= 130 { return .elevated }
-            if sys < 90 { return .low }
-            return .normal
-        }
-
-        var isHeartRateFresh: Bool {
-            LiveViewModel.isFresh(heartRateTimestamp, threshold: Self.freshnessThreshold)
-        }
-
-        var isBloodOxygenFresh: Bool {
-            LiveViewModel.isFresh(bloodOxygenTimestamp, threshold: Self.freshnessThreshold)
-        }
-
-        var isRespiratoryRateFresh: Bool {
-            LiveViewModel.isFresh(respiratoryRateTimestamp, threshold: Self.freshnessThreshold)
-        }
-
         var hasAnyData: Bool {
             currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
-        }
-
-        var hasFreshData: Bool {
-            isHeartRateFresh || isBloodOxygenFresh || isRespiratoryRateFresh
         }
 
         var hasRecentData: Bool {
@@ -152,7 +69,6 @@ extension LiveViewModel {
         }
 
         var isStale: Bool { hasAnyData && !hasRecentData }
-        var isAging: Bool { hasAnyData && !hasFreshData && hasRecentData }
     }
 
     /// Last night's sleep data
@@ -178,14 +94,6 @@ extension LiveViewModel {
 
         var hasSleepStageBreakdown: Bool {
             lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
-        }
-
-        var sleepQualityLabel: String {
-            let hours = tileDuration / 3600
-            if hours >= 7.5 { return "Great" }
-            if hours >= 6.5 { return "Good" }
-            if hours >= 5.5 { return "Fair" }
-            return "Poor"
         }
 
         func apply(summary: LiveSleepSummary) {
@@ -217,10 +125,6 @@ extension LiveViewModel {
         var moveGoal: Double = 500
         var exerciseGoal: Double = 30
         var standGoal: Double = 12
-
-        var moveProgress: Double { min(todayActiveCalories / moveGoal, 1.0) }
-        var exerciseProgress: Double { min(todayExerciseMinutes / exerciseGoal, 1.0) }
-        var standProgress: Double { min(todayStandHours / standGoal, 1.0) }
 
         var hasAnyData: Bool {
             todaySteps > 0 || todayActiveCalories > 0 || todayExerciseMinutes > 0

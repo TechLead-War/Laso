@@ -212,11 +212,6 @@ final class LiveViewModel {
         }
     }
 
-    var heartRateZonePercent: Double {
-        guard let hr = vitals.currentHeartRate else { return 0 }
-        return min(hr / estimatedMaxHR, 1.0)
-    }
-
     // MARK: - Readiness + Today Quick Fetch (for Home tab, no streams)
 
     /// Full fetch. calls all tiers unconditionally (used on first appear and manual refresh).

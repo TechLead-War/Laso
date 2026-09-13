@@ -58,7 +58,6 @@ final class CorrelationDiscovery {
                 if let correlation = analyzePair(
                     metricA: metrics[i],
                     metricB: metrics[j],
-                    metricCount: metrics.count,
                     dateValues: dateValues
                 ), correlation.isSignificant {
                     correlations.append(correlation)
@@ -95,7 +94,6 @@ final class CorrelationDiscovery {
     private func analyzePair(
         metricA: HealthMetric,
         metricB: HealthMetric,
-        metricCount: Int,
         dateValues: [HealthMetric: [Date: Double]]
     ) -> MLCorrelation? {
         guard let datesA = dateValues[metricA],
@@ -131,7 +129,6 @@ final class CorrelationDiscovery {
         // Tiered pruning: skip expensive tests for weak correlations
         let grangerCausal: Bool
         let grangerP: Double
-        var partialCorr: Double?
         let stability: Double
 
         var effectSize: Double = 0
@@ -148,17 +145,7 @@ final class CorrelationDiscovery {
             effectSize = grangerResult?.effectSize ?? 0
             optimalLagDays = grangerResult?.optimalLagDays ?? 0
 
-            // 4. Partial correlation (controlling for strongest confounder)
-            if metricCount > 2 {
-                (partialCorr, _) = partialCorrelation(
-                    a: valuesA, b: valuesB,
-                    metricA: metricA, metricB: metricB,
-                    allDateValues: dateValues,
-                    commonDates: commonDates
-                )
-            }
-
-            // 5. Stability over sliding windows
+            // 4. Stability over sliding windows
             stability = correlationStability(valuesA, valuesB)
         } else {
             // Weak-moderate (0.15-0.25): only Pearson + MI
@@ -174,7 +161,6 @@ final class CorrelationDiscovery {
             mutualInformation: mi,
             grangerCausal: grangerCausal,
             grangerPValue: grangerP,
-            partialCorrelation: partialCorr,
             stability: stability,
             sampleCount: valuesA.count,
             grangerEffectSize: effectSize,
@@ -233,66 +219,6 @@ final class CorrelationDiscovery {
         }
 
         return max(mi, 0) // MI is non-negative
-    }
-
-    // MARK: - Partial Correlation
-
-    /// Compute partial correlation r_ab|c controlling for the strongest confounder
-    private func partialCorrelation(
-        a: [Double], b: [Double],
-        metricA: HealthMetric, metricB: HealthMetric,
-        allDateValues: [HealthMetric: [Date: Double]],
-        commonDates: [Date]
-    ) -> (partialR: Double?, confounder: HealthMetric?) {
-        var bestConfounder: HealthMetric?
-        var bestConfR: Double = 0
-
-        // Find the metric most correlated with both A and B.
-        //
-        // A candidate only qualifies if it has a value on every common date, so
-        // the gather stops at the first gap instead of walking the whole window
-        // and then failing the count check. One reused buffer replaces an array
-        // allocation per candidate. Date hashing here, not the correlations,
-        // dominated this loop.
-        var cValues = [Double]()
-        cValues.reserveCapacity(commonDates.count)
-
-        for (metric, dv) in allDateValues {
-            guard metric != metricA, metric != metricB else { continue }
-
-            cValues.removeAll(keepingCapacity: true)
-            var isComplete = true
-            for date in commonDates {
-                guard let value = dv[date] else { isComplete = false; break }
-                cValues.append(value)
-            }
-            guard isComplete, cValues.count == a.count else { continue }
-
-            let rAC = abs([Double].pearsonCorrelation(a, cValues) ?? 0)
-            let rBC = abs([Double].pearsonCorrelation(b, cValues) ?? 0)
-            let confStrength = rAC * rBC
-
-            if confStrength > bestConfR {
-                bestConfR = confStrength
-                bestConfounder = metric
-            }
-        }
-
-        guard let confounder = bestConfounder,
-              let confValues = allDateValues[confounder] else { return (nil, nil) }
-
-        let c = commonDates.compactMap { confValues[$0] }
-        guard c.count == a.count else { return (nil, nil) }
-
-        let rAB = [Double].pearsonCorrelation(a, b) ?? 0
-        let rAC = [Double].pearsonCorrelation(a, c) ?? 0
-        let rBC = [Double].pearsonCorrelation(b, c) ?? 0
-
-        let denominator = ((1 - rAC * rAC) * (1 - rBC * rBC)).squareRoot()
-        guard denominator > 0 else { return (nil, nil) }
-
-        let partialR = (rAB - rAC * rBC) / denominator
-        return (partialR, confounder)
     }
 
     // MARK: - Stability Tracking

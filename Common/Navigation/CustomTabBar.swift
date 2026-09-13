@@ -89,8 +89,8 @@ struct CustomTabBar: View {
     private func feature(for tab: AppTab) -> AppFeature {
         switch tab {
         case .home: return .home
-        case .live: return .live
-        case .explore: return .explore
+        case .body: return .body
+        case .progress: return .progress
         case .settings: return .settings
         }
     }
@@ -98,8 +98,8 @@ struct CustomTabBar: View {
     private func blockType(for tab: AppTab) -> BlockType {
         switch tab {
         case .home: return .tabHome
-        case .live: return .tabLive
-        case .explore: return .tabExplore
+        case .body: return .tabBody
+        case .progress: return .tabProgress
         case .settings: return .tabSettings
         }
     }

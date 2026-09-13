@@ -6,6 +6,21 @@ enum AppSection: String {
     case homeRecovery = "home_recovery"
     case homeIllness = "home_illness"
     case homeWeeklyReview = "home_weekly_review"
+    case homeStatus = "home_status"
+    case homeDrivers = "home_drivers"
+    case homeMoves = "home_moves"
+    case homeFocus = "home_focus"
+    case homeVerdict = "home_verdict"
+
+    // Body (3)
+    case bodyLive = "body_live"
+    case bodyOffUsual = "body_off_usual"
+    case bodyAtUsual = "body_at_usual"
+
+    // Progress (3)
+    case progressFocus = "progress_focus"
+    case progressPast = "progress_past"
+    case progressSlow = "progress_slow"
 
     // Explore (6)
     case exploreScoreHero = "explore_score_hero"

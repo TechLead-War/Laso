@@ -40,11 +40,6 @@ struct DashboardSmartActionAdvisor {
         let title: String
         let subtitle: String
         var source: String = "context_rules"
-        /// Why we chose this specific action. shown on the detail page
-        var rationale: String = ""
-        /// What the user gets from doing it, shown as a chip under the reason.
-        /// Empty for the rule-based sources, which have no forecast behind them.
-        var expectedBenefit: String = ""
         /// True when the action asks for more intensity. Read only by the
         /// recovery gate in `recommend`, so every rung that can ask a person to
         /// push is vetoed in one place instead of each guarding itself.
@@ -56,11 +51,20 @@ struct DashboardSmartActionAdvisor {
         }
     }
 
+    /// Icons the advisor only assigns to bedtime and wind-down actions. The
+    /// evening gate keys on what the action IS, not on the reminder hour: a
+    /// walk at noon is honestly done at noon.
+    static let eveningAnchoredIcons: Set<String> = ["bed.double.fill", "moon.zzz.fill", "moon.fill"]
+
+    /// `daytimeOnly` drops every bedtime rung so the brief's day move can never
+    /// be "get to bed early"; the night move owns bedtime. False keeps the
+    /// original chain untouched.
     func recommend(
         live: LiveSnapshot,
-        analysis: AnalysisSnapshot
+        analysis: AnalysisSnapshot,
+        daytimeOnly: Bool = false
     ) -> Recommendation {
-        let candidate = chooseRecommendation(live: live, analysis: analysis)
+        let candidate = chooseRecommendation(live: live, analysis: analysis, daytimeOnly: daytimeOnly)
         // One veto, at the exit. The policy engine is not the only rung that
         // can ask for more intensity — both insight rungs and the fitness-focus
         // rung do too — so guarding one of them left the same contradiction
@@ -75,8 +79,7 @@ struct DashboardSmartActionAdvisor {
                 icon: "figure.mind.and.body",
                 title: Copy.Home.SmartAction.lowReadinessTitle,
                 subtitle: Copy.Home.SmartAction.doActiveRecovery,
-                source: "recovery_gate",
-                rationale: Copy.Home.SmartAction.lowReadinessRationale
+                source: "recovery_gate"
             )
         }
         return candidate
@@ -84,7 +87,8 @@ struct DashboardSmartActionAdvisor {
 
     private func chooseRecommendation(
         live: LiveSnapshot,
-        analysis: AnalysisSnapshot
+        analysis: AnalysisSnapshot,
+        daytimeOnly: Bool
     ) -> Recommendation {
         // 0. A rest context the user set beats every signal below it. The body
         // data cannot see a sprained ankle, so without this a strong recovery
@@ -94,8 +98,7 @@ struct DashboardSmartActionAdvisor {
                 icon: rest.systemImage,
                 title: Copy.Home.contextRestTitle,
                 subtitle: Copy.Home.contextRestSubtitle(rest.displayName.lowercasedFirst),
-                source: "life_context",
-                rationale: Copy.Home.contextRestRationale(rest.displayName.lowercasedFirst)
+                source: "life_context"
             )
         }
 
@@ -108,7 +111,7 @@ struct DashboardSmartActionAdvisor {
         // under the 7.5 hour floor carries a standing balance, so without this
         // the daily action would read "get to bed early" every day forever and
         // stop being an action at all.
-        if analysis.sleepDebtIsGrowing, analysis.sleepDebtHours >= SleepDebtTracker.actionableDebtHours {
+        if !daytimeOnly, analysis.sleepDebtIsGrowing, analysis.sleepDebtHours >= SleepDebtTracker.actionableDebtHours {
             let amount = analysis.sleepDebtHours.hoursAsClock
             let nights = SleepDebtTracker.nightsToClear(debtHours: analysis.sleepDebtHours)
             return Recommendation(
@@ -117,26 +120,25 @@ struct DashboardSmartActionAdvisor {
                 subtitle: nights <= SleepDebtTracker.paybackNightsWorthQuoting
                     ? Copy.Home.sleepBankActionSubtitle(amount, nights)
                     : Copy.Home.sleepBankActionSubtitleLong(amount),
-                source: "sleep_bank",
-                rationale: Copy.Home.sleepBankActionRationale(amount)
+                source: "sleep_bank"
             )
         }
 
         // 1. ML policy engine. highest quality, fully personalized
-        if let r = recommendFromPolicyEngine(analysis: analysis) { return r }
+        if let r = daytime(recommendFromPolicyEngine(analysis: analysis), daytimeOnly) { return r }
 
         // 2. Insight-driven. derive action from the highest-priority insight
-        if let r = recommendFromHighPriorityInsight(analysis: analysis) { return r }
+        if let r = daytime(recommendFromHighPriorityInsight(analysis: analysis, daytimeOnly: daytimeOnly), daytimeOnly) { return r }
 
         // 3. Live-data rules (only when data signals something notable)
-        if let r = recommendFromLiveDataRules(live: live) { return r }
+        if let r = daytime(recommendFromLiveDataRules(live: live), daytimeOnly) { return r }
 
         // 4. Any insight available. use it
         if let topInsight = analysis.topInsights.first,
-           let r = insightDrivenRecommendation(topInsight) { return r }
+           let r = daytime(insightDrivenRecommendation(topInsight, daytimeOnly: daytimeOnly), daytimeOnly) { return r }
 
         // 5. Focus-aware rules
-        if let focusAction = focusAwareRecommendation(live: live, analysis: analysis) {
+        if let focusAction = focusAwareRecommendation(live: live, analysis: analysis, daytimeOnly: daytimeOnly) {
             return focusAction
         }
 
@@ -144,18 +146,24 @@ struct DashboardSmartActionAdvisor {
         if let r = recommendFromActivityProgress(live: live) { return r }
 
         // 7. Late-hour wind-down
-        if let r = recommendLateHourWindDown(live: live) { return r }
+        if !daytimeOnly, let r = recommendLateHourWindDown(live: live) { return r }
 
         // 8. Default fallback
         return Recommendation(
             icon: "figure.walk",
             title: Copy.Home.SmartAction.defaultTitle,
-            subtitle: Copy.Home.SmartAction.defaultSubtitle,
-            rationale: Copy.Home.SmartAction.defaultRationale
+            subtitle: Copy.Home.SmartAction.defaultSubtitle
         )
     }
 
     // MARK: - Recommendation Sources
+
+    /// Under `daytimeOnly` an evening-anchored result is skipped so the chain
+    /// falls through to the next rung instead of surfacing a bedtime.
+    private func daytime(_ r: Recommendation?, _ daytimeOnly: Bool) -> Recommendation? {
+        guard let r, daytimeOnly, Self.eveningAnchoredIcons.contains(r.icon) else { return r }
+        return nil
+    }
 
     private func recommendFromPolicyEngine(analysis: AnalysisSnapshot) -> Recommendation? {
         guard let decision = analysis.policyDecision,
@@ -169,16 +177,14 @@ struct DashboardSmartActionAdvisor {
             title: actionTitle(for: decision.primaryAction.candidate.actionType),
             subtitle: decision.primaryAction.description,
             source: "policy_engine",
-            rationale: decision.primaryAction.whyItMatters,
-            expectedBenefit: decision.primaryAction.expectedBenefit,
             isPushDirection: decision.primaryAction.candidate.actionType == .intensifyExercise
         )
     }
 
-    private func recommendFromHighPriorityInsight(analysis: AnalysisSnapshot) -> Recommendation? {
+    private func recommendFromHighPriorityInsight(analysis: AnalysisSnapshot, daytimeOnly: Bool) -> Recommendation? {
         guard let topInsight = analysis.topInsights.first,
               topInsight.severity >= .warning || topInsight.priorityScore > 3.0 else { return nil }
-        return insightDrivenRecommendation(topInsight)
+        return insightDrivenRecommendation(topInsight, daytimeOnly: daytimeOnly)
     }
 
     private func recommendFromLiveDataRules(live: LiveSnapshot) -> Recommendation? {
@@ -186,8 +192,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "wind",
                 title: Copy.Home.SmartAction.highStressTitle,
-                subtitle: Copy.Home.SmartAction.highStressSubtitle,
-                rationale: Copy.Home.SmartAction.highStressRationale(stress)
+                subtitle: Copy.Home.SmartAction.highStressSubtitle
             )
         }
 
@@ -195,8 +200,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "moon.zzz.fill",
                 title: Copy.Home.SmartAction.lowSleepTitle,
-                subtitle: Copy.Home.SmartAction.lowSleepSubtitle(Self.formatHoursMinutes(live.sleepHours)),
-                rationale: Copy.Home.SmartAction.lowSleepRationale
+                subtitle: Copy.Home.SmartAction.lowSleepSubtitle(Self.formatHoursMinutes(live.sleepHours))
             )
         }
 
@@ -204,8 +208,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "figure.mind.and.body",
                 title: Copy.Home.SmartAction.lowReadinessTitle,
-                subtitle: Copy.Home.SmartAction.lowReadinessSubtitle(readiness),
-                rationale: Copy.Home.SmartAction.lowReadinessRationale
+                subtitle: Copy.Home.SmartAction.lowReadinessSubtitle(readiness)
             )
         }
 
@@ -217,8 +220,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "checkmark.seal.fill",
                 title: Copy.Home.SmartAction.exerciseGoalTitle,
-                subtitle: Copy.Home.SmartAction.exerciseGoalSubtitle(Int(live.exerciseMinutes)),
-                rationale: Copy.Home.SmartAction.exerciseGoalRationale
+                subtitle: Copy.Home.SmartAction.exerciseGoalSubtitle(Int(live.exerciseMinutes))
             )
         }
 
@@ -227,8 +229,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "bolt.heart.fill",
                 title: Copy.Home.SmartAction.minutesToGoTitle(remaining),
-                subtitle: Copy.Home.SmartAction.minutesToGoSubtitle,
-                rationale: Copy.Home.SmartAction.minutesToGoRationale
+                subtitle: Copy.Home.SmartAction.minutesToGoSubtitle
             )
         }
 
@@ -240,17 +241,18 @@ struct DashboardSmartActionAdvisor {
         return Recommendation(
             icon: "moon.fill",
             title: Copy.Home.SmartAction.windDownTitle,
-            subtitle: Copy.Home.SmartAction.windDownSubtitle,
-            rationale: Copy.Home.SmartAction.windDownRationale
+            subtitle: Copy.Home.SmartAction.windDownSubtitle
         )
     }
 
     // MARK: - Insight → Action
 
     /// nil when the insight carries no action we can phrase for a person, so the caller falls through to the next rule
-    private func insightDrivenRecommendation(_ insight: Insight) -> Recommendation? {
+    private func insightDrivenRecommendation(_ insight: Insight, daytimeOnly: Bool) -> Recommendation? {
+        // A sleep directive on a non-sleep metric carries a non-bedtime icon,
+        // so the icon gate alone would let "sleep better" through as a day move.
+        if daytimeOnly, insight.directive == .sleepMore || insight.directive == .sleepBetter { return nil }
         let icon = insight.metric.systemImageName
-        let rationale = insight.summary
 
         // Use the insight's actionable recommendation as the subtitle
         let subtitle = insight.actionSummary
@@ -278,32 +280,30 @@ struct DashboardSmartActionAdvisor {
             title: title,
             subtitle: subtitle,
             source: "insight_driven",
-            rationale: rationale,
             isPushDirection: insight.directive == .increaseActivity || insight.directive == .pushHarder
         )
     }
 
     private func focusAwareRecommendation(
         live: LiveSnapshot,
-        analysis: AnalysisSnapshot
+        analysis: AnalysisSnapshot,
+        daytimeOnly: Bool
     ) -> Recommendation? {
         guard !analysis.userFocuses.isEmpty else { return nil }
 
-        if analysis.userFocuses.contains(.sleep), live.hasSleepData {
+        if !daytimeOnly, analysis.userFocuses.contains(.sleep), live.hasSleepData {
             if live.deepSleepMinutes < 45 {
                 return Recommendation(
                     icon: "moon.zzz.fill",
                     title: Copy.Home.SmartAction.deepSleepTitle,
-                    subtitle: Copy.Home.SmartAction.deepSleepSubtitle(Int(live.deepSleepMinutes)),
-                    rationale: Copy.Home.SmartAction.deepSleepRationale
+                    subtitle: Copy.Home.SmartAction.deepSleepSubtitle(Int(live.deepSleepMinutes))
                 )
             }
             if live.sleepHours < 7 {
                 return Recommendation(
                     icon: "bed.double.fill",
                     title: Copy.Home.SmartAction.earlyBedTitle,
-                    subtitle: Copy.Home.SmartAction.earlyBedSubtitle(Self.formatHoursMinutes(live.sleepHours)),
-                    rationale: Copy.Home.SmartAction.earlyBedRationale
+                    subtitle: Copy.Home.SmartAction.earlyBedSubtitle(Self.formatHoursMinutes(live.sleepHours))
                 )
             }
         }
@@ -314,7 +314,6 @@ struct DashboardSmartActionAdvisor {
                 icon: "figure.run",
                 title: Copy.Home.SmartAction.fitnessGapTitle(remaining),
                 subtitle: Copy.Home.SmartAction.fitnessGapSubtitle,
-                rationale: Copy.Home.SmartAction.fitnessGapRationale(remaining),
                 isPushDirection: true
             )
         }
@@ -326,8 +325,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "heart.fill",
                 title: Copy.Home.SmartAction.restingHRUpTitle,
-                subtitle: Copy.Home.SmartAction.restingHRUpSubtitle,
-                rationale: Copy.Home.SmartAction.restingHRUpRationale(currentRHR: Int(restingHeartRate), baselineRHR: Int(baselineMean))
+                subtitle: Copy.Home.SmartAction.restingHRUpSubtitle
             )
         }
 
@@ -337,8 +335,7 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "figure.mind.and.body",
                 title: Copy.Home.SmartAction.focusRecoveryTitle,
-                subtitle: Copy.Home.SmartAction.focusRecoverySubtitle(readiness),
-                rationale: Copy.Home.SmartAction.focusRecoveryRationale
+                subtitle: Copy.Home.SmartAction.focusRecoverySubtitle(readiness)
             )
         }
 

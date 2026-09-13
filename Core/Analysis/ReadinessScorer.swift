@@ -192,8 +192,7 @@ struct ReadinessScorer {
 
     /// Stress read against the person's own HRV and resting-HR baselines, the
     /// way every other channel in this scorer reads. Fixed population anchors
-    /// (60 ms SDNN, 50 bpm) made "Relaxed" unreachable for normal older adults
-    /// and disagreed with `StressScorer`, which is baseline-relative.
+    /// (60 ms SDNN, 50 bpm) made "Relaxed" unreachable for normal older adults.
     ///
     /// Returns nil without both baselines: there is no honest population
     /// fallback here, so callers must show a no-data state instead.

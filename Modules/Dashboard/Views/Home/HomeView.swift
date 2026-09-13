@@ -12,40 +12,31 @@ struct HomeView: View {
     @State private var thermalManager = ThermalManager.shared
     @State private var homeRefreshTimer = RepeatTimer()
     @State private var readinessRefreshTimer = RepeatTimer()
-    @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
-    @State private var showScoreGuide = false
     @State private var showJournalEntry = false
     @State private var showMirrorMoment = false
     @State private var showMirrorCapture = false
-    @State private var showRecoveryInfo = false
-    @State private var actionDoneToday = false
-    @State private var actionReminderSet = false
     @State private var showShareCard = false
     /// Yesterday's marked-done action result, surfaced this morning (loop closer).
     @State private var dailyResult: DailyActionResultStore.Result?
     /// Not @State on purpose: see `ScrollDepthTracker`. Every write here
     /// used to re-run this whole body while the user was scrolling.
     @State private var scrollDepth = ScrollDepthTracker()
-    /// The merged life-context affordance on the action card: false shows one
+    /// The merged life-context affordance on the moves card: false shows one
     /// line, true expands the chip picker in place.
     @State private var showContextPicker = false
     @State private var showSoftLockPaywall = false
     /// One-shot full live fetch on first appear. Without it, Home only starts the
     /// tiered refresh timers, which defer the slow tier (HRV, resting HR, sleep),
-    /// so the "Why" list shows only Energy until the user pulls to refresh.
+    /// so the brief reads only Energy until the user pulls to refresh.
     @State private var didInitialLiveFetch = false
     // Section trackers
-    @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
-    @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
+    @State private var verdictTracker = SectionTracker(section: .homeVerdict, tab: .home)
+    @State private var statusTracker = SectionTracker(section: .homeStatus, tab: .home)
+    @State private var driversTracker = SectionTracker(section: .homeDrivers, tab: .home)
+    @State private var movesTracker = SectionTracker(section: .homeMoves, tab: .home)
+    @State private var focusTracker = SectionTracker(section: .homeFocus, tab: .home)
 
-    /// KEEP-KILL condition on the intraday card: before this hour the usual-day
-    /// trace has no shape to compare against, so any verdict would be noise.
-    private static let intradayMinimumHour = 10
-    /// Founder override (KEEP-KILL): an action whose reminder lands at or after
-    /// this hour is evening-anchored — a morning "Mark done" would log a thing
-    /// that has not happened yet.
-    private static let eveningAnchorHour = 18
     /// Under this age the footer renders a static caption. SwiftUI's relative
     /// date style ticks continuously, and a fresh timestamp does not need a
     /// live clock to be honest.
@@ -153,6 +144,9 @@ struct HomeView: View {
         // UI-test only: zero-size accessible triggers for sheets that otherwise
         // lack a stable, always-visible entry point (ScoreGuideSheet is not
         // wired to any gesture; the journal prompt only appears after 6pm).
+        // UI-test only: zero-size accessible triggers for sheets that otherwise
+        // lack a stable, always-visible entry point (the journal prompt only
+        // appears after 6pm).
         .overlay(alignment: .topLeading) { uiTestHiddenTriggers }
         .fullScreenCover(isPresented: Binding(
             get: { viewModel.ui.showDiscovery },
@@ -162,13 +156,6 @@ struct HomeView: View {
                 discoveries: viewModel.ui.discoveries,
                 dataDepth: viewModel.analysis.dataDepth,
                 onDismiss: { viewModel.dismissDiscovery() }
-            )
-        }
-        .sheet(isPresented: $showScoreGuide) {
-            ScoreGuideSheet(
-                score: viewModel.overallScore?.score,
-                weakestCategoryName: weakestCategoryName,
-                appStateStore: appStateStore
             )
         }
         .sheet(isPresented: $showJournalEntry) {
@@ -196,48 +183,40 @@ struct HomeView: View {
         .sheet(isPresented: $showSoftLockPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared, source: "soft_lock_home")
         }
-        .sheet(isPresented: $showRecoveryInfo) {
-            // Passed through unresolved: the sheet hides its ring when there is
-            // no reading, and 0 would have drawn the worst possible score.
-            RecoveryInfoSheet(score: liveViewModel.recovery.readinessScore)
-        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
             AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
             AppAnalytics.shared.trackCoreAction(.pulledToRefresh, screen: .home)
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
-            rebuildMetricTilesFromLive()
+            rebuildFromLive()
         }
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
         .onChange(of: viewModel.lastRefresh) { _, _ in
-            rebuildMetricTilesFromLive()
-            // A cold start can reach Home before the first analysis lands, and
-            // the review card no longer loads itself (it renders only when a
-            // review exists), so rebuild it whenever a refresh completes.
-            weeklyReviewViewModel?.load()
+            rebuildFromLive()
         }
         // Without this the live sleep reading only reaches the view model on
         // appear, on pull to refresh and on a completed refresh, so a night that
         // lands while Home is open is stranded until one of those fires.
         .onChange(of: liveViewModel.sleep.tileDuration) { _, _ in
-            rebuildMetricTilesFromLive()
+            rebuildFromLive()
+        }
+        .onChange(of: viewModel.focusStore.revision) { _, _ in
+            viewModel.rebuildDailyBrief(liveVM: liveViewModel)
+        }
+        .onChange(of: viewModel.lifeContextStore.active) { _, _ in
+            viewModel.rebuildDailyBrief(liveVM: liveViewModel)
         }
         .onAppear {
-            ensureWeeklyReviewVM()
-            // Loaded here, not in the entry card: the card now renders only
-            // when a review exists, so its own onAppear could never run the
-            // load that produces one.
-            weeklyReviewViewModel?.load()
             if !didInitialLiveFetch {
                 didInitialLiveFetch = true
-                // Load HRV, resting HR and sleep right away so the Why list is
+                // Load HRV, resting HR and sleep right away so the brief is
                 // complete on first open, not after a manual refresh.
                 liveViewModel.fetchHomeData()
             }
             startHomeRefresh()
             startReadinessRefresh()
-            rebuildMetricTilesFromLive()
+            rebuildFromLive()
             refreshDailyResult()
             AppAnalytics.shared.trackFeatureOpen(.home)
         }
@@ -245,6 +224,7 @@ struct HomeView: View {
             // The morning lock is written in the same pass that produces this
             // score, so a change here is the signal that it may now exist.
             refreshDailyResult()
+            viewModel.rebuildDailyBrief(liveVM: liveViewModel)
         }
         .onDisappear {
             stopHomeRefresh()
@@ -307,22 +287,9 @@ struct HomeView: View {
     // MARK: - Live Readiness Score (30-minute refresh)
 
     /// Live readiness score. Falls back to the daily score when no readiness
-    /// data is available, and stays nil when neither exists so the card can say
-    /// so instead of drawing a ring around a stand-in number.
+    /// data is available, and stays nil when neither exists.
     private var liveReadinessScore: Int? {
         liveViewModel.recovery.readinessScore ?? viewModel.overallScore?.score
-    }
-
-    /// Empty strings when there is no score: the card hides the summary footer
-    /// rather than narrating a number that was never computed.
-    private var readinessSummary: (head: String, sub: String) {
-        guard let liveReadinessScore else { return ("", "") }
-        return viewModel.readinessSummary(score: liveReadinessScore)
-    }
-
-    /// Whether we have a real live readiness score (not a fallback)
-    private var hasLiveReadiness: Bool {
-        liveViewModel.recovery.readinessScore != nil
     }
 
     /// The wins the user has actually earned right now. Empty is a valid answer
@@ -336,7 +303,7 @@ struct HomeView: View {
         viewModel.shareTemplates(liveVM: liveViewModel, actionResult: dailyResult)
     }
 
-    /// Compute the loop-closer card once today's morning lock exists. Guarded on
+    /// Compute the loop-closer result once today's morning lock exists. Guarded on
     /// `dailyResult == nil` so it resolves once per morning and the shown event
     /// fires a single time despite the 30-minute score refresh.
     private func refreshDailyResult() {
@@ -350,46 +317,6 @@ struct HomeView: View {
         case .down:   direction = "down"
         }
         AppAnalytics.shared.trackDailyResultShown(direction: direction, delta: result.delta)
-    }
-
-    /// Opens the screen behind one Why row on the score card. Energy has no
-    /// screen of its own — it is the ring's own number — so it opens the same
-    /// explainer the ring does.
-    private func openWhySignal(_ kind: DashboardViewModel.RecoveryWhyReason.Kind) {
-        let destination: String
-        switch kind {
-        case .sleep:
-            destination = "sleep_coach"
-            navigationPath.append(Route.sleepCoach)
-        case .heart:
-            destination = HealthMetric.heartRateVariability.rawValue
-            navigationPath.append(HealthMetric.heartRateVariability)
-        case .restingHR:
-            destination = HealthMetric.restingHeartRate.rawValue
-            navigationPath.append(HealthMetric.restingHeartRate)
-        case .stress:
-            destination = "stress_monitor"
-            navigationPath.append(Route.stressMonitor)
-        case .energy:
-            destination = "score_explainer"
-            if hasLiveReadiness {
-                showRecoveryInfo = true
-            } else {
-                showScoreGuide = true
-            }
-        }
-        AppAnalytics.shared.trackBlockTap(
-            title: "Why row",
-            type: .metricRow,
-            screen: .home,
-            metadata: ["source": "recovery_hero_why", "destination": destination]
-        )
-    }
-
-    /// Name of the lowest-scoring category for personalized score explanation.
-    /// Cached in DashboardViewModel.updateCachedProperties() to avoid recomputing on every render.
-    private var weakestCategoryName: String? {
-        viewModel.cachedWeakestCategoryName
     }
 
     private func startReadinessRefresh() {
@@ -409,20 +336,9 @@ struct HomeView: View {
         readinessRefreshTimer.stop()
     }
 
-    /// Ensure the WeeklyReviewViewModel is created before the body needs it.
-    private func ensureWeeklyReviewVM() {
-        if weeklyReviewViewModel == nil {
-            weeklyReviewViewModel = WeeklyReviewViewModel(dashboardViewModel: viewModel)
-        }
-    }
-
-    /// Rebuild cached metric tiles, passing current live sleep data to the viewModel.
-    private func rebuildMetricTilesFromLive() {
-        viewModel.rebuildMetricTiles(
-            hasSleepData: liveViewModel.sleep.hasSleepData,
-            lastNightSleepDuration: liveViewModel.sleep.tileDuration,
-            sleepQualityLabel: liveViewModel.sleep.sleepQualityLabel
-        )
+    /// Rebuild the brief from everything the live model holds now.
+    private func rebuildFromLive() {
+        viewModel.rebuildDailyBrief(liveVM: liveViewModel)
     }
 
     private var hasData: Bool {
@@ -437,6 +353,7 @@ struct HomeView: View {
         appStateStore.paywallDeclined && !FeatureGate.hasFullAccess
     }
 
+    /// Persistent quiet unlock bar pinned under the home scroll while soft locked.
     /// Persistent quiet unlock bar pinned under the home scroll while soft locked.
     private var softLockBottomBar: some View {
         VStack(spacing: DS.space2) {
@@ -469,226 +386,28 @@ struct HomeView: View {
         Text(title)
             .font(DS.Typography.captionSemibold)
             .tracking(1.2)
+            .textCase(.uppercase)
             .foregroundStyle(AppColour.textTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DS.screenPadding)
+            .padding(.top, DS.space3)
     }
 
     private var homeContent: some View {
         ScrollView(.vertical) {
             LazyVStack(spacing: DS.itemSpacing) {
                 if hasData {
-                    // ── Above the fold ──
-
-                    // 1. The app's only real safety signal leads the screen
-                    // when it exists (KEEP-KILL surviving-screen order), and is
-                    // never blurred behind a paywall.
+                    // The app's only real safety signal leads the screen when
+                    // it exists, and is never blurred behind a paywall.
                     compactAlertBanner
                         .padding(.top, DS.space1)
 
-                    // 2. Yesterday's result. When present, the proof that
-                    // yesterday's action was logged leads the loop — it is the
-                    // reason the user came back this morning. Hosts the share
-                    // entry on up mornings (KEEP-KILL merge list).
-                    if let dailyResult {
-                        // No completions history exists yet (DailyActionCompletion
-                        // stores a single day marker), so the aggregate line stays
-                        // off rather than dressing thin data as a pattern.
-                        DailyActionResultCard(result: dailyResult, aggregate: nil) {
-                            DailyActionResultStore.clear()
-                            withAnimation { self.dailyResult = nil }
-                        }
-
-                        if dailyResult.direction == .up, !shareTemplates.isEmpty {
-                            resultShareButton
-                        }
+                    if let brief = viewModel.dailyBrief {
+                        briefSections(brief)
+                    } else {
+                        LoadingView(Copy.Home.analyzingHealthData)
+                            .onAppear { viewModel.rebuildDailyBrief(liveVM: liveViewModel) }
                     }
-
-                    // 3. Next Up. the daily action leads the screen: Laso's core
-                    // promise is telling you what to do next, so the step comes
-                    // before the score that explains it.
-                    primaryActionCard
-
-                    // 4. Score card. live readiness score (updates every 30 min)
-                    // shown as one ring plus the plain-word reasons behind it.
-                    RecoveryHeroCard(
-                        score: liveReadinessScore,
-                        summaryHead: readinessSummary.head,
-                        summarySub: readinessSummary.sub,
-                        whyReasons: viewModel.recoveryWhyReasons(liveVM: liveViewModel),
-                        isFallbackScore: !hasLiveReadiness,
-                        isWearingWatch: liveViewModel.recovery.isWearingWatch,
-                        missingSignals: viewModel.scoreFedMissingSignalNames(),
-                        // When live Recovery exists the tap opens the Recovery
-                        // explainer; otherwise the headline is the fallback
-                        // health score so we open the matching guide.
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Recovery Score",
-                                type: .homeRecoveryInfoButton,
-                                screen: .home,
-                                metadata: ["has_live_readiness": hasLiveReadiness]
-                            )
-                            if hasLiveReadiness {
-                                showRecoveryInfo = true
-                            } else {
-                                showScoreGuide = true
-                            }
-                        },
-                        onTapWhy: { kind in openWhySignal(kind) },
-                        onFixCoverage: { openHealthAppForCoverage() },
-                        // No earned win means no share icon at all. Offering the
-                        // sheet with nothing in it would train users to ignore it.
-                        onShare: shareTemplates.isEmpty ? nil : {
-                            // Entry step of the share funnel: without this the
-                            // first event is the Share CTA inside the sheet, so
-                            // open-then-dismiss users were invisible.
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Share",
-                                type: .shareCard,
-                                screen: .home,
-                                metadata: ["source": "recovery_hero", "card_type": "template"]
-                            )
-                            showShareCard = true
-                        }
-                    )
-                    .onAppear {
-                        recoveryTracker.appeared()
-                        scrollDepth.record(10)
-                        if let liveReadinessScore {
-                            AppAnalytics.shared.trackScoreViewed(
-                                score: liveReadinessScore,
-                                previousScore: viewModel.scores.scoreChangeFromYesterday.map { liveReadinessScore - $0 }
-                            )
-                        }
-                    }
-                    .onDisappear { recoveryTracker.disappeared() }
-                    .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
-
-                    // 5. Last seven days, right under the score they are the
-                    // history of. Tapping opens the full month in Biology.
-                    // Today's dial is pinned to the exact score the ring above
-                    // shows: the stored snapshot carries the analysis score,
-                    // which is a different model from the live readiness score,
-                    // and two numbers for today on one screen reads as a bug.
-                    WeekScoreStrip(scoresByDay: {
-                        var scores = viewModel.cachedDailyScoresByDay
-                        // No score today leaves today's dial empty rather than
-                        // pinning it to a number the ring above never showed.
-                        if let liveReadinessScore {
-                            scores[Date.cal.startOfDay(for: .now)] = liveReadinessScore
-                        }
-                        return scores
-                    }()) {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Week Strip",
-                            type: .exploreCalendarDay,
-                            screen: .home,
-                            metadata: ["destination": "explore"]
-                        )
-                        NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: nil)
-                    }
-                    // Depth marker repointed from the deleted AskYourDataCard
-                    // onto a card that always renders, so the funnel keeps its
-                    // mid-scroll rung.
-                    .onAppear { scrollDepth.record(40) }
-
-                    // 6. Today's capture, next to the week it belongs to: the
-                    // strip above is the history of the score, this is the
-                    // visual record of the same week.
-                    mirrorCaptureCard
-
-                    // 7. When today actually happened, read against the user's
-                    // own usual day. Hidden until the day has energy logged AND
-                    // the morning has enough shape to compare against.
-                    if Date.cal.component(.hour, from: Date()) >= Self.intradayMinimumHour,
-                       liveViewModel.activity.intradayActiveEnergy.contains(where: { $0 > 0 }) {
-                        IntradayActivityCard(
-                            buckets: liveViewModel.activity.intradayActiveEnergy,
-                            usualBuckets: liveViewModel.usualIntradayEnergy
-                        )
-                    }
-
-                    // 8. Sleep bank. The only running total on the screen, so
-                    // it sits right under the score it helps explain. Hidden
-                    // entirely until the balance is big enough to act on.
-                    if let bank = viewModel.sleepBank {
-                        SleepBankCard(debtHours: bank.debtHours,
-                                      personalBaseline: bank.personalBaseline,
-                                      deficits: bank.deficits,
-                                      nightsRecorded: bank.nightsRecorded)
-                    }
-
-                    // 9. Watch face complication nudge. Only when a watch is paired
-                    // with the app installed and the complication is not on the face.
-                    WatchComplicationCard(linkState: PhoneWatchSession.shared.linkState)
-
-                    sectionHeader("VITALS")
-                        .padding(.top, DS.space3)
-
-                    // 10. Metric Strip. horizontal scroll replacing 6 vertical cards
-                    MetricStripView(tiles: viewModel.cachedMetricTiles) { tile in
-                        AppAnalytics.shared.trackBlockTap(
-                            title: tile.label,
-                            type: .metricRow,
-                            screen: .home,
-                            metadata: ["destination": tile.id]
-                        )
-                        navigationPath.append(tile.route)
-                    }
-                    .onAppear { scrollDepth.record(65) }
-                    .softLocked(isSoftLocked, feature: "home_vitals") { showSoftLockPaywall = true }
-
-                    // ── Below the fold ──
-
-                    // 11. Weekly Review. Header and card render together only
-                    // when a review exists, so a new user never sees a heading
-                    // with nothing under it.
-                    if let weeklyReviewViewModel, weeklyReviewViewModel.review != nil {
-                        sectionHeader("REVIEW")
-                            .padding(.top, DS.space3)
-
-                        WeeklyReviewEntryCard(viewModel: weeklyReviewViewModel) {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Weekly Review",
-                                type: .weeklyReviewCard,
-                                screen: .home,
-                                metadata: [
-                                    "destination": "weekly_review",
-                                    "score": liveReadinessScore ?? 0
-                                ]
-                            )
-                            navigationPath.append(Route.weeklyReview)
-                        }
-                        .onAppear { weeklyReviewTracker.appeared() }
-                        .onDisappear { weeklyReviewTracker.disappeared() }
-                        .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
-                    }
-
-                    // Last updated footer. always rendered so the user can confirm
-                    // the screen is alive; falls back to a pull-to-refresh hint
-                    // when no sync has happened yet (very first launch). Fresh
-                    // timestamps render statically instead of ticking.
-                    Group {
-                        if let lastRefresh = viewModel.lastRefresh {
-                            Group {
-                                if Date().timeIntervalSince(lastRefresh) < Self.freshRefreshWindowSeconds {
-                                    Text(Copy.Home.lastUpdatedAgo(lastRefresh))
-                                } else {
-                                    Copy.Home.updatedAgo(lastRefresh)
-                                }
-                            }
-                            .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
-                        } else {
-                            Copy.Home.pullToRefresh
-                                .accessibilityLabel(Copy.Home.notSyncedYetAccessibility)
-                        }
-                    }
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(AppColour.textTertiary)
-                    // The 90 rung moved off the review card, which now renders
-                    // on review weeks only; the footer always exists.
-                    .onAppear { scrollDepth.record(90) }
                 } else {
                     // The empty state is the unconditional fallback for no data,
                     // so the old blank gap state (greeting over nothing) is
@@ -709,6 +428,148 @@ struct HomeView: View {
         .safeAreaInset(edge: .bottom) {
             if isSoftLocked {
                 softLockBottomBar
+            }
+        }
+    }
+
+    /// Open, how am I doing, what is affecting me, what do I do, is it working.
+    @ViewBuilder
+    private func briefSections(_ brief: DailyBrief) -> some View {
+        // Yesterday's verdict leads when it exists: it is the reason the
+        // person came back this morning. Hosts the share entry on up mornings.
+        if let verdict = brief.verdict {
+            VerdictCard(verdict: verdict) {
+                viewModel.dismissVerdict(liveVM: liveViewModel)
+            }
+            .padding(.horizontal, DS.screenPadding)
+            .onAppear { verdictTracker.appeared() }
+            .onDisappear { verdictTracker.disappeared() }
+
+            if dailyResult?.direction == .up, !shareTemplates.isEmpty {
+                resultShareButton
+            }
+        }
+
+        StatusCard(status: brief.status)
+            .padding(.horizontal, DS.screenPadding)
+            .onAppear {
+                statusTracker.appeared()
+                scrollDepth.record(10)
+                if let score = brief.status.readiness {
+                    AppAnalytics.shared.trackScoreViewed(
+                        score: score,
+                        previousScore: viewModel.scores.scoreChangeFromYesterday.map { score - $0 }
+                    )
+                }
+                // The engagement sequence times its day-2 push off the first real
+                // readiness sighting; a fallback daily score is not that moment.
+                if liveViewModel.recovery.isWearingWatch,
+                   let live = liveViewModel.recovery.readinessScore, live > 0 {
+                    let seenBefore = UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+                    EngagementSequenceScheduler.markActivation(seenBefore ? .secondRecoveryScore : .firstRecoveryScore)
+                }
+            }
+            .onDisappear { statusTracker.disappeared() }
+            .softLocked(isSoftLocked, feature: "home_status", screen: .home) { showSoftLockPaywall = true }
+
+        if !brief.drivers.isEmpty {
+            sectionHeader(Copy.DailyBrief.sectionAffecting)
+
+            DriversCard(drivers: brief.drivers) { kind in
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Driver",
+                    type: .driverRow,
+                    screen: .home,
+                    metadata: ["driver": kind.id]
+                )
+                navigationPath.append(Route.driverDetail(kind))
+            }
+            .padding(.horizontal, DS.screenPadding)
+            .onAppear { driversTracker.appeared() }
+            .onDisappear { driversTracker.disappeared() }
+            .softLocked(isSoftLocked, feature: "home_drivers", screen: .home) { showSoftLockPaywall = true }
+        }
+
+        sectionHeader(Copy.DailyBrief.sectionToDo)
+
+        // Never soft-locked: the one thing to do today is the product.
+        MovesCard(
+            day: brief.dayMove,
+            night: brief.nightMove,
+            onDone: { kind in viewModel.markMoveDone(kind, liveVM: liveViewModel) },
+            onRemind: { kind in remind(kind) }
+        ) {
+            lifeContextSection
+        }
+        .padding(.horizontal, DS.screenPadding)
+        .onAppear {
+            movesTracker.appeared()
+            scrollDepth.record(40)
+        }
+        .onDisappear { movesTracker.disappeared() }
+
+        if let focus = brief.focus {
+            sectionHeader(Copy.DailyBrief.sectionWorking)
+
+            FocusCard(focus: focus) {
+                AppAnalytics.shared.trackBlockTap(
+                    title: focus.title,
+                    type: .focusCard,
+                    screen: .home,
+                    metadata: ["driver": focus.record.driver.id, "destination": "progress"]
+                )
+                NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: AppTab.progress)
+            }
+            .padding(.horizontal, DS.screenPadding)
+            .onAppear {
+                focusTracker.appeared()
+                scrollDepth.record(65)
+            }
+            .onDisappear { focusTracker.disappeared() }
+            .softLocked(isSoftLocked, feature: "home_focus", screen: .home) { showSoftLockPaywall = true }
+        }
+
+        Text(brief.footer)
+            .font(DS.Typography.caption)
+            .foregroundStyle(AppColour.textTertiary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, DS.screenPadding)
+            .padding(.top, DS.space2)
+
+        // Last updated footer. always rendered so the user can confirm
+        // the screen is alive; falls back to a pull-to-refresh hint
+        // when no sync has happened yet (very first launch). Fresh
+        // timestamps render statically instead of ticking.
+        // timestamps render statically instead of ticking.
+                    Group {
+                        if let lastRefresh = viewModel.lastRefresh {
+                            Group {
+                                if Date().timeIntervalSince(lastRefresh) < Self.freshRefreshWindowSeconds {
+                                    Text(Copy.Home.lastUpdatedAgo(lastRefresh))
+                                } else {
+                                    Copy.Home.updatedAgo(lastRefresh)
+                                }
+                            }
+                            .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
+                        } else {
+                            Copy.Home.pullToRefresh
+                                .accessibilityLabel(Copy.Home.notSyncedYetAccessibility)
+                        }
+                    }
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
+                    // The 90 rung moved off the review card, which now renders
+                    // on review weeks only; the footer always exists.
+                    .onAppear { scrollDepth.record(90) }
+    }
+
+    /// Arms the reminder for one move. Both schedulers ask for notification
+    /// permission themselves, so a tap never silently fails.
+    private func remind(_ kind: DailyMoveLog.MoveKind) {
+        Task {
+            switch kind {
+            case .day: await viewModel.remindDayMove(liveVM: liveViewModel)
+            case .night: await viewModel.remindNightMove(liveVM: liveViewModel)
             }
         }
     }
@@ -738,24 +599,7 @@ struct HomeView: View {
         .accessibilityIdentifier("home.dailyResultCard.share")
     }
 
-    /// Opens the Health app so the user can fix a missing read permission.
-    /// `x-apple-health://` is the public Health scheme; if the open fails the
-    /// app settings screen is the fallback door. Never Laso's own settings —
-    /// that was the coverage card's wrong-door CTA (KEEP-KILL merge list).
-    private func openHealthAppForCoverage() {
-        AppAnalytics.shared.trackBlockTap(
-            title: "Check Health settings",
-            type: .errorRetry,
-            screen: .home,
-            metadata: ["source": "hero_coverage_line"]
-        )
-        guard let healthURL = URL(string: "x-apple-health://") else { return }
-        UIApplication.shared.open(healthURL) { success in
-            if !success, let settings = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settings)
-            }
-        }
-    }
+    // MARK: - Empty State. Waiting For First Sync
 
     // MARK: - Empty State. Waiting For First Sync
 
@@ -770,6 +614,8 @@ struct HomeView: View {
             liveViewModel.fetchHomeData()
         }
     }
+
+    // MARK: - Compact Alert Banner (illness early warning only)
 
     // MARK: - Compact Alert Banner (illness early warning only)
 
@@ -835,304 +681,6 @@ struct HomeView: View {
             .onAppear { illnessTracker.appeared() }
             .onDisappear { illnessTracker.disappeared() }
         }
-    }
-
-    // MARK: - Next Up Card (single source of truth for what to do)
-
-    /// Icons the advisor only assigns to bedtime and wind-down actions. A walk
-    /// at noon is honestly done at noon, so the evening gate must key on what
-    /// the action IS, not on the reminder hour — the scheduler's default is an
-    /// evening time for every action, which gated daytime actions too.
-    private static let eveningAnchoredIcons: Set<String> = ["bed.double.fill", "moon.zzz.fill", "moon.fill"]
-
-    private func isEveningAnchored(_ action: DashboardViewModel.SmartAction) -> Bool {
-        Self.eveningAnchoredIcons.contains(action.icon)
-    }
-
-    private var isEveningNow: Bool {
-        Date.cal.component(.hour, from: Date()) >= Self.eveningAnchorHour
-    }
-
-    /// Mark done waits for the evening on evening-anchored actions: an 8am tap
-    /// would log a thing that has not happened yet.
-    private func markDoneWaitsForEvening(_ action: DashboardViewModel.SmartAction) -> Bool {
-        isEveningAnchored(action) && !isEveningNow
-    }
-
-    @ViewBuilder
-    private var primaryActionCard: some View {
-        let action = viewModel.smartDailyAction(liveVM: liveViewModel)
-        let actionRoute = Route.todaysAction
-        VStack(alignment: .leading, spacing: 12) {
-            if actionDoneToday {
-                // Done state: the card gives the slot back, keeping only the
-                // one-line confirmation.
-                actionDoneLoggedRow(action: action)
-            } else {
-                Text(isEveningAnchored(action) && isEveningNow ? Copy.Home.nextUpHeaderTonight : Copy.Home.nextUpHeader)
-                    .font(DS.Typography.captionSemibold)
-                    .tracking(1.2)
-                    .foregroundStyle(AppColour.scoreGood)
-
-                // The action is the headline; tapping opens the full detail.
-                Button {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: action.title,
-                        type: .homeDailyAction,
-                        screen: .home,
-                        metadata: [
-                            "source": action.source,
-                            "recovery_state": viewModel.recoveryState?.rawValue ?? "none",
-                            "routed_to": "\(actionRoute)"
-                        ]
-                    )
-                    navigationPath.append(actionRoute)
-                } label: {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(action.title)
-                            .font(DS.Typography.title3)
-                            .foregroundStyle(AppColour.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        Text(action.subtitle)
-                            .font(DS.Typography.footnote)
-                            .foregroundStyle(AppColour.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        // The advisor's hardcoded default is never dressed as
-                        // personal advice (KEEP-KILL fix row).
-                        if action.isFallback {
-                            Text(Copy.Home.nextUpFallbackNote)
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(AppColour.textTertiary)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        // The payoff sits in its own row rather than in the sentence:
-                        // it is the one line that answers "what do I get", and keeping
-                        // it out of the paragraph stops the reason growing back into
-                        // the four-sentence block this card used to show.
-                        if !action.expectedBenefit.isEmpty {
-                            Label(action.expectedBenefit, systemImage: "arrow.up.right")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(AppColour.scoreGood)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.vertical, DS.space1 + 2)
-                                .padding(.horizontal, DS.space2)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    AppColour.scoreGood.opacity(0.10),
-                                    in: RoundedRectangle(cornerRadius: DS.Radius.sm)
-                                )
-                                .padding(.top, 2)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-
-                // Before the evening the honest verb is Remind, so it leads and
-                // Mark done waits ghosted; in the evening Done leads.
-                HStack(spacing: 8) {
-                    if markDoneWaitsForEvening(action) {
-                        actionRemindButton(action: action)
-                        actionMarkDoneButton(action: action)
-                    } else {
-                        actionMarkDoneButton(action: action)
-                        actionRemindButton(action: action)
-                    }
-                }
-
-                if markDoneWaitsForEvening(action) {
-                    Text(Copy.Home.nextUpDoneTonightHint)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(AppColour.textTertiary)
-                }
-            }
-
-            lifeContextSection
-        }
-        .padding(DS.cardPadding)
-        .cardStyle()
-        .padding(.horizontal, DS.screenPadding)
-        .accessibilityIdentifier("home.todaysActionCard")
-        // On the card, not the button: marking done swaps the button subtree
-        // out for the confirmation row, which would drop the haptic with it.
-        .sensoryFeedback(.success, trigger: actionDoneToday) { _, new in new }
-        .onChange(of: viewModel.lifeContextStore.active) { _, _ in
-            // The action is cached for the day, so without this the card keeps
-            // yesterday's advice after a toggle.
-            viewModel.invalidateDailyActionCache()
-        }
-        .onAppear {
-            actionDoneToday = DailyActionCompletion.isDoneToday
-        }
-    }
-
-    // MARK: - Daily Mirror Capture Card
-
-    /// The permanent door into Daily Mirror capture. Deliberately not gated on
-    /// MirrorMomentManager: that prompt is a once-a-day nudge, this is the
-    /// affordance that has to be there every time the user goes looking for it.
-    /// Reading `hasPhoto` and `currentStreak` in the body is what subscribes this
-    /// view to the store, so the card flips to its done state on its own the
-    /// moment the capture sheet saves.
-    @ViewBuilder
-    private var mirrorCaptureCard: some View {
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            let store = MirrorPhotoStore.shared
-            let capturedToday = store.hasPhoto(on: .now)
-
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Capture today's you",
-                    type: .mirrorCaptureStarted,
-                    screen: .home,
-                    metadata: ["source": "home_card", "is_retake": capturedToday]
-                )
-                showMirrorCapture = true
-            } label: {
-                HStack(spacing: DS.space3) {
-                    if capturedToday, let frame = MirrorPhotoFrame.forStoredDay(.now, thumbnail: true) {
-                        frame
-                            .frame(width: DS.iconSize, height: DS.iconSize)
-                            .clipShape(RoundedRectangle(cornerRadius: DS.iconRadius))
-                    } else {
-                        Image(systemName: "camera.fill")
-                            .font(DS.Typography.mediumIcon)
-                            .foregroundStyle(AppColour.primary)
-                            .frame(width: DS.iconSize, height: DS.iconSize)
-                    }
-
-                    VStack(alignment: .leading, spacing: DS.space1) {
-                        Text(capturedToday ? Copy.Mirror.homeCardDoneTitle : Copy.Mirror.homeCardTitle)
-                            .font(DS.Typography.bodySemibold)
-                            .foregroundStyle(AppColour.textPrimary)
-                        Text(store.currentStreak > 0
-                             ? Copy.Mirror.streakDays(store.currentStreak)
-                             : Copy.Mirror.homeCardSubtitle)
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(AppColour.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if capturedToday {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(DS.Typography.footnoteMedium)
-                            .foregroundStyle(AppColour.success)
-                    } else {
-                        Text(Copy.Mirror.homeCardAction)
-                            .font(DS.Typography.captionSemibold)
-                            .foregroundStyle(AppColour.textOnAccent)
-                            .padding(.horizontal, DS.space3)
-                            .padding(.vertical, DS.space2)
-                            .background(AppColour.primary, in: Capsule())
-                    }
-                }
-                .padding(DS.cardPadding)
-                .cardStyle(tint: AppColour.primary)
-            }
-            .buttonStyle(.dsPress)
-            .padding(.horizontal, DS.screenPadding)
-            .accessibilityLabel(capturedToday ? Copy.Mirror.homeCardDoneTitle : Copy.Mirror.homeCardTitle)
-            .accessibilityHint(Copy.Mirror.homeCardSubtitle)
-            .accessibilityIdentifier("home.mirrorCaptureCard")
-        }
-    }
-
-    /// The collapsed confirmation after Mark done. One row, no buttons: the
-    /// loop's next beat is tomorrow's result card, not more chrome today.
-    private func actionDoneLoggedRow(action: DashboardViewModel.SmartAction) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(DS.Typography.bodySemibold)
-                .foregroundStyle(AppColour.success)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(action.title)
-                    .font(DS.Typography.subheadlineSemibold)
-                    .foregroundStyle(AppColour.textPrimary)
-                    .lineLimit(1)
-                Text(Copy.Home.nextUpDoneLogged)
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(AppColour.textSecondary)
-            }
-            Spacer(minLength: 0)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("home.action.doneLogged")
-    }
-
-    /// Primary green "Mark done" pill. Marks today's one thing done and records
-    /// it so tomorrow morning can show whether it moved the score (loop closer).
-    /// Ghosted until the evening for evening-anchored actions.
-    private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
-        Button {
-            // Locked once done for the day: a mark can't be undone, it auto-resets
-            // tomorrow. The guard lives inside `markDone` so a wrist tap earlier in
-            // the day cannot be overwritten from here.
-            DailyActionCompletion.markDone(
-                actionTitle: action.title,
-                actionIcon: action.icon,
-                source: "next_up_mark_done"
-            )
-            actionDoneToday = true
-        } label: {
-            HStack(spacing: 7) {
-                Image(systemName: "checkmark")
-                    .font(DS.Typography.captionSemibold)
-                Text(Copy.Home.nextUpMarkDone)
-                    .font(DS.Typography.subheadlineSemibold)
-            }
-            .foregroundStyle(markDoneWaitsForEvening(action) ? AppColour.textTertiary : AppColour.scoreGood)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 11)
-            .background(
-                markDoneWaitsForEvening(action)
-                    ? AnyShapeStyle(AppColour.surfaceSubtle)
-                    : AnyShapeStyle(AppColour.scoreGood.opacity(0.15)),
-                in: RoundedRectangle(cornerRadius: 13))
-        }
-        .buttonStyle(.plain)
-        .disabled(markDoneWaitsForEvening(action))
-        .accessibilityIdentifier("home.action.markDone")
-    }
-
-    /// Label for the remind pill. Past the reminder time the scheduler rolls to
-    /// tomorrow, so the pill must not offer a time that has already gone by.
-    private var actionRemindLabel: String {
-        let time = ActionReminderScheduler.timeLabel()
-        return ActionReminderScheduler.firesTomorrow()
-            ? Copy.Home.nextUpRemindTomorrow(time)
-            : Copy.Home.nextUpRemind(time)
-    }
-
-    /// Ghost "Remind 9:30" pill. Schedules a one-off reminder for the action.
-    private func actionRemindButton(action: DashboardViewModel.SmartAction) -> some View {
-        Button {
-            Task {
-                let ok = await ActionReminderScheduler.schedule(action: action.title)
-                actionReminderSet = ok
-                AppAnalytics.shared.trackBlockTap(
-                    title: action.title, type: .homeDailyAction, screen: .home,
-                    metadata: ["source": "next_up_remind", "set": "\(ok)"])
-            }
-        } label: {
-            HStack(spacing: 7) {
-                Image(systemName: actionReminderSet ? "bell.fill" : "clock")
-                    .font(DS.Typography.captionSemibold)
-                Text(actionReminderSet ? Copy.Home.nextUpReminderSet : actionRemindLabel)
-                    .font(DS.Typography.subheadlineSemibold)
-            }
-            .foregroundStyle(AppColour.textSecondary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 13))
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home.action.remind")
     }
 
     // MARK: - Life Context (merged onto the action card)
@@ -1388,16 +936,12 @@ struct HomeView: View {
         firstLaunchDotTimer.stop()
     }
 
-    /// Zero-size, UI-test-only buttons that expose entry points for sheets the
-    /// production UI does not offer as a direct tap target. Only compiled into
-    /// the tree when running under `UITestMode`; in production this returns an
-    /// `EmptyView` and has zero visual or accessibility impact.
     /// Present the Mirror Moment when the manager's rules allow it and no
     /// other sheet holds the screen. The manager owns every frequency rule;
     /// this only owns "nothing else is up right now".
     private func presentMirrorMomentIfDue() {
-        guard !viewModel.ui.showDiscovery, !showJournalEntry, !showScoreGuide,
-              !showSoftLockPaywall, !showRecoveryInfo, !showShareCard,
+        guard !viewModel.ui.showDiscovery, !showJournalEntry,
+              !showSoftLockPaywall, !showShareCard,
               !showMirrorMoment, !showMirrorCapture else { return }
         let manager = MirrorMomentManager.shared
         guard manager.shouldShow(cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera)) else { return }
@@ -1407,12 +951,14 @@ struct HomeView: View {
         showMirrorMoment = true
     }
 
+    /// Zero-size, UI-test-only buttons that expose entry points for sheets the
+    /// production UI does not offer as a direct tap target. Only compiled into
+    /// the tree when running under `UITestMode`; in production this returns an
+    /// `EmptyView` and has zero visual or accessibility impact.
     @ViewBuilder
     private var uiTestHiddenTriggers: some View {
         if UITestMode.isEnabled {
             VStack(spacing: 0) {
-                Button(Copy.Home.openScoreGuideButton) { showScoreGuide = true }
-                    .accessibilityIdentifier("uitest.openScoreGuide")
                 Button(Copy.Home.openJournalEntryButton) { showJournalEntry = true }
                     .accessibilityIdentifier("uitest.openJournalEntry")
                 Button(Copy.Home.openMirrorMomentButton) { showMirrorMoment = true }
@@ -1458,48 +1004,6 @@ struct HomeView: View {
         .onAppear {
             AppAnalytics.shared.trackError(type: "data_load_failed", screen: .home, message: message)
         }
-    }
-}
-
-/// Blurs a home card for paywall decliners and routes any tap to the unlock
-/// sheet. Whole-card blur is deliberate; per-element granularity is skipped.
-private struct SoftLockModifier: ViewModifier {
-    let isLocked: Bool
-    /// Names the blocked surface, so the six Home walls stay separable instead of
-    /// collapsing into one paywall_viewed(source: "soft_lock_home").
-    let feature: String
-    let onTap: () -> Void
-
-    func body(content: Content) -> some View {
-        if isLocked {
-            content
-                .blur(radius: 10)
-                .allowsHitTesting(false)
-                .overlay(
-                    HStack(spacing: DS.space1) {
-                        Image(systemName: "lock.fill")
-                        Text(Copy.Home.softLockBadge)
-                    }
-                    .font(DS.Typography.captionSemibold)
-                    .foregroundStyle(AppColour.textSecondary)
-                    .padding(.horizontal, DS.badgeH)
-                    .padding(.vertical, DS.badgeV)
-                    .background(Color.accentColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.full))
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .home)
-                    onTap()
-                }
-        } else {
-            content
-        }
-    }
-}
-
-private extension View {
-    func softLocked(_ isLocked: Bool, feature: String, onTap: @escaping () -> Void) -> some View {
-        modifier(SoftLockModifier(isLocked: isLocked, feature: feature, onTap: onTap))
     }
 }
 

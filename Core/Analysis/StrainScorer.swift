@@ -40,17 +40,6 @@ enum StrainLevel: String, CaseIterable {
         case .allOut:       return Copy.Strain.strainLevelAllOut
         }
     }
-
-    var color: Color {
-        switch self {
-        case .low:          return AppColour.info
-        case .light:        return AppColour.scoreOptimal
-        case .moderate:     return AppColour.scoreFair
-        case .high:         return AppColour.scorePoor
-        case .overreaching: return AppColour.scorePoor
-        case .allOut:       return AppColour.scorePoor
-        }
-    }
 }
 
 // MARK: - StrainScorer

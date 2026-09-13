@@ -9,6 +9,72 @@ struct RecoveryAnalyzer {
     /// rest actually taken and becomes a verdict on the training volume alone.
     private static let maxRestDaysPerWeek = 3
 
+    /// Rest taken against rest needed over the last 28 days. One rule for the
+    /// insight, the daily brief driver, the Body row and the focus KPI, so no
+    /// two screens can disagree about whether the person is under-rested.
+    struct RestDeficit: Equatable {
+        let restDays28: Int
+        let workoutDays28: Int
+        let highIntensity28: Int
+        let recommendedPerWeek: Int
+        var restPerWeek: Double { Double(restDays28) / 4 }
+        var isDeficit: Bool { restDays28 < recommendedPerWeek * 4 }
+    }
+
+    /// Nil with fewer than three workout days (nothing to judge) or when the
+    /// rest taken already covers the rest needed.
+    static func restDeficit(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> RestDeficit? {
+        restSummary(timeSeries: timeSeries, baselines: baselines).flatMap { $0.isDeficit ? $0 : nil }
+    }
+
+    /// The same 28-day count whether or not rest is short. Nil only with fewer
+    /// than three workout days.
+    static func restSummary(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> RestDeficit? {
+        guard let workoutSeries = timeSeries[.workoutDuration] else { return nil }
+        let days = identifyWorkoutDays(workoutSeries)
+        guard days.count >= 3 else { return nil }
+        let intensities = classifyIntensity(
+            workoutDays: days,
+            activeCalSeries: timeSeries[.activeCalories],
+            baselines: baselines
+        )
+        return restSummary(workoutDays: days, intensities: intensities)
+    }
+
+    /// Calendar days with any logged workout. A rest day is a day not in here.
+    static func workoutDays(_ series: MetricTimeSeries) -> Set<Date> {
+        Set(identifyWorkoutDays(series))
+    }
+
+    private static func restSummary(workoutDays: [Date], intensities: [Date: WorkoutIntensity]) -> RestDeficit {
+        let last28 = workoutDays.filter { $0.timeIntervalSinceNow > -28 * 86400 }
+        let workoutCount28 = last28.count
+        let restDays28 = 28 - workoutCount28
+        let highIntensityCount = intensities.filter { $0.value == .high }
+            .filter { $0.key.timeIntervalSinceNow > -28 * 86400 }.count
+        // highIntensityCount is a 28-day total, so it has to be brought down to a
+        // weekly rate before it can stand in for a per-week rest requirement, and the
+        // requirement is capped so it stays reachable: hard days come out of the same
+        // 28, so 13 of them leave at most 15 rest days and a 4-per-week bar (16) would
+        // fire on everyone who trains that often no matter how much they rested.
+        let recommendedRestPerWeek = min(
+            maxRestDaysPerWeek,
+            max(minRestDaysPerWeek, Int((Double(highIntensityCount) / 4.0).rounded(.up)))
+        )
+        return RestDeficit(
+            restDays28: restDays28,
+            workoutDays28: workoutCount28,
+            highIntensity28: highIntensityCount,
+            recommendedPerWeek: recommendedRestPerWeek
+        )
+    }
+
     /// Analyze recovery patterns and generate insights
     static func generateInsights(
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -61,33 +127,19 @@ struct RecoveryAnalyzer {
             }
         }
 
-        // Rest deficit analysis
-        let last28 = workoutDays.filter { $0.timeIntervalSinceNow > -28 * 86400 }
-        let workoutCount28 = last28.count
-        let restDays28 = 28 - workoutCount28
-        let highIntensityCount = intensities.filter { $0.value == .high }
-            .filter { $0.key.timeIntervalSinceNow > -28 * 86400 }.count
-        // highIntensityCount is a 28-day total, so it has to be brought down to a
-        // weekly rate before it can stand in for a per-week rest requirement, and the
-        // requirement is capped so it stays reachable: hard days come out of the same
-        // 28, so 13 of them leave at most 15 rest days and a 4-per-week bar (16) would
-        // fire on everyone who trains that often no matter how much they rested.
-        let recommendedRestPerWeek = min(
-            maxRestDaysPerWeek,
-            max(minRestDaysPerWeek, Int((Double(highIntensityCount) / 4.0).rounded(.up)))
-        )
-
-        if restDays28 < recommendedRestPerWeek * 4 {
-            let weeklyRest = Double(restDays28) / 4.0
+        let restSummary = restSummary(workoutDays: workoutDays, intensities: intensities)
+        if restSummary.isDeficit {
+            let deficit = restSummary
+            let weeklyRest = deficit.restPerWeek
             insights.append(Insight(
                 metric: .workoutDuration,
                 title: Copy.Analysis.Recovery.restDayDeficit,
-                summary: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days per week with \(highIntensityCount) high-intensity sessions in the last 28 days (\(workoutCount28) workout days, \(restDays28) rest days).",
-                recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(highIntensityCount) high-intensity sessions in the last 28 days. That's \(workoutCount28) workout days to \(restDays28) rest days.",
+                summary: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days per week with \(deficit.highIntensity28) high-intensity sessions in the last 28 days (\(deficit.workoutDays28) workout days, \(deficit.restDays28) rest days).",
+                recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(deficit.highIntensity28) high-intensity sessions in the last 28 days. That's \(deficit.workoutDays28) workout days to \(deficit.restDays28) rest days.",
                 severity: .warning,
                 trend: .declining,
-                baselineValue: Double(recommendedRestPerWeek),
-                deviationPercent: ((weeklyRest - Double(recommendedRestPerWeek)) / Double(recommendedRestPerWeek)) * 100,
+                baselineValue: Double(deficit.recommendedPerWeek),
+                deviationPercent: ((weeklyRest - Double(deficit.recommendedPerWeek)) / Double(deficit.recommendedPerWeek)) * 100,
                 category: .recovery,
             ))
         }

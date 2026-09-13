@@ -37,32 +37,6 @@ final class HealthKitManager: @unchecked Sendable {
     var error: String?
     var syncProgress: SyncProgress?
 
-    /// Per-day overnight sleep session boundaries derived from
-    /// `HKCategoryType(.sleepAnalysis)` asleep* samples. Keyed by the wake-day
-    /// `startOfDay` (Apple's convention: a sleep "belongs" to the day you wake up).
-    /// Populated as a side-effect of fetching `.sleepDuration` so we don't pay
-    /// the cost of a second category query.
-    struct SleepSessionBoundary: Sendable {
-        let bedtime: Date
-        let wakeTime: Date
-        /// Sum of `asleepCore` + `asleepUnspecified` samples within the session, in hours.
-        let coreHours: Double
-        /// Sum of `asleepDeep` samples within the session, in hours.
-        let deepHours: Double
-        /// Sum of `asleepREM` samples within the session, in hours.
-        let remHours: Double
-        /// Time inside the bedtime…wakeTime window not classified as any asleep stage.
-        let awakeHours: Double
-    }
-    var sleepSessionBoundaries: [Date: SleepSessionBoundary] = [:]
-
-    /// Per-day daytime naps (sessions ≥ 20 min that don't qualify as the
-    /// overnight session). Keyed by the *start*-day `startOfDay` so a nap
-    /// taken on Tuesday afternoon shows up under Tuesday. Multiple naps on
-    /// the same day are preserved in order so the Sleep Coach 14-Day History
-    /// can surface them.
-    var napSessionBoundaries: [Date: [SleepSessionBoundary]] = [:]
-
     // MARK: - Dashboard Observer State
 
     /// Persistent observer queries that wake the app when core dashboard metrics
@@ -1012,18 +986,6 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
-    /// One-shot refresh of `sleepSessionBoundaries` for the trailing `days` window.
-    /// Called when Sleep Coach opens so the 14-day history shows correct bedtime/wake
-    /// times even after a cold start (when the routine sync only fetches the last 1–2 days).
-    @MainActor
-    func refreshSleepBoundaries(days: Int = 14) async {
-        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
-        let startDate = Date.cal.date(byAdding: .day, value: -days, to: endDate) ?? endDate
-        let result = await queryOvernightBoundaries(from: startDate, to: endDate)
-        sleepSessionBoundaries.merge(result.overnight) { _, new in new }
-        napSessionBoundaries.merge(result.naps) { _, new in new }
-    }
-
     // MARK: - Sleep Sessions
 
     /// Sleep stage values that count as actually asleep.
@@ -1133,93 +1095,6 @@ final class HealthKitManager: @unchecked Sendable {
         }
         if let current = open { total += current.end.timeIntervalSince(current.start) }
         return total / 3600.0
-    }
-
-    private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> (overnight: [Date: SleepSessionBoundary], naps: [Date: [SleepSessionBoundary]]) {
-        return await withCheckedContinuation { continuation in
-            let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
-            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-
-            let query = HKSampleQuery(
-                sampleType: HKCategoryType(.sleepAnalysis),
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: [sort]
-            ) { _, results, _ in
-                guard let results = results as? [HKCategorySample] else {
-                    continuation.resume(returning: (overnight: [:], naps: [:]))
-                    return
-                }
-
-                let sessions = HealthKitManager.groupSleepSessions(results).sessions
-
-                /// Builds a SleepSessionBoundary by collecting each stage sample's span
-                /// under its category and measuring the union of those spans, then
-                /// deriving awake time from the rest of the bedtime…wakeTime window.
-                func buildBoundary(for session: SleepSession) -> SleepSessionBoundary {
-                    var coreSpans: [(start: Date, end: Date)] = []
-                    var deepSpans: [(start: Date, end: Date)] = []
-                    var remSpans: [(start: Date, end: Date)] = []
-                    for sample in session.samples {
-                        let span = (start: sample.startDate, end: sample.endDate)
-                        switch sample.value {
-                        case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                            deepSpans.append(span)
-                        case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                            remSpans.append(span)
-                        case HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-                             HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
-                            coreSpans.append(span)
-                        default:
-                            break
-                        }
-                    }
-                    let coreHours = HealthKitManager.unionHours(coreSpans)
-                    let deepHours = HealthKitManager.unionHours(deepSpans)
-                    let remHours = HealthKitManager.unionHours(remSpans)
-                    let totalHours = session.end.timeIntervalSince(session.start) / 3600.0
-                    let asleepHours = HealthKitManager.unionHours(coreSpans + deepSpans + remSpans)
-                    return SleepSessionBoundary(
-                        bedtime: session.start,
-                        wakeTime: session.end,
-                        coreHours: coreHours,
-                        deepHours: deepHours,
-                        remHours: remHours,
-                        awakeHours: max(0, totalHours - asleepHours)
-                    )
-                }
-
-                // Classify each session as either the day's overnight sleep
-                // (ends 4 AM–noon, ≥ 2 h) or a daytime nap (≥ 20 min, ends
-                // outside the overnight window OR shorter than 2 h). Naps go
-                // into a parallel dict keyed by *start*-day so a Sunday 1pm
-                // nap surfaces under Sunday in the Sleep Coach history.
-                var overnight: [Date: SleepSessionBoundary] = [:]
-                var naps: [Date: [SleepSessionBoundary]] = [:]
-                for session in sessions {
-                    let endHour = Date.cal.component(.hour, from: session.end)
-                    let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
-                    let isOvernight = endHour >= 4 && endHour < 12 && durationHours >= 2
-                    let candidate = buildBoundary(for: session)
-                    if isOvernight {
-                        let day = HealthKitManager.sleepDay(for: session)
-                        if let existing = overnight[day] {
-                            let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
-                            let newDur = session.end.timeIntervalSince(session.start)
-                            if newDur > existingDur { overnight[day] = candidate }
-                        } else {
-                            overnight[day] = candidate
-                        }
-                    } else if durationHours >= (20.0 / 60.0) {
-                        let day = session.start.startOfDay
-                        naps[day, default: []].append(candidate)
-                    }
-                }
-                continuation.resume(returning: (overnight: overnight, naps: naps))
-            }
-
-            healthStore.execute(query)
-        }
     }
 
     /// Return one sleep-stage series. All stages come from a SINGLE .sleepAnalysis

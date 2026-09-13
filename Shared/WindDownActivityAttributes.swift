@@ -60,11 +60,16 @@ enum WindDownCopy {
     static let header = "Wind down"
     static let toBed = "To bed"
     static let breatheButton = "Breathe 2 min"
+    /// Mirrors the app-side `copy_daily_brief_night_heading_in` default.
+    static let headingIn = "I'm heading in"
+    /// `%@` is the short clock time the person tapped heading in.
+    static let loggedAt = "Logged %@"
     /// `%d` is the HRV value in ms.
     static let hrvHintTemplate = "HRV %d ms, an earlier night helps"
 
     static let compactCountdownAccessibilityLabel = "Time until bedtime"
     static let breatheButtonAccessibilityLabel = "Start a two minute wind down breath"
+    static let headingInAccessibilityLabel = "Log that you are heading to bed"
 }
 
 #if canImport(ActivityKit)
@@ -78,6 +83,9 @@ struct WindDownActivityAttributes: ActivityAttributes {
         var hrvMs: Int?
         /// Whether recent HRV is meaningfully below baseline — surfaces a gentler nudge.
         var hrvIsLow: Bool
+        /// When the person tapped "I'm heading in". Optional so payloads from
+        /// before the button existed still decode.
+        var headedInAt: Date? = nil
     }
 }
 #endif

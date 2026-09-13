@@ -10,8 +10,6 @@ import Foundation
 final class ScrollDepthTracker {
     private(set) var maxDepth: Int = 0
 
-    func reset() { maxDepth = 0 }
-
     func record(_ depth: Int) {
         maxDepth = max(maxDepth, depth)
     }

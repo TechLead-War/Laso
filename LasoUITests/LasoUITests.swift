@@ -67,10 +67,10 @@ final class LasoUITests: XCTestCase {
         let resultCard = app.descendants(matching: .any)["home.dailyResultCard"].firstMatch
         XCTAssertTrue(resultCard.waitForExistence(timeout: 30), "Loop-closer card did not render")
 
-        // Seeded score 80 < today's score, so the up-framing must show. The card
-        // combines its children, so assert on its label.
-        XCTAssertTrue(resultCard.label.contains("higher this morning"),
-                      "Expected the positive result framing, got: \(resultCard.label)")
+        // The seed marks both of yesterday's moves done, so the verdict must name
+        // the result instead of only saying it was logged.
+        XCTAssertTrue(resultCard.label.localizedCaseInsensitiveContains("counted"),
+                      "Expected the verdict to say what counted, got: \(resultCard.label)")
         saveScreenshot(name: "loop-closer")
     }
 
@@ -108,89 +108,43 @@ final class LasoUITests: XCTestCase {
                       "Reminder did not confirm to 'Reminder set' after tap")
     }
 
-    /// Taps "Mark done", confirms it flips to "Done", then taps again and
-    /// confirms it stays locked as "Done" (no untick until tomorrow).
+    /// Taps the day move's Done, confirms it collapses to the logged row, and
+    /// relaunches to confirm it stays done for the rest of the day.
     @MainActor
     func testMarkDoneLocksForTheDay() throws {
         let app = XCUIApplication()
         app.launchArguments += ["--ui-test-mode"]
         app.launch()
         _ = app.buttons["Today"].waitForExistence(timeout: 30)
-        sleep(3)
+        // The moves card sits under the status and drivers, below the first fold,
+        // and the lazy stack only builds what is on screen.
+        let home = app.descendants(matching: .any)["screen.home"].firstMatch
+        XCTAssertTrue(home.waitForExistence(timeout: 30), "Home never appeared")
+        home.swipeUp()
 
-        // The mark-done button in either state — "Mark done" or "Done" both
-        // contain "done" (label query, since the label changes across states).
-        let btn = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'done'")).firstMatch
-        XCTAssertTrue(btn.waitForExistence(timeout: 15), "Mark done button missing")
-
-        // Get into the Done state first (covers the Mark done -> Done flip when
-        // the app launches fresh; already-done if a prior run left it marked).
-        if btn.label.localizedCaseInsensitiveContains("Mark done") {
-            btn.tap()
-            sleep(1)
+        let doneButton = app.buttons["home.action.markDone"]
+        let loggedRow = app.descendants(matching: .any)["home.action.doneLogged"].firstMatch
+        // A prior run on this simulator may already have marked today done.
+        if doneButton.waitForExistence(timeout: 15) {
+            doneButton.tap()
         }
+        XCTAssertTrue(loggedRow.waitForExistence(timeout: 10), "Done did not collapse to the logged row")
+        XCTAssertFalse(doneButton.exists, "The Done button is still offered after marking done")
         saveScreenshot(name: "mark-done")
-        XCTAssertFalse(btn.label.localizedCaseInsensitiveContains("Mark done"),
-                       "Button did not reach the Done state")
 
-        // Tap again — it must stay locked as Done and NOT revert to Mark done.
-        btn.tap()
-        sleep(1)
-        saveScreenshot(name: "mark-done-locked")
-        XCTAssertFalse(btn.label.localizedCaseInsensitiveContains("Mark done"),
-                       "Unticked on second tap; it must stay locked for the day")
-    }
-
-    /// The month calendar is only worth having if a day opens. Taps a scored
-    /// cell and checks the day sheet actually comes up with its signal list,
-    /// then pages back a month and returns with Today.
-    @MainActor
-    func testMonthCalendarDayOpensTheDaySheet() throws {
-        let app = XCUIApplication()
-        app.launchArguments += ["--ui-test-mode", "--ui-test-initial-tab=explore"]
+        app.terminate()
         app.launch()
-
-        let calendar = app.descendants(matching: .any)["explore.monthCalendar"].firstMatch
-        XCTAssertTrue(calendar.waitForExistence(timeout: 30), "Month calendar never appeared on Explore")
-
-        let days = app.buttons.matching(identifier: "explore.monthCalendar.day")
-        XCTAssertTrue(days.firstMatch.waitForExistence(timeout: 20), "No day cells rendered")
-
-        // Mid-month, so the cell is past (tappable) and likely to carry a score.
-        let day = days.element(boundBy: min(14, days.count - 1))
-        XCTAssertTrue(day.waitForExistence(timeout: 10))
-        day.tap()
-
-        let sheet = app.descendants(matching: .any)["explore.daySheet"].firstMatch
-        XCTAssertTrue(sheet.waitForExistence(timeout: 10), "Tapping a day did not open the day sheet")
-        saveScreenshot(name: "explore-day-sheet")
-
-        app.buttons["Close"].firstMatch.tap()
-        XCTAssertTrue(calendar.waitForExistence(timeout: 10), "Closing the sheet did not return to the calendar")
-
-        let thisMonth = Date().formatted(.dateTime.month(.wide).year())
-        app.buttons["Previous month"].firstMatch.tap()
-        calendar.swipeUp()
-
-        let header = app.staticTexts.matching(identifier: "explore.monthCalendar").firstMatch
-        XCTAssertTrue(header.waitForExistence(timeout: 10))
-        XCTAssertNotEqual(header.label, thisMonth, "The back arrow did not move the calendar off this month")
-        saveScreenshot(name: "explore-previous-month")
-
-        // Scoped by identifier so the tab bar's own "Today" cannot match.
-        let todayButton = app.buttons.matching(
-            NSPredicate(format: "label == %@ AND identifier == %@", "Today", "explore.monthCalendar")
-        ).firstMatch
-        XCTAssertTrue(todayButton.waitForExistence(timeout: 10), "Paging back did not offer a way home")
-        todayButton.tap()
-        XCTAssertEqual(app.staticTexts.matching(identifier: "explore.monthCalendar").firstMatch.label, thisMonth,
-                       "Today did not bring the calendar back to this month")
+        _ = app.buttons["Today"].waitForExistence(timeout: 30)
+        app.descendants(matching: .any)["screen.home"].firstMatch.swipeUp()
+        XCTAssertTrue(loggedRow.waitForExistence(timeout: 15), "The day move was not still done after relaunch")
+        XCTAssertFalse(doneButton.exists, "Relaunch offered Done again the same day")
+        saveScreenshot(name: "mark-done-locked")
     }
 
-    /// The sleep bank is the only running total on Home, so it has to survive a
-    /// scroll and render with a real balance rather than an empty frame.
+    /// Today is the brief: the status card and the day/night moves are the two
+    /// things that must render before anything else on the tab is worth testing.
     @MainActor
-    func testSleepBankCardRendersOnHome() throws {
+    func testStatusAndMovesRenderOnHome() throws {
         let app = XCUIApplication()
         app.launchArguments += ["--ui-test-mode", "--ui-test-initial-tab=home"]
         app.launch()
@@ -198,23 +152,18 @@ final class LasoUITests: XCTestCase {
         let home = app.descendants(matching: .any)["screen.home"].firstMatch
         XCTAssertTrue(home.waitForExistence(timeout: 30), "Home never appeared")
 
-        let bank = app.descendants(matching: .any)["home.sleepBank"].firstMatch
-        XCTAssertTrue(bank.waitForExistence(timeout: 20), "Sleep bank card never rendered on Home")
+        let status = app.descendants(matching: .any)["home.statusCard"].firstMatch
+        XCTAssertTrue(status.waitForExistence(timeout: 20), "Status card never rendered on Home")
 
-        // The card combines its children, so its label carries the balance, the
-        // baseline it is measured against and the payback line. Asserting on it
-        // proves real numbers rendered, not just an empty frame.
-        let texts = app.staticTexts.matching(identifier: "home.sleepBank")
-        let labels = (0..<texts.count).map { texts.element(boundBy: $0).label }
-        XCTAssertTrue(labels.contains { $0.contains("Against your usual") },
-                      "Card did not name the baseline it measures against, got: \(labels)")
-        XCTAssertTrue(labels.contains { $0.contains("early night") || $0.contains("puts you back") },
-                      "Card did not say what an early night is worth, got: \(labels)")
+        saveScreenshot(name: "home-brief-top")
 
-        // No scroll here on purpose: Home's accessibility tree is deep enough
-        // that any swipe query times out. The labels above already prove the
-        // card rendered with real numbers rather than an empty frame.
-        saveScreenshot(name: "home-sleep-bank")
+        // The brief is four short sections, so two swipes reach the focus card.
+        home.swipeUp()
+        let moves = app.descendants(matching: .any)["home.todaysActionCard"].firstMatch
+        XCTAssertTrue(moves.waitForExistence(timeout: 20), "Moves card never rendered on Home")
+        saveScreenshot(name: "home-brief-middle")
+        home.swipeUp()
+        saveScreenshot(name: "home-brief-bottom")
     }
 
     /// Taps the blank area on the right of a Settings row, not the icon or the

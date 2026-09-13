@@ -119,6 +119,11 @@ final class AppContainer {
     func injectUITestMockData() {
         #if DEBUG
         guard UITestMode.isEnabled else { return }
+        // Mock samples carry the launch time of day, which the sleep-need engine
+        // would read as the wake time. A fixed anchor keeps the night move real.
+        if WakeUpTimeDetector.userAnchor == nil {
+            WakeUpTimeDetector.userAnchor = (hour: 6, minute: 50)
+        }
 
         // Seed a completed user profile (female if requested so cycle flows appear)
         let gender: Gender = UITestMode.simulateFemaleProfile ? .female : .male
@@ -200,6 +205,15 @@ final class AppContainer {
             categoryScores: categories,
             baselines: analysisEngine.baselines
         )
+
+        // Fourteen morning locks ending today so the brief's readiness sparkline
+        // and trajectory have a real window. Today keeps the override score when
+        // one is set, or the seeded daily result would grade against the wrong lock.
+        let readinessStore = ReadinessStore()
+        let locks = [72, 74, 76, 78, 80, 79, 81, 83, 82, 84, 86, 88, 90, UITestMode.overrideOverallScore ?? 96]
+        for (daysAgo, lock) in locks.reversed().enumerated() {
+            readinessStore.saveMorningLock(lock, for: Date().daysAgo(daysAgo))
+        }
 
         // Force a paid subscription state so paywalls don't intercept and feature
         // gates render the post-purchase UI.

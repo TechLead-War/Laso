@@ -19,22 +19,14 @@ enum IntelligenceCardType: String {
 struct IntelligenceCard: Identifiable {
     let id = UUID()
     let type: IntelligenceCardType
-    let icon: String
     let label: String
     let headline: String
-    let detail: String
     let severity: CardSeverity
-    let confidence: Double
     let priority: Double
-    let accentColor: AccentColor
 
     enum CardSeverity: Int, Comparable {
         case info = 0, notable = 1, warning = 2, critical = 3
         static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
-    }
-
-    enum AccentColor {
-        case red, orange, yellow, green, blue, purple
     }
 }
 
@@ -118,30 +110,25 @@ final class TodayIntelligenceEngine {
             let urgentSignals = report.urgentSignals
             if let topSignal = urgentSignals.first, topSignal.riskLevel >= PredictiveHealthSignals.RiskLevel.moderate {
                 let severity: IntelligenceCard.CardSeverity
-                let color: IntelligenceCard.AccentColor
                 let priorityBase: Double
 
                 switch topSignal.riskLevel {
                 case .critical:
-                    severity = .critical; color = .red; priorityBase = 95
+                    severity = .critical; priorityBase = 95
                 case .high:
-                    severity = .warning; color = .orange; priorityBase = 85
+                    severity = .warning; priorityBase = 85
                 case .moderate:
-                    severity = .notable; color = .yellow; priorityBase = 70
+                    severity = .notable; priorityBase = 70
                 default:
-                    severity = .info; color = .blue; priorityBase = 50
+                    severity = .info; priorityBase = 50
                 }
 
                 return IntelligenceCard(
                     type: .predictiveRisk,
-                    icon: "exclamationmark.triangle.fill",
                     label: Copy.Briefing.Labels.headsUp,
                     headline: Copy.Briefing.TrendSignal.urgentHeadline(signalName: topSignal.signalName),
-                    detail: Copy.Briefing.TrendSignal.urgentDetail(explanation: topSignal.explanation),
                     severity: severity,
-                    confidence: topSignal.confidence,
-                    priority: priorityBase + topSignal.score * 5,
-                    accentColor: color
+                    priority: priorityBase + topSignal.score * 5
                 )
             }
         }
@@ -152,31 +139,19 @@ final class TodayIntelligenceEngine {
 
         let pctStr = formatPercent(prediction.probability)
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         switch prediction.probability {
-        case 0.7...: severity = .critical; color = .red
-        case 0.5..<0.7: severity = .warning; color = .orange
-        default: severity = .notable; color = .yellow
-        }
-
-        let topFactorDesc: String
-        if let topFactor = prediction.topFactors.first {
-            topFactorDesc = Copy.Briefing.TrendSignal.tomorrowDetailWithFactor(metricName: topFactor.metric.displayName)
-        } else {
-            topFactorDesc = Copy.Briefing.TrendSignal.tomorrowDetailGeneric
+        case 0.7...: severity = .critical
+        case 0.5..<0.7: severity = .warning
+        default: severity = .notable
         }
 
         return IntelligenceCard(
             type: .predictiveRisk,
-            icon: "exclamationmark.triangle.fill",
             label: Copy.Briefing.Labels.headsUp,
             headline: Copy.Briefing.TrendSignal.tomorrowHeadline(probability: pctStr),
-            detail: topFactorDesc,
             severity: severity,
-            confidence: prediction.confidence,
-            priority: 80 + prediction.probability * 20,
-            accentColor: color
+            priority: 80 + prediction.probability * 20
         )
     }
 
@@ -199,7 +174,6 @@ final class TodayIntelligenceEngine {
         let dateStr = shortDateString(topCP.date)
 
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         // Is this a good or bad shift?
         let isDecrease = !isIncrease
@@ -208,34 +182,18 @@ final class TodayIntelligenceEngine {
 
         if isPositive {
             severity = topCP.magnitude >= 1.5 ? .notable : .info
-            color = .green
         } else {
             severity = topCP.magnitude >= 2.0 ? .warning : .notable
-            color = topCP.magnitude >= 2.0 ? .orange : .yellow
-        }
-
-        let beforeStr = topCP.metric.formatWithUnit(topCP.beforeMean)
-        let afterStr = topCP.metric.formatWithUnit(topCP.afterMean)
-        let coNames = Array(topCP.coOccurringChanges.prefix(2)).map { $0.metric.displayName }
-        let detail: String
-        if !coNames.isEmpty {
-            detail = Copy.Briefing.SomethingChanged.detailWithCoChanges(before: beforeStr, after: afterStr, coChanges: coNames)
-        } else {
-            detail = Copy.Briefing.SomethingChanged.detailSimple(before: beforeStr, after: afterStr)
         }
 
         let priority: Double = isPositive ? 55 + topCP.magnitude * 5 : 70 + topCP.magnitude * 5
 
         return IntelligenceCard(
             type: .regimeShift,
-            icon: "chart.line.uptrend.xyaxis",
             label: Copy.Briefing.Labels.somethingChanged,
             headline: Copy.Briefing.SomethingChanged.headline(metricName: metricName, direction: directionWord, dateStr: dateStr),
-            detail: detail,
             severity: severity,
-            confidence: topCP.confidence,
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
@@ -252,14 +210,10 @@ final class TodayIntelligenceEngine {
 
             return IntelligenceCard(
                 type: .cascadeForecast,
-                icon: "arrow.triangle.branch",
                 label: Copy.Briefing.Labels.cascadeAlert,
                 headline: Copy.Briefing.WhatMightHappen.precursorHeadline(signalDescription: signalDesc, predictedEvent: top.predictedEvent),
-                detail: Copy.Briefing.WhatMightHappen.precursorDetail(description: top.description),
                 severity: .warning,
-                confidence: top.historicalAccuracy,
-                priority: 90 + top.historicalAccuracy * 10,
-                accentColor: .red
+                priority: 90 + top.historicalAccuracy * 10
             )
         }
 
@@ -288,14 +242,10 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .cascadeForecast,
-            icon: "arrow.triangle.branch",
             label: Copy.Briefing.Labels.cascadeForecast,
             headline: Copy.Briefing.WhatMightHappen.sequenceHeadline(outcome: outcomeStr),
-            detail: Copy.Briefing.WhatMightHappen.sequenceDetail(description: topSeq.description),
             severity: .notable,
-            confidence: topSeq.confidence,
-            priority: 75 + topSeq.confidence * 15,
-            accentColor: .orange
+            priority: 75 + topSeq.confidence * 15
         )
     }
 
@@ -314,25 +264,13 @@ final class TodayIntelligenceEngine {
         let effectMetric = top.metricB.displayName
         let lagDays = top.grangerOptimalLag
         let direction = top.pearsonR > 0 ? "drives" : "inversely drives"
-        let pVal = top.grangerPValue
-
-        let detail: String
-        if top.partialCorrelation != nil {
-            detail = Copy.Briefing.WhyThisIsHappening.detailWithPartial(sampleCount: top.sampleCount)
-        } else {
-            detail = Copy.Briefing.WhyThisIsHappening.detailSimple(sampleCount: top.sampleCount)
-        }
 
         return IntelligenceCard(
             type: .hiddenDriver,
-            icon: "link.circle.fill",
             label: Copy.Briefing.Labels.whyThisIsHappening,
             headline: Copy.Briefing.WhyThisIsHappening.headline(causeMetric: causeMetric, effectMetric: effectMetric, lagDays: lagDays, direction: direction),
-            detail: detail,
             severity: .notable,
-            confidence: 1.0 - pVal,
-            priority: 60 + top.grangerEffectSize * 20,
-            accentColor: .purple
+            priority: 60 + top.grangerEffectSize * 20
         )
     }
 
@@ -347,7 +285,6 @@ final class TodayIntelligenceEngine {
 
         // Find workout timing recommendation
         let workoutRec = recommendations.first { $0.activity == .workout }
-        let sleepRec = recommendations.first { $0.activity == .sleep }
 
         let headline: String
         if let workout = workoutRec {
@@ -358,20 +295,12 @@ final class TodayIntelligenceEngine {
             headline = Copy.Briefing.YourBodyClock.generalHeadline(peakTime: formatHourDecimal(profile.activityAcrophaseHour))
         }
 
-        let bedtime: String? = sleepRec.map { formatHour($0.optimalWindowStart) }
-        let hrvPeakStr: String? = profile.hrvAcrophaseHour.map { formatHourDecimal($0) }
-        let detail = Copy.Briefing.YourBodyClock.detail(bedtime: bedtime, hrvPeak: hrvPeakStr)
-
         return IntelligenceCard(
             type: .bodyClockStatus,
-            icon: "clock.arrow.circlepath",
             label: Copy.Briefing.Labels.yourBodyClock,
             headline: headline,
-            detail: detail,
             severity: .info,
-            confidence: profile.confidence,
-            priority: 45 + profile.confidence * 10,
-            accentColor: .blue
+            priority: 45 + profile.confidence * 10
         )
     }
 
@@ -451,25 +380,17 @@ final class TodayIntelligenceEngine {
         let overallZ = AccelerateML.mean(rawScores)
         let allostaticIndex = Swift.max(0, Swift.min(100, (overallZ + 3.0) / 6.0 * 100.0))
 
-        // Compute 30-day trailing percentile using available time series
-        let percentileStr = trailing30DayPercentile(
-            currentScore: allostaticIndex,
-            baselines: baselines,
-            timeSeries: timeSeries
-        )
-
         // Find the most stressed system
         let sortedSystems = systemScores.sorted { $0.score > $1.score }
         guard let worstSystem = sortedSystems.first else { return nil }
 
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         switch allostaticIndex {
-        case 75...: severity = .critical; color = .red
-        case 62..<75: severity = .warning; color = .orange
-        case 55..<62: severity = .notable; color = .yellow
-        default: severity = .info; color = .green
+        case 75...: severity = .critical
+        case 62..<75: severity = .warning
+        case 55..<62: severity = .notable
+        default: severity = .info
         }
 
         let headline: String
@@ -481,19 +402,6 @@ final class TodayIntelligenceEngine {
             headline = Copy.Briefing.StressAndRecovery.normalStressHeadline
         }
 
-        let systemSummaryItems = (percentileStr != nil ? sortedSystems.prefix(2) : sortedSystems.prefix(sortedSystems.count)).map { s in
-            let label = s.score > 0.5 ? "elevated" : (s.score < -0.5 ? "low" : "normal")
-            return "\(s.name): \(label)"
-        }
-        let systemSummary = systemSummaryItems.joined(separator: ", ")
-
-        let detail: String
-        if let pctStr = percentileStr {
-            detail = Copy.Briefing.StressAndRecovery.detailWithPercentile(percentileStr: pctStr, systemSummary: systemSummary)
-        } else {
-            detail = Copy.Briefing.StressAndRecovery.detailSimple(systemSummary: systemSummary)
-        }
-
         let priority: Double
         if allostaticIndex >= 70 { priority = 80 }
         else if allostaticIndex >= 55 { priority = 55 }
@@ -501,14 +409,10 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .allostaticLoad,
-            icon: "gauge.with.dots.needle.67percent",
             label: Copy.Briefing.Labels.stressAndRecovery,
             headline: headline,
-            detail: detail,
             severity: severity,
-            confidence: Double(systemScores.count) / 4.0,
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
@@ -555,33 +459,22 @@ final class TodayIntelligenceEngine {
         // Not noteworthy if within +/- 0.8 sigma
         guard abs(sigma) >= 0.8 else { return nil }
 
-        let hrvStr = HealthMetric.heartRateVariability.formatWithUnit(hrv)
-        let rhrStr = HealthMetric.restingHeartRate.formatWithUnit(rhr)
-
         let headline: String
-        let detail: String
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         if sigma > 1.0 {
             // Recovery mode
             headline = Copy.Briefing.NervousSystem.recoveryModeHeadline
-            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .notable : .info
-            color = .green
         } else if sigma < -1.0 {
             // Stress mode
             headline = Copy.Briefing.NervousSystem.stressModeHeadline
-            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .warning : .notable
-            color = abs(sigma) >= 2.0 ? .red : .orange
         } else {
             // Mild shift (0.8 - 1.0 sigma)
             let direction = sigma > 0 ? "toward recovery" : "toward stress"
             headline = Copy.Briefing.NervousSystem.mildShiftHeadline(direction: direction)
-            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = .info
-            color = sigma > 0 ? .green : .yellow
         }
 
         let priority: Double
@@ -591,14 +484,10 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .autonomicBalance,
-            icon: "waveform.path.ecg",
             label: Copy.Briefing.Labels.nervousSystem,
             headline: headline,
-            detail: detail,
             severity: severity,
-            confidence: Swift.min(1.0, Double(hrvBaseline.sampleCount) / 30.0),
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
@@ -648,10 +537,7 @@ final class TodayIntelligenceEngine {
         }
 
         // --- HRV Deficit ---
-        // The deficit score is recency weighted, so it is not a day count.
-        // Keep a plain count alongside it for anything shown to the user.
         var hrvDeficitScore = 0.0
-        var hrvBelowDays = 0
         if let hrvBaseline = baselines[.heartRateVariability],
            let hrvSeries = timeSeries[.heartRateVariability] {
             let recentHRV = hrvSeries.samples(lastDays: hrvWindowDays).sorted { $0.date > $1.date }
@@ -660,7 +546,6 @@ final class TodayIntelligenceEngine {
             for (i, sample) in recentHRV.enumerated() {
                 if sample.value < threshold {
                     hrvDeficitScore += pow(decay, Double(i))
-                    hrvBelowDays += 1
                 }
             }
         }
@@ -687,32 +572,14 @@ final class TodayIntelligenceEngine {
         let isSignificant = sleepDebtHours >= 2.0 || hrvDeficitScore >= 3.0 || activityDeficitDays >= 4
         guard isSignificant else { return nil }
 
-        // Trend: compare this week's sleep deficit to last week's
-        let thisWeekSleep = sleepByRecency.prefix(7)
-        let lastWeekSleep = sleepByRecency.dropFirst(7).prefix(7)
-
-        var trendDescription = ""
-        if thisWeekSleep.count >= 5 && lastWeekSleep.count >= 5 {
-            let thisWeekValues: [Double] = thisWeekSleep.map { $0.value }
-            let lastWeekValues: [Double] = lastWeekSleep.map { $0.value }
-            let thisWeekAvg = AccelerateML.mean(thisWeekValues)
-            let lastWeekAvg = AccelerateML.mean(lastWeekValues)
-            if thisWeekAvg > lastWeekAvg + 0.2 {
-                trendDescription = Copy.Briefing.SleepDebt.trendImproving
-            } else if thisWeekAvg < lastWeekAvg - 0.2 {
-                trendDescription = Copy.Briefing.SleepDebt.trendWorsening
-            }
-        }
-
         let sleepDebtStr = String(format: "%.1fh", sleepDebtHours)
 
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         switch sleepDebtHours {
-        case 5...: severity = .warning; color = .red
-        case 3..<5: severity = .notable; color = .orange
-        default: severity = hrvDeficitScore >= 3.0 ? .notable : .info; color = .yellow
+        case 5...: severity = .warning
+        case 3..<5: severity = .notable
+        default: severity = hrvDeficitScore >= 3.0 ? .notable : .info
         }
 
         let headline: String
@@ -722,22 +589,6 @@ final class TodayIntelligenceEngine {
             headline = Copy.Briefing.SleepDebt.headlineHRVSuppressed
         }
 
-        var detailParts: [String] = []
-        if sleepDebtHours >= 1.0 {
-            detailParts.append(Copy.Briefing.SleepDebt.detailSleepDeficit(debtHours: sleepDebtStr, windowDays: sleepWindowDays))
-        }
-        if hrvDeficitScore >= 2.0 {
-            detailParts.append(Copy.Briefing.SleepDebt.detailHRVBelow(dayCount: String(hrvBelowDays), windowDays: hrvWindowDays))
-        }
-        if activityDeficitDays >= 3 {
-            detailParts.append(Copy.Briefing.SleepDebt.detailExerciseBelow(missedDays: activityDeficitDays, windowDays: activityWindowDays))
-        }
-        if !trendDescription.isEmpty {
-            detailParts.append(trendDescription)
-        }
-
-        let detail = detailParts.joined(separator: " ")
-
         let priority: Double
         if sleepDebtHours >= 5.0 { priority = 72 }
         else if sleepDebtHours >= 3.0 || hrvDeficitScore >= 4.0 { priority = 58 }
@@ -745,14 +596,10 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .recoveryDebt,
-            icon: "battery.25percent",
             label: Copy.Briefing.Labels.sleepDebt,
             headline: headline,
-            detail: detail,
             severity: severity,
-            confidence: Swift.min(1.0, Double(recentSleep.count) / Double(sleepWindowDays)),
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
@@ -790,28 +637,7 @@ final class TodayIntelligenceEngine {
         let stabilityValues: [Double] = significantPairs.map { $0.stability }
         let meanStability = AccelerateML.mean(stabilityValues)
 
-        // Find weakest link: the pair with highest stability (expected to be strong) but lowest current |r|
-        // Score = stability - |pearsonR| (high score = big gap between expected and actual)
-        let stablePairs = significantPairs.filter { $0.stability > 0.5 }
-        let weakestLink = stablePairs.max { a, b in
-            let gapA = a.stability - abs(a.pearsonR)
-            let gapB = b.stability - abs(b.pearsonR)
-            return gapA < gapB
-        }
-
-        let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
-
-        if coherence < 0.35 || density < 0.15 {
-            severity = .notable
-            color = .orange
-        } else if coherence > 0.55 && density > 0.3 {
-            severity = .info
-            color = .green
-        } else {
-            severity = .info
-            color = .blue
-        }
+        let severity: IntelligenceCard.CardSeverity = (coherence < 0.35 || density < 0.15) ? .notable : .info
 
         let headline: String
         if meanStability > 0 && coherence < meanStability * 0.7 {
@@ -822,13 +648,6 @@ final class TodayIntelligenceEngine {
             headline = Copy.Briefing.BodySystems.normalHeadline
         }
 
-        let detail: String
-        if let weak = weakestLink {
-            detail = Copy.Briefing.BodySystems.detailWithWeakLink(metricA: weak.metricA.displayName, metricB: weak.metricB.displayName)
-        } else {
-            detail = Copy.Briefing.BodySystems.detailSimple
-        }
-
         let priority: Double
         if coherence < 0.35 { priority = 52 }
         else { priority = 30 }
@@ -837,14 +656,10 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .systemCoherence,
-            icon: "circle.hexagonpath.fill",
             label: cardLabel,
             headline: headline,
-            detail: detail,
             severity: severity,
-            confidence: Swift.min(1.0, Double(correlations.count) / 15.0),
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
@@ -852,7 +667,6 @@ final class TodayIntelligenceEngine {
 
     /// Computes how unusual today is compared to the same weekday's historical distribution.
     /// Combined deviation = sqrt(mean(z^2)) across all metrics with 14+ days of data.
-    /// Highlights the 1-2 most deviating metrics.
     private func rhythmDeviationCard(
         timeSeries: [HealthMetric: MetricTimeSeries],
         liveHRV: Double?,
@@ -874,14 +688,7 @@ final class TodayIntelligenceEngine {
         }
 
         // For each metric with 14+ days, compute same-weekday z-score
-        struct MetricDeviation {
-            let metric: HealthMetric
-            let zScore: Double
-            let todayVal: Double
-            let weekdayMean: Double
-        }
-
-        var deviations: [MetricDeviation] = []
+        var zScores: [Double] = []
 
         for (metric, series) in timeSeries {
             guard let todayVal = todayValue(for: metric) else { continue }
@@ -899,54 +706,30 @@ final class TodayIntelligenceEngine {
 
             guard std > 1e-10 else { continue }
 
-            let z = (todayVal - stats.mean) / std
-            deviations.append(MetricDeviation(
-                metric: metric,
-                zScore: z,
-                todayVal: todayVal,
-                weekdayMean: stats.mean
-            ))
+            zScores.append((todayVal - stats.mean) / std)
         }
 
-        guard deviations.count >= 3 else { return nil }
+        guard zScores.count >= 3 else { return nil }
 
         // RMS z-score across all metrics using Accelerate
-        let zSquared = deviations.map { $0.zScore * $0.zScore }
+        let zSquared = zScores.map { $0 * $0 }
         let meanZSq = AccelerateML.mean(zSquared)
         let rmsZ = meanZSq.squareRoot()
 
         // Not noteworthy if < 1.2
         guard rmsZ >= 1.2 else { return nil }
 
-        // Find top 2 most deviating metrics
-        let sortedByAbsZ = deviations.sorted { abs($0.zScore) > abs($1.zScore) }
-        let topDeviators = Array(sortedByAbsZ.prefix(2))
-
         let todayDayName = dayName(for: todayWeekday)
 
         let severity: IntelligenceCard.CardSeverity
-        let color: IntelligenceCard.AccentColor
 
         switch rmsZ {
-        case 2.5...: severity = .warning; color = .red
-        case 2.0..<2.5: severity = .notable; color = .orange
-        case 1.5..<2.0: severity = .notable; color = .yellow
-        default: severity = .info; color = .blue
+        case 2.5...: severity = .warning
+        case 1.5..<2.5: severity = .notable
+        default: severity = .info
         }
 
         let headline = Copy.Briefing.UnusualDay.headline(dayName: todayDayName)
-
-        let deviatorDescriptions = topDeviators.map { dev in
-            let direction = dev.zScore > 0 ? "above" : "below"
-            return Copy.Briefing.UnusualDay.deviatorDescription(
-                metricName: dev.metric.displayName,
-                currentValue: dev.metric.formatWithUnit(dev.todayVal),
-                direction: direction,
-                weekdayAvg: dev.metric.formatWithUnit(dev.weekdayMean),
-                dayName: todayDayName
-            )
-        }
-        let detail = Copy.Briefing.UnusualDay.detail(descriptions: deviatorDescriptions)
 
         let priority: Double
         if rmsZ >= 2.5 { priority = 68 }
@@ -955,90 +738,14 @@ final class TodayIntelligenceEngine {
 
         return IntelligenceCard(
             type: .rhythmDeviation,
-            icon: "waveform.badge.exclamationmark",
             label: Copy.Briefing.Labels.unusualDay,
             headline: headline,
-            detail: detail,
             severity: severity,
-            confidence: Swift.min(1.0, Double(deviations.count) / 8.0),
-            priority: priority,
-            accentColor: color
+            priority: priority
         )
     }
 
     // MARK: - Helpers
-
-    /// Compute trailing 30-day allostatic percentile using time series data.
-    /// Returns a human-readable percentile string, or nil if insufficient history.
-    private func trailing30DayPercentile(
-        currentScore: Double,
-        baselines: [HealthMetric: UserBaseline],
-        timeSeries: [HealthMetric: MetricTimeSeries]
-    ) -> String? {
-        // We need at least restingHeartRate and HRV time series to do a historical comparison
-        guard let rhrSeries = timeSeries[.restingHeartRate],
-              let hrvSeries = timeSeries[.heartRateVariability],
-              let rhrBaseline = baselines[.restingHeartRate],
-              let hrvBaseline = baselines[.heartRateVariability],
-              rhrBaseline.standardDeviation > 0,
-              hrvBaseline.standardDeviation > 0 else { return nil }
-
-        let rhrSamples = rhrSeries.samples(lastDays: 30)
-        let hrvSamples = hrvSeries.samples(lastDays: 30)
-        guard rhrSamples.count >= 14, hrvSamples.count >= 14 else { return nil }
-
-        // Compute daily composite z-score for each of the past 30 days using available core metrics
-        var dailyScores: [Double] = []
-
-        // Build date-indexed lookup for both metrics
-        var rhrByDate: [Date: Double] = [:]
-        for s in rhrSamples {
-            rhrByDate[calendar.startOfDay(for: s.date)] = s.value
-        }
-        var hrvByDate: [Date: Double] = [:]
-        for s in hrvSamples {
-            hrvByDate[calendar.startOfDay(for: s.date)] = s.value
-        }
-
-        let today = calendar.startOfDay(for: Date())
-        for daysAgo in 1...30 {
-            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) else { continue }
-            let dayStart = calendar.startOfDay(for: date)
-
-            var zScores: [Double] = []
-
-            if let rhr = rhrByDate[dayStart] {
-                var z = (rhr - rhrBaseline.mean) / rhrBaseline.standardDeviation
-                if HealthMetric.restingHeartRate.higherIsBetter { z = -z }
-                zScores.append(Swift.max(-3, Swift.min(3, z)))
-            }
-            if let hrv = hrvByDate[dayStart] {
-                var z = (hrv - hrvBaseline.mean) / hrvBaseline.standardDeviation
-                if HealthMetric.heartRateVariability.higherIsBetter { z = -z }
-                zScores.append(Swift.max(-3, Swift.min(3, z)))
-            }
-
-            guard zScores.count >= 2 else { continue }
-
-            let dayZ = AccelerateML.mean(zScores)
-            let dayScore = Swift.max(0, Swift.min(100, (dayZ + 3.0) / 6.0 * 100.0))
-            dailyScores.append(dayScore)
-        }
-
-        guard dailyScores.count >= 10 else { return nil }
-
-        // Percentile: what fraction of the 30 days had a lower score?
-        let countBelow = dailyScores.filter { $0 < currentScore }.count
-        let percentile = Int(round(Double(countBelow) / Double(dailyScores.count) * 100))
-
-        if percentile >= 85 {
-            return Copy.Insights.highestInDays(days: dailyScores.count, topPercent: 100 - percentile)
-        } else if percentile <= 15 {
-            return Copy.Insights.lowestInDays(days: dailyScores.count, bottomPercent: percentile)
-        } else {
-            return "\(ordinal(percentile)) percentile over the last \(dailyScores.count) days"
-        }
-    }
 
     /// Format a probability (0-1) as a rounded percentage string like "68%".
     private func formatPercent(_ value: Double) -> String {
@@ -1084,22 +791,5 @@ final class TodayIntelligenceEngine {
         case 7: return Copy.Insights.daySaturday
         default: return "day"
         }
-    }
-
-    /// Ordinal suffix for a number (1st, 2nd, 3rd, 4th...).
-    private func ordinal(_ n: Int) -> String {
-        let suffix: String
-        let tens = n % 100
-        if tens >= 11 && tens <= 13 {
-            suffix = "th"
-        } else {
-            switch n % 10 {
-            case 1: suffix = "st"
-            case 2: suffix = "nd"
-            case 3: suffix = "rd"
-            default: suffix = "th"
-            }
-        }
-        return "\(n)\(suffix)"
     }
 }

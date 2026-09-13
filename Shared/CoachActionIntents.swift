@@ -1,5 +1,8 @@
 import Foundation
 import AppIntents
+#if canImport(ActivityKit)
+import ActivityKit
+#endif
 
 /// Shared App Group bridge. Widget-side intents write a pending action key here,
 /// the main app reads and consumes it on next scene activation to route the user.
@@ -13,6 +16,9 @@ enum CoachActionBridge {
     static let pendingTimestampKey = "coach.pendingAction.ts"
     /// Anything older than this is ignored (user probably launched the app manually).
     static let pendingActionTTL: TimeInterval = 60
+    /// Epoch of the "I'm heading in" tap on the wind-down activity. Kept apart
+    /// from the pending action: it does not open the app and must outlive the night.
+    static let headedInKey = "coach.headedIn.ts"
 
     struct Pending {
         let kind: CoachActionKind
@@ -43,6 +49,20 @@ enum CoachActionBridge {
         defaults?.removeObject(forKey: pendingSourceKey)
         defaults?.removeObject(forKey: pendingTimestampKey)
         return Pending(kind: kind, source: source)
+    }
+
+    static func markHeadedIn(at date: Date) {
+        defaults?.set(date.timeIntervalSince1970, forKey: headedInKey)
+    }
+
+    /// App-side: read and clear the heading-in tap. `maxAge` has to cover a
+    /// whole night, since the app is usually opened the next morning, yet stay
+    /// short of a day so a tap cannot be credited to the following evening.
+    static func consumeHeadedIn(maxAge: TimeInterval = 20 * 3600) -> Date? {
+        guard let ts = defaults?.object(forKey: headedInKey) as? Double else { return nil }
+        defaults?.removeObject(forKey: headedInKey)
+        guard Date().timeIntervalSince1970 - ts <= maxAge else { return nil }
+        return Date(timeIntervalSince1970: ts)
     }
 }
 
@@ -93,6 +113,29 @@ struct WindDownBreatheIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         CoachActionBridge.markPending(.breathe, source: "wind_down")
+        return .result()
+    }
+}
+
+/// "I'm heading in" on the Wind-Down Live Activity. The one intent here that
+/// keeps the app closed: the person is putting the phone down, so the tap is
+/// stamped onto the activity in place and the app reads it on its next launch.
+@available(iOS 17.0, *)
+struct WindDownHeadingInIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "I'm heading in"
+    static let description = IntentDescription("Log that you are heading to bed from tonight's wind-down.")
+    static let openAppWhenRun: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        let now = Date()
+        CoachActionBridge.markHeadedIn(at: now)
+        #if canImport(ActivityKit)
+        if let activity = Activity<WindDownActivityAttributes>.activities.first {
+            var state = activity.content.state
+            state.headedInAt = now
+            await activity.update(ActivityContent(state: state, staleDate: activity.content.staleDate))
+        }
+        #endif
         return .result()
     }
 }

@@ -27,6 +27,7 @@ enum UITestMode {
     private static let overrideNamePrefix = "--ui-test-override-name="
     private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
     private static let seedDailyResultPrefix = "--ui-test-seed-daily-result="
+    private static let seedFocusPrefix = "--ui-test-seed-focus="
     private static let overrideSleepScorePrefix = "--ui-test-override-sleep-score="
     private static let overrideActivityScorePrefix = "--ui-test-override-activity-score="
 
@@ -119,9 +120,9 @@ enum UITestMode {
     }
 
     /// Optional initial tab. When set, ContentView selects this tab on first
-    /// appear so a single launch can land directly on Home, Live, Explore, or
+    /// appear so a single launch can land directly on Home, Body, Progress, or
     /// Settings without tap navigation.
-    /// Format: `--ui-test-initial-tab=home|live|explore|settings`
+    /// Format: `--ui-test-initial-tab=home|body|progress|settings`
     static var initialTab: String? {
         guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(initialTabPrefix) }) else {
             return nil
@@ -166,6 +167,10 @@ enum UITestMode {
     static var overrideSleepScore: Int? { intValue(for: overrideSleepScorePrefix) }
     /// Activity category score override (0-100).
     static var overrideActivityScore: Int? { intValue(for: overrideActivityScorePrefix) }
+    /// Day index (1-based) of a running rest-days focus written at launch, with
+    /// two finished ones behind it, so the Progress tab has something to show.
+    /// Format: `--ui-test-seed-focus=7`
+    static var seedFocusDay: Int? { intValue(for: seedFocusPrefix) }
 
     private static func stringValue(for prefix: String) -> String? {
         guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(prefix) }) else {
@@ -244,7 +249,63 @@ enum UITestMode {
             if let todayScore = overrideOverallScore {
                 ReadinessStore().saveMorningLock(todayScore, for: Date())
             }
+            // The verdict card grades yesterday's moves from the log, so the
+            // done day needs both moves on file with the times they were done.
+            MainActor.assumeIsolated { seedYesterdayMoves() }
         }
+
+        if let dayIndex = seedFocusDay {
+            seedFocusRecords(dayIndex: dayIndex)
+        }
+    }
+
+    /// Yesterday's two moves, both done. Cleared first so a relaunch on the
+    /// same simulator does not keep an older seed's tick times.
+    @MainActor
+    private static func seedYesterdayMoves() {
+        DailyMoveLog.clear()
+        let yesterday = Date.cal.date(byAdding: .day, value: -1, to: Date.cal.startOfDay(for: Date())) ?? Date()
+        func at(_ hour: Int, _ minute: Int) -> Date {
+            Date.cal.date(bySettingHour: hour, minute: minute, second: 0, of: yesterday) ?? yesterday
+        }
+        DailyMoveLog.recordShown(
+            day: yesterday,
+            dayMove: DailyMoveLog.Move(title: "10-minute brisk walk", icon: "figure.walk",
+                                       source: "context_rules", shownAt: at(9, 0)),
+            nightMove: DailyMoveLog.Move(title: "In bed by 10:30 PM", icon: "bed.double.fill",
+                                         source: "bedtime", shownAt: at(9, 0),
+                                         bedtimeTarget: at(22, 30), sleepDebtHoursAtShow: 2.33)
+        )
+        DailyMoveLog.markDone(.day, at: at(18, 10), day: yesterday)
+        DailyMoveLog.markDone(.night, at: at(22, 24), day: yesterday)
+    }
+
+    /// Two finished focuses and one running one. The finished pair goes in
+    /// first, oldest first, because the store refuses a start while one is
+    /// active and keeps the past list newest first.
+    private static func seedFocusRecords(dayIndex: Int) {
+        UserDefaults.standard.removeObject(forKey: AppKeys.Data.focusRecords)
+        let store = FocusStore()
+        let today = Date.cal.startOfDay(for: Date())
+        func day(_ year: Int, _ month: Int, _ day: Int) -> Date {
+            Date.cal.date(from: DateComponents(year: year, month: month, day: day)) ?? today
+        }
+        store.start(driver: .stressHigh,
+                    kpis: [.init(kind: .stressScore, day1: 62, latest: 58, latestAt: day(2026, 5, 31))],
+                    now: day(2026, 5, 10))
+        store.close(outcome: .noChange, now: day(2026, 5, 31))
+        store.start(driver: .sleepBalance,
+                    kpis: [.init(kind: .deepSleepMinutes, day1: 48, latest: 66, latestAt: day(2026, 8, 24))],
+                    now: day(2026, 8, 3))
+        store.close(outcome: .improved, now: day(2026, 8, 24))
+
+        let startedAt = Date.cal.date(byAdding: .day, value: -(dayIndex - 1), to: today) ?? today
+        store.start(driver: .restDays, kpis: [
+            .init(kind: .restDaysPerWeek, day1: 1.0, latest: 1.0, latestAt: startedAt),
+            .init(kind: .sleepBalanceHours, day1: -2.33, latest: -2.33, latestAt: startedAt),
+            .init(kind: .vo2Max, day1: 50.3, latest: 50.3, latestAt: startedAt)
+        ], now: startedAt)
+        store.updateLatest([.restDaysPerWeek: 2.0, .sleepBalanceHours: -0.83, .vo2Max: 50.4])
     }
 
     /// Writes eight synthetic Daily Mirror days ending today, so the capture
@@ -349,6 +410,7 @@ enum UITestMode {
     static var overrideOverallScore: Int? { nil }
     static var overrideSleepScore: Int? { nil }
     static var overrideActivityScore: Int? { nil }
+    static var seedFocusDay: Int? { nil }
 
     static func configureDefaults() { /* no-op in Release */ }
 }

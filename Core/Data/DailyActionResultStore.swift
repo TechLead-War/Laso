@@ -12,6 +12,9 @@ import Foundation
 /// differently-derived numbers instead.
 enum DailyActionResultStore {
 
+    /// Score moves inside ±this are day-to-day noise, not a result.
+    static let deadBand: Int = 2
+
     struct Record: Codable {
         let doneDate: Date
         let actionTitle: String
@@ -26,9 +29,8 @@ enum DailyActionResultStore {
         let todayMorningLock: Int
         var delta: Int { todayMorningLock - record.morningLockOnDoneDay }
         var direction: Direction {
-            // ±2 keeps normal day-to-day noise out of the "it moved" claim.
-            if delta >= 2 { return .up }
-            if delta <= -2 { return .down }
+            if delta >= DailyActionResultStore.deadBand { return .up }
+            if delta <= -DailyActionResultStore.deadBand { return .down }
             return .steady
         }
     }

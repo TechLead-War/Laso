@@ -51,6 +51,9 @@ enum AppFeature: String, Hashable {
     case mirrorCapture = "mirror_capture"
     case mirrorGallery = "mirror_gallery"
     case appLock = "app_lock"
+    case body
+    case progress
+    case driverDetail = "driver_detail"
 }
 
 /// Actionable block/card types. only user-initiated taps and meaningful interactions.
@@ -58,6 +61,14 @@ enum BlockType: String {
     // Home. user taps
     case sleepCard = "sleep_card"
     case smartAction = "smart_action"
+    case driverRow = "driver_row"
+    case moveDone = "move_done"
+    case moveRemind = "move_remind"
+    case focusCard = "focus_card"
+    case bodyRow = "body_row"
+    case pastFocusRow = "past_focus_row"
+    case tabBody = "tab_body"
+    case tabProgress = "tab_progress"
     case headlineInsight = "headline_insight"
     case seeAllInsights = "see_all_insights"
     case seeAllNeedsAttention = "see_all_needs_attention"
@@ -421,7 +432,6 @@ final class AppAnalytics {
 
     private var openTimestamps: [AppFeature: Date] = [:]
     private var backgroundedAt: Date?
-    private var streamingStartDate: Date?
     private enum Key {
         static let subscriptionStartDate = "laso.analytics.subscription_start_date"
         static let renewalCount = "laso.analytics.renewal_count"
@@ -1326,6 +1336,21 @@ final class AppAnalytics {
         ])
     }
 
+    /// A three-week focus started or closed. `state` is started/closed, `driver`
+    /// the DriverKind id it targeted, `outcome` improved/held/noChange on close
+    /// only, `days` how many days it ran.
+    func trackFocusLifecycle(state: String, driver: String, outcome: String?, days: Int) {
+        var params: [String: Any] = [
+            "focus_state": state,
+            "driver": driver,
+            "days": days
+        ]
+        if let outcome {
+            params["outcome"] = outcome
+        }
+        logEvent("focus_lifecycle", parameters: params)
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 7. Content Engagement Events
     // ══════════════════════════════════════════════════════════════════════
@@ -1410,17 +1435,6 @@ final class AppAnalytics {
             "hour_bucket": bucket,
             "is_first_set": isFirstSet,
             "source": source
-        ])
-    }
-
-    /// Fired once per Sleep Coach open so the drift distribution is visible
-    /// without shipping per-night times. Success is this median falling
-    /// within-user between week 1 and week 8.
-    func trackWakeAnchorDriftSnapshot(medianDriftMinutes: Int, nightsInWindow: Int, nightsTracked: Int) {
-        logEvent("wake_anchor_drift_snapshot", parameters: [
-            "median_drift_minutes": medianDriftMinutes,
-            "nights_in_window": nightsInWindow,
-            "nights_tracked": nightsTracked
         ])
     }
 
@@ -2132,30 +2146,6 @@ final class AppAnalytics {
     }
 
     // Live Streaming
-    func trackStreamingStarted() {
-        streamingStartDate = Date()
-        logEvent("streaming_started", parameters: [
-            "screen": AppFeature.live.rawValue
-        ])
-    }
-
-    func trackStreamingStopped() {
-        var duration = 0
-        if let start = streamingStartDate {
-            duration = Int(Date().timeIntervalSince(start))
-        }
-        streamingStartDate = nil
-        logEvent("streaming_stopped", parameters: [
-            "screen": AppFeature.live.rawValue,
-            "duration_sec": duration
-        ])
-    }
-
-    func trackLiveFirstDataReceived() {
-        logEvent("live_first_data_received", parameters: [
-            "screen": AppFeature.live.rawValue
-        ])
-    }
 
     // Feedback
     func trackFeedbackSubmitted(category: String, textLength: Int, sentiment: String = "neutral") {
@@ -2731,15 +2721,6 @@ final class AppAnalytics {
     // MARK: - 17. Trust Signals
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call when user views a score explanation or methodology page.
-    func trackExplanationViewed(type: String, screen: AppFeature) {
-        logEvent("explanation_viewed", parameters: [
-            "explanation_type": type,
-            "screen": screen.rawValue,
-            "days_since_install": session.daysSinceInstall
-        ])
-    }
-
     /// Call when user views the privacy/data policy page.
     func trackPrivacyPageViewed(source: String) {
         logEvent("privacy_page_viewed", parameters: [
@@ -2751,15 +2732,6 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 18. Recommendation Lifecycle
     // ══════════════════════════════════════════════════════════════════════
-
-    /// Call when a recommendation (Today's Action, insight action) is shown.
-    func trackRecommendationViewed(type: String, metric: String, difficulty: String = "") {
-        logEvent("recommendation_viewed", parameters: [
-            "recommendation_type": type,
-            "metric": metric,
-            "difficulty": difficulty.isEmpty ? "unspecified" : difficulty
-        ])
-    }
 
     /// Call when user starts acting on a recommendation.
     func trackRecommendationStarted(type: String, metric: String) {
@@ -2790,22 +2762,6 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 19. Feature Lifecycle Metrics
     // ══════════════════════════════════════════════════════════════════════
-
-    func trackWorkoutPlanOpened(
-        plan: WorkoutPlan,
-        recoveryBand: WorkoutRecoveryBand,
-        cyclePhase: CyclePhaseModifier?,
-        screen: AppFeature
-    ) {
-        logEvent("workout_plan_opened", parameters: [
-            "screen": screen.rawValue,
-            "training_zone": plan.zone.rawValue,
-            "recovery_band": recoveryBand.rawValue,
-            "target_duration_min": plan.targetDuration,
-            "estimated_calories": plan.estimatedCalories,
-            "cycle_phase": cyclePhase?.displayName ?? "none"
-        ])
-    }
 
     func trackBreathworkProtocolSelected(_ breathingProtocol: BreathingProtocol) {
         logEvent("breathwork_protocol_selected", parameters: [

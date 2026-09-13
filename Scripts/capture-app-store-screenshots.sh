@@ -118,24 +118,23 @@ SHOTS=(
   "01_onboarding|05_mirror|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=preview --ui-test-initial-tab=home"
   "01_onboarding|06_promise|--ui-test-show-onboarding --ui-test-onboarding-v2-screen=verdict --ui-test-initial-tab=home"
 
-  # ─── 02 Today (Home + morning + Today's Action + Weekly Review + Health State) ───
+  # ─── 02 Today (Home brief + next-morning verdict + Driver detail + Progress + Health State) ───
   "02_today|01_home|--ui-test-initial-tab=home"
-  "02_today|02_home_morning|--ui-test-initial-tab=home --ui-test-force-morning-checkin"
-  "02_today|03_todays_action|--ui-test-initial-tab=home --ui-test-initial-route=todaysAction"
-  "02_today|04_weekly_review|--ui-test-initial-tab=home --ui-test-initial-route=weeklyReview"
+  "02_today|02_home_morning|--ui-test-initial-tab=home --ui-test-seed-daily-result=84 --ui-test-override-overall-score=91"
+  "02_today|03_driver_detail|--ui-test-initial-tab=home --ui-test-initial-route=driverDetail"
+  "02_today|04_progress|--ui-test-initial-tab=progress --ui-test-seed-focus=7"
   "02_today|05_health_state|--ui-test-initial-tab=home --ui-test-initial-route=healthStateTimeline"
 
   # ─── 03 Sleep ───
-  "03_sleep|01_sleep_coach|--ui-test-initial-tab=home --ui-test-initial-route=sleepCoach"
+  "03_sleep|01_sleep_driver|--ui-test-initial-tab=home --ui-test-initial-route=driverDetail.sleepBalance"
 
-  # ─── 04 Activity & Strain (Live tab, Strain, Stress) ───
-  "04_activity|01_live_tab|--ui-test-initial-tab=live"
-  "04_activity|02_strain|--ui-test-initial-tab=home --ui-test-initial-route=strainDetail"
-  "04_activity|03_stress|--ui-test-initial-tab=home --ui-test-initial-route=stressMonitor"
+  # ─── 04 Activity & Strain (Body tab, Strain, Stress) ───
+  "04_activity|01_body_tab|--ui-test-initial-tab=body"
+  "04_activity|02_strain|--ui-test-initial-tab=home --ui-test-initial-route=driverDetail.strainHigh"
+  "04_activity|03_stress|--ui-test-initial-tab=home --ui-test-initial-route=driverDetail.stressHigh"
 
-  # ─── 05 Recovery & Vitality (Vitality, Brain Health, Cycle) ───
+  # ─── 05 Recovery & Vitality (Vitality, Cycle) ───
   "05_recovery|01_vitality|--ui-test-initial-tab=home --ui-test-initial-route=vitalityDetail"
-  "05_recovery|02_brain_health|--ui-test-initial-tab=home --ui-test-initial-route=brainHealth"
   "05_recovery|03_cycle|--ui-test-initial-tab=home --ui-test-initial-route=cycleDetail"
 
   # ─── 06 Insights & Intelligence (Insights, Correlations, Ask Your Data, Journal) ───
@@ -153,10 +152,9 @@ SHOTS=(
   # ─── 08 Edge cases & states (transient overlays, paywalls, empty states, engagement) ───
   "08_states|01_disclaimer|--ui-test-show-disclaimer --ui-test-initial-tab=home"
   "08_states|02_paywall|--ui-test-show-paywall --ui-test-initial-tab=home"
-  "08_states|03_pro_lock|--ui-test-force-pro-lock --ui-test-initial-tab=live"
+  "08_states|03_pro_lock|--ui-test-force-pro-lock --ui-test-initial-tab=body"
   "08_states|04_connect_health_empty|--ui-test-no-watch --ui-test-initial-tab=home"
   "08_states|05_achievements|--ui-test-initial-tab=home --ui-test-initial-route=achievements"
-  "08_states|06_explore_tab|--ui-test-initial-tab=explore"
 )
 
 COMMON_FLAGS=(
@@ -404,41 +402,40 @@ CATALOG = [
     {
         "id": "02_today",
         "title": "Today",
-        "description": "The Home tab and its primary daily surfaces — recovery, morning check-in, today's action, weekly review, health state timeline.",
+        "description": "The Home tab and its primary daily surfaces — the daily brief, the next-morning verdict, one driver's detail, the Progress tab, health state timeline.",
         "shots": [
-            {"id": "01_home",          "screen": "Home dashboard",             "caption": "Recovery + daily narrative"},
-            {"id": "02_home_morning",  "screen": "Home with morning check-in", "caption": "Coach greeting + today's plan"},
-            {"id": "03_todays_action", "screen": "Today's Action detail",      "caption": "Single contextual action with reasoning"},
-            {"id": "04_weekly_review", "screen": "Weekly Review",              "caption": "Score delta + wins of the week"},
-            {"id": "05_health_state",  "screen": "Health State Timeline",      "caption": "Optimal days dominate the calendar"},
+            {"id": "01_home",          "screen": "Home brief",               "caption": "Status, drivers and today's two moves"},
+            {"id": "02_home_morning",  "screen": "Home the next morning",    "caption": "Verdict on yesterday's moves"},
+            {"id": "03_driver_detail", "screen": "Driver detail",            "caption": "One driver explained with its usual band"},
+            {"id": "04_progress",      "screen": "Progress tab",             "caption": "Day 7 of a rest-days focus + past focuses"},
+            {"id": "05_health_state",  "screen": "Health State Timeline",    "caption": "Optimal days dominate the calendar"},
         ],
     },
     {
         "id": "03_sleep",
         "title": "Sleep",
-        "description": "Sleep Coach detail — debt, history, tips, bedtime anchor.",
+        "description": "Sleep balance driver detail — debt, history, bedtime anchor.",
         "shots": [
-            {"id": "01_sleep_coach", "screen": "Sleep Coach", "caption": "Debt cleared, 14-day chart healthy"},
+            {"id": "01_sleep_driver", "screen": "Sleep balance driver", "caption": "Debt, 14-day chart, tonight's bedtime"},
         ],
     },
     {
         "id": "04_activity",
         "title": "Activity & Strain",
-        "description": "Real-time and training-load surfaces — Live tab, strain, stress.",
+        "description": "Live and training-load surfaces — Body tab, strain driver, stress driver.",
         "shots": [
-            {"id": "01_live_tab", "screen": "Live tab",       "caption": "HR, HRV, SpO2, zones streaming"},
-            {"id": "02_strain",   "screen": "Strain detail",  "caption": "0 to 21 ring with HR zone breakdown"},
-            {"id": "03_stress",   "screen": "Stress Monitor", "caption": "Arc gauge + drivers + weekly comparison"},
+            {"id": "01_body_tab", "screen": "Body tab",      "caption": "Live signals, off usual and at usual"},
+            {"id": "02_strain",   "screen": "Strain driver", "caption": "Strain against the target, six-day view"},
+            {"id": "03_stress",   "screen": "Stress driver", "caption": "Stress level with its usual band"},
         ],
     },
     {
         "id": "05_recovery",
         "title": "Recovery & Vitality",
-        "description": "Slow-moving vitals — biological age, brain readiness, cycle phase.",
+        "description": "Slow-moving vitals — biological age, cycle phase.",
         "shots": [
-            {"id": "01_vitality",     "screen": "Vitality",     "caption": "High score with trend climbing"},
-            {"id": "02_brain_health", "screen": "Brain Health", "caption": "Score, 7-day trend, readiness factors"},
-            {"id": "03_cycle",        "screen": "Cycle Detail", "caption": "Phase tracking with hormonal context"},
+            {"id": "01_vitality", "screen": "Vitality",     "caption": "High score with trend climbing"},
+            {"id": "03_cycle",    "screen": "Cycle Detail", "caption": "Phase tracking with hormonal context"},
         ],
     },
     {
@@ -466,14 +463,13 @@ CATALOG = [
     {
         "id": "08_states",
         "title": "Edge cases & states",
-        "description": "Transient overlays, paywalls, empty states, and breadth screens — disclaimer, paywall, Pro lock, connect-health empty, achievements, Explore tab.",
+        "description": "Transient overlays, paywalls, empty states, and breadth screens — disclaimer, paywall, Pro lock, connect-health empty, achievements.",
         "shots": [
             {"id": "01_disclaimer",            "screen": "Medical Disclaimer",           "caption": "Pre-acknowledgement legal sheet"},
             {"id": "02_paywall",               "screen": "Paywall",                      "caption": "Pro upgrade with trial messaging"},
-            {"id": "03_pro_lock",              "screen": "Pro Feature Overlay (Live)",   "caption": "Free user hitting a Pro-only tab"},
+            {"id": "03_pro_lock",              "screen": "Pro Feature Overlay (Body)",   "caption": "Free user hitting a Pro-only tab"},
             {"id": "04_connect_health_empty",  "screen": "Connect Apple Health (empty)", "caption": "Home empty state when no watch / no data"},
             {"id": "05_achievements",          "screen": "Achievements",                 "caption": "Streaks, milestones and unlocked tiers"},
-            {"id": "06_explore_tab",           "screen": "Explore tab",                  "caption": "Trends, categories and historical depth"},
         ],
     },
 ]

@@ -79,7 +79,9 @@ final class WindDownLiveActivityManager {
             targetBedtime: bedtime,
             windDownStartedAt: activity?.content.state.windDownStartedAt ?? now,
             hrvMs: hrvMs,
-            hrvIsLow: hrvIsLow
+            hrvIsLow: hrvIsLow,
+            // Carried forward: a dashboard refresh must never wipe the tap.
+            headedInAt: activity?.content.state.headedInAt
         )
         let staleDate = windowEnd
         let content = ActivityContent(state: state, staleDate: staleDate)
