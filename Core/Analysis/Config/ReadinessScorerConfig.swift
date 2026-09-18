@@ -106,7 +106,9 @@ enum ReadinessScorerConfig {
     // MARK: - Stress Sub-Score
 
     /// How far from the person's own baseline fills one stress channel, as a
-    /// fraction of that baseline. Fixed population anchors used to sit here and labelled
+    /// fraction of that baseline. Matches `StressScorer.deviationAtMaxScore`
+    /// so the two stress readouts in the app cannot disagree about what a
+    /// stressed day is. Fixed population anchors used to sit here and labelled
     /// every healthy older adult "High" forever.
     static var stressDeviationAtCap: Double       { rc.readinessStressDeviationAtCap }
     static var stressChannelCap: Double           { rc.readinessStressChannelCap }

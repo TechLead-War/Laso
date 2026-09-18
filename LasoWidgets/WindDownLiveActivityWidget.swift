@@ -58,7 +58,7 @@ struct WindDownLiveActivityWidget: Widget {
     }
 
     /// Deep link target for the wind-down surface. `onOpenURL` (added by D3) maps
-    /// this via `Route.fromUITestIdentifier` to the sleep balance driver detail.
+    /// this via `Route.fromUITestIdentifier` to `Route.sleepCoach`.
     private static let sleepCoachURL = URL(string: "laso://route/sleepCoach")
 }
 
@@ -68,44 +68,37 @@ private struct WindDownLockScreenView: View {
     let state: WindDownActivityAttributes.ContentState
 
     var body: some View {
-        VStack(spacing: 10) {
-            HStack(alignment: .center, spacing: 14) {
-                WindDownIconTile(state: state, size: 58)
+        HStack(alignment: .center, spacing: 14) {
+            WindDownIconTile(state: state, size: 58)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "moon.stars.fill")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(windDownTint)
-                        Text(WindDownCopy.header)
-                            .font(.caption2.weight(.semibold))
-                            .textCase(.uppercase)
-                            .tracking(0.8)
-                            .foregroundStyle(AppColour.textOnInverseSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    WindDownPhraseLine(state: state)
-                    if let hint = hrvHint(state: state) {
-                        Text(hint)
-                            .font(.caption2)
-                            .foregroundStyle(AppColour.textOnInverseSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "moon.stars.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(windDownTint)
+                    Text(WindDownCopy.header)
+                        .font(.caption2.weight(.semibold))
+                        .textCase(.uppercase)
+                        .tracking(0.8)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
-
-                Spacer(minLength: 4)
-
-                WindDownCountdownStack(state: state, font: .title2.weight(.bold))
+                WindDownPhraseLine(state: state)
+                if let hint = hrvHint(state: state) {
+                    Text(hint)
+                        .font(.caption2)
+                        .foregroundStyle(AppColour.textOnInverseSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
             }
 
-            // Two pills do not fit beside the countdown at lock-screen width,
-            // so the actions take their own row, each half the card.
-            HStack(spacing: 8) {
-                WindDownBreatheButton(fullWidth: true)
-                WindDownHeadingInSlot(headedInAt: state.headedInAt, fullWidth: true)
-            }
+            Spacer(minLength: 4)
+
+            WindDownCountdownStack(state: state, font: .title2.weight(.bold))
+
+            WindDownBreatheButton(fullWidth: false)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -215,10 +208,7 @@ private struct WindDownExpandedBody: View {
                 Spacer(minLength: 4)
             }
 
-            HStack(spacing: 8) {
-                WindDownBreatheButton(fullWidth: true, fixedType: true)
-                WindDownHeadingInSlot(headedInAt: state.headedInAt, fullWidth: true, fixedType: true)
-            }
+            WindDownBreatheButton(fullWidth: true, fixedType: true)
         }
         .padding(.top, 4)
     }
@@ -382,13 +372,12 @@ private struct WindDownPhraseLine: View {
     }
 }
 
-// MARK: - Action Buttons
+// MARK: - Action Button
 
-/// HTML `btn` — accent at 22% background, accent glyph, white label. Shared by
-/// both actions and by the "logged" state so the row stays one height.
-private struct WindDownPillLabel: View {
-    let symbol: String
-    let text: String
+/// HTML `btn` — the single full-width "Breathe 2 min" action. Accent at 22%
+/// background, accent glyph, white label. `fullWidth` lets the lock screen reuse
+/// it as a trailing pill while the expanded island stretches it edge to edge.
+private struct WindDownBreatheButton: View {
     var fullWidth: Bool
     /// Fixed point size instead of a Dynamic Type style. The expanded island has a
     /// hard 160 pt cap and ignores `.dynamicTypeSize`, so the island passes `true`
@@ -401,61 +390,24 @@ private struct WindDownPillLabel: View {
     }
 
     var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: symbol)
-                .font(labelFont)
-                .foregroundStyle(windDownTint)
-            Text(text)
-                .font(labelFont)
-                .foregroundStyle(AppColour.textOnInverse)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: fullWidth ? .infinity : nil)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(windDownTint.opacity(0.22), in: Capsule())
-    }
-}
-
-private struct WindDownBreatheButton: View {
-    var fullWidth: Bool
-    var fixedType: Bool = false
-
-    var body: some View {
         Button(intent: WindDownBreatheIntent()) {
-            WindDownPillLabel(symbol: "wind", text: WindDownCopy.breatheButton,
-                              fullWidth: fullWidth, fixedType: fixedType)
+            HStack(spacing: 7) {
+                Image(systemName: "wind")
+                    .font(labelFont)
+                    .foregroundStyle(windDownTint)
+                Text(WindDownCopy.breatheButton)
+                    .font(labelFont)
+                    .foregroundStyle(AppColour.textOnInverse)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: fullWidth ? .infinity : nil)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(windDownTint.opacity(0.22), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(WindDownCopy.breatheButtonAccessibilityLabel)
-    }
-}
-
-/// "I'm heading in" until tapped, then the time it was logged. The tap does
-/// not open the app, so the activity state is the only place the pill can
-/// read its own result from.
-private struct WindDownHeadingInSlot: View {
-    let headedInAt: Date?
-    var fullWidth: Bool
-    var fixedType: Bool = false
-
-    var body: some View {
-        if let headedInAt {
-            WindDownPillLabel(
-                symbol: "checkmark",
-                text: String(format: WindDownCopy.loggedAt,
-                             headedInAt.formatted(date: .omitted, time: .shortened)),
-                fullWidth: fullWidth, fixedType: fixedType
-            )
-        } else {
-            Button(intent: WindDownHeadingInIntent()) {
-                WindDownPillLabel(symbol: "bed.double.fill", text: WindDownCopy.headingIn,
-                                  fullWidth: fullWidth, fixedType: fixedType)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(WindDownCopy.headingInAccessibilityLabel)
-        }
     }
 }
 

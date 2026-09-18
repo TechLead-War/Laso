@@ -537,6 +537,27 @@ final class HealthDataStore {
         saveContext("swiftdata_restore_snapshot")
     }
 
+    /// The score and the baselines that were in force on one calendar day.
+    ///
+    /// The day sheet has to compare a past reading against the baseline the
+    /// scorer actually used then, not today's, or a day would be described
+    /// against a body average it never saw.
+    func analysisSnapshot(on day: Date) -> (score: Int, baselines: [HealthMetric: UserBaseline])? {
+        let dayStart = Date.cal.startOfDay(for: day)
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= dayStart && $0.date < dayEnd }
+        var descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\StoredAnalysisSnapshot.date)])
+        descriptor.fetchLimit = 1
+        guard let snapshot = try? modelContext?.fetch(descriptor).first else { return nil }
+
+        let decoded = Self.decodeJSON([String: UserBaseline].self, from: snapshot.baselinesJSON) ?? [:]
+        let baselines = decoded.reduce(into: [HealthMetric: UserBaseline]()) { result, pair in
+            guard let metric = HealthMetric(rawValue: pair.key) else { return }
+            result[metric] = pair.value
+        }
+        return (snapshot.overallScore, baselines)
+    }
+
     /// The strain recorded for one calendar day, with the level word the
     /// scorer assigned at the time.
     func dailyStrain(on day: Date) -> (strain: Double, level: String)? {
@@ -810,6 +831,14 @@ final class HealthDataStore {
     /// Load recommendations that still need 24h or 7d evaluation
     func loadPendingRecommendations() -> [StoredRecommendation] {
         let predicate = #Predicate<StoredRecommendation> { !$0.evaluated24h || !$0.evaluated7d }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Load evaluated recommendations within a date range
+    func loadEvaluatedRecommendations(days: Int) -> [StoredRecommendation] {
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredRecommendation> { $0.shownDate >= cutoff && $0.evaluated7d }
         let descriptor = FetchDescriptor(predicate: predicate)
         return (try? modelContext?.fetch(descriptor)) ?? []
     }

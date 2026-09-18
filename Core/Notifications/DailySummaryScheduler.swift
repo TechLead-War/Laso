@@ -19,42 +19,27 @@ struct DailySummaryScheduler {
         topAnomaly: (metricName: String, changePercent: Double)? = nil,
         scoreChangeFromYesterday: Int? = nil,
         streakDays: Int = 0,
-        improvingDays: Int = 0,
-        yesterdayMoves: DailyMoveLog.Entry? = nil
+        improvingDays: Int = 0
     ) {
         guard preferences.dailySummaryEnabled else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
             return
         }
 
-        let title: String
-        let hookCategory: String?
-        if let moves = yesterdayMoves, moves.dayMove != nil || moves.nightMove != nil {
-            // A day with moves gets its verdict as the title. Only the done flags
-            // go in: the push is baked at the last refresh, before the night's
-            // numbers exist, so those stay on screen.
-            title = Copy.Notifications.verdictTitle(
-                dayShown: moves.dayMove != nil,
-                dayDone: moves.dayMove?.doneAt != nil,
-                nightShown: moves.nightMove != nil,
-                nightDone: moves.nightMove?.doneAt != nil
-            )
-            hookCategory = nil
-        } else {
-            // Dynamic title. leads with the most interesting psychological hook
-            title = Copy.Notifications.dynamicDailySummaryTitle(
-                score: score,
-                scoreDelta: scoreChangeFromYesterday,
-                streakDays: streakDays,
-                topAnomalyMetric: topAnomaly?.metricName,
-                topAnomalyPercent: topAnomaly?.changePercent,
-                improvingDays: improvingDays
-            )
-            // Read which hook category was chosen (set inside dynamicDailySummaryTitle)
-            hookCategory = UserDefaults.standard.string(
-                forKey: AppKeys.Notifications.lastDailyHookCategory
-            )
-        }
+        // Dynamic title. leads with the most interesting psychological hook
+        let title = Copy.Notifications.dynamicDailySummaryTitle(
+            score: score,
+            scoreDelta: scoreChangeFromYesterday,
+            streakDays: streakDays,
+            topAnomalyMetric: topAnomaly?.metricName,
+            topAnomalyPercent: topAnomaly?.changePercent,
+            improvingDays: improvingDays
+        )
+
+        // Read which hook category was chosen (set inside dynamicDailySummaryTitle)
+        let hookCategory = UserDefaults.standard.string(
+            forKey: AppKeys.Notifications.lastDailyHookCategory
+        )
 
         // Dynamic body. adds context without repeating the title
         let topAction: String? = topInsights.first.map { firstSentence($0.recommendation) }

@@ -47,6 +47,12 @@ struct MetricVerdict {
         )
     }
 
+    /// Verdict for the latest value in a series, for callers that hold samples but no stored baseline.
+    static func make(metric: HealthMetric, series: MetricTimeSeries) -> MetricVerdict? {
+        guard let value = series.latestValue else { return nil }
+        return make(metric: metric, value: value, baseline: BaselineCalculator.compute(series: series))
+    }
+
     /// Personal band around the baseline mean. Nil when the baseline is too thin to trust, or when
     /// the user's readings never move: a zero spread band would call every single reading abnormal.
     private static func personalBand(from baseline: UserBaseline?) -> (low: Double, high: Double)? {

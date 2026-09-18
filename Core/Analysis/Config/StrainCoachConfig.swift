@@ -15,6 +15,9 @@ enum StrainCoachConfig {
     /// Days back the analyzer scans for a recent rest day.
     static let recentRestWindowDays: Int = 3
 
+    /// Cold-start day count at which the coach drops the "limited data" caveat.
+    static let coldStartDays: Int = 7
+
     // MARK: - Balance Window
 
     static let balanceWindowDays: Int = 7
@@ -61,4 +64,19 @@ enum StrainCoachConfig {
 
     /// Red day → strict restoring band.
     static let redBand = StrainBand(target: 5.0, min: 0.0, max: 5.0)
+
+    // MARK: - Per-Zone Strain Ranges (for `TrainingZone.strainRange(for:)`)
+
+    static let greenRestoringRange: ClosedRange<Double> = 0...9
+    static let greenMaintainingRange: ClosedRange<Double> = 10...14
+    static let greenBuildingRange: ClosedRange<Double> = 14...18
+    static let greenOverreachingRange: ClosedRange<Double> = 18...21
+
+    static let yellowRestoringRange: ClosedRange<Double> = 0...7
+    static let yellowMaintainingRange: ClosedRange<Double> = 8...12
+
+    static let redRestoringRange: ClosedRange<Double> = 0...5
+
+    /// Sentinel range used for combinations that are not allowed (e.g. building on red).
+    static let unavailableRange: ClosedRange<Double> = 0...0
 }

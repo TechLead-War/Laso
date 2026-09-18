@@ -39,7 +39,6 @@ enum DailyActionCompletion {
 
         defaults.set(Date(), forKey: AppKeys.Data.dailyActionDoneDay)
         DailyActionResultStore.save(actionTitle: actionTitle, actionIcon: actionIcon)
-        DailyMoveLog.markDone(.day)
         AppAnalytics.shared.trackBlockTap(
             title: actionTitle,
             type: .homeDailyAction,

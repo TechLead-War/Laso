@@ -75,6 +75,7 @@ enum Copy {
         static var cancel: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_cancel", default: "Cancel") }
         static var continueButton: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_continue_button", default: "Continue") }
         static var skipForNow: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_skip_for_now", default: "Skip for now") }
+        static var close: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_close", default: "Close") }
         static var retry: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_retry", default: "Retry") }
         static var subscribe: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_subscribe", default: "Subscribe") }
         static var restorePurchases: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_restore_purchases", default: "Restore Purchases") }

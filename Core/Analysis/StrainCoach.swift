@@ -24,12 +24,33 @@ final class StrainCoach {
             case .overreaching: Copy.Strain.zoneOverreaching
             }
         }
+
+        /// Strain ranges per recovery state.
+        func strainRange(for recovery: DashboardViewModel.RecoveryState) -> ClosedRange<Double> {
+            switch (self, recovery) {
+            case (.restoring, .green):     return StrainCoachConfig.greenRestoringRange
+            case (.maintaining, .green):   return StrainCoachConfig.greenMaintainingRange
+            case (.building, .green):      return StrainCoachConfig.greenBuildingRange
+            case (.overreaching, .green):  return StrainCoachConfig.greenOverreachingRange
+
+            case (.restoring, .yellow):    return StrainCoachConfig.yellowRestoringRange
+            case (.maintaining, .yellow):  return StrainCoachConfig.yellowMaintainingRange
+            case (.building, .yellow),
+                 (.overreaching, .yellow): return StrainCoachConfig.unavailableRange
+
+            case (.restoring, .red):       return StrainCoachConfig.redRestoringRange
+            case (.maintaining, .red),
+                 (.building, .red),
+                 (.overreaching, .red):    return StrainCoachConfig.unavailableRange
+            }
+        }
     }
 
     struct StrainTarget: Sendable {
         let minStrain: Double
         let maxStrain: Double
         let zone: TrainingZone
+        let guidance: String
     }
 
     enum StrainBalance: String, CaseIterable, Sendable {
@@ -52,18 +73,22 @@ final class StrainCoach {
 
     // MARK: - Public API
 
-    /// Compute a strain target based on current recovery and recent history.
+    /// Compute a strain target based on current recovery, today's strain so far, and recent history.
     ///
     /// - Parameters:
     ///   - recoveryState: Current day classification (green/yellow/red), or nil
     ///     when nothing has been scored yet
+    ///   - currentStrain: Accumulated strain for today so far (0-21)
     ///   - recentStrainHistory: Dated strain values for recent days, sorted ascending by date
-    /// - Returns: A `StrainTarget` with zone and range, or nil when there is no
-    ///   recovery band to build one from
+    ///   - daysOfData: Total number of days the user has data for (used for cold-start gating)
+    /// - Returns: A `StrainTarget` with zone, range, and human-readable guidance,
+    ///   or nil when there is no recovery band to build one from
     @discardableResult
     func computeTarget(
         recoveryState: DashboardViewModel.RecoveryState?,
-        recentStrainHistory: [(date: Date, strain: Double)]
+        currentStrain: Double,
+        recentStrainHistory: [(date: Date, strain: Double)],
+        daysOfData: Int
     ) -> StrainTarget? {
         // Every zone and range below is selected by the recovery band. Without
         // one there is no target, and clearing rather than keeping the last one
@@ -85,10 +110,20 @@ final class StrainCoach {
             hasHistory: hasEnoughHistory
         )
 
+        let guidance = buildGuidance(
+            zone: zone,
+            recovery: recoveryState,
+            currentStrain: currentStrain,
+            target: target,
+            consecutiveHighDays: consecutiveHighDays,
+            daysOfData: daysOfData
+        )
+
         let result = StrainTarget(
             minStrain: min,
             maxStrain: max,
-            zone: zone
+            zone: zone,
+            guidance: guidance
         )
 
         currentTarget = result
@@ -132,6 +167,47 @@ final class StrainCoach {
         }
     }
 
+    private func buildGuidance(
+        zone: TrainingZone,
+        recovery: DashboardViewModel.RecoveryState,
+        currentStrain: Double,
+        target: Double,
+        consecutiveHighDays: Int,
+        daysOfData: Int
+    ) -> String {
+        if daysOfData < Cfg.coldStartDays {
+            return Copy.Strain.coachLimitedData
+        }
+
+        let remaining = max(0, target - currentStrain)
+
+        switch zone {
+        case .restoring:
+            if recovery == .red {
+                return Copy.Strain.coachRedRecovery(target: formatted(target))
+            }
+            if consecutiveHighDays >= Cfg.consecutiveHighThreshold {
+                return Copy.Strain.coachConsecutiveHigh(days: consecutiveHighDays)
+            }
+            return Copy.Strain.coachActiveRecovery
+
+        case .maintaining:
+            if remaining > 0 {
+                return Copy.Strain.coachMaintaining(remaining: formatted(remaining), target: formatted(target))
+            }
+            return Copy.Strain.coachMaintainHit
+
+        case .building:
+            if remaining > 0 {
+                return Copy.Strain.coachBuilding(target: formatted(target))
+            }
+            return Copy.Strain.coachBuildingHit(upper: formatted(zone.strainRange(for: recovery).upperBound))
+
+        case .overreaching:
+            return Copy.Strain.coachOverreaching
+        }
+    }
+
     private func countConsecutiveHighDays(_ history: [(date: Date, strain: Double)]) -> Int {
         var count = 0
         for entry in history.reversed() {
@@ -171,5 +247,9 @@ final class StrainCoach {
         } else {
             strainBalance = .optimal
         }
+    }
+
+    private func formatted(_ value: Double) -> String {
+        String(format: "%.1f", value)
     }
 }

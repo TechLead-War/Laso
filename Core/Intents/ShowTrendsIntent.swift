@@ -22,7 +22,7 @@ struct ShowTrendsIntent: AppIntent {
             )
             NotificationCenter.default.post(
                 name: .healthPulseNavigateToExplore,
-                object: AppTab.body
+                object: nil
             )
         }
 

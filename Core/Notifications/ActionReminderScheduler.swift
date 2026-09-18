@@ -7,9 +7,9 @@ import UserNotifications
 /// one-shot calendar trigger.
 enum ActionReminderScheduler {
 
-    /// Default reminder time: the brief's day-move reminder hour, on the half hour.
-    static var defaultHour: Int { DailyBriefConfig.dayReminderHour }
-    static let defaultMinute = 0
+    /// Default reminder time: 9:30 PM tonight.
+    static let defaultHour = 21
+    static let defaultMinute = 30
 
     /// Reused because building a `DateFormatter` costs 0.055 ms and the Home body reads
     /// the label on every pass. Held privately: nothing outside `timeLabel` may mutate it.
@@ -55,6 +55,15 @@ enum ActionReminderScheduler {
         comps.hour = hour
         comps.minute = minute
         return Date.cal.nextDate(after: now, matching: comps, matchingPolicy: .nextTime)
+    }
+
+    /// True when today's reminder time has passed, so the button can say the
+    /// reminder lands tomorrow instead of naming a time that is already gone.
+    static func firesTomorrow(hour: Int = defaultHour,
+                              minute: Int = defaultMinute,
+                              from now: Date = Date()) -> Bool {
+        guard let fire = nextFireDate(hour: hour, minute: minute, from: now) else { return false }
+        return !Date.cal.isDate(fire, inSameDayAs: now)
     }
 
     /// Schedule (or replace) the reminder for `action` at the next occurrence of

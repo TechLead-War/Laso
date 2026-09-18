@@ -22,4 +22,23 @@ struct DashboardDerivedStateBuilder {
         let delta = currentScore - yesterdayScore
         return delta == 0 ? nil : delta
     }
+
+    func topCorrelations(
+        from correlations: [HealthCorrelation],
+        focusCategories: Set<HealthCategory>,
+        limit: Int = 5
+    ) -> [HealthCorrelation] {
+        if focusCategories.isEmpty {
+            return Array(correlations.prefix(limit))
+        }
+
+        let sorted = correlations.sorted { a, b in
+            let aRelevant = focusCategories.contains(a.metricA.category) || focusCategories.contains(a.metricB.category)
+            let bRelevant = focusCategories.contains(b.metricA.category) || focusCategories.contains(b.metricB.category)
+            if aRelevant != bRelevant { return aRelevant }
+            return abs(a.correlation) > abs(b.correlation)
+        }
+
+        return Array(sorted.prefix(limit))
+    }
 }

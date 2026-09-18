@@ -90,6 +90,11 @@ final class AppStateStore {
         persist(isPending, forKey: Key.pendingCalibrationHydration)
     }
 
+    func markScoreGuideSeen() {
+        hasSeenScoreGuide = true
+        persist(true, forKey: Key.hasSeenScoreGuide)
+    }
+
     func markDisclaimerAcknowledged() {
         disclaimerAcknowledged = true
         persist(true, forKey: Key.disclaimerAcknowledged)

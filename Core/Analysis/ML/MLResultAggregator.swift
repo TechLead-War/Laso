@@ -496,6 +496,12 @@ final class MLResultAggregator {
             baselines: baselines,
             timeSeries: timeSeries
         )
+        let sleepTime = components.decisionPolicyEngine.computeTargetSleepTime(
+            baselines: baselines, timeSeries: timeSeries
+        )
+        let strainBudget = components.decisionPolicyEngine.computeStrainBudget(
+            baselines: baselines, timeSeries: timeSeries
+        )
 
         return PolicyDecision(
             primaryAction: primaryWithLang,
@@ -504,7 +510,9 @@ final class MLResultAggregator {
             rationale: decision.rationale,
             decisionConfidence: decision.decisionConfidence,
             decidedAt: decision.decidedAt,
-            prescriptiveHeadline: headline
+            prescriptiveHeadline: headline,
+            targetSleepTime: sleepTime,
+            strainBudget: strainBudget
         )
     }
 

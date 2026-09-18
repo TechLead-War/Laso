@@ -48,6 +48,12 @@ extension Copy {
             "Low recovery across all key numbers"
         ]
 
+        // MARK: - Strain Budget
+
+        static var highIntensityOK: String { RemoteConfigManager.shared.copyString("copy_policy_policy_high_intensity_ok", default: "A hard workout is fine") }
+        static var moderateEffort: String { RemoteConfigManager.shared.copyString("copy_policy_policy_moderate_effort", default: "Aim for medium effort") }
+        static var lightActivityOnly: String { RemoteConfigManager.shared.copyString("copy_policy_policy_light_activity_only", default: "Keep it light today") }
+
         // MARK: - Source Descriptions
 
         static var sourcePredictive: String { RemoteConfigManager.shared.copyString("copy_policy_policy_source_predictive", default: "trend signal") }

@@ -315,6 +315,28 @@ struct AskVitalsMirrorRegressionTests {
         #expect(LiveSleepSummaryBuilder().sessionGap == HealthKitManager.sleepSessionGapThreshold)
     }
 
+    // MARK: - Vitals: honest scores
+
+    /// Relaxing Brain Health so an iPhone-only user could get a tile let it
+    /// publish a score where four of the five subscales were the neutral
+    /// constant, so every such user read the same middling number as a finding.
+    @MainActor
+    @Test func brainHealthWithNothingMeasuredPublishesNoScore() {
+        let scorer = BrainHealthScorer()
+        let noon = Date.cal.startOfDay(for: Date()).addingTimeInterval(12 * 3600)
+        // Sleep duration alone: the anchor, and nothing else.
+        let duration = MetricTimeSeries(
+            metric: .sleepDuration,
+            samples: (0..<14).reversed().map {
+                MetricSample(date: noon.addingTimeInterval(-Double($0) * 86_400), value: 7)
+            }
+        )
+
+        scorer.compute(from: HealthDataStore(), timeSeries: [.sleepDuration: duration])
+        #expect(scorer.currentScore == nil,
+                "a score carried by the neutral default is not a measurement")
+    }
+
     // MARK: - Daily Mirror
 
     /// The streak widget said "Start your mirror" but had no deep link, and once

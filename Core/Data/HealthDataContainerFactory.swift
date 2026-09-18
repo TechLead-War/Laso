@@ -2,17 +2,6 @@ import Foundation
 import SwiftData
 
 enum HealthDataContainerFactory {
-    /// Every stored model. The count is the schema version: adding or removing
-    /// one wipes the on-device database on the next launch, so records that do
-    /// not need SwiftData go to UserDefaults instead.
-    static let allModels: [any PersistentModel.Type] = [
-        StoredDailySample.self, StoredSyncMetadata.self,
-        StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredMLModelState.self,
-        StoredRecommendation.self, StoredNotificationEvent.self,
-        StoredAdherenceRecord.self, StoredECGFeatures.self,
-        StoredModelEvaluation.self, StoredJournalEntry.self
-    ]
-
     /// Creates a ModelContainer with progressive fallback and logs each failure.
     static func makeModelContainer(
         fileManager: FileManager = .default,
@@ -30,6 +19,13 @@ enum HealthDataContainerFactory {
         )
 
         let dbURL = storeDir.appendingPathComponent("health.store")
+        let allModels: [any PersistentModel.Type] = [
+            StoredDailySample.self, StoredSyncMetadata.self,
+            StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredMLModelState.self,
+            StoredRecommendation.self, StoredNotificationEvent.self,
+            StoredAdherenceRecord.self, StoredECGFeatures.self,
+            StoredModelEvaluation.self, StoredJournalEntry.self
+        ]
 
         let schemaVersionKey = AppConstants.Schema.versionKey
         let currentSchemaVersion = allModels.count

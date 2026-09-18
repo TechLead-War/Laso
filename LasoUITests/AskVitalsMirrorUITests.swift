@@ -1,7 +1,8 @@
 import XCTest
 
-/// Runtime proof for two reports the user raised: Ask answering the wrong
-/// question, and the photo capture having no way in from Home.
+/// Runtime proof for the three reports the user raised: Ask answering the wrong
+/// question, the Vitals strip showing two tiles instead of about five, and the
+/// photo capture having no way in from Home.
 ///
 /// These run the real screens, so they catch what a unit test cannot: a tile the
 /// view model builds but the view never lays out, and an answer that reads wrong
@@ -35,17 +36,44 @@ final class AskVitalsMirrorUITests: XCTestCase {
         return app
     }
 
+    /// The user reported two tiles where there should be about five. The strip
+    /// itself never capped anything: tiles were built from scorer state captured
+    /// before the scorers had finished, and were never rebuilt afterwards.
+    @MainActor
+    func testVitalsStripShowsTheFullSetOfTiles() {
+        let app = launchHome()
+
+        // Tile labels as they render in the strip. Cycle is excluded: it is
+        // correctly absent for the seeded profile.
+        let expected = ["Vitality", "Sleep", "Strain", "Brain", "Stress"]
+        var found: [String] = []
+        for label in expected where app.staticTexts[label].waitForExistence(timeout: 15) {
+            found.append(label)
+        }
+
+        XCTAssertGreaterThanOrEqual(
+            found.count, 4,
+            "Vitals showed only \(found.count) tiles: \(found). The report was 2; the strip must carry the full set."
+        )
+        XCTAssertTrue(found.contains("Sleep"), "The sleep tile is the one the user named as missing")
+    }
+
     /// Home had no camera entry point at all. The only tap target was a card
     /// three taps deep inside the check-in sheet.
     @MainActor
     func testHomeOffersAWayIntoPhotoCapture() {
         let app = launchHome()
 
-        // The nav bar camera is the one door into capture now that Home is the
-        // brief, so it has to be on screen without any scrolling.
+        // The nav bar camera is the one that has to be on screen without any
+        // scrolling: the card sits six sections down, past two full screens.
         let toolbarCamera = app.buttons["home.mirrorCaptureButton"]
         XCTAssertTrue(toolbarCamera.waitForExistence(timeout: 20),
                       "Home has no camera in the nav bar, so capture is invisible on first open")
+
+        let card = app.otherElements["home.mirrorCaptureCard"]
+        let cardExists = card.waitForExistence(timeout: 20)
+            || app.buttons["home.mirrorCaptureCard"].waitForExistence(timeout: 5)
+        XCTAssertTrue(cardExists, "Home has no photo capture card on the scroll")
     }
 
     /// An off-topic question used to come back as a confident health answer,

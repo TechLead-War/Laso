@@ -16,6 +16,14 @@ extension Copy {
 
         // MARK: - Home capture card
 
+        // The permanent Home door into capture. Stated as the plain thing the
+        // user gets, never as a streak mechanic, so it still reads honestly on
+        // the day someone opens the app having missed a week.
+        static var homeCardTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_title", default: "Take today's photo") }
+        static var homeCardDoneTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_done_title", default: "Today is on the record") }
+        static var homeCardSubtitle: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_subtitle", default: "Ten seconds a day. In a month you can see the change.") }
+        static var homeCardAction: String { RemoteConfigManager.shared.copyString("copy_mirror_home_card_action", default: "Capture") }
+
         // The nav bar camera. Screen reader only, so it names the destination
         // rather than repeating the card's pitch.
         static var toolbarLabel: String { RemoteConfigManager.shared.copyString("copy_mirror_toolbar_label", default: "Take today's photo") }
@@ -65,6 +73,14 @@ extension Copy {
 
         static var replayTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_replay_title", default: "Your last 7 days") }
         static var replayDone: String { RemoteConfigManager.shared.copyString("copy_mirror_replay_done", default: "Done") }
+
+        // MARK: - Weekly review strip
+
+        static var weeklyStripTitle: String { RemoteConfigManager.shared.copyString("copy_mirror_weekly_strip_title", default: "Your week in faces") }
+        /// `%1$d` days captured, `%2$d` days in the week.
+        static func weeklyStripCount(_ captured: Int, _ total: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_mirror_weekly_strip_count", default: "%1$d of %2$d days"), captured, total)
+        }
 
         // MARK: - Share
 

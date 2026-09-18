@@ -39,12 +39,7 @@ struct PremiumShowcaseDataProvider {
         case .walkingHeartRateAverage:
             return 92 + sin(progress * .pi * 2) * 2 + noise * 92
         case .heartRateRecovery:
-            // Last 14 days only, flat in the low twenties with the final three
-            // under the rest, so the bounce-back driver has a dip to name. No
-            // jitter: the driver floor is 5% and the dip is only a little more.
-            let daysAgo = totalDays - dayIndex
-            guard daysAgo <= 14 else { return 0 }
-            return daysAgo <= 3 ? 19.5 : [21, 23, 19, 22, 24, 20, 18, 22, 23, 21, 20][daysAgo - 4]
+            return 32 + progress * 4 + noise * 32
         case .atrialFibrillationBurden:
             return 0.05 + abs(noise) * 0.05
         case .peripheralPerfusionIndex:
@@ -138,11 +133,7 @@ struct PremiumShowcaseDataProvider {
         case .bloodGlucose:
             return 88 + sin(progress * .pi * 3) * 6 + noise * 10
         case .workoutDuration:
-            // Last 28 days only: one rest day a week and 24 workouts of 30 to 60
-            // minutes, so the rest-day driver has a deficit to name.
-            let daysAgo = totalDays - dayIndex
-            guard daysAgo <= 28, daysAgo % 7 != 0 else { return 0 }
-            return 30 + Double((dayIndex * 11) % 31)
+            return dayIndex % 7 == 6 ? 0 : 48 + noise * 12
         default:
             return 0
         }

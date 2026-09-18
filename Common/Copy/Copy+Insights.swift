@@ -57,6 +57,15 @@ extension Copy {
         static var riskLevelLow: String { RemoteConfigManager.shared.copyString("copy_insights_risk_level_low", default: "Low") }
         static var riskLevelVeryLow: String { RemoteConfigManager.shared.copyString("copy_insights_risk_level_very_low", default: "Very Low") }
 
+        // MARK: - Today Intelligence
+
+        static func highestInDays(days: Int, topPercent: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_highest_in_days", default: "Highest in %d days (top %d%%)"), days, topPercent)
+        }
+        static func lowestInDays(days: Int, bottomPercent: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_insights_insights_lowest_in_days", default: "Lowest in %d days (bottom %d%%)"), days, bottomPercent)
+        }
+
         // MARK: - Day Names
 
         static var daySunday: String { RemoteConfigManager.shared.copyString("copy_insights_day_sunday", default: "Sunday") }

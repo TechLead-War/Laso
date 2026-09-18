@@ -231,6 +231,52 @@ struct RegressionTests {
         #expect(WakeUpTimeDetector.userAnchor?.hour == WakeUpTimeDetector.latestWakeHour)
     }
 
+    /// Drift is signed minutes around the anchor, and it has to take the nearer
+    /// side of the clock. Measured naively, a 23:40 wake against an 06:00
+    /// anchor reads as +1060 minutes late instead of 380 minutes early, which
+    /// renders as a full-height "late" mark on the wrong side of the line.
+    @Test func wakeDriftWrapsToTheNearerSideOfTheClock() {
+        func wake(_ hour: Int, _ minute: Int, daysAgo: Int) -> Date {
+            var comps = Date.cal.dateComponents(
+                [.year, .month, .day],
+                from: Date().addingTimeInterval(-Double(daysAgo) * 86_400)
+            )
+            comps.hour = hour
+            comps.minute = minute
+            return Date.cal.date(from: comps) ?? Date()
+        }
+
+        let points = WakeAnchorAnalyzer.drift(
+            from: [wake(23, 40, daysAgo: 1), wake(6, 20, daysAgo: 2), wake(5, 45, daysAgo: 3)],
+            anchor: (hour: 6, minute: 0),
+            days: 30
+        )
+
+        #expect(points.count == 3)
+        let drifts = points.map(\.driftMinutes).sorted()
+        #expect(drifts == [-380, -15, 20], "late-night wake reads as early, not as +1060")
+    }
+
+    /// A band label off four nights is a number pretending to be a finding, so
+    /// it stays nil until the minimum is met.
+    @Test func wakeConsistencyWithholdsItsBandUntilEnoughNights() {
+        func point(_ driftMinutes: Int, daysAgo: Int) -> WakeDriftPoint {
+            WakeDriftPoint(
+                date: Date().addingTimeInterval(-Double(daysAgo) * 86_400),
+                driftMinutes: driftMinutes
+            )
+        }
+
+        let sparse = (1...3).map { point(5, daysAgo: $0) }
+        #expect(WakeAnchorAnalyzer.consistency(from: sparse, windowDays: 28).band == nil)
+
+        let enough = (1...WakeAnchorConfig.consistencyMinNights).map { point(5, daysAgo: $0) }
+        let result = WakeAnchorAnalyzer.consistency(from: enough, windowDays: 28)
+        #expect(result.band == .steady)
+        #expect(result.medianAbsDriftMinutes == 5)
+        #expect(result.nightsInWindow == result.totalNights)
+    }
+
     // MARK: - Sample storage
 
     /// The dedupe key divided epoch seconds by 86400, a UTC bucket applied to
@@ -812,12 +858,12 @@ struct RegressionTests {
     @Test func aGapThatRoundsAwayReadsAsAtUsual() {
         let atUsual = Copy.Home.whyValueAtUsual
 
-        #expect(DashboardViewModel.usualComparison(current: 6.2, baseline: 6.5, unit: "hrs") == atUsual,
+        #expect(DashboardViewModel.gapToUsual(current: 6.2, baseline: 6.5, unit: "hrs") == atUsual,
                 "a gap under half an hour has no whole number to quote")
-        #expect(DashboardViewModel.usualComparison(current: 5.4, baseline: 6.5, unit: "hrs") != atUsual,
+        #expect(DashboardViewModel.gapToUsual(current: 5.4, baseline: 6.5, unit: "hrs") != atUsual,
                 "a real hour of missing sleep must still be named")
-        #expect(DashboardViewModel.usualComparison(current: 43, baseline: 43, unit: "ms") == atUsual)
-        #expect(DashboardViewModel.usualComparison(current: 30, baseline: 43, unit: "ms") != atUsual)
+        #expect(DashboardViewModel.gapToUsual(current: 43, baseline: 43, unit: "ms") == atUsual)
+        #expect(DashboardViewModel.gapToUsual(current: 30, baseline: 43, unit: "ms") != atUsual)
     }
 
 
@@ -826,7 +872,9 @@ struct RegressionTests {
     /// The same score used to be graded by four different tables: the ring
     /// painted amber at 55, the sentence under it said "lower than usual", and
     /// the explainer one tap away said "decent recovery". A user who checked
-    /// twice got two answers. Every grader now reads `DS.recoveryTier`.
+    /// twice got two answers. Every grader now reads `DS.recoveryTier`, and
+    /// `readinessSummary` switches on `RecoveryState` so it has no table of its
+    /// own left to drift.
     @Test func oneScoreIsGradedByOneTable() {
         for score in 0...100 {
             let ring = DashboardViewModel.RecoveryState(score: score)
@@ -837,10 +885,45 @@ struct RegressionTests {
             }
             #expect(ring == expected, "the ring and DS.scoreColor disagree at \(score)")
         }
+
+        // The explainer sheet prints its own ranges, so they must name the same
+        // numbers the grader uses or the sheet lies about the bands.
+        #expect(Copy.Home.RecoveryInfo.fullyRecoveredRange.contains("\(DS.optimalFloor)"),
+                "the sheet must print the floor it is actually graded by")
+        #expect(Copy.Home.RecoveryInfo.lowRange.contains("\(DS.fairFloor)"))
+        #expect(Copy.Home.RecoveryInfo.moderateRange.contains("\(DS.fairFloor)"))
     }
 
 
     // MARK: - Sleep bank
+
+    /// A night the watch did not record was stored as a zero deficit, which on
+    /// a chart draws as a night slept exactly to target. The bank has to know
+    /// the difference between "you met it" and "we have nothing".
+    @MainActor
+    @Test func aNightWithNoSleepRecordedIsNotDrawnAsMet() {
+        let today = Date.cal.startOfDay(for: Date())
+        // 13 nights of 6 hours against a 7.5 hour floor, and one gap.
+        let samples: [MetricSample] = (0..<14).compactMap { offset in
+            guard offset != 5 else { return nil }
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return MetricSample(date: day, value: 6.0)
+        }
+
+        let tracker = SleepDebtTracker()
+        tracker.compute(from: HealthDataStore(),
+                        sleepSeries: MetricTimeSeries(metric: .sleepDuration, samples: samples))
+
+        let debt = try? #require(tracker.currentDebt)
+        #expect(tracker.isReady)
+        #expect(debt?.dailyDeficits.count == 14, "every night in the window gets a slot")
+        #expect(debt?.nightsRecorded == 13, "the missing night must not count as recorded")
+
+        let gap = Date.cal.date(byAdding: .day, value: -5, to: today)
+        let missing = debt?.dailyDeficits.first { $0.date == gap }
+        #expect(missing?.hasData == false, "a night with no sample is flagged, not drawn as met")
+        #expect(missing?.deficit == 0, "and it still adds no invented debt")
+    }
 
     /// Sleep Coach shows nothing but "Building your sleep profile" while
     /// `SleepNeedCalculator.currentNeed` is nil, and only the launch prewarm can
@@ -1063,6 +1146,36 @@ struct RegressionTests {
 
     // MARK: - Biology calendar
 
+    /// The month calendar is the most expensive draw in the app (88 ms to
+    /// rasterize), and the tab rebuilds for reasons that have nothing to do with
+    /// it, which repainted it mid-scroll. It now compares its own inputs so
+    /// SwiftUI can skip it. The comparison must notice a life-context change:
+    /// a context covers a whole date range, so ending one rewrites past cells
+    /// without moving a single score. Comparing scores alone would leave the
+    /// calendar showing contexts the user already turned off.
+    @MainActor @Test func theCalendarRedrawsWhenAContextChangesButNoScoreDid() {
+        let day = Date.cal.startOfDay(for: Date())
+        let scores = [day: 72]
+        let detail: (Date) -> DashboardViewModel.DayDetail = { d in
+            DashboardViewModel.DayDetail(date: d, score: 72, contexts: [], signals: [], missing: [])
+        }
+
+        let noContext = ExploreMonthCalendarSection(
+            scoresByDay: scores, contextsByDay: [:], detailForDay: detail)
+        let sameAgain = ExploreMonthCalendarSection(
+            scoresByDay: scores, contextsByDay: [:], detailForDay: detail)
+        #expect(noContext == sameAgain, "identical inputs must skip the redraw")
+
+        let injured = ExploreMonthCalendarSection(
+            scoresByDay: scores, contextsByDay: [day: [.injured]], detailForDay: detail)
+        #expect(noContext != injured,
+                "a context change with identical scores must still force a redraw")
+
+        let scoreMoved = ExploreMonthCalendarSection(
+            scoresByDay: [day: 73], contextsByDay: [:], detailForDay: detail)
+        #expect(noContext != scoreMoved, "a score change must force a redraw")
+    }
+
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {
         let ranked = PolicyDecision.RankedIntervention(
             candidate: candidate(actionType: actionType),
@@ -1073,7 +1186,246 @@ struct RegressionTests {
         return PolicyDecision(
             primaryAction: ranked, secondaryAction: nil, allCandidates: [ranked],
             rationale: "test", decisionConfidence: 0.9, decidedAt: Date(),
-            prescriptiveHeadline: Copy.Policy.excellentHeadlines[0]
+            prescriptiveHeadline: Copy.Policy.excellentHeadlines[0],
+            targetSleepTime: nil, strainBudget: nil
         )
+    }
+}
+
+// MARK: - TEMPORARY perf harness (delete before shipping)
+
+
+@MainActor
+enum EF {
+
+    static let today = Date.cal.startOfDay(for: Date())
+
+    static func samples(_ n: Int, base: Double) -> [MetricSample] {
+        (0..<n).map { i in
+            MetricSample(
+                date: today.addingTimeInterval(Double(i - n) * 86_400),
+                value: base + Double((i * 7) % 17) - 8
+            )
+        }
+    }
+
+    static let trendMetrics: [TrendMetricItem] = {
+        let metrics: [HealthMetric] = [
+            .heartRateVariability, .restingHeartRate, .sleepDuration,
+            .steps, .vo2Max, .activeCalories, .sleepDeep, .sleepREM
+        ]
+        return metrics.enumerated().map { index, metric in
+            TrendMetricItem(
+                metric: metric,
+                trend: TrendAnalyzer.TrendResult(
+                    direction: index % 3 == 0 ? .improving : (index % 3 == 1 ? .declining : .stable),
+                    weekOverWeekChange: Double(index) * 2.3 - 5,
+                    movingAverage7d: 50, movingAverage30d: 48, movingAverage90d: 47,
+                    inflection: .steady
+                ),
+                sparklineSamples: samples(90, base: 50 + Double(index))
+            )
+        }
+    }()
+
+    static let categories: [(category: HealthCategory, score: Int?)] =
+        HealthCategory.allCases.enumerated().map { i, c in
+            (category: c, score: i == 8 ? nil : 40 + i * 6)
+        }
+
+    static let insightCounts: [HealthCategory: Int] = {
+        var d: [HealthCategory: Int] = [:]
+        for (i, c) in HealthCategory.allCases.enumerated() { d[c] = i % 3 }
+        return d
+    }()
+
+    static let explanation = HealthScorer.ScoreExplanation(
+        categoryContributions: HealthCategory.allCases.enumerated().map {
+            HealthScorer.CategoryContribution(category: $1, score: 30 + $0 * 5, weightedContribution: Double($0))
+        },
+        topFactors: [
+            HealthScorer.ScoreFactor(metric: .heartRateVariability, impact: -8, reason: "HRV dropped 15% versus your usual range this week", isPositive: false),
+            HealthScorer.ScoreFactor(metric: .sleepDeep, impact: -6, reason: "Deep sleep is down 22 minutes a night on average", isPositive: false),
+            HealthScorer.ScoreFactor(metric: .restingHeartRate, impact: -4, reason: "Resting heart rate is up 4 bpm from your baseline", isPositive: false),
+            HealthScorer.ScoreFactor(metric: .steps, impact: 5, reason: "Steps are up", isPositive: true)
+        ]
+    )
+
+    static let highlights: [DashboardViewModel.HistoricalHighlight] = [
+        .init(metric: .heartRateVariability, type: .weekOverWeek, title: "HRV down 15% this week", recommendation: "Prioritise an early night for the next two days", isPositive: false, significance: 0.8),
+        .init(metric: .sleepDeep, type: .allTimeExtreme, title: "Lowest deep sleep in 90 days", recommendation: "Keep the room cooler and cut screens after 10pm", isPositive: false, significance: 0.7),
+        .init(metric: .restingHeartRate, type: .longTermTrajectory, title: "Resting heart rate climbing since March", recommendation: "Add two easy aerobic sessions a week", isPositive: false, significance: 0.6)
+    ]
+
+    static let chains: [CausalChain] = [
+        CausalChain(
+            links: [
+                ChainLink(causeMetric: .steps, effectMetric: .sleepDeep, correlation: 0.52, lagDays: 1, causeDeviation: -12, effectDeviation: -8),
+                ChainLink(causeMetric: .sleepDeep, effectMetric: .heartRateVariability, correlation: 0.61, lagDays: 1, causeDeviation: -8, effectDeviation: -15)
+            ],
+            affectedMetric: .heartRateVariability,
+            confidence: 0.74,
+            narrative: "Lower step counts last week fed a drop in deep sleep, and the two nights after each of those pushed your HRV down with it."
+        )
+    ]
+
+    static let cards: [IntelligenceCard] = (0..<4).map { i in
+        IntelligenceCard(
+            type: .predictiveRisk,
+            icon: "exclamationmark.triangle.fill",
+            label: "Heads up",
+            headline: "Your HRV has been dropping since Friday and the pattern matches a run of short deep sleep.",
+            detail: "This is mainly your resting heart rate. Extra sleep tonight is the lever that moved it last time.",
+            severity: i == 0 ? .critical : .notable,
+            confidence: 0.8,
+            priority: 0.9,
+            accentColor: i == 0 ? .red : .blue
+        )
+    }
+
+    static let forecasts: [MetricForecast] = [
+        MetricForecast(metric: .heartRateVariability, predictedValue: 52, lowerBound: 42, upperBound: 62, currentValue: 48, confidence: 0.85),
+        MetricForecast(metric: .sleepDuration, predictedValue: 27000, lowerBound: 24000, upperBound: 30000, currentValue: 25200, confidence: 0.78),
+        MetricForecast(metric: .restingHeartRate, predictedValue: 58, lowerBound: 55, upperBound: 61, currentValue: 60, confidence: 0.82)
+    ]
+
+    static let scoresByDay: [Date: Int] = {
+        var d: [Date: Int] = [:]
+        for i in 0..<366 {
+            guard let day = Date.cal.date(byAdding: .day, value: -i, to: today) else { continue }
+            d[day] = 45 + (i * 13) % 50
+        }
+        return d
+    }()
+
+    static let dayDetail: (Date) -> DashboardViewModel.DayDetail = { _ in
+        fatalError("not rendered in these measurements")
+    }
+}
+
+@MainActor
+func rasterMedian(_ label: String, _ view: some View, height: CGFloat = 900) {
+    let host = UIHostingController(rootView: AnyView(view.frame(width: 393)))
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: height))
+    window.rootViewController = host
+    window.makeKeyAndVisible()
+    host.view.frame = window.bounds
+    host.view.setNeedsLayout(); host.view.layoutIfNeeded()
+    var samples: [Double] = []
+    let r = UIGraphicsImageRenderer(bounds: window.bounds)
+    for _ in 0..<11 {
+        let t0 = CFAbsoluteTimeGetCurrent()
+        _ = r.image { ctx in host.view.layer.render(in: ctx.cgContext) }
+        samples.append((CFAbsoluteTimeGetCurrent() - t0) * 1000)
+    }
+    samples.sort()
+    print(String(format: "MEASURE: %@ raster %.2f ms (median of 11)", label, samples[5]))
+}
+
+// MARK: - Section views under test
+
+@MainActor
+enum EV {
+    static var scoreHero: some View {
+        ExploreScoreHeroSection(
+            overallScore: 72,
+            scoreChangeFromLastWeek: -3,
+            weakestCategory: (category: .sleep, score: 44),
+            onScoreInfoTapped: {}
+        ).padding(.horizontal)
+    }
+
+    static var dataSummary: some View {
+        ExploreDataSummarySection(metricsTracked: 18, totalDataPoints: 42_318, daysOfData: 214, insightCount: 7)
+            .padding(.horizontal)
+    }
+
+    static var yourTrends: some View {
+        ExploreYourTrendsSection(
+            trendMetrics: EF.trendMetrics,
+            trendTimeframe: .constant(30),
+            onMetricTapped: { _ in }
+        )
+    }
+
+    static var briefing: some View {
+        TodayBriefingView(cards: EF.cards)
+    }
+
+    static var forecast: some View {
+        PersonalHealthForecastCard(forecasts: EF.forecasts, onTapMetric: { _ in })
+    }
+
+    static var categoriesSection: some View {
+        ExploreCategoriesSection(
+            categories: EF.categories,
+            insightCountProvider: { EF.insightCounts[$0] ?? 0 },
+            onCategoryTapped: { _, _ in }
+        ).padding(.horizontal)
+    }
+
+    static var needsAttention: some View {
+        ExploreNeedsAttentionSection(
+            scoreExplanation: EF.explanation,
+            onFactorTapped: { _ in },
+            onWeakCategoryTapped: { _ in }
+        ).padding(.horizontal)
+    }
+
+    static var declining: some View {
+        ExploreDecliningTrendsSection(
+            decliningHighlights: EF.highlights,
+            causalChains: EF.chains,
+            onHighlightTapped: { _ in },
+            onSeeAllIntelligenceTapped: {}
+        )
+    }
+
+    static var calendar: some View {
+        ExploreMonthCalendarSection(
+            scoresByDay: EF.scoresByDay,
+            contextsByDay: [:],
+            detailForDay: EF.dayDetail
+        ).padding(.horizontal)
+    }
+
+    /// Same order, spacing and paddings as ExploreView's LazyVStack.
+    @ViewBuilder
+    static func tab(includeCalendar: Bool) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 24) {
+                scoreHero
+                dataSummary
+                if includeCalendar { calendar }
+                yourTrends
+                briefing
+                forecast
+                categoriesSection
+                needsAttention
+                declining
+            }
+            .padding(.bottom, DS.space4)
+        }
+        .background(AppColour.surfaceBase.ignoresSafeArea())
+    }
+}
+
+struct ExplorePerfTemp {
+
+    @MainActor @Test func measureSections() {
+        rasterMedian("scoreHero", EV.scoreHero, height: 200)
+        rasterMedian("dataSummary", EV.dataSummary, height: 100)
+        rasterMedian("yourTrends", EV.yourTrends, height: 900)
+        rasterMedian("briefing", EV.briefing, height: 260)
+        rasterMedian("forecast", EV.forecast, height: 220)
+        rasterMedian("categories", EV.categoriesSection, height: 700)
+        rasterMedian("needsAttention", EV.needsAttention, height: 320)
+        rasterMedian("declining", EV.declining, height: 500)
+        rasterMedian("calendar", EV.calendar, height: 520)
+    }
+
+    @MainActor @Test func measureWholeTab() {
+        rasterMedian("TAB with calendar", EV.tab(includeCalendar: true))
+        rasterMedian("TAB without calendar", EV.tab(includeCalendar: false))
     }
 }

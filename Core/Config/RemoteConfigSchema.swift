@@ -135,6 +135,7 @@ extension RemoteConfigManager {
         RC.workoutZoneRestoringCeiling:       50   as NSNumber,
         RC.workoutZoneMaintainingCeiling:     75   as NSNumber,
         RC.workoutZoneBuildingCeiling:        90   as NSNumber,
+        RC.workoutDefaultMaxHR:               190  as NSNumber,
 
         // Colour tokens deliberately have NO in-app default.
         //
@@ -179,19 +180,16 @@ extension RemoteConfigManager {
         RC.recoveryWeeklyTrendMinDays:                 4      as NSNumber,
         RC.recoveryWeeklyTrendThresholdSDMultiplier:   0.3    as NSNumber,
 
-        // Daily brief. HEURISTIC — product guesses, not clinical cut-offs.
-        RC.dailyBriefFocusDays:                        21     as NSNumber,
-        RC.dailyBriefFocusEarlyCloseDays:              5      as NSNumber,
-        RC.dailyBriefPastFocusRetention:               12     as NSNumber,
-        RC.dailyBriefDriverCount:                      3      as NSNumber,
-        RC.dailyBriefSleepBalanceDriverHours:          1.0    as NSNumber,
-        RC.dailyBriefHrrOffUsualPercent:               5.0    as NSNumber,
-        RC.dailyBriefStrainHighDaysOfSix:              4      as NSNumber,
-        RC.dailyBriefReadinessWindowDays:              14     as NSNumber,
-        RC.dailyBriefReadinessBandDays:                60     as NSNumber,
-        RC.dailyBriefTrajectoryDeadBand:               3.0    as NSNumber,
-        RC.dailyBriefDayReminderHour:                  18     as NSNumber,
-        RC.dailyBriefMoveLogRetentionDays:             60     as NSNumber,
+        // Wake anchor. SOURCE: Windred et al., SLEEP 47(1) 2024 (N=60,977) —
+        // the lowest-mortality quintile woke inside roughly a 1-hour window,
+        // i.e. about +/-30 min, which sets the loose band. The tight band is
+        // the stricter half of that, not a separate finding.
+        RC.killWakeAnchor:                             false  as NSNumber,
+        RC.wakeAnchorDriftTightMinutes:                15     as NSNumber,
+        RC.wakeAnchorDriftLooseMinutes:                30     as NSNumber,
+        RC.wakeAnchorConsistencyWindowDays:            28     as NSNumber,
+        RC.wakeAnchorConsistencyMinNights:             14     as NSNumber,
+        RC.wakeAnchorHistoryWindowDays:                90     as NSNumber,
     ]
 }
 
@@ -333,6 +331,7 @@ extension RemoteConfigManager {
     var workoutZoneRestoringCeiling: Int       { int(forKey: RC.workoutZoneRestoringCeiling) }
     var workoutZoneMaintainingCeiling: Int     { int(forKey: RC.workoutZoneMaintainingCeiling) }
     var workoutZoneBuildingCeiling: Int        { int(forKey: RC.workoutZoneBuildingCeiling) }
+    var workoutDefaultMaxHR: Int               { int(forKey: RC.workoutDefaultMaxHR) }
 
     // MARK: Colors
     //
@@ -378,18 +377,13 @@ extension RemoteConfigManager {
     var recoveryWeeklyTrendMinDays: Int                 { int(forKey: RC.recoveryWeeklyTrendMinDays) }
     var recoveryWeeklyTrendThresholdSDMultiplier: Double { double(forKey: RC.recoveryWeeklyTrendThresholdSDMultiplier) }
 
-    // MARK: Daily brief
+    // MARK: Wake Anchor
 
-    var dailyBriefFocusDays: Int                        { int(forKey: RC.dailyBriefFocusDays) }
-    var dailyBriefFocusEarlyCloseDays: Int              { int(forKey: RC.dailyBriefFocusEarlyCloseDays) }
-    var dailyBriefPastFocusRetention: Int               { int(forKey: RC.dailyBriefPastFocusRetention) }
-    var dailyBriefDriverCount: Int                      { int(forKey: RC.dailyBriefDriverCount) }
-    var dailyBriefSleepBalanceDriverHours: Double       { double(forKey: RC.dailyBriefSleepBalanceDriverHours) }
-    var dailyBriefHrrOffUsualPercent: Double            { double(forKey: RC.dailyBriefHrrOffUsualPercent) }
-    var dailyBriefStrainHighDaysOfSix: Int              { int(forKey: RC.dailyBriefStrainHighDaysOfSix) }
-    var dailyBriefReadinessWindowDays: Int              { int(forKey: RC.dailyBriefReadinessWindowDays) }
-    var dailyBriefReadinessBandDays: Int                { int(forKey: RC.dailyBriefReadinessBandDays) }
-    var dailyBriefTrajectoryDeadBand: Double            { double(forKey: RC.dailyBriefTrajectoryDeadBand) }
-    var dailyBriefDayReminderHour: Int                  { int(forKey: RC.dailyBriefDayReminderHour) }
-    var dailyBriefMoveLogRetentionDays: Int             { int(forKey: RC.dailyBriefMoveLogRetentionDays) }
+    /// True → the Sleep Coach wake-window section is hidden entirely.
+    var killWakeAnchor: Bool                            { bool(forKey: RC.killWakeAnchor) }
+    var wakeAnchorDriftTightMinutes: Int                { int(forKey: RC.wakeAnchorDriftTightMinutes) }
+    var wakeAnchorDriftLooseMinutes: Int                { int(forKey: RC.wakeAnchorDriftLooseMinutes) }
+    var wakeAnchorConsistencyWindowDays: Int            { int(forKey: RC.wakeAnchorConsistencyWindowDays) }
+    var wakeAnchorConsistencyMinNights: Int             { int(forKey: RC.wakeAnchorConsistencyMinNights) }
+    var wakeAnchorHistoryWindowDays: Int                { int(forKey: RC.wakeAnchorHistoryWindowDays) }
 }

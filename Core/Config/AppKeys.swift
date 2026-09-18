@@ -92,14 +92,6 @@ enum AppKeys {
         /// so the next morning can show whether the score moved (closing the
         /// "do this → here is the result" loop the Next Up card promises).
         static let dailyActionResult     = "healthpulse.dailyActionResult"
-        /// JSON array of the moves the brief showed each day and when they were done.
-        static let dailyMoveLog          = "healthpulse.dailyMoveLog"
-        /// JSON array of three-week focuses, the active one first.
-        static let focusRecords          = "healthpulse.focusRecords"
-        /// JSON of the last evaluated wind-down night: target bedtime and sleep onset.
-        static let windDownLastOutcome   = "healthpulse.windDownLastOutcome"
-        /// Start of the day the person dismissed the morning verdict card on.
-        static let verdictDismissedDay   = "healthpulse.verdictDismissedDay"
         static let cachedDeviceSources   = "Laso.DeviceSource.cachedDevices"
         static let deviceSourceScanDate  = "Laso.DeviceSource.lastScanDate"
     }
@@ -128,6 +120,9 @@ enum AppKeys {
         /// armed for. Without it every foreground re-armed the same wear gap and
         /// a watch left on the charger pushed once per app open.
         static let notWornAlertedAnchor     = "healthpulse.watchMonitor.notWornAlertedAnchor"
+        /// Set when the user dismisses the "add the complication" card. Permanent:
+        /// the same steps stay available on the Apple Watch device screen.
+        static let complicationPromptDismissed = "laso.watch.complicationPromptDismissed"
     }
 
     // MARK: - UI Dismissals

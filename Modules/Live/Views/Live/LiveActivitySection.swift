@@ -1,0 +1,220 @@
+import SwiftUI
+
+struct LiveActivitySection: View {
+    let activity: LiveViewModel.ActivityData
+    var activityTracker: SectionTracker
+    var quickStatsTracker: SectionTracker
+    @Binding var maxScrollDepth: Int
+
+
+    private var isActivityAllZeros: Bool {
+        activity.todayActiveCalories == 0 && activity.todayExerciseMinutes == 0 && activity.todayStandHours == 0
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.Live.activityRings)
+                .font(DS.Typography.headline)
+                .padding(.horizontal)
+
+            if isActivityAllZeros && Date.cal.component(.hour, from: Date()) < 10 {
+                HStack(spacing: DS.itemSpacing) {
+                    Image(systemName: "figure.stand")
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(AppColour.textSecondary)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Copy.Live.noActivityYet)
+                            .font(DS.Typography.subheadlineMedium)
+                        Text(Copy.Live.yourRingsWillFillAsYou)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(DS.cardPadding)
+                .cardStyle()
+                .padding(.horizontal)
+            } else {
+
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Activity Rings",
+                    type: .activityRingsSection,
+                    screen: .live,
+                    metadata: [
+                        "metric_id": "activity_rings",
+                        "move_progress": Int(activity.moveProgress * 100),
+                        "exercise_progress": Int(activity.exerciseProgress * 100),
+                        "stand_progress": Int(activity.standProgress * 100)
+                    ]
+                )
+                activityTracker.tapped(target: "activity_rings")
+            } label: {
+                HStack(spacing: 16) {
+                    // Triple ring
+                    ZStack {
+                        // Stand (outer). cyan
+                        ringArc(progress: activity.standProgress, color: .cyan, size: 90, lineWidth: 8)
+                        // Exercise (middle). green
+                        ringArc(progress: activity.exerciseProgress, color: .green, size: 70, lineWidth: 8)
+                        // Move (inner). pink
+                        ringArc(progress: activity.moveProgress, color: .pink, size: 50, lineWidth: 8)
+                    }
+                    .frame(width: 100, height: 100)
+
+                    // Labels
+                    VStack(alignment: .leading, spacing: DS.space2) {
+                        ringLabel(
+                            color: .pink,
+                            label: "Move",
+                            value: "\(Int(activity.todayActiveCalories))/\(Int(activity.moveGoal)) kcal",
+                            progress: activity.moveProgress
+                        )
+                        ringLabel(
+                            color: .green,
+                            label: "Exercise",
+                            value: "\(Int(activity.todayExerciseMinutes))/\(Int(activity.exerciseGoal)) min",
+                            progress: activity.exerciseProgress
+                        )
+                        ringLabel(
+                            color: .cyan,
+                            label: "Stand",
+                            value: "\(Int(activity.todayStandHours))/\(Int(activity.standGoal)) hrs",
+                            progress: activity.standProgress
+                        )
+                    }
+
+                    Spacer()
+                }
+                .padding(DS.cardPadding)
+                .cardStyle()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Copy.Live.activityRingsMoveOfCaloriesLabel(Int(activity.todayActiveCalories), Int(activity.moveGoal), Int(activity.moveProgress * 100), Int(activity.todayExerciseMinutes), Int(activity.exerciseGoal), Int(activity.exerciseProgress * 100), Int(activity.todayStandHours), Int(activity.standGoal), Int(activity.standProgress * 100)))
+            }
+            .buttonStyle(.dsPress)
+            .padding(.horizontal)
+
+            // Quick stats row
+            HStack(spacing: 12) {
+                quickStatPill(
+                    icon: "figure.walk",
+                    value: formatLargeNumber(activity.todaySteps),
+                    label: "Steps",
+                    color: .green,
+                    blockType: .quickStatSteps
+                )
+                quickStatPill(
+                    icon: "location.fill",
+                    value: String(format: "%.1f km", activity.todayDistance),
+                    label: "Distance",
+                    color: .blue,
+                    blockType: .quickStatDistance
+                )
+                quickStatPill(
+                    icon: "figure.stairs",
+                    value: "\(Int(activity.todayFlightsClimbed))",
+                    label: "Flights",
+                    color: .purple,
+                    blockType: .quickStatFlights
+                )
+            }
+            .padding(.horizontal)
+            .onAppear { quickStatsTracker.appeared() }
+            .onDisappear { quickStatsTracker.disappeared() }
+
+            } // end else (has activity)
+        }
+        .onAppear { activityTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 65) }
+        .onDisappear { activityTracker.disappeared() }
+    }
+
+    private func ringArc(progress: Double, color: Color, size: CGFloat, lineWidth: CGFloat) -> some View {
+        ZStack {
+            Circle()
+                .stroke(color.opacity(0.15), lineWidth: lineWidth)
+                .frame(width: size, height: size)
+            Circle()
+                .trim(from: 0, to: min(progress, 1.0))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .frame(width: size, height: size)
+                .rotationEffect(.degrees(-90))
+        }
+    }
+
+    private func ringLabel(color: Color, label: String, value: String, progress: Double) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+
+            Text(label)
+                .font(DS.Typography.captionMedium)
+                .foregroundStyle(AppColour.textSecondary)
+                .frame(width: 52, alignment: .leading)
+
+            Text(value)
+                .font(DS.Typography.captionSemibold.monospacedDigit())
+                .foregroundStyle(AppColour.textPrimary)
+
+            Spacer()
+
+            Text(Copy.Live.xText(Int(progress * 100)))
+                .font(DS.Typography.caption2Semibold.monospacedDigit())
+                .foregroundStyle(color)
+        }
+    }
+
+    private func quickStatPill(icon: String, value: String, label: String, color: Color, blockType: BlockType) -> some View {
+        Button {
+            let metricId: String = switch blockType {
+            case .quickStatSteps: HealthMetric.steps.rawValue
+            case .quickStatDistance: HealthMetric.distanceWalkingRunning.rawValue
+            case .quickStatFlights: HealthMetric.flightsClimbed.rawValue
+            default: "unknown"
+            }
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: blockType,
+                screen: .live,
+                metadata: [
+                    "metric_id": metricId,
+                    "value": value
+                ]
+            )
+            quickStatsTracker.tapped(target: label.lowercased())
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(color)
+
+                Text(value)
+                    .font(DS.Typography.captionSemibold.monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
+                    .contentTransition(.numericText())
+
+                Text(label)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DS.space3)
+            .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Copy.Live.xLabel(label, value))
+        }
+        .buttonStyle(.dsPress)
+    }
+
+    private func formatLargeNumber(_ value: Double) -> String {
+        if value >= 10000 {
+            return String(format: "%.0fk", value / 1000)
+        } else if value >= 1000 {
+            return String(format: "%.1fk", value / 1000)
+        } else {
+            return String(format: "%.0f", value)
+        }
+    }
+}

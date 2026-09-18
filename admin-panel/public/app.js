@@ -1712,23 +1712,24 @@ const ScreenshotsPage = (() => {
       { id: "06_promise",    label: "7-Day Promise" },
     ]},
     { angle: "02_today", title: "Today", shots: [
-      { id: "01_home",          label: "Home brief" },
-      { id: "02_home_morning",  label: "Home the next morning" },
-      { id: "03_driver_detail", label: "Driver detail" },
-      { id: "04_progress",      label: "Progress tab" },
+      { id: "01_home",          label: "Home dashboard" },
+      { id: "02_home_morning",  label: "Home with morning check-in" },
+      { id: "03_todays_action", label: "Today's Action detail" },
+      { id: "04_weekly_review", label: "Weekly Review" },
       { id: "05_health_state",  label: "Health State Timeline" },
     ]},
     { angle: "03_sleep", title: "Sleep", shots: [
-      { id: "01_sleep_driver", label: "Sleep balance driver" },
+      { id: "01_sleep_coach", label: "Sleep Coach" },
     ]},
     { angle: "04_activity", title: "Activity & Strain", shots: [
-      { id: "01_body_tab", label: "Body tab" },
-      { id: "02_strain",   label: "Strain driver" },
-      { id: "03_stress",   label: "Stress driver" },
+      { id: "01_live_tab", label: "Live tab" },
+      { id: "02_strain",   label: "Strain" },
+      { id: "03_stress",   label: "Stress Monitor" },
     ]},
     { angle: "05_recovery", title: "Recovery & Vitality", shots: [
-      { id: "01_vitality", label: "Vitality" },
-      { id: "03_cycle",    label: "Cycle Detail" },
+      { id: "01_vitality",     label: "Vitality" },
+      { id: "02_brain_health", label: "Brain Health" },
+      { id: "03_cycle",        label: "Cycle Detail" },
     ]},
     { angle: "06_insights", title: "Insights & Intelligence", shots: [
       { id: "01_insights",      label: "Insights" },
@@ -1748,6 +1749,7 @@ const ScreenshotsPage = (() => {
       { id: "03_pro_lock",             label: "Pro Feature Overlay" },
       { id: "04_connect_health_empty", label: "Connect Apple Health (empty)" },
       { id: "05_achievements",         label: "Achievements" },
+      { id: "06_explore_tab",          label: "Explore tab" },
     ]},
   ];
 

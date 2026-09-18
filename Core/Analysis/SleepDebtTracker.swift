@@ -17,13 +17,21 @@ final class SleepDebtTracker {
     }
 
     struct DailyDeficit {
+        let date: Date
         /// Hours short of the personal baseline. Negative means a surplus.
         let deficit: Double
+        /// False when that night recorded nothing. The running total treats a
+        /// missing night as met so it cannot invent debt, but a chart must not
+        /// draw it as a night slept exactly to target.
+        let hasData: Bool
     }
 
     struct SleepDebtInfo {
         let totalDebtHours: Double
         let dailyDeficits: [DailyDeficit]
+        let personalBaseline: Double
+
+        var nightsRecorded: Int { dailyDeficits.filter(\.hasData).count }
     }
 
     /// Below this the balance is small enough that naming it would be noise
@@ -116,19 +124,20 @@ final class SleepDebtTracker {
 
             if let actual = dailyMap[dayStart] {
                 let deficit = personalBaseline - actual
-                dailyDeficits.append(DailyDeficit(deficit: deficit))
+                dailyDeficits.append(DailyDeficit(date: dayStart, deficit: deficit, hasData: true))
 
                 // Positive deficit adds to debt; surplus reduces debt but never below 0
                 cumulativeDebt = Swift.max(0, cumulativeDebt + deficit)
             } else {
                 // Missing day: assume baseline met (no deficit)
-                dailyDeficits.append(DailyDeficit(deficit: 0))
+                dailyDeficits.append(DailyDeficit(date: dayStart, deficit: 0, hasData: false))
             }
         }
 
         currentDebt = SleepDebtInfo(
             totalDebtHours: cumulativeDebt,
-            dailyDeficits: dailyDeficits
+            dailyDeficits: dailyDeficits,
+            personalBaseline: personalBaseline
         )
 
         // Determine trend: compare average deficit of last 3 days vs prior 3 days

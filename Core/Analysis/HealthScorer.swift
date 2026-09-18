@@ -8,6 +8,29 @@ struct HealthScorer {
 
     private typealias Cfg = HealthScorerConfig
 
+    // MARK: - Score Transparency Models
+
+    /// Explains how the overall score was computed, including per-category weights and top factors
+    struct ScoreExplanation {
+        let categoryContributions: [CategoryContribution]
+        let topFactors: [ScoreFactor]  // top 3 factors affecting score
+    }
+
+    /// A single category's weighted contribution to the overall score
+    struct CategoryContribution {
+        let category: HealthCategory
+        let score: Int
+        let weightedContribution: Double  // score * weight
+    }
+
+    /// A single metric-level factor that moved the score up or down
+    struct ScoreFactor {
+        let metric: HealthMetric
+        let impact: Int  // positive or negative points
+        let reason: String  // e.g. "HRV dropped 15% this week"
+        let isPositive: Bool
+    }
+
     // MARK: - Metric Scoring (unchanged)
 
     /// Compute score for a single metric using proportional deductions scaled by z-score magnitude
@@ -223,6 +246,104 @@ struct HealthScorer {
         }
 
         return normalizeWeights(rawWeights, minimumWeight: Cfg.categoryWeightFloor)
+    }
+
+    // MARK: - Score Explanation
+
+    /// Produce a transparent explanation of how the overall score was computed,
+    /// including per-category contributions and the top 3 factors affecting the score.
+    static func explainOverallScore(
+        categoryScores: [HealthScore],
+        weights: [HealthCategory: Double],
+        anomalies: [AnomalyDetector.AnomalyResult],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+    ) -> ScoreExplanation {
+        // Build category contributions
+        var contributions: [CategoryContribution] = []
+
+        for cs in categoryScores {
+            guard let cat = cs.category else { continue }
+            let w = weights[cat] ?? (1.0 / Double(categoryScores.count))
+            contributions.append(CategoryContribution(
+                category: cat,
+                score: cs.score,
+                weightedContribution: Double(cs.score) * w
+            ))
+        }
+
+        contributions.sort { $0.weightedContribution > $1.weightedContribution }
+
+        var factors: [ScoreFactor] = []
+
+        for anomaly in anomalies where anomaly.severity != .info {
+            let absDeviation = abs(anomaly.deviationPercent)
+            let direction = anomaly.isAboveBaseline ? "rose" : "dropped"
+            let impact: Int
+            switch anomaly.severity {
+            case .critical:
+                impact = -min(Cfg.criticalDeductionCap, Int(abs(anomaly.zScore) * Cfg.criticalDeductionPerZ))
+            case .warning:
+                impact = -min(Cfg.warningDeductionCap, Int(abs(anomaly.zScore) * Cfg.warningDeductionPerZ))
+            case .info:
+                impact = 0
+            }
+
+            factors.append(ScoreFactor(
+                metric: anomaly.metric,
+                impact: impact,
+                reason: "\(anomaly.metric.displayName) \(direction) \(String(format: "%.0f", absDeviation))% from baseline",
+                isPositive: false
+            ))
+        }
+
+        for (metric, trend) in trends {
+            switch trend.direction {
+            case .declining:
+                let absWoW = abs(trend.weekOverWeekChange)
+                let impact = -min(Cfg.decliningDeductionCap, Int(absWoW * Cfg.decliningDeductionPerPercent + Cfg.decliningDeductionOffset))
+                factors.append(ScoreFactor(
+                    metric: metric,
+                    impact: impact,
+                    reason: "\(metric.displayName) \(trend.rateOfChange.displayLabel) declining (\(String(format: "%.1f", absWoW))% WoW)",
+                    isPositive: false
+                ))
+            case .improving:
+                let absWoW = abs(trend.weekOverWeekChange)
+                let impact = min(Cfg.improvingBonusCap, Int(absWoW * Cfg.improvingBonusPerPercent + Cfg.improvingBonusOffset))
+                factors.append(ScoreFactor(
+                    metric: metric,
+                    impact: impact,
+                    reason: "\(metric.displayName) \(trend.rateOfChange.displayLabel) improving",
+                    isPositive: true
+                ))
+            case .stable:
+                break
+            }
+        }
+
+        // Deduplicate: if a metric has both an anomaly factor and a trend factor,
+        // keep only the one with the larger absolute impact
+        var bestFactorByMetric: [HealthMetric: ScoreFactor] = [:]
+        for factor in factors {
+            if let existing = bestFactorByMetric[factor.metric] {
+                if abs(factor.impact) > abs(existing.impact) {
+                    bestFactorByMetric[factor.metric] = factor
+                }
+            } else {
+                bestFactorByMetric[factor.metric] = factor
+            }
+        }
+
+        let topFactors = Array(
+            bestFactorByMetric.values
+                .sorted { abs($0.impact) > abs($1.impact) }
+                .prefix(Cfg.maxTopFactors)
+        )
+
+        return ScoreExplanation(
+            categoryContributions: contributions,
+            topFactors: topFactors
+        )
     }
 
     // MARK: - Coverage-Adjusted Scoring

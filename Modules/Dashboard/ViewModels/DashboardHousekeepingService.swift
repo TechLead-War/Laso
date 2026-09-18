@@ -168,9 +168,7 @@ final class DashboardHousekeepingService {
                 topAnomaly: topAnomaly,
                 scoreChangeFromYesterday: payload.scoreChangeFromYesterday,
                 streakDays: streakDays,
-                improvingDays: payload.improvingDays,
-                // Today's entry: by the time the push fires it is yesterday.
-                yesterdayMoves: DailyMoveLog.entry(for: Date())
+                improvingDays: payload.improvingDays
             )
 
             DailySummaryScheduler.scheduleEvening(
@@ -245,7 +243,7 @@ final class DashboardHousekeepingService {
     /// Small helper struct for capturing the last HRV reading and its trend direction.
     /// Consumed by `WindDownScheduler` (to personalise the hint) and by the lapsed-user
     /// re-engagement push (for the data-grounded body).
-    struct HRVSnapshot {
+    private struct HRVSnapshot {
         let valueMs: Int
         let trend: TrendDirection
         /// `true` if the last HRV is notably below the recent 30-day average.
@@ -254,7 +252,7 @@ final class DashboardHousekeepingService {
 
     /// Derive the most recent HRV reading + trend direction from the refresh payload.
     /// Returns `nil` when HRV data or trend info is not available.
-    static func hrvSnapshot(
+    private static func hrvSnapshot(
         timeSeries: [HealthMetric: MetricTimeSeries],
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> HRVSnapshot? {

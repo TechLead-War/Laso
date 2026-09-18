@@ -3,11 +3,18 @@ import Observation
 import SwiftUI
 import os
 
-/// How much completed score history the backfill makes sure exists, so the
-/// readiness trend on Today has two weeks to draw from on a new install.
+/// Smoothing parameters for the Explore weekly score (`computeRollingAverageScore`).
+/// Anchored to EWMA literature and commercial wearable practice; see that
+/// function's doc comment for source links.
 enum WeeklyScoreSmoothing {
-    /// Long enough that one bad day cannot dominate the trend, short enough to
-    /// track real adaptations in HRV, sleep and activity.
+    /// EWMA decay parameter. 0.05–0.25 is the standard tutorial range for
+    /// non-stationary health time series; 0.2 trends recent days without
+    /// over-reacting to a single outlier day.
+    static let lambda: Double = 0.2
+
+    /// Two weeks of completed daily snapshots. Long enough that one bad day
+    /// cannot dominate the visible weekly number, short enough to track real
+    /// adaptations in HRV / sleep / activity.
     static let windowDays: Int = 14
 }
 
@@ -25,8 +32,6 @@ final class DashboardViewModel {
     /// What the user told us is going on. Read on every action rebuild, so
     /// turning a chip on changes today's card immediately.
     let lifeContextStore: LifeContextStore
-    /// The running three-week focus. The brief starts, updates and expires it.
-    let focusStore: FocusStore
     private let housekeepingService: DashboardHousekeepingService
     private let derivedStateBuilder: DashboardDerivedStateBuilder
 
@@ -36,11 +41,13 @@ final class DashboardViewModel {
     let ui: UIState
     /// Score-related state: overall score, category scores, score changes, recovery
     let scores = ScoreState()
+    /// Trend-related state: trends summary
+    let trends = TrendState()
     /// Insight-related state: focused insights, headline, focus categories
     let insights = InsightState()
     /// Anomaly-related state: anomalous metrics, alert counts
     let anomalies = AnomalyState()
-    /// Analysis-related state: data depth, correlations, risks, illness, causal chains
+    /// Analysis-related state: historical highlights, data depth, correlations, risks, illness, causal chains
     let analysis = AnalysisState()
 
     private var isSyncRetryInProgress = false
@@ -74,7 +81,7 @@ final class DashboardViewModel {
     /// per refresh, and each run republishes ~25 observable properties: most of
     /// the published types (HealthScore, [Insight], [HealthCorrelation]) are not
     /// Equatable, so Observation cannot suppress an identical write and each call
-    /// repaints Home (0.34 ms per body pass)
+    /// repaints Home (0.34 ms per body pass) and Explore (2.13 ms per body pass)
     /// in full. `nil` means "never computed", so
     /// the very first call always publishes.
     @MainActor private var lastCacheHash: Int?
@@ -85,10 +92,52 @@ final class DashboardViewModel {
     /// `loadScoreHistory`'s measured 3.16 ms SwiftData fetch.
     @MainActor private var scoreHistoryGeneration: Int = 0
 
+    /// Fingerprint of the inputs behind the heavy derived caches alone (trend
+    /// metrics ×3, historical highlights, top correlations). Kept separate from
+    /// `lastCacheHash`: a phase that only rewrote insights has to republish, but
+    /// must not pay to recompute trends whose inputs it never touched.
+    @MainActor private var lastExpensiveCacheHash: Int = 0
+
+    /// Cached daily action. computed once per calendar day (or after analysis refresh)
+    /// Observation-ignored: `smartDailyAction` is called from inside HomeView's body,
+    /// so writing these as tracked state re-invalidated the body that produced them
+    /// and cost a second full pass and layout every time the cache missed.
+    @ObservationIgnored @MainActor private var _cachedDailyAction: SmartAction?
+    @ObservationIgnored @MainActor private var _cachedDailyActionDate: Date?
+
+    /// Action proof, refreshed on the refresh path rather than on demand.
+    /// `RecommendationEvaluator.buildActionProof` runs a predicated SwiftData fetch,
+    /// which is the one piece of `smartDailyAction` that must never run in a frame.
+    @ObservationIgnored @MainActor private var _cachedActionProof: RecommendationEvaluator.ActionProofSummary?
+
     /// Cached 365-day score history for the current refresh cycle.
     /// Fetched once on first access via `scoreHistoryCached()`, cleared at
     /// the start of each refresh and after saving a new analysis snapshot.
     @MainActor private var _cachedScoreHistory: [(date: Date, score: Int)]?
+
+    /// Pre-fills every trend row's verdict memo off the main thread. Rows in
+    /// Explore's lazy stack first render mid-scroll, and an unwarmed memo put
+    /// the baseline maths (~1 ms per row at 90 days) inside a scroll frame.
+    /// The maths runs detached over value-type copies; only the memo writes
+    /// come back to the main actor.
+    @MainActor
+    private func warmTrendVerdicts(_ byTimeframe: [Int: [TrendMetricItem]]) {
+        let inputs = byTimeframe.values.flatMap { items in
+            items.map { (metric: $0.metric, samples: $0.sparklineSamples) }
+        }
+        guard !inputs.isEmpty else { return }
+        let items = byTimeframe.values.flatMap { $0 }
+        Task.detached(priority: .utility) {
+            let verdicts = inputs.map {
+                TrendMetricItem.computeVerdict(metric: $0.metric, samples: $0.samples)
+            }
+            await MainActor.run {
+                for (item, verdict) in zip(items, verdicts) {
+                    item.seedVerdict(verdict)
+                }
+            }
+        }
+    }
 
     /// Whether cycle tracking applies to this user. Read before the flow query is
     /// launched and reused for the tracker's own gate, so the two cannot drift.
@@ -137,6 +186,9 @@ final class DashboardViewModel {
     @Observable
     final class ScoreState {
         fileprivate(set) var cachedScoreChangeFromYesterday: Int?
+        /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
+        /// describes the same series as the displayed weekly score.
+        fileprivate(set) var cachedWeeklyScoreChange: Int?
         /// Set by parent after each analysis refresh. Nil until an analysis has
         /// actually scored something, so a user with no data (or with HealthKit
         /// denied) is never handed a stand-in number.
@@ -144,12 +196,32 @@ final class DashboardViewModel {
         fileprivate(set) var categoryScores: [HealthScore] = []
 
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
+        var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
 
         /// Nil until something has been scored. Banding a missing score put
         /// every no-data user in the red recovery tier, which drove a rest-day
         /// strain target the app never actually computed.
         var recoveryState: RecoveryState? {
             overallScore.map { RecoveryState(score: $0.score) }
+        }
+
+        /// Score explanation for transparency
+        fileprivate(set) var scoreExplanation: HealthScorer.ScoreExplanation?
+
+        /// 7-day rolling average score for Explore tab (differs from today's overallScore).
+        /// Falls back to overallScore when insufficient history, and stays nil
+        /// when neither exists so Explore hides its hero instead of showing 0.
+        fileprivate(set) var rollingAverageScore: Int?
+    }
+
+    @Observable
+    final class TrendState {
+        /// Pre-computed trend metrics keyed by timeframe (7, 30, 90 days)
+        fileprivate(set) var cachedTrendMetricsByTimeframe: [Int: [TrendMetricItem]] = [:]
+
+        /// Returns pre-computed trend metrics for the given timeframe
+        func trendMetrics(for days: Int) -> [TrendMetricItem] {
+            cachedTrendMetricsByTimeframe[days] ?? []
         }
     }
 
@@ -160,6 +232,7 @@ final class DashboardViewModel {
         fileprivate(set) var cachedFocusCategories: Set<HealthCategory> = []
         fileprivate(set) var cachedFocusedInsights: [Insight] = []
 
+        var focusCategories: Set<HealthCategory> { cachedFocusCategories }
         var focusedInsights: [Insight] { cachedFocusedInsights }
 
         var headlineInsight: Insight? { focusedInsights.first }
@@ -185,6 +258,12 @@ final class DashboardViewModel {
 
     @Observable
     final class AnalysisState {
+        fileprivate(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
+        fileprivate(set) var cachedTopCorrelations: [HealthCorrelation] = []
+
+        var historicalHighlights: [HistoricalHighlight] { cachedHistoricalHighlights }
+        var topCorrelations: [HealthCorrelation] { cachedTopCorrelations }
+
         fileprivate(set) var correlations: [HealthCorrelation] = []
         fileprivate(set) var healthRisks: [HealthRisk] = []
         fileprivate(set) var topHealthRisks: [HealthRisk] = []
@@ -216,6 +295,27 @@ final class DashboardViewModel {
             case .optimal: self = .green
             case .fair:    self = .yellow
             case .poor:    self = .red
+            }
+        }
+
+        /// Single source of truth for the recovery state colour. Mirrors the
+        /// 3-band model (green/yellow/red), so the home recovery card's title,
+        /// pill, and ring all paint from the same threshold table.
+        var color: Color {
+            switch self {
+            case .green: AppColour.scoreOptimal
+            case .yellow: AppColour.scoreFair
+            case .red: AppColour.scorePoor
+            }
+        }
+
+        /// One word for the band, so a score can be read without knowing the
+        /// thresholds. Used wherever a number appears without its ring.
+        var plainName: String {
+            switch self {
+            case .green: Copy.Home.stateNameGood
+            case .yellow: Copy.Home.stateNameSteady
+            case .red: Copy.Home.stateNameLow
             }
         }
     }
@@ -262,9 +362,22 @@ final class DashboardViewModel {
     struct PeriodSummary {
         let topImproved: [MetricChange]
         let topDeclined: [MetricChange]
+        let stableMetrics: [MetricChange]
 
         var improvedCount: Int { topImproved.count }
         var declinedCount: Int { topDeclined.count }
+    }
+
+    /// Period summary filtered to only metrics matching user's health focuses
+    func focusFilteredPeriodSummary(for period: TimePeriod) -> PeriodSummary {
+        let base = periodSummary(for: period)
+        let categories = insights.focusCategories
+        guard !categories.isEmpty else { return base }
+        return PeriodSummary(
+            topImproved: base.topImproved.filter { categories.contains($0.metric.category) },
+            topDeclined: base.topDeclined.filter { categories.contains($0.metric.category) },
+            stableMetrics: base.stableMetrics.filter { categories.contains($0.metric.category) }
+        )
     }
 
     /// Recorded days each side of a period comparison must have before the change
@@ -275,6 +388,7 @@ final class DashboardViewModel {
         let days = period.days
         var improved: [MetricChange] = []
         var declined: [MetricChange] = []
+        var stable: [MetricChange] = []
 
         // Previous-period window abuts the current one and reuses the same
         // day-shifted boundary as samples(lastDays:), resolved by O(log n) binary
@@ -307,26 +421,32 @@ final class DashboardViewModel {
                 improved.append(mc)
             } else if isDeclined {
                 declined.append(mc)
+            } else {
+                stable.append(mc)
             }
         }
 
         improved.sort { abs($0.changePercent) > abs($1.changePercent) }
         declined.sort { abs($0.changePercent) > abs($1.changePercent) }
+        stable.sort { $0.metric.displayName < $1.metric.displayName }
 
         return PeriodSummary(
             topImproved: improved,
-            topDeclined: declined
+            topDeclined: declined,
+            stableMetrics: stable
         )
     }
 
     // MARK: - New Engines
 
     let strainScorer = StrainScorer()
+    let stressScorer = StressScorer()
     let sleepNeedCalculator = SleepNeedCalculator()
     let sleepDebtTracker = SleepDebtTracker()
     let menstrualCycleTracker = MenstrualCycleTracker()
     let gamificationEngine = GamificationEngine()
     let vitalityScorer = VitalityScorer()
+    let brainHealthScorer = BrainHealthScorer()
     let strainCoach = StrainCoach()
     let todayIntelligenceEngine = TodayIntelligenceEngine()
 
@@ -335,10 +455,61 @@ final class DashboardViewModel {
 
     // MARK: - Cached View Properties (computed once per refresh, not per render)
 
-    /// Name of the lowest-scoring category. The Today Live Activity names it as the pillar to watch.
+    /// Name of the lowest-scoring category. used by ScoreGuideSheet for personalized explanation
     @MainActor var cachedWeakestCategoryName: String?
 
+    /// Metric tiles for MetricStripView, derived on read.
+    ///
+    /// Not a stored array rebuilt by hand: every scorer behind it is `@Observable`
+    /// and finishes at its own moment (Vitality and Strain in `computeNewEngines`,
+    /// the cycle tracker later still, live sleep on an async HealthKit callback),
+    /// so a snapshot taken at three fixed points kept whatever happened to be
+    /// ready and silently dropped the rest for the whole visit. Deriving means a
+    /// SwiftUI body reading this re-runs when any of those publish. Nothing in
+    /// here mutates observed state, so it cannot loop.
+    @MainActor var cachedMetricTiles: [MetricTile] { buildMetricTiles() }
+
+    /// Last night's sleep as LiveViewModel last reported it. DashboardViewModel
+    /// does not own LiveViewModel, so the values are pushed in through
+    /// `rebuildMetricTiles` and held here for the derivation above to read.
+    /// Stamped because an app left running past midnight would otherwise keep
+    /// showing the night before as if it were last night.
+    @MainActor private var liveSleepDuration: TimeInterval = 0
+    @MainActor private var liveSleepQuality: String = ""
+    @MainActor private var liveSleepRecordedAt: Date?
+
+    /// One score per calendar day for Explore's month calendar, keyed by start
+    /// of day. Built at the end of every refresh path rather than from a SwiftUI
+    /// body: building it measured 0.60 ms per Explore body pass, and the score
+    /// history behind it is a 3.16 ms SwiftData fetch that used to be reached
+    /// lazily from inside that body.
+    @MainActor private(set) var cachedDailyScoresByDay: [Date: Int] = [:]
+
+    /// Life contexts per calendar day, for the same window as the score map.
+    /// A context covers a whole date range, so turning one off rewrites every
+    /// past day it covered; the calendar compares this to know that happened.
+    @MainActor private(set) var cachedContextsByDay: [Date: [LifeContextStore.Context]] = [:]
+
+    /// Walks the window once and asks the store per day. Days with no context
+    /// are left out so the dictionary stays small and comparing it is cheap.
+    private static func contextsByDay(
+        store: LifeContextStore,
+        days: Int
+    ) -> [Date: [LifeContextStore.Context]] {
+        let today = Date.cal.startOfDay(for: Date())
+        var byDay: [Date: [LifeContextStore.Context]] = [:]
+        for offset in 0..<days {
+            guard let day = Date.cal.date(byAdding: .day, value: -offset, to: today) else { continue }
+            let contexts = store.contexts(on: day)
+            if !contexts.isEmpty { byDay[day] = contexts }
+        }
+        return byDay
+    }
+
     // MARK: - Research-Backed Feature State (Papers 1-10)
+
+    /// Personal health forecast cards (Paper 3: Conformal Prediction + Digital Twin)
+    @MainActor var healthForecasts: [MetricForecast] = []
 
     /// Activation sequence state (Paper 8: 8-Day Hook Window). The banner that
     /// displayed it is gone; the state still advances so the milestone
@@ -358,11 +529,9 @@ final class DashboardViewModel {
         smartActionAdvisor: DashboardSmartActionAdvisor = DashboardSmartActionAdvisor(),
         housekeepingService: DashboardHousekeepingService,
         derivedStateBuilder: DashboardDerivedStateBuilder = DashboardDerivedStateBuilder(),
-        lifeContextStore: LifeContextStore = LifeContextStore(),
-        focusStore: FocusStore = FocusStore()
+        lifeContextStore: LifeContextStore = LifeContextStore()
     ) {
         self.lifeContextStore = lifeContextStore
-        self.focusStore = focusStore
         self.persistence = persistence
         self.appStateStore = appStateStore
         self.intentCacheStore = intentCacheStore
@@ -383,7 +552,7 @@ final class DashboardViewModel {
 
     /// One-shot synchronous warm-up that populates every Intelligence-strip
     /// scorer from persisted SwiftData on launch so the first frame shows
-    /// both tiles (Vitality, Strain) together rather
+    /// all four tiles (Vitality, Strain, Brain, Stress) together rather
     /// than only the snapshot-restored ones with the rest popping in a
     /// second later. The tiles derive from these scorers, so filling them in
     /// here is all it takes. Skips Vitality/Strain when their snapshots already
@@ -397,6 +566,11 @@ final class DashboardViewModel {
     private func prewarmScorersFromStoreIfNeeded() {
         let needsVitality = !vitalityScorer.isReady
         let needsStrain = !strainScorer.isReady
+        // Brain + Stress have no on-disk snapshot today and their tiles only
+        // appear once `currentScore` / `currentStress` is non-nil, so always
+        // run them on launch when missing.
+        let needsBrain = brainHealthScorer.currentScore == nil
+        let needsStress = stressScorer.currentStress == nil
         // Sleep Coach gates its whole screen on `currentNeed`, and the Home sleep
         // tile that opens it is rebuilt from an on-disk snapshot. Without this the
         // tile shows real hours while the calculator is still empty, so tapping it
@@ -404,7 +578,7 @@ final class DashboardViewModel {
         // profile" on a user who has years of nights.
         let needsSleepNeed = sleepNeedCalculator.currentNeed == nil
 
-        guard needsVitality || needsStrain || needsSleepNeed else { return }
+        guard needsVitality || needsStrain || needsBrain || needsStress || needsSleepNeed else { return }
 
         // Passed explicitly instead of letting each scorer fall through to
         // `store.loadAllTimeSeries()`. This runs inside `ContentView.init`, before
@@ -412,6 +586,12 @@ final class DashboardViewModel {
         // install. Every scorer window here fits inside a year.
         let recent = store.loadRecentTimeSeries(days: Self.prewarmLookbackDays)
 
+        if needsBrain {
+            brainHealthScorer.compute(from: store, timeSeries: recent)
+        }
+        if needsStress {
+            stressScorer.compute(from: store, timeSeries: recent)
+        }
         let resolvedAge = resolveChronologicalAge()
         if let age = resolvedAge {
             if needsStrain {
@@ -462,6 +642,7 @@ final class DashboardViewModel {
         updateCachedProperties()
         computeNewEngines()
         lastAnalysisDate = Date()
+        invalidateDailyActionCache()
     }
 
     /// Initial load: authorize, fetch, analyze.
@@ -735,26 +916,29 @@ final class DashboardViewModel {
             }
         }
 
-        // Seed historical snapshots from HK history so the readiness trend has
+        // Seed historical snapshots from HK history so EWMA on Explore has
         // real per-day scores immediately on a fresh install instead of
         // needing two weeks of app usage. No-op once history is full.
-        // Awaited: the brief reads score history, so it must land first.
+        // Awaited: Explore's EWMA reads score history, so it must land first.
         await backfillScoreHistoryIfNeeded()
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
 
-        // Circadian biomarkers build from value-type inputs, so only
+        // Forecasts and circadian biomarkers build from value-type inputs, so only
         // the assignment needs the main actor. Running them inline put a second
         // stall right behind the scorer block and the two read as one freeze.
         // The briefing stays on main: `generateBriefing` takes the orchestrator
         // itself, and handing a live reference type to a detached task would trade
         // a stall for a data race.
+        let forecasts = shouldReuseThermalSnapshot ? nil : await buildHealthForecastsOffMain()
         let circadian = shouldReuseThermalSnapshot ? nil : await buildCircadianBiomarkersOffMain()
 
         await MainActor.run {
+            invalidateDailyActionCache()
             if !shouldReuseThermalSnapshot {
                 refreshIntelligenceBriefing()
+                if let forecasts { healthForecasts = forecasts }
                 if let circadian { circadianBiomarkers = circadian }
                 checkActivationMilestones()
             }
@@ -1048,7 +1232,7 @@ final class DashboardViewModel {
 
         // Every assignment below writes an observable property, and most of the
         // published types are not Equatable, so Observation republishes even when
-        // the value is byte-identical: one call repaints Home in full.
+        // the value is byte-identical: one call repaints Home and Explore in full.
         // Refuse the whole call when nothing this function reads has moved — the
         // no-new-data early-out in refreshCore reaches here on every foreground
         // return with nothing to say.
@@ -1069,6 +1253,25 @@ final class DashboardViewModel {
         scores.overallScore = analysisEngine.overallScore
         scores.categoryScores = analysisEngine.categoryScores
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
+        scores.rollingAverageScore = computeRollingAverageScore()
+        scores.cachedWeeklyScoreChange = computeWeeklyScoreChange()
+        scores.scoreExplanation = analysisEngine.scoreExplanation
+
+        // Built here rather than from Explore's body. Explore rebuilt it on every
+        // body pass (0.60 ms each, 9 passes per refresh burst) and reached the
+        // 3.16 ms `loadScoreHistory` SwiftData fetch lazily from inside that body.
+        // The lines above have already paid that fetch, so the map is close to free
+        // at this point.
+        cachedDailyScoresByDay = dailyScoresByDay(days: Self.scoreCalendarDays)
+
+        // Contexts as a value, not a closure. The calendar used to call into the
+        // store once per visible cell on every render; as a plain dictionary it
+        // is built once per publish and lets the calendar compare its whole
+        // input and skip redrawing when nothing moved.
+        cachedContextsByDay = Self.contextsByDay(
+            store: lifeContextStore,
+            days: Self.scoreCalendarDays
+        )
 
         // North-star activation event: fire exactly once per install when the
         // first non-zero score is computed. Gate on a UserDefaults flag so
@@ -1095,6 +1298,33 @@ final class DashboardViewModel {
             .min(by: { $0.1 < $1.1 })?
             .0
 
+        // The heavy derived caches (trend metrics ×3, historical highlights, top
+        // correlations) only need recomputing when their inputs changed — within a
+        // single refresh this method runs 4-5× with identical timeSeries/analysis.
+        let expensiveHash = cacheInputFingerprint()
+        let expensiveInputsChanged = expensiveHash != lastExpensiveCacheHash
+        lastExpensiveCacheHash = expensiveHash
+
+        // Update trend state
+        if (expensiveInputsChanged || trends.cachedTrendMetricsByTimeframe.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !trends.cachedTrendMetricsByTimeframe.isEmpty) {
+            trends.cachedTrendMetricsByTimeframe = [
+                7: computeTrendMetrics(days: 7),
+                30: computeTrendMetrics(days: 30),
+                90: computeTrendMetrics(days: 90),
+            ]
+            warmTrendVerdicts(trends.cachedTrendMetricsByTimeframe)
+        }
+
+        // Update analysis state
+        if (expensiveInputsChanged || analysis.cachedHistoricalHighlights.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !analysis.cachedHistoricalHighlights.isEmpty) {
+            analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
+        }
+        if (expensiveInputsChanged || analysis.cachedTopCorrelations.isEmpty),
+           !(ThermalManager.shared.shouldThrottle && !analysis.cachedTopCorrelations.isEmpty) {
+            analysis.cachedTopCorrelations = computeTopCorrelations()
+        }
         analysis.correlations = analysisEngine.correlations
         analysis.healthRisks = analysisEngine.healthRisks
         analysis.topHealthRisks = analysisEngine.healthRisks.filter { $0.riskGrade != .low }
@@ -1149,9 +1379,10 @@ final class DashboardViewModel {
         }
     }
 
-    /// Fingerprint of the time series (per-metric sample count + latest date),
-    /// correlation count and overall score. Stable across the 4-5 phase calls of
-    /// one refresh.
+    /// Fingerprint of the inputs that drive the expensive derived caches. Changes
+    /// when timeSeries (per-metric sample count + latest date), correlations, or the
+    /// overall score change — i.e. whenever trend metrics / highlights / correlations
+    /// would actually differ. Stable across the 4-5 phase calls of one refresh.
     @MainActor
     private func cacheInputFingerprint() -> Int {
         var hasher = Hasher()
@@ -1198,7 +1429,6 @@ final class DashboardViewModel {
         // days without touching a single score. Without this the gate would
         // refuse to republish and the calendar would show stale contexts.
         counts.append(lifeContextStore.revision)
-        counts.append(focusStore.revision)
 
         return Self.cachePublishFingerprint(
             expensiveInputsHash: cacheInputFingerprint(),
@@ -1313,8 +1543,16 @@ final class DashboardViewModel {
         // Strain Coach
         strainCoach.computeTarget(
             recoveryState: recoveryState,
-            recentStrainHistory: strainScorer.weeklyStrainHistory
+            currentStrain: strainScorer.currentStrain,
+            recentStrainHistory: strainScorer.weeklyStrainHistory,
+            daysOfData: analysis.dataDepth.daysOfData
         )
+
+        // Stress
+        stressScorer.compute(from: store, timeSeries: timeSeries)
+
+        // Brain Health. pass in-memory timeSeries for guaranteed freshness
+        brainHealthScorer.compute(from: store, timeSeries: timeSeries)
 
         // Sleep debt
         sleepDebtTracker.compute(from: store, sleepSeries: sleepSeries)
@@ -1377,6 +1615,247 @@ final class DashboardViewModel {
         // the very first refresh. Do not duplicate the assignment here.
     }
 
+    // MARK: - Sleep Tile Snapshot
+
+    /// On-disk snapshot of the most recent sleep tile values. DashboardViewModel
+    /// doesn't own LiveViewModel's sleep state, so we cache the values it
+    /// provides and replay them on the next launch's first frame instead of
+    /// waiting for LiveViewModel to refetch from HealthKit.
+    private struct SleepTileSnapshot: Codable {
+        var duration: TimeInterval
+        var quality: String
+        var savedAt: Date
+    }
+
+    private static let sleepSnapshotKey = "DashboardViewModel.sleepTile.v1"
+
+    /// The values last actually written to disk. Observation-ignored: pure write
+    /// bookkeeping, and publishing it would repaint Home for no visible change.
+    @ObservationIgnored @MainActor
+    private var _lastWrittenSleepSnapshot: (duration: TimeInterval, quality: String, writtenAt: Date)?
+
+    /// How long an unchanged snapshot may sit without being rewritten.
+    /// `loadFreshSleepSnapshot` expires a snapshot at 36h, so refreshing `savedAt`
+    /// hourly keeps skipped writes from ever flipping that freshness decision.
+    private static let sleepSnapshotRefreshInterval: TimeInterval = 3600
+
+    /// How recent a stored sleep reading has to be to still stand for "last
+    /// night". One night plus the day after it: a reading taken this morning is
+    /// still last night's at 11pm, one from the morning before is not. Shared by
+    /// both stored fallbacks so they cannot disagree about what counts as fresh.
+    private static let sleepFreshnessWindow: TimeInterval = 36 * 3600
+
+    /// The snapshot as it stood at launch. Read once: it only ages, both other
+    /// sleep sources outrank it, and the tiles derive on every SwiftUI body pass,
+    /// which is no place for a UserDefaults read and a JSON decode.
+    private let launchSleepSnapshot: SleepTileSnapshot? = DashboardViewModel.loadFreshSleepSnapshot()
+
+    /// Persist the latest live sleep values for use on the next launch's
+    /// first frame. Skips zero-duration "no data" inputs so we never restore
+    /// an empty placeholder.
+    ///
+    /// Writes only on a real change: `rebuildMetricTiles` runs on every Home appear
+    /// and every live-sleep update, and this JSON encode plus UserDefaults write was
+    /// 97% of that function's measured 0.156 ms, each time re-writing a snapshot
+    /// identical to the one already on disk. It is also why this write stays on
+    /// that path and out of the tile derivation, which runs far more often.
+    @MainActor
+    private func saveSleepSnapshot(duration: TimeInterval, quality: String) {
+        guard duration > 0 else { return }
+        let now = Date()
+        if let last = _lastWrittenSleepSnapshot,
+           last.duration == duration,
+           last.quality == quality,
+           now.timeIntervalSince(last.writtenAt) < Self.sleepSnapshotRefreshInterval {
+            return
+        }
+        let snap = SleepTileSnapshot(duration: duration, quality: quality, savedAt: now)
+        guard let data = try? JSONEncoder().encode(snap) else { return }
+        UserDefaults.standard.set(data, forKey: Self.sleepSnapshotKey)
+        _lastWrittenSleepSnapshot = (duration, quality, now)
+    }
+
+    /// Restore the saved sleep tile values only when they're recent enough to
+    /// still represent "last night".
+    private static func loadFreshSleepSnapshot() -> SleepTileSnapshot? {
+        guard let data = UserDefaults.standard.data(forKey: sleepSnapshotKey),
+              let snap = try? JSONDecoder().decode(SleepTileSnapshot.self, from: data) else {
+            return nil
+        }
+        if Date().timeIntervalSince(snap.savedAt) > sleepFreshnessWindow { return nil }
+        return snap
+    }
+
+    /// The sleep quality wording and the hour thresholds behind it live on
+    /// `LiveViewModel.SleepData`. A reading recovered from the stored series has
+    /// to resolve to the same label rather than restate those thresholds here.
+    private static func sleepQualityLabel(for duration: TimeInterval) -> String {
+        let sleep = LiveViewModel.SleepData()
+        sleep.lastNightSleepDuration = duration
+        return sleep.sleepQualityLabel
+    }
+
+    /// Last night's sleep from the freshest source that actually has it: the live
+    /// HealthKit query, then the synced `.sleepDuration` series, then the launch
+    /// snapshot. The series step is what puts the tile on screen for a user whose
+    /// live query came back empty while HealthKit and SwiftData both hold the
+    /// night. Nil means no source has it, which hides the tile rather than
+    /// showing a zero.
+    @MainActor
+    private var effectiveSleep: (duration: TimeInterval, quality: String)? {
+        if liveSleepDuration > 0, Self.isFreshSleep(liveSleepRecordedAt) {
+            return (liveSleepDuration, liveSleepQuality)
+        }
+        if let stored = storedSleepDuration {
+            return (stored, Self.sleepQualityLabel(for: stored))
+        }
+        // Re-checked on read, not only at launch: a session left running for
+        // days would otherwise keep replaying whatever was fresh when it started.
+        if let snap = launchSleepSnapshot, Self.isFreshSleep(snap.savedAt) {
+            return (snap.duration, snap.quality)
+        }
+        return nil
+    }
+
+    private static func isFreshSleep(_ recordedAt: Date?) -> Bool {
+        guard let recordedAt else { return false }
+        return Date().timeIntervalSince(recordedAt) <= sleepFreshnessWindow
+    }
+
+    /// Last night's hours out of the synced `.sleepDuration` series. Its samples
+    /// are dated at wake time and carry hours, so the newest one inside the
+    /// freshness window is last night.
+    @MainActor
+    private var storedSleepDuration: TimeInterval? {
+        guard let last = healthKitManager.timeSeries[.sleepDuration]?.sortedSamples.last,
+              last.value > 0,
+              Date().timeIntervalSince(last.date) <= Self.sleepFreshnessWindow else {
+            return nil
+        }
+        return last.value * 3600
+    }
+
+    // MARK: - Metric Tiles
+
+    /// Record the live sleep reading LiveViewModel just produced. The tiles
+    /// themselves derive from it (see `cachedMetricTiles`), so this only stores
+    /// the values and persists the snapshot.
+    ///
+    /// A `hasSleepData` of false is "the query has not landed yet", not "no sleep
+    /// last night", so it leaves an earlier reading alone instead of erasing it.
+    @MainActor
+    func rebuildMetricTiles(
+        hasSleepData: Bool = false,
+        lastNightSleepDuration: TimeInterval = 0,
+        sleepQualityLabel: String = ""
+    ) {
+        guard hasSleepData, lastNightSleepDuration > 0 else { return }
+        // Written only on a change: an identical write to an observable property
+        // still repaints every Home body that reads the tiles.
+        if liveSleepDuration != lastNightSleepDuration || liveSleepQuality != sleepQualityLabel {
+            liveSleepDuration = lastNightSleepDuration
+            liveSleepQuality = sleepQualityLabel
+            liveSleepRecordedAt = Date()
+        } else if let at = liveSleepRecordedAt,
+                  Date().timeIntervalSince(at) >= Self.sleepSnapshotRefreshInterval {
+            // The same reading arriving again is proof it is still current, so the
+            // stamp has to move or an unchanged night would age out. Restamped at
+            // most hourly, for the same reason the snapshot write is: this runs on
+            // every Home appear and every stamp repaints the strip.
+            liveSleepRecordedAt = Date()
+        }
+        saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
+    }
+
+    /// True once HealthKit has given us any activity at all. It is what separates
+    /// a strain of exactly 0 that means "you moved nothing today" from one that
+    /// means "nothing has synced", since `StrainScorer.isReady` is set even when
+    /// it computed against an empty store.
+    @MainActor
+    private var hasActivityHistory: Bool {
+        let series = healthKitManager.timeSeries
+        return series[.activeCalories]?.sortedSamples.isEmpty == false
+            || series[.steps]?.sortedSamples.isEmpty == false
+    }
+
+    @MainActor
+    private func buildMetricTiles() -> [MetricTile] {
+        var tiles: [MetricTile] = []
+
+        // Vitality. Gated on the scorer being ready: unguarded, a brand new
+        // user's first impression was a body age of 0.
+        if vitalityScorer.isReady {
+        let vDelta = vitalityScorer.delta
+        let vBadge: String
+        if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
+        else if vDelta > 0 { vBadge = "\(vDelta)y older" }
+        else { vBadge = "On track" }
+        let vColor: Color = vDelta <= 0 ? AppColour.vitalityWhoopGreen : (vDelta <= 3 ? AppColour.vitalityPaceYellow : AppColour.vitalityPaceRed)
+        tiles.append(MetricTile(
+            id: "vitality_detail", icon: "figure.run", label: "Vitality",
+            value: "\(vitalityScorer.vitalityAge) \(Copy.Vitality.yrs)",
+            badge: vBadge, color: vColor, route: .vitalityDetail
+        ))
+        }
+
+        // Sleep
+        if let sleep = effectiveSleep, sleep.duration > 0 {
+            let sleepHours = sleep.duration / 3600
+            let h = Int(sleepHours)
+            let m = Int((sleepHours - Double(h)) * 60)
+            let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
+            let sleepTileColor: Color = sleep.quality == "Great" || sleep.quality == "Good" ? AppColour.categorySleep : AppColour.warning
+            tiles.append(MetricTile(
+                id: "sleep_coach", icon: "moon.fill", label: "Sleep",
+                value: sleepValue, badge: sleep.quality, color: sleepTileColor, route: .sleepCoach
+            ))
+        }
+
+        // Strain. `isReady` records only that compute ran, and it runs against an
+        // empty store too, so a zero on its own could mean "nothing synced". A
+        // zero backed by a real activity series is a genuine rest day and shows;
+        // a zero with no series behind it stays off.
+        let strain = strainScorer
+        if strain.isReady, strain.currentStrain > 0 || hasActivityHistory {
+            tiles.append(MetricTile(
+                id: "strain_detail", icon: "flame.fill", label: "Strain",
+                value: String(format: "%.1f", strain.currentStrain),
+                badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
+            ))
+        }
+
+        // Brain Health
+        if let brain = brainHealthScorer.currentScore {
+            let brainColor: Color = brain.score >= 80 ? AppColour.scoreOptimal : brain.score >= 65 ? AppColour.info : brain.score >= 45 ? AppColour.stateDefault : AppColour.warning
+            tiles.append(MetricTile(
+                id: "brain_health", icon: "brain", label: "Brain",
+                value: "\(brain.score)", badge: brain.state.displayName, color: brainColor, route: .brainHealth
+            ))
+        }
+
+        // Stress
+        if let stress = stressScorer.currentStress {
+            tiles.append(MetricTile(
+                id: "stress_monitor", icon: "waveform.path.ecg", label: "Stress",
+                value: String(format: "%.1f", stress.score),
+                badge: stress.level.displayName, color: stress.level.color, route: .stressMonitor
+            ))
+        }
+
+        // Cycle. require isApplicable so a male user (or female with tracking
+        // off) never sees a cycle tile even when stray flow samples exist in
+        // HealthKit (shared device, family member's data).
+        if menstrualCycleTracker.isApplicable, let cycle = menstrualCycleTracker.currentCycle {
+            tiles.append(MetricTile(
+                id: "cycle_detail", icon: cycle.currentPhase.icon, label: "Cycle",
+                value: "Day \(cycle.dayInCycle)",
+                badge: cycle.currentPhase.displayName, color: cycle.currentPhase.color, route: .cycleDetail
+            ))
+        }
+
+        return tiles
+    }
+
     // MARK: - Score History Cache
 
     /// Returns the cached 365-day score history, fetching once per refresh cycle.
@@ -1399,10 +1878,35 @@ final class DashboardViewModel {
         return all.filter { $0.date >= cutoff }
     }
 
+    /// A full year plus the current day, so paging one month back in Explore's
+    /// calendar never lands on a grid that was cut off at the window edge.
+    private static let scoreCalendarDays = 366
+
+    /// One score per calendar day for the month calendar, keyed by start of day.
+    /// A day with two snapshots keeps the later one, which is the day's settled
+    /// score rather than a partial morning read.
+    ///
+    /// Builds `cachedDailyScoresByDay` once per publish; views read that property
+    /// rather than calling this from a body.
+    @MainActor
+    func dailyScoresByDay(days: Int) -> [Date: Int] {
+        var byDay: [Date: Int] = [:]
+        for entry in scoreHistoryCached(days: days) where entry.score > 0 {
+            byDay[Date.cal.startOfDay(for: entry.date)] = entry.score
+        }
+        return byDay
+    }
+
     // MARK: - Sleep Bank
 
     struct SleepBank {
         let debtHours: Double
+        let personalBaseline: Double
+        let deficits: [SleepDebtTracker.DailyDeficit]
+        /// How many of the 14 nights actually recorded sleep. The card says so
+        /// when the window is thin, rather than presenting a partial balance as
+        /// a complete one.
+        let nightsRecorded: Int
     }
 
     /// The running sleep balance, or nil when there is nothing worth showing:
@@ -1412,8 +1916,150 @@ final class DashboardViewModel {
     var sleepBank: SleepBank? {
         guard sleepDebtTracker.isReady, let debt = sleepDebtTracker.currentDebt else { return nil }
         guard debt.totalDebtHours >= SleepDebtTracker.actionableDebtHours else { return nil }
-        return SleepBank(debtHours: debt.totalDebtHours)
+        return SleepBank(debtHours: debt.totalDebtHours,
+                         personalBaseline: debt.personalBaseline,
+                         deficits: debt.dailyDeficits,
+                         nightsRecorded: debt.nightsRecorded)
     }
+
+    // MARK: - One Day, Explained
+
+    /// One signal as it read on a past day, next to the baseline the scorer was
+    /// using then.
+    struct DaySignal: Identifiable {
+        /// Which side of the person's own usual the reading landed on. Nil when
+        /// the day stored no baseline, and for strain, which has none in this
+        /// model, so the card can stay silent rather than imply a comparison it
+        /// cannot make.
+        enum Usual { case above, atUsual, below }
+
+        let title: String
+        let valueText: String
+        /// The row's second line, always present: the person's own usual as a
+        /// real number, or why there is not one, or the strain level word. One
+        /// slot for all three so a missing baseline cannot produce a
+        /// differently shaped row.
+        let subText: String
+        /// "12 ms below your usual", or "At your usual". No longer drawn: the
+        /// number opposite it says this now. Kept because it is what VoiceOver
+        /// reads, so the spoken direction comes from the same place the arrow does.
+        let gapText: String
+        let usual: Usual?
+
+        var id: String { title }
+    }
+
+    /// Everything the app can honestly say about one past day. Every field is
+    /// read back from what was stored on that day; nothing is recomputed
+    /// against today's baselines and nothing is filled in when missing.
+    struct DayDetail {
+        let date: Date
+        let score: Int?
+        let contexts: [LifeContextStore.Context]
+        let signals: [DaySignal]
+        /// Signals the day sheet would have shown if the day had recorded them.
+        let missing: [HealthMetric]
+
+        var state: RecoveryState? { score.map { RecoveryState(score: $0) } }
+    }
+
+    /// The signals a day is judged on, in the order the sheet lists them.
+    private static let daySignalMetrics: [HealthMetric] = [
+        .heartRateVariability, .restingHeartRate, .sleepDuration
+    ]
+
+    @MainActor
+    func dayDetail(for day: Date) -> DayDetail {
+        let dayStart = Date.cal.startOfDay(for: day)
+        let snapshot = store.analysisSnapshot(on: dayStart)
+
+        var signals: [DaySignal] = []
+        var missing: [HealthMetric] = []
+
+        for metric in Self.daySignalMetrics {
+            // Values are stored in the unit `HealthMetric.unit` advertises, sleep
+            // included, so nothing is converted on the way out.
+            guard let value = dayValue(of: metric, on: dayStart) else {
+                missing.append(metric)
+                continue
+            }
+            let baseline = snapshot?.baselines[metric]?.mean
+            let comparison = baseline.map {
+                Self.usualComparison(current: value, baseline: $0, unit: metric.unit)
+            }
+            signals.append(DaySignal(
+                title: metric.displayName,
+                valueText: Self.dayValueText(value, of: metric),
+                // Same formatter as the reading, so "48 ms" sits opposite
+                // "usual 44 ms" and "6h 23m" opposite "usual 7h 30m".
+                subText: baseline.map { Copy.Explore.dayUsualValue(Self.dayValueText($0, of: metric)) }
+                    ?? Copy.Explore.dayNoBaseline,
+                gapText: comparison?.text ?? Copy.Explore.dayNoBaseline,
+                usual: comparison?.usual
+            ))
+        }
+
+        if let strain = store.dailyStrain(on: dayStart) {
+            signals.append(DaySignal(
+                title: Copy.Explore.dayStrainTitle,
+                valueText: String(format: "%.1f", strain.strain),
+                // The store hands back the raw case name it persisted, so this
+                // printed "allOut" on a hard day. Rebuild the level from the
+                // number, the way ContentView and StrainDetailView already do.
+                // The store keeps returning the raw string on purpose: the
+                // illness check below matches it against raw case names.
+                subText: StrainLevel(strain: strain.strain).displayName,
+                gapText: Copy.Explore.dayStrainCaption,
+                usual: nil
+            ))
+        }
+
+        return DayDetail(date: dayStart,
+                         score: snapshot?.score,
+                         contexts: lifeContextStore.contexts(on: dayStart),
+                         signals: signals,
+                         missing: missing)
+    }
+
+    /// That day's reading for one metric, aggregated the way the metric is
+    /// meant to be: sleep and steps accumulate across the day, a heart reading
+    /// averages. Nil when the day recorded nothing, which the sheet says out
+    /// loud rather than drawing a zero.
+    @MainActor
+    private func dayValue(of metric: HealthMetric, on dayStart: Date) -> Double? {
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return nil }
+        let samples = (healthKitManager.timeSeries[metric]?.samples ?? [])
+            .filter { $0.date >= dayStart && $0.date < dayEnd }
+        guard !samples.isEmpty else { return nil }
+
+        let total = samples.reduce(0.0) { $0 + $1.value }
+        let value: Double
+        switch metric {
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .steps,
+             .activeCalories, .exerciseMinutes, .standHours:
+            value = total
+        default:
+            value = total / Double(samples.count)
+        }
+        // A stored zero means the watch recorded nothing that day, not that the
+        // person slept for zero hours. Printing "0h 0m" reads as a finding.
+        return value > 0 ? value : nil
+    }
+
+    private static func dayValueText(_ value: Double, of metric: HealthMetric) -> String {
+        switch metric {
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
+            let hours = Int(value)
+            let minutes = Int((value - Double(hours)) * 60)
+            return Copy.Explore.dayHoursMinutes(hours, minutes)
+        default:
+            return Copy.Explore.dayValue(String(Int(value.rounded())), metric.unit)
+        }
+    }
+
+    /// The reading placed on a bar that runs from half to one and a half times
+    /// the person's own usual, so the bar answers "how far off was this" rather
+    /// than pretending the metric has an absolute scale.
 
     /// Clears the cached score history so the next access re-fetches from the store.
     @MainActor
@@ -1479,6 +2125,62 @@ final class DashboardViewModel {
         )
     }
 
+    /// EWMA-smoothed weekly score for the Explore tab.
+    ///
+    /// Why EWMA over completed days only: today's overall score is recomputed
+    /// live from whatever HealthKit currently has, so including it makes the
+    /// "weekly" number swing every time the watch syncs. Both WHOOP Recovery
+    /// and Oura Readiness lock per completed day for the same reason; clinical
+    /// longitudinal monitoring uses EWMA for the same reason.
+    ///
+    /// Sources:
+    ///   - Luxenberg & Boyd, Exponentially Weighted Moving Models, Stanford
+    ///     https://web.stanford.edu/~boyd/papers/pdf/ewmm.pdf
+    ///   - PMC10248291, EWMA tutorial for longitudinal psychological data
+    ///   - whoop.com/.../how-does-whoop-recovery-work-101
+    ///   - livity-app.com/en/blog/readiness-score-explained (Oura)
+    @MainActor
+    private func computeRollingAverageScore() -> Int? {
+        let today = Date.cal.startOfDay(for: Date())
+        return ewmaWeeklyScore(asOf: today) ?? overallScore?.score
+    }
+
+    /// EWMA over completed daily snapshots strictly before `asOf`.
+    /// Returns nil when no completed-day data is available for the anchor.
+    @MainActor
+    private func ewmaWeeklyScore(asOf anchor: Date) -> Int? {
+        let cal = Date.cal
+        var perDay: [Date: Int] = [:]
+        for entry in scoreHistoryCached() {
+            let day = cal.startOfDay(for: entry.date)
+            if day < anchor { perDay[day] = entry.score }
+        }
+        let recent = perDay
+            .sorted { $0.key < $1.key }
+            .suffix(WeeklyScoreSmoothing.windowDays)
+        guard let first = recent.first else { return nil }
+        let lambda = WeeklyScoreSmoothing.lambda
+        var ewma = Double(first.value)
+        for (_, score) in recent.dropFirst() {
+            ewma = lambda * Double(score) + (1.0 - lambda) * ewma
+        }
+        return Int(ewma.rounded())
+    }
+
+    /// EWMA-now minus EWMA-anchored-7-days-ago. Used by the Explore hero
+    /// badge so the "± pts this week" label describes the same EWMA series
+    /// as the headline number, instead of mixing live daily with smoothed.
+    @MainActor
+    private func computeWeeklyScoreChange() -> Int? {
+        let cal = Date.cal
+        let today = cal.startOfDay(for: Date())
+        guard let weekAgo = cal.date(byAdding: .day, value: -7, to: today),
+              let current = ewmaWeeklyScore(asOf: today),
+              let old = ewmaWeeklyScore(asOf: weekAgo) else { return nil }
+        let delta = current - old
+        return delta == 0 ? nil : delta
+    }
+
     /// Count consecutive recent days where the score improved day-over-day.
     @MainActor
     private func computeImprovingDays() -> Int {
@@ -1494,6 +2196,128 @@ final class DashboardViewModel {
             }
         }
         return count
+    }
+
+    private func computeTrendMetrics(days: Int) -> [TrendMetricItem] {
+        var items: [TrendMetricItem] = []
+        for (metric, series) in healthKitManager.timeSeries {
+            guard let trend = TrendAnalyzer.canonicalTrend(
+                metric: metric,
+                series: series,
+                analysisEngine: analysisEngine,
+                days: days
+            ) else { continue }
+            let samples = series.samples(lastDays: days)
+            guard samples.count >= 3 else { continue }
+            items.append(TrendMetricItem(
+                metric: metric,
+                trend: trend,
+                sparklineSamples: samples
+            ))
+        }
+        items.sort { abs($0.trend.weekOverWeekChange) > abs($1.trend.weekOverWeekChange) }
+        return items
+    }
+
+    private func computeTopCorrelations() -> [HealthCorrelation] {
+        derivedStateBuilder.topCorrelations(
+            from: analysisEngine.correlations,
+            focusCategories: insights.focusCategories
+        )
+    }
+
+    private func computeHistoricalHighlights() -> [HistoricalHighlight] {
+        var highlights: [HistoricalHighlight] = []
+        let focuses = insights.focusCategories
+        let calendar = Date.cal
+        // Anchor windows at start-of-day so "this week" / "last week" do not
+        // slide by seconds and re-shuffle the surfaced highlights between
+        // refreshes within the same day.
+        let now = calendar.startOfDay(for: Date())
+        guard let thisWeekStart = calendar.date(byAdding: .day, value: -7, to: now),
+              let lastWeekStart = calendar.date(byAdding: .day, value: -14, to: now) else {
+            return []
+        }
+
+        // Week-over-week comparison for the Home/Coach screen
+        for (metric, series) in healthKitManager.timeSeries {
+            let thisWeek = series.samples(lastDays: 7)
+            let lastWeek = series.samples(from: lastWeekStart, until: thisWeekStart)
+
+            guard !thisWeek.isEmpty, !lastWeek.isEmpty else { continue }
+
+            let thisAvg = thisWeek.mean(of: \.value)
+            let lastAvg = lastWeek.mean(of: \.value)
+            guard lastAvg != 0 else { continue }
+
+            let change = ((thisAvg - lastAvg) / lastAvg) * 100
+            guard abs(change) > 3 else { continue }
+
+            let improving = metric.higherIsBetter ? change > 0 : change < 0
+            let direction = change > 0 ? "up" : "down"
+            let rec = improving
+                ? "Good trend. keep it going this week."
+                : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
+
+            highlights.append(HistoricalHighlight(
+                metric: metric,
+                type: .weekOverWeek,
+                title: "\(metric.displayName) \(direction) \(String(format: "%.0f", abs(change)))% this week",
+                recommendation: rec,
+                isPositive: improving,
+                significance: abs(change)
+            ))
+        }
+
+        highlights.sort { a, b in
+            let aFocus = !focuses.isEmpty && focuses.contains(a.metric.category)
+            let bFocus = !focuses.isEmpty && focuses.contains(b.metric.category)
+            if aFocus != bFocus { return aFocus }
+            return a.significance > b.significance
+        }
+        return Array(highlights.prefix(5))
+    }
+
+
+    // MARK: - Struct Definitions (kept at DashboardViewModel level for external type references)
+
+    /// Historical highlights computed from deep analysis context
+    struct HistoricalHighlight: Identifiable {
+        let id = UUID()
+        let metric: HealthMetric
+        let type: HighlightType
+        let title: String
+        let recommendation: String
+        let isPositive: Bool
+        let significance: Double
+
+        enum HighlightType {
+            case weekOverWeek
+            case yearOverYear
+            case allTimeExtreme
+            case seasonal
+            case longTermTrajectory
+        }
+
+        var icon: String {
+            switch type {
+            case .weekOverWeek: return "calendar.badge.clock"
+            case .yearOverYear: return "calendar.badge.clock"
+            case .allTimeExtreme: return "trophy.fill"
+            case .seasonal: return "leaf.fill"
+            case .longTermTrajectory: return "chart.line.uptrend.xyaxis"
+            }
+        }
+
+        var typeLabel: String {
+            switch type {
+            case .weekOverWeek: return "This Week"
+            case .yearOverYear: return "Year-over-Year"
+            case .allTimeExtreme: return "All-Time"
+            case .seasonal: return "Seasonal"
+            case .longTermTrajectory: return "Long-Term"
+            }
+        }
     }
 
     /// The wins the user has actually earned right now. Empty is a valid answer
@@ -1545,396 +2369,88 @@ final class DashboardViewModel {
             .max { ($0.unlockedDate ?? .distantPast) < ($1.unlockedDate ?? .distantPast) }
     }
 
-    /// The advisor's view of right now.
+    /// Single source of truth for what to do today.
+    /// Cached per calendar day. stable within a day, refreshed on new day or after analysis re-run.
     @MainActor
-    private func advisorLiveSnapshot(liveVM: LiveViewModel) -> DashboardSmartActionAdvisor.LiveSnapshot {
-        DashboardSmartActionAdvisor.LiveSnapshot(
-            hour: Date.cal.component(.hour, from: Date()),
-            stressLevel: liveVM.recovery.stressLevel,
-            readinessScore: liveVM.recovery.readinessScore,
-            hasSleepData: liveVM.sleep.hasSleepData,
-            sleepHours: liveVM.sleep.lastNightSleepDuration / 3600,
-            deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
-            exerciseMinutes: liveVM.activity.todayExerciseMinutes,
-            exerciseGoal: liveVM.activity.exerciseGoal,
-            latestRestingHeartRate: liveVM.recovery.latestRestingHeartRate,
-            // Same number the status card renders, fallback and all, so the
-            // action cannot argue with the card above it.
-            heroRecoveryScore: liveVM.recovery.readinessScore ?? overallScore?.score
+    func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
+        let today = Date.cal.startOfDay(for: Date())
+        if let cached = _cachedDailyAction,
+           let cachedDate = _cachedDailyActionDate,
+           Date.cal.isDate(cachedDate, inSameDayAs: today) {
+            return cached
+        }
+
+        let sortedInsights = insights.focusedInsights
+        let recentActionKeys = loadRecentActionKeys()
+
+        // Filter insights: deprioritize ones shown 2+ consecutive days
+        let rotatedInsights = rotateInsights(sortedInsights, recentKeys: recentActionKeys)
+
+        let recommendation = smartActionAdvisor.recommend(
+            live: DashboardSmartActionAdvisor.LiveSnapshot(
+                hour: Date.cal.component(.hour, from: Date()),
+                stressLevel: liveVM.recovery.stressLevel,
+                readinessScore: liveVM.recovery.readinessScore,
+                hasSleepData: liveVM.sleep.hasSleepData,
+                sleepHours: liveVM.sleep.lastNightSleepDuration / 3600,
+                deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
+                exerciseMinutes: liveVM.activity.todayExerciseMinutes,
+                exerciseGoal: liveVM.activity.exerciseGoal,
+                latestRestingHeartRate: liveVM.recovery.latestRestingHeartRate,
+                // Same number the recovery hero on Home renders, fallback and
+                // all, so the action cannot argue with the card above it.
+                heroRecoveryScore: liveVM.recovery.readinessScore ?? overallScore?.score
+            ),
+            analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
+                policyDecision: analysisEngine.mlOrchestrator.policyDecision,
+                restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
+                userFocuses: insights.cachedHealthFocuses,
+                topInsights: rotatedInsights,
+                restContext: activeRestContext,
+                sleepDebtHours: sleepBank?.debtHours ?? 0,
+                sleepDebtIsGrowing: sleepDebtTracker.debtTrend == .increasing
+            )
         )
-    }
 
-    @MainActor
-    private func advisorAnalysisSnapshot(topInsights: [Insight]) -> DashboardSmartActionAdvisor.AnalysisSnapshot {
-        DashboardSmartActionAdvisor.AnalysisSnapshot(
-            policyDecision: analysisEngine.mlOrchestrator.policyDecision,
-            restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
-            userFocuses: insights.cachedHealthFocuses,
-            topInsights: topInsights,
-            restContext: activeRestContext,
-            sleepDebtHours: sleepBank?.debtHours ?? 0,
-            sleepDebtIsGrowing: sleepDebtTracker.debtTrend == .increasing
+        // Refreshed on the refresh path. Falling back to a live build only covers
+        // the case where the card is read before the first refresh has landed.
+        let proofSummary = _cachedActionProof ?? RecommendationEvaluator.buildActionProof(store: store)
+
+        let action = SmartAction(
+            icon: recommendation.icon,
+            title: recommendation.title,
+            subtitle: recommendation.subtitle,
+            source: recommendation.source,
+            rationale: recommendation.rationale,
+            supportingInsights: Array(sortedInsights.prefix(2)),
+            proofSummary: proofSummary,
+            expectedBenefit: recommendation.expectedBenefit,
+            // The advisor labels rungs 3-8 alike as "context_rules", so its
+            // rung-8 hardcoded default is only identifiable by its fixed
+            // headline; both sides resolve through the same Copy accessor.
+            isFallback: recommendation.source == "context_rules"
+                && recommendation.title == Copy.Home.SmartAction.defaultTitle
         )
+
+        _cachedDailyAction = action
+        _cachedDailyActionDate = today
+        saveActionKey(recommendation.title)
+        // Persist it too: `refresh` clears the in-memory cache immediately before
+        // writing widget snapshots, so the widget and the watch would otherwise get
+        // nothing. Surfaces outside this view model read the stored copy.
+        DailyActionStore.save(title: action.title, subtitle: action.subtitle, icon: action.icon)
+
+        return action
     }
 
-    // MARK: - Daily Brief
-
-    /// The Today tab. Written only by `rebuildDailyBrief`, which runs from a
-    /// few explicit call sites and skips itself when nothing it reads has moved.
-    @MainActor private(set) var dailyBrief: DailyBrief?
-    @ObservationIgnored @MainActor private var briefFingerprint: Int?
-    /// Reminders armed this session. The notification centre only answers
-    /// asynchronously, so the labels read these instead of a pending-request
-    /// lookup; a relaunch forgets them and the label falls back to "Remind me".
-    @ObservationIgnored @MainActor private var dayReminderFire: Date?
-    @ObservationIgnored @MainActor private var nightReminderFire: Date?
-    /// Bumped when the verdict is dismissed, so the brief gate sees the change.
-    @ObservationIgnored @MainActor private var verdictDismissRevision = 0
-
-    /// Mirrors the builder's learning week: under this many morning locks the
-    /// stored analysis scores stand in, since a new install has history in
-    /// SwiftData before its first lock.
-    private static let minMorningLocks = 7
-    /// How far back the verdict looks for the last rest day before yesterday.
-    private static let restLookbackDays = 28
-
-    /// Everything the builder needs, read from the engines as they stand now.
+    /// Invalidate the cached daily action. called after analysis refresh so new data takes effect.
     @MainActor
-    func briefSnapshot(liveVM: LiveViewModel) -> DailyBriefBuilder.Snapshot {
-        let now = Date()
-        let series = healthKitManager.timeSeries
-        let baselines = analysisEngine.baselines
-        let readinessStore = ReadinessStore()
-        let readiness = liveVM.recovery.readinessScore
-            ?? readinessStore.loadMorningLock(for: now)
-            ?? overallScore?.score
-
-        var locks: [(date: Date, score: Int)] = []
-        for back in stride(from: DailyBriefConfig.readinessBandDays - 1, through: 0, by: -1) {
-            guard let day = Date.cal.date(byAdding: .day, value: -back, to: now),
-                  let score = readinessStore.loadMorningLock(for: day) else { continue }
-            locks.append((date: Date.cal.startOfDay(for: day), score: score))
-        }
-        let history = locks.count >= Self.minMorningLocks
-            ? locks
-            : scoreHistoryCached(days: DailyBriefConfig.readinessBandDays)
-        let trajectory = history.count >= Self.minMorningLocks
-            ? ScoreTrajectoryAnalyzer.generateInsights(scoreHistory: history).first?.trend
-            : nil
-
-        var latest: [HealthMetric: Double] = [:]
-        for metric in [HealthMetric.vo2Max, .heartRateVariability, .restingHeartRate, .sleepDuration] {
-            latest[metric] = series[metric]?.latestValue
-        }
-        // Today is still filling up for these, so the last completed day is the reading.
-        for metric in [HealthMetric.steps, .activeCalories] {
-            latest[metric] = series[metric]?.completedDaySamples(lastDays: 7).last?.value
-        }
-        // Overnight HRV, resting heart rate and sleep land on the live model
-        // before the stored series is rebuilt, so they win when present.
-        latest[.heartRateVariability] = liveVM.recovery.latestHRV ?? latest[.heartRateVariability]
-        latest[.restingHeartRate] = liveVM.recovery.latestRestingHeartRate ?? latest[.restingHeartRate]
-        if liveVM.sleep.hasSleepData { latest[.sleepDuration] = liveVM.sleep.tileDuration / 3600 }
-        // The deep-sleep series is stored in hours; the focus KPI reads minutes.
-        if liveVM.sleep.lastNightDeepSleep > 0 {
-            latest[.sleepDeep] = liveVM.sleep.lastNightDeepSleep / 60
-        } else if let hours = series[.sleepDeep]?.latestValue {
-            latest[.sleepDeep] = hours * 60
-        }
-
-        let hrr: (current: Double, baseline: UserBaseline)? = {
-            guard let current = series[.heartRateRecovery]?.completedDaySamples(lastDays: 30).last?.value,
-                  let baseline = baselines[.heartRateRecovery] else { return nil }
-            return (current, baseline)
-        }()
-
-        let workoutDays = series[.workoutDuration].map(RecoveryAnalyzer.workoutDays) ?? []
-        let restWeek = Self.restDaysThisWeek(workoutDays: workoutDays, now: now)
-        let debt = sleepDebtTracker.currentDebt?.totalDebtHours
-        let dismissedDay = UserDefaults.standard.object(forKey: AppKeys.Data.verdictDismissedDay) as? Date
-        let verdict = dismissedDay.map { Date.cal.isDate($0, inSameDayAs: now) } == true
-            ? nil
-            : DailyVerdictBuilder.make(DailyVerdictBuilder.Input(
-                yesterday: DailyMoveLog.yesterday(relativeTo: now),
-                dayResult: DailyActionResultStore.resultToShow(),
-                sleepDebtNow: debt,
-                lastNightSeconds: liveVM.sleep.hasSleepData ? liveVM.sleep.tileDuration : nil,
-                sleepOnset: WindDownOutcomeTracker.lastOutcome,
-                restDaysThisWeekBefore: restWeek?.before,
-                restDaysThisWeekAfter: restWeek?.after,
-                restDaysSinceLastRest: Self.daysSinceLastRest(workoutDays: workoutDays, now: now)))
-
-        let rotatedInsights = rotateInsights(insights.focusedInsights, recentKeys: loadRecentActionKeys())
-        return DailyBriefBuilder.Snapshot(
-            now: now,
-            readiness: readiness,
-            readinessHistory: history,
-            trajectory: trajectory,
-            anomalies: analysisEngine.anomalies,
-            restDeficit: RecoveryAnalyzer.restDeficit(timeSeries: series, baselines: baselines),
-            restSummary: RecoveryAnalyzer.restSummary(timeSeries: series, baselines: baselines),
-            sleepDebt: sleepDebtTracker.currentDebt,
-            sleepDebtTrend: sleepDebtTracker.debtTrend,
-            hrr: hrr,
-            // Today's strain is still accumulating, so the six completed days
-            // before it are the ones judged against the target.
-            strainLast6: strainScorer.weeklyStrainHistory.dropLast().suffix(6).map(\.strain),
-            strainTarget: strainCoach.currentTarget,
-            baselines: baselines,
-            latest: latest,
-            stressLevel: liveVM.recovery.stressLevel,
-            advisor: smartActionAdvisor.recommend(
-                live: advisorLiveSnapshot(liveVM: liveVM),
-                analysis: advisorAnalysisSnapshot(topInsights: rotatedInsights),
-                daytimeOnly: true),
-            exerciseMinutes: liveVM.activity.todayExerciseMinutes,
-            exerciseGoal: liveVM.activity.exerciseGoal,
-            sleepNeed: sleepNeedCalculator.currentNeed,
-            restContext: activeRestContext,
-            dayDone: DailyMoveLog.isDone(.day) || DailyActionCompletion.isDoneToday,
-            nightDone: DailyMoveLog.isDone(.night),
-            nightDoneYesterday: DailyMoveLog.yesterday(relativeTo: now)?.nightMove?.doneAt != nil,
-            dayReminderFire: dayReminderFire,
-            nightReminderFire: nightReminderFire,
-            focus: focusStore.active,
-            verdict: verdict
-        )
-    }
-
-    /// Rest days from Monday to yesterday, without and with yesterday's own
-    /// count, for the verdict's "1 → 2 this week". Nil with no workout history:
-    /// with nothing logged every day reads as rest, which is not worth printing.
-    nonisolated static func restDaysThisWeek(workoutDays: Set<Date>, now: Date) -> (before: Int, after: Int)? {
-        guard !workoutDays.isEmpty,
-              let yesterday = Date.cal.date(byAdding: .day, value: -1, to: Date.cal.startOfDay(for: now)) else {
-            return nil
-        }
-        // The reference counts the training week Monday to Sunday whatever the
-        // locale's first weekday is.
-        var mondayFirst = Date.cal
-        mondayFirst.firstWeekday = 2
-        guard let weekStart = mondayFirst.dateInterval(of: .weekOfYear, for: yesterday)?.start else { return nil }
-        var before = 0
-        var day = weekStart
-        while day < yesterday {
-            if !workoutDays.contains(day) { before += 1 }
-            guard let next = Date.cal.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
-        }
-        return (before, before + (workoutDays.contains(yesterday) ? 0 : 1))
-    }
-
-    /// Days from the last rest day before yesterday up to yesterday, e.g. 9 in
-    /// "your first proper rest day in 9". Nil when none sits inside the window.
-    nonisolated static func daysSinceLastRest(workoutDays: Set<Date>, now: Date) -> Int? {
-        guard !workoutDays.isEmpty,
-              let yesterday = Date.cal.date(byAdding: .day, value: -1, to: Date.cal.startOfDay(for: now)) else {
-            return nil
-        }
-        for back in 1...restLookbackDays {
-            guard let day = Date.cal.date(byAdding: .day, value: -back, to: yesterday) else { return nil }
-            if !workoutDays.contains(day) { return back }
-        }
-        return nil
-    }
-
-    /// Pure gate for `rebuildDailyBrief`, split out so a test can prove which
-    /// inputs republish the brief without raising a view model.
-    nonisolated static func briefFingerprint(
-        day: Date,
-        cacheHash: Int?,
-        focusRevision: Int,
-        contextRevision: Int,
-        moveLogRevision: Int,
-        verdictDismissRevision: Int,
-        readiness: Int?,
-        sleepSeconds: Int,
-        stress: Int?,
-        exerciseMinutes: Int,
-        hour: Int,
-        dayReminderFire: Date?,
-        nightReminderFire: Date?
-    ) -> Int {
-        var hasher = Hasher()
-        hasher.combine(day)
-        hasher.combine(cacheHash)
-        hasher.combine(focusRevision)
-        hasher.combine(contextRevision)
-        hasher.combine(moveLogRevision)
-        hasher.combine(verdictDismissRevision)
-        hasher.combine(readiness)
-        hasher.combine(sleepSeconds)
-        hasher.combine(stress)
-        hasher.combine(exerciseMinutes)
-        hasher.combine(hour)
-        hasher.combine(dayReminderFire)
-        hasher.combine(nightReminderFire)
-        return hasher.finalize()
-    }
-
-    @MainActor
-    private func currentBriefFingerprint(liveVM: LiveViewModel) -> Int {
-        let now = Date()
-        return Self.briefFingerprint(
-            day: Date.cal.startOfDay(for: now),
-            cacheHash: lastCacheHash,
-            focusRevision: focusStore.revision,
-            contextRevision: lifeContextStore.revision,
-            moveLogRevision: DailyMoveLog.revision,
-            verdictDismissRevision: verdictDismissRevision,
-            readiness: liveVM.recovery.readinessScore,
-            sleepSeconds: Int(liveVM.sleep.tileDuration),
-            stress: liveVM.recovery.stressLevel,
-            exerciseMinutes: Int(liveVM.activity.todayExerciseMinutes),
-            hour: Date.cal.component(.hour, from: now),
-            dayReminderFire: dayReminderFire,
-            nightReminderFire: nightReminderFire
-        )
-    }
-
-    /// Rebuilds the Today tab and runs the side effects that belong to a
-    /// shown brief: the focus lifecycle, the move log and the widget action.
-    /// Skips itself when nothing it reads has moved since the last build.
-    @MainActor
-    func rebuildDailyBrief(liveVM: LiveViewModel) {
-        guard currentBriefFingerprint(liveVM: liveVM) != briefFingerprint else { return }
-
-        var snapshot = briefSnapshot(liveVM: liveVM)
-        var brief = DailyBriefBuilder().build(snapshot)
-        let now = Date()
-
-        let focusRevisionBefore = focusStore.revision
-        let lastClosedBefore = focusStore.past.first?.id
-        focusStore.expireIfNeeded(now: now)
-        if let active = focusStore.active, let isOff = DailyBriefBuilder.isDriverOff(active.driver, snapshot) {
-            focusStore.noteDriver(isOff: isOff, now: now)
-        }
-        if let closed = focusStore.past.first, closed.id != lastClosedBefore {
-            AppAnalytics.shared.trackFocusLifecycle(
-                state: "closed", driver: closed.driver.id,
-                outcome: closed.outcome?.rawValue,
-                days: closed.dayIndex(now: closed.endedAt ?? now))
-        }
-
-        let kpiValues = DailyBriefBuilder.kpiValues(snapshot)
-        if focusStore.active == nil, let top = brief.drivers.first {
-            startFocus(top.kind, kpiValues: kpiValues, now: now)
-        } else {
-            focusStore.updateLatest(kpiValues, now: now)
-        }
-        if focusStore.revision != focusRevisionBefore {
-            snapshot.focus = focusStore.active
-            brief = DailyBriefBuilder().build(snapshot)
-        }
-
-        let debt = sleepDebtTracker.currentDebt?.totalDebtHours
-        DailyMoveLog.recordShown(
-            day: now,
-            dayMove: DailyMoveLog.Move(
-                title: brief.dayMove.title, icon: brief.dayMove.icon, source: brief.dayMove.source,
-                shownAt: now, doneAt: nil, bedtimeTarget: nil, sleepDebtHoursAtShow: debt),
-            nightMove: brief.nightMove.map {
-                DailyMoveLog.Move(
-                    title: $0.title, icon: $0.icon, source: $0.source,
-                    shownAt: now, doneAt: nil, bedtimeTarget: $0.bedtime, sleepDebtHoursAtShow: debt)
-            })
-        // The widget and the watch read the stored copy, so they show the same
-        // move as Today.
-        DailyActionStore.save(title: brief.dayMove.title, subtitle: brief.dayMove.reason, icon: brief.dayMove.icon)
-
-        dailyBrief = brief
-        // Taken after the writes above: the log and the focus store bump their
-        // revisions on every write, and the gate must not chase its own tail.
-        briefFingerprint = currentBriefFingerprint(liveVM: liveVM)
-    }
-
-    /// Starts a focus on `kind` from today's readings. A focus with no number
-    /// behind it could never be graded, so a kind with no readable KPI is skipped.
-    @MainActor
-    private func startFocus(_ kind: DriverKind, kpiValues: [FocusStore.KPIKind: Double], now: Date) {
-        let kpis = kind.focusKPIs.compactMap { kpi in
-            kpiValues[kpi].map { FocusStore.KPISnapshot(kind: kpi, day1: $0, latest: $0, latestAt: now) }
-        }
-        guard !kpis.isEmpty else { return }
-        focusStore.start(driver: kind, kpis: kpis, now: now)
-        AppAnalytics.shared.trackFocusLifecycle(state: "started", driver: kind.id, outcome: nil, days: 0)
-    }
-
-    /// The driver detail's "Start a 3-week focus" button.
-    @MainActor
-    func startFocus(_ kind: DriverKind, liveVM: LiveViewModel) {
-        startFocus(kind, kpiValues: DailyBriefBuilder.kpiValues(briefSnapshot(liveVM: liveVM)), now: Date())
-        rebuildDailyBrief(liveVM: liveVM)
-    }
-
-    @MainActor
-    func markMoveDone(_ kind: DailyMoveLog.MoveKind, liveVM: LiveViewModel) {
-        switch kind {
-        case .day:
-            guard let move = dailyBrief?.dayMove else { return }
-            // Writes the move log itself, so phone and wrist share one funnel.
-            DailyActionCompletion.markDone(actionTitle: move.title, actionIcon: move.icon, source: "today_moves")
-        case .night:
-            DailyMoveLog.markDone(.night)
-            AppAnalytics.shared.trackBlockTap(
-                title: dailyBrief?.nightMove?.title ?? "",
-                type: .moveDone, screen: .home, metadata: ["move": "night"])
-        }
-        rebuildDailyBrief(liveVM: liveVM)
-    }
-
-    /// Hides this morning's verdict. The result store is cleared too so the
-    /// old loop-closer cannot resurface the same day.
-    @MainActor
-    func dismissVerdict(liveVM: LiveViewModel) {
-        DailyActionResultStore.clear()
-        UserDefaults.standard.set(Date.cal.startOfDay(for: Date()), forKey: AppKeys.Data.verdictDismissedDay)
-        verdictDismissRevision &+= 1
-        rebuildDailyBrief(liveVM: liveVM)
-    }
-
-    /// Arms the one-shot day reminder. On success the move's label names the
-    /// time it fires at.
-    @MainActor
-    func remindDayMove(liveVM: LiveViewModel) async {
-        guard let move = dailyBrief?.dayMove else { return }
-        let ok = await ActionReminderScheduler.schedule(action: move.title)
-        AppAnalytics.shared.trackBlockTap(
-            title: move.title, type: .moveRemind, screen: .home, metadata: ["move": "day", "set": "\(ok)"])
-        guard ok else { return }
-        dayReminderFire = ActionReminderScheduler.nextFireDate()
-        rebuildDailyBrief(liveVM: liveVM)
-    }
-
-    /// Re-arms tonight's wind-down push, switching the preference on when the
-    /// person had it off: asking to be reminded is the clearest opt-in there is.
-    @MainActor
-    func remindNightMove(liveVM: LiveViewModel) async {
-        guard let move = dailyBrief?.nightMove, let bedtime = move.bedtime else { return }
-        var authorized = await NotificationManager.shared.isCurrentlyAuthorized()
-        if !authorized {
-            authorized = await NotificationManager.shared.requestAuthorization(source: "night_move_reminder")
-        }
-        let fire = Date.cal.date(byAdding: .minute, value: -WindDownScheduler.leadMinutes, to: bedtime)
-        let ok = authorized && fire.map { $0 > Date() } == true
-        AppAnalytics.shared.trackBlockTap(
-            title: move.title, type: .moveRemind, screen: .home, metadata: ["move": "night", "set": "\(ok)"])
-        guard ok else { return }
-
-        var preferences = persistence.loadPreferences()
-        if !preferences.windDownEnabled {
-            preferences.windDownEnabled = true
-            persistence.savePreferences(preferences)
-        }
-        let hrv = DashboardHousekeepingService.hrvSnapshot(
-            timeSeries: healthKitManager.timeSeries, trends: analysisEngine.trends)
-        WindDownScheduler.schedule(
-            recommendedBedtime: bedtime,
-            lastHRV: hrv?.valueMs,
-            hrvIsLow: hrv?.isLow ?? false,
-            preferences: preferences)
-        nightReminderFire = fire
-        rebuildDailyBrief(liveVM: liveVM)
+    func invalidateDailyActionCache() {
+        _cachedDailyAction = nil
+        _cachedDailyActionDate = nil
+        // Rebuilt here, on the refresh path, so the next body pass that misses the
+        // action cache does not have to reach SwiftData to fill in the proof.
+        _cachedActionProof = RecommendationEvaluator.buildActionProof(store: store)
     }
 
     // MARK: - Intelligence Briefing
@@ -2228,6 +2744,14 @@ final class DashboardViewModel {
         UserDefaults.standard.stringArray(forKey: Self.recentActionKeysKey) ?? []
     }
 
+    private func saveActionKey(_ key: String) {
+        var recent = loadRecentActionKeys()
+        recent.append(key)
+        // Keep last 7 days worth
+        if recent.count > 7 { recent = Array(recent.suffix(7)) }
+        UserDefaults.standard.set(recent, forKey: Self.recentActionKeysKey)
+    }
+
     /// Reorder insights so that if the same metric/directive drove the action 2+ consecutive days,
     /// it drops down in priority to let a fresh insight surface.
     private func rotateInsights(_ insights: [Insight], recentKeys: [String]) -> [Insight] {
@@ -2250,6 +2774,157 @@ final class DashboardViewModel {
             }
         }
         return prioritized + deprioritized
+    }
+
+    struct SmartAction {
+        let icon: String
+        let title: String
+        let subtitle: String
+        var source: String = "context_rules"
+        var rationale: String = ""
+        var supportingInsights: [Insight] = []
+        /// Full proof summary for the detail view
+        var proofSummary: RecommendationEvaluator.ActionProofSummary?
+        /// What doing this is forecast to change. Empty for rule-based actions.
+        var expectedBenefit: String = ""
+        /// True when the advisor fell through every rung to the hardcoded
+        /// default, so the card can say so instead of dressing standard advice
+        /// as personal (KEEP-KILL fix row).
+        var isFallback: Bool = false
+    }
+
+    /// Snapshot of the three core recovery signals for the Today's Action detail view.
+    /// Each field is optional so the view can render whatever the user's data supports.
+    struct RecoverySignalsSnapshot {
+        let hrvCurrent: Double?
+        let hrvBaseline: Double?
+        let rhrCurrent: Double?
+        let rhrBaseline: Double?
+        let sleepHoursLast: Double?
+        let sleepHoursGoal: Double
+
+        var hasAny: Bool {
+            hrvCurrent != nil || rhrCurrent != nil || sleepHoursLast != nil
+        }
+    }
+
+    /// One signal row in the score card's "Why" list. The three signals (Sleep,
+    /// Heart, Energy) ALWAYS show so the card is never half empty; a signal with
+    /// no reading shows `.noData` (never a faked value).
+    struct RecoveryWhyReason: Identifiable {
+        enum Kind: Hashable, CaseIterable {
+            case sleep, heart, restingHR, energy, stress
+
+            /// Plain name, shown when there is no reading to interpret.
+            var displayName: String {
+                switch self {
+                case .sleep:     return Copy.Home.whyNameSleep
+                case .heart:     return Copy.Home.whyNameHeart
+                case .restingHR: return Copy.Home.whyNameRestingHR
+                case .energy:    return Copy.Home.whyNameEnergy
+                case .stress:    return Copy.Home.whyNameStress
+                }
+            }
+        }
+        enum Tone { case good, okay, concern, noData }
+        /// Stable per-signal id so SwiftUI diffs the rows instead of rebuilding
+        /// all three on every home refresh (a fresh UUID would churn every time).
+        var id: Kind { kind }
+        let kind: Kind
+        let label: String    // the plain interpretation, e.g. "Sleep was short"
+        let value: String    // "5h 40m" / "Good" / "No reading yet"
+        let tone: Tone
+
+        /// Placeholder row for a signal that has no reading yet.
+        static func noData(kind: Kind) -> RecoveryWhyReason {
+            .init(kind: kind, label: kind.displayName, value: Copy.Home.whyNoData, tone: .noData)
+        }
+    }
+
+    /// The "Why" list. Every signal (sleep, heart/HRV, resting heart rate,
+    /// energy, stress) always gets a row, so the card keeps the same shape day
+    /// to day and the score card can say how many signals it actually had.
+    /// Signals with a reading come first, ranked by how far they are from your
+    /// usual (times a small weight for the ones that matter most), each labelled
+    /// with the plain interpretation and the real value. Signals with no reading
+    /// follow as greyed placeholders instead of being dropped.
+    @MainActor
+    func recoveryWhyReasons(liveVM: LiveViewModel) -> [RecoveryWhyReason] {
+        let s = todayRecoverySignals(liveVM: liveVM)
+        var candidates: [(reason: RecoveryWhyReason, relevance: Double)] = []
+
+        // Sleep — vs your goal.
+        if let sleep = s.sleepHoursLast {
+            let short = sleep < s.sleepHoursGoal - 0.75
+            let h = Int(sleep), m = Int((sleep - Double(h)) * 60)
+            let dev = abs(sleep - s.sleepHoursGoal) / s.sleepHoursGoal
+            candidates.append((.init(kind: .sleep,
+                label: short ? Copy.Home.whySleepShort : Copy.Home.whySleepGood,
+                value: "\(h)h \(m)m",
+                tone: short ? .concern : .good), dev * 1.0))
+        }
+
+        // Heart / HRV — vs your baseline. Highest weight.
+        if let hrv = s.hrvCurrent, let base = s.hrvBaseline, base > 0 {
+            let calm = hrv >= base * 0.95
+            let dev = abs(hrv - base) / base
+            candidates.append((.init(kind: .heart,
+                label: calm ? Copy.Home.whyHeartCalm : Copy.Home.whyHeartWorking,
+                value: Self.gapToUsual(current: hrv, baseline: base, unit: HealthMetric.heartRateVariability.unit),
+                tone: calm ? .good : .concern), dev * 1.2))
+        }
+
+        // Resting heart rate — vs your baseline.
+        if let rhr = s.rhrCurrent, let base = s.rhrBaseline, base > 0 {
+            let up = rhr > base * 1.05
+            let dev = abs(rhr - base) / base
+            candidates.append((.init(kind: .restingHR,
+                label: up ? Copy.Home.whyRhrUp : Copy.Home.whyRhrCalm,
+                value: Self.gapToUsual(current: rhr, baseline: base, unit: HealthMetric.restingHeartRate.unit),
+                tone: up ? .concern : .good), dev * 1.1))
+        }
+
+        // Energy — the same score the ring shows (readiness, or daily score).
+        if let score = liveVM.recovery.readinessScore ?? overallScore.flatMap({ $0.score > 0 ? $0.score : nil }) {
+            let low = score < 60
+            let dev = abs(Double(score) - 70) / 70
+            candidates.append((.init(kind: .energy,
+                label: low ? Copy.Home.whyEnergyLow : Copy.Home.whyEnergyGood,
+                value: low ? Copy.Home.whyEnergyLowValue : Copy.Home.whyEnergyGoodValue,
+                tone: low ? .concern : .good), dev * 0.8))
+        }
+
+        // Stress — high stress is worth surfacing more than low.
+        if let stress = liveVM.recovery.stressLevel {
+            let high = stress >= 60
+            let dev = abs(Double(stress) - 30) / 70
+            candidates.append((.init(kind: .stress,
+                label: high ? Copy.Home.whyStressHigh : Copy.Home.whyStressLow,
+                value: ReadinessScorer.stressLabel(for: stress),
+                tone: high ? .concern : .good), high ? dev * 1.1 : dev * 0.6))
+        }
+
+        // Out-of-range signals lead outright: the hero card blindly shows the
+        // first three rows, and a big deviation on a signal that reads fine
+        // (e.g. HRV well above baseline) must not push a concern off the card.
+        // Swift's sort is not stable, so ties fall back to the order the signals
+        // are appended above. Without it two equally relevant rows swap places
+        // on every refresh and the list looks like it is jumping around.
+        let withReading = candidates.enumerated()
+            .sorted {
+                let lhsConcern = $0.element.reason.tone == .concern
+                let rhsConcern = $1.element.reason.tone == .concern
+                if lhsConcern != rhsConcern { return lhsConcern }
+                return $0.element.relevance == $1.element.relevance
+                    ? $0.offset < $1.offset
+                    : $0.element.relevance > $1.element.relevance
+            }
+            .map(\.element.reason)
+        let readKinds = Set(withReading.map(\.kind))
+        let missing = RecoveryWhyReason.Kind.allCases
+            .filter { !readKinds.contains($0) }
+            .map { RecoveryWhyReason.noData(kind: $0) }
+        return withReading + missing
     }
 
     /// How many of the last N days actually produced a reading for one signal.
@@ -2283,6 +2958,23 @@ final class DashboardViewModel {
         }
     }
 
+    /// The signals the readiness score is actually built from (`ReadinessScorer`
+    /// inputs: HRV, resting HR, sleep). Steps and blood oxygen are read for
+    /// coverage but feed no scorer input, so they must never appear in the
+    /// hero's honesty line (KEEP-KILL merge list).
+    private static let scoreFedSignals: [HealthMetric] = [
+        .sleepDuration, .heartRateVariability, .restingHeartRate
+    ]
+
+    /// Display names of score-fed signals with no reading in the coverage
+    /// window, for the hero card's one tappable coverage line.
+    @MainActor
+    func scoreFedMissingSignalNames() -> [String] {
+        signalCoverage()
+            .filter { $0.isMissing && Self.scoreFedSignals.contains($0.metric) }
+            .map(\.metric.displayName)
+    }
+
     /// The rest context in force today, if any. Nothing expires on a timer here:
     /// only the user turns a context off, and Home nudges them to confirm it is
     /// still true so it cannot sit on unnoticed.
@@ -2294,32 +2986,87 @@ final class DashboardViewModel {
     /// unit. A row that said only "Good" gave nothing to act on; a row that says
     /// "6 bpm above usual" does. Gaps under 3% read as at-usual, since a rounded
     /// "0 bpm above usual" is noise, not a finding.
+    /// The sentence and the direction it describes, from one body. Both the 3%
+    /// deadband and the rounds-to-zero guard live here, so an arrow can never
+    /// point up on a row whose sentence reads "At your usual" — a sleep gap of
+    /// 0.4h clears the 3% floor and then rounds away, and a separately computed
+    /// direction would disagree exactly there.
     static func usualComparison(
         current: Double,
         baseline: Double,
         unit: String
-    ) -> String {
+    ) -> (text: String, usual: DaySignal.Usual) {
         let gap = current - baseline
         guard baseline > 0, abs(gap) / baseline >= 0.03 else {
-            return Copy.Home.whyValueAtUsual
+            return (Copy.Home.whyValueAtUsual, .atUsual)
         }
         // A gap that rounds away is at usual. On an hours metric the 3% floor
         // above still lets a 0.4 hour gap through, which printed the nonsense
         // "0 hrs below usual".
         let rounded = Int(abs(gap).rounded())
-        guard rounded > 0 else { return Copy.Home.whyValueAtUsual }
+        guard rounded > 0 else { return (Copy.Home.whyValueAtUsual, .atUsual) }
         let agreeing = (rounded == 1 && unit == HealthMetric.sleepDuration.unit)
             ? Copy.Home.unitHourSingular
             : unit
         return gap > 0
-            ? Copy.Home.whyValueAboveUsual(String(rounded), agreeing)
-            : Copy.Home.whyValueBelowUsual(String(rounded), agreeing)
+            ? (Copy.Home.whyValueAboveUsual(String(rounded), agreeing), .above)
+            : (Copy.Home.whyValueBelowUsual(String(rounded), agreeing), .below)
+    }
+
+    static func gapToUsual(current: Double, baseline: Double, unit: String) -> String {
+        usualComparison(current: current, baseline: baseline, unit: unit).text
+    }
+
+    /// Plain-English summary under the score as a bold heading + a lighter sub
+    /// line, keyed to the 3-band model.
+    /// Reads the same band as the ring colour. It used to carry its own 60/75
+    /// split, so a 55 painted amber while this sentence called it low.
+    func readinessSummary(score: Int) -> (head: String, sub: String) {
+        switch RecoveryState(score: score) {
+        case .red:    return (Copy.Home.scoreSummaryLowHead, Copy.Home.scoreSummaryLowSub)
+        case .yellow: return (Copy.Home.scoreSummaryModerateHead, Copy.Home.scoreSummaryModerateSub)
+        case .green:  return (Copy.Home.scoreSummaryHighHead, Copy.Home.scoreSummaryHighSub)
+        }
+    }
+
+    /// Build the recovery signals snapshot from current live values and personal baselines.
+    @MainActor
+    func todayRecoverySignals(liveVM: LiveViewModel) -> RecoverySignalsSnapshot {
+        let sleepHours: Double? = liveVM.sleep.hasSleepData ? liveVM.sleep.lastNightSleepDuration / 3600 : nil
+        return RecoverySignalsSnapshot(
+            hrvCurrent: liveVM.recovery.latestHRV,
+            hrvBaseline: analysisEngine.baselines[.heartRateVariability]?.mean,
+            rhrCurrent: liveVM.recovery.latestRestingHeartRate,
+            rhrBaseline: analysisEngine.baselines[.restingHeartRate]?.mean,
+            sleepHoursLast: sleepHours,
+            sleepHoursGoal: 7.5
+        )
     }
 
     // MARK: - Research-Backed Features
 
-    /// Snapshots the inputs on the main actor, then builds off it. `computeBiomarkers`
-    /// is static over an `AnalysisContext` of value types, so nothing shared crosses.
+    /// Refresh personal health forecasts from MLOrchestrator multi-horizon output (Paper 3)
+    @MainActor
+    func refreshHealthForecasts() {
+        healthForecasts = ForecastBuilder.buildForecasts(
+            multiHorizonForecasts: analysisEngine.mlOrchestrator.multiHorizonForecasts,
+            timeSeries: healthKitManager.timeSeries
+        )
+    }
+
+    /// Snapshots the inputs on the main actor, then builds off it. Both arguments
+    /// are value types, so nothing shared crosses the boundary.
+    @MainActor
+    private func buildHealthForecastsOffMain() async -> [MetricForecast] {
+        let horizons = analysisEngine.mlOrchestrator.multiHorizonForecasts
+        let series = healthKitManager.timeSeries
+        return await Task.detached(priority: .utility) {
+            ForecastBuilder.buildForecasts(multiHorizonForecasts: horizons, timeSeries: series)
+        }.value
+    }
+
+    /// See `buildHealthForecastsOffMain`. `computeBiomarkers` is static over an
+    /// `AnalysisContext` of value types.
     @MainActor
     private func buildCircadianBiomarkersOffMain() async -> CircadianHealthAnalyzer.CircadianBiomarkers? {
         let context = AnalysisContext(
@@ -2391,6 +3138,39 @@ final class DashboardViewModel {
                 )
             }
         }
+    }
+
+    // MARK: - Explore Tab Derived Data
+
+    var exploreSortedCategories: [(category: HealthCategory, score: Int?)] {
+        let focuses = insights.focusCategories
+        return HealthCategory.allCases.map { cat in
+            (category: cat, score: analysisEngine.score(for: cat)?.score)
+        }
+        .sorted { a, b in
+            let aHasScore = a.score != nil
+            let bHasScore = b.score != nil
+            if aHasScore != bHasScore { return aHasScore }
+            guard let aScore = a.score, let bScore = b.score else { return false }
+            let aFocused = focuses.contains(a.category)
+            let bFocused = focuses.contains(b.category)
+            if aFocused != bFocused { return aFocused }
+            if aScore != bScore { return aScore < bScore }
+            // Stable tiebreak so the list order does not flip across refreshes
+            // when two categories share the same score.
+            return a.category.rawValue < b.category.rawValue
+        }
+    }
+
+    var exploreWeakestCategory: (category: HealthCategory, score: Int)? {
+        let scored = HealthCategory.allCases.compactMap { cat -> (category: HealthCategory, score: Int)? in
+            guard let score = analysisEngine.score(for: cat)?.score else { return nil }
+            return (category: cat, score: score)
+        }
+        return scored.min(by: { a, b in
+            if a.score != b.score { return a.score < b.score }
+            return a.category.rawValue < b.category.rawValue
+        })
     }
 
     func makeHealthDataQueryRequest() -> HealthDataQueryRequest {

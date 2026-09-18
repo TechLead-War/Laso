@@ -17,8 +17,7 @@ struct ContentView: View {
     @State private var rootSheet: RootSheet?
     @State private var navigationPath = NavigationPath()
     @State private var homePath = NavigationPath()
-    @State private var bodyPath = NavigationPath()
-    @State private var progressPath = NavigationPath()
+    @State private var explorePath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
     /// Which cards the visible detail screen offers, set by `routeDestination`
@@ -247,17 +246,11 @@ struct ContentView: View {
                     // The expanded island buttons open the app but only logged before;
                     // route to the matching surface so the CTA is not a dead end.
                     switch pending.kind {
-                    case .setIntention: navigate(to: .tab(.home))
-                    case .breathe:      navigate(to: .driverDetail(.stressHigh))
-                    case .windDown:     navigate(to: .tab(.home))
+                    case .setIntention: navigate(to: .todaysAction)
+                    case .breathe:      navigate(to: .stressMonitor)
+                    case .windDown:     navigate(to: .sleepCoach)
                     case .noop:         break
                     }
-                }
-                // The lock-screen "I'm heading in" tap never opens the app, so the
-                // bedtime it logged is applied the next time the app is in front.
-                if let headedIn = CoachActionBridge.consumeHeadedIn() {
-                    DailyMoveLog.markDone(.night, at: headedIn, day: headedIn)
-                    dashboardViewModel.rebuildDailyBrief(liveVM: liveViewModel)
                 }
                 Task {
                     if await NotificationRepromptManager.checkAndRecordDenial() {
@@ -337,7 +330,12 @@ struct ContentView: View {
         }
         .onChange(of: selectedTab) { oldTab, newTab in
             SessionTracker.shared.currentTab = newTab.rawValue
-            let blockType = newTab.blockType
+            let blockType: BlockType = switch newTab {
+            case .home: .tabHome
+            case .live: .tabLive
+            case .explore: .tabExplore
+            case .settings: .tabSettings
+            }
             // The tap happened on the tab the user is LEAVING. Hardcoding .home
             // put every Settings→Live switch on Home, and trackBlockTap derives
             // element_id/action_id from this value too.
@@ -349,8 +347,7 @@ struct ContentView: View {
                 metadata: ["from_tab": oldTab.rawValue, "to_tab": newTab.rawValue]
             )
             guard scenePhase == .active else { return }
-            // Body shows the live heart-rate row, so it needs the same fresh pull Home does.
-            if newTab == .home || newTab == .body {
+            if newTab == .home {
                 liveViewModel.fetchHomeDataTiered()
             }
         }
@@ -360,16 +357,11 @@ struct ContentView: View {
         .onChange(of: homePath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
-        .onChange(of: bodyPath.count) { _, newCount in
+        .onChange(of: explorePath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
-        .onChange(of: progressPath.count) { _, newCount in
-            AppAnalytics.shared.updateNavigationDepth(newCount)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { notification in
-            // Siri's trends intent names Body; the focus card on Today sends
-            // nothing and means Progress.
-            selectedTab = (notification.object as? AppTab) ?? .progress
+        .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
+            selectedTab = .explore
         }
         .onChange(of: NotificationRouter.shared.pendingRoute) { _, newRoute in
             // Push taps arriving while the app is already foregrounded set the
@@ -422,14 +414,14 @@ struct ContentView: View {
                     withNavigationDestinations(homeTabView(path: $homePath), path: $homePath)
                 }
             }
-            Tab(AppTab.body.label, systemImage: AppTab.body.systemImageName, value: AppTab.body) {
-                NavigationStack(path: $bodyPath) {
-                    withNavigationDestinations(bodyTabView(path: $bodyPath), path: $bodyPath)
+            Tab(AppTab.live.label, systemImage: AppTab.live.systemImageName, value: AppTab.live) {
+                NavigationStack {
+                    liveTabView
                 }
             }
-            Tab(AppTab.progress.label, systemImage: AppTab.progress.systemImageName, value: AppTab.progress) {
-                NavigationStack(path: $progressPath) {
-                    withNavigationDestinations(progressTabView(path: $progressPath), path: $progressPath)
+            Tab(AppTab.explore.label, systemImage: AppTab.explore.systemImageName, value: AppTab.explore) {
+                NavigationStack(path: $explorePath) {
+                    withNavigationDestinations(exploreTabView(path: $explorePath), path: $explorePath)
                 }
             }
             Tab(AppTab.settings.label, systemImage: AppTab.settings.systemImageName, value: AppTab.settings) {
@@ -522,21 +514,36 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func bodyTabView(path: Binding<NavigationPath>) -> some View {
-        BodyView(
+    private func exploreTabView(path: Binding<NavigationPath>) -> some View {
+        ExploreView(
             viewModel: dashboardViewModel,
-            liveViewModel: liveViewModel,
+            appStateStore: appStateStore,
             navigationPath: path
         )
     }
 
     @ViewBuilder
-    private func progressTabView(path: Binding<NavigationPath>) -> some View {
-        ProgressTabView(
-            focusStore: dashboardViewModel.focusStore,
-            vitalityScorer: dashboardViewModel.vitalityScorer,
-            navigationPath: path
-        )
+    private var liveTabView: some View {
+        if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
+            MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
+        } else if UITestMode.isEnabled && UITestMode.forceProLock {
+            ProFeatureOverlay(
+                feature: "Live Vitals",
+                icon: "waveform.path.ecg",
+                description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+            )
+        } else if FeatureGate.canAccess(.liveTab) {
+            LiveView(
+                viewModel: liveViewModel,
+                deviceSourceManager: deviceSourceManager
+            )
+        } else {
+            ProFeatureOverlay(
+                feature: "Live Vitals",
+                icon: "waveform.path.ecg",
+                description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+            )
+        }
     }
 
     private func refreshDeviceSourcesIfNeeded() async {
@@ -551,10 +558,10 @@ struct ContentView: View {
         switch selectedTab {
         case .home:
             homeTabView(path: $navigationPath)
-        case .body:
-            bodyTabView(path: $navigationPath)
-        case .progress:
-            progressTabView(path: $navigationPath)
+        case .live:
+            liveTabView
+        case .explore:
+            exploreTabView(path: $navigationPath)
         case .settings:
             settingsTabView
         }
@@ -612,10 +619,13 @@ struct ContentView: View {
             // Falls back to the plain body-age card on a day where the gap is
             // inside the model's warm-up and `.younger` did not qualify.
             return ([.younger, .bodyAge], .vitalityDetail)
-        case .driverDetail(.sleepBalance):
-            return ([.bestSleep, .sleep], .driverDetail)
+        case .sleepCoach:
+            return ([.bestSleep, .sleep], .sleepCoach)
         case .insightsDetail:
             return ([.receipt], .insightsDetail)
+        case .weeklyReview:
+            // Carries its own ShareButton in its toolbar already.
+            return nil
         default:
             return nil
         }
@@ -631,16 +641,8 @@ struct ContentView: View {
                 headlineSummary: dashboardViewModel.analysis.topCausalChain?.narrative ?? dashboardViewModel.insights.headlineInsight?.recommendation,
                 store: healthDataStore
             )
-        case .driverDetail(let kind):
-            DriverDetailView(
-                kind: kind,
-                viewModel: dashboardViewModel,
-                liveViewModel: liveViewModel,
-                navigationPath: activePath
-            )
-        case .tab:
-            // Handled by `navigate(to:)` as a tab switch; never lands on a path.
-            EmptyView()
+        case .weeklyReview:
+            WeeklyReviewView(viewModel: WeeklyReviewViewModel(dashboardViewModel: dashboardViewModel))
         case .correlationsDetail:
             CorrelationsView(
                 correlations: dashboardViewModel.analysis.correlations,
@@ -655,6 +657,14 @@ struct ContentView: View {
             )
         case .vitalityDetail:
             VitalityDetailView(scorer: dashboardViewModel.vitalityScorer)
+        case .strainDetail:
+            strainDetailDestination
+        case .stressMonitor:
+            stressMonitorDestination
+        case .brainHealth:
+            brainHealthDestination
+        case .sleepCoach:
+            sleepCoachDestination
         case .cycleDetail:
             cycleDetailDestination
         case .achievements:
@@ -663,6 +673,21 @@ struct ContentView: View {
             // `navigate(to:)` diverts this route to a sheet before it can reach a
             // path, so this branch only exists to keep the switch exhaustive.
             JournalEntryView()
+        case .todaysAction:
+            // Nil when nothing has been scored. The detail view then keeps the
+            // action and the reasons and drops the band-driven plan, rather than
+            // prescribing a rest day off a stand-in 0.
+            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore?.score
+            TodaysActionDetailView(
+                action: dashboardViewModel.smartDailyAction(liveVM: liveViewModel),
+                policyDecision: dashboardViewModel.analysisEngine.mlOrchestrator.policyDecision,
+                readinessScore: readinessScore,
+                workoutRecoveryBand: readinessScore.map(WorkoutRecoveryBand.init(score:)),
+                cyclePhase: dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier,
+                topCausalChain: dashboardViewModel.analysis.topCausalChain,
+                recoverySignals: dashboardViewModel.todayRecoverySignals(liveVM: liveViewModel),
+                onTapMetric: { metric in navigationPath.append(metric) }
+            )
         case .askYourData:
             AskYourDataView(viewModel: dashboardViewModel)
         case .mirrorCapture:
@@ -670,6 +695,241 @@ struct ContentView: View {
             // so this branch only exists to keep the switch exhaustive.
             MirrorCaptureSheet()
         }
+    }
+
+    @ViewBuilder
+    private var strainDetailDestination: some View {
+        let scorer = dashboardViewModel.strainScorer
+        let coach = dashboardViewModel.strainCoach
+        let target = coach.currentTarget
+        let balance: StrainBalance = {
+            switch coach.strainBalance {
+            case .undertraining: return .under
+            case .optimal: return .optimal
+            case .overreaching: return .overreaching
+            }
+        }()
+        StrainDetailView(
+            strainValue: scorer.currentStrain,
+            strainLevel: scorer.strainLevel,
+            zoneMinutes: scorer.zoneMinutes,
+            targetStrainRange: (target?.minStrain ?? 10)...(target?.maxStrain ?? 14),
+            trainingZone: target?.zone.displayName ?? "Maintain Fitness",
+            guidanceText: target?.guidance ?? "Stay active and listen to your body",
+            weekHistory: scorer.weeklyStrainHistory.map {
+                DailyStrainPoint(date: $0.date, strain: $0.strain, level: StrainLevel(strain: $0.strain))
+            },
+            strainBalance: balance,
+            trendPoints: scorer.trendStrainHistory.map {
+                TrendSparkPoint(date: $0.date, value: $0.strain)
+            }
+        )
+    }
+
+    @ViewBuilder
+    private var stressMonitorDestination: some View {
+        if let stress = dashboardViewModel.stressScorer.currentStress {
+            let history = dashboardViewModel.stressScorer.dailyStressHistory
+            let weekScores = history.suffix(7).map {
+                DailyStressPoint(date: $0.date,
+                                 dayLabel: $0.date.formatted(.dateTime.weekday(.abbreviated)),
+                                 score: $0.score)
+            }
+            let prevWeek = history.count > 7 ? Array(history.dropLast(7).suffix(7)) : [(date: Date, score: Double)]()
+            let prevAvg = prevWeek.isEmpty
+                ? (dashboardViewModel.stressScorer.weeklyAverage ?? 0)
+                : prevWeek.map(\.score).reduce(0, +) / Double(prevWeek.count)
+            StressMonitorView(
+                stressScore: stress.score,
+                stressLevel: stress.level.displayName,
+                levelColor: stress.level.color,
+                hrvDeviation: stress.hrvDeviation,
+                hrElevation: stress.hrElevation,
+                weeklyScores: weekScores,
+                weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
+                previousWeekAverage: prevAvg,
+                trendPoints: history.map { TrendSparkPoint(date: $0.date, value: $0.score) }
+            )
+        } else {
+            ContentUnavailableView(
+                Copy.StressMonitor.buildingBaselineTitle,
+                systemImage: "waveform.path.ecg",
+                description: Text(Copy.StressMonitor.needHRVData)
+            )
+            .navigationTitle(Copy.StressMonitor.title)
+        }
+    }
+
+    @ViewBuilder
+    private var brainHealthDestination: some View {
+        if let brain = dashboardViewModel.brainHealthScorer.currentScore {
+            BrainHealthDetailView(
+                brainScore: brain,
+                weeklyHistory: dashboardViewModel.brainHealthScorer.weeklyHistory,
+                weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
+                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend,
+                trendPoints: dashboardViewModel.brainHealthScorer.weeklyHistory.map {
+                    TrendSparkPoint(date: $0.date, value: Double($0.score))
+                }
+            )
+        } else {
+            ContentUnavailableView(
+                Copy.BrainHealth.emptyStateTitle,
+                systemImage: "brain",
+                description: Text(Copy.BrainHealth.emptyStateMessage)
+            )
+            .navigationTitle(Copy.BrainHealth.title)
+        }
+    }
+
+    @ViewBuilder
+    private var sleepCoachDestination: some View {
+        if let need = dashboardViewModel.sleepNeedCalculator.currentNeed {
+            let debt = dashboardViewModel.sleepDebtTracker.currentDebt
+            let baseline = debt?.personalBaseline ?? need.totalHoursNeeded
+            let boundaries = healthKitManager.sleepSessionBoundaries
+            let napsByDay = healthKitManager.napSessionBoundaries
+            let dailyHistory = (debt?.dailyDeficits ?? []).suffix(14).map { entry in
+                let boundary = boundaries[entry.date]
+                let napTotalMin = (napsByDay[entry.date] ?? []).reduce(0.0) {
+                    $0 + ($1.coreHours + $1.deepHours + $1.remHours) * 60.0
+                }
+                return SleepCoachView.DayEntry(
+                    date: entry.date,
+                    actual: max(0, baseline - entry.deficit),
+                    needed: baseline,
+                    hasData: entry.hasData,
+                    bedtime: boundary?.bedtime,
+                    wakeTime: boundary?.wakeTime,
+                    coreHours: boundary?.coreHours,
+                    deepHours: boundary?.deepHours,
+                    remHours: boundary?.remHours,
+                    awakeHours: boundary?.awakeHours,
+                    napMinutes: napTotalMin >= 1 ? Int(napTotalMin.rounded()) : nil
+                )
+            }
+            SleepCoachView(
+                baseHoursNeeded: need.totalHoursNeeded,
+                bedtime: need.recommendedBedtime,
+                wakeTime: need.recommendedWakeTime,
+                debtHours: debt?.totalDebtHours ?? 0,
+                dailyHistory: dailyHistory,
+                // Live overnight wake times, not stored sample dates: the
+                // boundary query excludes naps and is re-run on open, so a
+                // corrected night shows the corrected wake time.
+                wakeTimes: boundaries.values.map(\.wakeTime),
+                onRefresh: { await dashboardViewModel.refresh() }
+            )
+            .task {
+                // Covers both consumers: the 14-day history section and the
+                // wake window's 28-night consistency readout.
+                await healthKitManager.refreshSleepBoundaries(
+                    days: max(14, WakeAnchorConfig.consistencyWindowDays)
+                )
+            }
+        } else {
+            sleepCoachEmptyState
+        }
+    }
+
+    private var sleepCoachEmptyState: some View {
+        ScrollView {
+            VStack(spacing: DS.sectionSpacing) {
+                VStack(spacing: 14) {
+                    Image(systemName: "moon.zzz")
+                        .font(.system(size: 56, weight: .light))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, DS.space5)
+
+                    Text(Copy.Common.buildingYourSleepProfile)
+                        .font(DS.Typography.title3.weight(.semibold))
+
+                    Text(Copy.Common.weNeedAFewNightsOf)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, DS.space5)
+                        .padding(.bottom, DS.space5)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.space5)
+                .cardStyle()
+                .padding(.horizontal)
+
+                sleepCoachEmptyTipsSection
+            }
+            .padding(.top, DS.space4)
+            .padding(.bottom, DS.space6)
+        }
+        .background(AppColour.surfaceBase.ignoresSafeArea())
+        .navigationTitle(Copy.SleepCoach.title)
+        .navigationBarTitleDisplayMode(.large)
+        .task {
+            await healthKitManager.refreshSleepBoundaries(days: 14)
+        }
+    }
+
+    private var sleepCoachEmptyTipsSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            HStack(spacing: DS.space2) {
+                Image(systemName: "lightbulb.fill")
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.categorySleep)
+                Text(Copy.Common.whileYouWait)
+                    .font(DS.Typography.headline)
+            }
+            .padding(.horizontal)
+
+            VStack(spacing: 0) {
+                sleepCoachEmptyTipRow(
+                    icon: "clock.fill",
+                    color: AppColour.categorySleep,
+                    title: Copy.SleepCoach.tipConsistentScheduleTitle,
+                    detail: Copy.SleepCoach.tipConsistentScheduleDetail
+                )
+                Divider().padding(.leading, 44)
+                sleepCoachEmptyTipRow(
+                    icon: "thermometer.snowflake",
+                    color: AppColour.accent,
+                    title: Copy.SleepCoach.tipCoolBedroomTitle,
+                    detail: Copy.SleepCoach.tipCoolBedroomDetail
+                )
+                Divider().padding(.leading, 44)
+                sleepCoachEmptyTipRow(
+                    icon: "sun.max.fill",
+                    color: AppColour.warning,
+                    title: Copy.SleepCoach.tipMorningSunlightTitle,
+                    detail: Copy.SleepCoach.tipMorningSunlightDetail
+                )
+            }
+            .padding(.vertical, DS.space2)
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    private func sleepCoachEmptyTipRow(icon: String, color: Color, title: String, detail: String) -> some View {
+        HStack(spacing: DS.itemSpacing) {
+            Image(systemName: icon)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(color)
+                .frame(width: 32, height: 32)
+                .background(color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(DS.Typography.subheadlineMedium)
+                Text(detail)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, DS.space2)
     }
 
     @ViewBuilder
@@ -765,25 +1025,11 @@ struct ContentView: View {
             rootSheet = .mirrorCapture
             return
         }
-        if case .tab(let tab) = route {
-            selectedTab = tab
-            return
+        switch selectedTab {
+        case .home: homePath.append(route)
+        case .explore: explorePath.append(route)
+        case .live, .settings: navigationPath.append(route)
         }
-        activePath.wrappedValue.append(route)
-    }
-
-    /// The stack the visible tab pushes onto. Per-tab stacks exist only on the
-    /// iOS 26 tab view; the legacy layout runs every tab through one stack.
-    private var activePath: Binding<NavigationPath> {
-        if #available(iOS 26.0, *) {
-            switch selectedTab {
-            case .home: return $homePath
-            case .body: return $bodyPath
-            case .progress: return $progressPath
-            case .settings: return $navigationPath
-            }
-        }
-        return $navigationPath
     }
 
     /// Route a `laso://route/<name>` widget deep link. Reuses the single
@@ -801,9 +1047,7 @@ struct ContentView: View {
         // nothing else links to them, so tagging every laso:// open as "widget"
         // put pure Live Activity traffic in the widget bucket. A home-screen
         // widget that gains a widgetURL lands in the default branch.
-        // Compared by name: the old ids now resolve to shared destinations, so the
-        // Route value alone no longer says a Live Activity sent the person here.
-        let isLiveActivityRoute = ["todaysAction", "sleepCoach", "stressMonitor"].contains(name)
+        let isLiveActivityRoute = route == .todaysAction || route == .sleepCoach || route == .stressMonitor
         SessionTracker.shared.pendingSessionSource = isLiveActivityRoute ? .liveActivity : .widget
         AppAnalytics.shared.trackDeepLinkOpened(
             url: url.absoluteString,

@@ -349,24 +349,6 @@ extension Copy {
         static var mirrorReminderBody: String { RemoteConfigManager.shared.copyString("copy_notifications_mirror_reminder_body", default: "Ten seconds puts today on the record.") }
 
         static var actionReminderTitle: String { RemoteConfigManager.shared.copyString("copy_notifications_action_reminder_title", default: "Time for your one thing") }
-
-        // MARK: - Morning Verdict
-
-        /// Title of the morning push after a day the brief showed its moves.
-        /// Not clipped: the day-only line runs past the title budget on purpose
-        /// because the bedtime question is the hook.
-        static func verdictTitle(dayShown: Bool, dayDone: Bool, nightShown: Bool, nightDone: Bool) -> String {
-            switch (dayShown && dayDone, nightShown && nightDone) {
-            case (true, true):
-                return RemoteConfigManager.shared.copyString("copy_notifications_verdict_title_both", default: "Both logged. Open for the numbers.")
-            case (true, false):
-                return RemoteConfigManager.shared.copyString("copy_notifications_verdict_title_day", default: "Day move logged. Did the bedtime? Open for the numbers.")
-            case (false, true):
-                return RemoteConfigManager.shared.copyString("copy_notifications_verdict_title_night", default: "Bedtime logged. Open for the numbers.")
-            case (false, false):
-                return RemoteConfigManager.shared.copyString("copy_notifications_verdict_title_none", default: "Yesterday's moves are waiting for their verdict.")
-            }
-        }
         static func actionReminderBody(_ action: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_notifications_action_reminder_body", default: "%@"), action) }
 
         static func windDownTitle() -> String {

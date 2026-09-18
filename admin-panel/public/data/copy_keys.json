@@ -3366,243 +3366,483 @@
     "isArray": false
   },
   {
-    "key": "copy_body_calm",
-    "defaultValue": "calm",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_actions_circadian",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_brain_health_actions_cognitive_readiness",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_brain_health_actions_header",
+    "defaultValue": "TRY THIS TODAY",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_elevated",
-    "defaultValue": "elevated",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_actions_memory_recovery",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_brain_health_actions_neurovascular",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_brain_health_actions_stress_cognition",
+    "defaultValue": "(array)",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": true
+  },
+  {
+    "key": "copy_brain_health_biggest_lever_header",
+    "defaultValue": "BIGGEST LEVER TODAY",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_health_states",
-    "defaultValue": "Health states",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_building_accuracy",
+    "defaultValue": "Building accuracy · %d%%",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_heart_rate_now",
-    "defaultValue": "Heart rate %d",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_direction_above",
+    "defaultValue": "above",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_heart_rate_now_title",
-    "defaultValue": "Heart rate now",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_direction_baseline",
+    "defaultValue": "%@ baseline",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_last_night_sleep",
-    "defaultValue": "last night's sleep",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_direction_below",
+    "defaultValue": "below",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_list_separator",
-    "defaultValue": ", ",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_empty_state_message",
+    "defaultValue": "We need a few nights of sleep and heart data from your Apple Watch before this score can appear. Wear your watch to bed and check back.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_morning_heart_rate",
-    "defaultValue": "morning heart rate",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_empty_state_title",
+    "defaultValue": "Building your brain health profile",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_not_synced_join",
-    "defaultValue": " · ",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_factor_deep_sleep",
+    "defaultValue": "Deep Sleep",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_not_synced_prefix",
-    "defaultValue": "Not synced yet today:",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_factor_hrv",
+    "defaultValue": "HRV",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_nothing_off",
-    "defaultValue": "Nothing off your usual today",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_factor_rem",
+    "defaultValue": "REM Sleep",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_open_health",
-    "defaultValue": "Open Health",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_factor_resting_hr",
+    "defaultValue": "Resting HR",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_rest_per_week",
-    "defaultValue": "%@ a week",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_factor_sleep_schedule",
+    "defaultValue": "Sleep Schedule",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_bounce_back",
-    "defaultValue": "Heart rate bounce-back",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_label",
+    "defaultValue": "BRAIN HEALTH",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_cycle",
-    "defaultValue": "Cycle",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_over_time",
+    "defaultValue": "Brain Health Over Time",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_hrv",
-    "defaultValue": "Heart rate variability",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_percent_above_below_baseline",
+    "defaultValue": "%d%% %@ baseline",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_mindful",
-    "defaultValue": "Mindful minutes",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_points_lost",
+    "defaultValue": "−%d pts",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_rest_days",
-    "defaultValue": "Rest days",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_projection_gain",
+    "defaultValue": "+%d pts",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_resting_hr",
-    "defaultValue": "Resting heart rate",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_timing_consistent",
+    "defaultValue": "consistent timing",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_sleep_balance",
-    "defaultValue": "Sleep balance",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_timing_irregular",
+    "defaultValue": "irregular timing",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_steps",
-    "defaultValue": "Steps",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_title",
+    "defaultValue": "Brain Health",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_strain_recent",
-    "defaultValue": "Strain, last 6 days",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_brain_health_weight_of_score",
+    "defaultValue": "%d%% of score",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_stress_now",
-    "defaultValue": "Stress now",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_chart_today",
+    "defaultValue": "Today",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_row_vo2_max",
-    "defaultValue": "VO2 max",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_deep_sleep",
+    "defaultValue": "Deep Sleep",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_section_off",
-    "defaultValue": "Off your usual",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_dream_sleep",
+    "defaultValue": "Dream Sleep",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_section_usual",
-    "defaultValue": "At your usual",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_estimated",
+    "defaultValue": "Estimated",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_behind_nights",
-    "defaultValue": "Behind · %d nights to clear",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_baseline_mixed",
+    "defaultValue": "Mixed signals today. Match your effort to how you feel as the day goes on.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_bounce_back_below",
-    "defaultValue": "Below usual · earliest under-recovery sign",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_baseline_steady",
+    "defaultValue": "Signals near your usual range. Stick to routine tasks today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_rest_below",
-    "defaultValue": "Below the %d a week your load needs",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_focused_default",
+    "defaultValue": "Signals look good. Keep your usual work rhythm.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_steps_on_pace",
-    "defaultValue": "On pace for your usual %@",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_focused_hrv",
+    "defaultValue": "Good HRV is helping focus. A solid day for steady work.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_strain_above",
-    "defaultValue": "High, above your %d to %d target on %d of 6",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_focused_sleep",
+    "defaultValue": "Solid sleep recovery. Deep work should feel easier today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_strain_in_range",
-    "defaultValue": "Inside your target",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_foggy_both",
+    "defaultValue": "HRV is low and REM was short last night. Keep work simple today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_top_of_range",
-    "defaultValue": "Top of your range",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_foggy_hrv",
+    "defaultValue": "HRV is well below your usual. Keep work simple today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_usual",
-    "defaultValue": "Usual",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_foggy_sleep",
+    "defaultValue": "Sleep quality was low last night. Keep work simple today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_status_years_younger",
-    "defaultValue": "%d years younger than %d",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_sharp_default",
+    "defaultValue": "Signals above your usual. A good day to take on hard problems.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_strain_avg",
-    "defaultValue": "%@ avg",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_sharp_hrv",
+    "defaultValue": "High HRV shows sharp readiness. Take on hard tasks.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_subtitle",
-    "defaultValue": "Every signal against your usual",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_sharp_sleep",
+    "defaultValue": "Excellent sleep recovery. You can handle deep focus today.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_title",
-    "defaultValue": "Body",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_headline_sharp_strong",
+    "defaultValue": "Strong REM and high HRV. Great day for tough work.",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_watch_off",
-    "defaultValue": "watch not on",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_heart_and_brain",
+    "defaultValue": "Heart and Brain",
+    "sourceFile": "Copy+BrainHealth.swift",
     "isArray": false
   },
   {
-    "key": "copy_body_watch_on",
-    "defaultValue": "watch on",
-    "sourceFile": "Copy+Body.swift",
+    "key": "copy_brain_health_heart_recovery",
+    "defaultValue": "Heart Recovery",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_hero_explainer",
+    "defaultValue": "How sharp and focused your mind is likely to feel today",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_improve_breakdown",
+    "defaultValue": "Where Your 100 Points Are Earned",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_improve_footer",
+    "defaultValue": "Each area's weight matches its impact on cognition. Fix the biggest gap first.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_improve_needs_confidence",
+    "defaultValue": "We will show your biggest lever once we have a few more nights of data.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_improve_strong_state",
+    "defaultValue": "You are already strong here. Keep your habits steady.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_improve_title",
+    "defaultValue": "Improve Your Score",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_last_seven_days",
+    "defaultValue": "Last 7 Days",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_learn_more",
+    "defaultValue": "Learn More",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_learn_more_hint",
+    "defaultValue": "Dream sleep, mental energy, and long term trends.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_long_term_explanation",
+    "defaultValue": "A healthy heart and a regular sleep schedule help keep your brain sharp over time.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_mental_energy",
+    "defaultValue": "Mental Energy",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_mental_energy_explanation",
+    "defaultValue": "How much mental energy is left after stress.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_need_more_data",
+    "defaultValue": "We need more nights of sleep + HRV data before locking in your brain readiness number.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_no_sleep_stage_data",
+    "defaultValue": "We do not have your sleep stage data yet. These are estimates based on your other health data.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_projection_label",
+    "defaultValue": "Lift this and your score moves to",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_rem_sleep",
+    "defaultValue": "REM Sleep",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_scale_and_direction",
+    "defaultValue": "out of 100  ·  Higher is sharper",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_scale_suffix",
+    "defaultValue": "/ 100",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_sleep_and_memory",
+    "defaultValue": "Sleep and Memory",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_sleep_brain_explanation",
+    "defaultValue": "Deep sleep cleans your brain. Dream sleep helps lock in memories.",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_sleep_recovery",
+    "defaultValue": "Sleep Recovery",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_sleep_rhythm",
+    "defaultValue": "Sleep Rhythm",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_state_baseline",
+    "defaultValue": "Baseline",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_state_focused",
+    "defaultValue": "Focused",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_state_low_energy",
+    "defaultValue": "Low energy",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_state_sharp",
+    "defaultValue": "Sharp",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_subscale_cognitive_readiness",
+    "defaultValue": "Cognitive Readiness",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_subscale_memory_recovery",
+    "defaultValue": "Memory Recovery",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_trend_declining",
+    "defaultValue": "declining",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_trend_improving",
+    "defaultValue": "improving",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_trend_stable",
+    "defaultValue": "stable",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_brain_health_what_helped_and_hurt",
+    "defaultValue": "What Helped and Hurt",
+    "sourceFile": "Copy+BrainHealth.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_body_clock_bedtime",
+    "defaultValue": "A good bedtime for you looks like around %@",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_body_clock_fallback",
+    "defaultValue": "Based on your natural rhythm over the past few weeks.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_body_clock_hrv_peak",
+    "defaultValue": "Your body tends to feel most rested around %@",
+    "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
   {
@@ -3614,6 +3854,12 @@
   {
     "key": "copy_briefing_body_systems_decoupled_headline",
     "defaultValue": "Your body's systems are a bit out of sync today. A calm day with good sleep should help bring things back together.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_body_systems_detail_simple",
+    "defaultValue": "Your key health measures are moving together nicely.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -3698,6 +3944,78 @@
   {
     "key": "copy_briefing_briefing_trend_signal_urgent_headline",
     "defaultValue": "Your body might be getting tired. Extra sleep tonight would help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_confidence_badge",
+    "defaultValue": "Based on %d%% confidence",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail",
+    "defaultValue": "HRV: %@, resting heart rate: %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_exercise_below",
+    "defaultValue": "You moved less than your usual on %d of the past %d days.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_hrv_below",
+    "defaultValue": "Your body has felt tired on %@ of the past %d days.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_simple",
+    "defaultValue": "It moved from %@ to %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_sleep_deficit",
+    "defaultValue": "You have missed about %@ of sleep over the past %d days.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_with_co_changes_base",
+    "defaultValue": "It moved from %@ to %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_with_co_changes_suffix",
+    "defaultValue": "Your %@ shifted around the same time, so they are likely connected.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_with_partial",
+    "defaultValue": "This connection looks strong, even when other things are taken into account. Based on %d days of your data.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_with_percentile",
+    "defaultValue": "%@. Here is what is going on: %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_detail_with_weak_link",
+    "defaultValue": "Your %@ and %@ are a little out of step today. Some extra rest should help them line back up.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_deviator_description",
+    "defaultValue": "Your %@ is %@ today, %@ the %@ you usually see on a %@.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -3798,6 +4116,48 @@
     "isArray": false
   },
   {
+    "key": "copy_briefing_stress_detail_simple",
+    "defaultValue": "Here is what is going on: %@.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_tomorrow_detail_generic",
+    "defaultValue": "A few of your numbers are shifting together. Taking it easy could help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_tomorrow_detail_with_factor",
+    "defaultValue": "Your %@ has been a little off lately. A good night of sleep tonight could help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_trend_improving",
+    "defaultValue": "Getting better compared to last week.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_trend_worsening",
+    "defaultValue": "Not quite as good as last week. A little more rest will help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_unusual_day_detail_prefix",
+    "defaultValue": "Here is what stood out: ",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_unusual_day_detail_separator",
+    "defaultValue": " And ",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_briefing_unusual_day_headline",
     "defaultValue": "Today is shaping up pretty different from your usual %@.",
     "sourceFile": "Copy+Briefing.swift",
@@ -3854,6 +4214,12 @@
   {
     "key": "copy_briefing_what_might_happen_precursor_headline",
     "defaultValue": "Your %@ is shifting in a way that has often been linked with %@ before. A calmer day could help.",
+    "sourceFile": "Copy+Briefing.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_briefing_why_this_detail_simple",
+    "defaultValue": "This pattern has been steady across %d days of your data.",
     "sourceFile": "Copy+Briefing.swift",
     "isArray": false
   },
@@ -4356,6 +4722,42 @@
     "isArray": false
   },
   {
+    "key": "copy_common_building_your_sleep_profile",
+    "defaultValue": "Building your sleep profile",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_avg",
+    "defaultValue": "Avg",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_improved",
+    "defaultValue": "Improved",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_increased",
+    "defaultValue": "Increased",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_last_week",
+    "defaultValue": "Last Week",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_not_enough_data",
+    "defaultValue": "Not enough data yet",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_common_quick_question",
     "defaultValue": "Quick question",
     "sourceFile": "Copy+Common.swift",
@@ -4370,6 +4772,12 @@
   {
     "key": "copy_common_common_share_health_card",
     "defaultValue": "Share health card",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_common_this_week",
+    "defaultValue": "This Week",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -4908,6 +5316,42 @@
     "isArray": false
   },
   {
+    "key": "copy_common_trend_a11y_value",
+    "defaultValue": "%@, %@",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_trend_above_usual",
+    "defaultValue": "Above your usual",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_trend_below_usual",
+    "defaultValue": "Below your usual",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_trend_building_usual_range",
+    "defaultValue": "Learning your usual range",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_trend_in_usual_range",
+    "defaultValue": "In your usual range",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_trend_section_title",
+    "defaultValue": "Trends",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_under_maintenance",
     "defaultValue": "Under Maintenance",
     "sourceFile": "Copy+Common.swift",
@@ -4986,6 +5430,12 @@
     "isArray": false
   },
   {
+    "key": "copy_common_we_need_a_few_nights_of",
+    "defaultValue": "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_what_is_the_main_benefit_you",
     "defaultValue": "What is the main benefit you get from Laso?",
     "sourceFile": "Copy+Common.swift",
@@ -5004,8 +5454,20 @@
     "isArray": false
   },
   {
+    "key": "copy_common_while_you_wait",
+    "defaultValue": "While you wait",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_common_x",
     "defaultValue": "·",
+    "sourceFile": "Copy+Common.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_common_x10100_text",
+    "defaultValue": "%d%%",
     "sourceFile": "Copy+Common.swift",
     "isArray": false
   },
@@ -5054,6 +5516,12 @@
   {
     "key": "copy_copy_buttons_cancel",
     "defaultValue": "Cancel",
+    "sourceFile": "Copy.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_copy_buttons_close",
+    "defaultValue": "Close",
     "sourceFile": "Copy.swift",
     "isArray": false
   },
@@ -5592,1044 +6060,6 @@
     "isArray": false
   },
   {
-    "key": "copy_daily_brief_day_done",
-    "defaultValue": "Done",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_day_label",
-    "defaultValue": "Day",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_day_remind_at",
-    "defaultValue": "Remind me at %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_day_reminder_set",
-    "defaultValue": "Reminder set · %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_day_walk_reason",
-    "defaultValue": "You are %d min from today's goal. A brisk walk closes it and counts as a rest day for your heart.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_day_walk_title",
-    "defaultValue": "Close your goal with a walk, not a workout",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_all_insights",
-    "defaultValue": "All insights",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_breathe",
-    "defaultValue": "Breathe 2 min",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_connections",
-    "defaultValue": "Connections",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move1_note",
-    "defaultValue": "Bounce-back recovers on the days you do not train.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move1_title",
-    "defaultValue": "Rest days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move1_value",
-    "defaultValue": "two a week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move2_note",
-    "defaultValue": "Short nights slow the settle the next day.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move2_title",
-    "defaultValue": "Sleep balance",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move2_value",
-    "defaultValue": "to zero",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move3_note",
-    "defaultValue": "Long hard days are what pushed it down.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move3_title",
-    "defaultValue": "Keep hard sessions short",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_move3_value",
-    "defaultValue": "under 45 min",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_subtitle",
-    "defaultValue": "%d%% below your usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_usual_title",
-    "defaultValue": "Bounce-back, last 30 days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_hrr_why",
-    "defaultValue": "How fast your heart settles after effort is the first number to move when recovery falls behind, days before resting heart rate or HRV show it.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_legend_rest",
-    "defaultValue": "rest day · %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_legend_workout",
-    "defaultValue": "workout day · %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move1_note",
-    "defaultValue": "A brisk walk counts. A run does not.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move1_title",
-    "defaultValue": "Two rest days a week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move1_value",
-    "defaultValue": "target",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move2_note",
-    "defaultValue": "Rest days work better when the balance is clear.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move2_title",
-    "defaultValue": "Sleep balance back to zero",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move2_value",
-    "defaultValue": "%@ to go",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move3_note",
-    "defaultValue": "When it returns to usual, this driver closes.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move3_title",
-    "defaultValue": "Watch bounce-back",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_move3_value",
-    "defaultValue": "weekly",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_subtitle",
-    "defaultValue": "%d rest days in the last %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_usual_status",
-    "defaultValue": "Below the %d a week your load needs",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_usual_title",
-    "defaultValue": "Rest days, last 3 months",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_usual_value",
-    "defaultValue": "%.1f a week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_rest_why",
-    "defaultValue": "Your fitness numbers are excellent: VO2 max %@, resting heart rate %d. Rest is where those numbers get banked. Without it, the first thing to slip is heart rate bounce-back, which is already %d%% below your usual.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move1_note",
-    "defaultValue": "The bedtime is built from your own wake time.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move1_title",
-    "defaultValue": "In bed by the target",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move1_value",
-    "defaultValue": "tonight",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move2_note",
-    "defaultValue": "One early night holds the line. Two start clearing it.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move2_title",
-    "defaultValue": "Two nights in a row",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move2_value",
-    "defaultValue": "this week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move3_note",
-    "defaultValue": "Sleeping in moves the balance for one day and the rhythm for a week.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move3_title",
-    "defaultValue": "Keep the wake time",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_move3_value",
-    "defaultValue": "daily",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_subtitle",
-    "defaultValue": "%@ behind over the last 14 nights",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_usual_title",
-    "defaultValue": "Sleep, last 30 nights",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_sleep_why",
-    "defaultValue": "A balance that sits still is not paid back. Every night short of your usual keeps readiness and bounce-back below where your fitness says they should be.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move1_note",
-    "defaultValue": "A walk keeps the streak without adding load.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move1_title",
-    "defaultValue": "One easy day",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move1_value",
-    "defaultValue": "today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move2_note",
-    "defaultValue": "The target moves with your readiness each morning.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move2_title",
-    "defaultValue": "Stay inside the target",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move2_value",
-    "defaultValue": "this week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move3_note",
-    "defaultValue": "When it is back at your usual, this driver closes.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move3_title",
-    "defaultValue": "Watch readiness",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_move3_value",
-    "defaultValue": "daily",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_subtitle",
-    "defaultValue": "Above target on %d of the last 6 days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_usual_title",
-    "defaultValue": "Strain, last 6 days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_strain_why",
-    "defaultValue": "Strain above your target for days at a time is load your body has not yet absorbed. Readiness follows it down within the week.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move1_note",
-    "defaultValue": "Slow breathing brings HRV up within minutes.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move1_title",
-    "defaultValue": "Breathe",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move1_value",
-    "defaultValue": "2 min",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move2_note",
-    "defaultValue": "A hard session on a stressed day costs two days of recovery.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move2_title",
-    "defaultValue": "Keep training light",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move2_value",
-    "defaultValue": "today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move3_note",
-    "defaultValue": "Sleep is where a stressed day gets cleared.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move3_title",
-    "defaultValue": "Bed on time",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_move3_value",
-    "defaultValue": "tonight",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_subtitle",
-    "defaultValue": "Above your usual most of today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_usual_title",
-    "defaultValue": "Stress, last 14 days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_stress_why",
-    "defaultValue": "Stress here is your heart rate and HRV against your own baseline. A day like this taxes recovery the same way a hard session does.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_what_moves_it",
-    "defaultValue": "What moves it",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_why_it_matters",
-    "defaultValue": "Why it matters",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_detail_your_usual",
-    "defaultValue": "Your usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_above",
-    "defaultValue": "above",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_anomaly_sentence",
-    "defaultValue": "%@ today. %@.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_anomaly_sentence_plain",
-    "defaultValue": "%@ today.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_anomaly_title",
-    "defaultValue": "%@ %@ usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_anomaly_value",
-    "defaultValue": "%d%% off",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_below",
-    "defaultValue": "below",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_hrr_sentence",
-    "defaultValue": "Your heart takes longer to settle after effort than it did. The earliest sign of under-recovery.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_hrr_title",
-    "defaultValue": "Heart rate bounce-back below usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_hrr_value",
-    "defaultValue": "%d%% off",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_rest_days_sentence",
-    "defaultValue": "%d workout days to %d rest days. You need about %d rest days a week for the load you carry.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_rest_days_title",
-    "defaultValue": "Not enough rest days",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_rest_days_value",
-    "defaultValue": "%d of %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_sleep_balance_growing",
-    "defaultValue": "%d nights at your usual would clear it, and it is still growing.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_sleep_balance_sentence",
-    "defaultValue": "%d nights at your usual would clear it. You are stable, not paying it back.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_sleep_balance_title",
-    "defaultValue": "Sleep balance behind",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_strain_sentence",
-    "defaultValue": "Above your %d to %d target on %d of the last 6 days.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_strain_title",
-    "defaultValue": "Strain running high",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_strain_value",
-    "defaultValue": "%d of 6",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_stress_sentence",
-    "defaultValue": "Your body has been under pressure most of today.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_driver_stress_title",
-    "defaultValue": "Stress running high",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_closed_held",
-    "defaultValue": "Held",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_closed_improved",
-    "defaultValue": "Worked",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_closed_no_change",
-    "defaultValue": "Did not move",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_day",
-    "defaultValue": "Day %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_start_button",
-    "defaultValue": "Start a 3-week focus",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_anomaly",
-    "defaultValue": "Bring %@ back to usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_hrr",
-    "defaultValue": "Bring bounce-back back",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_rest",
-    "defaultValue": "Recover without losing fitness",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_sleep",
-    "defaultValue": "Clear the sleep balance",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_strain",
-    "defaultValue": "Bring strain back in range",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_title_stress",
-    "defaultValue": "Calming stress",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_focus_week",
-    "defaultValue": "Week %d of %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_footer_next_verdict",
-    "defaultValue": "%@: first verdict on bounce-back.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_footer_tomorrow",
-    "defaultValue": "Tomorrow morning: did the walk and the bedtime count?",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_behind",
-    "defaultValue": "−%@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_bpm",
-    "defaultValue": "%d bpm",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_deep_sleep_minutes",
-    "defaultValue": "deep sleep",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_hrr_percent_off_usual",
-    "defaultValue": "bounce-back vs usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_hrv_ms",
-    "defaultValue": "HRV",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_milliseconds",
-    "defaultValue": "%d ms",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_minutes",
-    "defaultValue": "%d min",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_percent",
-    "defaultValue": "%d%%",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_rest_days_per_week",
-    "defaultValue": "rest days a week",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_resting_hr",
-    "defaultValue": "resting heart rate",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_sleep_balance_hours",
-    "defaultValue": "sleep balance, target 0",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_steps",
-    "defaultValue": "steps a day",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_stress_score",
-    "defaultValue": "stress",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_kpi_vo2_max",
-    "defaultValue": "VO2 max, hold it",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_in_bed_now",
-    "defaultValue": "In bed now",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_keep_rhythm",
-    "defaultValue": "Keeps your %@ wake steady.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_label",
-    "defaultValue": "Night",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_pays_back",
-    "defaultValue": "Pays back %@ of the %@. Based on your %@ wake.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_remind_at",
-    "defaultValue": "Remind me at %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_reminder_set",
-    "defaultValue": "Reminder set · %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_title",
-    "defaultValue": "In bed by %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_title_again",
-    "defaultValue": "In bed by %@ again",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_night_two_nights",
-    "defaultValue": "Two nights in a row is what clears the balance.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_section_affecting",
-    "defaultValue": "What's affecting you",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_section_to_do",
-    "defaultValue": "What to do today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_section_working",
-    "defaultValue": "Is it working",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_section_yesterday",
-    "defaultValue": "Yesterday",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_balance_clause",
-    "defaultValue": "and your sleep balance is %@ behind.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_chip_low",
-    "defaultValue": "Low today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_chip_steady",
-    "defaultValue": "Steady today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_chip_strong",
-    "defaultValue": "Strong today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_chip_under_rested",
-    "defaultValue": "Under-rested · %d weeks",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_clause_end",
-    "defaultValue": ".",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_clause_join",
-    "defaultValue": ", ",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_headline_easy",
-    "defaultValue": "Steady. Keep it easy.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_headline_move_not_push",
-    "defaultValue": "Good day to move. Not a day to push.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_headline_push",
-    "defaultValue": "Good day to push.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_headline_recovered",
-    "defaultValue": "Recovered well.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_headline_rest",
-    "defaultValue": "Rest day.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_holding",
-    "defaultValue": "Holding, not improving.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_improving",
-    "defaultValue": "Improving.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_learning",
-    "defaultValue": "Learning your usual.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_learning_sentence",
-    "defaultValue": "%d more days of readings and Laso can tell you what is off.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_readiness_above",
-    "defaultValue": "Readiness %d, above your usual %d to %d.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_readiness_below",
-    "defaultValue": "Readiness %d, below your usual %d to %d.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_readiness_inside",
-    "defaultValue": "Readiness %d, inside your usual.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_readiness_plain",
-    "defaultValue": "Readiness %d.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_rest_clause",
-    "defaultValue": "But you've had %d rest days in %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_slipping",
-    "defaultValue": "Slipping.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_spark_start",
-    "defaultValue": "2 weeks ago",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_spark_today",
-    "defaultValue": "today · %d",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_status_spark_usual",
-    "defaultValue": "your usual",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_tab_body",
-    "defaultValue": "Body",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_tab_progress",
-    "defaultValue": "Progress",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_tab_today",
-    "defaultValue": "Today",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_bed_detail",
-    "defaultValue": "Sleep balance %@ → %@.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_bed_line",
-    "defaultValue": "In bed %@ · %@",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_both_counted",
-    "defaultValue": "Both counted.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_first_rest_in",
-    "defaultValue": "Your first proper rest day in %d.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_neither",
-    "defaultValue": "Not yet.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_one_counted",
-    "defaultValue": "One counted.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_walk_detail",
-    "defaultValue": "Counted as a rest day. %d → %d this week.",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_daily_brief_verdict_walk_line",
-    "defaultValue": "Walk, %d min · goal closed",
-    "sourceFile": "Copy+DailyBrief.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_devices_app_text",
     "defaultValue": "App: %@",
     "sourceFile": "Copy+Devices.swift",
@@ -6734,6 +6164,12 @@
   {
     "key": "copy_devices_watch_complication_added",
     "defaultValue": "Laso is on your watch face.",
+    "sourceFile": "Copy+Devices.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_devices_watch_complication_dismiss_label",
+    "defaultValue": "Hide this tip",
     "sourceFile": "Copy+Devices.swift",
     "isArray": false
   },
@@ -6954,8 +6390,590 @@
     "isArray": false
   },
   {
+    "key": "copy_explore_category_label",
+    "defaultValue": "%@ category",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_confidence_percent",
+    "defaultValue": "%d%% confidence",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_explore_day_close",
     "defaultValue": "Close",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_context",
+    "defaultValue": "You were marked %1$@ that day",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_hours_minutes",
+    "defaultValue": "%1$dh %2$dm",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_missing",
+    "defaultValue": "%1$@ was not recorded, so it did not count toward the score.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_no_baseline",
+    "defaultValue": "No usual to compare against yet",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_no_score",
+    "defaultValue": "This day was not scored",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_no_score_hint",
+    "defaultValue": "Nothing was recorded, so there is nothing to score.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_signals_qualifier",
+    "defaultValue": "Vs your usual",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_signals_title",
+    "defaultValue": "What the score was built from",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_strain_caption",
+    "defaultValue": "How hard the day was on your body",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_strain_title",
+    "defaultValue": "Strain",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_usual_value",
+    "defaultValue": "usual %1$@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_day_value",
+    "defaultValue": "%1$@ %2$@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_days_value",
+    "defaultValue": "%d days",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_declining_trend_label",
+    "defaultValue": "%@ declining trend, %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_discover_hidden_connections",
+    "defaultValue": "Find hidden links between your health metrics.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_almost_there",
+    "defaultValue": "Almost there...",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_almost_there_body",
+    "defaultValue": "A few more days of tracking and your score will be ready.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_categories",
+    "defaultValue": "Categories",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_connections",
+    "defaultValue": "Connections",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_data_points",
+    "defaultValue": "Data Points",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_day",
+    "defaultValue": "Day",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_days",
+    "defaultValue": "Days",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_declining_trends",
+    "defaultValue": "Why this week",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_doing_well",
+    "defaultValue": "Doing well",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_empty_state_connect_button",
+    "defaultValue": "Connect Apple Health",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_empty_state_syncing",
+    "defaultValue": "Syncing your first insights",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_empty_state_syncing_body",
+    "defaultValue": "Apple Health is already connected. Explore will populate after the next batch of imported samples is analyzed.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_excellent_shape",
+    "defaultValue": "Strong momentum",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_focus_to_improve",
+    "defaultValue": "%@ has the most room to grow",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_health_score",
+    "defaultValue": "Weekly Health Score",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_health_score_subtitle",
+    "defaultValue": "Updated each morning. Recent days count more.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_health_states",
+    "defaultValue": "Health States",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_insights",
+    "defaultValue": "Insights",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_looking_good",
+    "defaultValue": "Solid progress",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_metrics",
+    "defaultValue": "Metrics",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_needs_attention",
+    "defaultValue": "Getting started",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_needs_attention_header",
+    "defaultValue": "Areas to Focus",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_needs_work",
+    "defaultValue": "Opportunity",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_no_data_yet",
+    "defaultValue": "No data yet",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_no_data_yet_body",
+    "defaultValue": "Open the Health app and allow access to see your analysis.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_on_track",
+    "defaultValue": "On track",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_room_to_improve",
+    "defaultValue": "Building up",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_score_guide_description",
+    "defaultValue": "A single number from 0 to 100 that shows how your body has been doing across the past two weeks, weighted toward your most recent days.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_score_guide_how_its_calculated_body",
+    "defaultValue": "Your Weekly Health Score is a smoothed average of your daily scores from the past two weeks. Recent days count for more, and today is not included until the day is finished.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_score_guide_title",
+    "defaultValue": "This is your Weekly Health Score",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_score_guide_when_it_updates_body",
+    "defaultValue": "Your Weekly Health Score refreshes each morning when yesterday is added to the average. It does not change during the day, even when new data syncs from Apple Health.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_see_all",
+    "defaultValue": "See all",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_see_health_state_patterns",
+    "defaultValue": "See your health state patterns",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_title",
+    "defaultValue": "Biology",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_trend_period",
+    "defaultValue": "Trend period",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_why_explainer_subtitle",
+    "defaultValue": "What changed and why, in plain English.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_why_tap_to_explain",
+    "defaultValue": "Tap to see why",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_your_health_score",
+    "defaultValue": "Your Health Score",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_explore_your_trends",
+    "defaultValue": "Your Trends",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_health_score_info_label",
+    "defaultValue": "Health score info",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_health_state_duration",
+    "defaultValue": "%@ for %d %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_health_state_duration_day_plural",
+    "defaultValue": "days",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_health_state_duration_day_singular",
+    "defaultValue": "day",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_impact_value",
+    "defaultValue": "Impact %d. %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_insight_count",
+    "defaultValue": "%d %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_insight_count_plural",
+    "defaultValue": "insights",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_insight_count_singular",
+    "defaultValue": "insight",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_calendar_subtitle",
+    "defaultValue": "One ring per day. Tap any day to see what drove it.",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_calendar_title",
+    "defaultValue": "Daily score",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_day_score",
+    "defaultValue": "%1$d, %2$@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_next",
+    "defaultValue": "Next month",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_no_score",
+    "defaultValue": "No score for this day",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_previous",
+    "defaultValue": "Previous month",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_scored_days",
+    "defaultValue": "%1$d of %2$d days scored this month",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_streak_days",
+    "defaultValue": "%d days",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_streak_label",
+    "defaultValue": "Days scored in a row",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_month_today",
+    "defaultValue": "Today",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_needs_attention_label",
+    "defaultValue": "%@, needs attention",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_open_metric",
+    "defaultValue": "Open %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_an_explanation_of_how_your_hint",
+    "defaultValue": "Opens an explanation of how your health score is calculated",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_detail_view_hint",
+    "defaultValue": "Opens %@ detail view",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_detailed_metric_history_hint",
+    "defaultValue": "Opens detailed metric history",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_metric_details_hint",
+    "defaultValue": "Opens metric details",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_the_category_detail_hint",
+    "defaultValue": "Opens the %@ category detail",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_the_full_health_intelligence_view_hint",
+    "defaultValue": "Opens the full health intelligence view",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_opens_the_health_states_timeline_hint",
+    "defaultValue": "Opens the health states timeline",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_pro",
+    "defaultValue": "PRO",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_pts_this_week",
+    "defaultValue": "%@%d pts this week",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_score_value",
+    "defaultValue": "Score %d",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_see_all_causal_explanations_label",
+    "defaultValue": "See all causal explanations",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_strongest",
+    "defaultValue": "Strongest: %@",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_switches_between7_day30_day_hint",
+    "defaultValue": "Switches between 7-day, 30-day, and 90-day views",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_trend_label",
+    "defaultValue": "%@ trend",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_trend_timeframe_label",
+    "defaultValue": "Trend timeframe",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x",
+    "defaultValue": "--",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x30d",
+    "defaultValue": "30D",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x7d",
+    "defaultValue": "7D",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x90d",
+    "defaultValue": "90D",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x_text",
+    "defaultValue": "%d pts",
+    "sourceFile": "Copy+Explore.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_explore_x_text2",
+    "defaultValue": "%d",
     "sourceFile": "Copy+Explore.swift",
     "isArray": false
   },
@@ -7104,6 +7122,18 @@
     "isArray": false
   },
   {
+    "key": "copy_home_action_proof_past_outcome_summary",
+    "defaultValue": "Out of %d similar tips, %d led to a real improvement in your %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_action_proof_tracking_window",
+    "defaultValue": "Based on your data from the last %d days",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_activation_fully_calibrated",
     "defaultValue": "Fully calibrated",
     "sourceFile": "Copy+Home.swift",
@@ -7124,6 +7154,18 @@
   {
     "key": "copy_home_activation_milestone_tomorrow",
     "defaultValue": "Day %1$d of 7. %2$@ in 1 day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activity_detail",
+    "defaultValue": "Steps, workouts, and energy burned",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_activity_name",
+    "defaultValue": "Activity",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7194,6 +7236,54 @@
     "isArray": false
   },
   {
+    "key": "copy_home_baseline_callout",
+    "defaultValue": "This score compares you to yourself, not other people. As we learn your patterns, it gets more accurate.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_baseline_with_unit_text",
+    "defaultValue": "%@ %@ %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_body_intelligence",
+    "defaultValue": "Body Intelligence",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_body_vitals_detail",
+    "defaultValue": "Weight, body fat, blood oxygen, and more",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_body_vitals_name",
+    "defaultValue": "Body & Vitals",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_cards_generated_by_laso_intelligence",
+    "defaultValue": "Generated by Laso intelligence",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_cards_next_seven_days",
+    "defaultValue": "Next 7 days",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_cards_your_forecast",
+    "defaultValue": "YOUR FORECAST",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_clear_search_label",
     "defaultValue": "Clear search",
     "sourceFile": "Copy+Home.swift",
@@ -7202,6 +7292,24 @@
   {
     "key": "copy_home_closes_the_check_in_card_without_hint",
     "defaultValue": "Closes the check-in card without submitting",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_conf_text",
+    "defaultValue": "%d%% conf",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_confidence_percent_value",
+    "defaultValue": "%@, confidence %d percent",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_confidence_text",
+    "defaultValue": "%@ confidence",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7232,6 +7340,12 @@
   {
     "key": "copy_home_context_poor_sleep_week",
     "defaultValue": "Sleeping badly",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_context_rest_rationale",
+    "defaultValue": "While %@ is on, recovery matters more than any training gain, so the day's action ignores your readiness score.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7290,6 +7404,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_coverage_inline_missing",
+    "defaultValue": "Not reading: %@. Tap to fix in the Health app.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_coverage_missing_hint",
     "defaultValue": "%@ has sent nothing. Either it is switched off for Laso in the Health app, or your watch has not recorded it.",
     "sourceFile": "Copy+Home.swift",
@@ -7314,8 +7434,50 @@
     "isArray": false
   },
   {
+    "key": "copy_home_daily_result_aggregate",
+    "defaultValue": "Done %1$d times. %2$@, measured across your last %3$d weeks.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_daily_result_dismiss",
     "defaultValue": "Got it",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_daily_result_header",
+    "defaultValue": "YESTERDAY'S RESULT",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_daily_result_logged",
+    "defaultValue": "Done yesterday. Every completion builds your record.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_day_text",
+    "defaultValue": "%@ steps/day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_day_text2",
+    "defaultValue": "%@ steps/day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_day_text3",
+    "defaultValue": "%@ steps/day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_deep_sleep_rationale",
+    "defaultValue": "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than 45 minutes.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7446,6 +7608,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_early_bed_rationale",
+    "defaultValue": "Sleep is your top focus area and you are falling short. Even 30 more minutes makes a real difference.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_early_bed_title",
     "defaultValue": "Get to bed 30 min earlier",
     "sourceFile": "Copy+Home.swift",
@@ -7458,8 +7626,50 @@
     "isArray": false
   },
   {
+    "key": "copy_home_excellent_description",
+    "defaultValue": "Everything looks great. Keep doing what you are doing.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_excellent_label",
+    "defaultValue": "Excellent",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_excellent_range",
+    "defaultValue": "85 to 100",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_exercise_goal_rationale",
+    "defaultValue": "You have already hit your daily exercise goal.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_exercise_goal_title",
     "defaultValue": "Exercise goal reached!",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_fair_description",
+    "defaultValue": "A few numbers have shifted. Worth paying attention to.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_fair_label",
+    "defaultValue": "Fair",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_fair_range",
+    "defaultValue": "55 to 69",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7470,8 +7680,44 @@
     "isArray": false
   },
   {
+    "key": "copy_home_focus_recovery_rationale",
+    "defaultValue": "Recovery is your focus area, and today's signals suggest your body has not fully bounced back yet.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_focus_recovery_title",
     "defaultValue": "Focus on recovery today",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_forecast_label",
+    "defaultValue": "%@ forecast",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_good_description",
+    "defaultValue": "Most things are on track with small areas to watch.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_good_label",
+    "defaultValue": "Good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_good_range",
+    "defaultValue": "70 to 84",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_got_it",
+    "defaultValue": "Got It",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7524,8 +7770,32 @@
     "isArray": false
   },
   {
+    "key": "copy_home_heart_cardio_detail",
+    "defaultValue": "Resting heart rate, heart calm signal, and cardio fitness",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_heart_cardio_name",
+    "defaultValue": "Heart & Cardio",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_hides_the_milestone_unlock_card_hint",
     "defaultValue": "Hides the milestone unlock card",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_how_its_calculated",
+    "defaultValue": "How it\\u{2019}s calculated",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_how_its_calculated_body",
+    "defaultValue": "Your Health Score blends four areas. Areas with more data and more change count for more. Each number is compared to your usual, and shifts and trends move the score up or down.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7538,6 +7808,12 @@
   {
     "key": "copy_home_insight_keep_it_up",
     "defaultValue": "Keep it up. %@ is solid",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_insight_label",
+    "defaultValue": "%@ insight: %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7560,8 +7836,62 @@
     "isArray": false
   },
   {
+    "key": "copy_home_intraday_accessibility",
+    "defaultValue": "Active energy today, %1$d calories. Busiest hour %2$@.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_peak",
+    "defaultValue": "%d cal",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_title",
+    "defaultValue": "Your day so far",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_unit",
+    "defaultValue": "CAL",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_usual_legend",
+    "defaultValue": "Faint bars are your usual day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_ahead",
+    "defaultValue": "Ahead of your usual day by this hour",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_behind",
+    "defaultValue": "Quieter than your usual day so far",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_intraday_verdict_usual",
+    "defaultValue": "About your usual pace for this hour",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_last_updated_ago",
     "defaultValue": "Last updated %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_low_readiness_rationale",
+    "defaultValue": "A few signals (heart calm signal, resting heart rate, sleep) suggest your body has not fully recovered from recent strain.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7572,8 +7902,20 @@
     "isArray": false
   },
   {
+    "key": "copy_home_low_sleep_rationale",
+    "defaultValue": "You got much less sleep than your body needs. Hard effort today would add to the shortfall.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_low_sleep_title",
     "defaultValue": "Go easy today",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_minutes_to_go_rationale",
+    "defaultValue": "Your body is well recovered and ready for effort. Closing the exercise gap today would build momentum.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7602,6 +7944,24 @@
     "isArray": false
   },
   {
+    "key": "copy_home_needs_attention_description",
+    "defaultValue": "Several things are off from your usual. Check your insights.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_needs_attention_label",
+    "defaultValue": "Room to Grow",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_needs_attention_range",
+    "defaultValue": "Below 55",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_up_context_adjusted",
     "defaultValue": "Adjusted for: %@ · change",
     "sourceFile": "Copy+Home.swift",
@@ -7620,8 +7980,62 @@
     "isArray": false
   },
   {
+    "key": "copy_home_next_up_done_tonight_hint",
+    "defaultValue": "You can mark it done this evening.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_fallback_note",
+    "defaultValue": "No strong signal today, so this is the standard suggestion.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_header",
+    "defaultValue": "NEXT UP · TODAY",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_header_tonight",
+    "defaultValue": "TONIGHT",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_mark_done",
+    "defaultValue": "Mark done",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_next_up_marked_done",
     "defaultValue": "Done",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_remind",
+    "defaultValue": "Remind %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_remind_tomorrow",
+    "defaultValue": "Remind tomorrow %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_up_reminder_set",
+    "defaultValue": "Reminder set",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_next_week_target",
+    "defaultValue": "Next week target",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7650,8 +8064,38 @@
     "isArray": false
   },
   {
+    "key": "copy_home_open_score_guide_button",
+    "defaultValue": "Open Score Guide",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_opens_ask_your_data_hint",
     "defaultValue": "Opens Ask Your Data",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_opens_detailed_metric_view_hint",
+    "defaultValue": "Opens detailed metric view",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_opens_score_breakdown_hint",
+    "defaultValue": "Opens score breakdown",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_opens_the_full_insight_hint",
+    "defaultValue": "Opens the full insight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_opens_your_weekly_review_hint",
+    "defaultValue": "Opens your weekly review",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7676,6 +8120,192 @@
   {
     "key": "copy_home_ready",
     "defaultValue": "Ready",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_description",
+    "defaultValue": "Each morning your Readiness is set from last night's sleep and your overnight heart rate data. It stays the same all day, because it describes the state your body woke up in. What you do today shows up in Strain, not here.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_fully_recovered_description",
+    "defaultValue": "Your body is well rested. Great day for a hard workout.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_fully_recovered_label",
+    "defaultValue": "Ready",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_fully_recovered_range",
+    "defaultValue": "67 to 100",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_how_its_calculated",
+    "defaultValue": "How it\\u{2019}s calculated",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_how_its_calculated_body",
+    "defaultValue": "Readiness blends a few signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it moves the score.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_hrv_detail",
+    "defaultValue": "A higher heart calm signal means better recovery and lower stress. Compared to your usual.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_hrv_name",
+    "defaultValue": "Heart Calm Signal",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_hrv_weight",
+    "defaultValue": "40% weight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_low_description",
+    "defaultValue": "Your body needs rest. Focus on easy movement and sleep.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_low_label",
+    "defaultValue": "Low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_low_range",
+    "defaultValue": "Below 45",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_moderate_description",
+    "defaultValue": "About your usual. Moderate effort is best today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_moderate_label",
+    "defaultValue": "Steady",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_moderate_range",
+    "defaultValue": "45 to 66",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_resting_hr_detail",
+    "defaultValue": "A lower resting heart rate means your heart is recovering well. Compared to your usual.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_resting_hr_name",
+    "defaultValue": "Resting Heart Rate",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_resting_hr_weight",
+    "defaultValue": "35% weight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_score_levels",
+    "defaultValue": "Score levels",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_duration_detail",
+    "defaultValue": "7.5 hours is best. Too little or too much lowers the score.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_duration_name",
+    "defaultValue": "Sleep Duration",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_duration_weight",
+    "defaultValue": "15% weight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_quality_detail",
+    "defaultValue": "Deep and REM sleep stages help your recovery quality.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_quality_name",
+    "defaultValue": "Sleep Quality",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_sleep_quality_weight",
+    "defaultValue": "6% weight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_title",
+    "defaultValue": "How Readiness Works",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_workout_recovery_detail",
+    "defaultValue": "Hard workouts lower recovery for a short time. The effect fades over 18 to 36 hours.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_workout_recovery_name",
+    "defaultValue": "Recent Workout",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_info_workout_recovery_weight",
+    "defaultValue": "4% weight",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_when_it_updates_body",
+    "defaultValue": "Once each morning, from last night's signals. It then stays put for the rest of the day. If you do not have a morning reading yet and the watch is off your wrist, the score is hidden until your next overnight wear.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_recovery_when_it_updates_title",
+    "defaultValue": "When does it update?",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7734,6 +8364,36 @@
     "isArray": false
   },
   {
+    "key": "copy_home_score_guide_description",
+    "defaultValue": "A single number from 0 to 100 that shows how your body is doing right now, based on your own data.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_guide_health_score",
+    "defaultValue": "Health Score",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_guide_title",
+    "defaultValue": "This is your Health Score",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_guide_what_does_it_mean",
+    "defaultValue": "What does it mean?",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_levels",
+    "defaultValue": "Score levels",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_score_list_final_joiner",
     "defaultValue": " and ",
     "sourceFile": "Copy+Home.swift",
@@ -7752,8 +8412,104 @@
     "isArray": false
   },
   {
+    "key": "copy_home_score_no_data_yet",
+    "defaultValue": "Not enough data yet to score your day",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_no_data_yet_detail",
+    "defaultValue": "Keep your health data syncing and your score will show up here",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_score_range",
     "defaultValue": "Likely %1$d to %2$d",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_ready_label",
+    "defaultValue": "Readiness",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_high_head",
+    "defaultValue": "Higher than usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_high_sub",
+    "defaultValue": "Good to push a little.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_low_head",
+    "defaultValue": "Lower than usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_low_sub",
+    "defaultValue": "Worth an easy day.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_moderate_head",
+    "defaultValue": "About usual today.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_summary_moderate_sub",
+    "defaultValue": "A steady day suits you.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_category_hint",
+    "defaultValue": " %@ is the area pulling your score down the most right now.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_excellent",
+    "defaultValue": "Your numbers are steady or getting better compared to your usual. Everything looks well balanced.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_fair",
+    "defaultValue": "Several numbers have shifted from your usual. This is worth paying attention to.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_good",
+    "defaultValue": "Most of your numbers are on track, but a few areas have shifted a bit from your usual.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_needs",
+    "defaultValue": "Several numbers are off from your usual. Check your insights for areas to focus on.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_what_means_suffix",
+    "defaultValue": " This is for information only. Think of it as a daily check in with your body.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_score_why_label",
+    "defaultValue": "Why",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7794,6 +8550,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_sleep_bank_action_rationale",
+    "defaultValue": "A %@ shortfall built up over the last two weeks weighs on recovery more than anything you can do in the gym today, so tonight's sleep is the action.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_sleep_bank_action_subtitle",
     "defaultValue": "You are %1$@ down on sleep. %2$d early nights clear it.",
     "sourceFile": "Copy+Home.swift",
@@ -7812,8 +8574,86 @@
     "isArray": false
   },
   {
+    "key": "copy_home_sleep_bank_against",
+    "defaultValue": "Against your usual %@ a night",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_behind",
+    "defaultValue": "-%@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_behind_label",
+    "defaultValue": "Behind",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_first_night",
+    "defaultValue": "14 nights ago",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_last_night",
+    "defaultValue": "Last night",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_nights_recorded",
+    "defaultValue": "Built from %d recorded nights",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_payback",
+    "defaultValue": "%2$d minutes extra for %1$d nights puts you back to level",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_payback_one",
+    "defaultValue": "%d minutes extra tonight puts you back to level",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_payback_per_night",
+    "defaultValue": "Every early night takes %d minutes off this",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_bank_title",
+    "defaultValue": "SLEEP BANK · LAST 14 NIGHTS",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_detail",
+    "defaultValue": "Duration, consistency, and sleep stages",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_sleep_name",
+    "defaultValue": "Sleep",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_smart_action_deep_sleep_subtitle",
     "defaultValue": "Only %d min of deep sleep. Try cutting caffeine after 2 PM",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_smart_action_default_rationale",
+    "defaultValue": "No specific signals today. A walk is the simplest, highest payoff activity for overall health.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7842,6 +8682,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_smart_action_fitness_gap_rationale",
+    "defaultValue": "Fitness is your focus area and you have %d minutes left to hit today's goal.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_smart_action_fitness_gap_title",
     "defaultValue": "You're %d min from your goal",
     "sourceFile": "Copy+Home.swift",
@@ -7850,6 +8696,12 @@
   {
     "key": "copy_home_smart_action_focus_recovery_subtitle",
     "defaultValue": "Your body is %d%% ready. Light stretching and water will help",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_smart_action_high_stress_rationale",
+    "defaultValue": "Your live stress reading is %d%%, which is above your comfortable range.",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7884,6 +8736,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_smart_action_resting_hr_up_rationale",
+    "defaultValue": "Your resting heart rate is %d beats per minute, above your usual of %d. This could mean your body has not fully recovered, or stress is higher.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_softlock_badge",
     "defaultValue": "Unlock to read",
     "sourceFile": "Copy+Home.swift",
@@ -7898,6 +8756,24 @@
   {
     "key": "copy_home_softlock_patterns",
     "defaultValue": "Patterns found in your data: %d",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_state_name_good",
+    "defaultValue": "Ready",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_state_name_low",
+    "defaultValue": "Low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_state_name_steady",
+    "defaultValue": "Steady",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -7938,6 +8814,48 @@
     "isArray": false
   },
   {
+    "key": "copy_home_todays_action",
+    "defaultValue": "Today's Action",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_baseline",
+    "defaultValue": "usual",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_do_today",
+    "defaultValue": "Do Today",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_todays_workout",
+    "defaultValue": "Today's Workout",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_whats_leading_to_what",
+    "defaultValue": "What's leading to what",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_whats_off_today",
+    "defaultValue": "What's off today",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_todays_action_detail_your_coachs_notes",
+    "defaultValue": "Your coach's notes",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_try_again",
     "defaultValue": "Try Again",
     "sourceFile": "Copy+Home.swift",
@@ -7962,6 +8880,174 @@
     "isArray": false
   },
   {
+    "key": "copy_home_view_details_hint",
+    "defaultValue": "View %@ details",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_wear_apple_watch_for_recovery",
+    "defaultValue": "Wear your Apple Watch overnight to see your Readiness",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_wear_requirement_default",
+    "defaultValue": "Wear your Apple Watch overnight so it can measure your heart calm signal and resting heart rate while you sleep.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_wear_requirement_named",
+    "defaultValue": "Wear your %@ overnight so it can measure your heart calm signal and resting heart rate while you sleep.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_week_strip_accessibility",
+    "defaultValue": "Your score for the last seven days. Opens the full month.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_weekly_review_sections_navigation_title",
+    "defaultValue": "Weekly Review",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_what_happened_before",
+    "defaultValue": "What happened before",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_when_it_updates_body",
+    "defaultValue": "Your Health Score refreshes each time you open the app or pull to refresh. It uses the latest data from Apple Health, so changes in your numbers show up within minutes. Trends and shifts in your usual take about 1 to 3 days to show up in the score.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_when_it_updates_title",
+    "defaultValue": "When does it update?",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_good",
+    "defaultValue": "Energy is good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_good_value",
+    "defaultValue": "Good",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_low",
+    "defaultValue": "Energy is low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_energy_low_value",
+    "defaultValue": "Below usual",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_calm",
+    "defaultValue": "Heart is calm",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_heart_working",
+    "defaultValue": "Heart is working hard",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_energy",
+    "defaultValue": "Energy",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_heart",
+    "defaultValue": "Heart",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_resting_hr",
+    "defaultValue": "Resting HR",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_sleep",
+    "defaultValue": "Sleep",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_name_stress",
+    "defaultValue": "Stress",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_no_data",
+    "defaultValue": "None yet",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_calm",
+    "defaultValue": "Heart rate is calm at rest",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_rhr_up",
+    "defaultValue": "Resting heart rate is up",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_sleep_good",
+    "defaultValue": "Sleep was solid",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_sleep_short",
+    "defaultValue": "Sleep was short",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_stress_high",
+    "defaultValue": "Stress is high",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_stress_low",
+    "defaultValue": "Stress is low",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_why_this_today",
+    "defaultValue": "Why this, today",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_why_value_above_usual",
     "defaultValue": "%1$@ %2$@ above usual",
     "sourceFile": "Copy+Home.swift",
@@ -7980,6 +9066,12 @@
     "isArray": false
   },
   {
+    "key": "copy_home_wind_down_rationale",
+    "defaultValue": "It is late evening. Less blue light and caffeine now directly improves your sleep quality tonight.",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_wind_down_subtitle",
     "defaultValue": "Dim screens and skip caffeine for better rest tonight",
     "sourceFile": "Copy+Home.swift",
@@ -7992,8 +9084,26 @@
     "isArray": false
   },
   {
+    "key": "copy_home_x",
+    "defaultValue": "·",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_x_label",
+    "defaultValue": "%@: %@",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_home_x_text",
     "defaultValue": "%d%%",
+    "sourceFile": "Copy+Home.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_home_x_text2",
+    "defaultValue": "%@ %@",
     "sourceFile": "Copy+Home.swift",
     "isArray": false
   },
@@ -8388,6 +9498,12 @@
     "isArray": false
   },
   {
+    "key": "copy_insights_insights_highest_in_days",
+    "defaultValue": "Highest in %d days (top %d%%)",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_insights_insights_hrv_trending",
     "defaultValue": "Your heart recovery signal is heading %@, %d%% from your usual",
     "sourceFile": "Copy+Insights.swift",
@@ -8426,6 +9542,12 @@
   {
     "key": "copy_insights_insights_insight_card_linked_to_metric",
     "defaultValue": "May be linked to your %@ being %d%% off",
+    "sourceFile": "Copy+Insights.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_insights_insights_lowest_in_days",
+    "defaultValue": "Lowest in %d days (bottom %d%%)",
     "sourceFile": "Copy+Insights.swift",
     "isArray": false
   },
@@ -8820,6 +9942,156 @@
     "isArray": false
   },
   {
+    "key": "copy_live_activity_rings",
+    "defaultValue": "Activity Rings",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_activity_rings_move_of_calories_label",
+    "defaultValue": "Activity rings. Move: %d of %d calories, %d percent. Exercise: %d of %d minutes, %d percent. Stand: %d of %d hours, %d percent.",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_ago",
+    "defaultValue": "ago",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_beats_per_minute_text",
+    "defaultValue": "%d beats per minute",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_blood_pressure",
+    "defaultValue": "Blood Pressure",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_blood_pressure_sys_over_dia",
+    "defaultValue": "%d/%d",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_bpm",
+    "defaultValue": "bpm",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_kcal_text",
+    "defaultValue": "%d kcal",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_last_known_readings",
+    "defaultValue": "Last Known Readings",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_last_reading",
+    "defaultValue": "Last Reading",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_last_signal_ago_text",
+    "defaultValue": "Last signal %@ ago",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_last_workout",
+    "defaultValue": "Last Workout",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_live",
+    "defaultValue": "Live",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_min_text",
+    "defaultValue": "%d min",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_mmhg",
+    "defaultValue": "mmHg",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_no_activity_yet",
+    "defaultValue": "No activity yet",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_no_data",
+    "defaultValue": "No data",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_opens_detail_hint",
+    "defaultValue": "Opens %@ detail",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_syncing",
+    "defaultValue": "Syncing",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_temperature",
+    "defaultValue": "Temperature",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_today_bpm_text",
+    "defaultValue": "Today: %d–%d bpm",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_x",
+    "defaultValue": "···",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_x_label",
+    "defaultValue": "%@: %@",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_x_text",
+    "defaultValue": "%d%%",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_live_your_rings_will_fill_as_you",
+    "defaultValue": "Your rings will fill as you move throughout the day.",
+    "sourceFile": "Copy+Live.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_metric_detail_metric_detail_body_weight_header",
     "defaultValue": "Body Weight",
     "sourceFile": "Copy+MetricDetail.swift",
@@ -9146,6 +10418,30 @@
   {
     "key": "copy_mirror_group_voice",
     "defaultValue": "In words",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_action",
+    "defaultValue": "Capture",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_done_title",
+    "defaultValue": "Today is on the record",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_subtitle",
+    "defaultValue": "Ten seconds a day. In a month you can see the change.",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_home_card_title",
+    "defaultValue": "Take today's photo",
     "sourceFile": "Copy+Mirror.swift",
     "isArray": false
   },
@@ -9752,6 +11048,18 @@
   {
     "key": "copy_mirror_tpl_this_week",
     "defaultValue": "This Week",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_weekly_strip_count",
+    "defaultValue": "%1$d of %2$d days",
+    "sourceFile": "Copy+Mirror.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_mirror_weekly_strip_title",
+    "defaultValue": "Your week in faces",
     "sourceFile": "Copy+Mirror.swift",
     "isArray": false
   },
@@ -10776,30 +12084,6 @@
     "isArray": false
   },
   {
-    "key": "copy_notifications_verdict_title_both",
-    "defaultValue": "Both logged. Open for the numbers.",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_notifications_verdict_title_day",
-    "defaultValue": "Day move logged. Did the bedtime? Open for the numbers.",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_notifications_verdict_title_night",
-    "defaultValue": "Bedtime logged. Open for the numbers.",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_notifications_verdict_title_none",
-    "defaultValue": "Yesterday's moves are waiting for their verdict.",
-    "sourceFile": "Copy+Notifications.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_notifications_warning_metric",
     "defaultValue": "Keep an eye on %@",
     "sourceFile": "Copy+Notifications.swift",
@@ -11238,6 +12522,24 @@
     "isArray": false
   },
   {
+    "key": "copy_policy_policy_high_intensity_ok",
+    "defaultValue": "A hard workout is fine",
+    "sourceFile": "Copy+Policy.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_policy_policy_light_activity_only",
+    "defaultValue": "Keep it light today",
+    "sourceFile": "Copy+Policy.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_policy_policy_moderate_effort",
+    "defaultValue": "Aim for medium effort",
+    "sourceFile": "Copy+Policy.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_policy_policy_predictive_default",
     "defaultValue": "Your risk for tomorrow is higher than usual (%d%% sure). This tackles the biggest cause.",
     "sourceFile": "Copy+Policy.swift",
@@ -11424,96 +12726,6 @@
     "isArray": false
   },
   {
-    "key": "copy_progress_achievements",
-    "defaultValue": "Achievements",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_changes_slowly",
-    "defaultValue": "Changes slowly",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_date_range",
-    "defaultValue": "%@ to %@",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_driver_line_bounce_back",
-    "defaultValue": "Heart rate bounce-back %@ → %@. Moving back toward usual.",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_empty_message",
-    "defaultValue": "Laso starts a three-week focus from the first driver that is off your usual. Come back when Today shows one.",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_empty_title",
-    "defaultValue": "No focus yet",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_outcome_line",
-    "defaultValue": "%@ %@ → %@",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_past_focuses",
-    "defaultValue": "Past focuses",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_since",
-    "defaultValue": "since %@",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_subtitle",
-    "defaultValue": "What you worked on, and whether it worked",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_title",
-    "defaultValue": "Progress",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_vitality_needs_history",
-    "defaultValue": "Needs %d days of history to show a pace. Next check %@.",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_vitality_pace",
-    "defaultValue": "%@",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_vitality_row",
-    "defaultValue": "Vitality age %d",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
-    "key": "copy_progress_vitality_you_are",
-    "defaultValue": "you are %d",
-    "sourceFile": "Copy+Progress.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_referral_banner_subtitle",
     "defaultValue": "You joined early. Every friend you bring makes your free time longer.",
     "sourceFile": "Copy+Referral.swift",
@@ -11649,6 +12861,138 @@
     "key": "copy_referral_your_code_label",
     "defaultValue": "YOUR CODE",
     "sourceFile": "Copy+Referral.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_current_average",
+    "defaultValue": "Current average",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_current_target",
+    "defaultValue": "Current target",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_highlights_label",
+    "defaultValue": "Highlights",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_key_discovery_label",
+    "defaultValue": "Key Discovery",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_next_week_label",
+    "defaultValue": "Next Week",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_no_major_changes",
+    "defaultValue": "No major changes. Consistency is a strength.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_powered_by_model",
+    "defaultValue": "Built from your own health data",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_progressive_coach_label",
+    "defaultValue": "Progressive Coach",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_stable_week",
+    "defaultValue": "A stable week across the board.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_status",
+    "defaultValue": "Status",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_step_target",
+    "defaultValue": "Step target: %@ steps/day",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_watch_out_label",
+    "defaultValue": "Watch Out",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_keeping_up",
+    "defaultValue": "You are hitting your %@ steps/day target. Next week, we will bump it up to %@ steps/day.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_plateauing",
+    "defaultValue": "You are close to your %@ steps/day target. Let us hold here this week and build the habit before pushing higher.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_struggling",
+    "defaultValue": "This week was tough at %@ steps/day. We will drop to %@ steps/day next week so it feels doable.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_coach_target",
+    "defaultValue": "Coach target: %@ steps/day",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_consistency_paying_off",
+    "defaultValue": "Your steady work on %@ is paying off. Keep it going next week.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_first_week_no_comparison",
+    "defaultValue": "First week. No comparison yet.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_keep_syncing",
+    "defaultValue": "Keep syncing health data for a few days and check back.",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_score",
+    "defaultValue": "Score %d",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weekly_review_view_title",
+    "defaultValue": "Your Weekly Review",
+    "sourceFile": "Copy+Reports.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_reports_weeks_wins_label",
+    "defaultValue": "This Week's Wins",
+    "sourceFile": "Copy+Reports.swift",
     "isArray": false
   },
   {
@@ -12312,6 +13656,600 @@
     "isArray": false
   },
   {
+    "key": "copy_sleep_coach_accumulating",
+    "defaultValue": "Accumulating",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_bedtime",
+    "defaultValue": "Bedtime",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_current_debt",
+    "defaultValue": "Current Balance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_days_to_pay_off",
+    "defaultValue": "%d days to recover",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_days_to_pay_off_singular",
+    "defaultValue": "1 day to recover",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_debt_clear",
+    "defaultValue": "Clear",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_debt_high",
+    "defaultValue": "High",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_debt_low",
+    "defaultValue": "Low",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_debt_moderate",
+    "defaultValue": "Moderate",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_fourteen_day_history",
+    "defaultValue": "14-Day History",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_paying_off",
+    "defaultValue": "Paying off",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_paying_off_debt_title",
+    "defaultValue": "Restoring Balance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_performance_label",
+    "defaultValue": "Performance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_performance_level",
+    "defaultValue": "Performance Level",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_show_more_tips",
+    "defaultValue": "Show %d more tips",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_recommended_sleep",
+    "defaultValue": "Recommended sleep for %@ performance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_tip_be_patient_detail",
+    "defaultValue": "Pay off debt gradually over %d days. Avoid marathon sleep sessions.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_tip_be_patient_detail_singular",
+    "defaultValue": "Pay off debt gradually over 1 day. Avoid marathon sleep sessions.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_title",
+    "defaultValue": "Sleep Coach",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_coach_tonight",
+    "defaultValue": "tonight",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_debt",
+    "defaultValue": "Sleep Balance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_sleep_tips",
+    "defaultValue": "Sleep Tips",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stable",
+    "defaultValue": "Stable",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stage_awake",
+    "defaultValue": "Awake",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stage_core",
+    "defaultValue": "Core",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stage_data_unavailable",
+    "defaultValue": "Stage data not available for this night",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stage_deep",
+    "defaultValue": "Deep",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_stage_rem",
+    "defaultValue": "REM",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_add_sleep_detail",
+    "defaultValue": "Going to bed a bit earlier works better than sleeping in late.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_add_sleep_title",
+    "defaultValue": "Add 30-60 min per night",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_be_patient_title",
+    "defaultValue": "Be patient",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_consistent_schedule_detail",
+    "defaultValue": "Going to bed and waking up at the same time, even on weekends, is one of the best things you can do for sleep.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_consistent_schedule_title",
+    "defaultValue": "Consistent schedule",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_cool_bedroom_detail",
+    "defaultValue": "65 to 68\\u{00B0}F (18 to 20\\u{00B0}C) is the sweet spot. A cooler room helps you fall into deeper sleep.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_cool_bedroom_title",
+    "defaultValue": "Cool bedroom",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_cut_caffeine_detail",
+    "defaultValue": "Caffeine stays in your body for hours. Stopping after 2 PM can help you sleep deeper.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_cut_caffeine_title",
+    "defaultValue": "Caffeine timing",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_exercise_timing_detail",
+    "defaultValue": "Regular exercise helps you sleep better. Try to finish hard workouts at least 3 hours before bed.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_exercise_timing_title",
+    "defaultValue": "Exercise timing",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_morning_sunlight_detail",
+    "defaultValue": "10 to 15 minutes of bright light within an hour of waking up helps set your body clock.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_morning_sunlight_title",
+    "defaultValue": "Morning sunlight",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_screen_curfew_detail",
+    "defaultValue": "Put screens away 45 minutes before bed. Bright light makes it harder for your brain to wind down.",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tip_screen_curfew_title",
+    "defaultValue": "Screen wind down",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_tracking",
+    "defaultValue": "Tracking",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleep_coach_wake_up",
+    "defaultValue": "Wake Up",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleepcoach_daytime_nap_minutes_counted_in_label",
+    "defaultValue": "Daytime nap %d minutes, counted in sleep balance",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleepcoach_m_nap_text",
+    "defaultValue": "+%dm nap",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_sleepcoach_sleep_in_bed_label",
+    "defaultValue": "%@ sleep: %@ asleep",
+    "sourceFile": "Copy+SleepCoach.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_above_target",
+    "defaultValue": "Above Target",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_active_recovery",
+    "defaultValue": "Active Recovery",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_aerobic",
+    "defaultValue": "Aerobic",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_anaerobic",
+    "defaultValue": "Anaerobic",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_average_days_with_data",
+    "defaultValue": "Average of %d days with data:",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_average_days_with_data_one",
+    "defaultValue": "Average of %d day with data:",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_below_target",
+    "defaultValue": "Below Target",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_calories_label",
+    "defaultValue": "Cal",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_coach_active_recovery",
+    "defaultValue": "Active recovery day. Light activity to promote blood flow without adding fatigue.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_coach_maintain_hit",
+    "defaultValue": "You've reached your maintenance target. Additional strain is fine but keep intensity controlled.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_coach_overreaching",
+    "defaultValue": "Functional overreach zone. Push to your limit today, then plan recovery tomorrow.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_cooldown_title",
+    "defaultValue": "Cooldown",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_cycle_adjustment_title",
+    "defaultValue": "Cycle Adjustment",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_cycle_phase_title",
+    "defaultValue": "Cycle Phase",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_done",
+    "defaultValue": "Done",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_duration_label",
+    "defaultValue": "Duration",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_fat_burn",
+    "defaultValue": "Fat Burn",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_green_recovery",
+    "defaultValue": "Green recovery",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_heart_rate_zones",
+    "defaultValue": "Heart Rate Zones",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_in_target",
+    "defaultValue": "In Target",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_latest_and_average",
+    "defaultValue": "Latest strain %@, average %@ over %d days with data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_latest_and_average_one",
+    "defaultValue": "Latest strain %@, average %@ over %d day with data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_learn_more",
+    "defaultValue": "Learn More",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_learn_more_hint",
+    "defaultValue": "See your heart rate zones and detailed coaching.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_log_workout_hint",
+    "defaultValue": "Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_main_block_title",
+    "defaultValue": "Main Block %d",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_min_text",
+    "defaultValue": "%d min",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_minutes_short",
+    "defaultValue": "%d min",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_missing_days_note",
+    "defaultValue": "Shaded days have no data recorded.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_no_data_day",
+    "defaultValue": "No data",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_no_history_available",
+    "defaultValue": "No history available",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_no_workout_data",
+    "defaultValue": "No workout data yet",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_recovery_label",
+    "defaultValue": "Recovery",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_red_recovery",
+    "defaultValue": "Red recovery",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_scale_suffix",
+    "defaultValue": "/ 21",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_seven_day_history",
+    "defaultValue": "7-Day History",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_building",
+    "defaultValue": "Your body is ready for a challenge. Push toward a strain of %@ with a hard workout.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_building_hit",
+    "defaultValue": "Great work \\u{2014} you've hit your building target. You can keep going up to %@.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_consecutive_high",
+    "defaultValue": "You've pushed hard %d days in a row. Take it easy today to avoid overtraining.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_limited_data",
+    "defaultValue": "Limited data \\u{2014} this target is estimated. Keep logging for more accurate recommendations.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_maintaining",
+    "defaultValue": "Moderate training day. You have %@ strain remaining to hit your target of %@.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_coach_red_recovery",
+    "defaultValue": "Your body needs recovery. Focus on gentle movement like walking or stretching. Aim to keep strain under %@.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_all_out",
+    "defaultValue": "Maximum effort today. Real recovery is the priority now.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_high",
+    "defaultValue": "Hard day on the body. Make sure to eat well, drink water, and get enough sleep tonight.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_light",
+    "defaultValue": "Easy effort so far. You have room to push a bit more today.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_low",
+    "defaultValue": "Light day for your body. Safe to add some activity if you feel up to it.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_moderate",
+    "defaultValue": "Solid workload for your recovery. Keep this rhythm going.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_context_peak",
+    "defaultValue": "You pushed near your limit. Plan an easier day tomorrow.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_cycle_phase_detail",
+    "defaultValue": "Current phase: %@. Training stays in line with your recovery for today.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_disclaimer",
+    "defaultValue": "Strain is based on your heart rate during activity. It is not a medical measurement. Talk to a qualified professional before making big changes to your exercise routine.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_hero_explainer",
+    "defaultValue": "How much physical effort your body handled today",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_strain_level_all_out",
     "defaultValue": "All Out",
     "sourceFile": "Copy+Strain.swift",
@@ -12348,6 +14286,72 @@
     "isArray": false
   },
   {
+    "key": "copy_strain_strain_optimal",
+    "defaultValue": "Best",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_optimal_description",
+    "defaultValue": "You are training in your best range for your current recovery. Nice work.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_over_the_last_days_text",
+    "defaultValue": "Strain over the last %d days",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_overreaching",
+    "defaultValue": "Peak",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_overreaching_description",
+    "defaultValue": "You are pushing harder than your body can recover from. Rest and go lighter.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_scale_legend",
+    "defaultValue": "Strain Scale",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_target_zone_label",
+    "defaultValue": "Target zone: %@ to %@ / 21",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_title",
+    "defaultValue": "Strain",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_under_training",
+    "defaultValue": "Under-Training",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_under_training_description",
+    "defaultValue": "Your strain is below your target. Try adding more activity to stay on track.",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_strain_workout_heart_rate_target",
+    "defaultValue": "Target: %@ \\u{2022} %d-%d bpm",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_strain_zone_building",
     "defaultValue": "Progressive Overload",
     "sourceFile": "Copy+Strain.swift",
@@ -12372,8 +14376,68 @@
     "isArray": false
   },
   {
+    "key": "copy_strain_tap_to_view_workout",
+    "defaultValue": "Tap to view warm-up, blocks, and cooldown",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_strain_target_range",
     "defaultValue": "Aim for %@ to %@",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_threshold",
+    "defaultValue": "Threshold",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_today_snapshot",
+    "defaultValue": "Today's Snapshot",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_todays_workout",
+    "defaultValue": "Today's Workout",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_value_and_level",
+    "defaultValue": "Strain %@, %@",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_warm_up_title",
+    "defaultValue": "Warm-Up",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_x_text",
+    "defaultValue": "%d",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_yellow_recovery",
+    "defaultValue": "Yellow recovery",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_zone_default",
+    "defaultValue": "Zone %d",
+    "sourceFile": "Copy+Strain.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_strain_zone_short",
+    "defaultValue": "Z%d",
     "sourceFile": "Copy+Strain.swift",
     "isArray": false
   },
@@ -12452,6 +14516,186 @@
   {
     "key": "copy_stress_monitor_breathwork_session_in_progress",
     "defaultValue": "Your breathing session is still in progress.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_driver_off_usual",
+    "defaultValue": "%d%% off usual",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_scale_suffix_max",
+    "defaultValue": "/ %d",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_start_breathing_a11y",
+    "defaultValue": "Start breathing exercise",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_level_high",
+    "defaultValue": "High Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_level_low",
+    "defaultValue": "Low Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_level_mild",
+    "defaultValue": "Mild Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_level_moderate",
+    "defaultValue": "Moderate Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_building_baseline_title",
+    "defaultValue": "Building your stress baseline",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_context_default",
+    "defaultValue": "Tracking your stress signals throughout the day.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_context_high",
+    "defaultValue": "Stress is high. Step back, breathe, and rest well tonight.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_context_low",
+    "defaultValue": "Your body feels relaxed. Good time to focus on work or training.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_context_mild",
+    "defaultValue": "Some tension is building. A few slow breaths can help reset it.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_context_moderate",
+    "defaultValue": "Your body is showing real strain. Slow down before adding more load.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_hero_explainer",
+    "defaultValue": "How much pressure your body is under right now",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_hr_elevation",
+    "defaultValue": "Heart Rate",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_hrv_deviation",
+    "defaultValue": "Heart Rate Variability",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_level_calm",
+    "defaultValue": "Calm",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_level_elevated",
+    "defaultValue": "Raised",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_level_high",
+    "defaultValue": "High",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_level_mild",
+    "defaultValue": "Mild",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_need_hrv_data",
+    "defaultValue": "We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here.",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_reduce_stress",
+    "defaultValue": "Reduce Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_scale_and_direction",
+    "defaultValue": "out of 100  ·  Lower is better",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_scale_high",
+    "defaultValue": "High",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_scale_low",
+    "defaultValue": "Low",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_seven_day_stress",
+    "defaultValue": "7-Day Stress",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_start_breathing_exercise",
+    "defaultValue": "Start Breathing Exercise",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_stress_monitor_title",
+    "defaultValue": "Stress Monitor",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_trend_card_title",
+    "defaultValue": "Stress Score",
+    "sourceFile": "Copy+StressMonitor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_stress_monitor_your_average",
+    "defaultValue": "Your average %d",
     "sourceFile": "Copy+StressMonitor.swift",
     "isArray": false
   },
@@ -12894,6 +15138,90 @@
     "isArray": false
   },
   {
+    "key": "copy_wake_anchor_band_close",
+    "defaultValue": "Close",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_band_steady",
+    "defaultValue": "Steady",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_band_variable",
+    "defaultValue": "Variable",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_change_action",
+    "defaultValue": "Change",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_empty_cta",
+    "defaultValue": "Choose a time",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_empty_message",
+    "defaultValue": "Keeping the same wake time is the steadiest thing you can do for your sleep. We move your bedtime instead.",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_empty_title",
+    "defaultValue": "Set one wake time",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_every_day",
+    "defaultValue": "every day",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_evidence_note",
+    "defaultValue": "In a study of 60,977 adults, the steadiest fifth woke within about an hour of the same time each day.",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_landed_within",
+    "defaultValue": "Your wake time landed within %d minutes of your anchor on %d of %d nights.",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_minutes",
+    "defaultValue": "%d min",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_nights_many",
+    "defaultValue": "%d nights",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_nights_one",
+    "defaultValue": "%d night",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_nights_tracked",
+    "defaultValue": "%d of %d nights tracked",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_wake_anchor_onboarding_body",
     "defaultValue": "Keep this as your wake time and we move your bedtime instead. Steady mornings do more for sleep than any single early night.",
     "sourceFile": "Copy+WakeAnchor.swift",
@@ -12924,8 +15252,50 @@
     "isArray": false
   },
   {
+    "key": "copy_wake_anchor_section_title",
+    "defaultValue": "Your wake window",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
     "key": "copy_wake_anchor_set_action",
     "defaultValue": "Set",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_setter_bedtime_preview",
+    "defaultValue": "Bedtime target %@",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_setter_confirm",
+    "defaultValue": "Set wake time",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_setter_footer",
+    "defaultValue": "We remind you at this time and move your bedtime instead when you need more sleep. This is a reminder, not an alarm.",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_setter_range_note",
+    "defaultValue": "Pick a time between 5:00 AM and 11:00 AM.",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_setter_title",
+    "defaultValue": "Wake time",
+    "sourceFile": "Copy+WakeAnchor.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_wake_anchor_varied_by",
+    "defaultValue": "varied by %@ over %@",
     "sourceFile": "Copy+WakeAnchor.swift",
     "isArray": false
   }

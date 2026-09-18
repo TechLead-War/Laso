@@ -45,6 +45,7 @@ Boolean flags. Default OFF; flip ON in Firebase Console for live incidents. Keep
 | `kill_anomaly_alerts` | `false` | `AlertEvaluator.evaluate()` | False-positive alert flood |
 | `ai_narrative_enabled` | `true` | `DailyNarrativeCard.loadNarrative()` | iOS 26 LLM regression — flip OFF to silence |
 | `onboarding_force_skip_to_paywall` | `false` | `OnboardingV2View` | Mid-flow screen crash; jump to paywall |
+| `kill_wake_anchor` | `false` | `SleepCoachView.wakeWindowSection` | Wake window section misbehaving; hides it without a release |
 
 ---
 
@@ -220,6 +221,7 @@ Consumer: `Core/Analysis/Config/WorkoutBandsConfig.swift` → `Core/Analysis/Wor
 | `scoring_workout_zone_restoring_ceiling` | Int | 50 | Recovery → restoring zone cap |
 | `scoring_workout_zone_maintaining_ceiling` | Int | 75 | Recovery → maintaining zone cap |
 | `scoring_workout_zone_building_ceiling` | Int | 90 | Recovery → building zone cap |
+| `scoring_workout_default_max_hr` | Int | 190 | Used when no HR-max measurement |
 
 ---
 
@@ -308,26 +310,21 @@ Consumer: `Core/Notifications/*`.
 
 ---
 
-## 12. Daily brief
+## 11. Wake anchor
 
-Focus length, driver thresholds and reminder time for the one-direction-a-day brief on Home. HEURISTIC: the driver thresholds are product guesses, not clinical cut-offs, so they live here to be tuned without a release.
+Bands and windows for the Sleep Coach wake-window section. SOURCE: Windred et al., *SLEEP* 47(1) 2024 (N=60,977) — the lowest-mortality quintile woke inside roughly a 1-hour window, which sets the loose band at +/-30 min. Not a tested threshold: no study randomises a drift width, so these are descriptive labels, never a risk claim.
 
-Consumer: `Core/Analysis/Config/DailyBriefConfig.swift`.
+The anchor time itself is bounded at 5-11 by `WakeUpTimeDetector`, not here. That band is load-bearing for delivery, not sleep science: outside it the morning reminder is a repeating trigger that quiet hours drops silently.
+
+Consumer: `Core/Analysis/Config/WakeAnchorConfig.swift`.
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `daily_brief_focus_days` | Int | 21 | Length of one focus in days |
-| `daily_brief_focus_early_close_days` | Int | 5 | A focus closes early once its driver has been back at usual this many days |
-| `daily_brief_past_focus_retention` | Int | 12 | Finished focuses kept for the Progress list |
-| `daily_brief_driver_count` | Int | 3 | Drivers shown on Home |
-| `daily_brief_sleep_balance_driver_hours` | Double | 1.0 | Sleep debt at or above this names sleep balance as a driver |
-| `daily_brief_hrr_off_usual_percent` | Double | 5.0 | Heart rate recovery this far under baseline names bounce-back as a driver |
-| `daily_brief_strain_high_days_of_six` | Int | 4 | Days of the last six above the strain target that name strain as a driver |
-| `daily_brief_readiness_window_days` | Int | 14 | Days of morning locks drawn in the status sparkline |
-| `daily_brief_readiness_band_days` | Int | 60 | Days of history behind the usual-range band on the sparkline |
-| `daily_brief_trajectory_dead_band` | Double | 3.0 | Week-over-week readiness moves inside this many points read as flat |
-| `daily_brief_day_reminder_hour` | Int | 18 | Local hour of the day-move reminder push |
-| `daily_brief_move_log_retention_days` | Int | 60 | Days of shown and done moves kept on device |
+| `wake_anchor_drift_tight_minutes` | Int | 15 | Median absolute drift at or below this reads as "Steady" |
+| `wake_anchor_drift_loose_minutes` | Int | 30 | Half-width of the band drawn behind the drift strip, and the "Close" / "Variable" cutoff |
+| `wake_anchor_consistency_window_days` | Int | 28 | Window the headline readout is computed over. Also sets how many days of sleep boundaries Sleep Coach queries on open |
+| `wake_anchor_consistency_min_nights` | Int | 14 | Below this many tracked nights, show counts instead of a band label |
+| `wake_anchor_history_window_days` | Int | 90 | Longest window the drift strip will render |
 
 ---
 

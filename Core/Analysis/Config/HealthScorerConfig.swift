@@ -58,6 +58,12 @@ enum HealthScorerConfig {
     static var coveragePower: Double              { rc.healthCoveragePower }
     static var neutralScore: Double               { rc.healthNeutralScore }
 
+    // MARK: - Score Explanation (locked)
+
+    /// Hard-coded — surfacing more than 3 factors clutters the explanation
+    /// card and is a UI invariant, not a tuning knob.
+    static let maxTopFactors: Int = 3
+
     /// Tolerance for the "weights sum to 1.0" final pass. Floating-point
     /// epsilon, not a product knob — locked.
     static let weightSumTolerance: Double = 0.001

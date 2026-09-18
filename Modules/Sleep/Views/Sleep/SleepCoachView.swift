@@ -1,0 +1,893 @@
+import SwiftUI
+
+/// Full Sleep Coach detail view showing tonight's sleep recommendation,
+/// sleep debt tracking, 14-day history, the wake window, and tips.
+struct SleepCoachView: View {
+    let baseHoursNeeded: Double
+    let bedtime: Date?
+    let wakeTime: Date?
+    let debtHours: Double
+    let dailyHistory: [DayEntry]
+    /// Overnight wake instants from HealthKit, any order. Drift is derived
+    /// here rather than passed in, because it depends on `anchor`, which this
+    /// view owns — computing it upstream leaves the strip empty until the
+    /// parent happens to re-render.
+    let wakeTimes: [Date]
+    /// Pull-to-refresh hook wired by the route destination
+    /// to `dashboardViewModel.refresh()`. Defaults to a no-op so existing
+    /// previews and unit consumers continue to compile unchanged.
+    var onRefresh: (() async -> Void)? = nil
+
+    @State private var showAllTips = false
+    @State private var expandedDayId: Date? = nil
+    @State private var showWakeAnchorSetter = false
+    /// Mirrors `WakeUpTimeDetector.userAnchor` so the card redraws the moment
+    /// the sheet writes it. UserDefaults is not observable.
+    @State private var anchor: (hour: Int, minute: Int)? = WakeUpTimeDetector.userAnchor
+
+    private var wakeDrift: [WakeDriftPoint] {
+        guard let anchor else { return [] }
+        return WakeAnchorAnalyzer.drift(
+            from: wakeTimes,
+            anchor: anchor,
+            days: WakeAnchorConfig.consistencyWindowDays
+        )
+    }
+
+    /// A single day's sleep record for the 14-day history chart.
+    struct DayEntry: Identifiable {
+        // The caller rebuilds this array inside a @ViewBuilder on every parent
+        // re-render, so a fresh UUID here would collapse the expanded row.
+        // One entry per calendar day, so the date cannot collide.
+        var id: Date { date }
+        let date: Date
+        let actual: Double   // hours slept (asleep stages summed)
+        let needed: Double   // hours needed
+        /// False when that night recorded nothing. `actual` then carries the
+        /// personal baseline, which is a stand-in and must never be reported as
+        /// a night slept.
+        let hasData: Bool
+        let bedtime: Date?
+        let wakeTime: Date?
+        /// Per-stage breakdown — populated when HealthKit stage data is available.
+        let coreHours: Double?
+        let deepHours: Double?
+        let remHours: Double?
+        let awakeHours: Double?
+        /// Total nap minutes recorded on this calendar day (sleep that didn't
+        /// qualify as the overnight session). Surfaced as a small "+ Xm nap"
+        /// badge on the history row so users can see naps that are silently
+        /// counted toward sleep balance.
+        let napMinutes: Int?
+
+        init(
+            date: Date,
+            actual: Double,
+            needed: Double,
+            hasData: Bool,
+            bedtime: Date? = nil,
+            wakeTime: Date? = nil,
+            coreHours: Double? = nil,
+            deepHours: Double? = nil,
+            remHours: Double? = nil,
+            awakeHours: Double? = nil,
+            napMinutes: Int? = nil
+        ) {
+            self.date = date
+            self.actual = actual
+            self.needed = needed
+            self.hasData = hasData
+            self.bedtime = bedtime
+            self.wakeTime = wakeTime
+            self.coreHours = coreHours
+            self.deepHours = deepHours
+            self.remHours = remHours
+            self.awakeHours = awakeHours
+            self.napMinutes = napMinutes
+        }
+
+        /// Total bed-to-wake span in hours when both timestamps are present.
+        /// Falls back to `actual` (sum of asleep stages) when boundaries are missing.
+        var bedToWakeHours: Double {
+            if let bedtime, let wakeTime {
+                return max(0, wakeTime.timeIntervalSince(bedtime) / 3600.0)
+            }
+            return actual
+        }
+
+        /// Whether per-stage data is available for the expanded breakdown view.
+        var hasStageBreakdown: Bool {
+            coreHours != nil || deepHours != nil || remHours != nil || awakeHours != nil
+        }
+    }
+
+    @State private var performanceLevel: PerformanceLevel = .peak
+
+    enum PerformanceLevel: String, CaseIterable, Identifiable {
+        case peak = "Peak"
+        case perform = "Perform"
+        case getBy = "Get By"
+
+        var id: String { rawValue }
+
+        /// Adjustment to the base sleep need (in hours).
+        var adjustment: Double {
+            switch self {
+            case .peak: return 0.75
+            case .perform: return 0
+            case .getBy: return -0.75
+            }
+        }
+    }
+
+    private var adjustedNeed: Double {
+        max(4, baseHoursNeeded + performanceLevel.adjustment)
+    }
+
+    /// Bedtime shifted by the performance-level adjustment so
+    /// that bedtime + adjustedNeed ≈ wakeTime.
+    private var adjustedBedtime: Date? {
+        bedtime?.addingTimeInterval(-performanceLevel.adjustment * 3600)
+    }
+
+    private var formattedBedtime: String {
+        adjustedBedtime?.formatted(date: .omitted, time: .shortened) ?? "--:--"
+    }
+
+    private var formattedWakeTime: String {
+        wakeTime?.formatted(date: .omitted, time: .shortened) ?? "--:--"
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: DS.sectionSpacing) {
+                heroSection
+                performancePicker
+                scheduleSection
+                debtSection
+                historySection
+                if !WakeAnchorConfig.isKilled {
+                    wakeWindowSection
+                }
+                tipsSection
+            }
+            .padding(.bottom, DS.space6)
+        }
+        .background(AppColour.surfaceBase.ignoresSafeArea())
+        .sheet(isPresented: $showWakeAnchorSetter) {
+            WakeAnchorSetterSheet(
+                initial: anchor ?? WakeUpTimeDetector.persistedWakeTime,
+                // The adjusted need, not the base one, so the sheet's bedtime
+                // preview agrees with the "tonight" figure in the hero above.
+                hoursNeeded: adjustedNeed
+            ) { chosen in
+                let isFirstSet = anchor == nil
+                WakeUpTimeDetector.userAnchor = chosen
+                anchor = WakeUpTimeDetector.userAnchor
+                AppAnalytics.shared.trackWakeAnchorSet(hour: chosen.hour, isFirstSet: isFirstSet)
+            }
+        }
+        .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .sleepCoach)
+            await onRefresh?()
+        }
+        .navigationTitle(Copy.SleepCoach.title)
+        .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.sleepCoach)
+            if anchor != nil, !WakeAnchorConfig.isKilled {
+                let consistency = WakeAnchorAnalyzer.consistency(
+                    from: wakeDrift,
+                    windowDays: WakeAnchorConfig.consistencyWindowDays
+                )
+                AppAnalytics.shared.trackWakeAnchorDriftSnapshot(
+                    medianDriftMinutes: consistency.medianAbsDriftMinutes,
+                    nightsInWindow: consistency.nightsInWindow,
+                    nightsTracked: consistency.totalNights
+                )
+            }
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.sleepCoach)
+        }
+    }
+
+    // MARK: - 1. Hero Section
+
+    private var heroSection: some View {
+        VStack(spacing: DS.space4) {
+            ZStack {
+                Circle()
+                    .stroke(AppColour.categorySleep.opacity(0.2), lineWidth: 8)
+                    .frame(width: 120, height: 120)
+
+                Circle()
+                    .trim(from: 0, to: min(1, adjustedNeed / 12))
+                    .stroke(AppColour.categorySleep, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 2) {
+                    Image(systemName: "moon.fill")
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(AppColour.categorySleep)
+                    Text(adjustedNeed.hoursAsClock)
+                        .font(DS.Typography.displayS)
+                    Text(Copy.SleepCoach.tonight)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
+                }
+            }
+
+            Text(Copy.SleepCoach.recommendedSleep(level: performanceLevel.rawValue.lowercased()))
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(DS.space5)
+        .frame(maxWidth: .infinity)
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+        .padding(.horizontal)
+    }
+
+    // MARK: - 2. Performance Level Picker
+
+    private var performancePicker: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            sectionHeader(icon: "slider.horizontal.3", title: Copy.SleepCoach.performanceLevel)
+
+            Picker(Copy.SleepCoach.performanceLabel, selection: $performanceLevel) {
+                ForEach(PerformanceLevel.allCases) { level in
+                    Text(level.rawValue).tag(level)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .onChange(of: performanceLevel) { oldLevel, newLevel in
+                guard oldLevel != newLevel else { return }
+                AppAnalytics.shared.trackFilterChanged(
+                    screen: .sleepCoach,
+                    filterType: "performance_level",
+                    from: oldLevel.rawValue,
+                    to: newLevel.rawValue
+                )
+            }
+        }
+    }
+
+    // MARK: - 3. Schedule Section
+
+    private var scheduleSection: some View {
+        HStack(spacing: DS.itemSpacing) {
+            scheduleItem(
+                icon: "moon.zzz.fill",
+                label: Copy.SleepCoach.bedtime,
+                value: formattedBedtime,
+                color: AppColour.categorySleep
+            )
+
+            scheduleItem(
+                icon: "sunrise.fill",
+                label: Copy.SleepCoach.wakeUp,
+                value: formattedWakeTime,
+                color: .orange
+            )
+        }
+        .padding(.horizontal)
+    }
+
+    private func scheduleItem(icon: String, label: String, value: String, color: Color) -> some View {
+        VStack(spacing: DS.space2) {
+            Image(systemName: icon)
+                .font(DS.Typography.title2)
+                .foregroundStyle(color)
+
+            Text(label)
+                .font(DS.Typography.captionSemibold)
+                .foregroundStyle(AppColour.textSecondary)
+                .textCase(.uppercase)
+
+            Text(value)
+                .font(DS.Typography.title3.weight(.bold))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.space4)
+        .cardStyle()
+    }
+
+    // MARK: - 4. Sleep Debt Section
+
+    private var debtSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            sectionHeader(icon: "exclamationmark.triangle.fill", title: Copy.SleepCoach.sleepDebt)
+
+            VStack(spacing: DS.itemSpacing) {
+                HStack {
+                    VStack(alignment: .leading, spacing: DS.space1) {
+                        Text(Copy.SleepCoach.currentDebt)
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .textCase(.uppercase)
+
+                        Text(debtHours.hoursAsClock)
+                            .font(DS.Typography.title2.weight(.bold).monospacedDigit())
+                            .foregroundStyle(debtHours > 0 ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.success))
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: DS.space1) {
+                        debtLevelBadge
+
+                        if debtHours > 0 {
+                            Text(Copy.SleepCoach.daysToPayOff(daysToPayOff))
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textSecondary)
+                        }
+                    }
+                }
+
+                // Debt level bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(AppColour.trackNeutral)
+                            .frame(height: 6)
+
+                        Capsule()
+                            .fill(debtColor.gradient)
+                            .frame(width: geo.size.width * debtFraction, height: 6)
+                    }
+                }
+                .frame(height: 6)
+
+                // Trend indicator
+                HStack(spacing: DS.space1) {
+                    Image(systemName: debtTrendIcon)
+                        .font(DS.Typography.caption2.weight(.bold))
+                    Text(debtTrendLabel)
+                        .font(DS.Typography.caption)
+                }
+                .foregroundStyle(debtTrendColor)
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - 5. 14-Day Sleep History
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            sectionHeader(icon: "chart.bar.fill", title: Copy.SleepCoach.fourteenDayHistory)
+
+            if dailyHistory.isEmpty {
+                Text(Copy.Common.notEnoughData)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, DS.space5)
+                    .cardStyle()
+                    .padding(.horizontal)
+            } else {
+                VStack(spacing: 6) {
+                    ForEach(Array(dailyHistory.suffix(14).reversed())) { day in
+                        historyRow(day)
+                    }
+                }
+                .padding(DS.cardPadding)
+                .cardStyle()
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    /// Tappable row — collapsed shows day/bedtime/bar/wake/total. Expanded
+    /// reveals the per-stage breakdown (Deep / REM / Core / Awake).
+    @ViewBuilder
+    private func historyRow(_ day: DayEntry) -> some View {
+        let isExpanded = expandedDayId == day.id
+
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                // Asleep hours, the number this row shows. A night with nothing
+                // recorded reports no hours at all rather than the baseline
+                // `actual` stands in with.
+                var metadata: [String: Any] = ["action": isExpanded ? "collapse" : "expand"]
+                if day.hasData { metadata["sleep_hours"] = day.actual }
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Sleep History Day",
+                    type: .sleepHistoryRow,
+                    screen: .sleepCoach,
+                    metadata: metadata
+                )
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    expandedDayId = isExpanded ? nil : day.id
+                }
+            } label: {
+                historyBar(day, isExpanded: isExpanded)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), day.actual.hoursAsClock))
+            .accessibilityHint(isExpanded ? "Tap to collapse stage breakdown" : "Tap to show stage breakdown")
+
+            if let napMinutes = day.napMinutes, napMinutes > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
+                    Text(Copy.SleepCoach.mNapText(napMinutes))
+                        .font(DS.Typography.caption2.monospacedDigit())
+                        .foregroundStyle(AppColour.textSecondary)
+                    Spacer()
+                }
+                .padding(.leading, 80)
+                .accessibilityLabel(Copy.SleepCoach.daytimeNapMinutesCountedInLabel(napMinutes))
+            }
+
+            if isExpanded {
+                stageBreakdown(day)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private func historyBar(_ day: DayEntry, isExpanded: Bool) -> some View {
+        HStack(spacing: DS.space2) {
+            Text(dayLabel(day.date))
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(AppColour.textSecondary)
+                .frame(width: 28, alignment: .leading)
+
+            Text(day.bedtime.map(Self.timeFormatter.string(from:)) ?? "—")
+                .font(DS.Typography.caption2.monospacedDigit())
+                .foregroundStyle(day.bedtime == nil ? AppColour.textTertiary : AppColour.textSecondary)
+                .frame(width: 42, alignment: .trailing)
+
+            sleepBar(day)
+                .frame(height: 18)
+
+            Text(day.wakeTime.map(Self.timeFormatter.string(from:)) ?? "—")
+                .font(DS.Typography.caption2.monospacedDigit())
+                .foregroundStyle(day.wakeTime == nil ? AppColour.textTertiary : AppColour.textSecondary)
+                .frame(width: 42, alignment: .leading)
+
+            // Asleep hours, not bed-to-wake: this is the number the bar and
+            // the goal colour actually judge, so printing time-in-bed here put
+            // a warning tint on a value that never missed the goal.
+            Text(day.actual.hoursAsClock)
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(day.actual >= adjustedNeed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
+                .frame(width: 46, alignment: .trailing)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(AppColour.textTertiary)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                .frame(width: 10)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+
+    /// Per-stage breakdown shown when a row is expanded. Falls back to a hint
+    /// when HealthKit didn't return any stage data for that night.
+    @ViewBuilder
+    private func stageBreakdown(_ day: DayEntry) -> some View {
+        if day.hasStageBreakdown {
+            VStack(spacing: 6) {
+                stageRow(label: Copy.SleepCoach.stageDeep,  hours: day.deepHours,  total: day.bedToWakeHours, color: AppColour.categorySleep)
+                stageRow(label: Copy.SleepCoach.stageRem,   hours: day.remHours,   total: day.bedToWakeHours, color: AppColour.categoryStress)
+                stageRow(label: Copy.SleepCoach.stageCore,  hours: day.coreHours,  total: day.bedToWakeHours, color: AppColour.scoreOptimal)
+                stageRow(label: Copy.SleepCoach.stageAwake, hours: day.awakeHours, total: day.bedToWakeHours, color: AppColour.warning)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
+        } else {
+            Text(Copy.SleepCoach.stageDataUnavailable)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
+        }
+    }
+
+    private func stageRow(label: String, hours: Double?, total: Double, color: Color) -> some View {
+        let value = hours ?? 0
+        let frac = total > 0 ? max(0, min(1, value / total)) : 0
+        return HStack(spacing: DS.space2) {
+            Text(label)
+                .font(DS.Typography.caption2.weight(.medium))
+                .foregroundStyle(AppColour.textSecondary)
+                .frame(width: 44, alignment: .leading)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(color.opacity(0.15))
+                    Capsule()
+                        .fill(color)
+                        .frame(width: max(2, geo.size.width * frac))
+                }
+            }
+            .frame(height: 6)
+
+            Text(value.hoursAsClock)
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(AppColour.textPrimary)
+                .frame(width: 56, alignment: .trailing)
+        }
+    }
+
+    private func sleepBar(_ day: DayEntry) -> some View {
+        GeometryReader { geo in
+            let maxHours: Double = 12
+            // The goal tick and verdict follow the hero's adjusted need, so the
+            // rows and the headline number cannot name two different targets.
+            let neededFrac = max(0, min(1, adjustedNeed / maxHours))
+            let actualFrac = max(0, min(1, day.actual / maxHours))
+            let goalMet = day.actual >= adjustedNeed
+            let accent: Color = goalMet ? AppColour.categorySleep : AppColour.warning
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColour.trackNeutral)
+                    .frame(width: geo.size.width, height: 4)
+
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                accent.opacity(0.55),
+                                accent,
+                                accent.opacity(0.9)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(2, geo.size.width * actualFrac), height: 8)
+                    .shadow(color: AppColour.shadowAmbient,
+                            radius: goalMet ? 5 : 3, x: 0, y: 1)
+
+                Rectangle()
+                    .fill(AppColour.textTertiary.opacity(0.5))
+                    .frame(width: 1.5, height: 12)
+                    .offset(x: max(0, geo.size.width * neededFrac - 0.75))
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
+        }
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mma"
+        formatter.amSymbol = "a"
+        formatter.pmSymbol = "p"
+        return formatter
+    }()
+
+    // MARK: - 6. Wake Window
+    //
+    // Replaced a 0–100 "consistency score": an undisclosed composite of
+    // duration CV and bedtime stddev, banded at 80/60/40, where 0 also meant
+    // "not enough data". Minutes against a wake time the user chose are a
+    // measurement they can check against their own clock.
+
+    private var wakeWindowSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            sectionHeader(icon: "clock", title: Copy.WakeAnchor.sectionTitle)
+
+            Group {
+                if let anchor {
+                    wakeWindowCard(anchor: anchor)
+                } else {
+                    DSEmptyState(
+                        icon: "clock",
+                        title: Copy.WakeAnchor.emptyTitle,
+                        message: Copy.WakeAnchor.emptyMessage,
+                        ctaTitle: Copy.WakeAnchor.emptyCTA
+                    ) {
+                        showWakeAnchorSetter = true
+                    }
+                    .padding(DS.cardPadding)
+                    .cardStyle()
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func wakeWindowCard(anchor: (hour: Int, minute: Int)) -> some View {
+        let consistency = WakeAnchorAnalyzer.consistency(
+            from: wakeDrift,
+            windowDays: WakeAnchorConfig.consistencyWindowDays
+        )
+        let band = WakeAnchorConfig.driftLooseMinutes
+
+        return VStack(alignment: .leading, spacing: DS.space3) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: DS.space1) {
+                    Text(anchorLabel(anchor))
+                        .font(DS.Typography.displayM)
+                    Text(Copy.WakeAnchor.everyDay)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
+                }
+                Spacer()
+                Button(Copy.WakeAnchor.changeAction) { showWakeAnchorSetter = true }
+                    .buttonStyle(.dsTertiary)
+            }
+
+            if consistency.totalNights > 0 {
+                WakeDriftStrip(points: wakeDrift, bandMinutes: band)
+
+                if let readout = consistency.band {
+                    HStack(spacing: DS.space1) {
+                        Text(bandLabel(readout))
+                            .font(DS.Typography.subheadlineSemibold)
+                        Text(driftSummary(consistency))
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+                    Text(Copy.WakeAnchor.landedWithin(
+                        minutes: band,
+                        hits: consistency.nightsInWindow,
+                        total: consistency.totalNights
+                    ))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(Copy.WakeAnchor.nightsTracked(
+                        consistency.totalNights,
+                        of: WakeAnchorConfig.consistencyMinNights
+                    ))
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
+                }
+            } else {
+                Text(Copy.WakeAnchor.nightsTracked(0, of: WakeAnchorConfig.consistencyMinNights))
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
+            }
+
+            Text(Copy.WakeAnchor.evidenceNote)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DS.cardPadding)
+        .cardStyle(tint: AppColour.categorySleep)
+    }
+
+    private func anchorLabel(_ anchor: (hour: Int, minute: Int)) -> String {
+        var comps = DateComponents()
+        comps.hour = anchor.hour
+        comps.minute = anchor.minute
+        guard let date = Date.cal.date(from: comps) else { return "--:--" }
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    private func bandLabel(_ band: WakeAnchorBand) -> String {
+        switch band {
+        case .steady:   return Copy.WakeAnchor.bandSteady
+        case .close:    return Copy.WakeAnchor.bandClose
+        case .variable: return Copy.WakeAnchor.bandVariable
+        }
+    }
+
+    private func driftSummary(_ consistency: WakeConsistency) -> String {
+        let nights = Copy.plural(
+            consistency.totalNights,
+            one: Copy.WakeAnchor.nightsOneFormat,
+            many: Copy.WakeAnchor.nightsManyFormat
+        )
+        return Copy.WakeAnchor.variedBy(
+            driftMinutes: Copy.WakeAnchor.minutes(consistency.medianAbsDriftMinutes),
+            nights: nights
+        )
+    }
+
+    // MARK: - 7. Tips Section
+
+    private var tipsSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            sectionHeader(icon: "lightbulb.fill", title: debtHours > 2 ? Copy.SleepCoach.payingOffDebtTitle : Copy.SleepCoach.sleepTips)
+
+            let visibleTips = showAllTips ? currentTips : Array(currentTips.prefix(2))
+
+            VStack(spacing: 0) {
+                ForEach(Array(visibleTips.enumerated()), id: \.offset) { index, tip in
+                    tipRow(tip)
+                    if index < visibleTips.count - 1 {
+                        Divider().padding(.leading, 44)
+                    }
+                }
+
+                if !showAllTips && currentTips.count > 2 {
+                    Divider().padding(.leading, 44)
+                    Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Show More Sleep Tips",
+                            type: .smartAction,
+                            screen: .sleepCoach,
+                            metadata: [
+                                "source": "sleep_coach_tips",
+                                "hidden_tips_count": currentTips.count - 2
+                            ]
+                        )
+                        withAnimation(.easeInOut(duration: 0.25)) { showAllTips = true }
+                    } label: {
+                        Text(Copy.SleepCoach.showMoreTips(currentTips.count - 2))
+                            .font(DS.Typography.subheadlineMedium)
+                            .foregroundStyle(AppColour.info)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DS.space3)
+                    }
+                    .buttonStyle(.dsPress)
+                }
+            }
+            .padding(.vertical, DS.space2)
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    private func tipRow(_ tip: SleepTip) -> some View {
+        HStack(spacing: DS.itemSpacing) {
+            Image(systemName: tip.icon)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(tip.color)
+                .frame(width: 32, height: 32)
+                .background(tip.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tip.title)
+                    .font(DS.Typography.subheadlineMedium)
+                Text(tip.detail)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, DS.space2)
+    }
+
+    // MARK: - Section Header
+
+    private func sectionHeader(icon: String, title: String) -> some View {
+        HStack(spacing: DS.space2) {
+            Image(systemName: icon)
+                .font(DS.Typography.subheadlineSemibold)
+                .foregroundStyle(AppColour.categorySleep)
+            Text(title)
+                .font(DS.Typography.headline)
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - Tips Data
+
+    private struct SleepTip {
+        let icon: String
+        let color: Color
+        let title: String
+        let detail: String
+    }
+
+    private var currentTips: [SleepTip] {
+        if debtHours > 2 {
+            return [
+                SleepTip(icon: "plus.circle.fill", color: AppColour.categorySleep,
+                         title: Copy.SleepCoach.tipAddSleepTitle,
+                         detail: Copy.SleepCoach.tipAddSleepDetail),
+                SleepTip(icon: "calendar.badge.clock", color: .orange,
+                         title: Copy.SleepCoach.tipBePatientTitle,
+                         detail: Copy.SleepCoach.tipBePatientDetail(days: daysToPayOff)),
+                SleepTip(icon: "cup.and.saucer.fill", color: .brown,
+                         title: Copy.SleepCoach.tipCutCaffeineTitle,
+                         detail: Copy.SleepCoach.tipCutCaffeineDetail),
+                SleepTip(icon: "iphone.slash", color: .red,
+                         title: Copy.SleepCoach.tipScreenCurfewTitle,
+                         detail: Copy.SleepCoach.tipScreenCurfewDetail)
+            ]
+        } else {
+            return [
+                SleepTip(icon: "clock.fill", color: AppColour.categorySleep,
+                         title: Copy.SleepCoach.tipConsistentScheduleTitle,
+                         detail: Copy.SleepCoach.tipConsistentScheduleDetail),
+                SleepTip(icon: "thermometer.snowflake", color: .cyan,
+                         title: Copy.SleepCoach.tipCoolBedroomTitle,
+                         detail: Copy.SleepCoach.tipCoolBedroomDetail),
+                SleepTip(icon: "sun.max.fill", color: .orange,
+                         title: Copy.SleepCoach.tipMorningSunlightTitle,
+                         detail: Copy.SleepCoach.tipMorningSunlightDetail),
+                SleepTip(icon: "figure.walk", color: .green,
+                         title: Copy.SleepCoach.tipExerciseTimingTitle,
+                         detail: Copy.SleepCoach.tipExerciseTimingDetail)
+            ]
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var debtColor: Color {
+        if debtHours <= 1 { return AppColour.success }
+        if debtHours <= 4 { return AppColour.warning }
+        return AppColour.danger
+    }
+
+    private var debtFraction: Double {
+        min(1.0, debtHours / 10.0)
+    }
+
+    private var debtLevelBadge: some View {
+        let (text, color) = debtLevelInfo
+        return Text(text)
+            .font(DS.Typography.caption2.weight(.bold))
+            .foregroundStyle(color)
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(color.opacity(DS.badgeBg), in: Capsule())
+    }
+
+    private var debtLevelInfo: (String, Color) {
+        if debtHours <= 0.5 { return (Copy.SleepCoach.debtClear, AppColour.success) }
+        if debtHours <= 2 { return (Copy.SleepCoach.debtLow, AppColour.info) }
+        if debtHours <= 5 { return (Copy.SleepCoach.debtModerate, AppColour.warning) }
+        return (Copy.SleepCoach.debtHigh, AppColour.danger)
+    }
+
+    private var daysToPayOff: Int {
+        guard debtHours > 0 else { return 0 }
+        // Assume recovering ~45 min extra per night
+        return max(1, Int(ceil(debtHours / 0.75)))
+    }
+
+    private var debtTrendIcon: String {
+        let recent = dailyHistory.suffix(3)
+        guard recent.count >= 2 else { return "arrow.right" }
+        let avgDelta = recent.map { $0.actual - $0.needed }.reduce(0, +) / Double(recent.count)
+        if avgDelta > 0.25 { return "arrow.down.right" }
+        if avgDelta < -0.25 { return "arrow.up.right" }
+        return "arrow.right"
+    }
+
+    private var debtTrendLabel: String {
+        let recent = dailyHistory.suffix(3)
+        guard recent.count >= 2 else { return Copy.SleepCoach.tracking }
+        let avgDelta = recent.map { $0.actual - $0.needed }.reduce(0, +) / Double(recent.count)
+        if avgDelta > 0.25 { return Copy.SleepCoach.payingOff }
+        if avgDelta < -0.25 { return Copy.SleepCoach.accumulating }
+        return Copy.SleepCoach.stable
+    }
+
+    private var debtTrendColor: Color {
+        let recent = dailyHistory.suffix(3)
+        guard recent.count >= 2 else { return AppColour.textSecondary }
+        let avgDelta = recent.map { $0.actual - $0.needed }.reduce(0, +) / Double(recent.count)
+        if avgDelta > 0.25 { return AppColour.success }
+        if avgDelta < -0.25 { return AppColour.warning }
+        return AppColour.textSecondary
+    }
+
+
+    // MARK: - Formatting Helpers
+
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        return formatter
+    }()
+
+    private func dayLabel(_ date: Date) -> String {
+        String(Self.dayFormatter.string(from: date).prefix(3))
+    }
+}

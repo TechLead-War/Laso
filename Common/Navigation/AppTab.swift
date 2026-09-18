@@ -1,29 +1,28 @@
 import SwiftUI
 
-/// The three places a person goes plus Settings: today's direction, the body
-/// signals behind it, and whether what they did is working.
+/// Three-tab navigation model for the custom bottom bar
 enum AppTab: String, CaseIterable, Identifiable {
     case home
-    case body
-    case progress
+    case live
+    case explore
     case settings
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .home: return Copy.DailyBrief.tabToday
-        case .body: return Copy.DailyBrief.tabBody
-        case .progress: return Copy.DailyBrief.tabProgress
-        case .settings: return Copy.Settings.settings
+        case .home: return "Today"
+        case .live: return "Live"
+        case .explore: return "Biology"
+        case .settings: return "Settings"
         }
     }
 
     var systemImageName: String {
         switch self {
-        case .home: return "sun.max"
-        case .body: return "waveform.path.ecg"
-        case .progress: return "chart.line.uptrend.xyaxis"
+        case .home: return "heart.text.clipboard"
+        case .live: return "waveform.path.ecg"
+        case .explore: return "chart.bar.xaxis"
         case .settings: return "gearshape"
         }
     }
@@ -33,18 +32,9 @@ enum AppTab: String, CaseIterable, Identifiable {
     var feature: AppFeature {
         switch self {
         case .home: return .home
-        case .body: return .body
-        case .progress: return .progress
+        case .live: return .live
+        case .explore: return .explore
         case .settings: return .settings
-        }
-    }
-
-    var blockType: BlockType {
-        switch self {
-        case .home: return .tabHome
-        case .body: return .tabBody
-        case .progress: return .tabProgress
-        case .settings: return .tabSettings
         }
     }
 }

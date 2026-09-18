@@ -67,7 +67,7 @@ struct TodayScoreLiveActivityWidget: Widget {
     }
 
     /// Deep link target for the dashboard surface. `onOpenURL` (added by D3) maps
-    /// this via `Route.fromUITestIdentifier` to the Today tab.
+    /// this via `Route.fromUITestIdentifier` to `Route.todaysAction`.
     private static let todaysActionURL = URL(string: "laso://route/todaysAction")
     /// Evening act target: the sleep surface, where the bedtime countdown leads.
     private static let sleepCoachURL = URL(string: "laso://route/sleepCoach")

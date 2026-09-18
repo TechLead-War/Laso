@@ -42,6 +42,7 @@ final class AnalysisEngine {
         /// or a user who denied HealthKit, has no score — not a perfect one.
         var overallScore: HealthScore?
         var categoryScores: [HealthScore] = []
+        var scoreExplanation: HealthScorer.ScoreExplanation?
     }
 
     @Observable
@@ -87,6 +88,10 @@ final class AnalysisEngine {
     var categoryScores: [HealthScore] {
         get { scoreState.categoryScores }
         set { scoreState.categoryScores = newValue }
+    }
+    var scoreExplanation: HealthScorer.ScoreExplanation? {
+        get { scoreState.scoreExplanation }
+        set { scoreState.scoreExplanation = newValue }
     }
     var insights: [Insight] {
         get { insightState.insights }
@@ -156,6 +161,7 @@ final class AnalysisEngine {
 
     // MARK: - ML Integration
     let mlOrchestrator = MLOrchestrator()
+    var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
 
     /// `persistence` is injected so the app shares the container's single
     /// instance. Building a second one here ran the encrypted-store migration
@@ -243,12 +249,19 @@ final class AnalysisEngine {
                 HealthScorer.applyCoverageAdjustment(rawScore: raw.score, baselines: newBaselines)
                     .map { HealthScore(score: $0, breakdown: raw.breakdown, generatedAt: raw.generatedAt) }
             }
+        let newScoreExplanation = HealthScorer.explainOverallScore(
+            categoryScores: newCategoryScores,
+            weights: adaptiveWeights,
+            anomalies: newAnomalies,
+            trends: newTrends
+        )
 
         baselines = newBaselines
         trends = newTrends
         anomalies = newAnomalies
         categoryScores = newCategoryScores
         overallScore = newOverallScore
+        scoreExplanation = newScoreExplanation
         lastAnalysis = Date()
         persistence.saveLastAnalysisDate(Date())
     }

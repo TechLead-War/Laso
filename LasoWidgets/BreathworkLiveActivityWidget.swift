@@ -46,7 +46,7 @@ struct BreathworkLiveActivityWidget: Widget {
     }
 
     /// Deep link target for the breathwork surface. `onOpenURL` (added by D3)
-    /// maps this via `Route.fromUITestIdentifier` to the stress driver detail.
+    /// maps this via `Route.fromUITestIdentifier` to `Route.stressMonitor`.
     private static let stressMonitorURL = URL(string: "laso://route/stressMonitor")
 }
 

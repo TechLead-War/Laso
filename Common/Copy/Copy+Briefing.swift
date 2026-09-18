@@ -48,10 +48,20 @@ extension Copy {
                 }
             }
 
+            static func urgentDetail(explanation: String) -> String {
+                explanation
+            }
+
             /// Tomorrow risk prediction. `probability` arrives already formatted as a percent, like "62%".
             static func tomorrowHeadline(probability: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_briefing_tomorrow_headline", default: "There is about a %@ chance tomorrow feels tougher than usual. An earlier bedtime tonight could help."), probability)
             }
+
+            static func tomorrowDetailWithFactor(metricName: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_tomorrow_detail_with_factor", default: "Your %@ has been a little off lately. A good night of sleep tonight could help."), metricName.lowercased())
+            }
+
+            static var tomorrowDetailGeneric: String { RemoteConfigManager.shared.copyString("copy_briefing_tomorrow_detail_generic", default: "A few of your numbers are shifting together. Taking it easy could help.") }
         }
 
         // MARK: - Regime Shift Card (Something Changed)
@@ -60,6 +70,19 @@ extension Copy {
 
             static func headline(metricName: String, direction: String, dateStr: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_something_changed_headline", default: "Your %@ has been %@ since %@. That is a real shift worth noticing."), metricName.lowercased(), direction, dateStr)
+            }
+
+            static func detailWithCoChanges(before: String, after: String, coChanges: [String]) -> String {
+                let base = String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_with_co_changes_base", default: "It moved from %@ to %@."), before, after)
+                if coChanges.isEmpty {
+                    return base
+                }
+                let names = coChanges.joined(separator: " and ")
+                return base + " " + String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_with_co_changes_suffix", default: "Your %@ shifted around the same time, so they are likely connected."), names.lowercased())
+            }
+
+            static func detailSimple(before: String, after: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_simple", default: "It moved from %@ to %@."), before, after)
             }
         }
 
@@ -72,9 +95,17 @@ extension Copy {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_what_might_happen_precursor_headline", default: "Your %@ is shifting in a way that has often been linked with %@ before. A calmer day could help."), signalDescription.lowercased(), predictedEvent.lowercased())
             }
 
+            static func precursorDetail(description: String) -> String {
+                description
+            }
+
             /// Active temporal sequence.
             static func sequenceHeadline(outcome: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_sequence_headline", default: "Some of your numbers are shifting in a pattern often seen with %@. Extra rest over the next few days could help."), outcome.lowercased())
+            }
+
+            static func sequenceDetail(description: String) -> String {
+                description
             }
         }
 
@@ -94,6 +125,15 @@ extension Copy {
                     : RemoteConfigManager.shared.copyString("copy_briefing_verb_pulls_down", default: "pulls down")
                 return String(format: RemoteConfigManager.shared.copyString("copy_briefing_why_this_headline", default: "Your %@ %@ your %@ %@. This pattern keeps showing up for you."), causeMetric.lowercased(), verb, effectMetric.lowercased(), lagStr)
             }
+
+            /// `sampleCount` is the number of days where both measures had a reading.
+            static func detailWithPartial(sampleCount: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_with_partial", default: "This connection looks strong, even when other things are taken into account. Based on %d days of your data."), sampleCount)
+            }
+
+            static func detailSimple(sampleCount: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_why_this_detail_simple", default: "This pattern has been steady across %d days of your data."), sampleCount)
+            }
         }
 
         // MARK: - Body Clock Card
@@ -106,6 +146,20 @@ extension Copy {
 
             static func generalHeadline(peakTime: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_your_body_clock_general_headline", default: "Your energy feels best around %@ each day."), peakTime)
+            }
+
+            static func detail(bedtime: String?, hrvPeak: String?) -> String {
+                var parts: [String] = []
+                if let bedtime {
+                    parts.append(String(format: RemoteConfigManager.shared.copyString("copy_briefing_body_clock_bedtime", default: "A good bedtime for you looks like around %@"), bedtime))
+                }
+                if let hrvPeak {
+                    parts.append(String(format: RemoteConfigManager.shared.copyString("copy_briefing_body_clock_hrv_peak", default: "Your body tends to feel most rested around %@"), hrvPeak))
+                }
+                if parts.isEmpty {
+                    return RemoteConfigManager.shared.copyString("copy_briefing_body_clock_fallback", default: "Based on your natural rhythm over the past few weeks.")
+                }
+                return parts.joined(separator: ". ") + "."
             }
         }
 
@@ -120,6 +174,14 @@ extension Copy {
             static var lowStressHeadline: String { RemoteConfigManager.shared.copyString("copy_briefing_low_stress_headline", default: "Your body feels well rested today. A great day to make the most of.") }
 
             static var normalStressHeadline: String { RemoteConfigManager.shared.copyString("copy_briefing_normal_stress_headline", default: "Your body feels about normal today. Nothing unusual going on.") }
+
+            static func detailWithPercentile(percentileStr: String, systemSummary: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_with_percentile", default: "%@. Here is what is going on: %@."), percentileStr, systemSummary)
+            }
+
+            static func detailSimple(systemSummary: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_stress_detail_simple", default: "Here is what is going on: %@."), systemSummary)
+            }
         }
 
         // MARK: - Autonomic Balance Card (Nervous System / Stress and Recovery)
@@ -136,6 +198,10 @@ extension Copy {
                     : RemoteConfigManager.shared.copyString("copy_briefing_mild_shift_tired", default: "feeling a little tired")
                 return String(format: RemoteConfigManager.shared.copyString("copy_briefing_mild_shift_headline", default: "Your body is %@ today. A small shift, but worth noticing."), plain)
             }
+
+            static func detail(hrvStr: String, rhrStr: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail", default: "HRV: %@, resting heart rate: %@."), hrvStr, rhrStr)
+            }
         }
 
         // MARK: - Recovery Debt Card (Sleep Debt)
@@ -150,6 +216,21 @@ extension Copy {
             }
 
             static var headlineHRVSuppressed: String { RemoteConfigManager.shared.copyString("copy_briefing_headline_hrv_suppressed", default: "Your body has been running low over the past couple of weeks. A few good nights of sleep will help.") }
+
+            static func detailSleepDeficit(debtHours: String, windowDays: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_sleep_deficit", default: "You have missed about %@ of sleep over the past %d days."), debtHours, windowDays)
+            }
+
+            static func detailHRVBelow(dayCount: String, windowDays: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_hrv_below", default: "Your body has felt tired on %@ of the past %d days."), dayCount, windowDays)
+            }
+
+            static func detailExerciseBelow(missedDays: Int, windowDays: Int) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_exercise_below", default: "You moved less than your usual on %d of the past %d days."), missedDays, windowDays)
+            }
+
+            static var trendImproving: String { RemoteConfigManager.shared.copyString("copy_briefing_trend_improving", default: "Getting better compared to last week.") }
+            static var trendWorsening: String { RemoteConfigManager.shared.copyString("copy_briefing_trend_worsening", default: "Not quite as good as last week. A little more rest will help.") }
         }
 
         // MARK: - System Coherence Card (Everything Looks Good / or Warning)
@@ -161,6 +242,12 @@ extension Copy {
             static var alignedHeadline: String { RemoteConfigManager.shared.copyString("copy_briefing_body_systems_aligned_headline", default: "Your body's systems are working together really well right now. Nice and steady.") }
 
             static var normalHeadline: String { RemoteConfigManager.shared.copyString("copy_briefing_body_systems_normal_headline", default: "Your body is mostly in sync today. Things are ticking along nicely.") }
+
+            static func detailWithWeakLink(metricA: String, metricB: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_detail_with_weak_link", default: "Your %@ and %@ are a little out of step today. Some extra rest should help them line back up."), metricA.lowercased(), metricB.lowercased())
+            }
+
+            static var detailSimple: String { RemoteConfigManager.shared.copyString("copy_briefing_body_systems_detail_simple", default: "Your key health measures are moving together nicely.") }
         }
 
         // MARK: - Rhythm Deviation Card (Unusual Day)
@@ -170,6 +257,22 @@ extension Copy {
             static func headline(dayName: String) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_briefing_unusual_day_headline", default: "Today is shaping up pretty different from your usual %@."), dayName)
             }
+
+            static func deviatorDescription(metricName: String, currentValue: String, direction: String, weekdayAvg: String, dayName: String) -> String {
+                String(format: RemoteConfigManager.shared.copyString("copy_briefing_deviator_description", default: "Your %@ is %@ today, %@ the %@ you usually see on a %@."), metricName.lowercased(), currentValue, direction, weekdayAvg, dayName)
+            }
+
+            static func detail(descriptions: [String]) -> String {
+                let prefix = RemoteConfigManager.shared.copyString("copy_briefing_unusual_day_detail_prefix", default: "Here is what stood out: ")
+                let separator = RemoteConfigManager.shared.copyString("copy_briefing_unusual_day_detail_separator", default: " And ")
+                return prefix + descriptions.joined(separator: separator)
+            }
+        }
+
+        // MARK: - Confidence Display
+
+        static func confidenceBadge(percent: Int) -> String {
+            String(format: RemoteConfigManager.shared.copyString("copy_briefing_confidence_badge", default: "Based on %d%% confidence"), percent)
         }
     }
 }

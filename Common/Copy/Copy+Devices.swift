@@ -70,6 +70,7 @@ extension Copy {
             static var stepOne: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_one", default: "Press and hold your watch face") }
             static var stepTwo: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_two", default: "Tap Edit, then swipe to Complications") }
             static var stepThree: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_step_three", default: "Tap a slot and choose Laso") }
+            static var dismissLabel: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_dismiss_label", default: "Hide this tip") }
             static var added: String { RemoteConfigManager.shared.copyString("copy_devices_watch_complication_added", default: "Laso is on your watch face.") }
         }
 

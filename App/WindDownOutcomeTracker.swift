@@ -19,29 +19,6 @@ enum WindDownOutcomeTracker {
     private static let pendingBedtimeKey = "windDown.outcome.pendingBedtime"
     private static let pendingShownAtKey = "windDown.outcome.pendingShownAt"
 
-    struct Outcome: Codable {
-        let bedtime: Date
-        let onset: Date?
-        let deltaMinutes: Int?
-        let evaluatedAt: Date
-    }
-
-    /// The last evaluated night, kept so the next morning's verdict can say
-    /// whether the person was asleep near the bedtime the brief asked for.
-    static var lastOutcome: Outcome? {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: AppKeys.Data.windDownLastOutcome) else { return nil }
-            return try? JSONDecoder().decode(Outcome.self, from: data)
-        }
-        set {
-            guard let data = newValue.flatMap({ try? JSONEncoder().encode($0) }) else {
-                UserDefaults.standard.removeObject(forKey: AppKeys.Data.windDownLastOutcome)
-                return
-            }
-            UserDefaults.standard.set(data, forKey: AppKeys.Data.windDownLastOutcome)
-        }
-    }
-
     /// Hours to wait after the target bedtime before we consider the outcome evaluable.
     private static let minHoursSinceBedtime: Double = 6
     /// Maximum age (hours) before we give up on a pending outcome record.
@@ -97,7 +74,6 @@ enum WindDownOutcomeTracker {
             sleepDetected: onset != nil
         )
 
-        lastOutcome = Outcome(bedtime: bedtime, onset: onset, deltaMinutes: deltaMinutes, evaluatedAt: now)
         clear()
     }
 
