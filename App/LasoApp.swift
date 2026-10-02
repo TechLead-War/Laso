@@ -1,5 +1,6 @@
 import SwiftUI
 import AppIntents
+import AppTrackingTransparency
 
 /// Main entry point for the Laso app
 @main
@@ -81,12 +82,14 @@ struct LasoApp: App {
                     MaintenanceView(message: remoteConfig.killSwitchMessage)
                 } else {
                     ContentView(container: container)
-                    // 1. Onboarding (first launch)
+                    // 1. Onboarding (first launch). The setter is a no-op: SwiftUI
+                    // writes `false` whenever it tears the cover down itself (seen
+                    // on iOS 26 during launch), and treating that as completion
+                    // skipped onboarding for every new install. Completion comes
+                    // only from the flow's own onComplete.
                     .fullScreenCover(isPresented: Binding(
                         get: { !appStateStore.onboardingCompleted },
-                        set: { if !$0 {
-                            appStateStore.markOnboardingCompleted()
-                        }}
+                        set: { _ in }
                     )) {
                         OnboardingV2View(
                             healthKitManager: container.healthKitManager,
@@ -102,7 +105,7 @@ struct LasoApp: App {
                     // finished onboarding before that screen existed.
                     .fullScreenCover(isPresented: Binding(
                         get: { appStateStore.onboardingCompleted && !appStateStore.disclaimerAcknowledged },
-                        set: { if !$0 { appStateStore.markDisclaimerAcknowledged() } }
+                        set: { _ in }  // same reason as the onboarding cover above
                     )) {
                         MedicalDisclaimerView {
                             appStateStore.markDisclaimerAcknowledged()
@@ -170,11 +173,17 @@ struct LasoApp: App {
                     if oldPhase == .active { AppLockManager.shared.sceneWillResignActive() }
                 case .background:
                     AppLockManager.shared.sceneDidEnterBackground()
+                    AnalyticsBackend.provider.flush()
                 case .active:
                     AppLockManager.shared.sceneDidActivate()
                 @unknown default:
                     break
                 }
+            }
+            // `initial: true`: a cold launch can already be `.active` when this
+            // view appears, and a plain onChange never fires for that value.
+            .onChange(of: scenePhase, initial: true) { _, newPhase in
+                if newPhase == .active { requestTrackingPermissionIfNeeded() }
             }
             // Appearance is applied to the window by ThemeManager, not with
             // .preferredColorScheme — see ThemeManager for why "System" cannot
@@ -186,6 +195,18 @@ struct LasoApp: App {
                 )
             }
         }
+    }
+
+    /// iOS only presents the tracking prompt while the scene is active, and
+    /// SwiftUI never forwards applicationDidBecomeActive through the delegate
+    /// adaptor, so the request lives on scenePhase. Meta SDK 17+ reads the
+    /// resulting status itself. Re-checked on every activation because a
+    /// request made while another system prompt is up is dropped silently.
+    /// Skipped in UI tests: the alert would overlay every captured screen.
+    private func requestTrackingPermissionIfNeeded() {
+        guard !isUITestMode,
+              ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return }
+        ATTrackingManager.requestTrackingAuthorization { _ in }
     }
 
     // MARK: - Splash View

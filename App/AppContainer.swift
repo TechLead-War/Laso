@@ -242,6 +242,9 @@ final class AppContainer {
             )
         }
         deviceSourceManager.connectedDevices = devices
+        // Publish the same derived score and history state used by the real
+        // dashboard, after the fixture has populated the shared data sources.
+        dashboardViewModel.hydrateFromCalibration()
         #endif
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The last seven days as dials, so a week of history is readable without
-/// leaving Home. Biology still owns the full month; this is the glance.
+/// leaving Home. Health still owns the full month; this is the glance.
 ///
 /// Ends on today rather than running Monday to Sunday: a fixed calendar week
 /// leaves most of the row empty on a Monday, and the useful question is "how
@@ -30,8 +30,7 @@ struct WeekScoreStrip: View {
                     dayColumn(day)
                 }
             }
-            .padding(DS.cardPadding)
-            .cardStyle()
+            .padding(.vertical, DS.space2)
         }
         .buttonStyle(.plain)
         .disabled(onTap == nil)

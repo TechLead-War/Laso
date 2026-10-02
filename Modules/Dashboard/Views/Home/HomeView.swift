@@ -29,6 +29,9 @@ struct HomeView: View {
     /// The merged life-context affordance on the action card: false shows one
     /// line, true expands the chip picker in place.
     @State private var showContextPicker = false
+    @State private var showActionReminder = false
+    @State private var reminderHour = ActionReminderScheduler.defaultHour
+    @State private var reminderMinute = ActionReminderScheduler.defaultMinute
     @State private var showSoftLockPaywall = false
     /// One-shot full live fetch on first appear. Without it, Home only starts the
     /// tiered refresh timers, which defer the slow tier (HRV, resting HR, sleep),
@@ -71,7 +74,8 @@ struct HomeView: View {
         .background(AppColour.surfaceSunken.ignoresSafeArea())
         // The Ask Your Data door moved off the scroll (KEEP-KILL merge list)
         // into the nav bar, so the bar is shown again after being hidden.
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(AppTab.home.label)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 // The capture card sits six sections down the scroll, which is
@@ -163,6 +167,20 @@ struct HomeView: View {
                 dataDepth: viewModel.analysis.dataDepth,
                 onDismiss: { viewModel.dismissDiscovery() }
             )
+        }
+        .sheet(isPresented: $showContextPicker) {
+            HomeContextSheet(store: viewModel.lifeContextStore)
+        }
+        .sheet(isPresented: $showActionReminder) {
+            HomeActionReminderSheet(
+                actionTitle: viewModel.smartDailyAction(liveVM: liveViewModel).title,
+                hour: reminderHour,
+                minute: reminderMinute
+            ) { hour, minute in
+                reminderHour = hour
+                reminderMinute = minute
+                actionReminderSet = true
+            }
         }
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet(
@@ -478,6 +496,11 @@ struct HomeView: View {
         ScrollView(.vertical) {
             LazyVStack(spacing: DS.itemSpacing) {
                 if hasData {
+                    Text(Date.now, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                        .font(.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, DS.screenPadding)
                     // ── Above the fold ──
 
                     // 1. The app's only real safety signal leads the screen
@@ -504,13 +527,6 @@ struct HomeView: View {
                         }
                     }
 
-                    // 3. Next Up. the daily action leads the screen: Laso's core
-                    // promise is telling you what to do next, so the step comes
-                    // before the score that explains it.
-                    primaryActionCard
-
-                    // 4. Score card. live readiness score (updates every 30 min)
-                    // shown as one ring plus the plain-word reasons behind it.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
                         summaryHead: readinessSummary.head,
@@ -565,33 +581,45 @@ struct HomeView: View {
                     .onDisappear { recoveryTracker.disappeared() }
                     .softLocked(isSoftLocked, feature: "home_recovery_score") { showSoftLockPaywall = true }
 
-                    // 5. Last seven days, right under the score they are the
-                    // history of. Tapping opens the full month in Biology.
-                    // Today's dial is pinned to the exact score the ring above
-                    // shows: the stored snapshot carries the analysis score,
-                    // which is a different model from the live readiness score,
-                    // and two numbers for today on one screen reads as a bug.
-                    WeekScoreStrip(scoresByDay: {
-                        var scores = viewModel.cachedDailyScoresByDay
-                        // No score today leaves today's dial empty rather than
-                        // pinning it to a number the ring above never showed.
-                        if let liveReadinessScore {
-                            scores[Date.cal.startOfDay(for: .now)] = liveReadinessScore
-                        }
-                        return scores
-                    }()) {
+                    primaryActionCard
+
+                    // Daily health-score history stays comparable across days;
+                    // today's live readiness remains a separately labelled score above.
+                    WeekScoreStrip(scoresByDay: viewModel.cachedDailyScoresByDay) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Week Strip",
                             type: .exploreCalendarDay,
                             screen: .home,
                             metadata: ["destination": "explore"]
                         )
-                        NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: nil)
+                        NotificationCenter.default.post(name: .healthPulseNavigateToExplore, object: nil, userInfo: ["section": "history"])
                     }
                     // Depth marker repointed from the deleted AskYourDataCard
                     // onto a card that always renders, so the funnel keeps its
                     // mid-scroll rung.
                     .onAppear { scrollDepth.record(40) }
+                    .padding(.horizontal, DS.screenPadding)
+
+                    // 11. Weekly Review. Header and card render together only
+                    // when a review exists, so a new user never sees a heading
+                    // with nothing under it.
+                    if let weeklyReviewViewModel, weeklyReviewViewModel.review != nil {
+                        WeeklyReviewEntryCard(viewModel: weeklyReviewViewModel) {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Weekly Review",
+                                type: .weeklyReviewCard,
+                                screen: .home,
+                                metadata: [
+                                    "destination": "weekly_review",
+                                    "score": liveReadinessScore ?? 0
+                                ]
+                            )
+                            navigationPath.append(Route.weeklyReview)
+                        }
+                        .onAppear { weeklyReviewTracker.appeared() }
+                        .onDisappear { weeklyReviewTracker.disappeared() }
+                        .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
+                    }
 
                     // 6. Today's capture, next to the week it belongs to: the
                     // strip above is the history of the score, this is the
@@ -640,30 +668,6 @@ struct HomeView: View {
                     .softLocked(isSoftLocked, feature: "home_vitals") { showSoftLockPaywall = true }
 
                     // ── Below the fold ──
-
-                    // 11. Weekly Review. Header and card render together only
-                    // when a review exists, so a new user never sees a heading
-                    // with nothing under it.
-                    if let weeklyReviewViewModel, weeklyReviewViewModel.review != nil {
-                        sectionHeader("REVIEW")
-                            .padding(.top, DS.space3)
-
-                        WeeklyReviewEntryCard(viewModel: weeklyReviewViewModel) {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Weekly Review",
-                                type: .weeklyReviewCard,
-                                screen: .home,
-                                metadata: [
-                                    "destination": "weekly_review",
-                                    "score": liveReadinessScore ?? 0
-                                ]
-                            )
-                            navigationPath.append(Route.weeklyReview)
-                        }
-                        .onAppear { weeklyReviewTracker.appeared() }
-                        .onDisappear { weeklyReviewTracker.disappeared() }
-                        .softLocked(isSoftLocked, feature: "home_weekly_review") { showSoftLockPaywall = true }
-                    }
 
                     // Last updated footer. always rendered so the user can confirm
                     // the screen is alive; falls back to a pull-to-refresh hint
@@ -869,10 +873,27 @@ struct HomeView: View {
                 // one-line confirmation.
                 actionDoneLoggedRow(action: action)
             } else {
-                Text(isEveningAnchored(action) && isEveningNow ? Copy.Home.nextUpHeaderTonight : Copy.Home.nextUpHeader)
-                    .font(DS.Typography.captionSemibold)
-                    .tracking(1.2)
-                    .foregroundStyle(AppColour.scoreGood)
+                HStack {
+                    Label(isEveningAnchored(action) && isEveningNow ? Copy.Home.nextUpHeaderTonight : Copy.Home.nextUpHeader,
+                          systemImage: action.icon)
+                        .font(.caption.weight(.semibold))
+                        .tracking(1.2)
+                        .foregroundStyle(AppColour.primary)
+                    Spacer()
+                    Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Life Context", type: .homeDailyAction, screen: .home,
+                            metadata: ["source": "context_picker_open", "active_count": activeLifeContexts.count])
+                        showContextPicker = true
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.body)
+                            .foregroundStyle(AppColour.textSecondary)
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .accessibilityLabel("Adjust today's context")
+                    .accessibilityIdentifier("home.lifeContext.prompt")
+                }
 
                 // The action is the headline; tapping opens the full detail.
                 Button {
@@ -920,26 +941,21 @@ struct HomeView: View {
                                 .font(DS.Typography.caption)
                                 .foregroundStyle(AppColour.scoreGood)
                                 .fixedSize(horizontal: false, vertical: true)
-                                .padding(.vertical, DS.space1 + 2)
-                                .padding(.horizontal, DS.space2)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    AppColour.scoreGood.opacity(0.10),
-                                    in: RoundedRectangle(cornerRadius: DS.Radius.sm)
-                                )
                                 .padding(.top, 2)
                         }
                     }
                 }
                 .buttonStyle(.plain)
 
-                // Before the evening the honest verb is Remind, so it leads and
-                // Mark done waits ghosted; in the evening Done leads.
-                HStack(spacing: 8) {
-                    if markDoneWaitsForEvening(action) {
-                        actionRemindButton(action: action)
+                // Evening actions keep the existing completion gate. Controls
+                // can stack when the user's text size needs more room.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
                         actionMarkDoneButton(action: action)
-                    } else {
+                        actionRemindButton(action: action)
+                    }
+                    VStack(spacing: 8) {
                         actionMarkDoneButton(action: action)
                         actionRemindButton(action: action)
                     }
@@ -1033,7 +1049,7 @@ struct HomeView: View {
                     }
                 }
                 .padding(DS.cardPadding)
-                .cardStyle(tint: AppColour.primary)
+                .cardStyle()
             }
             .buttonStyle(.dsPress)
             .padding(.horizontal, DS.screenPadding)
@@ -1043,8 +1059,7 @@ struct HomeView: View {
         }
     }
 
-    /// The collapsed confirmation after Mark done. One row, no buttons: the
-    /// loop's next beat is tomorrow's result card, not more chrome today.
+    /// A compact confirmation with an undo for accidental completion.
     private func actionDoneLoggedRow(action: DashboardViewModel.SmartAction) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
@@ -1054,14 +1069,22 @@ struct HomeView: View {
                 Text(action.title)
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(AppColour.textPrimary)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(Copy.Home.nextUpDoneLogged)
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textSecondary)
             }
             Spacer(minLength: 0)
+            Button("Undo") {
+                DailyActionCompletion.undoToday()
+                actionDoneToday = DailyActionCompletion.isDoneToday
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(AppColour.primary)
+            .frame(minWidth: 44, minHeight: 44)
+            .accessibilityIdentifier("home.action.undo")
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home.action.doneLogged")
     }
 
@@ -1070,9 +1093,7 @@ struct HomeView: View {
     /// Ghosted until the evening for evening-anchored actions.
     private func actionMarkDoneButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
-            // Locked once done for the day: a mark can't be undone, it auto-resets
-            // tomorrow. The guard lives inside `markDone` so a wrist tap earlier in
-            // the day cannot be overwritten from here.
+            // The shared guard keeps a wrist completion from being overwritten.
             DailyActionCompletion.markDone(
                 actionTitle: action.title,
                 actionIcon: action.icon,
@@ -1086,13 +1107,13 @@ struct HomeView: View {
                 Text(Copy.Home.nextUpMarkDone)
                     .font(DS.Typography.subheadlineSemibold)
             }
-            .foregroundStyle(markDoneWaitsForEvening(action) ? AppColour.textTertiary : AppColour.scoreGood)
+            .foregroundStyle(markDoneWaitsForEvening(action) ? AppColour.textTertiary : AppColour.textOnAccent)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .background(
                 markDoneWaitsForEvening(action)
                     ? AnyShapeStyle(AppColour.surfaceSubtle)
-                    : AnyShapeStyle(AppColour.scoreGood.opacity(0.15)),
+                    : AnyShapeStyle(AppColour.primary),
                 in: RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
@@ -1103,8 +1124,8 @@ struct HomeView: View {
     /// Label for the remind pill. Past the reminder time the scheduler rolls to
     /// tomorrow, so the pill must not offer a time that has already gone by.
     private var actionRemindLabel: String {
-        let time = ActionReminderScheduler.timeLabel()
-        return ActionReminderScheduler.firesTomorrow()
+        let time = ActionReminderScheduler.timeLabel(hour: reminderHour, minute: reminderMinute)
+        return ActionReminderScheduler.firesTomorrow(hour: reminderHour, minute: reminderMinute)
             ? Copy.Home.nextUpRemindTomorrow(time)
             : Copy.Home.nextUpRemind(time)
     }
@@ -1112,23 +1133,17 @@ struct HomeView: View {
     /// Ghost "Remind 9:30" pill. Schedules a one-off reminder for the action.
     private func actionRemindButton(action: DashboardViewModel.SmartAction) -> some View {
         Button {
-            Task {
-                let ok = await ActionReminderScheduler.schedule(action: action.title)
-                actionReminderSet = ok
-                AppAnalytics.shared.trackBlockTap(
-                    title: action.title, type: .homeDailyAction, screen: .home,
-                    metadata: ["source": "next_up_remind", "set": "\(ok)"])
-            }
+            showActionReminder = true
         } label: {
             HStack(spacing: 7) {
                 Image(systemName: actionReminderSet ? "bell.fill" : "clock")
                     .font(DS.Typography.captionSemibold)
-                Text(actionReminderSet ? Copy.Home.nextUpReminderSet : actionRemindLabel)
+                Text(actionReminderSet ? ActionReminderScheduler.timeLabel(hour: reminderHour, minute: reminderMinute) : "Remind me")
                     .font(DS.Typography.subheadlineSemibold)
             }
             .foregroundStyle(AppColour.textSecondary)
             .padding(.horizontal, 14)
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: 13))
         }
         .buttonStyle(.plain)
@@ -1148,112 +1163,19 @@ struct HomeView: View {
     /// picker, so the card whose advice a context overrides is where it lives.
     @ViewBuilder
     private var lifeContextSection: some View {
-        let store = viewModel.lifeContextStore
-        let active = activeLifeContexts
-
-        Divider().overlay(AppColour.borderLow)
-
-        if showContextPicker {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DS.space2) {
-                    ForEach(LifeContextStore.Context.allCases, id: \.self) { context in
-                        lifeContextChip(context)
-                    }
-                }
-            }
-            .accessibilityIdentifier("home.lifeContextChips")
-        } else if !active.isEmpty {
-            Button {
-                // The picker-open step was invisible in the funnel, so chip
-                // toggle rates could not be computed against opens.
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Life Context",
-                    type: .homeDailyAction,
-                    screen: .home,
-                    metadata: ["source": "context_picker_open", "active_count": active.count]
-                )
-                showContextPicker = true
-            } label: {
-                Text(Copy.Home.nextUpContextAdjusted(active.map(\.displayName).sentenceList))
-                    .font(DS.Typography.footnoteMedium)
-                    .foregroundStyle(AppColour.accent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
+        if !activeLifeContexts.isEmpty {
+            Button { showContextPicker = true } label: {
+                Text(Copy.Home.nextUpContextAdjusted(activeLifeContexts.map(\.displayName).sentenceList))
+                    .font(.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("home.lifeContext.active")
-        } else {
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Life Context",
-                    type: .homeDailyAction,
-                    screen: .home,
-                    metadata: ["source": "context_picker_open", "active_count": 0]
-                )
-                showContextPicker = true
-            } label: {
-                Text(Copy.Home.nextUpContextPrompt)
-                    .font(DS.Typography.footnote)
-                    .foregroundStyle(AppColour.textTertiary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint(Copy.Home.contextAddHint)
-            .accessibilityIdentifier("home.lifeContext.prompt")
         }
-
-        // Nothing switches itself off, so the only thing keeping a stale
-        // context from suppressing advice for months is asking.
-        ForEach(store.needingConfirmation(), id: \.self) { context in
+        ForEach(viewModel.lifeContextStore.needingConfirmation(), id: \.self) { context in
             lifeContextConfirmRow(context)
         }
-    }
-
-    private func lifeContextChip(_ context: LifeContextStore.Context) -> some View {
-        let store = viewModel.lifeContextStore
-        let isOn = store.isActive(context)
-        let tint = context.requiresRest ? AppColour.danger : AppColour.accent
-
-        return Button {
-            store.toggle(context)
-            AppAnalytics.shared.trackBlockTap(
-                title: context.rawValue,
-                type: .homeDailyAction,
-                screen: .home,
-                metadata: ["life_context": context.rawValue, "turned_on": !isOn]
-            )
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: context.systemImage)
-                    .font(DS.Typography.caption)
-                Text(lifeContextChipLabel(for: context, isOn: isOn))
-                    .font(DS.Typography.footnoteMedium)
-                    .lineLimit(1)
-            }
-            .foregroundStyle(isOn ? tint : AppColour.textSecondary)
-            .padding(.horizontal, DS.space3)
-            .padding(.vertical, DS.space2)
-            .background(
-                Capsule().fill(isOn ? tint.opacity(DS.badgeBg) : AppColour.surfaceRaised)
-            )
-            .overlay(
-                Capsule().strokeBorder(isOn ? tint.opacity(0.45) : AppColour.borderLow, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(lifeContextChipLabel(for: context, isOn: isOn))
-        .accessibilityAddTraits(isOn ? [.isSelected] : [])
-        .accessibilityHint(Copy.Home.contextAddHint)
-    }
-
-    /// An active chip shows the day it was switched on. That is a fact we know;
-    /// an end date would be a guess about how long the person stays injured.
-    private func lifeContextChipLabel(for context: LifeContextStore.Context, isOn: Bool) -> String {
-        guard isOn, let start = viewModel.lifeContextStore.startDate(for: context) else {
-            return context.displayName
-        }
-        return Copy.Home.contextSince(context.displayName, start.formatted(.dateTime.day().month(.abbreviated)))
     }
 
     private func lifeContextConfirmRow(_ context: LifeContextStore.Context) -> some View {
@@ -1396,9 +1318,16 @@ struct HomeView: View {
     /// other sheet holds the screen. The manager owns every frequency rule;
     /// this only owns "nothing else is up right now".
     private func presentMirrorMomentIfDue() {
+        // Home is already alive under the onboarding, disclaimer and paywall
+        // covers. Presenting this sheet then makes SwiftUI preempt the cover
+        // (each host re-presents over the other until both drop), which is
+        // how new installs ended up on the dashboard with no onboarding.
+        guard appStateStore.onboardingCompleted, appStateStore.disclaimerAcknowledged,
+              !(SubscriptionManager.shared.shouldEnforcePaywall && !FeatureGate.hasFullAccess)
+        else { return }
         guard !viewModel.ui.showDiscovery, !showJournalEntry, !showScoreGuide,
               !showSoftLockPaywall, !showRecoveryInfo, !showShareCard,
-              !showMirrorMoment, !showMirrorCapture else { return }
+              !showMirrorMoment, !showMirrorCapture, !showContextPicker, !showActionReminder else { return }
         let manager = MirrorMomentManager.shared
         guard manager.shouldShow(cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera)) else { return }
         // The sheet stamps the day itself in onAppear: stamping here would
@@ -1526,5 +1455,135 @@ private extension View {
             appStateStore: AppStateStore(),
             navigationPath: .constant(NavigationPath())
         )
+    }
+}
+
+/// Context changes remain local until Save so dismissing the sheet is harmless.
+private struct HomeContextSheet: View {
+    let store: LifeContextStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: Set<LifeContextStore.Context>
+
+    init(store: LifeContextStore) {
+        self.store = store
+        _draft = State(initialValue: store.active)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    ForEach(LifeContextStore.Context.allCases, id: \.self) { context in
+                        Toggle(isOn: Binding(
+                            get: { draft.contains(context) },
+                            set: { enabled in
+                                if enabled { draft.insert(context) } else { draft.remove(context) }
+                            }
+                        )) {
+                            Label(context.displayName, systemImage: context.systemImage)
+                        }
+                    }
+                } footer: {
+                    Text("Your daily advice adapts to what you select. Context stays active until you turn it off.")
+                }
+            }
+            .tint(AppColour.primary)
+            .navigationTitle("Today's context")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        for context in LifeContextStore.Context.allCases where draft.contains(context) != store.isActive(context) {
+                            store.toggle(context)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: context.rawValue, type: .homeDailyAction, screen: .home,
+                                metadata: ["life_context": context.rawValue, "turned_on": draft.contains(context)])
+                        }
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+private struct HomeActionReminderSheet: View {
+    let actionTitle: String
+    let onSave: (Int, Int) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @State private var time: Date
+    @State private var isSaving = false
+    @State private var failed = false
+
+    init(actionTitle: String, hour: Int, minute: Int, onSave: @escaping (Int, Int) -> Void) {
+        self.actionTitle = actionTitle
+        self.onSave = onSave
+        _time = State(initialValue: Date.cal.date(bySettingHour: hour, minute: minute, second: 0, of: .now) ?? .now)
+    }
+
+    private var fireDate: Date? {
+        ActionReminderScheduler.nextFireDate(
+            hour: Date.cal.component(.hour, from: time),
+            minute: Date.cal.component(.minute, from: time))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(actionTitle).font(.headline)
+                    DatePicker("Remind me at", selection: $time, displayedComponents: .hourAndMinute)
+                } footer: {
+                    if let fireDate {
+                        Text("One reminder: \(fireDate.formatted(date: .abbreviated, time: .shortened))")
+                    }
+                }
+                if failed {
+                    Section {
+                        Text("Couldn't set this reminder. Check that notifications are allowed for Laso, then try again.")
+                        Button("Open Settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                        }
+                    }
+                }
+            }
+            .disabled(isSaving)
+            .navigationTitle("Set a reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.disabled(isSaving)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        isSaving = true
+                        let hour = Date.cal.component(.hour, from: time)
+                        let minute = Date.cal.component(.minute, from: time)
+                        Task { @MainActor in
+                            let ok = await ActionReminderScheduler.schedule(action: actionTitle, hour: hour, minute: minute)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: actionTitle, type: .homeDailyAction, screen: .home,
+                                metadata: ["source": "next_up_remind", "set": "\(ok)"])
+                            isSaving = false
+                            if ok { onSave(hour, minute); dismiss() } else { failed = true }
+                        }
+                    } label: {
+                        if isSaving { ProgressView() } else { Text("Save").fontWeight(.semibold) }
+                    }
+                    .disabled(isSaving)
+                }
+            }
+        }
+        .tint(AppColour.primary)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(isSaving)
     }
 }

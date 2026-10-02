@@ -108,3 +108,101 @@ struct HealthScoreRing: View {
     }
     .padding()
 }
+
+/// A quiet, open dial for the primary score. Decorative ticks are hidden from
+/// VoiceOver; the accessible value always includes the score's actual identity.
+struct HealthScoreGauge: View {
+    let score: Int
+    let label: String
+    var tint: Color = AppColour.primary
+    var compact = false
+
+    @ScaledMetric(relativeTo: .largeTitle) private var numeralSize: CGFloat = 80
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var diameter: CGFloat { compact ? 100 : 236 }
+    private var progress: CGFloat { CGFloat(min(100, max(0, score))) / 100 }
+
+    static func bandColor(_ score: Int) -> Color {
+        switch HealthScoreBand.from(score: score) {
+        case .excellent, .good: return AppColour.primary
+        case .fair: return AppColour.warning
+        case .needsAttention, .critical: return AppColour.danger
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            if !compact { tickMarks.accessibilityHidden(true) }
+            progressArc.accessibilityHidden(true)
+            scoreLabel
+        }
+        .frame(width: diameter, height: diameter)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: score)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue("\(score) out of 100")
+    }
+
+    private var tickMarks: some View {
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let outer: CGFloat = size.width / 2 - 1
+            for tick in 0...40 {
+                let degrees: CGFloat = 135 + CGFloat(tick) * 6.75
+                let angle: CGFloat = degrees * .pi / 180
+                let inner: CGFloat = outer - (tick.isMultiple(of: 5) ? 6 : 3)
+                let start = CGPoint(x: center.x + cos(angle) * inner,
+                                    y: center.y + sin(angle) * inner)
+                let end = CGPoint(x: center.x + cos(angle) * outer,
+                                  y: center.y + sin(angle) * outer)
+                var path = Path()
+                path.move(to: start)
+                path.addLine(to: end)
+                context.stroke(path, with: .color(AppColour.borderMedium), lineWidth: 1)
+            }
+        }
+    }
+
+    private var progressArc: some View {
+        ZStack {
+            Circle().trim(from: 0, to: 0.75)
+                .stroke(AppColour.trackNeutral, style: arcStroke)
+            Circle().trim(from: 0, to: progress * 0.75)
+                .stroke(tint, style: arcStroke)
+            Circle().fill(tint)
+                .frame(width: compact ? 6 : 9, height: compact ? 6 : 9)
+                .offset(x: (diameter - (compact ? 8 : 26)) / 2)
+                .rotationEffect(.degrees(Double(progress) * 270))
+        }
+        .rotationEffect(.degrees(135))
+        .padding(compact ? 4 : 13)
+    }
+
+    private var arcStroke: StrokeStyle {
+        StrokeStyle(lineWidth: compact ? 4 : 5, lineCap: .round)
+    }
+
+    private var scoreLabel: some View {
+        VStack(spacing: compact ? 0 : 3) {
+            if !compact {
+                Text(label)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            Text(score.formatted())
+                .font(.system(size: compact ? 36 : min(numeralSize, 100), weight: .light).monospacedDigit())
+                .foregroundStyle(AppColour.textPrimary)
+                .contentTransition(.numericText())
+                .postHogMask()
+            if !compact {
+                Text("OUT OF 100")
+                    .font(.caption2.weight(.medium))
+                    .tracking(1.6)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, compact ? 12 : 30)
+    }
+}

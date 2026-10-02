@@ -46,10 +46,10 @@ enum DS {
     static let space8: CGFloat = 48
 
     /// Standard screen horizontal padding.
-    static let screenPadding: CGFloat = space3    // 12
+    static let screenPadding: CGFloat = space5    // 20
 
     /// Standard card interior padding.
-    static let cardPadding: CGFloat = space4      // 16 (was 16.8)
+    static let cardPadding: CGFloat = space5      // 20 (was 16.8)
 
     /// Between sections on scrollable pages.
     static let sectionSpacing: CGFloat = space6   // 24

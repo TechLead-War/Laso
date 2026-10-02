@@ -11,6 +11,9 @@ final class WeeklyReviewViewModel {
     private static let maximumDailyStepTarget = 15000
     private static let weeklyStepIncrement = 500
 
+    /// A notification can open this screen before the first dashboard refresh.
+    var sourceUpdatedAt: Date? { dashboardViewModel.lastRefresh }
+
     var review: WeeklyReview?
     var isLoading = false
     /// Timestamp of the most recent successful `load()`.
@@ -27,12 +30,14 @@ final class WeeklyReviewViewModel {
 
         // Don't show a review if there's no real scored data
         guard !dashboardViewModel.analysisEngine.categoryScores.isEmpty,
-              let score = dashboardViewModel.scores.overallScore?.score else {
+              let score = dashboardViewModel.scores.rollingAverageScore else {
             review = nil
             return
         }
 
-        let previousScore = persistence.loadPreviousWeekScore()
+        // Use the same weekly series as Health. Mixing today's live score
+        // with an arbitrary prior-day snapshot made this comparison misleading.
+        let previousScore = dashboardViewModel.scores.weeklyScoreChange.map { score - $0 }
 
         let scoreTrend: TrendDirection
         if let prev = previousScore {

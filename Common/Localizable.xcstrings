@@ -10,42 +10,12 @@
     "·" : {
 
     },
-    "%@ %@" : {
+    "%@ %@ percent" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "%@ %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$lld"
-          }
-        }
-      }
-    },
-    "%@ dropped %@ this week." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ dropped %2$@ this week."
-          }
-        }
-      }
-    },
-    "%@ improved by %@ this week." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ improved by %2$@ this week."
+            "value" : "%1$@ %2$@ percent"
           }
         }
       }
@@ -68,16 +38,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ score %2$lld out of 100"
-          }
-        }
-      }
-    },
-    "%@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@"
           }
         }
       }
@@ -168,9 +128,6 @@
         }
       }
     },
-    "%lld from last week" : {
-
-    },
     "%lld metric%@ need%@ attention" : {
       "localizations" : {
         "en" : {
@@ -201,13 +158,13 @@
         }
       }
     },
+    "%lld out of 100" : {
+
+    },
     "%lld%%" : {
 
     },
     "%lldd" : {
-
-    },
-    "+%lld from last week" : {
 
     },
     "+%lld%%" : {
@@ -225,6 +182,9 @@
     "100" : {
 
     },
+    "A LITTLE FOCUS" : {
+
+    },
     "Active" : {
 
     },
@@ -232,6 +192,9 @@
 
     },
     "Activity" : {
+
+    },
+    "Adjust today's context" : {
 
     },
     "Age" : {
@@ -243,10 +206,19 @@
     "Baseline" : {
 
     },
+    "Behind your score" : {
+
+    },
     "Body & Vitals" : {
 
     },
     "BPM" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Changes in recorded averages over the last 7 days compared with the previous 7 days." : {
 
     },
     "Check Health Score" : {
@@ -447,6 +419,9 @@
     "Cooldown" : {
 
     },
+    "Couldn't set this reminder. Check that notifications are allowed for Laso, then try again." : {
+
+    },
     "Cycling" : {
 
     },
@@ -498,6 +473,9 @@
     "Health Trends" : {
 
     },
+    "Health view" : {
+
+    },
     "Heart & Cardio" : {
 
     },
@@ -532,6 +510,9 @@
 
     },
     "Idle" : {
+
+    },
+    "Improving" : {
 
     },
     "Inactive" : {
@@ -593,10 +574,16 @@
     "Mobility" : {
 
     },
+    "No notable changes to show. Comparisons need enough readings in both weeks." : {
+
+    },
     "No score yet" : {
 
     },
     "Not Enough Data" : {
+
+    },
+    "One reminder: %@" : {
 
     },
     "Open Laso and begin a short breath session from tonight's wind-down." : {
@@ -611,6 +598,9 @@
     "Open Laso and start a quick breathing session." : {
 
     },
+    "Open Settings" : {
+
+    },
     "Opening your health trends in Laso." : {
 
     },
@@ -620,10 +610,19 @@
     "Opens Laso to the Explore tab showing your health trends and analysis." : {
 
     },
+    "OUT OF 100" : {
+
+    },
     "Quickly log a workout to your Health app with a type and duration." : {
 
     },
     "Readiness" : {
+
+    },
+    "Recent days count more in your weekly score." : {
+
+    },
+    "Remind me at" : {
 
     },
     "Respiratory" : {
@@ -644,6 +643,9 @@
     "Running" : {
 
     },
+    "Save" : {
+
+    },
     "Score %lld" : {
 
     },
@@ -651,6 +653,9 @@
 
     },
     "Series" : {
+
+    },
+    "Set a reminder" : {
 
     },
     "Set today's intention" : {
@@ -719,10 +724,16 @@
     "Time" : {
 
     },
+    "Today's context" : {
+
+    },
     "Toggles a causal explanation for why this metric declined" : {
 
     },
     "Trend" : {
+
+    },
+    "Undo" : {
 
     },
     "Update" : {
@@ -740,10 +751,16 @@
     "Walking" : {
 
     },
+    "Weekly highlights" : {
+
+    },
     "What type of workout did you do?" : {
 
     },
     "Workout Type" : {
+
+    },
+    "Worth watching" : {
 
     },
     "Yoga" : {
@@ -752,7 +769,13 @@
     "you@example.com" : {
 
     },
+    "Your daily advice adapts to what you select. Context stays active until you turn it off." : {
+
+    },
     "Your idea or feedback" : {
+
+    },
+    "Your week, in view" : {
 
     }
   },

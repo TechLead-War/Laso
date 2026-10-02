@@ -105,38 +105,38 @@ enum AppColour {
 
     /// Page behind a page: grouped-list background, scroll container under cards, sheet backdrop.
     static let surfaceSunken = dynamic(
-        light: #colorLiteral(red: 0.894, green: 0.894, blue: 0.925, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.031, green: 0.031, blue: 0.039, alpha: 1.00)
+        light: #colorLiteral(red: 0.9686, green: 0.9725, blue: 0.9529, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.0667, green: 0.0824, blue: 0.0745, alpha: 1.00)
     )
 
     /// Default page/screen background.
     static let surfaceBase = dynamic(
-        light: #colorLiteral(red: 0.933, green: 0.933, blue: 0.957, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.059, green: 0.059, blue: 0.075, alpha: 1.00)
+        light: #colorLiteral(red: 0.9686, green: 0.9725, blue: 0.9529, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.0667, green: 0.0824, blue: 0.0745, alpha: 1.00)
     )
 
     /// Card fill: cardStyle(), chips, tiles, icon discs, field backgrounds.
     static let surfaceRaised = dynamic(
-        light: #colorLiteral(red: 0.973, green: 0.973, blue: 0.984, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.106, green: 0.106, blue: 0.129, alpha: 1.00)
+        light: #colorLiteral(red: 1.0000, green: 1.0000, blue: 1.0000, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1059, green: 0.1294, blue: 0.1176, alpha: 1.00)
     )
 
     /// Sheet, popover body, card nested inside a card.
     static let surfaceElevated = dynamic(
-        light: #colorLiteral(red: 0.988, green: 0.988, blue: 0.992, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.149, green: 0.149, blue: 0.176, alpha: 1.00)
+        light: #colorLiteral(red: 0.9333, green: 0.9451, blue: 0.9098, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1412, green: 0.1725, blue: 0.1529, alpha: 1.00)
     )
 
     /// Opaque floating chrome: toasts, chart scrub tooltips, menus. Replaces .ultraThinMaterial where the surface must occlude.
     static let surfaceOverlay = dynamic(
-        light: #colorLiteral(red: 0.996, green: 0.996, blue: 1.000, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.200, green: 0.200, blue: 0.231, alpha: 1.00)
+        light: #colorLiteral(red: 1.0000, green: 1.0000, blue: 1.0000, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1882, green: 0.2275, blue: 0.2000, alpha: 1.00)
     )
 
     /// Barely-there fill: inactive rows, badge/pill containers, mock-sheet bodies, unselected chips. Replaces the tint@12% pattern.
     static let surfaceSubtle = dynamic(
-        light: #colorLiteral(red: 0.918, green: 0.918, blue: 0.945, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.090, green: 0.090, blue: 0.110, alpha: 1.00)
+        light: #colorLiteral(red: 0.9333, green: 0.9451, blue: 0.9098, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1412, green: 0.1725, blue: 0.1529, alpha: 1.00)
     )
 
     /// Neutral solid chip/badge fill carrying textOnAccent. Replaces raw Color.gray and .gray.gradient. Sits on `surfaceRaised`.
@@ -159,8 +159,8 @@ enum AppColour {
 
     /// Launch screen and cold-start splash. LaunchBackground.colorset must gain a light appearance.
     static let splashBackground = dynamic(
-        light: #colorLiteral(red: 0.933, green: 0.933, blue: 0.957, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.031, green: 0.031, blue: 0.039, alpha: 1.00)
+        light: #colorLiteral(red: 0.9686, green: 0.9725, blue: 0.9529, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.0667, green: 0.0824, blue: 0.0745, alpha: 1.00)
     )
 
 
@@ -168,26 +168,26 @@ enum AppColour {
 
     /// Headings, body copy, hero numerals. Sits on `surfaceBase`.
     static let textPrimary = dynamic(
-        light: #colorLiteral(red: 0.106, green: 0.106, blue: 0.125, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.949, green: 0.949, blue: 0.965, alpha: 1.00)
+        light: #colorLiteral(red: 0.1255, green: 0.1725, blue: 0.1373, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.9569, green: 0.9569, blue: 0.9255, alpha: 1.00)
     )
 
     /// Supporting copy, subtitles, row detail. Sits on `surfaceBase`.
     static let textSecondary = dynamic(
-        light: #colorLiteral(red: 0.267, green: 0.267, blue: 0.302, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.788, green: 0.788, blue: 0.824, alpha: 1.00)
+        light: #colorLiteral(red: 0.3686, green: 0.4275, blue: 0.3765, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.6314, green: 0.6706, blue: 0.6392, alpha: 1.00)
     )
 
     /// Captions, units, timestamps, metadata. Sits on `surfaceBase`.
     static let textTertiary = dynamic(
-        light: #colorLiteral(red: 0.357, green: 0.357, blue: 0.396, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.678, green: 0.678, blue: 0.722, alpha: 1.00)
+        light: #colorLiteral(red: 0.3922, green: 0.4392, blue: 0.3922, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.6314, green: 0.6706, blue: 0.6392, alpha: 1.00)
     )
 
     /// Placeholder and disabled label. Raised above the legal exemption to AA because a greyed-out health metric still has to be identifiable; hierarchy below tertiary is now carried by size and weight, not colour. Sits on `surfaceBase`.
     static let textQuaternary = dynamic(
-        light: #colorLiteral(red: 0.384, green: 0.384, blue: 0.424, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.651, green: 0.651, blue: 0.698, alpha: 1.00)
+        light: #colorLiteral(red: 0.3922, green: 0.4392, blue: 0.3922, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.6314, green: 0.6706, blue: 0.6392, alpha: 1.00)
     )
 
     /// Every label, glyph and numeral drawn ON a saturated fill. Flips polarity with the fill (M3 onPrimary tone 100 light / tone 20 dark). Clears 4.5:1 on all 34 fill tokens in both modes. Sits on `primary`.
@@ -210,8 +210,8 @@ enum AppColour {
 
     /// Decorative hairline: dividers, flat-card outlines, row separators. Opaque neutral step, not alpha. WCAG 1.4.11 decorative exemption, tuned to the APCA Lc 15 discernibility floor.
     static let borderLow = dynamic(
-        light: #colorLiteral(red: 0.878, green: 0.878, blue: 0.910, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.180, green: 0.180, blue: 0.212, alpha: 1.00)
+        light: #colorLiteral(red: 0.8627, green: 0.8863, blue: 0.8392, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1882, green: 0.2275, blue: 0.2000, alpha: 1.00)
     )
 
     /// Component outline that is not the sole identifier: raised-card definition, dashed coupon border, chip strokes.
@@ -238,16 +238,16 @@ enum AppColour {
 
     // MARK: - 3. Brand
 
-    /// Brand blue: primary buttons, links, selection state, section glyphs. Carries textOnAccent. Sits on `surfaceRaised`.
+    /// Sage: primary buttons, links, selection state, section glyphs. Carries textOnAccent. Sits on `surfaceRaised`.
     static let primary = dynamic(
-        light: #colorLiteral(red: 0.000, green: 0.392, blue: 0.800, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.302, green: 0.639, blue: 1.000, alpha: 1.00)
+        light: #colorLiteral(red: 0.1451, green: 0.3098, blue: 0.2118, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.7412, green: 0.9137, blue: 0.7961, alpha: 1.00)
     )
 
-    /// Pale brand wash behind callout cards. Container fill only, never a graphic boundary; textPrimary on it scores 14.1 light / 13.7 dark.
+    /// Pale brand wash behind callout cards. Container fill only, never a graphic boundary.
     static let primarySoft = dynamic(
-        light: #colorLiteral(red: 0.863, green: 0.922, blue: 0.980, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.063, green: 0.149, blue: 0.247, alpha: 1.00)
+        light: #colorLiteral(red: 0.8980, green: 0.9373, blue: 0.8745, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1333, green: 0.2353, blue: 0.1725, alpha: 1.00)
     )
 
     /// Cyan CTA pop: breathwork controls, Ask-your-data affordances, accent eyebrows. Light variant darkened from #06B6D4 (2.4:1) to clear white text. Sits on `surfaceRaised`.
@@ -538,8 +538,8 @@ enum AppColour {
 
     /// Unfilled rail of every progress bar, ring, gauge and day-dial, plus toggle-off tracks and missing-data placeholder bars. Load-bearing, so 3:1 minimum. Sits on `surfaceRaised`.
     static let trackNeutral = dynamic(
-        light: #colorLiteral(red: 0.541, green: 0.541, blue: 0.588, alpha: 1.00),
-        dark:  #colorLiteral(red: 0.451, green: 0.451, blue: 0.494, alpha: 1.00)
+        light: #colorLiteral(red: 0.8627, green: 0.8980, blue: 0.8431, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.1686, green: 0.2235, blue: 0.1882, alpha: 1.00)
     )
 
     /// Ring and progress track on liveActivityCanvas / surfaceInverse. Static with its canvas. Sits on `liveActivityCanvas`.

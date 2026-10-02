@@ -7,6 +7,8 @@ struct ExploreView: View {
     let viewModel: DashboardViewModel
     let appStateStore: AppStateStore
     @Binding var navigationPath: NavigationPath
+    enum Section: String, CaseIterable { case overview = "Overview", history = "History" }
+    @Binding var selectedSection: Section
     @State private var showScoreGuide = false
     @State private var trendTimeframe: Int = 30
     /// Not @State on purpose: see `ScrollDepthTracker`. Every write here
@@ -32,83 +34,121 @@ struct ExploreView: View {
         // body pass for nine categories.
         let insightCounts = insightCountsByCategory
         ScrollView {
-            // The first three sections are pinned in a plain VStack: they sit
-            // in the viewport at tab open, so laziness buys them nothing — and
-            // it actively hurts the calendar. A LazyVStack destroys children
-            // that scroll off, so every scroll past Your Trends tore down the
-            // most expensive draw in the app (88 ms first build, its own
-            // comment) and rebuilt it mid-scroll on the way back. `.equatable()`
-            // cannot help there: recycling destroys identity, not just state.
+            Picker("Health view", selection: $selectedSection) {
+                ForEach(Section.allCases, id: \.self) { section in
+                    Text(section.rawValue).tag(section)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, DS.screenPadding)
+            .padding(.bottom, DS.space4)
+            .accessibilityIdentifier("explore.sectionPicker")
+
+            // Keep the summary and calendar stable while their section scrolls.
             VStack(spacing: 24) {
                 if hasScoreData {
-                    // 1. Score Hero with trend. Categories can be scored while the
-                    // overall number is not (no baselines yet), and the hero has no
-                    // honest way to draw a missing score, so it stays away.
-                    if let rollingScore = viewModel.scores.rollingAverageScore {
-                        ExploreScoreHeroSection(
-                            overallScore: rollingScore,
-                            scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
-                            weakestCategory: weakestCategory,
-                            onScoreInfoTapped: {
+                    if selectedSection == .overview {
+                        // 1. Score Hero with trend. Categories can be scored while the
+                        // overall number is not (no baselines yet), and the hero has no
+                        // honest way to draw a missing score, so it stays away.
+                        if let rollingScore = viewModel.scores.rollingAverageScore {
+                            ExploreScoreHeroSection(
+                                overallScore: rollingScore,
+                                scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
+                                weakestCategory: weakestCategory,
+                                onScoreInfoTapped: {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: "Score Info",
+                                        type: .exploreScoreInfo,
+                                        screen: .explore,
+                                        metadata: [
+                                            // Send the same EWMA value the user sees,
+                                            // not the live daily score, so analytics
+                                            // never disagree with the UI.
+                                            "score": rollingScore,
+                                            "grade": HealthScore.grade(for: rollingScore)
+                                        ]
+                                    )
+                                    scoreHeroTracker.tapped(target: "score_info")
+                                    showScoreGuide = true
+                                },
+                                onFocusTapped: { category in
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: category.displayName, type: .exploreWeakCategory, screen: .explore,
+                                        metadata: ["category_id": category.rawValue])
+                                    navigationPath.append(category)
+                                }
+                            )
+                            .padding(.horizontal, DS.screenPadding)
+                            .onAppear { scoreHeroTracker.appeared(); scrollDepth.record(15) }
+                            .onDisappear { scoreHeroTracker.disappeared() }
+                        }
+
+                        // 4. Categories. primary navigation
+                        ExploreCategoriesSection(
+                            categories: sortedCategories,
+                            // A category absent from the map has no insights at all,
+                            // which is the 0 that `coordinate([])` returns for it.
+                            insightCountProvider: { insightCounts[$0] ?? 0 },
+                            onCategoryTapped: { category, score in
                                 AppAnalytics.shared.trackBlockTap(
-                                    title: "Score Info",
-                                    type: .exploreScoreInfo,
+                                    title: category.displayName,
+                                    type: .categoryRow,
                                     screen: .explore,
                                     metadata: [
-                                        // Send the same EWMA value the user sees,
-                                        // not the live daily score, so analytics
-                                        // never disagree with the UI.
-                                        "score": rollingScore,
-                                        "grade": HealthScore.grade(for: rollingScore)
+                                        "category_id": category.rawValue,
+                                        "category_score": score ?? -1
                                     ]
                                 )
-                                scoreHeroTracker.tapped(target: "score_info")
-                                showScoreGuide = true
+                                categoriesTracker.tapped(target: category.rawValue)
+                                navigationPath.append(category)
                             }
                         )
-                        .padding(.horizontal)
-                        .onAppear { scoreHeroTracker.appeared(); scrollDepth.record(15) }
-                        .onDisappear { scoreHeroTracker.disappeared() }
+                        .padding(.horizontal, DS.screenPadding)
+                        .onAppear { categoriesTracker.appeared(); scrollDepth.record(45) }
+                        .onDisappear { categoriesTracker.disappeared() }
+
+                        // 2. Data depth bar. Metrics, Data Points, Days
+                        ExploreDataSummarySection(
+                            metricsTracked: viewModel.analysis.dataDepth.metricsTracked,
+                            totalDataPoints: viewModel.analysis.dataDepth.totalDataPoints,
+                            daysOfData: viewModel.analysis.dataDepth.daysOfData,
+                            insightCount: viewModel.insights.focusedInsights.count
+                        )
+                        .padding(.horizontal, DS.screenPadding)
+                        .onAppear { dataSummaryTracker.appeared() }
+                        .onDisappear { dataSummaryTracker.disappeared() }
+
+                    } else {
+                        // 3. Month calendar. the only view of whether anything is
+                        // actually improving, and the surface the habit lives on.
+                        // A year of scores, so paging back a month is not an empty
+                        // grid the moment someone looks at it.
+                        //
+                        // The view model builds this map once per publish. Building it
+                        // from here cost 0.60 ms per body pass (9 passes per refresh
+                        // burst) and pulled a 3.16 ms SwiftData score-history fetch onto
+                        // the main thread from inside a body. The fallback covers the one
+                        // window the cached map misses: core analysis fills
+                        // `categoryScores` on a background task, so `hasScoreData` can
+                        // flip true a HealthKit fetch ahead of the publish that fills the
+                        // map, and the calendar would flash empty. Same window length as
+                        // the builder, so the fallback shows the same days.
+                        ExploreMonthCalendarSection(
+                            scoresByDay: viewModel.cachedDailyScoresByDay.isEmpty
+                                ? viewModel.dailyScoresByDay(days: Self.calendarDays)
+                                : viewModel.cachedDailyScoresByDay,
+                            contextsByDay: viewModel.cachedContextsByDay,
+                            detailForDay: { viewModel.dayDetail(for: $0) }
+                        )
+                        // The tab rebuilds for reasons that have nothing to do with
+                        // the calendar. This makes SwiftUI compare its inputs first
+                        // and skip the most expensive draw in the app when they have
+                        // not moved.
+                        .equatable()
+                        .padding(.horizontal, DS.screenPadding)
                     }
 
-                    // 2. Data depth bar. Metrics, Data Points, Days
-                    ExploreDataSummarySection(
-                        metricsTracked: viewModel.analysis.dataDepth.metricsTracked,
-                        totalDataPoints: viewModel.analysis.dataDepth.totalDataPoints,
-                        daysOfData: viewModel.analysis.dataDepth.daysOfData,
-                        insightCount: viewModel.insights.focusedInsights.count
-                    )
-                    .padding(.horizontal)
-                    .onAppear { dataSummaryTracker.appeared() }
-                    .onDisappear { dataSummaryTracker.disappeared() }
-
-                    // 3. Month calendar. the only view of whether anything is
-                    // actually improving, and the surface the habit lives on.
-                    // A year of scores, so paging back a month is not an empty
-                    // grid the moment someone looks at it.
-                    //
-                    // The view model builds this map once per publish. Building it
-                    // from here cost 0.60 ms per body pass (9 passes per refresh
-                    // burst) and pulled a 3.16 ms SwiftData score-history fetch onto
-                    // the main thread from inside a body. The fallback covers the one
-                    // window the cached map misses: core analysis fills
-                    // `categoryScores` on a background task, so `hasScoreData` can
-                    // flip true a HealthKit fetch ahead of the publish that fills the
-                    // map, and the calendar would flash empty. Same window length as
-                    // the builder, so the fallback shows the same days.
-                    ExploreMonthCalendarSection(
-                        scoresByDay: viewModel.cachedDailyScoresByDay.isEmpty
-                            ? viewModel.dailyScoresByDay(days: Self.calendarDays)
-                            : viewModel.cachedDailyScoresByDay,
-                        contextsByDay: viewModel.cachedContextsByDay,
-                        detailForDay: { viewModel.dayDetail(for: $0) }
-                    )
-                    // The tab rebuilds for reasons that have nothing to do with
-                    // the calendar. This makes SwiftUI compare its inputs first
-                    // and skip the most expensive draw in the app when they have
-                    // not moved.
-                    .equatable()
-                    .padding(.horizontal)
                 }
             }
 
@@ -120,7 +160,7 @@ struct ExploreView: View {
             LazyVStack(spacing: 24) {
                 if hasScoreData {
                     // 4. Your Trends. prominent trend-first section
-                    if !trendMetrics.isEmpty {
+                    if selectedSection == .history, !trendMetrics.isEmpty {
                         ExploreYourTrendsSection(
                             trendMetrics: trendMetrics,
                             trendTimeframe: $trendTimeframe,
@@ -147,222 +187,200 @@ struct ExploreView: View {
                         .onDisappear { yourTrendsTracker.disappeared() }
                     }
 
-                    // 3b. Body Intelligence and forecast. Both moved off Home,
-                    // where they restated the score card. Here they sit beside
-                    // the other analysis the user came to this tab to read.
-                    TodayBriefingView(cards: viewModel.intelligenceBriefing)
+                    if selectedSection == .overview {
+                        // 3b. Body Intelligence and forecast. Both moved off Home,
+                        // where they restated the score card. Here they sit beside
+                        // the other analysis the user came to this tab to read.
+                        TodayBriefingView(cards: viewModel.intelligenceBriefing)
 
-                    PersonalHealthForecastCard(forecasts: viewModel.healthForecasts) { metric in
-                        AppAnalytics.shared.trackBlockTap(
-                            title: metric.displayName,
-                            type: .exploreTrendMetric,
-                            screen: .explore,
-                            metadata: ["metric_id": metric.rawValue, "source": "forecast"]
-                        )
-                        navigationPath.append(metric)
-                    }
-
-                    // 4. Categories. primary navigation
-                    ExploreCategoriesSection(
-                        categories: sortedCategories,
-                        // A category absent from the map has no insights at all,
-                        // which is the 0 that `coordinate([])` returns for it.
-                        insightCountProvider: { insightCounts[$0] ?? 0 },
-                        onCategoryTapped: { category, score in
+                        PersonalHealthForecastCard(forecasts: viewModel.healthForecasts) { metric in
                             AppAnalytics.shared.trackBlockTap(
-                                title: category.displayName,
-                                type: .categoryRow,
+                                title: metric.displayName,
+                                type: .exploreTrendMetric,
                                 screen: .explore,
-                                metadata: [
-                                    "category_id": category.rawValue,
-                                    "category_score": score ?? -1
-                                ]
+                                metadata: ["metric_id": metric.rawValue, "source": "forecast"]
                             )
-                            categoriesTracker.tapped(target: category.rawValue)
-                            navigationPath.append(category)
+                            navigationPath.append(metric)
                         }
-                    )
-                    .padding(.horizontal)
-                    .onAppear { categoriesTracker.appeared(); scrollDepth.record(45) }
-                    .onDisappear { categoriesTracker.disappeared() }
 
-                    // 5. Health State Timeline link (requires 30+ days)
-                    if viewModel.analysis.dataDepth.daysOfData >= 30,
-                       viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
-                        ExploreHealthStateLinkSection(
-                            currentHealthState: viewModel.analysisEngine.currentHealthState,
-                            onTapped: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Health States",
-                                    type: .exploreHealthStateTeaser,
-                                    screen: .explore,
-                                    metadata: [
-                                        "destination": "health_state_timeline",
-                                        "state": viewModel.analysisEngine.currentHealthState?.label ?? "unknown"
-                                    ]
-                                )
-                                navigationPath.append(Route.healthStateTimeline)
-                            }
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    // 6. Strongest area. positive anchor before negative content
-                    if let strongest = viewModel.analysisEngine.categoryScores
-                        .compactMap({ score -> (category: HealthCategory, score: Int)? in
-                            guard let cat = score.category else { return nil }
-                            return (category: cat, score: score.score)
-                        })
-                        // Stable tiebreak by category.rawValue — without this
-                        // the displayed strongest pill flips between refreshes
-                        // when two categories share the top score.
-                        .max(by: { a, b in
-                            if a.score != b.score { return a.score < b.score }
-                            return a.category.rawValue > b.category.rawValue
-                        }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: strongest.category.systemImageName)
-                                .font(.caption)
-                                .foregroundStyle(AppColour.success)
-                            Text(Copy.Explore.strongest(strongest.category.displayName))
-                                .font(.caption)
-                                .foregroundStyle(AppColour.textSecondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    // 7. Needs Attention. negative factors
-                    ExploreNeedsAttentionSection(
-                        scoreExplanation: viewModel.scores.scoreExplanation,
-                        onFactorTapped: { factor in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: factor.metric.displayName,
-                                type: .exploreNeedsAttentionMetric,
-                                screen: .explore,
-                                metadata: [
-                                    "metric_id": factor.metric.rawValue,
-                                    "metric_category": factor.metric.category.rawValue
-                                ]
-                            )
-                            needsAttentionTracker.tapped(target: factor.metric.rawValue)
-                            navigationPath.append(factor.metric)
-                        },
-                        onWeakCategoryTapped: { contrib in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: contrib.category.displayName,
-                                type: .exploreWeakCategory,
-                                screen: .explore,
-                                metadata: [
-                                    "category_id": contrib.category.rawValue,
-                                    "category_score": contrib.score
-                                ]
-                            )
-                            needsAttentionTracker.tapped(target: contrib.category.rawValue)
-                            navigationPath.append(contrib.category)
-                        }
-                    )
-                    .padding(.horizontal)
-                    .onAppear { needsAttentionTracker.appeared(); scrollDepth.record(65) }
-                    .onDisappear { needsAttentionTracker.disappeared() }
-
-                    // 8. Why this week — declining metrics merged with their causal explanation
-                    // Filtered once, and only once the depth gate has passed, so
-                    // the check and the section share one pass.
-                    let declining = viewModel.analysis.dataDepth.daysOfData >= 30 ? decliningHighlights : []
-                    if !declining.isEmpty {
-                        ExploreDecliningTrendsSection(
-                            decliningHighlights: declining,
-                            causalChains: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.causalChains : [],
-                            onHighlightTapped: { highlight in
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: highlight.metric.displayName,
-                                    type: .exploreDecliningMetric,
-                                    screen: .explore,
-                                    metadata: [
-                                        "metric_id": highlight.metric.rawValue,
-                                        "metric_category": highlight.metric.category.rawValue,
-                                        "highlight_type": highlight.typeLabel
-                                    ]
-                                )
-                                decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
-                                navigationPath.append(highlight.metric)
-                            },
-                            onSeeAllIntelligenceTapped: FeatureGate.canAccess(.advancedAnalytics) ? {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "See all",
-                                    type: .exploreSeeAllCorrelations,
-                                    screen: .explore,
-                                    metadata: [
-                                        "destination": "correlations_detail",
-                                        "correlations_count": viewModel.analysis.topCorrelations.count
-                                    ]
-                                )
-                                correlationsTracker.tapped(target: "see_all")
-                                navigationPath.append(Route.correlationsDetail)
-                            } : nil
-                        )
-                        .onAppear { decliningTrendsTracker.appeared(); correlationsTracker.appeared() }
-                        .onDisappear { decliningTrendsTracker.disappeared(); correlationsTracker.disappeared() }
-                    }
-
-                    // 9. Connections entry.
-                    //
-                    // Pro gets a permanent header link. Section 8's "See all"
-                    // is the only other route to `correlationsDetail`, and it
-                    // renders only when `causalChains` is non-empty and the
-                    // section itself has declining highlights and 30+ days of
-                    // data — so a paying user with none of those could not
-                    // reach the screen at all, while free users always saw the
-                    // upsell for it.
-                    if FeatureGate.canAccess(.advancedAnalytics) {
-                        SectionHeaderView(
-                            icon: "link",
-                            title: Copy.Explore.connections,
-                            trailingTitle: Copy.Explore.seeAll,
-                            trailingAction: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: Copy.Explore.seeAll,
-                                    type: .exploreSeeAllCorrelations,
-                                    screen: .explore,
-                                    metadata: ["destination": "correlations_detail", "source": "connections_header"]
-                                )
-                                navigationPath.append(Route.correlationsDetail)
-                            }
-                        )
-                        .onAppear { scrollDepth.record(90) }
-                    } else {
-                        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                            SectionHeaderView(icon: "link", title: Copy.Explore.connections)
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(Copy.Explore.connections)
-                                        .font(.headline)
-                                    Spacer()
-                                    Text(Copy.Explore.pro)
-                                        .font(.caption2.weight(.bold))
-                                        .foregroundStyle(AppColour.textOnAccent)
-                                        .padding(.horizontal, DS.space2)
-                                        .padding(.vertical, DS.space1)
-                                        .background(AppColour.primary, in: Capsule())
+                        // 5. Health State Timeline link (requires 30+ days)
+                        if viewModel.analysis.dataDepth.daysOfData >= 30,
+                           viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
+                            ExploreHealthStateLinkSection(
+                                currentHealthState: viewModel.analysisEngine.currentHealthState,
+                                onTapped: {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: "Health States",
+                                        type: .exploreHealthStateTeaser,
+                                        screen: .explore,
+                                        metadata: [
+                                            "destination": "health_state_timeline",
+                                            "state": viewModel.analysisEngine.currentHealthState?.label ?? "unknown"
+                                        ]
+                                    )
+                                    navigationPath.append(Route.healthStateTimeline)
                                 }
-                                Text(Copy.Explore.discoverHiddenConnections)
-                                    .font(.subheadline)
-                                    .foregroundStyle(AppColour.textSecondary)
-                            }
-                            .padding(DS.cardPadding)
-                            .cardStyle()
-                            .padding(.horizontal)
+                            )
+                            .padding(.horizontal, DS.screenPadding)
                         }
-                        .onAppear { scrollDepth.record(90) }
+
+                        // 6. Strongest area. positive anchor before negative content
+                        if let strongest = viewModel.analysisEngine.categoryScores
+                            .compactMap({ score -> (category: HealthCategory, score: Int)? in
+                                guard let cat = score.category else { return nil }
+                                return (category: cat, score: score.score)
+                            })
+                            // Stable tiebreak by category.rawValue — without this
+                            // the displayed strongest pill flips between refreshes
+                            // when two categories share the top score.
+                            .max(by: { a, b in
+                                if a.score != b.score { return a.score < b.score }
+                                return a.category.rawValue > b.category.rawValue
+                            }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: strongest.category.systemImageName)
+                                    .font(.caption)
+                                    .foregroundStyle(AppColour.success)
+                                Text(Copy.Explore.strongest(strongest.category.displayName))
+                                    .font(.caption)
+                                    .foregroundStyle(AppColour.textSecondary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, DS.screenPadding)
+                        }
+
+                        // 7. Needs Attention. negative factors
+                        ExploreNeedsAttentionSection(
+                            scoreExplanation: viewModel.scores.scoreExplanation,
+                            onFactorTapped: { factor in
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: factor.metric.displayName,
+                                    type: .exploreNeedsAttentionMetric,
+                                    screen: .explore,
+                                    metadata: [
+                                        "metric_id": factor.metric.rawValue,
+                                        "metric_category": factor.metric.category.rawValue
+                                    ]
+                                )
+                                needsAttentionTracker.tapped(target: factor.metric.rawValue)
+                                navigationPath.append(factor.metric)
+                            },
+                            onWeakCategoryTapped: { contrib in
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: contrib.category.displayName,
+                                    type: .exploreWeakCategory,
+                                    screen: .explore,
+                                    metadata: [
+                                        "category_id": contrib.category.rawValue,
+                                        "category_score": contrib.score
+                                    ]
+                                )
+                                needsAttentionTracker.tapped(target: contrib.category.rawValue)
+                                navigationPath.append(contrib.category)
+                            }
+                        )
+                        .padding(.horizontal, DS.screenPadding)
+                        .onAppear { needsAttentionTracker.appeared(); scrollDepth.record(65) }
+                        .onDisappear { needsAttentionTracker.disappeared() }
+
+                        // 8. Why this week — declining metrics merged with their causal explanation
+                        // Filtered once, and only once the depth gate has passed, so
+                        // the check and the section share one pass.
+                        let declining = viewModel.analysis.dataDepth.daysOfData >= 30 ? decliningHighlights : []
+                        if !declining.isEmpty {
+                            ExploreDecliningTrendsSection(
+                                decliningHighlights: declining,
+                                causalChains: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.causalChains : [],
+                                onHighlightTapped: { highlight in
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: highlight.metric.displayName,
+                                        type: .exploreDecliningMetric,
+                                        screen: .explore,
+                                        metadata: [
+                                            "metric_id": highlight.metric.rawValue,
+                                            "metric_category": highlight.metric.category.rawValue,
+                                            "highlight_type": highlight.typeLabel
+                                        ]
+                                    )
+                                    decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
+                                    navigationPath.append(highlight.metric)
+                                },
+                                onSeeAllIntelligenceTapped: FeatureGate.canAccess(.advancedAnalytics) ? {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: "See all",
+                                        type: .exploreSeeAllCorrelations,
+                                        screen: .explore,
+                                        metadata: [
+                                            "destination": "correlations_detail",
+                                            "correlations_count": viewModel.analysis.topCorrelations.count
+                                        ]
+                                    )
+                                    correlationsTracker.tapped(target: "see_all")
+                                    navigationPath.append(Route.correlationsDetail)
+                                } : nil
+                            )
+                            .onAppear { decliningTrendsTracker.appeared(); correlationsTracker.appeared() }
+                            .onDisappear { decliningTrendsTracker.disappeared(); correlationsTracker.disappeared() }
+                        }
+
+                        // 9. Connections entry.
+                        //
+                        // Pro gets a permanent header link. Section 8's "See all"
+                        // is the only other route to `correlationsDetail`, and it
+                        // renders only when `causalChains` is non-empty and the
+                        // section itself has declining highlights and 30+ days of
+                        // data — so a paying user with none of those could not
+                        // reach the screen at all, while free users always saw the
+                        // upsell for it.
+                        if FeatureGate.canAccess(.advancedAnalytics) {
+                            SectionHeaderView(
+                                icon: "link",
+                                title: Copy.Explore.connections,
+                                trailingTitle: Copy.Explore.seeAll,
+                                trailingAction: {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: Copy.Explore.seeAll,
+                                        type: .exploreSeeAllCorrelations,
+                                        screen: .explore,
+                                        metadata: ["destination": "correlations_detail", "source": "connections_header"]
+                                    )
+                                    navigationPath.append(Route.correlationsDetail)
+                                }
+                            )
+                            .onAppear { scrollDepth.record(90) }
+                        } else {
+                            VStack(alignment: .leading, spacing: DS.itemSpacing) {
+                                SectionHeaderView(icon: "link", title: Copy.Explore.connections)
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text(Copy.Explore.connections)
+                                            .font(.headline)
+                                        Spacer()
+                                        Text(Copy.Explore.pro)
+                                            .font(.caption2.weight(.bold))
+                                            .foregroundStyle(AppColour.textOnAccent)
+                                            .padding(.horizontal, DS.space2)
+                                            .padding(.vertical, DS.space1)
+                                            .background(AppColour.primary, in: Capsule())
+                                    }
+                                    Text(Copy.Explore.discoverHiddenConnections)
+                                        .font(.subheadline)
+                                        .foregroundStyle(AppColour.textSecondary)
+                                }
+                                .padding(DS.cardPadding)
+                                .cardStyle()
+                                .padding(.horizontal, DS.screenPadding)
+                            }
+                            .onAppear { scrollDepth.record(90) }
+                        }
                     }
                 } else {
                     ExploreEmptyStateSection(
                         hasAnyHealthData: hasAnyHealthData,
                         isAuthorized: viewModel.healthKitManager.isAuthorized
                     )
-                    .padding(.horizontal)
+                    .padding(.horizontal, DS.screenPadding)
                     .onAppear {
                         AppAnalytics.shared.trackEmptyStateShown(
                             screen: .explore,
@@ -375,10 +393,10 @@ struct ExploreView: View {
             }
             .padding(.bottom, DS.space4)
         }
-        .contentMargins(.bottom, 72, for: .scrollContent)
+        .contentMargins(.bottom, 24, for: .scrollContent)
         .accessibilityIdentifier("screen.explore")
         .background(AppColour.surfaceBase.ignoresSafeArea())
-        .navigationTitle(Copy.Explore.title)
+        .navigationTitle(AppTab.explore.label)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             scrollDepth.reset()
@@ -466,7 +484,8 @@ struct ExploreView: View {
                 )
             ),
             appStateStore: AppStateStore(),
-            navigationPath: .constant(NavigationPath())
+            navigationPath: .constant(NavigationPath()),
+            selectedSection: .constant(.overview)
         )
     }
 }

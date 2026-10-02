@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Three-tab navigation model for the custom bottom bar
+/// Stable identities for the four native tab destinations
 enum AppTab: String, CaseIterable, Identifiable {
     case home
     case live
@@ -13,16 +13,16 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .home: return "Today"
         case .live: return "Live"
-        case .explore: return "Biology"
+        case .explore: return "Health"
         case .settings: return "Settings"
         }
     }
 
     var systemImageName: String {
         switch self {
-        case .home: return "heart.text.clipboard"
+        case .home: return "sun.max"
         case .live: return "waveform.path.ecg"
-        case .explore: return "chart.bar.xaxis"
+        case .explore: return "heart"
         case .settings: return "gearshape"
         }
     }

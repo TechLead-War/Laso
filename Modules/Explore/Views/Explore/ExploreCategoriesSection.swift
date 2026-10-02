@@ -5,13 +5,16 @@ struct ExploreCategoriesSection: View {
     let insightCountProvider: (HealthCategory) -> Int
     let onCategoryTapped: (HealthCategory, Int?) -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Copy.Explore.categories)
                 .font(.headline)
 
-            VStack(spacing: 0) {
-                ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: DS.space3),
+                                     count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: DS.space3) {
+                ForEach(categories, id: \.category) { item in
                     Button {
                         // The owner of `onCategoryTapped` is the single emitter
                         // for this tap. Firing here too double-counted every
@@ -32,13 +35,10 @@ struct ExploreCategoriesSection: View {
                     .accessibilityValue(item.score.map { "Score \($0)" } ?? "No score yet")
                     .accessibilityHint(Copy.Explore.opensTheCategoryDetailHint(item.category.displayName))
 
-                    if index < categories.count - 1 {
-                        Divider()
-                            .padding(.leading, 56)
-                    }
+
                 }
             }
-            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+
         }
     }
 }
@@ -54,54 +54,36 @@ struct ExploreCategoryRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: category.systemImageName)
-                .font(.title3)
-                .foregroundStyle(category.color)
-                .frame(width: 32)
-
+        VStack(alignment: .leading, spacing: DS.space3) {
+            HStack(alignment: .center) {
+                Image(systemName: category.systemImageName)
+                    .font(.title3)
+                    .foregroundStyle(category.color)
+                Spacer(minLength: 4)
+                Text(score.map { $0.formatted() } ?? "—")
+                    .font(.title2.weight(.regular).monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
+                    .postHogMask()
+            }
             VStack(alignment: .leading, spacing: DS.space1) {
                 Text(category.displayName)
-                    .font(needsAttention ? .body.weight(.bold) : .body.weight(.medium))
-
-                HStack(spacing: 8) {
-                    Text(scoreStatus)
-                        .font(.caption.weight(needsAttention ? .semibold : .regular))
-                        .foregroundStyle(scoreStatusColor)
-
-                    if insightCount > 0 {
-                        Text(Copy.Explore.insightCount(insightCount))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColour.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(scoreStatus)
+                    .font(.caption)
+                    .foregroundStyle(scoreStatusColor)
+                    .fixedSize(horizontal: false, vertical: true)
+                if insightCount > 0 {
+                    Text(Copy.Explore.insightCount(insightCount))
+                        .font(.caption2)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
-
-            Spacer()
-
-            if let score {
-                HealthScoreRing(
-                    score: score,
-                    label: "",
-                    size: 36,
-                    lineWidth: 4,
-                    // Nine of these live in a lazily recycled row: without this
-                    // they all replay their intro trim on every scroll back.
-                    animatesOnAppear: false
-                )
-            } else {
-                Text(Copy.Explore.x)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.tertiary)
-                    .frame(width: 36, height: 36)
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, DS.space4)
-        .padding(.vertical, DS.space3)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(DS.space4)
+        .cardStyle()
     }
 
     private var scoreStatus: String {

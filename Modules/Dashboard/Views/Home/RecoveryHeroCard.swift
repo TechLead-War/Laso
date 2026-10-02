@@ -32,6 +32,8 @@ struct RecoveryHeroCard: View {
     /// no earned win to share.
     var onShare: (() -> Void)? = nil
 
+    @State private var showReasons = false
+
     /// The screen never shows more Why rows than a glance can hold; the rest
     /// live behind the ring tap.
     private static let maxWhyRows = 3
@@ -71,7 +73,7 @@ struct RecoveryHeroCard: View {
                     Image(systemName: "square.and.arrow.up")
                         .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(AppColour.textSecondary)
-                        .padding(10)
+                        .frame(minWidth: 44, minHeight: 44)
                 }
                 .accessibilityLabel(Copy.Common.shareHealthCard)
                 .accessibilityIdentifier("home.recoveryCard.share")
@@ -157,154 +159,99 @@ struct RecoveryHeroCard: View {
 
     // MARK: - Card Content
 
-    /// The card is a stack of separate buttons, not one big button, because a
-    /// Button nested inside another Button's label never receives the tap.
     private func cardContent(score: Int) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Ring on the left, the "Why" list on the right — compact side by
-            // side. Ring is vertically centered against the taller Why column.
-            HStack(alignment: .center, spacing: 16) {
-                Button { onTap?() } label: { ringColumn(score: score) }
-                    .buttonStyle(.dsPress)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(ringLabel) \(score)")
-                    .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
+        VStack(spacing: DS.space3) {
+            Button { onTap?() } label: {
+                HealthScoreGauge(
+                    score: score,
+                    label: ringLabel,
+                    tint: isFallbackScore
+                        ? HealthScoreGauge.bandColor(score)
+                        : DashboardViewModel.RecoveryState(score: score).color
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
 
-                if !visibleWhyReasons.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(Copy.Home.scoreWhyLabel)
-                            .font(DS.Typography.captionSemibold)
-                            .tracking(1.4)
-                            .foregroundStyle(AppColour.textTertiary)
-                            .padding(.bottom, 2)
-
-                        ForEach(Array(visibleWhyReasons.enumerated()), id: \.element.id) { index, reason in
-                            Button { onTapWhy?(reason.kind) } label: { whyRow(reason) }
-                                .buttonStyle(.dsPress)
-                                .accessibilityElement(children: .combine)
-                                .accessibilityLabel("\(reason.label), \(reason.value)")
-                                .accessibilityHint(Copy.Home.viewDetailsHint(reason.kind.displayName))
-
-                            if index < visibleWhyReasons.count - 1 {
-                                Divider().overlay(AppColour.borderLow)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            if !summaryHead.isEmpty || !summarySub.isEmpty {
+                VStack(spacing: DS.space1) {
+                    Text(summaryHead)
+                        .font(.headline)
+                        .foregroundStyle(AppColour.textPrimary)
+                    Text(summarySub)
+                        .font(.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             }
 
-            // Plain-word takeaway kept as a footer so it is never dropped.
-            if !summaryHead.isEmpty || !summarySub.isEmpty {
-                Divider()
-                    .overlay(AppColour.borderLow)
-                    .padding(.vertical, 14)
-
-                Button { onTap?() } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(summaryHead)
-                            .font(DS.Typography.headline)
-                            .foregroundStyle(AppColour.textPrimary)
-                        Text(summarySub)
-                            .font(DS.Typography.subheadline)
-                            .foregroundStyle(AppColour.textSecondary)
+            if !missingSignals.isEmpty {
+                Button { onFixCoverage?() } label: {
+                    HStack(spacing: DS.space2) {
+                        Image(systemName: "clock")
+                        Text(Copy.Home.coverageInlineMissing(missingSignals.sentenceList))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
                     }
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
+                    .font(.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .padding(.horizontal, DS.space3)
+                    .padding(.vertical, DS.space2)
+                    .frame(minHeight: 44)
+                    .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
                 }
                 .buttonStyle(.plain)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(summaryHead) \(summarySub)")
-                .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
+                .accessibilityIdentifier("home.recoveryCard.missingSignals")
             }
 
-            coverageRow
+            if !visibleWhyReasons.isEmpty {
+                DisclosureGroup(isExpanded: $showReasons) {
+                    VStack(spacing: 0) {
+                        ForEach(visibleWhyReasons) { reason in
+                            Button { onTapWhy?(reason.kind) } label: {
+                                ViewThatFits(in: .horizontal) {
+                                    HStack(spacing: DS.space2) {
+                                        reasonLabel(reason)
+                                        Spacer(minLength: 8)
+                                        Text(reason.value).foregroundStyle(AppColour.textSecondary)
+                                    }
+                                    VStack(alignment: .leading, spacing: DS.space1) {
+                                        reasonLabel(reason)
+                                        Text(reason.value).foregroundStyle(AppColour.textSecondary)
+                                    }.frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .font(.subheadline)
+                                .padding(.vertical, DS.space2)
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityHint(Copy.Home.viewDetailsHint(reason.kind.displayName))
+                        }
+                    }
+                } label: {
+                    Text("Behind your score")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
+                        .frame(minHeight: 44)
+                }
+                .tint(AppColour.textSecondary)
+            }
         }
-        .padding(DS.cardPadding + 4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColour.surfaceRaised)
-        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
-        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.borderLow, lineWidth: 1))
+        .padding(.bottom, DS.space2)
+        .frame(maxWidth: .infinity)
         .accessibilityIdentifier("home.recoveryCard")
     }
 
-    private func ringColumn(score: Int) -> some View {
-        let recoveryState = DashboardViewModel.RecoveryState(score: score)
-        return ZStack {
-            // Soft glow via a radial gradient (cheap) rather than a
-            // Gaussian blur, which re-renders offscreen every frame and
-            // makes scrolling lag. Same RecoveryState colour as the ring,
-            // so a red morning can never glow green.
-            Circle()
-                .fill(RadialGradient(
-                    colors: [recoveryState.color.opacity(0.28), .clear],
-                    center: .center, startRadius: 6, endRadius: 66))
-                .frame(width: 132, height: 132)
-                .allowsHitTesting(false)
-            HealthScoreRing(
-                score: score,
-                label: ringLabel,
-                size: 104,
-                lineWidth: 9,
-                tint: recoveryState.color
-            )
-        }
-        .frame(width: 132)
-        .contentShape(Rectangle())
-    }
-
-    /// The card's one honesty device: names the scorer-fed signals with no
-    /// reading and opens the screen that fixes them. Silent on a full read.
-    @ViewBuilder
-    private var coverageRow: some View {
-        if !missingSignals.isEmpty {
-            Button { onFixCoverage?() } label: {
-                Text(Copy.Home.coverageInlineMissing(missingSignals.sentenceList))
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(AppColour.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 12)
-            .accessibilityLabel(Copy.Home.coverageInlineMissing(missingSignals.sentenceList))
-            .accessibilityIdentifier("home.recoveryCard.missingSignals")
-        }
-    }
-
-    // MARK: - Why Row
-
-    /// One plain line: a colored dot, the interpretation, and the value. The
-    /// label auto-shrinks a touch rather than wrapping, so long reasons like
-    /// "Resting heart rate is up" stay on one line in the narrow right column.
-    /// A signal with no reading stays in place, greyed, so the list never looks
-    /// like it is holding something back.
-    private func whyRow(_ reason: DashboardViewModel.RecoveryWhyReason) -> some View {
-        let missing = reason.tone == .noData
-        return HStack(spacing: 9) {
-            Circle()
-                .fill(dotColor(reason.tone))
-                .frame(width: 7, height: 7)
-            // The signal name has to survive intact; the reading beside it can
-            // shrink, because a clipped label leaves the row meaningless.
+    private func reasonLabel(_ reason: DashboardViewModel.RecoveryWhyReason) -> some View {
+        HStack(spacing: DS.space2) {
+            Circle().fill(dotColor(reason.tone)).frame(width: 6, height: 6)
             Text(reason.label)
-                .font(DS.Typography.subheadline)
-                .foregroundStyle(missing ? AppColour.textTertiary : AppColour.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .layoutPriority(1)
-            Spacer(minLength: 6)
-            Text(reason.value)
-                .font(DS.Typography.footnote)
-                .foregroundStyle(missing ? AppColour.textTertiary : AppColour.textSecondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .postHogMask()
+                .foregroundStyle(AppColour.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 9)
-        .contentShape(Rectangle())
     }
 
     private func dotColor(_ tone: DashboardViewModel.RecoveryWhyReason.Tone) -> Color {

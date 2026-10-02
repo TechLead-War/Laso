@@ -15,9 +15,11 @@ struct ContentView: View {
     /// still present its container with no content — an empty card with no Skip
     /// button and no drag gesture, which the user can only escape by force-quit.
     @State private var rootSheet: RootSheet?
-    @State private var navigationPath = NavigationPath()
+    @State private var livePath = NavigationPath()
+    @State private var settingsPath = NavigationPath()
     @State private var homePath = NavigationPath()
     @State private var explorePath = NavigationPath()
+    @State private var exploreSection: ExploreView.Section = .overview
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
     /// Which cards the visible detail screen offers, set by `routeDestination`
@@ -351,7 +353,7 @@ struct ContentView: View {
                 liveViewModel.fetchHomeDataTiered()
             }
         }
-        .onChange(of: navigationPath.count) { _, newCount in
+        .onChange(of: livePath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
         .onChange(of: homePath.count) { _, newCount in
@@ -360,7 +362,14 @@ struct ContentView: View {
         .onChange(of: explorePath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
+        .onChange(of: settingsPath.count) { _, newCount in
+            AppAnalytics.shared.updateNavigationDepth(newCount)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { notification in
+            if notification.userInfo?["section"] as? String == "history" {
+                exploreSection = .history
+                explorePath = NavigationPath()
+            }
             selectedTab = .explore
         }
         .onChange(of: NotificationRouter.shared.pendingRoute) { _, newRoute in
@@ -397,54 +406,34 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
     private var tabsRoot: some View {
-        if #available(iOS 26.0, *) {
-            liquidGlassTabs
-        } else {
-            legacyNavStack
-        }
-    }
-
-    @available(iOS 26.0, *)
-    private var liquidGlassTabs: some View {
         TabView(selection: $selectedTab) {
-            Tab(AppTab.home.label, systemImage: AppTab.home.systemImageName, value: AppTab.home) {
-                NavigationStack(path: $homePath) {
-                    withNavigationDestinations(homeTabView(path: $homePath), path: $homePath)
-                }
+            NavigationStack(path: $homePath) {
+                withNavigationDestinations(homeTabView(path: $homePath), path: $homePath)
             }
-            Tab(AppTab.live.label, systemImage: AppTab.live.systemImageName, value: AppTab.live) {
-                NavigationStack {
-                    liveTabView
-                }
-            }
-            Tab(AppTab.explore.label, systemImage: AppTab.explore.systemImageName, value: AppTab.explore) {
-                NavigationStack(path: $explorePath) {
-                    withNavigationDestinations(exploreTabView(path: $explorePath), path: $explorePath)
-                }
-            }
-            Tab(AppTab.settings.label, systemImage: AppTab.settings.systemImageName, value: AppTab.settings) {
-                NavigationStack {
-                    settingsTabView
-                }
-            }
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            billingGraceBanner
-        }
-    }
+            .tabItem { Label(AppTab.home.label, systemImage: AppTab.home.systemImageName) }
+            .tag(AppTab.home)
 
-    private var legacyNavStack: some View {
-        NavigationStack(path: $navigationPath) {
-            withNavigationDestinations(tabContent, path: $navigationPath)
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    billingGraceBanner
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    CustomTabBar(selectedTab: $selectedTab)
-                }
+            NavigationStack(path: $livePath) {
+                withNavigationDestinations(liveTabView, path: $livePath)
+            }
+            .tabItem { Label(AppTab.live.label, systemImage: AppTab.live.systemImageName) }
+            .tag(AppTab.live)
+
+            NavigationStack(path: $explorePath) {
+                withNavigationDestinations(exploreTabView(path: $explorePath), path: $explorePath)
+            }
+            .tabItem { Label(AppTab.explore.label, systemImage: AppTab.explore.systemImageName) }
+            .tag(AppTab.explore)
+
+            NavigationStack(path: $settingsPath) {
+                withNavigationDestinations(settingsTabView, path: $settingsPath)
+            }
+            .tabItem { Label(AppTab.settings.label, systemImage: AppTab.settings.systemImageName) }
+            .tag(AppTab.settings)
         }
+        .tint(AppColour.primary)
+        .safeAreaInset(edge: .top, spacing: 0) { billingGraceBanner }
     }
 
     @ViewBuilder
@@ -487,7 +476,7 @@ struct ContentView: View {
                 }
             }
             .navigationDestination(for: Route.self) { route in
-                routeDestination(for: route)
+                routeDestination(for: route, path: path)
             }
     }
 
@@ -518,7 +507,8 @@ struct ContentView: View {
         ExploreView(
             viewModel: dashboardViewModel,
             appStateStore: appStateStore,
-            navigationPath: path
+            navigationPath: path,
+            selectedSection: $exploreSection
         )
     }
 
@@ -553,20 +543,6 @@ struct ContentView: View {
         await deviceSourceManager.scanSources()
     }
 
-    @ViewBuilder
-    private var tabContent: some View {
-        switch selectedTab {
-        case .home:
-            homeTabView(path: $navigationPath)
-        case .live:
-            liveTabView
-        case .explore:
-            exploreTabView(path: $navigationPath)
-        case .settings:
-            settingsTabView
-        }
-    }
-
     // MARK: - Route Destinations
 
     /// Wraps every pushed detail screen with its share entry.
@@ -578,10 +554,10 @@ struct ContentView: View {
     /// free of share plumbing and there is a single place that decides which
     /// card leads from which screen.
     @ViewBuilder
-    private func routeDestination(for route: Route) -> some View {
+    private func routeDestination(for route: Route, path: Binding<NavigationPath>) -> some View {
         let entry = Self.shareEntry(for: route)
 
-        routeContent(for: route)
+        routeContent(for: route, path: path)
             .toolbar {
                 if let entry {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -632,12 +608,12 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func routeContent(for route: Route) -> some View {
+    private func routeContent(for route: Route, path: Binding<NavigationPath>) -> some View {
         switch route {
         case .insightsDetail:
             InsightsDetailView(
                 insightsByCategory: dashboardViewModel.insights.insightsByCategory,
-                onTapMetric: { metric in navigationPath.append(metric) },
+                onTapMetric: { metric in path.wrappedValue.append(metric) },
                 headlineSummary: dashboardViewModel.analysis.topCausalChain?.narrative ?? dashboardViewModel.insights.headlineInsight?.recommendation,
                 store: healthDataStore
             )
@@ -649,7 +625,7 @@ struct ContentView: View {
                 causalChains: dashboardViewModel.analysis.causalChains,
                 compoundInsights: dashboardViewModel.analysis.compoundInsights,
                 interactionEffects: dashboardViewModel.analysis.interactionEffects,
-                onTapMetric: { metric in navigationPath.append(metric) }
+                onTapMetric: { metric in path.wrappedValue.append(metric) }
             )
         case .healthStateTimeline:
             HealthStateTimelineView(
@@ -686,7 +662,7 @@ struct ContentView: View {
                 cyclePhase: dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier,
                 topCausalChain: dashboardViewModel.analysis.topCausalChain,
                 recoverySignals: dashboardViewModel.todayRecoverySignals(liveVM: liveViewModel),
-                onTapMetric: { metric in navigationPath.append(metric) }
+                onTapMetric: { metric in path.wrappedValue.append(metric) }
             )
         case .askYourData:
             AskYourDataView(viewModel: dashboardViewModel)
@@ -1011,8 +987,7 @@ struct ContentView: View {
     // MARK: - Deep-link Routing
 
     /// Append a deep-link route onto the navigation path for the active tab,
-    /// matching the per-tab NavigationStack bindings (home/explore have their
-    /// own paths; live/settings share `navigationPath`).
+    /// matching the independent NavigationStack owned by each tab.
     private func navigate(to route: Route) {
         // JournalEntryView owns its own NavigationStack. Pushing it into the tab
         // stack nests two stacks, which SwiftUI treats as undefined behavior and
@@ -1028,7 +1003,8 @@ struct ContentView: View {
         switch selectedTab {
         case .home: homePath.append(route)
         case .explore: explorePath.append(route)
-        case .live, .settings: navigationPath.append(route)
+        case .live: livePath.append(route)
+        case .settings: settingsPath.append(route)
         }
     }
 

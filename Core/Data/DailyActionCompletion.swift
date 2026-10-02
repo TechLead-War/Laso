@@ -28,7 +28,7 @@ enum DailyActionCompletion {
     /// a zero here, and tomorrow reported the whole score as the gain.
     ///
     /// Returns false when today was already marked, in which case nothing is
-    /// written. A mark cannot be undone; it resets on the next calendar day.
+    /// written. A mark resets on the next calendar day or when the user explicitly undoes it.
     @discardableResult
     static func markDone(
         actionTitle: String,
@@ -58,4 +58,17 @@ enum DailyActionCompletion {
         AppAnalytics.shared.trackCoreAction(.completedDailyAction, screen: .home)
         return true
     }
+    /// Removes only today's completion and its pending next-morning result.
+    static func undoToday() {
+        guard isDoneToday else { return }
+        defaults.removeObject(forKey: AppKeys.Data.dailyActionDoneDay)
+        if let record = DailyActionResultStore.pending, Date.cal.isDateInToday(record.doneDate) {
+            DailyActionResultStore.clear()
+        }
+        AppAnalytics.shared.trackBlockTap(
+            title: "Undo daily action", type: .homeDailyAction, screen: .home,
+            metadata: ["source": "next_up_undo"]
+        )
+    }
+
 }

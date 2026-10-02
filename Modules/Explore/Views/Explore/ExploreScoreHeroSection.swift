@@ -5,102 +5,92 @@ struct ExploreScoreHeroSection: View {
     let scoreChangeFromLastWeek: Int?
     let weakestCategory: (category: HealthCategory, score: Int)?
     let onScoreInfoTapped: () -> Void
+    var onFocusTapped: ((HealthCategory) -> Void)? = nil
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 20) {
-                HealthScoreRing(
-                    score: overallScore,
-                    label: DS.scoreLabel(overallScore),
-                    size: 100,
-                    lineWidth: 10,
-                    showScore: false
-                )
-
-                VStack(alignment: .leading, spacing: 6) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            Text(Copy.Explore.healthScore)
-                                .font(.subheadline)
-                                .foregroundStyle(AppColour.textSecondary)
-
-                            Button {
-                                onScoreInfoTapped()
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                    .foregroundStyle(AppColour.textSecondary)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(Copy.Explore.healthScoreInfoLabel)
-                            .accessibilityHint(Copy.Explore.opensAnExplanationOfHowYourHint)
-                        }
-
-                        Text(Copy.Explore.healthScoreSubtitle)
-                            .font(.caption2)
-                            .foregroundStyle(AppColour.textTertiary)
-                    }
-
-                    Text(displayScore)
-                        .font(DS.Typography.displayL)
-                        .foregroundStyle(displayScoreColor)
-                        .postHogMask()
-
-                    if let delta = scoreChangeFromLastWeek {
-                        HStack(spacing: 4) {
-                            Image(systemName: delta > 0 ? "arrow.up.right" : "arrow.down.right")
-                                .font(.caption2.weight(.bold))
-                            Text(Copy.Explore.ptsThisWeek(delta))
-                                .font(.caption.weight(.medium))
-                                .postHogMask()
-                        }
-                        .foregroundStyle(delta > 0 ? AppColour.success : AppColour.danger)
+        VStack(spacing: DS.space3) {
+            Button(action: onScoreInfoTapped) {
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: DS.space3) {
+                            scoreSummary
+                            scoreGauge
+                        }.frame(maxWidth: .infinity, alignment: .leading)
                     } else {
-                        Text(scoreLabel)
-                            .font(.caption)
-                            .foregroundStyle(AppColour.textSecondary)
+                        HStack(spacing: DS.space4) {
+                            scoreSummary.frame(maxWidth: .infinity, alignment: .leading)
+                            scoreGauge
+                        }
                     }
                 }
-
-                Spacer()
+                .padding(DS.cardPadding)
+                .cardStyle()
             }
+            .buttonStyle(.plain)
+            .accessibilityHint(Copy.Explore.opensAnExplanationOfHowYourHint)
 
             if let weakest = weakestCategory {
-                HStack(spacing: 6) {
-                    Image(systemName: weakest.category.systemImageName)
-                        .font(.caption)
-                        .foregroundStyle(weakest.category.color)
-                    Text(Copy.Explore.focusToImprove(weakest.category.displayName))
-                        .font(.caption)
-                        .foregroundStyle(AppColour.textSecondary)
-                    Spacer()
+                Button { onFocusTapped?(weakest.category) } label: {
+                    HStack(alignment: .center, spacing: DS.space3) {
+                        Image(systemName: weakest.category.systemImageName)
+                            .font(.title3)
+                            .foregroundStyle(weakest.category.color)
+                            .frame(width: 36)
+                        VStack(alignment: .leading, spacing: DS.space1) {
+                            Text("A LITTLE FOCUS")
+                                .font(.caption2.weight(.semibold))
+                                .tracking(1.3)
+                                .foregroundStyle(AppColour.textSecondary)
+                            Text(weakest.category.displayName)
+                                .font(.headline)
+                                .foregroundStyle(AppColour.textPrimary)
+                            Text(Copy.Explore.focusToImprove(weakest.category.displayName))
+                                .font(.footnote)
+                                .foregroundStyle(AppColour.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+                    .padding(DS.cardPadding)
+                    .cardStyle()
                 }
-                .padding(DS.space3)
-                .background(AppColour.surfaceSubtle, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("explore.focusCategory")
             }
         }
-        .padding(DS.space4)
-        // Opaque, not a material: a material re-samples and blurs whatever sits
-        // behind it on every frame of a scroll, and the backdrop here is one flat
-        // colour, so the blurred result is indistinguishable from a solid fill.
-        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
-    private var displayScore: String {
-        "\(overallScore)"
+    private var scoreGauge: some View {
+        HealthScoreGauge(score: overallScore, label: Copy.Explore.healthScore,
+                         tint: HealthScoreGauge.bandColor(overallScore), compact: true)
     }
 
-    /// Routes through `HealthScoreBand` so the score-number colour and the
-    /// status label below it always sit in the same band — using `DS.scoreColor`
-    /// here would mix the recovery-tier scheme (75/50) with the band scheme
-    /// (85/70/55/40) and let, e.g., a 72 colour yellow while reading "Good".
-    private var displayScoreColor: Color {
-        switch HealthScoreBand.from(score: overallScore) {
-        case .excellent: return AppColour.success
-        case .good: return AppColour.scoreOptimal
-        case .fair: return AppColour.scoreFair
-        case .needsAttention, .critical: return AppColour.scorePoor
+    private var scoreSummary: some View {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            Text(Copy.Explore.healthScore)
+                .font(.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
+            Text(scoreLabel)
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(AppColour.textPrimary)
+            if let delta = scoreChangeFromLastWeek {
+                Label(Copy.Explore.ptsThisWeek(delta),
+                      systemImage: delta == 0 ? "arrow.right" : delta > 0 ? "arrow.up.right" : "arrow.down.right")
+                    .font(.footnote)
+                    .foregroundStyle(delta == 0 ? AppColour.textSecondary : delta > 0 ? AppColour.primary : AppColour.warning)
+                    .postHogMask()
+            } else {
+                Text(Copy.Explore.healthScoreSubtitle)
+                    .font(.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var scoreLabel: String {
