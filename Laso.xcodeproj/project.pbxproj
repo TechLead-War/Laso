@@ -2618,7 +2618,7 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					08AD24A007F4503B8999A065 = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -2630,16 +2630,16 @@
 						};
 					};
 					1029A915F9487DD209F51551 = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
 					12B932B2BF8CDB1A1FD8B93A = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 					};
 					1B53013A9579B763C5987AD2 = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.watchos = {
@@ -2651,7 +2651,7 @@
 						};
 					};
 					2131E0565430F53E4EC2F615 = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -2660,7 +2660,7 @@
 						};
 					};
 					352EFC7934409A0E2B4A5ACE = {
-						DevelopmentTeam = S2MAH8X8JM;
+						DevelopmentTeam = SGX8SC86TT;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.watchos = {
@@ -3347,7 +3347,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 124;
+				CURRENT_PROJECT_VERSION = 125;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -3366,7 +3366,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.115;
+				MARKETING_VERSION = 1.2.116;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3388,7 +3388,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				ENABLE_DEBUG_DYLIB = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -3437,7 +3437,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 124;
+				CURRENT_PROJECT_VERSION = 125;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3450,7 +3450,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2.115;
+				MARKETING_VERSION = 1.2.116;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3467,7 +3467,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3493,7 +3493,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				ENABLE_DEBUG_DYLIB = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -3514,7 +3514,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3535,7 +3535,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3557,7 +3557,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;
@@ -3575,7 +3575,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3598,7 +3598,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = LasoWatchWidgets/LasoWatchWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatchWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -3620,7 +3620,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3642,7 +3642,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LasoWatch/LasoWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.watchkitapp;
@@ -3659,7 +3659,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3679,7 +3679,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

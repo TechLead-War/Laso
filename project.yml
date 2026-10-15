@@ -13,8 +13,8 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     # Shared by every target on purpose. The App Store rejects an embedded watch
     # app whose version does not match its host, and per-target copies drift.
-    MARKETING_VERSION: "1.2.115"
-    CURRENT_PROJECT_VERSION: "124"
+    MARKETING_VERSION: "1.2.116"
+    CURRENT_PROJECT_VERSION: "125"
 
 packages:
   Firebase:
@@ -118,7 +118,7 @@ targets:
         INFOPLIST_FILE: Info.plist
         CODE_SIGN_ENTITLEMENTS: Laso.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit
         # Xcode 16 splits a Debug build into a stub plus Laso.debug.dylib. The
         # stub cannot launch without that dylib, so tapping the icon on a device
@@ -187,7 +187,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.tests
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Laso.app/Laso
         BUNDLE_LOADER: $(TEST_HOST)
         SWIFT_EMIT_LOC_STRINGS: "NO"
@@ -205,7 +205,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.uitests
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         TEST_TARGET_NAME: Laso
         SWIFT_EMIT_LOC_STRINGS: "NO"
         GENERATE_INFOPLIST_FILE: "YES"
@@ -234,7 +234,7 @@ targets:
         INFOPLIST_FILE: LasoWidgets/Info.plist
         CODE_SIGN_ENTITLEMENTS: LasoWidgets/LasoWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.widgets
         GENERATE_INFOPLIST_FILE: false
         APPLICATION_EXTENSION_API_ONLY: true
@@ -278,7 +278,7 @@ targets:
         INFOPLIST_FILE: LasoWatch/Info.plist
         CODE_SIGN_ENTITLEMENTS: LasoWatch/LasoWatch.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.watchkitapp
         GENERATE_INFOPLIST_FILE: false
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
@@ -317,7 +317,7 @@ targets:
         INFOPLIST_FILE: LasoWatchWidgets/Info.plist
         CODE_SIGN_ENTITLEMENTS: LasoWatchWidgets/LasoWatchWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: S2MAH8X8JM
+        DEVELOPMENT_TEAM: SGX8SC86TT
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.watchkitapp.widgets
         GENERATE_INFOPLIST_FILE: false
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
