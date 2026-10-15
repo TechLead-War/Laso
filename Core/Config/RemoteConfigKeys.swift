@@ -117,19 +117,11 @@ enum RC {
     static let readinessSleepRestorativeRange    = "scoring_readiness_sleep_restorative_ratio_range"
     static let readinessWorkoutLoadDurationCap   = "scoring_readiness_workout_load_duration_cap"
     static let readinessWorkoutLoadCalorieCap    = "scoring_readiness_workout_load_calorie_cap"
-    static let readinessWorkoutRecentBandHours   = "scoring_readiness_workout_recent_band_hours"
-    static let readinessWorkoutMidBandHours      = "scoring_readiness_workout_mid_band_hours"
-    static let readinessWorkoutRecentBase        = "scoring_readiness_workout_recent_base"
-    static let readinessWorkoutRecentLoadPenalty = "scoring_readiness_workout_recent_load_penalty"
-    static let readinessWorkoutMidBase           = "scoring_readiness_workout_mid_base"
-    static let readinessWorkoutMidLoadPenalty    = "scoring_readiness_workout_mid_load_penalty"
-    static let readinessWorkoutLateBase          = "scoring_readiness_workout_late_base"
-    static let readinessWorkoutLateLoadPenalty   = "scoring_readiness_workout_late_load_penalty"
+    static let readinessWorkoutMaxPenalty        = "scoring_readiness_workout_max_penalty"
+    static let readinessWorkoutTauHours          = "scoring_readiness_workout_tau_hours"
     static let readinessWorkoutConfFloor         = "scoring_readiness_workout_conf_floor"
     static let readinessWorkoutConfOnsetHours    = "scoring_readiness_workout_conf_onset_hours"
     static let readinessWorkoutConfDecayHours    = "scoring_readiness_workout_conf_decay_hours"
-    static let readinessStressDeviationAtCap     = "scoring_readiness_stress_deviation_at_cap"
-    static let readinessStressChannelCap         = "scoring_readiness_stress_channel_cap"
 
     // MARK: Scoring — StrainScorer
     static let strainLowUpper                    = "scoring_strain_low_upper_exclusive"
@@ -146,13 +138,9 @@ enum RC {
     static let strainMinDaysForBaseline          = "scoring_strain_min_days_for_baseline"
 
     // MARK: Scoring — WorkoutBands
-    static let workoutGreenBandFloor             = "scoring_workout_green_band_floor"
-    static let workoutYellowBandFloor            = "scoring_workout_yellow_band_floor"
     static let workoutRedBandSeed                = "scoring_workout_red_band_seed"
     static let workoutYellowBandSeed             = "scoring_workout_yellow_band_seed"
     static let workoutGreenBandSeed              = "scoring_workout_green_band_seed"
-    static let workoutZoneRestoringCeiling       = "scoring_workout_zone_restoring_ceiling"
-    static let workoutZoneMaintainingCeiling     = "scoring_workout_zone_maintaining_ceiling"
     static let workoutZoneBuildingCeiling        = "scoring_workout_zone_building_ceiling"
     static let workoutDefaultMaxHR               = "scoring_workout_default_max_hr"
 

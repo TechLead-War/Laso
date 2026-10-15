@@ -24,6 +24,16 @@ struct HealthRisk: Identifiable {
         factors.filter { $0.status != .unmeasured }
     }
 
+    /// Blood pressure is the one clinical anchor in the heart profile. Without it
+    /// the grade rests on wearable proxies (RHR, HRV, HRR, AFib) and must not be
+    /// shown as a heart risk grade. Every other profile is anchored by design.
+    var isClinicallyAnchored: Bool {
+        guard riskType == .cardiac else { return true }
+        return factors.contains {
+            ($0.metric == .bloodPressureSystolic || $0.metric == .bloodPressureDiastolic) && $0.status != .unmeasured
+        }
+    }
+
     init(riskType: HealthRiskType, level: Int, factors: [RiskFactor], focusAreas: [FocusArea]) {
         self.riskType = riskType
         self.level = max(0, min(100, level))

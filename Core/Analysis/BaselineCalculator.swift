@@ -15,12 +15,9 @@ struct BaselineCalculator {
         let filtered = values.filterOutliers(maxDeviations: 2.0)
         guard !filtered.isEmpty else { return nil }
 
-        // Step 2: Apply exponential smoothing (alpha = 0.3)
-        let smoothed = filtered.exponentialSmoothing(alpha: 0.3)
-
-        // Step 3: Compute statistics
-        let mean = smoothed.mean
-        let median = smoothed.median
+        // Step 2: Compute statistics from the filtered distribution
+        let mean = filtered.mean
+        let median = filtered.median
         // Spread comes from the unsmoothed days on purpose. Every consumer of this
         // baseline divides a raw-scale quantity by it (mean +/- SD bands, single-day
         // and 3-day-mean z-scores), and the EWMA is a low-pass filter that strips

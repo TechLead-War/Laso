@@ -23,6 +23,9 @@ struct MirrorCaptureSheet: View {
     /// to its safe step, so nothing ever waits on Vision to draw something.
     @State private var analysis = MirrorLegibility.Analysis.unknown
     @State private var personMask: UIImage?
+    /// True once the cutout was asked for and nothing came back. Behind You
+    /// without a cutout is just a number on a photo, so it leaves the row.
+    @State private var cutoutMissing = false
     @State private var payload = MirrorPayload.empty
     @State private var suggested: MirrorTemplate?
     @State private var suggestionReason: String?
@@ -56,7 +59,9 @@ struct MirrorCaptureSheet: View {
                 explainer
             case .camera:
                 CameraCaptureView(cameraDevice: .front, dismissesOnCapture: false) { image in
-                    stage = .confirm(image)
+                    // Rotated into its pixels once, here, so the preview, the
+                    // measurement, the cutout and the saved file all agree.
+                    stage = .confirm(MirrorLegibility.upright(image))
                 }
                 .ignoresSafeArea()
             case .confirm(let image):
@@ -154,6 +159,7 @@ struct MirrorCaptureSheet: View {
 
     private var offered: [MirrorTemplate] {
         let available = MirrorTemplate.available(payload: payload, archive: archiveFacts)
+            .filter { !(cutoutMissing && $0 == .behindYou) }
         // The suggestion leads the row, then the rest in declaration order, so
         // the list never reshuffles under the user between two captures.
         guard let suggested, available.contains(suggested) else { return available }
@@ -341,12 +347,17 @@ struct MirrorCaptureSheet: View {
             let mask = await MirrorLegibility.personMask(image)
             guard !Task.isCancelled else { return }
             personMask = mask
+            cutoutMissing = mask == nil
+            if cutoutMissing, template == .behindYou {
+                template = offered.first ?? .clean
+            }
         }
     }
 
     private func retake() {
         analysis = .unknown
         personMask = nil
+        cutoutMissing = false
         suggested = nil
         suggestionReason = nil
         stage = .camera

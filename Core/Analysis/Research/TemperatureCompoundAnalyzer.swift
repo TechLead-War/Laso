@@ -17,6 +17,14 @@ struct TemperatureCompoundAnalyzer {
     private static let mildElevationThreshold = 0.3 // °C
     private static let significantElevationThreshold = 0.5 // °C
     private static let consecutiveNightsRequired = 2
+    /// Night-to-night spread of a healthy sleeper's wrist temperature. Wrist
+    /// actigraphy puts the normal nocturnal SD at about 0.15 to 0.35 °C
+    /// (Sarabia et al. 2008, Physiol Behav), so 0.25 is the midpoint and 0.40
+    /// is clearly outside it. Spread is read as SD in °C, never as a
+    /// coefficient of variation: Apple logs this metric as a delta around
+    /// 0 °C, and dividing by a near-zero mean printed +8,000 % swings.
+    private static let normalNightlyTemperatureSD = 0.25 // °C
+    private static let highVariabilityTemperatureSD = 0.40 // °C
 
     // MARK: - Analysis
 
@@ -125,18 +133,16 @@ struct TemperatureCompoundAnalyzer {
             }
         }
 
-        // Insight 3: Temperature variability as metabolic health marker
-        let cv = baselineSD / max(abs(baselineMean), 0.1)
-        if cv > 0.05 && !isCyclicalPattern && samples.count >= 30 {
+        // Insight 3: night-to-night temperature spread as a thermoregulation marker
+        if baselineSD > highVariabilityTemperatureSD && !isCyclicalPattern && samples.count >= 30 {
             let sdText = String(format: "%.2f", baselineSD)
-            let cvText = String(format: "%.1f", cv * 100)
             insights.append(InsightFactory.observation(
                 metric: .appleSleepingWristTemperature,
                 title: Copy.Analysis.Research.TemperatureCompound.highVariabilityTitle,
                 summary: Copy.Analysis.Research.TemperatureCompound.highVariabilitySummary(sd: sdText),
-                recommendation: Copy.Analysis.Research.TemperatureCompound.highVariabilityRecommendation(cvPercent: cvText),
-                baselineValue: 3,
-                deviationPercent: ((cv * 100 - 3) / 3) * 100,
+                recommendation: Copy.Analysis.Research.TemperatureCompound.highVariabilityRecommendation(sd: sdText),
+                baselineValue: normalNightlyTemperatureSD,
+                deviationPercent: ((baselineSD - normalNightlyTemperatureSD) / normalNightlyTemperatureSD) * 100,
                 category: .circadian,
             ))
         }

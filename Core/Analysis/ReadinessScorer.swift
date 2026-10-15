@@ -190,10 +190,13 @@ struct ReadinessScorer {
         )
     }
 
-    /// Stress read against the person's own HRV and resting-HR baselines, the
-    /// way every other channel in this scorer reads. Fixed population anchors
-    /// (60 ms SDNN, 50 bpm) made "Relaxed" unreachable for normal older adults
-    /// and disagreed with `StressScorer`, which is baseline-relative.
+    /// Stress read against the person's own HRV and resting-HR baselines on
+    /// the exact formula and weights the Stress Monitor uses (`StressScorer.score`),
+    /// so Siri, the morning lock and the stress tab quote one number for one
+    /// morning. A second formula used to live here (median baselines, 50/50
+    /// weights) and the two surfaces disagreed by 15 to 20 points. The only
+    /// remaining difference is the baseline window: these baselines span the
+    /// scorer's longer history, the monitor's trail 14 days.
     ///
     /// Returns nil without both baselines: there is no honest population
     /// fallback here, so callers must show a no-data state instead.
@@ -204,27 +207,22 @@ struct ReadinessScorer {
         restingHeartRateBaseline: BaselineStats?
     ) -> Int? {
         guard let hrv, let restingHeartRate,
-              let hrvBaseline, hrvBaseline.median > 0,
-              let rhrBaseline = restingHeartRateBaseline, rhrBaseline.median > 0 else { return nil }
+              let hrvBaseline, hrvBaseline.mean > 0,
+              let rhrBaseline = restingHeartRateBaseline, rhrBaseline.mean > 0 else { return nil }
 
-        let cap = ReadinessScorerConfig.stressChannelCap
-        let deviationAtCap = max(ReadinessScorerConfig.stressDeviationAtCap, 0.0001)
-        let hrvDrop = max(0, (hrvBaseline.median - hrv) / hrvBaseline.median)
-        let rhrRise = max(0, (restingHeartRate - rhrBaseline.median) / rhrBaseline.median)
-        let hrvStress = min(hrvDrop / deviationAtCap, 1.0) * cap
-        let rhrStress = min(rhrRise / deviationAtCap, 1.0) * cap
-        return Int((hrvStress + rhrStress).rounded())
+        return Int(StressScorer.score(
+            currentHRV: hrv,
+            hrvBaselineMean: hrvBaseline.mean,
+            currentHR: restingHeartRate,
+            rhrBaselineMean: rhrBaseline.mean
+        ).score.rounded())
     }
 
+    /// Same four bands the Stress Monitor shows, so a Siri answer and the stress
+    /// tab never name the same score differently.
     static func stressLabel(for level: Int?) -> String {
-        guard let level else { return "No Data" }
-        switch level {
-        case 0..<20: return "Relaxed"
-        case 20..<40: return "Low"
-        case 40..<60: return "Moderate"
-        case 60..<80: return "High"
-        default: return "Very High"
-        }
+        guard let level else { return Copy.Live.noData }
+        return StressLevel(score: Double(level)).displayName
     }
 
     private static func hrvScore(current: Double, baseline: BaselineStats?) -> Double {
@@ -296,13 +294,9 @@ struct ReadinessScorer {
                 (calories ?? 0) / ReadinessScorerConfig.workoutLoadCalorieCap
             )
         )
-        if hoursSinceWorkout < ReadinessScorerConfig.workoutRecoveryRecentBandHours {
-            return ReadinessScorerConfig.workoutRecoveryRecentBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryRecentLoadPenalty
-        }
-        if hoursSinceWorkout < ReadinessScorerConfig.workoutRecoveryMidBandHours {
-            return ReadinessScorerConfig.workoutRecoveryMidBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryMidLoadPenalty
-        }
-        return ReadinessScorerConfig.workoutRecoveryLateBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryLateLoadPenalty
+        let elapsedHours = max(0.0, hoursSinceWorkout)
+        let fatigue = workoutLoad * ReadinessScorerConfig.workoutRecoveryMaxPenalty * exp(-elapsedHours / ReadinessScorerConfig.workoutRecoveryTauHours)
+        return clamp(100.0 - fatigue, min: 0, max: 100)
     }
 
     private static func freshnessConfidence(age: TimeInterval, maxAge: TimeInterval) -> Double {

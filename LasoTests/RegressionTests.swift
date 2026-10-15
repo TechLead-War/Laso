@@ -894,6 +894,114 @@ struct RegressionTests {
         #expect(Copy.Home.RecoveryInfo.moderateRange.contains("\(DS.fairFloor)"))
     }
 
+    /// DEF-04: WorkoutRecoveryBand must match DesignSystem.recoveryTier across all 0...100 scores.
+    @Test func workoutRecoveryBandMatchesDesignSystem() {
+        for score in 0...100 {
+            let band = WorkoutRecoveryBand(score: score)
+            let tier = DS.recoveryTier(for: score)
+            switch tier {
+            case .optimal: #expect(band == .green, "score \(score) should be .green")
+            case .fair:    #expect(band == .yellow, "score \(score) should be .yellow")
+            case .poor:    #expect(band == .red, "score \(score) should be .red")
+            }
+        }
+    }
+
+    /// DEF-11: Sleep debt payback must be smooth and continuous, without 30-min jumps for 1 min debt.
+    @MainActor
+    @Test func sleepNeedDebtAdjustmentIsMonotonicAndContinuous() throws {
+        let calc = SleepNeedCalculator()
+        let modelContainer = try ModelContainer(
+            for: StoredDailySample.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let store = HealthDataStore(modelContainer: modelContainer)
+        // Two weeks of identical 7 h nights: enough history for the calculator to
+        // run (an empty store returns the flat fallback) with no quality trend.
+        let nights = MetricTimeSeries(metric: .sleepDuration, samples: (1...14).map { daysAgo in
+            MetricSample(date: Date().addingTimeInterval(-Double(daysAgo) * 86_400), value: 7.0)
+        })
+        func need(debt: Double) -> SleepNeed {
+            calc.compute(from: store, currentStrain: 0, sleepDebt: debt, targetWakeTime: nil, age: 30, sleepSeries: nights)
+        }
+        let need0 = need(debt: 0.0)
+        let need1m = need(debt: 1.0 / 60.0)
+        let need60m = need(debt: 1.0)
+        let need3h = need(debt: 3.0)
+        let need10h = need(debt: 10.0)
+
+        #expect(need1m.totalHoursNeeded - need0.totalHoursNeeded < 0.05, "1 min debt should not cause a 30-min jump")
+        #expect(need60m.totalHoursNeeded > need1m.totalHoursNeeded, "Need must increase with debt")
+        #expect(need3h.totalHoursNeeded > need60m.totalHoursNeeded, "Need must increase with debt")
+        #expect(need10h.totalHoursNeeded <= need0.totalHoursNeeded + SleepNeedConfig.maxDebtAdjustment + 0.001, "Capped at maxDebtAdjustment")
+    }
+
+    /// DEF-15: Social jet lag read as a difference in hours slept, so a sleeper
+    /// who kept 7 h every night but drifted three hours later at the weekend
+    /// scored zero jet lag. It is the shift of the sleep midpoint (Roenneberg).
+    @Test func socialJetLagIsTheMidpointShiftNotTheDurationGap() {
+        let calendar = Date.cal
+        let today = calendar.startOfDay(for: Date())
+        // 21 nights, every one 7 h long; weekday wake 07:00, weekend wake 10:00.
+        let nights = MetricTimeSeries(metric: .sleepDuration, samples: (1...21).compactMap { daysAgo -> MetricSample? in
+            guard let day = calendar.date(byAdding: .day, value: -daysAgo, to: today) else { return nil }
+            let weekday = calendar.component(.weekday, from: day)
+            let wakeHour = (weekday == 1 || weekday == 7) ? 10 : 7
+            guard let wake = calendar.date(bySettingHour: wakeHour, minute: 0, second: 0, of: day) else { return nil }
+            return MetricSample(date: wake, value: 7.0)
+        })
+        let sample = nights.samples.first!
+        let expectedMidpoint = sample.date.addingTimeInterval(-3.5 * 3600)
+        let parts = calendar.dateComponents([.hour, .minute], from: expectedMidpoint)
+        let expectedMinutes = (Double(parts.hour!) * 60 + Double(parts.minute!) + 720).truncatingRemainder(dividingBy: 1440)
+        #expect(SleepRegularityAnalyzer.sleepMidpointMinutesFromNoon(sample) == expectedMinutes)
+
+        let context = AnalysisContext(timeSeries: [.sleepDuration: nights], baselines: [:], trends: [:], anomalies: [])
+        let insights = SleepRegularityAnalyzer.generateInsights(context: context)
+        let jetLag = insights.first { $0.title == Copy.Analysis.Research.SleepRegularity.socialJetLagTitle(minutes: "180") }
+        #expect(jetLag != nil, "a three hour weekend midpoint shift must surface as 180 minutes of social jet lag; got \(insights.map(\.title))")
+    }
+
+    /// DEF-14: circadian amplitude was the day-to-day spread of step totals, which
+    /// scored a steady 10,000-step walker as disrupted. It is now the rest-activity
+    /// relative amplitude of the 24-hour profile: a daytime walker scores full
+    /// marks, a flat all-hours profile scores zero.
+    @Test func restActivityAmplitudeComesFromTheDailyProfile() {
+        func profile(_ stepsAtHour: (Int) -> Double) -> [[Double]] {
+            (0..<24).map { hour in Array(repeating: stepsAtHour(hour), count: 30) }
+        }
+        let daytimeWalker = profile { (8...20).contains($0) ? 800 : 0 }
+        let flat = profile { _ in 400 }
+        #expect(CircadianDisruptionAnalyzer.relativeAmplitudeScore(hourlyStepBins: daytimeWalker) == 100)
+        #expect(CircadianDisruptionAnalyzer.relativeAmplitudeScore(hourlyStepBins: flat) == 0)
+        #expect(CircadianDisruptionAnalyzer.relativeAmplitudeScore(hourlyStepBins: nil) == nil)
+    }
+
+    /// DEF-17: Workout recovery decay curve must be continuous without 17-point stair-step cliffs.
+    @Test func workoutRecoveryDecayIsMonotonicAndContinuous() {
+        let now = Date()
+        var input5h59 = ReadinessScorer.Input()
+        input5h59.now = now
+        input5h59.workoutTimestamp = now.addingTimeInterval(-5.99 * 3600)
+        input5h59.workoutDurationMinutes = 60
+        input5h59.workoutCalories = 500
+
+        var input6h01 = ReadinessScorer.Input()
+        input6h01.now = now
+        input6h01.workoutTimestamp = now.addingTimeInterval(-6.01 * 3600)
+        input6h01.workoutDurationMinutes = 60
+        input6h01.workoutCalories = 500
+
+        guard let res5h59 = ReadinessScorer.assess(input5h59),
+              let res6h01 = ReadinessScorer.assess(input6h01) else {
+            Issue.record("assess failed")
+            return
+        }
+        #expect(abs(res6h01.smoothedScore - res5h59.smoothedScore) < 2.0, "Recovery curve must be continuous across 6h threshold")
+        #expect(res6h01.smoothedScore >= res5h59.smoothedScore, "Recovery must monotonically increase over time")
+    }
+
+
 
     // MARK: - Sleep bank
 
@@ -1057,6 +1165,37 @@ struct RegressionTests {
         #expect(small.source != "sleep_bank", "half an hour is not worth taking over the day for")
     }
 
+    // MARK: - Health risk
+
+    /// The heart profile graded users who had never logged blood pressure as if
+    /// it were a heart risk score, built from wearable heart rate signals alone.
+    @Test func heartRiskGradeIsOnlyClinicalWithBloodPressure() {
+        func series(_ metric: HealthMetric, _ value: Double) -> MetricTimeSeries {
+            MetricTimeSeries(metric: metric, samples: [
+                MetricSample(date: Date().addingTimeInterval(-25 * 3600), value: value),
+                MetricSample(date: Date().addingTimeInterval(-3600), value: value)
+            ])
+        }
+        func cardiac(_ timeSeries: [HealthMetric: MetricTimeSeries]) -> HealthRisk {
+            HealthRiskEngine.assessRisk(riskType: .cardiac, timeSeries: timeSeries,
+                                        baselines: [:], trends: [:], anomalies: [])
+        }
+
+        let proxiesOnly = cardiac([
+            .restingHeartRate: series(.restingHeartRate, 58),
+            .heartRateVariability: series(.heartRateVariability, 45)
+        ])
+        #expect(proxiesOnly.measuredFactors.count == 2, "heart rate signals are still graded")
+        #expect(!proxiesOnly.isClinicallyAnchored, "no blood pressure means no clinical heart risk grade")
+
+        let withBP = cardiac([
+            .restingHeartRate: series(.restingHeartRate, 58),
+            .heartRateVariability: series(.heartRateVariability, 45),
+            .bloodPressureSystolic: series(.bloodPressureSystolic, 118)
+        ])
+        #expect(withBP.isClinicallyAnchored, "one systolic reading anchors the grade")
+    }
+
     // MARK: - Dashboard
 
     /// One refresh called `updateCachedProperties` four to five times, and every
@@ -1174,6 +1313,39 @@ struct RegressionTests {
         let scoreMoved = ExploreMonthCalendarSection(
             scoresByDay: [day: 73], contextsByDay: [:], detailForDay: detail)
         #expect(noContext != scoreMoved, "a score change must force a redraw")
+    }
+
+    // MARK: - Cycle tracking
+
+    /// Phase boundaries were stretched in proportion to cycle length, so a
+    /// 35-day cycle showed ovulation on days 17 to 20 and a 24-day cycle on
+    /// days 12 to 14. The luteal phase is a fixed 14 days; only the follicular
+    /// phase varies, so ovulation sits 14 days before the next period.
+    @Test func ovulationIsFourteenDaysBeforeTheNextPeriod() {
+        let tracker = MenstrualCycleTracker()
+
+        #expect(tracker.phaseForDay(18, cycleLength: 35) == .follicular)
+        #expect(tracker.phaseForDay(21, cycleLength: 35) == .ovulation, "35 - 14 = day 21")
+        for day in 24...35 {
+            #expect(tracker.phaseForDay(day, cycleLength: 35) == .luteal, "day \(day) of 35")
+        }
+
+        #expect(tracker.phaseForDay(3, cycleLength: 28) == .menstrual)
+        #expect(tracker.phaseForDay(8, cycleLength: 28) == .follicular)
+        #expect(tracker.phaseForDay(14, cycleLength: 28) == .ovulation)
+        #expect(tracker.phaseForDay(20, cycleLength: 28) == .luteal)
+
+        #expect(tracker.phaseForDay(3, cycleLength: 24) == .menstrual)
+        #expect(tracker.phaseForDay(10, cycleLength: 24) == .ovulation, "24 - 14 = day 10")
+        #expect(tracker.phaseForDay(24, cycleLength: 24) == .luteal)
+
+        // The shortest cycles compute() accepts must still pass through every phase in order.
+        for length in [18, 21] {
+            let phases = (1...length).map { tracker.phaseForDay($0, cycleLength: length) }
+            #expect(phases.first == .menstrual && phases.contains(.follicular)
+                    && phases.contains(.ovulation) && phases.last == .luteal,
+                    "\(length)-day cycle must keep every phase")
+        }
     }
 
     private static func decision(actionType: InterventionCandidate.ActionType) -> PolicyDecision {

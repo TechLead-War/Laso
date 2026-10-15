@@ -67,13 +67,14 @@ enum WorkoutRecoveryBand: String, CaseIterable {
     case yellow
     case green
 
+    /// One grading ladder for the whole app. `DS.recoveryTier` owns the floors,
+    /// so the workout card can never call a score yellow that the hero ring
+    /// calls green (it did: 67 vs 75 green floors on the same screen).
     init(score: Int) {
-        if score > WorkoutBandsConfig.greenBandScoreFloor {
-            self = .green
-        } else if score >= WorkoutBandsConfig.yellowBandScoreFloor {
-            self = .yellow
-        } else {
-            self = .red
+        switch DS.recoveryTier(for: score) {
+        case .optimal: self = .green
+        case .fair: self = .yellow
+        case .poor: self = .red
         }
     }
 
@@ -165,9 +166,11 @@ struct WorkoutProgrammer {
 
     private static func zoneForRecovery(_ score: Int) -> TrainingZone {
         switch score {
-        case 0..<WorkoutBandsConfig.zoneRestoringScoreCeiling: return .restoring
-        case WorkoutBandsConfig.zoneRestoringScoreCeiling..<WorkoutBandsConfig.zoneMaintainingScoreCeiling: return .maintaining
-        case WorkoutBandsConfig.zoneMaintainingScoreCeiling..<WorkoutBandsConfig.zoneBuildingScoreCeiling: return .building
+        // Restoring / maintaining / building split on the same floors the
+        // recovery ring grades by; only the building ceiling is a workout knob.
+        case 0..<DS.fairFloor: return .restoring
+        case DS.fairFloor..<DS.optimalFloor: return .maintaining
+        case DS.optimalFloor..<WorkoutBandsConfig.zoneBuildingScoreCeiling: return .building
         default: return .overreaching
         }
     }

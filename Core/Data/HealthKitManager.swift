@@ -319,6 +319,16 @@ final class HealthKitManager: @unchecked Sendable {
         let afibRescaleKey = "Laso.HealthKitManager.afibPercentRescale"
         let needsAfibRescale = !isFirstSync && !UserDefaults.standard.bool(forKey: afibRescaleKey)
 
+        // Zero and negative readings were dropped at ingestion for every metric.
+        // Wrist temperature is a delta around 0 °C, so its cooler nights never
+        // reached the store and its baseline sat too warm; 0% AFib days and 0
+        // fall days were missing the same way. The filter now keeps them for
+        // the metrics that allow them, and their history is read back once so
+        // the old gaps fill in.
+        let nonPositiveBackfillKey = "Laso.HealthKitManager.nonPositiveValuesBackfill"
+        let needsNonPositiveBackfill = !isFirstSync && !UserDefaults.standard.bool(forKey: nonPositiveBackfillKey)
+        let nonPositiveMetrics = Set(HealthMetric.allCases.filter(\.allowsNegativeOrZero))
+
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
 
@@ -346,6 +356,7 @@ final class HealthKitManager: @unchecked Sendable {
             let lastSync = syncDates[metric]
             let rewriteHistory = (needsSleepBackfill && sleepStageMetrics.contains(metric))
                 || (needsAfibRescale && metric == .atrialFibrillationBurden)
+                || (needsNonPositiveBackfill && nonPositiveMetrics.contains(metric))
             // The sleep scan reaches one day further back than everything else
             // because its first day is dropped as a lead-in (fetchAllSleepStages).
             let incrementalDaysBack = sleepStageMetrics.contains(metric) ? -2 : -1
@@ -441,6 +452,9 @@ final class HealthKitManager: @unchecked Sendable {
         }
         if needsAfibRescale, fetchedMetrics.contains(.atrialFibrillationBurden) {
             UserDefaults.standard.set(true, forKey: afibRescaleKey)
+        }
+        if needsNonPositiveBackfill, nonPositiveMetrics.isSubset(of: fetchedMetrics) {
+            UserDefaults.standard.set(true, forKey: nonPositiveBackfillKey)
         }
 
         finalizeInMemoryTimeSeries(
@@ -861,7 +875,7 @@ final class HealthKitManager: @unchecked Sendable {
                         raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
                     }
                     let value = raw.map { $0 * config.valueScale }
-                    if let value, value > 0 {
+                    if let value, value.isFinite && (metric.allowsNegativeOrZero || value > 0) {
                         let hour = calendar.component(.hour, from: statistics.startDate)
                         guard hour >= 0, hour < 24 else { return }
                         hourBins[hour].append(value)
@@ -919,6 +933,46 @@ final class HealthKitManager: @unchecked Sendable {
         }
     }
 
+    // MARK: - Nocturnal Heart Rate (Sleep Coherence)
+
+    /// Mean heart rate inside each night's bedtime to wake window, keyed by the
+    /// wake-day `startOfDay` like `sleepSessionBoundaries`. One statistics query
+    /// per night. The stored heart-rate series is a 24-hour daily average, and
+    /// grading the overnight dip against that average read every commute and
+    /// workout as a night the heart never settled.
+    func fetchNocturnalHeartRate(
+        for nights: [Date: SleepSessionBoundary],
+        days: Int
+    ) async -> [Date: Double] {
+        let cutoff = Date.cal.startOfDay(for: Date()).daysAgo(days)
+        let type = HKQuantityType(.heartRate)
+        let unit = HKUnit.count().unitDivided(by: .minute())
+
+        var result: [Date: Double] = [:]
+        for (day, night) in nights where day >= cutoff {
+            let mean: Double? = await withCheckedContinuation { continuation in
+                let predicate = HKQuery.predicateForSamples(
+                    withStart: night.bedtime,
+                    end: night.wakeTime,
+                    options: .strictStartDate
+                )
+                let query = HKStatisticsQuery(
+                    quantityType: type,
+                    quantitySamplePredicate: predicate,
+                    options: .discreteAverage
+                ) { _, statistics, error in
+                    if let error {
+                        recordHealthKitFetchError(error, context: "healthkit_fetch_nocturnal_hr")
+                    }
+                    continuation.resume(returning: statistics?.averageQuantity()?.doubleValue(for: unit))
+                }
+                self.healthStore.execute(query)
+            }
+            if let mean, mean > 0 { result[day] = mean }
+        }
+        return result
+    }
+
     // MARK: - Private Query Methods
 
     private func fetchStatisticsDaily(metric: HealthMetric, from startDate: Date, to endDate: Date) async -> MetricTimeSeries? {
@@ -958,7 +1012,7 @@ final class HealthKitManager: @unchecked Sendable {
                         raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
                     }
                     let value = raw.map { $0 * config.valueScale }
-                    if let value, value > 0 {
+                    if let value, value.isFinite && (metric.allowsNegativeOrZero || value > 0) {
                         samples.append(MetricSample(date: statistics.startDate, value: value))
                     }
                 }
@@ -1189,24 +1243,28 @@ final class HealthKitManager: @unchecked Sendable {
                     )
                 }
 
-                // Classify each session as either the day's overnight sleep
-                // (ends 4 AM–noon, ≥ 2 h) or a daytime nap (≥ 20 min, ends
-                // outside the overnight window OR shorter than 2 h). Naps go
-                // into a parallel dict keyed by *start*-day so a Sunday 1pm
-                // nap surfaces under Sunday in the Sleep Coach history.
+                // Classify each session as either the day's primary sleep
+                // or a daytime nap. Primary sleep captures both typical nocturnal
+                // sleep and daytime sleep for shift workers (duration >= 3h, or duration >= 2h
+                // ending between 3 AM and 2 PM). Shorter sessions or secondary sessions become naps.
                 var overnight: [Date: SleepSessionBoundary] = [:]
                 var naps: [Date: [SleepSessionBoundary]] = [:]
                 for session in sessions {
                     let endHour = Date.cal.component(.hour, from: session.end)
                     let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
-                    let isOvernight = endHour >= 4 && endHour < 12 && durationHours >= 2
+                    let isPrimarySleep = durationHours >= 3.0 || (durationHours >= 2.0 && endHour >= 3 && endHour <= 14)
                     let candidate = buildBoundary(for: session)
-                    if isOvernight {
+                    if isPrimarySleep {
                         let day = HealthKitManager.sleepDay(for: session)
                         if let existing = overnight[day] {
                             let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
                             let newDur = session.end.timeIntervalSince(session.start)
-                            if newDur > existingDur { overnight[day] = candidate }
+                            if newDur > existingDur {
+                                naps[day, default: []].append(existing)
+                                overnight[day] = candidate
+                            } else {
+                                naps[day, default: []].append(candidate)
+                            }
                         } else {
                             overnight[day] = candidate
                         }

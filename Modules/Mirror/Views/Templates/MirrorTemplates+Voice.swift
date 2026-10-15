@@ -63,6 +63,12 @@ struct MirrorClaim: View {
         if payload.hasHistory {
             ZStack(alignment: .bottom) {
                 MirrorScrim(protection: protection, height: 250)
+                MirrorScrim(
+                    protection: MirrorLegibility.topProtection(for: Self.header, analysis: analysis),
+                    height: 100,
+                    edge: .top
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 VStack(spacing: 0) {
                     MirrorLabel(
@@ -112,6 +118,9 @@ struct MirrorClaim: View {
             .frame(height: 1)
     }
 
+    /// Where the month sits, so a bright top edge gets its own cover.
+    private static let header = CGRect(x: 0.4, y: 0, width: 0.6, height: 0.12)
+
     private var protection: MirrorLegibility.Protection {
         MirrorLegibility.protection(
             for: CGRect(x: 0, y: 0.62, width: 1, height: 0.38),
@@ -152,23 +161,21 @@ struct MirrorLandmark: View {
     var body: some View {
         if MirrorTemplate.ArchiveFacts.landmarks.contains(payload.streak) {
             ZStack(alignment: .bottom) {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 110)
-                    Text(String(payload.streak))
-                        .font(MirrorType.numeral(250, weight: .heavy))
-                        .tracking(-12)
-                        // Deliberately under the contrast a reader needs: this
-                        // is texture on the frame, not information to read. The
-                        // number is said properly in the plate below.
-                        .foregroundStyle(.white.opacity(0.11))
-                        // Three and four digit landmarks are wider than the
-                        // frame at 250pt, and without these the numeral
-                        // silently truncates to "1..." instead of shrinking.
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.42)
-                        .frame(maxWidth: .infinity)
-                    Spacer(minLength: 0)
-                }
+                // Texture behind the plate, not information to read, so it is
+                // held under the contrast a reader needs. It sits low, inside
+                // the plate's own gradient: centred on the frame it crossed the
+                // face, and a quarter-tone numeral over a face reads as a smear.
+                Text(String(payload.streak))
+                    .font(MirrorType.numeral(250, weight: .heavy))
+                    .tracking(-12)
+                    .foregroundStyle(.white.opacity(0.13))
+                    // Three and four digit landmarks are wider than the
+                    // frame at 250pt, and without these the numeral
+                    // silently truncates to "1..." instead of shrinking.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.42)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 40)
 
                 // No analysis reaches this template, so the plate carries its
                 // own fixed floor rather than a measured one.

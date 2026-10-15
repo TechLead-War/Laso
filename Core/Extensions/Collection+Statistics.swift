@@ -192,3 +192,26 @@ extension Sequence {
         mean { $0[keyPath: keyPath] }
     }
 }
+
+extension Collection where Element == (x: Double, y: Double) {
+    /// Linear regression for explicit (x, y) coordinate pairs: returns (slope, intercept)
+    var linearRegression: (slope: Double, intercept: Double) {
+        guard count > 1 else { return (0, first?.y ?? 0) }
+        let xMean = reduce(0.0) { $0 + $1.x } / Double(count)
+        let yMean = reduce(0.0) { $0 + $1.y } / Double(count)
+
+        var numerator: Double = 0
+        var denominator: Double = 0
+        for pt in self {
+            let xDiff = pt.x - xMean
+            let yDiff = pt.y - yMean
+            numerator += xDiff * yDiff
+            denominator += xDiff * xDiff
+        }
+
+        guard denominator != 0 else { return (0, yMean) }
+        let slope = numerator / denominator
+        let intercept = yMean - slope * xMean
+        return (slope, intercept)
+    }
+}

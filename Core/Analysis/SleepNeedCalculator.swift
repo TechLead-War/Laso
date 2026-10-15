@@ -100,7 +100,7 @@ final class SleepNeedCalculator {
             strainAdjustment = 0
         }
 
-        let debtAdjustment = sleepDebt > 0 ? Cfg.maxDebtAdjustment : 0.0
+        let debtAdjustment = min(Cfg.maxDebtAdjustment, max(0.0, sleepDebt / Cfg.debtPaybackDays))
 
         let trendAdjustment = sleepQualityDeclining(sleepSeries) ? Cfg.qualityTrendAdjustment : 0.0
 

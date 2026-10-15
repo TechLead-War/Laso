@@ -10,14 +10,24 @@ struct TimeSeriesAligner {
         let valueB: Double
     }
 
-    /// Build a Date→Double dictionary keyed by start-of-day for fast lookup
+    /// Build a Date→Double dictionary keyed by start-of-day for fast lookup.
+    /// Aggregates multiple samples per day according to metric semantics (sum for accumulating metrics, mean otherwise).
     static func dailyValueMap(_ series: MetricTimeSeries) -> [Date: Double] {
-        var map: [Date: Double] = [:]
-        map.reserveCapacity(series.samples.count)
+        var grouped: [Date: [Double]] = [:]
+        grouped.reserveCapacity(series.samples.count)
         for sample in series.samples {
             let day = sample.date.startOfDay
-            // If multiple samples per day, use the latest (overwrite)
-            map[day] = sample.value
+            grouped[day, default: []].append(sample.value)
+        }
+        var map: [Date: Double] = [:]
+        map.reserveCapacity(grouped.count)
+        let shouldSum = series.metric.accumulatesDuringDay
+        for (day, values) in grouped {
+            if shouldSum {
+                map[day] = values.reduce(0.0, +)
+            } else {
+                map[day] = values.mean
+            }
         }
         return map
     }

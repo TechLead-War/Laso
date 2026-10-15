@@ -1,17 +1,32 @@
 import Foundation
 
-/// Heuristic — unvalidated. Surfaces circadian disruption signals derived
+/// Heuristic, unvalidated. Surfaces circadian disruption signals derived
 /// from wearable activity/sleep data; treat outputs as informational, not
 /// clinical, measurements.
 ///
-/// Implementation: Computes circadian rhythm metrics from daily activity patterns:
-/// rest-activity amplitude, acrophase stability, and intradaily variability.
-/// Surfaces circadian health as a distinct signal.
+/// Three components, each 0 to 100:
+/// - Rest-activity amplitude from the averaged 24-hour step profile (M10/L5
+///   relative amplitude, Van Someren et al. 1999). This replaced a day-to-day
+///   coefficient of variation of daily totals, which rewarded erratic days
+///   while the regularity component punished them, so nobody could score well.
+/// - Regularity: how similar consecutive days' step totals are.
+/// - Sleep timing: how steady the nightly sleep midpoint is.
 struct CircadianDisruptionAnalyzer {
 
     // MARK: - Constants
 
     private static let minDaysRequired = 21
+    /// Days the hourly step profile spans; missing hours are zero steps, so the
+    /// per-hour mean divides by the window, not by the hours that had samples.
+    private static let hourlyProfileDays = 30
+    /// Relative amplitude (M10 - L5) / (M10 + L5) of healthy consolidated
+    /// rhythms sits near 0.9 or above; below about 0.6 the rhythm is flat or
+    /// inverted (Van Someren et al. 1999; Gonçalves et al. 2014).
+    private static let relativeAmplitudeFloor = 0.6
+    private static let relativeAmplitudeCeiling = 0.95
+    /// Sleep-midpoint spread that reads as fully irregular timing. Regular
+    /// sleepers hold the midpoint within roughly 30 to 45 minutes night to night.
+    private static let midpointSDAtZeroScore = 120.0 // minutes
 
     // MARK: - Analysis
 
@@ -22,25 +37,19 @@ struct CircadianDisruptionAnalyzer {
         let samples = stepsSeries.samples(lastDays: 30)
         guard samples.count >= minDaysRequired else { return [] }
 
-        // Compute circadian metrics
-        let rhythmMetrics = computeRhythmMetrics(samples: samples)
-
-        // Also check sleep timing consistency
-        let sleepTimingConsistency = computeSleepTimingConsistency(context: context)
-
         // Composite circadian health score (0-100)
         var components: [(score: Double, weight: Double, label: String)] = []
-        components.append((rhythmMetrics.amplitudeScore, 0.30, Copy.Analysis.Research.CircadianDisruption.amplitudeComponent))
-        components.append((rhythmMetrics.regularityScore, 0.25, Copy.Analysis.Research.CircadianDisruption.regularityComponent))
-        components.append((rhythmMetrics.restActivityRatio, 0.20, Copy.Analysis.Research.CircadianDisruption.restActivityComponent))
-
-        if let sleepScore = sleepTimingConsistency {
-            components.append((sleepScore, 0.25, Copy.Analysis.Research.CircadianDisruption.sleepTimingComponent))
+        if let amplitude = relativeAmplitudeScore(hourlyStepBins: context.hourlyStepBins) {
+            components.append((amplitude, 0.35, Copy.Analysis.Research.CircadianDisruption.restActivityComponent))
+        }
+        components.append((regularityScore(samples: samples), 0.30, Copy.Analysis.Research.CircadianDisruption.regularityComponent))
+        if let sleepScore = sleepTimingConsistency(context: context) {
+            components.append((sleepScore, 0.35, Copy.Analysis.Research.CircadianDisruption.sleepTimingComponent))
         }
 
-        // Divide by the weight actually present, not by 1: sleep timing is
-        // optional, so a user without it carries 0.75 of the model and clamping
-        // the divisor to 1 would report their circadian score a quarter low.
+        // Divide by the weight actually present, not by 1: amplitude and sleep
+        // timing are optional, so a user missing one carries part of the model
+        // and clamping the divisor to 1 would report their score low.
         let totalWeight = components.map(\.weight).reduce(0, +)
         guard totalWeight > 0 else { return [] }
         let circadianScore = components.map { $0.score * $0.weight }.reduce(0, +) / totalWeight
@@ -101,23 +110,35 @@ struct CircadianDisruptionAnalyzer {
 
     // MARK: - Rhythm Metrics
 
-    private struct RhythmResult {
-        let amplitudeScore: Double    // 0-100: how different active vs rest periods are
-        let regularityScore: Double   // 0-100: day-to-day consistency
-        let restActivityRatio: Double // 0-100: contrast between rest and activity
+    /// Relative amplitude of the averaged 24-hour step profile: the mean of the
+    /// most active 10 consecutive hours (M10) against the least active 5 (L5).
+    /// Nil without an hourly profile.
+    static func relativeAmplitudeScore(hourlyStepBins: [[Double]]?) -> Double? {
+        guard let bins = hourlyStepBins, bins.count == 24 else { return nil }
+        let hourlyMean = bins.map { $0.reduce(0, +) / Double(hourlyProfileDays) }
+
+        func windowMean(length: Int, pick: (Double, Double) -> Bool) -> Double {
+            var best: Double? = nil
+            for start in 0..<24 {
+                var sum = 0.0
+                for offset in 0..<length { sum += hourlyMean[(start + offset) % 24] }
+                let mean = sum / Double(length)
+                if let current = best, !pick(mean, current) { continue }
+                best = mean
+            }
+            return best ?? 0
+        }
+        let m10 = windowMean(length: 10, pick: >)
+        let l5 = windowMean(length: 5, pick: <)
+        guard m10 + l5 > 0 else { return nil }
+
+        let relativeAmplitude = (m10 - l5) / (m10 + l5)
+        let span = relativeAmplitudeCeiling - relativeAmplitudeFloor
+        return min(max((relativeAmplitude - relativeAmplitudeFloor) / span, 0), 1) * 100
     }
 
-    private static func computeRhythmMetrics(samples: [MetricSample]) -> RhythmResult {
-        let values = samples.map(\.value)
-        let mean = values.mean
-        let stdDev = values.standardDeviation
-
-        // 1. Amplitude: relative amplitude of daily activity pattern
-        // Higher CV = more distinct active/rest contrast = younger rhythm
-        let cv = mean > 0 ? stdDev / mean : 0
-        let amplitudeScore = min(cv / 0.5, 1.0) * 100
-
-        // 2. Regularity: consistency of day-to-day patterns
+    /// 0 to 100 from how similar consecutive days' step totals are.
+    private static func regularityScore(samples: [MetricSample]) -> Double {
         let sorted = samples.sorted { $0.date < $1.date }
         var dayDiffs: [Double] = []
         for i in 1..<sorted.count {
@@ -130,50 +151,19 @@ struct CircadianDisruptionAnalyzer {
             }
         }
         let avgRelDiff = dayDiffs.isEmpty ? 0.5 : dayDiffs.mean
-        let regularityScore = max(0, (1.0 - avgRelDiff) * 100)
-
-        // 3. Rest-activity ratio: do rest days look different from active days?
-        let sortedValues = values.sorted()
-        let lower25 = Array(sortedValues.prefix(max(1, sortedValues.count / 4)))
-        let upper25 = Array(sortedValues.suffix(max(1, sortedValues.count / 4)))
-        let restMean = lower25.mean
-        let activeMean = upper25.mean
-        let contrast = activeMean > 0 ? (activeMean - restMean) / activeMean : 0
-        let ratioScore = min(contrast / 0.6, 1.0) * 100
-
-        return RhythmResult(
-            amplitudeScore: amplitudeScore,
-            regularityScore: regularityScore,
-            restActivityRatio: ratioScore
-        )
+        return max(0, (1.0 - avgRelDiff) * 100)
     }
 
-    /// Compute sleep timing consistency score from sleep data
-    private static func computeSleepTimingConsistency(context: AnalysisContext) -> Double? {
+    /// 0 to 100 from how steady the nightly sleep midpoint is: the spread of
+    /// the midpoint clock time, so a fixed 7 h sleeper who drifts from 10 pm to
+    /// 2 am scores low even though every night is the same length.
+    private static func sleepTimingConsistency(context: AnalysisContext) -> Double? {
         guard let sleepSeries = context.timeSeries[.sleepDuration] else { return nil }
         let samples = sleepSeries.samples(lastDays: 21)
         guard samples.count >= 14 else { return nil }
 
-        let values = samples.map(\.value)
-        let mean = values.mean
-        guard mean > 0 else { return nil }
-
-        let cv = values.standardDeviation / mean
-
-        // Also check weekday vs weekend gap
-        let calendar = Date.cal
-        let weekday = samples.filter { calendar.component(.weekday, from: $0.date) >= 2 && calendar.component(.weekday, from: $0.date) <= 6 }.map(\.value)
-        let weekend = samples.filter { calendar.component(.weekday, from: $0.date) == 1 || calendar.component(.weekday, from: $0.date) == 7 }.map(\.value)
-
-        var gapPenalty = 0.0
-        if !weekday.isEmpty && !weekend.isEmpty {
-            let gap = abs(weekday.mean - weekend.mean)
-            gapPenalty = min(gap / 2.0, 1.0) * 20
-        }
-
-        let cvPenalty = min(cv / 0.25, 1.0) * 30
-
-        return max(0, 100 - cvPenalty - gapPenalty)
+        let midpointSD = samples.map(SleepRegularityAnalyzer.sleepMidpointMinutesFromNoon).standardDeviation
+        return max(0, 100 - min(midpointSD / midpointSDAtZeroScore, 1.0) * 100)
     }
 }
 

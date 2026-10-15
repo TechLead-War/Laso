@@ -975,8 +975,12 @@ final class DashboardViewModel {
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
             await MainActor.run { updateCachedProperties() }
 
+            let heavyInputs = await fetchHeavyAnalysisInputs(force: forceHeavyDeferred)
             await Task.detached(priority: .background) { [analysisEngine] in
-                analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
+                analysisEngine.runDeferredHeavy(
+                    timeSeries: ts, force: forceHeavyDeferred,
+                    nocturnalHeartRate: heavyInputs.nocturnalHeartRate, hourlyStepBins: heavyInputs.hourlyStepBins
+                )
             }.value
 
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
@@ -1056,7 +1060,11 @@ final class DashboardViewModel {
 
             // Heavy cross-metric analysis (correlations, historical, causal chains)
             // Skipped automatically if results are still fresh (1-hour TTL)
-            analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
+            let heavyInputs = await self.fetchHeavyAnalysisInputs(force: forceHeavyDeferred)
+            analysisEngine.runDeferredHeavy(
+                timeSeries: ts, force: forceHeavyDeferred,
+                nocturnalHeartRate: heavyInputs.nocturnalHeartRate, hourlyStepBins: heavyInputs.hourlyStepBins
+            )
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
             // Update cached properties now that correlations + historicalContext are available
@@ -1081,6 +1089,20 @@ final class DashboardViewModel {
     }
 
     /// Runs post-heavy enrichments and optional housekeeping (backup/notifications/analytics).
+    /// Inputs only the heavy analyzers read, fetched right before that phase so
+    /// they see the sleep windows the current sync produced. Skipped when the
+    /// heavy phase is going to be skipped, so a fresh TTL costs no HealthKit work.
+    private func fetchHeavyAnalysisInputs(
+        force: Bool
+    ) async -> (nocturnalHeartRate: [Date: Double], hourlyStepBins: [[Double]]?) {
+        guard force || analysisEngine.needsHeavyAnalysis else { return ([:], nil) }
+        async let nocturnal = healthKitManager.fetchNocturnalHeartRate(
+            for: healthKitManager.sleepSessionBoundaries, days: 30
+        )
+        async let hourly = healthKitManager.fetchHourlySamples(.steps, days: 30)
+        return await (nocturnal, hourly)
+    }
+
     private func runPostHeavyPhase(
         timeSeries: [HealthMetric: MetricTimeSeries],
         prevTrends: [HealthMetric: TrendDirection],

@@ -105,11 +105,11 @@ final class MirrorTemplateRenderTests: XCTestCase {
     /// The ladder must climb as the frame gets brighter and more uneven.
     func testProtectionLadderClimbsWithBrightness() {
         let block = CGRect(x: 0, y: 0.7, width: 1, height: 0.3)
-        let dark = MirrorLegibility.Analysis(face: nil, cells: Array(repeating: 0.05, count: 36))
-        let bright = MirrorLegibility.Analysis(face: nil, cells: Array(repeating: 0.85, count: 36))
+        let dark = MirrorLegibility.Analysis(cells: Array(repeating: 0.05, count: 36))
+        let bright = MirrorLegibility.Analysis(cells: Array(repeating: 0.85, count: 36))
         var mixedCells = Array(repeating: 0.05, count: 36)
         for index in 30..<36 { mixedCells[index] = 0.95 }
-        let uneven = MirrorLegibility.Analysis(face: nil, cells: mixedCells)
+        let uneven = MirrorLegibility.Analysis(cells: mixedCells)
 
         XCTAssertEqual(MirrorLegibility.protection(for: block, analysis: dark, largeType: false), .none)
         XCTAssertEqual(MirrorLegibility.protection(for: block, analysis: bright, largeType: false), .strip)
@@ -165,7 +165,6 @@ final class MirrorTemplateRenderTests: XCTestCase {
     // MARK: - Fixtures
 
     private static let analysis = MirrorLegibility.Analysis(
-        face: CGRect(x: 0.3, y: 0.22, width: 0.4, height: 0.34),
         cells: (0..<36).map { 0.18 + Double($0 % 6) * 0.04 }
     )
 
@@ -282,6 +281,52 @@ final class MirrorTemplateRenderTests: XCTestCase {
             0.02,
             "Behind You drew no visible numeral beside the subject"
         )
+    }
+
+    /// Newsprint laid a fixed dot grid over a contrast boosted photo, so a
+    /// shadowed face or a dark shirt came out as one solid black block. A real
+    /// halftone sizes each dot by the tone under it, and a mid grey frame has
+    /// to come back mid grey.
+    func testNewsprintKeepsMidtones() {
+        let photo = Self.flat(size: CGSize(width: 390, height: 520), grey: 0.35)
+        let rendered = MirrorPhotoRenderer.render(photo: photo, template: .newsprint, payload: Self.fullPayload)
+        // The middle of the frame, clear of the masthead and the slab.
+        let band = CGRect(x: 0.1, y: 0.3, width: 0.8, height: 0.3)
+        XCTAssertGreaterThan(Self.meanLuminance(rendered, in: band), 0.3,
+                             "a 35% grey frame rendered as near black in Newsprint")
+    }
+
+    /// Without a cutout, Behind You drew a half transparent numeral across the
+    /// body. The number now sits in the fade at the floor and the band where
+    /// the subject stands is left alone.
+    func testBehindYouWithoutACutoutLeavesTheSubjectAlone() {
+        let photo = Self.portrait(size: CGSize(width: 390, height: 520), warm: false)
+        var payload = MirrorPayload.empty
+        payload.score = 74
+        payload.date = Self.fullPayload.date
+        payload.streak = 12
+        let rendered = MirrorPhotoRenderer.render(photo: photo, template: .behindYou, payload: payload, analysis: Self.analysis)
+        let band = CGRect(x: 0.1, y: 0.24, width: 0.8, height: 0.3)
+        XCTAssertLessThan(abs(Self.meanLuminance(rendered, in: band) - Self.meanLuminance(photo, in: band)), 0.02,
+                          "Behind You still drew over the subject with no cutout to put it behind")
+    }
+
+    /// A white ceiling behind the date wiped the whole top row of Field Notes,
+    /// because only the bottom block was ever measured and covered.
+    func testFieldNotesCoversABrightTopEdge() {
+        let photo = Self.flat(size: CGSize(width: 390, height: 520), grey: 0.9)
+        let bright = MirrorLegibility.Analysis(cells: Array(repeating: 0.9, count: 36))
+        let rendered = MirrorPhotoRenderer.render(photo: photo, template: .fieldNotes, payload: Self.fullPayload, analysis: bright)
+        let top = CGRect(x: 0.1, y: 0.0, width: 0.8, height: 0.08)
+        XCTAssertLessThan(Self.meanLuminance(rendered, in: top), Self.meanLuminance(photo, in: top) - 0.08,
+                          "Field Notes left its header on a bright edge with no cover")
+    }
+
+    private static func flat(size: CGSize, grey: CGFloat) -> UIImage {
+        UIGraphicsImageRenderer(size: size).image { context in
+            context.cgContext.setFillColor(red: grey, green: grey, blue: grey, alpha: 1)
+            context.cgContext.fill(CGRect(origin: .zero, size: size))
+        }
     }
 
     private static func meanLuminance(_ image: UIImage, in unitRect: CGRect) -> Double {

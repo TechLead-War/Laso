@@ -29,6 +29,12 @@ struct AnalysisContext {
     let scoreHistory: [(date: Date, score: Int)]
     let categoryScores: [HealthScore]
     let baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]]
+    /// Mean heart rate inside each night's sleep window, keyed by wake day.
+    /// Heavy phase only; empty elsewhere.
+    let nocturnalHeartRate: [Date: Double]
+    /// Step totals binned by hour of day over the last 30 days (24 bins, one
+    /// entry per day that had steps in that hour). Heavy phase only.
+    let hourlyStepBins: [[Double]]?
 
     init(
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -43,7 +49,9 @@ struct AnalysisContext {
         illnessWarnings: [IllnessEarlyWarning.Warning] = [],
         scoreHistory: [(date: Date, score: Int)] = [],
         categoryScores: [HealthScore] = [],
-        baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
+        baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:],
+        nocturnalHeartRate: [Date: Double] = [:],
+        hourlyStepBins: [[Double]]? = nil
     ) {
         self.timeSeries = timeSeries
         self.baselines = baselines
@@ -58,5 +66,7 @@ struct AnalysisContext {
         self.scoreHistory = scoreHistory
         self.categoryScores = categoryScores
         self.baselineHistory = baselineHistory
+        self.nocturnalHeartRate = nocturnalHeartRate
+        self.hourlyStepBins = hourlyStepBins
     }
 }

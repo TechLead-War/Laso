@@ -91,27 +91,16 @@ enum ReadinessScorerConfig {
 
     static var workoutLoadDurationCap: Double     { rc.readinessWorkoutLoadDurationCap }
     static var workoutLoadCalorieCap: Double      { rc.readinessWorkoutLoadCalorieCap }
-    static var workoutRecoveryRecentBandHours: Double { rc.readinessWorkoutRecentBandHours }
-    static var workoutRecoveryMidBandHours: Double { rc.readinessWorkoutMidBandHours }
-    static var workoutRecoveryRecentBase: Double  { rc.readinessWorkoutRecentBase }
-    static var workoutRecoveryRecentLoadPenalty: Double { rc.readinessWorkoutRecentLoadPenalty }
-    static var workoutRecoveryMidBase: Double     { rc.readinessWorkoutMidBase }
-    static var workoutRecoveryMidLoadPenalty: Double { rc.readinessWorkoutMidLoadPenalty }
-    static var workoutRecoveryLateBase: Double    { rc.readinessWorkoutLateBase }
-    static var workoutRecoveryLateLoadPenalty: Double { rc.readinessWorkoutLateLoadPenalty }
     static var workoutRecoveryConfidenceFloor: Double { rc.readinessWorkoutConfFloor }
     static var workoutRecoveryConfidenceOnsetHours: Double { rc.readinessWorkoutConfOnsetHours }
     static var workoutRecoveryConfidenceDecayHours: Double { rc.readinessWorkoutConfDecayHours }
-
-    // MARK: - Stress Sub-Score
-
-    /// How far from the person's own baseline fills one stress channel, as a
-    /// fraction of that baseline. Matches `StressScorer.deviationAtMaxScore`
-    /// so the two stress readouts in the app cannot disagree about what a
-    /// stressed day is. Fixed population anchors used to sit here and labelled
-    /// every healthy older adult "High" forever.
-    static var stressDeviationAtCap: Double       { rc.readinessStressDeviationAtCap }
-    static var stressChannelCap: Double           { rc.readinessStressChannelCap }
+    /// Points taken off the moment a max-load workout ends. Recovery then
+    /// follows a continuous exponential, not the 6 h / 18 h stair-steps that
+    /// used to jump the score 17 points at a single minute.
+    static var workoutRecoveryMaxPenalty: Double  { rc.readinessWorkoutMaxPenalty }
+    /// Time constant of that exponential, in hours (half the penalty is gone
+    /// after about 0.7 tau).
+    static var workoutRecoveryTauHours: Double    { rc.readinessWorkoutTauHours }
 
     // MARK: - Recovery Lock
 

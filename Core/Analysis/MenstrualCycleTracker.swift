@@ -53,12 +53,14 @@ final class MenstrualCycleTracker {
         }
 
         /// Inclusive day range within a standard 28-day cycle (1-indexed).
+        /// Must match `phaseRanges(cycleLength: 28)`; ovulation and luteal overlap
+        /// by design and `phaseForDay` gives ovulation precedence.
         var dayRange: ClosedRange<Int> {
             switch self {
             case .menstrual:  return 1...5
-            case .follicular: return 6...13
+            case .follicular: return 6...11
             case .ovulation:  return 12...16
-            case .luteal:     return 17...28
+            case .luteal:     return 15...28
             }
         }
 
@@ -256,19 +258,14 @@ final class MenstrualCycleTracker {
 
     /// Determine the cycle phase for a given day within a cycle of the specified length.
     func phaseForDay(_ day: Int, cycleLength: Int) -> CyclePhase {
-        // Scale phase boundaries proportionally when cycle length differs from 28.
-        let scale = Double(cycleLength) / 28.0
-
-        let menstrualEnd   = Int(round(5.0 * scale))
-        let follicularEnd  = Int(round(13.0 * scale))
-        let ovulationEnd   = Int(round(16.0 * scale))
+        let ranges = Self.phaseRanges(cycleLength: cycleLength)
 
         switch day {
-        case 1...menstrualEnd:
+        case ranges.menstrual:
             return .menstrual
-        case (menstrualEnd + 1)...follicularEnd:
+        case ranges.follicular:
             return .follicular
-        case (follicularEnd + 1)...ovulationEnd:
+        case ranges.ovulation:
             return .ovulation
         default:
             return .luteal
@@ -301,30 +298,55 @@ final class MenstrualCycleTracker {
         return starts
     }
 
+    /// The luteal phase is ~14 days regardless of cycle length; cycle-length variation
+    /// lives in the follicular phase (Fehring et al. 2006; Bull et al. 2019, npj Digital Medicine).
+    private static let lutealLengthDays = 14
+
+    /// Ovulation window is the ovulation day plus/minus this many days.
+    private static let ovulationHalfWidthDays = 2
+
+    /// Menstrual bleeding is days 1...5 and does not scale with cycle length.
+    private static let menstrualEndDay = 5
+
+    /// Phase day ranges for a cycle of the given length, counted back from the
+    /// next period: ovulation on day (length - 14), luteal the 14 days after it.
+    /// Ovulation and luteal overlap by design; `phaseForDay` gives ovulation precedence.
+    private static func phaseRanges(cycleLength: Int) -> (
+        menstrual: ClosedRange<Int>, follicular: ClosedRange<Int>,
+        ovulation: ClosedRange<Int>, luteal: ClosedRange<Int>
+    ) {
+        let ovulationDay = cycleLength - lutealLengthDays
+        // Cycles under 23 days cannot hold a 5-day period, a follicular day, the
+        // ovulation window and a 14-day luteal phase. Luteal is the biologically fixed
+        // one, so the period shrinks first (never below day 1) and only an 18-day cycle
+        // also loses the front of the ovulation window. Follicular always keeps day
+        // (menstrualEnd + 1), so the window opens on day 3 at the earliest.
+        let ovulationStart = max(ovulationDay - ovulationHalfWidthDays, 3)
+        let menstrualEnd = min(menstrualEndDay, ovulationStart - 2)
+        precondition(ovulationStart <= ovulationDay,
+                     "cycleLength \(cycleLength) is too short for a \(lutealLengthDays)-day luteal phase; compute() only accepts 18+")
+
+        return (
+            menstrual: 1...menstrualEnd,
+            follicular: (menstrualEnd + 1)...(ovulationStart - 1),
+            ovulation: ovulationStart...(ovulationDay + ovulationHalfWidthDays),
+            luteal: (ovulationDay + 1)...cycleLength
+        )
+    }
+
     /// Compute how far through the current phase the user is (0 = start, 1 = end).
     private func computePhaseProgress(dayInCycle: Int, phase: CyclePhase, cycleLength: Int) -> Double {
-        let scale = Double(cycleLength) / 28.0
+        let ranges = Self.phaseRanges(cycleLength: cycleLength)
 
-        let phaseStart: Int
-        let phaseEnd: Int
-
+        let range: ClosedRange<Int>
         switch phase {
-        case .menstrual:
-            phaseStart = 1
-            phaseEnd = Int(round(5.0 * scale))
-        case .follicular:
-            phaseStart = Int(round(5.0 * scale)) + 1
-            phaseEnd = Int(round(13.0 * scale))
-        case .ovulation:
-            phaseStart = Int(round(13.0 * scale)) + 1
-            phaseEnd = Int(round(16.0 * scale))
-        case .luteal:
-            phaseStart = Int(round(16.0 * scale)) + 1
-            phaseEnd = cycleLength
+        case .menstrual:  range = ranges.menstrual
+        case .follicular: range = ranges.follicular
+        case .ovulation:  range = ranges.ovulation
+        case .luteal:     range = ranges.luteal
         }
 
-        let phaseDuration = max(phaseEnd - phaseStart + 1, 1)
-        let dayWithinPhase = dayInCycle - phaseStart
-        return min(max(Double(dayWithinPhase) / Double(phaseDuration), 0.0), 1.0)
+        let dayWithinPhase = dayInCycle - range.lowerBound
+        return min(max(Double(dayWithinPhase) / Double(range.count), 0.0), 1.0)
     }
 }

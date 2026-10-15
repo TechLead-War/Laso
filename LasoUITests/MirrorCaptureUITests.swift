@@ -22,20 +22,21 @@ final class MirrorCaptureUITests: XCTestCase {
         return app
     }
 
-    /// Home toolbar camera, then the check-in's mirror row, lands on confirm.
+    /// The Home toolbar camera opens the capture flow directly, and in UI test
+    /// mode the flow starts on confirm. The check-in's Daily Mirror row is the
+    /// older door and is still accepted, so the test survives either layout.
     private func openConfirm(_ app: XCUIApplication) {
         let camera = app.buttons.matching(identifier: "camera").firstMatch
         let toolbarCamera = camera.exists ? camera : app.navigationBars.buttons.element(boundBy: 0)
-        XCTAssertTrue(toolbarCamera.waitForExistence(timeout: 20), "No door into the check-in from Home")
+        XCTAssertTrue(toolbarCamera.waitForExistence(timeout: 20), "No door into the capture flow from Home")
         toolbarCamera.tap()
 
-        // The Daily Mirror row inside the check-in sheet. It says one of two
-        // things depending on whether today is already captured, and the seed
-        // captures today, so it is the retake wording.
+        if app.buttons["Save photo"].waitForExistence(timeout: 10) { return }
+
         let mirrorRow = app.staticTexts[Copy_journalCardDone]
         let fallback = app.staticTexts[Copy_journalCardCTA]
-        let row = mirrorRow.waitForExistence(timeout: 10) ? mirrorRow : fallback
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "The check-in has no Daily Mirror row")
+        let row = mirrorRow.waitForExistence(timeout: 5) ? mirrorRow : fallback
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Neither the capture flow nor the check-in's Daily Mirror row opened")
         row.tap()
     }
 

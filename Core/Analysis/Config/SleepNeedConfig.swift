@@ -50,6 +50,8 @@ enum SleepNeedConfig {
 
     /// Maximum upward shift applied when the user is carrying any sleep debt.
     static let maxDebtAdjustment: Double = 0.5
+    /// Number of nights over which accumulated sleep debt is smoothly repaid.
+    static let debtPaybackDays: Double = 6.0
 
     // MARK: - Quality-Trend Adjustment
 

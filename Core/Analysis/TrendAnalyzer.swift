@@ -154,8 +154,8 @@ struct TrendAnalyzer {
         var sumRecentHalf = 0.0, countRecentHalf = 0
         var sumOlderHalf  = 0.0, countOlderHalf  = 0
 
-        // Collect regression and inflection values (reversed, will flip for regression)
-        var regressionValues: [Double] = []
+        // Collect regression and inflection values (regression uses elapsed days from cutoff)
+        var regressionPoints: [(x: Double, y: Double)] = []
         var recent7Values: [Double] = []   // last 7 days (for inflection)
         var older7to14Values: [Double] = [] // 7-14 days ago (for inflection)
 
@@ -185,9 +185,10 @@ struct TrendAnalyzer {
                 sumOlderHalf += value; countOlderHalf += 1
             }
 
-            // Regression values (last regressionDays)
+            // Regression values (last regressionDays, x in elapsed days)
             if date >= cutoffRegression {
-                regressionValues.append(value)
+                let elapsedDays = date.timeIntervalSince(cutoffRegression) / 86400.0
+                regressionPoints.append((x: elapsedDays, y: value))
             }
 
             // Inflection buckets
@@ -214,9 +215,8 @@ struct TrendAnalyzer {
         let ma30  = count30  > 0 ? sum30  / Double(count30)  : 0
         let ma90  = count90  > 0 ? sum90  / Double(count90)  : 0
 
-        // Compute regression slope (values were collected newest-first, reverse for chronological order)
-        regressionValues.reverse()
-        let slope = regressionValues.linearRegression.slope
+        // Compute regression slope (x is elapsed days, so slope is units/day)
+        let slope = regressionPoints.linearRegression.slope
 
         // Period-over-period change.
         // Both halves must actually contain days. An empty recent half used to be

@@ -6,19 +6,16 @@ import Foundation
 /// fractions below are common training-zone conventions, not anchored to
 /// a specific peer-reviewed dataset. Treat outputs as coaching guidance.
 ///
-/// The band thresholds, seeds, ceilings, and default max-HR live in Firebase
-/// Remote Config (see `RC.workout*` in `RemoteConfigSchema.swift`). HR zone
+/// Recovery band floors are NOT here: `WorkoutRecoveryBand` and the zone split
+/// grade on `DS.recoveryTier` so every surface agrees. The seeds, building
+/// ceiling, and default max-HR live in Firebase Remote Config (see
+/// `RC.workout*` in `RemoteConfigSchema.swift`). HR zone
 /// fractions stay code-side because they are exercise-physiology convention,
 /// not a product-tuning knob — changing them would invalidate every cached
 /// workout zone classification.
 enum WorkoutBandsConfig {
 
     private static var rc: RemoteConfigManager { .shared }
-
-    // MARK: - Recovery Bands (recovery score → band)
-
-    static var greenBandScoreFloor: Int           { rc.workoutGreenBandFloor }
-    static var yellowBandScoreFloor: Int          { rc.workoutYellowBandFloor }
 
     // MARK: - Recovery Score Seeds (band → seed score)
 
@@ -28,8 +25,6 @@ enum WorkoutBandsConfig {
 
     // MARK: - Recovery → Training Zone
 
-    static var zoneRestoringScoreCeiling: Int     { rc.workoutZoneRestoringCeiling }
-    static var zoneMaintainingScoreCeiling: Int   { rc.workoutZoneMaintainingCeiling }
     static var zoneBuildingScoreCeiling: Int      { rc.workoutZoneBuildingCeiling }
 
     // MARK: - Default Athlete Profile

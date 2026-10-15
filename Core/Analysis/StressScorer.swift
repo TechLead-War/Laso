@@ -96,8 +96,10 @@ struct StressScore {
 
 // MARK: - Stress Scorer
 
-/// Computes a continuous stress score (0-3) from HRV and heart rate data,
-/// modeled after WHOOP's strain/recovery scale.
+/// Computes a continuous stress score (0-100) from HRV and heart rate data,
+/// modeled after WHOOP's strain/recovery scale. `score(...)` is the one stress
+/// formula in the app: `ReadinessScorer.stressLevel` calls it too, so Siri and
+/// the morning lock can never disagree with the Stress Monitor about a morning.
 ///
 /// The score combines two physiological signals:
 /// - HRV deviation below personal baseline (60% weight). lower HRV indicates higher sympathetic activation
@@ -183,35 +185,7 @@ final class StressScorer {
 
         isReady = true
 
-        // Build baselines from the 14-day window
-        let hrvBaseline = computeBaseline(hrvSeries, days: Self.baselineWindowDays)
-        let rhrBaseline: (mean: Double, sd: Double)?
-        if let rhrSeries = allSeries[.restingHeartRate] {
-            rhrBaseline = computeBaseline(rhrSeries, days: Self.baselineWindowDays)
-        } else {
-            rhrBaseline = nil
-        }
-
-        // Compute current stress from most recent values
-        let currentHRV = mostRecentDailyValue(hrvSeries)
-        // Resting HR only. A daytime average heart rate scored against a resting-HR
-        // baseline reads as elevation that never happened, so a missing resting
-        // reading drops the HR component rather than substituting another quantity.
-        let currentHR = allSeries[.restingHeartRate].flatMap { mostRecentDailyValue($0) }
-
-        if let hrvBase = hrvBaseline, let hrv = currentHRV {
-            let stressScore = computeStressScore(
-                currentHRV: hrv,
-                hrvBaseline: hrvBase,
-                currentHR: currentHR,
-                rhrBaseline: rhrBaseline
-            )
-            currentStress = stressScore
-        } else {
-            currentStress = nil
-        }
-
-        // Build daily history
+        // Build daily history and update currentStress deterministically
         buildDailyHistory(
             hrvSeries: hrvSeries,
             rhrSeries: allSeries[.restingHeartRate]
@@ -220,62 +194,17 @@ final class StressScorer {
 
     // MARK: - Private Helpers
 
-    /// Compute mean and standard deviation for a baseline window
-    private func computeBaseline(_ series: MetricTimeSeries, days: Int) -> (mean: Double, sd: Double)? {
-        let samples = series.samples(lastDays: days)
-        guard samples.count >= Self.minSamplesForBaseline else { return nil }
-
-        let mean = samples.mean(of: \.value)
-        guard mean > 0 else { return nil }
-
-        var sumOfSquares = 0.0
-        for sample in samples {
-            let delta = sample.value - mean
-            sumOfSquares += delta * delta
-        }
-        let sd = (sumOfSquares / Double(samples.count)).squareRoot()
-
-        return (mean: mean, sd: sd)
-    }
-
-    /// Get the most recent daily average value from a time series
-    private func mostRecentDailyValue(_ series: MetricTimeSeries) -> Double? {
-        mostRecentDailyMean(series.samples(lastDays: Self.mostRecentLookbackDays))
-    }
-
-    /// Aggregate samples by calendar day and return the most recent day's mean.
-    /// Avoids the single-sample noise that caused the score to clip to 0 when one
-    /// raw reading happened to land at or above the 14-day baseline mean.
-    private func mostRecentDailyMean(_ samples: [MetricSample]) -> Double? {
-        guard !samples.isEmpty else { return nil }
-        let calendar = Date.cal
-        var byDay: [Date: (sum: Double, count: Int)] = [:]
-        for sample in samples {
-            let day = calendar.startOfDay(for: sample.date)
-            if var existing = byDay[day] {
-                existing.sum += sample.value
-                existing.count += 1
-                byDay[day] = existing
-            } else {
-                byDay[day] = (sum: sample.value, count: 1)
-            }
-        }
-        guard let latestDay = byDay.keys.max(),
-              let agg = byDay[latestDay], agg.count > 0 else { return nil }
-        return agg.sum / Double(agg.count)
-    }
-
-    /// Compute the stress score from current values and baselines
-    private func computeStressScore(
+    /// The stress score for one reading against personal baseline means.
+    static func score(
         currentHRV: Double,
-        hrvBaseline: (mean: Double, sd: Double),
+        hrvBaselineMean: Double,
         currentHR: Double?,
-        rhrBaseline: (mean: Double, sd: Double)?
+        rhrBaselineMean: Double?
     ) -> StressScore {
         // HRV component: how far below baseline (lower HRV = higher stress)
         let hrvDeviation: Double
-        if hrvBaseline.mean > 0 {
-            hrvDeviation = max(0, (hrvBaseline.mean - currentHRV) / hrvBaseline.mean)
+        if hrvBaselineMean > 0 {
+            hrvDeviation = max(0, (hrvBaselineMean - currentHRV) / hrvBaselineMean)
         } else {
             hrvDeviation = 0
         }
@@ -284,8 +213,8 @@ final class StressScorer {
         // HR component: how far above resting baseline (higher HR = higher stress)
         let hrElevation: Double
         let hrComponent: Double
-        if let hr = currentHR, let rhr = rhrBaseline, rhr.mean > 0 {
-            hrElevation = max(0, (hr - rhr.mean) / rhr.mean)
+        if let hr = currentHR, let rhrMean = rhrBaselineMean, rhrMean > 0 {
+            hrElevation = max(0, (hr - rhrMean) / rhrMean)
             hrComponent = hrElevation * Self.stressScoreScale
         } else {
             hrElevation = 0
@@ -293,7 +222,7 @@ final class StressScorer {
         }
 
         // Weighted combination
-        let hasHR = currentHR != nil && rhrBaseline != nil
+        let hasHR = currentHR != nil && rhrBaselineMean != nil
         let rawScore: Double
         if hasHR {
             rawScore = hrvComponent * Self.hrvWeight + hrComponent * Self.hrWeight
@@ -312,7 +241,7 @@ final class StressScorer {
         )
     }
 
-    /// Build the last 30 days of daily stress history
+    /// Build daily stress history and update currentStress deterministically
     private func buildDailyHistory(
         hrvSeries: MetricTimeSeries,
         rhrSeries: MetricTimeSeries?
@@ -333,6 +262,7 @@ final class StressScorer {
         }
 
         var history: [(date: Date, score: Double)] = []
+        var latestComputedStress: (date: Date, stress: StressScore)?
 
         for dayOffset in (0..<historyDays).reversed() {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
@@ -341,39 +271,39 @@ final class StressScorer {
             guard let currentHRV = hrvByDay[dayStart] else { continue }
 
             // Build a trailing baseline for this day (14 days ending the day before)
-            let baselineHRV = trailingBaseline(from: hrvByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
-            guard let hrvBase = baselineHRV, hrvBase.mean > 0 else { continue }
+            guard let hrvBaseMean = trailingBaselineMean(from: hrvByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar) else { continue }
 
-            let hrvDeviation = max(0, (hrvBase.mean - currentHRV) / hrvBase.mean)
-            var score = hrvDeviation * Self.stressScoreScale
+            let currentRHR = rhrByDay[dayStart]
+            let rhrBaseMean = currentRHR == nil
+                ? nil
+                : trailingBaselineMean(from: rhrByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
 
-            // Add HR component if available
-            if let currentRHR = rhrByDay[dayStart] {
-                let rhrBase = trailingBaseline(from: rhrByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
-                if let rBase = rhrBase, rBase.mean > 0 {
-                    let hrElevation = max(0, (currentRHR - rBase.mean) / rBase.mean)
-                    score = score * Self.hrvWeight + (hrElevation * Self.stressScoreScale) * Self.hrWeight
-                }
-            }
+            let dayStress = Self.score(
+                currentHRV: currentHRV,
+                hrvBaselineMean: hrvBaseMean,
+                currentHR: currentRHR,
+                rhrBaselineMean: rhrBaseMean
+            )
 
-            history.append((date: dayStart, score: min(StressScale.maxScore, max(0.0, score))))
-        }
-
-        // The gauge and the chart's Today bar must be one number. The per-day
-        // formula above legitimately differs from the gauge's (baseline window
-        // includes vs excludes today, raw-sample vs per-day means, heartRate
-        // fallback), so whenever a current score exists it overwrites today's
-        // entry instead of only filling a missing one. Past days stay on the
-        // per-day formula.
-        if let current = currentStress {
-            if history.last?.date == today, let last = history.indices.last {
-                history[last].score = current.score
-            } else {
-                history.append((date: today, score: current.score))
-            }
+            history.append((date: dayStart, score: dayStress.score))
+            latestComputedStress = (date: dayStart, stress: dayStress)
         }
 
         dailyStressHistory = history
+
+        // Current stress corresponds to the latest available day within the lookback window.
+        // Because each day uses an immutable trailing baseline strictly preceding it,
+        // historical scores are deterministic and will not mutate overnight.
+        if let latest = latestComputedStress {
+            let daysDifference = calendar.dateComponents([.day], from: latest.date, to: today).day ?? 0
+            if daysDifference < Self.mostRecentLookbackDays {
+                currentStress = latest.stress
+            } else {
+                currentStress = nil
+            }
+        } else {
+            currentStress = nil
+        }
     }
 
     /// Build a lookup of date -> average value for a set of samples
@@ -399,13 +329,14 @@ final class StressScorer {
         return result
     }
 
-    /// Compute a trailing baseline (mean, sd) from a daily lookup, for the N days before a given date
-    private func trailingBaseline(
+    /// Mean of the N daily values strictly before `date`. Excluding the day
+    /// itself is what keeps a past day's score fixed once it is scored.
+    private func trailingBaselineMean(
         from lookup: [Date: Double],
         before date: Date,
         days: Int,
         calendar: Calendar
-    ) -> (mean: Double, sd: Double)? {
+    ) -> Double? {
         var values: [Double] = []
         values.reserveCapacity(days)
 
@@ -419,16 +350,7 @@ final class StressScorer {
 
         guard values.count >= Self.minSamplesForBaseline else { return nil }
 
-        let mean = values.reduce(0, +) / Double(values.count)
-        guard mean > 0 else { return nil }
-
-        var sumOfSquares = 0.0
-        for value in values {
-            let delta = value - mean
-            sumOfSquares += delta * delta
-        }
-        let sd = (sumOfSquares / Double(values.count)).squareRoot()
-
-        return (mean: mean, sd: sd)
+        let mean = values.mean
+        return mean > 0 ? mean : nil
     }
 }

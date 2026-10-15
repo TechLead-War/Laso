@@ -221,7 +221,10 @@ struct HealthScorer {
             var avgCV = 0.0
             if !categoryBaselines.isEmpty {
                 let cvValues = categoryBaselines.compactMap { baseline -> Double? in
-                    guard baseline.mean != 0 else { return nil }
+                    // A delta scale centred on zero has no coefficient of variation:
+                    // wrist temperature sits near 0 °C and read as infinitely
+                    // volatile, pinning its category at the volatility cap.
+                    guard !baseline.metric.isZeroCenteredDelta, baseline.mean != 0 else { return nil }
                     return baseline.standardDeviation / abs(baseline.mean)
                 }
                 avgCV = cvValues.isEmpty ? 0.0 : cvValues.reduce(0, +) / Double(cvValues.count)

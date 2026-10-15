@@ -164,23 +164,11 @@ Consumer: `Core/Analysis/Config/ReadinessScorerConfig.swift` → `Core/Analysis/
 |---|---|
 | `scoring_readiness_workout_load_duration_cap` | 75.0 |
 | `scoring_readiness_workout_load_calorie_cap` | 600.0 |
-| `scoring_readiness_workout_recent_band_hours` | 6.0 |
-| `scoring_readiness_workout_mid_band_hours` | 18.0 |
-| `scoring_readiness_workout_recent_base` | 85.0 |
-| `scoring_readiness_workout_recent_load_penalty` | 35.0 |
-| `scoring_readiness_workout_mid_base` | 92.0 |
-| `scoring_readiness_workout_mid_load_penalty` | 25.0 |
-| `scoring_readiness_workout_late_base` | 96.0 |
-| `scoring_readiness_workout_late_load_penalty` | 12.0 |
+| `scoring_readiness_workout_max_penalty` | 50.0 |
+| `scoring_readiness_workout_tau_hours` | 10.0 |
 | `scoring_readiness_workout_conf_floor` | 0.4 |
 | `scoring_readiness_workout_conf_onset_hours` | 36.0 |
 | `scoring_readiness_workout_conf_decay_hours` | 24.0 |
-
-### Stress sub-score
-| Key | Default |
-|---|---|
-| `scoring_readiness_stress_deviation_at_cap` | 0.5 |
-| `scoring_readiness_stress_channel_cap` | 50.0 |
 
 ---
 
@@ -211,15 +199,13 @@ Consumer: `Core/Analysis/Config/StrainScorerConfig.swift` → `Core/Analysis/Str
 
 Consumer: `Core/Analysis/Config/WorkoutBandsConfig.swift` → `Core/Analysis/WorkoutProgrammer.swift`.
 
+Band floors (green 67, amber 45) are not remote keys: every surface grades on `DS.recoveryTier` in code. Delete `scoring_workout_green_band_floor`, `scoring_workout_yellow_band_floor`, `scoring_workout_zone_restoring_ceiling`, `scoring_workout_zone_maintaining_ceiling`, the eight `scoring_readiness_workout_*_band_hours` / `*_base` / `*_load_penalty` keys and the two `scoring_readiness_stress_*` keys from the Firebase console; the app no longer reads them.
+
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `scoring_workout_green_band_floor` | Int | 75 | Recovery score → green |
-| `scoring_workout_yellow_band_floor` | Int | 50 | Recovery score → yellow |
 | `scoring_workout_red_band_seed` | Int | 35 | Seed score for red band |
-| `scoring_workout_yellow_band_seed` | Int | 65 | Seed score for yellow band |
+| `scoring_workout_yellow_band_seed` | Int | 56 | Seed score for yellow band |
 | `scoring_workout_green_band_seed` | Int | 82 | Seed score for green band |
-| `scoring_workout_zone_restoring_ceiling` | Int | 50 | Recovery → restoring zone cap |
-| `scoring_workout_zone_maintaining_ceiling` | Int | 75 | Recovery → maintaining zone cap |
 | `scoring_workout_zone_building_ceiling` | Int | 90 | Recovery → building zone cap |
 | `scoring_workout_default_max_hr` | Int | 190 | Used when no HR-max measurement |
 

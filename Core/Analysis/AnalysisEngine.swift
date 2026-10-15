@@ -309,7 +309,12 @@ final class AnalysisEngine {
 
     // MARK: - Deferred Heavy
 
-    func runDeferredHeavy(timeSeries: [HealthMetric: MetricTimeSeries], force: Bool = false) {
+    func runDeferredHeavy(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        force: Bool = false,
+        nocturnalHeartRate: [Date: Double] = [:],
+        hourlyStepBins: [[Double]]? = nil
+    ) {
         guard force || needsHeavyAnalysis else {
             isAnalyzing = false
             return
@@ -333,7 +338,9 @@ final class AnalysisEngine {
             correlations: newCorrelations,
             historicalContext: newHistoricalContext,
             crossMetricAnomalies: newCrossMetricAnomalies,
-            causalChains: newCausalChains
+            causalChains: newCausalChains,
+            nocturnalHeartRate: nocturnalHeartRate,
+            hourlyStepBins: hourlyStepBins
         )
 
         let heavyInsights = AnalyzerRegistry.runAll(AnalyzerRegistry.heavy, context: context)

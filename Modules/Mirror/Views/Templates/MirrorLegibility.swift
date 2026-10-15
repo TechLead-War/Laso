@@ -18,16 +18,12 @@ enum MirrorLegibility {
     // MARK: - What we learned about the frame
 
     struct Analysis: Codable, Equatable {
-        /// Face box in unit coordinates with y running down, matching SwiftUI.
-        /// Nil when Vision found nobody, which is a normal outcome worth
-        /// handling rather than an error.
-        var face: CGRect?
         /// Mean luminance, 0 to 1, of each cell of a `gridSize` square grid,
         /// row major from the top left.
         var cells: [Double]
 
         static let gridSize = 6
-        static let unknown = Analysis(face: nil, cells: [])
+        static let unknown = Analysis(cells: [])
 
         /// Mean and spread of the cells a rect covers. Spread matters as much
         /// as brightness: an evenly dark background takes light type fine, a
@@ -79,6 +75,13 @@ enum MirrorLegibility {
     /// because whatever opacity suits one end blows out the other.
     private static let unevenSpread = 0.34
 
+    /// The step for the small labels along the top edge. Capped below the
+    /// strip: a solid bar across the top of a portrait reads as a crop, so a
+    /// bright ceiling gets the deep gradient and nothing heavier.
+    static func topProtection(for rect: CGRect, analysis: Analysis) -> Protection {
+        min(protection(for: rect, analysis: analysis, largeType: false), .deepScrim)
+    }
+
     /// The step needed for a block of type occupying `rect` in unit coordinates.
     static func protection(for rect: CGRect, analysis: Analysis, largeType: Bool) -> Protection {
         // No measurement means no confidence, so take the step that always
@@ -103,15 +106,30 @@ enum MirrorLegibility {
 
     // MARK: - Measuring
 
-    /// Face box and a luminance grid for a captured frame. Runs off the main
-    /// actor: the Vision request is the slow part and the caller is holding a
-    /// photo on screen while it waits.
+    /// A luminance grid for a captured frame. Runs off the main actor so the
+    /// caller can keep the photo on screen while it waits. Expects an upright
+    /// photo (see `upright`): the grid reads raw pixels, and a camera frame
+    /// still carrying its rotation flag would be measured on its side.
     static func analyse(_ photo: UIImage) async -> Analysis {
         guard let cgImage = photo.cgImage else { return .unknown }
         return await Task.detached(priority: .userInitiated) {
-            Analysis(face: faceBox(in: cgImage, orientation: photo.imageOrientation),
-                     cells: luminanceGrid(cgImage))
+            Analysis(cells: luminanceGrid(cgImage, columns: Analysis.gridSize, rows: Analysis.gridSize))
         }.value
+    }
+
+    /// The photo with its pixels rotated the way it is displayed, so every
+    /// pixel reader downstream (the luminance grid, the person mask, the
+    /// halftone) agrees with what `Image(uiImage:)` shows. A camera capture
+    /// arrives with its rotation in a flag rather than in its pixels; Vision
+    /// and CoreGraphics read the pixels, SwiftUI honours the flag, and the
+    /// cutout came back sideways against the face it was meant to cover.
+    static func upright(_ photo: UIImage) -> UIImage {
+        guard photo.imageOrientation != .up else { return photo }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: photo.size, format: format).image { _ in
+            photo.draw(in: CGRect(origin: .zero, size: photo.size))
+        }
     }
 
     /// The subject cut out of the frame, as a white on black mask.
@@ -135,54 +153,34 @@ enum MirrorLegibility {
         }.value
     }
 
-    private static func faceBox(in image: CGImage, orientation: UIImage.Orientation) -> CGRect? {
-        let request = VNDetectFaceRectanglesRequest()
-        let handler = VNImageRequestHandler(cgImage: image,
-                                            orientation: cgOrientation(orientation),
-                                            options: [:])
-        try? handler.perform([request])
-        guard let faces = request.results, !faces.isEmpty else { return nil }
-        // The largest face is the subject. A reflection or a person behind
-        // should not be what the layout dodges.
-        let biggest = faces.max { $0.boundingBox.height < $1.boundingBox.height }
-        guard let box = biggest?.boundingBox else { return nil }
-        // Vision measures from the bottom left, SwiftUI from the top left.
-        // Padded a little, because a template must clear hair and chin too.
-        let flipped = CGRect(x: box.minX, y: 1 - box.maxY, width: box.width, height: box.height)
-        return flipped.insetBy(dx: -flipped.width * 0.12, dy: -flipped.height * 0.16)
-    }
-
-    /// Mean luminance per cell, read from one small grayscale draw. Drawing the
-    /// image straight into a gridSize square bitmap makes the hardware do the
-    /// averaging, so this stays well under a millisecond.
-    private static func luminanceGrid(_ image: CGImage) -> [Double] {
-        let side = Analysis.gridSize
-        var pixels = [UInt8](repeating: 0, count: side * side)
+    /// Mean luminance per cell of a `columns` by `rows` grid, row major from
+    /// the top left, read from one small grayscale draw so the hardware does
+    /// the averaging. With `aspect` (width over height) the image is first
+    /// cropped to fill that shape, matching a `scaledToFill` frame.
+    static func luminanceGrid(_ image: CGImage, columns: Int, rows: Int, filling aspect: CGFloat? = nil) -> [Double] {
+        guard columns > 0, rows > 0 else { return [] }
+        var source = image
+        if let aspect, aspect > 0 {
+            let width = CGFloat(image.width)
+            let height = CGFloat(image.height)
+            let cropWidth = min(width, height * aspect)
+            let cropHeight = min(height, width / aspect)
+            let crop = CGRect(x: (width - cropWidth) / 2, y: (height - cropHeight) / 2,
+                              width: cropWidth, height: cropHeight).integral
+            if let cropped = image.cropping(to: crop) { source = cropped }
+        }
+        var pixels = [UInt8](repeating: 0, count: columns * rows)
         guard let context = CGContext(
-            data: &pixels, width: side, height: side, bitsPerComponent: 8,
-            bytesPerRow: side, space: CGColorSpaceCreateDeviceGray(),
+            data: &pixels, width: columns, height: rows, bitsPerComponent: 8,
+            bytesPerRow: columns, space: CGColorSpaceCreateDeviceGray(),
             bitmapInfo: CGImageAlphaInfo.none.rawValue
         ) else { return [] }
         context.interpolationQuality = .medium
-        context.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+        context.draw(source, in: CGRect(x: 0, y: 0, width: columns, height: rows))
         // CGContext origin is bottom left, so rows come back upside down
         // relative to the unit rects callers hand in.
-        return (0..<side).reversed().flatMap { row in
-            (0..<side).map { Double(pixels[row * side + $0]) / 255.0 }
-        }
-    }
-
-    private static func cgOrientation(_ orientation: UIImage.Orientation) -> CGImagePropertyOrientation {
-        switch orientation {
-        case .up: return .up
-        case .down: return .down
-        case .left: return .left
-        case .right: return .right
-        case .upMirrored: return .upMirrored
-        case .downMirrored: return .downMirrored
-        case .leftMirrored: return .leftMirrored
-        case .rightMirrored: return .rightMirrored
-        @unknown default: return .up
+        return (0..<rows).reversed().flatMap { row in
+            (0..<columns).map { Double(pixels[row * columns + $0]) / 255.0 }
         }
     }
 }
@@ -227,16 +225,3 @@ struct MirrorScrim: View {
     }
 }
 
-extension View {
-    /// Anchors a scrim to one edge of the frame without disturbing layout.
-    func mirrorScrim(
-        _ protection: MirrorLegibility.Protection,
-        height: CGFloat = 200,
-        edge: Edge = .bottom
-    ) -> some View {
-        overlay(alignment: edge == .bottom ? .bottom : .top) {
-            MirrorScrim(protection: protection, height: height, edge: edge)
-                .allowsHitTesting(false)
-        }
-    }
-}

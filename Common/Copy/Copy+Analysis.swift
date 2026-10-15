@@ -1008,6 +1008,8 @@ extension Copy {
             static func metricsMeasured(measured: Int, total: Int) -> String {
                 String(format: RemoteConfigManager.shared.copyString("copy_analysis_risk_detail_metrics_measured", default: "%d of %d metrics measured"), measured, total)
             }
+            static var heartFitnessProfileTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_detail_heart_fitness_profile_title", default: "Heart Fitness Profile") }
+            static var heartFitnessProfileCaption: String { RemoteConfigManager.shared.copyString("copy_analysis_risk_detail_heart_fitness_profile_caption", default: "Based on heart rate signals only. Log a blood pressure reading to unlock your heart risk grade.") }
             static var disclaimer: String { RemoteConfigManager.shared.copyString("copy_analysis_disclaimer", default: "These scores are based on patterns in your health data and published wellness ranges. They are not medical advice and should not replace guidance from a qualified professional.") }
         }
 
@@ -1101,31 +1103,31 @@ extension Copy {
 
             enum SleepRegularity {
                 static var irregularTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_irregular_title", default: "Irregular Sleep Pattern Detected") }
-                static var needsAttentionTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_needs_attention_title", default: "Sleep Regularity Needs Attention") }
-                static var excellentTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_excellent_title", default: "Excellent Sleep Regularity") }
+                static var needsAttentionTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_needs_attention_title", default: "Sleep Steadiness Needs Attention") }
+                static var excellentTitle: String { RemoteConfigManager.shared.copyString("copy_analysis_sleep_regularity_excellent_title", default: "Excellent Sleep Steadiness") }
                 static func socialJetLagTitle(minutes: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_social_jet_lag_title", default: "Weekend Sleep Shift: %@ Minutes"), minutes)
                 }
 
                 static func irregularSummary(sri: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_summary", default: "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Research shows how steady your sleep is matters more for long-term health than how long you sleep."), sri)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_summary", default: "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Your nights change a lot in length or in timing from one to the next."), sri)
                 }
                 static func irregularRecommendation(sri: String, samples: Int, socialJetLag: Double, jetLagMinutes: String) -> String {
                     let jetLagSuffix = socialJetLag > 60
                         ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_suffix", default: " Your weekend sleep shift of %@ min is also on the high side."), jetLagMinutes)
                         : ""
-                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_recommendation", default: "Across 5 large studies, people with irregular sleep (a steadiness score under 60) may think less clearly and feel worse over time, no matter how many hours they sleep. Your score of %@ over %d nights shows your sleep changes a lot from night to night."), sri, samples)
+                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_irregular_recommendation", default: "Your score of %@ over %d nights shows your sleep changes a lot from night to night. A steadier bedtime and wake time is the simplest way to lift it."), sri, samples)
                     return body + jetLagSuffix
                 }
 
                 static func needsAttentionSummary(sri: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_summary", default: "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times matters more than how long you sleep for long-term health."), sri)
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_summary", default: "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times helps your body clock settle."), sri)
                 }
                 static func needsAttentionRecommendation(sri: String, samples: Int, socialJetLag: Double, jetLagMinutes: String) -> String {
                     let jetLagSuffix = socialJetLag > 45
                         ? String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_sleep_regularity_jet_lag_reduce", default: " Cutting your %@-min weekend sleep shift would help most."), jetLagMinutes)
                         : ""
-                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_recommendation", default: "Your steadiness score of %@ across %d nights is in the middle range. Research links every 10-point gain in this score to real gains in heart and body health."), sri, samples)
+                    let body = String(format: RemoteConfigManager.shared.copyString("copy_analysis_research_needs_attention_recommendation", default: "Your steadiness score of %@ across %d nights is in the middle range. Keeping your wake time within the same hour every day is what moves it most."), sri, samples)
                     return body + jetLagSuffix
                 }
 
@@ -1279,7 +1281,6 @@ extension Copy {
             // MARK: Circadian Disruption
 
             enum CircadianDisruption {
-                static var amplitudeComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_amplitude_component", default: "how active vs still you are") }
                 static var regularityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_regularity_component", default: "how steady your daily rhythm is") }
                 static var restActivityComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_rest_activity_component", default: "gap between active and rest times") }
                 static var sleepTimingComponent: String { RemoteConfigManager.shared.copyString("copy_analysis_circadian_disruption_sleep_timing_component", default: "sleep timing") }
@@ -1374,8 +1375,8 @@ extension Copy {
                 static func highVariabilitySummary(sd: String) -> String {
                     String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_summary", default: "Your nighttime wrist temperature jumps around a lot from night to night (\u{00B1}%@°C). Big swings like this are linked to an off body clock and body health."), sd)
                 }
-                static func highVariabilityRecommendation(cvPercent: String) -> String {
-                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_recommendation", default: "How much your temperature swings: %@%%. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock."), cvPercent)
+                static func highVariabilityRecommendation(sd: String) -> String {
+                    String(format: RemoteConfigManager.shared.copyString("copy_analysis_temperature_compound_high_variability_recommendation_sd", default: "Your nighttime temperature moves about ±%@°C from one night to the next. Most people stay within about ±0.3°C. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock."), sd)
                 }
             }
 

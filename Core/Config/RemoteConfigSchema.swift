@@ -98,19 +98,11 @@ extension RemoteConfigManager {
         RC.readinessSleepRestorativeRange:    0.24 as NSNumber,
         RC.readinessWorkoutLoadDurationCap:   75.0 as NSNumber,
         RC.readinessWorkoutLoadCalorieCap:    600.0 as NSNumber,
-        RC.readinessWorkoutRecentBandHours:   6.0  as NSNumber,
-        RC.readinessWorkoutMidBandHours:      18.0 as NSNumber,
-        RC.readinessWorkoutRecentBase:        85.0 as NSNumber,
-        RC.readinessWorkoutRecentLoadPenalty: 35.0 as NSNumber,
-        RC.readinessWorkoutMidBase:           92.0 as NSNumber,
-        RC.readinessWorkoutMidLoadPenalty:    25.0 as NSNumber,
-        RC.readinessWorkoutLateBase:          96.0 as NSNumber,
-        RC.readinessWorkoutLateLoadPenalty:   12.0 as NSNumber,
+        RC.readinessWorkoutMaxPenalty:        50.0 as NSNumber,
+        RC.readinessWorkoutTauHours:          10.0 as NSNumber,
         RC.readinessWorkoutConfFloor:         0.4  as NSNumber,
         RC.readinessWorkoutConfOnsetHours:    36.0 as NSNumber,
         RC.readinessWorkoutConfDecayHours:    24.0 as NSNumber,
-        RC.readinessStressDeviationAtCap:     0.5  as NSNumber,
-        RC.readinessStressChannelCap:         50.0 as NSNumber,
 
         // Scoring — StrainScorer (mirrors StrainScorerConfig values).
         RC.strainLowUpper:                    6.0  as NSNumber,
@@ -127,13 +119,9 @@ extension RemoteConfigManager {
         RC.strainMinDaysForBaseline:          7    as NSNumber,
 
         // Scoring — WorkoutBands (mirrors WorkoutBandsConfig values).
-        RC.workoutGreenBandFloor:             75   as NSNumber,
-        RC.workoutYellowBandFloor:            50   as NSNumber,
         RC.workoutRedBandSeed:                35   as NSNumber,
-        RC.workoutYellowBandSeed:             65   as NSNumber,
+        RC.workoutYellowBandSeed:             56   as NSNumber,
         RC.workoutGreenBandSeed:              82   as NSNumber,
-        RC.workoutZoneRestoringCeiling:       50   as NSNumber,
-        RC.workoutZoneMaintainingCeiling:     75   as NSNumber,
         RC.workoutZoneBuildingCeiling:        90   as NSNumber,
         RC.workoutDefaultMaxHR:               190  as NSNumber,
 
@@ -285,19 +273,11 @@ extension RemoteConfigManager {
     var readinessSleepRestorativeRange: Double { double(forKey: RC.readinessSleepRestorativeRange) }
     var readinessWorkoutLoadDurationCap: Double { double(forKey: RC.readinessWorkoutLoadDurationCap) }
     var readinessWorkoutLoadCalorieCap: Double { double(forKey: RC.readinessWorkoutLoadCalorieCap) }
-    var readinessWorkoutRecentBandHours: Double { double(forKey: RC.readinessWorkoutRecentBandHours) }
-    var readinessWorkoutMidBandHours: Double   { double(forKey: RC.readinessWorkoutMidBandHours) }
-    var readinessWorkoutRecentBase: Double     { double(forKey: RC.readinessWorkoutRecentBase) }
-    var readinessWorkoutRecentLoadPenalty: Double { double(forKey: RC.readinessWorkoutRecentLoadPenalty) }
-    var readinessWorkoutMidBase: Double        { double(forKey: RC.readinessWorkoutMidBase) }
-    var readinessWorkoutMidLoadPenalty: Double { double(forKey: RC.readinessWorkoutMidLoadPenalty) }
-    var readinessWorkoutLateBase: Double       { double(forKey: RC.readinessWorkoutLateBase) }
-    var readinessWorkoutLateLoadPenalty: Double { double(forKey: RC.readinessWorkoutLateLoadPenalty) }
+    var readinessWorkoutMaxPenalty: Double     { double(forKey: RC.readinessWorkoutMaxPenalty) }
+    var readinessWorkoutTauHours: Double       { double(forKey: RC.readinessWorkoutTauHours) }
     var readinessWorkoutConfFloor: Double      { double(forKey: RC.readinessWorkoutConfFloor) }
     var readinessWorkoutConfOnsetHours: Double { double(forKey: RC.readinessWorkoutConfOnsetHours) }
     var readinessWorkoutConfDecayHours: Double { double(forKey: RC.readinessWorkoutConfDecayHours) }
-    var readinessStressDeviationAtCap: Double  { double(forKey: RC.readinessStressDeviationAtCap) }
-    var readinessStressChannelCap: Double      { double(forKey: RC.readinessStressChannelCap) }
 
     // MARK: Scoring — StrainScorer
 
@@ -323,13 +303,9 @@ extension RemoteConfigManager {
 
     // MARK: Scoring — WorkoutBands
 
-    var workoutGreenBandFloor: Int             { int(forKey: RC.workoutGreenBandFloor) }
-    var workoutYellowBandFloor: Int            { int(forKey: RC.workoutYellowBandFloor) }
     var workoutRedBandSeed: Int                { int(forKey: RC.workoutRedBandSeed) }
     var workoutYellowBandSeed: Int             { int(forKey: RC.workoutYellowBandSeed) }
     var workoutGreenBandSeed: Int              { int(forKey: RC.workoutGreenBandSeed) }
-    var workoutZoneRestoringCeiling: Int       { int(forKey: RC.workoutZoneRestoringCeiling) }
-    var workoutZoneMaintainingCeiling: Int     { int(forKey: RC.workoutZoneMaintainingCeiling) }
     var workoutZoneBuildingCeiling: Int        { int(forKey: RC.workoutZoneBuildingCeiling) }
     var workoutDefaultMaxHR: Int               { int(forKey: RC.workoutDefaultMaxHR) }
 

@@ -29,17 +29,18 @@ struct MirrorBehindYou: View {
     private func numeral(_ score: Int) -> some View {
         VStack(spacing: 0) {
             // With a cutout the glyph sits high so the person crosses its middle.
-            // Without one it drops to the floor of the frame, because a 230 point
-            // number over an uncut photo would land straight on the face.
+            // Without one it drops into the fade at the floor of the frame, at
+            // full strength: a half-transparent numeral laid across the body
+            // was the fallback before, and it read as a watermark gone wrong.
             if hasCutout {
                 Spacer().frame(height: 110)
             } else {
                 Spacer(minLength: 0)
             }
             Text("\(score)")
-                .font(MirrorType.numeral(230, weight: .heavy))
-                .tracking(-12)
-                .foregroundStyle(.white.opacity(hasCutout ? 0.93 : 0.30))
+                .font(MirrorType.numeral(hasCutout ? 230 : 150, weight: .heavy))
+                .tracking(hasCutout ? -12 : -7)
+                .foregroundStyle(.white.opacity(0.93))
                 // The only thing standing between a white glyph and a white wall.
                 // No analysis reaches this template, so there is no measured scrim
                 // to fall back on and this shadow has to carry the contrast alone.
@@ -47,7 +48,7 @@ struct MirrorBehindYou: View {
             if hasCutout {
                 Spacer(minLength: 0)
             } else {
-                Spacer().frame(height: 40)
+                Spacer().frame(height: 44)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -127,7 +128,8 @@ struct MirrorNewsprint: View {
     private static let slabInk = Color(red: 0.043, green: 0.043, blue: 0.051)
 
     private static let dotPitch: CGFloat = 4
-    private static let dotRadius: CGFloat = 1.15
+    /// Largest dot, a touch over half the pitch so solid blacks close up.
+    private static let dotMaxRadius: CGFloat = 2.25
 
     var body: some View {
         if let photo = photo, let score = payload.score {
@@ -135,7 +137,7 @@ struct MirrorNewsprint: View {
             // here reads against the photo and the legibility ladder has nothing
             // to decide.
             ZStack {
-                screened(photo)
+                halftone(photo)
                 VStack(spacing: 0) {
                     masthead
                     Spacer(minLength: 0)
@@ -153,48 +155,41 @@ struct MirrorNewsprint: View {
         }
     }
 
-    /// Rebuilding the photo at a contrast we choose, rather than the one the room
-    /// gave us, is what makes this the safe look for hopeless lighting.
-    private func screened(_ photo: UIImage) -> some View {
-        Image(uiImage: photo)
-            .resizable()
-            .scaledToFill()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
-            .saturation(0)
-            .contrast(1.9)
-            .brightness(0.03)
-            .overlay { dotScreen }
-    }
-
-    private var dotScreen: some View {
-        Rectangle()
-            .fill(.black)
-            .opacity(0.62)
-            .mask {
-                Canvas { context, size in
-                    // Every dot goes into one Path and is filled once. Stamping
-                    // circles one call at a time is thousands of draws on a full
-                    // frame, and this has to render inside an ImageRenderer pass.
-                    var dots = Path()
-                    var y: CGFloat = 0
-                    while y < size.height {
-                        var x: CGFloat = 0
-                        while x < size.width {
-                            dots.addEllipse(in: CGRect(
-                                x: x - Self.dotRadius,
-                                y: y - Self.dotRadius,
-                                width: Self.dotRadius * 2,
-                                height: Self.dotRadius * 2
-                            ))
-                            x += Self.dotPitch
-                        }
-                        y += Self.dotPitch
-                    }
-                    context.fill(dots, with: .color(.white))
+    /// The photo re-screened as a real halftone: the page is paper, and each
+    /// dot is sized by how dark the picture is under it, so a face keeps its
+    /// midtones. The screen used to be a fixed dot grid laid over a contrast
+    /// boosted copy of the photo, which turned anything darker than skin,
+    /// hair, a shirt, a shadowed cheek, into one solid black blob.
+    ///
+    /// Every dot goes into one Path and is filled once. Stamping circles one
+    /// call at a time is thousands of draws on a full frame, and this has to
+    /// render inside an ImageRenderer pass.
+    private func halftone(_ photo: UIImage) -> some View {
+        Canvas { context, size in
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Self.paper))
+            guard let cgImage = photo.cgImage, size.width > 0, size.height > 0 else { return }
+            let columns = Int((size.width / Self.dotPitch).rounded(.up))
+            let rows = Int((size.height / Self.dotPitch).rounded(.up))
+            let grid = MirrorLegibility.luminanceGrid(
+                cgImage, columns: columns, rows: rows, filling: size.width / size.height
+            )
+            guard grid.count == columns * rows else { return }
+            var dots = Path()
+            for row in 0..<rows {
+                for column in 0..<columns {
+                    // Ink area tracks darkness, so the radius tracks its square root.
+                    let darkness = max(0, 1 - grid[row * columns + column])
+                    let radius = Self.dotMaxRadius * darkness.squareRoot()
+                    guard radius > 0.2 else { continue }
+                    let centre = CGPoint(x: (CGFloat(column) + 0.5) * Self.dotPitch,
+                                         y: (CGFloat(row) + 0.5) * Self.dotPitch)
+                    dots.addEllipse(in: CGRect(x: centre.x - radius, y: centre.y - radius,
+                                               width: radius * 2, height: radius * 2))
                 }
             }
-            .allowsHitTesting(false)
+            context.fill(dots, with: .color(Self.ink))
+        }
+        .allowsHitTesting(false)
     }
 
     private var masthead: some View {

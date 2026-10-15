@@ -17,11 +17,13 @@ struct MirrorHorizon: View {
     /// The band the drawing is allowed to occupy. Anything taller starts
     /// crossing a centred face. Static because a private stored property would
     /// drop the memberwise init below the access the dispatcher needs.
-    private static let bandHeight: CGFloat = 180
-    /// Floor of the plot above the band's bottom edge, and the full height of
-    /// the 0 to 100 range above that floor.
-    private static let floorInset: CGFloat = 50
-    private static let plotHeight: CGFloat = 112
+    private static let bandHeight: CGFloat = 200
+    /// Floor of the plot above the band's bottom edge: the numeral and its
+    /// label live under this line, so the terrain can never run through them.
+    /// A 50 point floor used to put the month's low days straight across the
+    /// score. The window's height above that floor is the rest of the band.
+    private static let floorInset: CGFloat = 96
+    private static let plotHeight: CGFloat = 92
 
     var body: some View {
         if payload.hasHistory, let today = payload.scoreHistory.last {
@@ -81,10 +83,11 @@ struct MirrorHorizon: View {
             }
             .stroke(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
             // Positioned rather than stacked because the label has to track a
-            // value that only exists once the chart has been measured.
+            // value that only exists once the chart has been measured. Leading,
+            // because today's marker owns the right edge and sat on the label.
             MirrorLabel(Copy.Mirror.averageScore(mean), size: 8, opacity: 0.55)
-                .frame(width: size.width - 14, height: 12, alignment: .trailing)
-                .position(x: (size.width - 14) / 2, y: line - 9)
+                .frame(width: size.width - 28, height: 12, alignment: .leading)
+                .position(x: size.width / 2, y: line - 9)
         }
     }
 

@@ -302,6 +302,26 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Whether this metric's values can be negative or zero (e.g. wrist temperature deviations, AFib burden, fall counts).
+    var allowsNegativeOrZero: Bool {
+        switch self {
+        case .appleSleepingWristTemperature, .atrialFibrillationBurden, .numberOfTimesFallen:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Whether this metric represents an interval/delta scale centered around zero rather than a strictly positive ratio scale.
+    var isZeroCenteredDelta: Bool {
+        switch self {
+        case .appleSleepingWristTemperature:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Whether a higher value is better for this metric
     var higherIsBetter: Bool {
         switch self {

@@ -582,12 +582,6 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_circadian_disruption_amplitude_component",
-    "defaultValue": "how active vs still you are",
-    "sourceFile": "Copy+Analysis.swift",
-    "isArray": false
-  },
-  {
     "key": "copy_analysis_circadian_disruption_disrupted_summary",
     "defaultValue": "Your body clock health score is %@/100, which points to a big disruption in your daily rhythm. Weakest area: %@ (%@/100).",
     "sourceFile": "Copy+Analysis.swift",
@@ -2053,25 +2047,25 @@
   },
   {
     "key": "copy_analysis_research_needs_attention_recommendation",
-    "defaultValue": "Your steadiness score of %@ across %d nights is in the middle range. Research links every 10-point gain in this score to real gains in heart and body health.",
+    "defaultValue": "Your steadiness score of %@ across %d nights is in the middle range. Keeping your wake time within the same hour every day is what moves it most.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_needs_attention_summary",
-    "defaultValue": "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times matters more than how long you sleep for long-term health.",
+    "defaultValue": "Your sleep steadiness score is %@/100, okay but with room to improve. Going to bed and waking at steady times helps your body clock settle.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_irregular_recommendation",
-    "defaultValue": "Across 5 large studies, people with irregular sleep (a steadiness score under 60) may think less clearly and feel worse over time, no matter how many hours they sleep. Your score of %@ over %d nights shows your sleep changes a lot from night to night.",
+    "defaultValue": "Your score of %@ over %d nights shows your sleep changes a lot from night to night. A steadier bedtime and wake time is the simplest way to lift it.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
   {
     "key": "copy_analysis_research_sleep_regularity_irregular_summary",
-    "defaultValue": "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Research shows how steady your sleep is matters more for long-term health than how long you sleep.",
+    "defaultValue": "Your sleep is scored %@/100 for how steady it is, which lands in the irregular range. Your nights change a lot in length or in timing from one to the next.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2144,6 +2138,18 @@
   {
     "key": "copy_analysis_risk_detail_contributing_factors",
     "defaultValue": "Contributing Factors",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_detail_heart_fitness_profile_caption",
+    "defaultValue": "Based on heart rate signals only. Log a blood pressure reading to unlock your heart risk grade.",
+    "sourceFile": "Copy+Analysis.swift",
+    "isArray": false
+  },
+  {
+    "key": "copy_analysis_risk_detail_heart_fitness_profile_title",
+    "defaultValue": "Heart Fitness Profile",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2917,7 +2923,7 @@
   },
   {
     "key": "copy_analysis_sleep_regularity_excellent_title",
-    "defaultValue": "Excellent Sleep Regularity",
+    "defaultValue": "Excellent Sleep Steadiness",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -2929,7 +2935,7 @@
   },
   {
     "key": "copy_analysis_sleep_regularity_needs_attention_title",
-    "defaultValue": "Sleep Regularity Needs Attention",
+    "defaultValue": "Sleep Steadiness Needs Attention",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -3090,8 +3096,8 @@
     "isArray": false
   },
   {
-    "key": "copy_analysis_temperature_compound_high_variability_recommendation",
-    "defaultValue": "How much your temperature swings: %@%%. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock.",
+    "key": "copy_analysis_temperature_compound_high_variability_recommendation_sd",
+    "defaultValue": "Your nighttime temperature moves about ±%@°C from one night to the next. Most people stay within about ±0.3°C. Research links big nighttime temperature swings to an off body clock, poor sleep, and worse body health. Steady temperatures point to a stronger body clock.",
     "sourceFile": "Copy+Analysis.swift",
     "isArray": false
   },
@@ -6697,7 +6703,7 @@
   },
   {
     "key": "copy_explore_explore_title",
-    "defaultValue": "Biology",
+    "defaultValue": "Health",
     "sourceFile": "Copy+Explore.swift",
     "isArray": false
   },

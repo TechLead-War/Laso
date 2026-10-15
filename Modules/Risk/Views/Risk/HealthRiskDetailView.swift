@@ -14,7 +14,7 @@ struct HealthRiskDetailView: View {
                 riskGaugeSection
 
                 // Description
-                Text(risk.riskType.description)
+                Text(risk.isClinicallyAnchored ? risk.riskType.description : Copy.Analysis.RiskDetail.heartFitnessProfileCaption)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
@@ -38,7 +38,7 @@ struct HealthRiskDetailView: View {
             AppAnalytics.shared.trackPullToRefresh(screen: .riskDetail)
             await onRefresh?()
         }
-        .navigationTitle(risk.riskType.displayName)
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: [
@@ -95,7 +95,7 @@ struct HealthRiskDetailView: View {
                 .foregroundStyle(AppColour.textSecondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Copy.Common.riskTypeAndGradeLabel(risk.riskType.displayName, risk.riskGrade.displayName))
+        .accessibilityLabel(Copy.Common.riskTypeAndGradeLabel(title, risk.riskGrade.displayName))
     }
 
     // MARK: - Focus Areas
@@ -232,6 +232,10 @@ struct HealthRiskDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private var title: String {
+        risk.isClinicallyAnchored ? risk.riskType.displayName : Copy.Analysis.RiskDetail.heartFitnessProfileTitle
+    }
 
     private func formatValue(_ value: Double, metric: HealthMetric) -> String {
         "\(metric.formatValue(value)) \(metric.unit)"

@@ -10,10 +10,12 @@ enum ScoreBucketsConfig {
 
     /// Lower bound (inclusive) of the "well recovered" engagement band.
     static let engagementWellRecoveredFloor = 85
-    /// Lower bound (inclusive) of the "looking good" engagement band.
-    static let engagementLookingGoodFloor = 70
-    /// Lower bound (inclusive) of the "moderate" engagement band.
-    static let engagementModerateFloor = 55
+    /// Lower bound (inclusive) of the "looking good" engagement band. Same floor
+    /// the recovery ring turns green at, so a push never calls a green day moderate.
+    static let engagementLookingGoodFloor = DS.optimalFloor
+    /// Lower bound (inclusive) of the "moderate" engagement band. Same floor the
+    /// recovery ring turns amber at.
+    static let engagementModerateFloor = DS.fairFloor
     /// Lower bound (inclusive) of the "needs attention" engagement band.
     static let engagementNeedsAttentionFloor = 40
 }

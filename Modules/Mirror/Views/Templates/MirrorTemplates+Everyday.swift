@@ -11,6 +11,9 @@ struct MirrorFieldNotes: View {
     /// The bottom rail's own footprint, measured rather than guessed, so the
     /// ladder can decide how much cover the readouts actually need.
     private static let block = CGRect(x: 0, y: 0.76, width: 1, height: 0.24)
+    /// The header's footprint. A white ceiling behind the date used to make
+    /// the whole top row vanish, because only the bottom block was measured.
+    private static let header = CGRect(x: 0, y: 0, width: 1, height: 0.16)
 
     /// One cell of the rail. A value that is missing is never a zero here, it
     /// is simply absent from this array and the row closes over the gap.
@@ -48,6 +51,12 @@ struct MirrorFieldNotes: View {
                     height: 130
                 )
             }
+            MirrorScrim(
+                protection: MirrorLegibility.topProtection(for: Self.header, analysis: analysis),
+                height: 110,
+                edge: .top
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             MirrorCorners(inset: 13, arm: 15, opacity: 0.55)
             VStack(spacing: 0) {
                 header
@@ -100,6 +109,8 @@ struct MirrorNumber: View {
     var analysis: MirrorLegibility.Analysis
 
     private static let block = CGRect(x: 0, y: 0.62, width: 1, height: 0.38)
+    /// Where the date sits, so a bright top edge gets its own cover.
+    private static let header = CGRect(x: 0, y: 0, width: 0.6, height: 0.12)
 
     var body: some View {
         if let score = payload.score {
@@ -108,6 +119,12 @@ struct MirrorNumber: View {
                     protection: MirrorLegibility.protection(for: Self.block, analysis: analysis, largeType: true),
                     height: 250
                 )
+                MirrorScrim(
+                    protection: MirrorLegibility.topProtection(for: Self.header, analysis: analysis),
+                    height: 100,
+                    edge: .top
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 VStack(alignment: .leading, spacing: 0) {
                     MirrorLabel(MirrorFormat.stamp(payload.date), size: 9.5)
                         .padding(.leading, 18)

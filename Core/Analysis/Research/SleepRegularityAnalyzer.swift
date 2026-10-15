@@ -1,19 +1,21 @@
 import Foundation
 
-/// Finding: Sleep irregularity is a STRONGER predictor of cardiometabolic disease
-/// than sleep duration. Irregular sleepers face 26-53% higher dementia risk,
-/// 20-88% higher all-cause mortality. SRI (Sleep Regularity Index) validated
-/// across 5 large cohorts.
+/// Heuristic, unvalidated. Scores how steady sleep duration is night to night
+/// and how far the sleep midpoint shifts between weekdays and weekends.
 ///
-/// Implementation: Computes a validated Sleep Regularity Index (0-100)
-/// from daily sleep/wake patterns. Surfaces prominently alongside duration.
+/// This is NOT the Phillips et al. Sleep Regularity Index: that needs
+/// minute-level sleep/wake state, which the daily series here does not carry,
+/// so no cohort outcome from the SRI literature may be quoted against this
+/// number. Social jet lag follows Roenneberg et al. (2006): the clock
+/// difference between weekend and weekday sleep midpoints, not a difference
+/// in hours slept.
 struct SleepRegularityAnalyzer {
 
     // MARK: - Constants
 
-    private static let poorSRI: Double = 60
-    private static let moderateSRI: Double = 70
-    private static let goodSRI: Double = 80
+    private static let poorSteadiness: Double = 60
+    private static let moderateSteadiness: Double = 70
+    private static let goodSteadiness: Double = 80
 
     private static let minDaysRequired = 14
 
@@ -27,19 +29,15 @@ struct SleepRegularityAnalyzer {
         let samples = sleepSeries.samples(lastDays: 30)
         guard samples.count >= minDaysRequired else { return [] }
 
-        // Compute Sleep Regularity Index
-        // SRI = probability that any two time points 24h apart are in the same state
-        // Approximation using sleep duration consistency + timing consistency
-        let sri = computeSRI(samples: samples)
+        let sri = computeSteadiness(samples: samples)
 
-        // Compute social jet lag (weekday vs weekend midpoint difference)
         let socialJetLag = computeSocialJetLag(samples: samples)
 
-        // Compute week-over-week SRI trend
+        // Week-over-week steadiness trend
         let recentSamples = sleepSeries.samples(lastDays: 14)
         let recentSRI: Double
         if recentSamples.count >= 10 {
-            recentSRI = computeSRI(samples: recentSamples)
+            recentSRI = computeSteadiness(samples: recentSamples)
         } else {
             recentSRI = sri
         }
@@ -47,8 +45,8 @@ struct SleepRegularityAnalyzer {
         let trendDirection: TrendDirection = recentSRI > sri + 3 ? .improving
             : recentSRI < sri - 3 ? .declining : .stable
 
-        // Insight: Sleep Regularity Score
-        if sri < poorSRI {
+        // Insight: sleep steadiness score
+        if sri < poorSteadiness {
             let sriText = String(format: "%.0f", sri)
             let jetLagText = String(format: "%.0f", socialJetLag)
             insights.append(InsightFactory.make(
@@ -58,8 +56,8 @@ struct SleepRegularityAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepRegularity.irregularRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .warning,
                 trend: trendDirection,
-                baselineValue: Double(goodSRI),
-                deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
+                baselineValue: Double(goodSteadiness),
+                deviationPercent: ((sri - Double(goodSteadiness)) / Double(goodSteadiness)) * 100,
                 category: .sleepPerformance,
                 directive: .sleepBetter,
                 context: InsightContext(
@@ -67,7 +65,7 @@ struct SleepRegularityAnalyzer {
                     dataPointCount: samples.count
                 )
             ))
-        } else if sri < moderateSRI {
+        } else if sri < moderateSteadiness {
             let sriText = String(format: "%.0f", sri)
             let jetLagText = String(format: "%.0f", socialJetLag)
             insights.append(InsightFactory.make(
@@ -77,20 +75,20 @@ struct SleepRegularityAnalyzer {
                 recommendation: Copy.Analysis.Research.SleepRegularity.needsAttentionRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .info,
                 trend: trendDirection,
-                baselineValue: Double(goodSRI),
-                deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
+                baselineValue: Double(goodSteadiness),
+                deviationPercent: ((sri - Double(goodSteadiness)) / Double(goodSteadiness)) * 100,
                 category: .sleepPerformance,
                 directive: .sleepBetter,
             ))
-        } else if sri >= goodSRI {
+        } else if sri >= goodSteadiness {
             let sriText = String(format: "%.0f", sri)
             insights.append(InsightFactory.observation(
                 metric: .sleepDuration,
                 title: Copy.Analysis.Research.SleepRegularity.excellentTitle,
                 summary: Copy.Analysis.Research.SleepRegularity.excellentSummary(sri: sriText),
                 recommendation: Copy.Analysis.Research.SleepRegularity.excellentRecommendation(sri: sriText, samples: samples.count),
-                baselineValue: Double(goodSRI),
-                deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
+                baselineValue: Double(goodSteadiness),
+                deviationPercent: ((sri - Double(goodSteadiness)) / Double(goodSteadiness)) * 100,
                 category: .sleepPerformance,
             ))
         }
@@ -115,12 +113,12 @@ struct SleepRegularityAnalyzer {
         return insights
     }
 
-    // MARK: - SRI Computation
+    // MARK: - Steadiness
 
-    /// Computes an approximation of the Sleep Regularity Index.
-    /// True SRI requires minute-level sleep/wake state; we approximate using
-    /// daily sleep duration consistency + weekday/weekend timing alignment.
-    private static func computeSRI(samples: [MetricSample]) -> Double {
+    /// 0 to 100 from how much nightly duration varies (coefficient of variation)
+    /// and how much it jumps between consecutive nights. Duration only; timing
+    /// is read separately through the midpoint helpers below.
+    private static func computeSteadiness(samples: [MetricSample]) -> Double {
         let values = samples.map(\.value)
         guard values.count >= 2 else { return 50 }
 
@@ -144,8 +142,7 @@ struct SleepRegularityAnalyzer {
 
         let avgDayDiff = dayToDayDiffs.isEmpty ? stdDev : dayToDayDiffs.mean
 
-        // SRI approximation:
-        // Perfect regularity (cv=0, avgDayDiff=0) → 100
+        // Perfect steadiness (cv=0, avgDayDiff=0) → 100
         // High variability (cv>0.3, avgDayDiff>2hr) → <50
         let cvPenalty = min(cv / 0.30, 1.0) * 30       // up to -30 points
         let diffPenalty = min(avgDayDiff / 2.0, 1.0) * 20 // up to -20 points
@@ -153,27 +150,39 @@ struct SleepRegularityAnalyzer {
         return max(0, min(100, 100 - cvPenalty - diffPenalty))
     }
 
-    /// Computes social jet lag in minutes: difference between weekday and weekend
-    /// average sleep duration, approximating timing shift.
+    // MARK: - Sleep Timing
+
+    /// Clock time of the middle of a night's sleep, in minutes from noon
+    /// (3 am reads 900, 11 pm reads 660). Noon-based so a midpoint either side of
+    /// midnight averages correctly; the seam sits at noon, where no overnight
+    /// midpoint falls. A `sleepDuration` sample is stamped at wake time and
+    /// holds hours slept, so the midpoint is wake minus half the duration.
+    static func sleepMidpointMinutesFromNoon(_ sample: MetricSample) -> Double {
+        let midpoint = sample.date.addingTimeInterval(-sample.value * 1800)
+        let parts = Date.cal.dateComponents([.hour, .minute], from: midpoint)
+        let sinceMidnight = Double(parts.hour ?? 0) * 60 + Double(parts.minute ?? 0)
+        return (sinceMidnight + 720).truncatingRemainder(dividingBy: 1440)
+    }
+
+    /// Social jet lag in minutes: how far the weekend sleep midpoint sits from
+    /// the weekday one (Roenneberg et al. 2006, Chronobiol Int). A night counts
+    /// as weekend when it ends on Saturday or Sunday.
     private static func computeSocialJetLag(samples: [MetricSample]) -> Double {
         let calendar = Date.cal
-        var weekdayDurations: [Double] = []
-        var weekendDurations: [Double] = []
+        var weekdayMidpoints: [Double] = []
+        var weekendMidpoints: [Double] = []
 
         for sample in samples {
             let weekday = calendar.component(.weekday, from: sample.date)
             if weekday >= 2 && weekday <= 6 {
-                weekdayDurations.append(sample.value)
+                weekdayMidpoints.append(sleepMidpointMinutesFromNoon(sample))
             } else {
-                weekendDurations.append(sample.value)
+                weekendMidpoints.append(sleepMidpointMinutesFromNoon(sample))
             }
         }
 
-        guard !weekdayDurations.isEmpty, !weekendDurations.isEmpty else { return 0 }
-
-        // Social jet lag = absolute difference in average sleep, converted to minutes
-        let diff = abs(weekendDurations.mean - weekdayDurations.mean)
-        return diff * 60 // hours to minutes
+        guard !weekdayMidpoints.isEmpty, !weekendMidpoints.isEmpty else { return 0 }
+        return abs(weekendMidpoints.mean - weekdayMidpoints.mean)
     }
 }
 

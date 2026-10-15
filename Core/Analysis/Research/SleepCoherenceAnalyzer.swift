@@ -1,10 +1,12 @@
 import Foundation
 
-/// Finding: When body systems go out of sync during sleep. brain asleep but heart awake —
-/// that signals disease risk. 130 conditions predictable from sleep signal coherence.
-///
-/// Implementation: Measures whether HR/HRV/respiratory rate follow expected
-/// stage-appropriate patterns during each sleep phase. Flags incoherence.
+/// Heuristic, unvalidated. Scores how well the overnight signals settle
+/// together: heart rate inside the sleep window below the resting baseline,
+/// HRV above its baseline, a healthy deep-sleep share, and a lower breathing
+/// rate. Overnight heart rate comes from `AnalysisContext.nocturnalHeartRate`,
+/// the mean inside each night's bedtime to wake window. The 24-hour daily
+/// average used to stand in for it, so every commute and workout read as a
+/// night the heart never dropped.
 struct SleepCoherenceAnalyzer {
 
     // MARK: - Analysis
@@ -13,7 +15,7 @@ struct SleepCoherenceAnalyzer {
         // Need: sleep stages, HR, HRV, respiratory rate
         guard let deepSeries = context.timeSeries[.sleepDeep],
               let remSeries = context.timeSeries[.sleepREM],
-              let hrSeries = context.timeSeries[.heartRate],
+              !context.nocturnalHeartRate.isEmpty,
               let hrvSeries = context.timeSeries[.heartRateVariability],
               let rhrBaseline = context.baselines[.restingHeartRate],
               let hrvBaseline = context.baselines[.heartRateVariability] else { return [] }
@@ -23,7 +25,7 @@ struct SleepCoherenceAnalyzer {
 
         let deepMap = TimeSeriesAligner.dailyValueMap(deepSeries)
         let remMap = TimeSeriesAligner.dailyValueMap(remSeries)
-        let hrMap = TimeSeriesAligner.dailyValueMap(hrSeries)
+        let hrMap = context.nocturnalHeartRate
         let hrvMap = TimeSeriesAligner.dailyValueMap(hrvSeries)
 
         let rrMap: [Date: Double]? = rrSeries.map { TimeSeriesAligner.dailyValueMap($0) }
@@ -114,7 +116,7 @@ struct SleepCoherenceAnalyzer {
             totalNights += 1
             var scoreComponents: [Double] = []
 
-            // 1. HR coherence: overnight HR should be well below resting
+            // 1. HR coherence: heart rate inside the sleep window should sit well below resting
             let hrDrop = ((rhrBaseline.mean - nightHR) / rhrBaseline.mean) * 100
             let hrCoherence = hrDrop >= 5 ? min(hrDrop / 20.0, 1.0) : max(0, hrDrop / 5.0)
             scoreComponents.append(hrCoherence)

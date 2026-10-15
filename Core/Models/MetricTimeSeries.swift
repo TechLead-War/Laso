@@ -119,9 +119,11 @@ struct MetricTimeSeries: Identifiable {
         return lastDate < cutoff
     }
 
-    /// Samples within the last N days
+    /// Samples within the last N days, anchored to start of day so moving windows do not drift intraday.
     func samples(lastDays days: Int) -> [MetricSample] {
-        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let calendar = Date.cal
+        let todayStart = calendar.startOfDay(for: Date())
+        let cutoff = calendar.date(byAdding: .day, value: -days, to: todayStart) ?? todayStart
         guard !samples.isEmpty else { return [] }
 
         let startIndex = firstIndex(onOrAfter: cutoff)
