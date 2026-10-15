@@ -24,6 +24,17 @@ struct HealthKitMetricRegistry {
         var valueScale: Double = 1.0
     }
 
+    /// Apple's own floor for an "elevated" breathing disturbances night, read
+    /// from HealthKit rather than typed in. The old hand-written range (0 to 5
+    /// "events per hour") described a different measure entirely: Apple's
+    /// number is a nightly count and is not an apnea-hypopnea index.
+    static var breathingDisturbancesElevatedFloor: Double {
+        if #available(iOS 18.0, *) {
+            return HKAppleSleepingBreathingDisturbancesClassification.elevated.minimum.doubleValue(for: .count())
+        }
+        return .infinity
+    }
+
     static func config(for metric: HealthMetric) -> MetricConfig {
         switch metric {
         case .heartRate, .restingHeartRate, .heartRateVariability, .walkingHeartRateAverage,
@@ -145,10 +156,13 @@ struct HealthKitMetricRegistry {
             )
         case .sleepBreathingDisturbances:
             if #available(iOS 18.0, *) {
+                // Apple stores this as a plain count (HKTypeIdentifiers.h:
+                // "count, Discrete"). Asking for count per hour made HealthKit
+                // throw on every sample and abort the app during sync.
                 return MetricConfig(
                     sampleType: HKQuantityType(.appleSleepingBreathingDisturbances),
                     quantityType: HKQuantityType(.appleSleepingBreathingDisturbances),
-                    unit: HKUnit.count().unitDivided(by: .hour()),
+                    unit: .count(),
                     strategy: .quantitySample,
                     statisticsOption: .discreteAverage
                 )

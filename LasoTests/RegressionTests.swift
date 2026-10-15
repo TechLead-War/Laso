@@ -1,4 +1,5 @@
 import Foundation
+import HealthKit
 import SwiftData
 import SwiftUI
 import Testing
@@ -934,6 +935,21 @@ struct RegressionTests {
         #expect(need60m.totalHoursNeeded > need1m.totalHoursNeeded, "Need must increase with debt")
         #expect(need3h.totalHoursNeeded > need60m.totalHoursNeeded, "Need must increase with debt")
         #expect(need10h.totalHoursNeeded <= need0.totalHoursNeeded + SleepNeedConfig.maxDebtAdjustment + 0.001, "Capped at maxDebtAdjustment")
+    }
+
+    /// Every production crash on 15 Oct 2026 was HealthKit throwing an
+    /// Objective-C exception from `doubleValue(for:)` because the registry asked
+    /// for breathing disturbances in count per hour while Apple stores a plain
+    /// count. Swift cannot catch that exception, so one mismatched metric took
+    /// the whole app down on every full sync. HealthKit can tell us up front
+    /// whether a unit fits a type, so every registry entry is checked here.
+    @Test func everyRegistryUnitFitsItsHealthKitType() {
+        for metric in HealthMetric.allCases {
+            let config = HealthKitMetricRegistry.config(for: metric)
+            guard let quantityType = config.quantityType else { continue }
+            #expect(quantityType.is(compatibleWith: config.unit),
+                    "\(metric.rawValue) asks HealthKit for \(config.unit) which its type cannot convert to")
+        }
     }
 
     /// DEF-15: Social jet lag read as a difference in hours slept, so a sleeper

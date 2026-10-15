@@ -118,7 +118,8 @@ struct RulesConfiguration {
         // Respiratory (additional)
         case .forcedExpiratoryVolume1: return NormalRange(low: 2.0, high: 5.0)  // liters
         // Sleep (additional)
-        case .sleepBreathingDisturbances: return NormalRange(low: 0, high: 5)  // events/hr
+        // Nightly count on Apple's scale, graded by Apple's own elevated floor.
+        case .sleepBreathingDisturbances: return NormalRange(low: 0, high: HealthKitMetricRegistry.breathingDisturbancesElevatedFloor)
         // Mobility (additional)
         case .walkingSteadiness: return NormalRange(low: 50, high: 100)  // %
         case .numberOfTimesFallen: return NormalRange(low: 0, high: 0)  // ideally zero

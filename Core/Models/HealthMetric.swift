@@ -185,7 +185,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .peripheralPerfusionIndex: return "%"
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
             return "hrs"
-        case .sleepBreathingDisturbances: return "events/hr"
+        case .sleepBreathingDisturbances: return "per night"
         case .steps: return "steps"
         case .activeCalories, .basalCalories: return "kcal"
         case .exerciseMinutes: return "min"

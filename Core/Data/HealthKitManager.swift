@@ -14,6 +14,34 @@ private func recordHealthKitFetchError(_ error: Error, context: String, metadata
     AnalyticsBackend.provider.captureError(error, context: context, metadata: metadata)
 }
 
+/// Reads a quantity in the registry's unit, or nil when HealthKit holds the
+/// type in a unit that cannot convert to it. `doubleValue(for:)` raises an
+/// Objective-C exception on a mismatch, which Swift cannot catch, so one wrong
+/// unit in the registry (breathing disturbances asked for per hour against
+/// Apple's plain count) aborted the app on every full sync. The mismatch is
+/// reported once per metric so the registry gets fixed, and the metric is
+/// skipped rather than the app.
+private let unitMismatchLock = NSLock()
+nonisolated(unsafe) private var reportedUnitMismatches = Set<String>()
+
+private func healthKitValue(of quantity: HKQuantity?, in unit: HKUnit, metric: HealthMetric, site: String) -> Double? {
+    guard let quantity else { return nil }
+    guard quantity.is(compatibleWith: unit) else {
+        unitMismatchLock.lock()
+        let firstTime = reportedUnitMismatches.insert(metric.rawValue).inserted
+        unitMismatchLock.unlock()
+        if firstTime {
+            AnalyticsBackend.provider.captureError(
+                "healthkit_unit_mismatch",
+                context: "healthkit_unit_mismatch",
+                metadata: ["metric": metric.rawValue, "site": site, "unit": unit.unitString]
+            )
+        }
+        return nil
+    }
+    return quantity.doubleValue(for: unit)
+}
+
 @Observable
 final class HealthKitManager: @unchecked Sendable {
     let healthStore = HKHealthStore()
@@ -739,9 +767,10 @@ final class HealthKitManager: @unchecked Sendable {
 
                 var buckets = [Double](repeating: 0, count: bucketCount)
                 results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
-                    let raw = config.statisticsOption == .cumulativeSum
-                        ? statistics.sumQuantity()?.doubleValue(for: config.unit)
-                        : statistics.averageQuantity()?.doubleValue(for: config.unit)
+                    let raw = healthKitValue(
+                        of: config.statisticsOption == .cumulativeSum ? statistics.sumQuantity() : statistics.averageQuantity(),
+                        in: config.unit, metric: metric, site: "healthkit_fetch_intraday_buckets"
+                    )
                     guard let raw else { return }
                     let offset = statistics.startDate.timeIntervalSince(startDate)
                     let index = Int(offset / bucketSeconds)
@@ -811,9 +840,10 @@ final class HealthKitManager: @unchecked Sendable {
                 // usual shape, not one deflated to five fourteenths.
                 var contributingDays = Set<Date>()
                 results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
-                    let raw = config.statisticsOption == .cumulativeSum
-                        ? statistics.sumQuantity()?.doubleValue(for: config.unit)
-                        : statistics.averageQuantity()?.doubleValue(for: config.unit)
+                    let raw = healthKitValue(
+                        of: config.statisticsOption == .cumulativeSum ? statistics.sumQuantity() : statistics.averageQuantity(),
+                        in: config.unit, metric: metric, site: "healthkit_fetch_usual_shape"
+                    )
                     guard let raw, raw > 0 else { return }
                     let dayStart = calendar.startOfDay(for: statistics.startDate)
                     let index = Int(statistics.startDate.timeIntervalSince(dayStart) / bucketSeconds)
@@ -868,12 +898,10 @@ final class HealthKitManager: @unchecked Sendable {
                 let calendar = Date.cal
 
                 results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
-                    let raw: Double?
-                    if config.statisticsOption == .cumulativeSum {
-                        raw = statistics.sumQuantity()?.doubleValue(for: config.unit)
-                    } else {
-                        raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
-                    }
+                    let raw = healthKitValue(
+                        of: config.statisticsOption == .cumulativeSum ? statistics.sumQuantity() : statistics.averageQuantity(),
+                        in: config.unit, metric: metric, site: "healthkit_fetch_daily_stats"
+                    )
                     let value = raw.map { $0 * config.valueScale }
                     if let value, value.isFinite && (metric.allowsNegativeOrZero || value > 0) {
                         let hour = calendar.component(.hour, from: statistics.startDate)
@@ -950,12 +978,11 @@ final class HealthKitManager: @unchecked Sendable {
 
         var result: [Date: Double] = [:]
         for (day, night) in nights where day >= cutoff {
+            // HealthKit throws an Objective-C exception, not an error, for a
+            // window whose end precedes its start, so the builder orders them.
+            guard night.wakeTime > night.bedtime else { continue }
             let mean: Double? = await withCheckedContinuation { continuation in
-                let predicate = HKQuery.predicateForSamples(
-                    withStart: night.bedtime,
-                    end: night.wakeTime,
-                    options: .strictStartDate
-                )
+                let predicate = HealthKitQueryBuilder.datePredicate(from: night.bedtime, to: night.wakeTime)
                 let query = HKStatisticsQuery(
                     quantityType: type,
                     quantitySamplePredicate: predicate,
@@ -1005,12 +1032,10 @@ final class HealthKitManager: @unchecked Sendable {
                 var samples: [MetricSample] = []
                 // Use midnight boundaries so daily buckets include today's partial data
                 results.enumerateStatistics(from: startDate.startOfDay, to: endDate) { statistics, _ in
-                    let raw: Double?
-                    if config.statisticsOption == .cumulativeSum {
-                        raw = statistics.sumQuantity()?.doubleValue(for: config.unit)
-                    } else {
-                        raw = statistics.averageQuantity()?.doubleValue(for: config.unit)
-                    }
+                    let raw = healthKitValue(
+                        of: config.statisticsOption == .cumulativeSum ? statistics.sumQuantity() : statistics.averageQuantity(),
+                        in: config.unit, metric: metric, site: "healthkit_fetch_daily_stats"
+                    )
                     let value = raw.map { $0 * config.valueScale }
                     if let value, value.isFinite && (metric.allowsNegativeOrZero || value > 0) {
                         samples.append(MetricSample(date: statistics.startDate, value: value))
@@ -1050,8 +1075,8 @@ final class HealthKitManager: @unchecked Sendable {
                 var dailyValues: [Date: [Double]] = [:]
                 for sample in results {
                     let day = sample.startDate.startOfDay
-                    let value = sample.quantity.doubleValue(for: config.unit) * config.valueScale
-                    dailyValues[day, default: []].append(value)
+                    guard let raw = healthKitValue(of: sample.quantity, in: config.unit, metric: metric, site: "healthkit_fetch_quantity") else { continue }
+                    dailyValues[day, default: []].append(raw * config.valueScale)
                 }
 
                 let samples = dailyValues.map { (day, values) in
